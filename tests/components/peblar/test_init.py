@@ -85,12 +85,13 @@ async def test_config_entry_authentication_failed(
 @pytest.mark.usefixtures("init_integration")
 async def test_peblar_device_entry(
     device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test authentication error, aborts setup."""
     assert (
-        device_entry := device_registry.async_get_device(
-            identifiers={(DOMAIN, "23-45-A4O-MOF")}
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "23-45-A4O-MOF"), mock_config_entry.entry_id
         )
     )
     assert device_entry == snapshot

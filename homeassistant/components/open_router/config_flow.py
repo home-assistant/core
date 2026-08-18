@@ -25,7 +25,6 @@ from homeassistant.core import callback
 from homeassistant.helpers import llm
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
-    BooleanSelector,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -47,7 +46,7 @@ class OpenRouterConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for OpenRouter."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     @classmethod
     @callback
@@ -221,7 +220,22 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                             CONF_WEB_SEARCH,
                             RECOMMENDED_CONVERSATION_OPTIONS[CONF_WEB_SEARCH],
                         ),
-                    ): BooleanSelector(),
+                    ): SelectSelector(
+                        SelectSelectorConfig(
+                            options=[
+                                "off",
+                                "plugin",
+                                "tool",
+                                "tool_native",
+                                "tool_exa",
+                                "tool_firecrawl",
+                                "tool_parallel",
+                                "tool_perplexity",
+                            ],
+                            translation_key="web_search_modes",
+                            mode=SelectSelectorMode.DROPDOWN,
+                        )
+                    ),
                 }
             ),
         )

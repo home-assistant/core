@@ -62,9 +62,12 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle dhcp discovery for twinkly."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
-        device_info = await Twinkly(
-            discovery_info.ip, async_get_clientsession(self.hass)
-        ).get_details()
+        try:
+            device_info = await Twinkly(
+                discovery_info.ip, async_get_clientsession(self.hass)
+            ).get_details()
+        except TimeoutError, ClientError:
+            return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(device_info["mac"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 

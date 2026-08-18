@@ -9,7 +9,14 @@ from pyoverkiz.enums import OverkizState
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.water_heater import ATTR_OPERATION_MODE, STATE_PERFORMANCE
+from homeassistant.components.water_heater import (
+    ATTR_MAX_TEMP,
+    ATTR_MIN_TEMP,
+    ATTR_OPERATION_MODE,
+    ATTR_TARGET_TEMP_STEP,
+    STATE_ECO,
+    STATE_PERFORMANCE,
+)
 from homeassistant.const import ATTR_TEMPERATURE, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -36,6 +43,13 @@ DHW_HITACHI_YUTAKI = FixtureDevice(
     "setup/cloud_atlantic_cozytouch.json",
     "modbus://1234-5678-5643/6381497/1#4",
     "water_heater.yutaki_dhw",
+)
+
+# Thermor Aéromax 4 (io:AtlanticDomesticHotWaterProductionIOComponent)
+DHW_ATLANTIC_IO = FixtureDevice(
+    "setup/cloud_atlantic_cozytouch.json",
+    "io://1234-5678-5643/6713703#1",
+    "water_heater.my_home_water_heater",
 )
 
 SNAPSHOT_FIXTURES = [
@@ -312,4 +326,172 @@ async def test_hitachi_turn_off_uses_stop(
         device_url=DHW_HITACHI_YUTAKI.device_url,
         command_name="setControlDHW",
         parameters=["stop"],
+    )
+
+
+# --- DHWP V1 (io:AtlanticDomesticHotWaterProductionIOComponent) ---
+async def test_atlantic_io_temperature_range(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test the setpoint falls back to 50-62 °C with a 4 °C step.
+
+    The fixture has no manual-mode min/max states, so min/max use the defaults.
+    """
+    await setup_overkiz_integration(fixture=DHW_ATLANTIC_IO.fixture)
+
+    state = hass.states.get(DHW_ATLANTIC_IO.entity_id)
+    assert state is not None
+    assert state.attributes[ATTR_MIN_TEMP] == 50.0
+    assert state.attributes[ATTR_MAX_TEMP] == 62.0
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 4.0
+
+
+@pytest.mark.parametrize(
+    ("operation_mode", "expected_param"),
+    [
+        ("auto", "autoMode"),
+        (STATE_ECO, "manualEcoActive"),
+        ("manual", "manualEcoInactive"),
+    ],
+)
+async def test_atlantic_io_set_operation_mode(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    operation_mode: str,
+    expected_param: str,
+) -> None:
+    """Test each DHW operation mode maps to the right setDHWMode param."""
+    await setup_overkiz_integration(fixture=DHW_ATLANTIC_IO.fixture)
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {"entity_id": DHW_ATLANTIC_IO.entity_id, ATTR_OPERATION_MODE: operation_mode},
+        blocking=True,
+    )
+
+    # The fixture starts in autoMode, so every mode change also refreshes the
+    # target temperature within the same batch.
+    assert_commands_call(
+        mock_client,
+        device_url=DHW_ATLANTIC_IO.device_url,
+        commands=[
+            ("setDHWMode", [expected_param]),
+            ("refreshTargetTemperature", None),
+        ],
+    )
+
+
+async def test_atlantic_io_set_temperature(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test setting the target temperature sends setTargetTemperature then a refresh."""
+    await setup_overkiz_integration(fixture=DHW_ATLANTIC_IO.fixture)
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_temperature",
+        {"entity_id": DHW_ATLANTIC_IO.entity_id, ATTR_TEMPERATURE: 54.0},
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client,
+        device_url=DHW_ATLANTIC_IO.device_url,
+        commands=[
+            ("setTargetTemperature", [54.0]),
+            ("refreshTargetTemperature", None),
+        ],
+    )
+
+
+async def test_atlantic_io_set_operation_mode_performance(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test 'performance' sets boost duration + relaunch operating mode."""
+    await setup_overkiz_integration(fixture=DHW_ATLANTIC_IO.fixture)
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_operation_mode",
+        {
+            "entity_id": DHW_ATLANTIC_IO.entity_id,
+            ATTR_OPERATION_MODE: STATE_PERFORMANCE,
+        },
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client,
+        device_url=DHW_ATLANTIC_IO.device_url,
+        commands=[
+            ("setBoostModeDuration", [7]),
+            (
+                "setCurrentOperatingMode",
+                [{"relaunch": "on", "absence": "off"}],
+            ),
+            ("refreshBoostModeDuration", None),
+        ],
+    )
+
+
+async def test_atlantic_io_turn_away_mode_on(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test turning away mode on sets absence operating mode then refreshes."""
+    await setup_overkiz_integration(fixture=DHW_ATLANTIC_IO.fixture)
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_away_mode",
+        {"entity_id": DHW_ATLANTIC_IO.entity_id, "away_mode": True},
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client,
+        device_url=DHW_ATLANTIC_IO.device_url,
+        commands=[
+            (
+                "setCurrentOperatingMode",
+                [{"relaunch": "off", "absence": "on"}],
+            ),
+            ("refreshAwayModeDuration", None),
+        ],
+    )
+
+
+async def test_atlantic_io_turn_away_mode_off(
+    hass: HomeAssistant,
+    mock_client: MockOverkizClient,
+    setup_overkiz_integration: SetupOverkizIntegration,
+) -> None:
+    """Test turning away mode off clears the absence operating mode."""
+    await setup_overkiz_integration(fixture=DHW_ATLANTIC_IO.fixture)
+
+    await hass.services.async_call(
+        "water_heater",
+        "set_away_mode",
+        {"entity_id": DHW_ATLANTIC_IO.entity_id, "away_mode": False},
+        blocking=True,
+    )
+
+    assert_commands_call(
+        mock_client,
+        device_url=DHW_ATLANTIC_IO.device_url,
+        commands=[
+            (
+                "setCurrentOperatingMode",
+                [{"relaunch": "off", "absence": "off"}],
+            ),
+            ("refreshAwayModeDuration", None),
+        ],
     )

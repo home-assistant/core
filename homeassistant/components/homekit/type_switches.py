@@ -13,6 +13,8 @@ from pyhap.const import (
 )
 
 from homeassistant.components import button, input_button
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import (
     ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
     CONF_MAX as INPUT_NUMBER_CONF_MAX,
@@ -193,9 +195,9 @@ class Switch(HomeAccessory):
         if self._domain == "script":
             service = self._object_id
             params = {}
-        elif self._domain == button.DOMAIN:
+        elif self._domain == BUTTON_DOMAIN:
             service = button.SERVICE_PRESS
-        elif self._domain == input_button.DOMAIN:
+        elif self._domain == INPUT_BUTTON_DOMAIN:
             service = input_button.SERVICE_PRESS
         else:
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF

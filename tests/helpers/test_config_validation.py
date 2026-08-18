@@ -2,7 +2,7 @@
 
 from collections import OrderedDict
 from collections.abc import Callable
-from datetime import date, datetime, timedelta
+from datetime import date, timedelta
 import enum
 from functools import partial
 import logging
@@ -28,6 +28,7 @@ from homeassistant.helpers import (
     template,
 )
 from homeassistant.helpers.config_validation import TRIGGER_SCHEMA
+from homeassistant.util import dt as dt_util
 
 
 def test_boolean() -> None:
@@ -802,7 +803,7 @@ def test_date() -> None:
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    schema(datetime.now().date())  # pylint: disable=home-assistant-enforce-naive-now
+    schema(dt_util.now().date())
     schema("2016-11-23")
 
 
@@ -814,7 +815,7 @@ def test_time() -> None:
         with pytest.raises(vol.Invalid):
             schema(value)
 
-    schema(datetime.now().time())  # pylint: disable=home-assistant-enforce-naive-now
+    schema(dt_util.now().time())
     schema("23:42:00")
     schema("23:42")
 
@@ -826,7 +827,7 @@ def test_datetime() -> None:
         with pytest.raises(vol.MultipleInvalid):
             schema(value)
 
-    schema(datetime.now())  # pylint: disable=home-assistant-enforce-naive-now
+    schema(dt_util.now())
     schema("2016-11-23T18:59:08")
 
 

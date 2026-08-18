@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_get_live_context_schema
+  dict({
+    'properties': dict({
+      'area': dict({
+        'description': 'Filter entities by area name or alias (case-insensitive).',
+        'type': 'string',
+      }),
+      'domain': dict({
+        'anyOf': list([
+          dict({
+            'type': 'string',
+          }),
+          dict({
+            'items': dict({
+              'type': 'string',
+            }),
+            'type': 'array',
+          }),
+        ]),
+        'description': "Filter entities by domain (e.g. 'light', 'sensor'). Accepts a single domain or a list.",
+      }),
+      'name': dict({
+        'description': 'Filter entities by name or alias (case-insensitive).',
+        'type': 'string',
+      }),
+    }),
+    'required': list([
+    ]),
+    'type': 'object',
+  })
+# ---

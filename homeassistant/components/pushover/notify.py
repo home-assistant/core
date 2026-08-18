@@ -1,7 +1,7 @@
 """Pushover platform for notify component."""
 
 import logging
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from pushover_complete import BadAPIRequestError, PushoverAPI
 
@@ -29,7 +29,6 @@ from .const import (
     ATTR_URL,
     ATTR_URL_TITLE,
     CONF_USER_KEY,
-    DOMAIN,
 )
 
 _LOGGER = logging.getLogger(__name__)
@@ -41,13 +40,13 @@ async def async_get_service(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> PushoverNotificationService | None:
     """Get the Pushover notification service."""
-    if discovery_info is None:
-        return None
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    pushover_api: PushoverAPI = hass.data[DOMAIN][discovery_info["entry_id"]]
+    if TYPE_CHECKING:
+        assert discovery_info is not None
+    entry = hass.config_entries.async_get_entry(discovery_info["entry_id"])
+    if TYPE_CHECKING:
+        assert entry is not None
     return PushoverNotificationService(
-        hass, pushover_api, discovery_info[CONF_USER_KEY]
+        hass, entry.runtime_data, discovery_info[CONF_USER_KEY]
     )
 
 
