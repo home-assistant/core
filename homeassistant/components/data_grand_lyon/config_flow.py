@@ -2,13 +2,15 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError, ClientResponseError
 from data_grand_lyon_ha import (
     DataGrandLyonClient,
+    TclParkAndRide,
     TclStop,
     VelovStation,
+    find_tcl_park_and_ride_by_id,
     find_tcl_stop_by_id,
 )
 import voluptuous as vol
@@ -32,9 +34,11 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_LINE,
+    CONF_PARK_ID,
     CONF_STATION_ID,
     CONF_STOP_ID,
     DOMAIN,
+    SUBENTRY_TYPE_PARK_AND_RIDE,
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
 )
@@ -62,6 +66,7 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -69,8 +74,10 @@ class DataGrandLyonConfigFlow(ConfigFlow, domain=DOMAIN):
         return {
             SUBENTRY_TYPE_STOP: StopSubentryFlowHandler,
             SUBENTRY_TYPE_VELOV_STATION: VelovStationSubentryFlowHandler,
+            SUBENTRY_TYPE_PARK_AND_RIDE: ParkAndRideSubentryFlowHandler,
         }
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -394,3 +401,81 @@ def _velov_station_label(station: VelovStation) -> str:
     label += f" - {station.number}"
 
     return label
+
+
+class ParkAndRideSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle a subentry flow for adding a TCL park-and-ride (P+R)."""
+
+    def __init__(self) -> None:
+        """Initialize the flow."""
+        self._parks: list[TclParkAndRide] = []
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Pick a park-and-ride from the list fetched from the API, or enter one."""
+        if not self._parks:
+            if error := await self._async_load_park_and_rides():
+                return self.async_abort(reason=error)
+
+        if user_input is not None:
+            park_id = user_input[CONF_PARK_ID]
+            entry = self._get_entry()
+            unique_id = f"park_and_ride_{park_id}"
+
+            for subentry in entry.subentries.values():
+                if subentry.unique_id == unique_id:
+                    return self.async_abort(reason="already_configured")
+
+            park = find_tcl_park_and_ride_by_id(self._parks, park_id)
+            return self.async_create_entry(
+                title=park.nom if park else park_id,
+                data={CONF_PARK_ID: park_id},
+                unique_id=unique_id,
+            )
+
+        options = [
+            SelectOptionDict(value=park.id, label=_park_and_ride_label(park))
+            for park in sorted(self._parks, key=lambda p: (p.nom, p.id))
+        ]
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_PARK_ID): SelectSelector(
+                    SelectSelectorConfig(
+                        options=options,
+                        mode=SelectSelectorMode.DROPDOWN,
+                        sort=False,
+                        custom_value=True,
+                    )
+                )
+            }
+        )
+        return self.async_show_form(step_id="user", data_schema=schema)
+
+    async def _async_load_park_and_rides(self) -> str | None:
+        """Fetch park-and-rides from the API, returning an error key on failure."""
+        entry = self._get_entry()
+        session = async_get_clientsession(self.hass)
+        client = DataGrandLyonClient(
+            session=session,
+            username=entry.data[CONF_USERNAME],
+            password=entry.data[CONF_PASSWORD],
+        )
+        try:
+            self._parks = await client.get_tcl_park_and_rides()
+        except ClientResponseError as err:
+            if err.status in (401, 403):
+                return "invalid_auth"
+            return "cannot_connect"
+        except ClientError, TimeoutError:
+            return "cannot_connect"
+        except Exception:
+            _LOGGER.exception(
+                "Unexpected error fetching Data Grand Lyon park-and-rides"
+            )
+            return "unknown"
+        return None
+
+
+def _park_and_ride_label(park: TclParkAndRide) -> str:
+    return f"{park.nom} - {park.id}"

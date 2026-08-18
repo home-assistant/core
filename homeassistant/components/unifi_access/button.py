@@ -1,5 +1,7 @@
 """Button platform for the UniFi Access integration."""
 
+from typing import override
+
 from unifi_access_api import Door, UnifiAccessError
 
 from homeassistant.components.button import ButtonEntity
@@ -51,6 +53,7 @@ class UnifiAccessUnlockButton(UnifiAccessEntity, ButtonEntity):
         """Initialize the button entity."""
         super().__init__(coordinator, door, "unlock")
 
+    @override
     async def async_press(self) -> None:
         """Unlock the door."""
         try:

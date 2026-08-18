@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 import logging
+from typing import override
 
 from fressnapftracker import (
     ApiClient,
@@ -52,6 +53,7 @@ class FressnapfTrackerDataUpdateCoordinator(DataUpdateCoordinator[Tracker]):
         )
         self.data = initial_data
 
+    @override
     async def _async_update_data(self) -> Tracker:
         try:
             return await self.client.get_tracker()

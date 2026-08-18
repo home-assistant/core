@@ -1,21 +1,35 @@
 """Config flow for SMLIGHT Zigbee integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pysmlight import Api2
 from pysmlight.const import Devices
 from pysmlight.exceptions import SmlightAuthError, SmlightConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_USER, ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlowWithReload,
+)
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.core import callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import (
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .const import DOMAIN
+from .bluetooth import get_ble_scanner_mode
+from .const import CONF_BLE_SCANNER_MODE, DOMAIN, BLEScannerMode
+from .coordinator import SmConfigEntry
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -30,6 +44,25 @@ STEP_AUTH_DATA_SCHEMA = vol.Schema(
     }
 )
 
+BLE_SCANNER_OPTIONS = [
+    BLEScannerMode.DISABLED,
+    BLEScannerMode.AUTO,
+    BLEScannerMode.ACTIVE,
+    BLEScannerMode.PASSIVE,
+]
+
+BLE_SCANNER_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_BLE_SCANNER_MODE): SelectSelector(
+            SelectSelectorConfig(
+                options=BLE_SCANNER_OPTIONS,
+                translation_key=CONF_BLE_SCANNER_MODE,
+                mode=SelectSelectorMode.DROPDOWN,
+            )
+        )
+    }
+)
+
 
 class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SMLIGHT Zigbee."""
@@ -38,6 +71,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
     _device_name: str
     client: Api2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -81,6 +115,17 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
                     if info.model not in Devices:
                         return self.async_abort(reason="unsupported_device")
 
+                    if self.source == SOURCE_RECONFIGURE:
+                        await self.async_set_unique_id(format_mac(info.MAC))
+                        self._abort_if_unique_id_mismatch()
+                        return self.async_update_reload_and_abort(
+                            self._get_reconfigure_entry(),
+                            data_updates={
+                                CONF_HOST: self._host,
+                                **user_input,
+                            },
+                        )
+
                     return await self._async_complete_entry(user_input)
             except SmlightConnectionError:
                 return self.async_abort(reason="cannot_connect")
@@ -91,6 +136,7 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="auth", data_schema=STEP_AUTH_DATA_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -182,6 +228,46 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of SMLIGHT device."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._host = user_input[CONF_HOST]
+            self.client = Api2(self._host, session=async_get_clientsession(self.hass))
+
+            check_input = {**entry.data, **user_input}
+            try:
+                await self._async_check_auth_required(check_input)
+                info = await self.client.get_info()
+            except SmlightConnectionError:
+                errors["base"] = "cannot_connect"
+            except SmlightAuthError:
+                return await self.async_step_auth()
+            else:
+                if info.model not in Devices:
+                    return self.async_abort(reason="unsupported_device")
+
+                await self.async_set_unique_id(format_mac(info.MAC))
+                self._abort_if_unique_id_mismatch()
+
+                return self.async_update_reload_and_abort(
+                    entry,
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, user_input or entry.data
+            ),
+            errors=errors,
+        )
+
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -217,3 +303,86 @@ class SmlightConfigFlow(ConfigFlow, domain=DOMAIN):
         assert info.model is not None
         title = self._device_name or info.model
         return self.async_create_entry(title=title, data=user_input)
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: SmConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle options flow for SMLIGHT."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow."""
+        errors: dict[str, str] = {}
+
+        if not hasattr(self.config_entry, "runtime_data"):
+            errors["base"] = "cannot_connect"
+            return self.async_show_form(
+                step_id="init",
+                data_schema=self.add_suggested_values_to_schema(
+                    BLE_SCANNER_SCHEMA,
+                    user_input or {CONF_BLE_SCANNER_MODE: BLEScannerMode.DISABLED},
+                ),
+                errors=errors,
+            )
+
+        coordinator = self.config_entry.runtime_data.data
+        info = coordinator.data.info
+
+        if info.ble is None:
+            return await self.async_step_no_settings()
+
+        if user_input is not None:
+            scanner_mode = BLEScannerMode(user_input[CONF_BLE_SCANNER_MODE])
+            user_input[CONF_BLE_SCANNER_MODE] = scanner_mode
+            current_mode = get_ble_scanner_mode(self.config_entry, info)
+
+            if (scanner_mode == BLEScannerMode.DISABLED) != (
+                current_mode == BLEScannerMode.DISABLED
+            ):
+                try:
+                    await coordinator.client.set_ble_proxy(
+                        scanner_mode != BLEScannerMode.DISABLED
+                    )
+                except SmlightConnectionError:
+                    errors["base"] = "cannot_connect"
+                except SmlightAuthError:
+                    errors["base"] = "invalid_auth"
+                    self.config_entry.async_start_reauth(self.hass)
+
+            if not errors:
+                return self.async_create_entry(title="", data=user_input)
+
+        suggested_values = {
+            CONF_BLE_SCANNER_MODE: get_ble_scanner_mode(self.config_entry, info)
+        }
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                BLE_SCANNER_SCHEMA, user_input or suggested_values
+            ),
+            errors=errors,
+        )
+
+    async def async_step_no_settings(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options for devices without settings."""
+        if user_input is not None:
+            return self.async_create_entry(title="", data={})
+
+        coordinator = self.config_entry.runtime_data.data
+        return self.async_show_form(
+            step_id="no_settings",
+            data_schema=vol.Schema({}),
+            description_placeholders={"model": coordinator.data.info.model},
+        )

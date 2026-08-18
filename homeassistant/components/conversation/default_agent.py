@@ -8,7 +8,7 @@ from enum import Enum, auto
 import logging
 from pathlib import Path
 import time
-from typing import IO, Any, cast
+from typing import IO, Any, cast, override
 
 from hassil.expression import Expression, Group, ListReference, TextChunk
 from hassil.intents import (
@@ -244,12 +244,14 @@ class DefaultAgent(ConversationEntity):
         # LRU cache to avoid unnecessary intent matching
         self._intent_cache = IntentCache(capacity=128)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to intents updates when added to hass."""
         self._unsub_intents = get_agent_manager(self.hass).subscribe_intents(
             self._update_intents
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unsubscribe from intents updates when removed from hass."""
         if self._unsub_intents is not None:
@@ -272,6 +274,7 @@ class DefaultAgent(ConversationEntity):
             self._trigger_intents = None
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return get_languages()
@@ -406,10 +409,13 @@ class DefaultAgent(ConversationEntity):
             }
 
             if successful_match:
+                satellite_area, _ = self._get_satellite_area_and_device(
+                    user_input.satellite_id, user_input.device_id
+                )
                 result_dict["targets"] = {
                     state.entity_id: {"matched": is_matched}
                     for state, is_matched in _get_debug_targets(
-                        self.hass, intent_result
+                        self.hass, intent_result, satellite_area
                     )
                 }
 
@@ -428,6 +434,7 @@ class DefaultAgent(ConversationEntity):
 
         return result_dict
 
+    @override
     async def _async_handle_message(
         self,
         user_input: ConversationInput,
@@ -801,6 +808,10 @@ class DefaultAgent(ConversationEntity):
                 else:
                     num_unmatched_entities += 1
 
+            # Literal text matched is the dominant signal
+            same_text_matched = (maybe_result is not None) and (
+                result.text_chunks_matched == maybe_result.text_chunks_matched
+            )
             if (
                 (maybe_result is None)  # first result
                 or (
@@ -809,22 +820,25 @@ class DefaultAgent(ConversationEntity):
                 )
                 or (
                     # More entities matched
-                    num_matched_entities > best_num_matched_entities
+                    same_text_matched
+                    and (num_matched_entities > best_num_matched_entities)
                 )
                 or (
                     # Fewer unmatched entities
-                    (num_matched_entities == best_num_matched_entities)
+                    same_text_matched
+                    and (num_matched_entities == best_num_matched_entities)
                     and (num_unmatched_entities < best_num_unmatched_entities)
                 )
                 or (
                     # Prefer unmatched ranges
-                    (num_matched_entities == best_num_matched_entities)
+                    same_text_matched
+                    and (num_matched_entities == best_num_matched_entities)
                     and (num_unmatched_entities == best_num_unmatched_entities)
                     and (num_unmatched_ranges > best_num_unmatched_ranges)
                 )
                 or (
                     # Prefer match failures with entities
-                    (result.text_chunks_matched == maybe_result.text_chunks_matched)
+                    same_text_matched
                     and (num_unmatched_entities == best_num_unmatched_entities)
                     and (num_unmatched_ranges == best_num_unmatched_ranges)
                     and (
@@ -977,6 +991,7 @@ class DefaultAgent(ConversationEntity):
         # Intents have changed, so we must clear the cache
         self._intent_cache.clear()
 
+    @override
     async def async_prepare(self, language: str | None = None) -> None:
         """Load intents for a language."""
         if language is None:
@@ -1239,12 +1254,10 @@ class DefaultAgent(ConversationEntity):
             area_id = entity_entry.area_id
             device_id = entity_entry.device_id
 
-        if (
-            area_id is None
-            and device_id is not None
-            and (device_entry := dr.async_get(hass).async_get(device_id)) is not None
-        ):
-            area_id = device_entry.area_id
+        if area_id is None and device_id is not None:
+            device_registry = dr.async_get(hass)
+            if (device_entry := device_registry.async_get(device_id)) is not None:
+                area_id = dr.async_get_effective_area_id(hass, device_entry)
 
         if area_id is None:
             return None, device_id
@@ -1664,12 +1677,14 @@ def _collect_list_references(expression: Expression, list_names: set[str]) -> No
 def _get_debug_targets(
     hass: HomeAssistant,
     result: RecognizeResult,
+    satellite_area: ar.AreaEntry | None = None,
 ) -> Iterable[tuple[State, bool]]:
     """Yield state/is_matched pairs for a hassil recognition."""
     entities = result.entities
 
     name: str | None = None
     area_name: str | None = None
+    floor_name: str | None = None
     domains: set[str] | None = None
     device_classes: set[str] | None = None
     state_names: set[str] | None = None
@@ -1679,6 +1694,9 @@ def _get_debug_targets(
 
     if "area" in entities:
         area_name = str(entities["area"].value)
+
+    if "floor" in entities:
+        floor_name = str(entities["floor"].value)
 
     if "domain" in entities:
         domains = set(cv.ensure_list(entities["domain"].value))
@@ -1690,23 +1708,26 @@ def _get_debug_targets(
         # HassGetState only
         state_names = set(cv.ensure_list(entities["state"].value))
 
-    if (
-        (name is None)
-        and (area_name is None)
-        and (not domains)
-        and (not device_classes)
-        and (not state_names)
-    ):
+    constraints = intent.MatchTargetsConstraints(
+        name=name,
+        area_name=area_name,
+        floor_name=floor_name,
+        domains=domains,
+        device_classes=device_classes,
+        assistant=DOMAIN,
+    )
+
+    if not (constraints.has_constraints or state_names):
         # Avoid "matching" all entities when there is no filter
         return
 
-    states = intent.async_match_states(
-        hass,
-        name=name,
-        area_name=area_name,
-        domains=domains,
-        device_classes=device_classes,
+    # Mirror the preferences used when the intent is actually handled so that
+    # duplicate names are deduplicated the same way.
+    preferences = intent.MatchTargetsPreferences(
+        area_id=satellite_area.id if satellite_area is not None else None
     )
+
+    states = intent.async_match_targets(hass, constraints, preferences).states
 
     for state in states:
         # For queries, a target is "matched" based on its state

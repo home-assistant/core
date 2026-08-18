@@ -1,7 +1,7 @@
 """Number entities for the Seko PoolDose integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -9,9 +9,9 @@ from homeassistant.components.number import (
     NumberEntityDescription,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     EntityCategory,
     UnitOfElectricPotential,
+    UnitOfRatio,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -46,7 +46,7 @@ NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
         key="cl_target",
         translation_key="cl_target",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     NumberEntityDescription(
         key="ofa_ph_lower",
@@ -78,13 +78,13 @@ NUMBER_DESCRIPTIONS: tuple[NumberEntityDescription, ...] = (
         key="ofa_cl_lower",
         translation_key="ofa_cl_lower",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     NumberEntityDescription(
         key="ofa_cl_upper",
         translation_key="ofa_cl_upper",
         entity_category=EntityCategory.CONFIG,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     NumberEntityDescription(
         key="time_off_ph_dosing",
@@ -163,6 +163,7 @@ class PooldoseNumber(PooldoseEntity, NumberEntity):
         super().__init__(coordinator, serial_number, device_info, description, "number")
         self._async_update_attrs()
 
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_update_attrs()
@@ -176,6 +177,7 @@ class PooldoseNumber(PooldoseEntity, NumberEntity):
         self._attr_native_max_value = data["max"]
         self._attr_native_step = data["step"]
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self._async_perform_write(

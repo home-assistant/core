@@ -1,7 +1,7 @@
 """Reusable utilities for the Bond component."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohttp import ClientResponseError
 from bond_async import Action, Bond, BondType
@@ -32,6 +32,7 @@ class BondDevice:
         self._attrs = attrs or {}
         self._supported_actions: set[str] = set(self._attrs.get("actions", []))
 
+    @override
     def __repr__(self) -> str:
         """Return readable representation of a bond device."""
         return {

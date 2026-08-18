@@ -6,10 +6,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,11 +44,11 @@
 # name: test_number_entities[number.test_player_1_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player 1 Bass',
-      'max': 10.0,
-      'min': -10.0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1.0,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Bass',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1.0,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_player_1_bass',
@@ -65,10 +65,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,11 +103,11 @@
 # name: test_number_entities[number.test_player_1_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Player 1 Treble',
-      'max': 10,
-      'min': -10,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Player 1 Treble',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 10,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.test_player_1_treble',

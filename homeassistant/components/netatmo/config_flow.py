@@ -2,12 +2,12 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 import uuid
 
 import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_SHOW_ON_MAP, CONF_UUID
 from homeassistant.core import callback
 from homeassistant.helpers import config_entry_oauth2_flow, config_validation as cv
@@ -24,7 +24,7 @@ from .const import (
     CONF_WEATHER_AREAS,
     DOMAIN,
 )
-from .data_handler import NetatmoConfigEntry
+from .coordinator import NetatmoConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -38,6 +38,7 @@ class NetatmoFlowHandler(
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: NetatmoConfigEntry,
     ) -> OptionsFlow:
@@ -45,23 +46,22 @@ class NetatmoFlowHandler(
         return NetatmoOptionsFlowHandler(config_entry)
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
     @property
+    @override
     def extra_authorize_data(self) -> dict:
         """Extra data that needs to be appended to the authorize url."""
         scopes = get_api_scopes(self.flow_impl.domain)
         return {"scope": " ".join(scopes)}
 
+    @override
     async def async_step_user(self, user_input: dict | None = None) -> ConfigFlowResult:
         """Handle a flow start."""
         await self.async_set_unique_id(DOMAIN)
-
-        if self.source != SOURCE_REAUTH and self._async_current_entries():
-            return self.async_abort(reason="single_instance_allowed")
-
         return await super().async_step_user(user_input)
 
     async def async_step_reauth(
@@ -79,6 +79,7 @@ class NetatmoFlowHandler(
 
         return await self.async_step_user()
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Create an oauth config entry or update existing entry for reauth."""
         existing_entry = await self.async_set_unique_id(DOMAIN)

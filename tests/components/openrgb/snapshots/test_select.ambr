@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -42,8 +42,8 @@
 # name: test_entities[select.test_computer_profile-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Computer Profile',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Computer Profile',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
       ]),
     }),
     'context': <ANY>,

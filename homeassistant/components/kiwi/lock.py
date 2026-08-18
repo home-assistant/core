@@ -1,7 +1,7 @@
 """Support for the KIWI.KI lock platform."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from kiwiki import KiwiClient, KiwiException
 import voluptuous as vol
@@ -13,10 +13,9 @@ from homeassistant.components.lock import (
 )
 from homeassistant.const import (
     ATTR_ID,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_PASSWORD,
     CONF_USERNAME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -68,12 +67,8 @@ class KiwiLock(LockEntity):
         self._state = LockState.LOCKED
 
         address = kiwi_lock.get("address")
-        address.update(
-            {
-                ATTR_LATITUDE: address.pop("lat", None),
-                ATTR_LONGITUDE: address.pop("lng", None),
-            }
-        )
+        latitude = address.pop("lat", None)
+        longitude = address.pop("lng", None)
 
         self._device_attrs = {
             ATTR_ID: self.lock_id,
@@ -81,9 +76,12 @@ class KiwiLock(LockEntity):
             ATTR_PERMISSION: kiwi_lock.get("highest_permission"),
             ATTR_CAN_INVITE: kiwi_lock.get("can_invite"),
             **address,
+            EntityStateAttribute.LATITUDE: latitude,
+            EntityStateAttribute.LONGITUDE: longitude,
         }
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the lock."""
         name = self._sensor.get("name")
@@ -91,11 +89,13 @@ class KiwiLock(LockEntity):
         return name or specifier
 
     @property
+    @override
     def is_locked(self) -> bool:
         """Return true if lock is locked."""
         return self._state == LockState.LOCKED
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return self._device_attrs
@@ -106,6 +106,7 @@ class KiwiLock(LockEntity):
         self._state = LockState.LOCKED
         self.async_write_ha_state()
 
+    @override
     def unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
 

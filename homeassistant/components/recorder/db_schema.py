@@ -4,7 +4,7 @@ from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
 import time
-from typing import Any, Final, Protocol, Self
+from typing import Any, Final, Protocol, Self, override
 
 import ciso8601
 from fnv_hash_fast import fnv1a_32
@@ -171,6 +171,7 @@ def compile_char_one(type_: TypeDecorator, compiler: Any, **kw: Any) -> str:
 class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
     """Use ciso8601 to parse datetimes instead of sqlalchemy built-in regex."""
 
+    @override
     def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """Offload the datetime parsing to ciso8601."""
         return lambda value: None if value is None else ciso8601.parse_datetime(value)
@@ -179,6 +180,7 @@ class FAST_PYSQLITE_DATETIME(sqlite.DATETIME):
 class NativeLargeBinary(LargeBinary):
     """A faster version of LargeBinary for native bytes engines."""
 
+    @override
     def result_processor(self, dialect: Dialect, coltype: Any) -> Callable | None:
         """No conversion needed for engines that support native bytes."""
         return None
@@ -233,6 +235,7 @@ class _LiteralProcessorType(Protocol):
 class JSONLiteral(JSON):
     """Teach SA how to literalize json."""
 
+    @override
     def literal_processor(self, dialect: Dialect) -> _LiteralProcessorType:
         """Processor to convert a value to JSON."""
 
@@ -283,6 +286,7 @@ class Events(Base):
     event_data_rel: Mapped[EventData | None] = relationship("EventData")
     event_type_rel: Mapped[EventTypes | None] = relationship("EventTypes")
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -346,6 +350,7 @@ class EventData(Base):
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -388,6 +393,7 @@ class EventTypes(Base):
         String(MAX_LENGTH_EVENT_EVENT_TYPE), index=True, unique=True
     )
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -447,6 +453,7 @@ class States(Base):
     )
     states_meta_rel: Mapped[StatesMeta | None] = relationship("StatesMeta")
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -543,6 +550,7 @@ class StateAttributes(Base):
         Text().with_variant(mysql.LONGTEXT, "mysql", "mariadb")
     )
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -608,6 +616,7 @@ class StatesMeta(Base):
         String(MAX_LENGTH_STATE_ENTITY_ID), index=True, unique=True
     )
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -802,6 +811,7 @@ class RecorderRuns(Base):
     closed_incorrect: Mapped[bool] = mapped_column(Boolean, default=False)
     created: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         end = (
@@ -835,6 +845,7 @@ class SchemaChanges(Base):
     schema_version: Mapped[int | None] = mapped_column(Integer)
     changed: Mapped[datetime] = mapped_column(DATETIME_TYPE, default=dt_util.utcnow)
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (
@@ -854,6 +865,7 @@ class StatisticsRuns(Base):
     run_id: Mapped[int] = mapped_column(ID_TYPE, Identity(), primary_key=True)
     start: Mapped[datetime] = mapped_column(DATETIME_TYPE, index=True)
 
+    @override
     def __repr__(self) -> str:
         """Return string representation of instance for debugging."""
         return (

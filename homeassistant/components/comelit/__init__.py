@@ -6,7 +6,7 @@ from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE, Platf
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from .const import _LOGGER, CONF_VEDO_PIN, DEFAULT_PORT, DOMAIN
+from .const import CONF_VEDO_PIN, DEFAULT_PORT, DOMAIN, LOGGER
 from .coordinator import (
     ComelitBaseCoordinator,
     ComelitConfigEntry,
@@ -104,7 +104,7 @@ async def async_migrate_entry(
             ):
                 return None
 
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Migrating from version %s.%s",
                 config_entry.version,
                 config_entry.minor_version,
@@ -119,7 +119,7 @@ async def async_migrate_entry(
 
         hass.config_entries.async_update_entry(config_entry, version=1, minor_version=2)
 
-        _LOGGER.info(
+        LOGGER.info(
             "Migration to version %s.%s successful",
             config_entry.version,
             config_entry.minor_version,

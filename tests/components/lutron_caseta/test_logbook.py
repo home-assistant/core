@@ -137,10 +137,10 @@ async def test_humanify_lutron_caseta_button_event_ra3(
     """Test humanifying lutron_caseta_button_events from an RA3 hub."""
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
-    await async_setup_integration(hass, MockBridge)
+    config_entry = await async_setup_integration(hass, MockBridge)
 
-    keypad = device_registry.async_get_device(
-        identifiers={(DOMAIN, 66286451)}, connections=set()
+    keypad = device_registry.async_get_device_by_identifier(
+        (DOMAIN, 66286451), config_entry.entry_id
     )
     assert keypad
 
@@ -174,10 +174,10 @@ async def test_humanify_lutron_caseta_button_unknown_type(
     """Test humanifying lutron_caseta_button_events with an unknown type."""
     hass.config.components.add("recorder")
     assert await async_setup_component(hass, "logbook", {})
-    await async_setup_integration(hass, MockBridge)
+    config_entry = await async_setup_integration(hass, MockBridge)
 
-    keypad = device_registry.async_get_device(
-        identifiers={(DOMAIN, 66286451)}, connections=set()
+    keypad = device_registry.async_get_device_by_identifier(
+        (DOMAIN, 66286451), config_entry.entry_id
     )
     assert keypad
 

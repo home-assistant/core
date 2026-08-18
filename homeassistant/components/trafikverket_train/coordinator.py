@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from datetime import datetime, time, timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pytrafikverket import (
     InvalidAuthentication,
@@ -89,6 +89,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
         self._weekdays: list[str] = config_entry.data[CONF_WEEKDAY]
         self._filter_product: str | None = config_entry.options.get(CONF_FILTER_PRODUCT)
 
+    @override
     async def _async_setup(self) -> None:
         """Initiate stations."""
         try:
@@ -110,6 +111,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[TrainData]):
                 f" {self.config_entry.data[CONF_TO]}. Error: {error} "
             ) from error
 
+    @override
     async def _async_update_data(self) -> TrainData:
         """Fetch data from Trafikverket."""
 

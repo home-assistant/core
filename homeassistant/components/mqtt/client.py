@@ -71,7 +71,6 @@ from .const import (
     DEFAULT_QOS,
     DEFAULT_TRANSPORT,
     DEFAULT_WILL,
-    DEFAULT_WS_HEADERS,
     DEFAULT_WS_PATH,
     DOMAIN,
     MQTT_CONNECTION_STATE,
@@ -414,7 +413,7 @@ class MqttClientSetup:
         tls_insecure = config.get(CONF_TLS_INSECURE)
         if transport == TRANSPORT_WEBSOCKETS:
             ws_path: str = config.get(CONF_WS_PATH, DEFAULT_WS_PATH)
-            ws_headers: dict[str, str] = config.get(CONF_WS_HEADERS, DEFAULT_WS_HEADERS)
+            ws_headers: dict[str, str] = config.get(CONF_WS_HEADERS, {})
             self._client.ws_set_options(ws_path, ws_headers)
         if certificate is not None:
             self._client.tls_set(

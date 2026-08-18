@@ -8,7 +8,7 @@ from datetime import datetime, timedelta
 import logging
 import os
 from random import SystemRandom
-from typing import Final, final
+from typing import Final, final, override
 
 from aiohttp import hdrs, web
 import httpx
@@ -17,7 +17,11 @@ import voluptuous as vol
 
 from homeassistant.components.http import KEY_AUTHENTICATED, KEY_HASS, HomeAssistantView
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONTENT_TYPE_MULTIPART, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import (
+    CONTENT_TYPE_MULTIPART,
+    EVENT_HOMEASSISTANT_STOP,
+    EntityStateAttribute,
+)
 from homeassistant.core import (
     Event,
     EventStateChangedData,
@@ -41,7 +45,7 @@ from homeassistant.helpers.typing import (
     VolDictType,
 )
 
-from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT
+from .const import DATA_COMPONENT, DOMAIN, IMAGE_TIMEOUT, ImageEntityStateAttribute
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -193,13 +197,13 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
     """The base class for image entities."""
 
     _entity_component_unrecorded_attributes = frozenset(
-        {"access_token", "entity_picture"}
+        {ImageEntityStateAttribute.ACCESS_TOKEN, EntityStateAttribute.ENTITY_PICTURE}
     )
 
     # Entity Properties
     _attr_content_type: str = DEFAULT_CONTENT_TYPE
     _attr_image_last_updated: datetime | None = None
-    _attr_image_url: str | None | UndefinedType = UNDEFINED
+    _attr_image_url: str | UndefinedType | None = UNDEFINED
     _attr_should_poll: bool = False  # No need to poll image entities
     _attr_state: None = None  # State is determined by last_updated
     _cached_image: Image | None = None
@@ -216,6 +220,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_content_type
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return a link to the image as entity picture."""
         if self._attr_entity_picture is not None:
@@ -228,7 +233,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         return self._attr_image_last_updated
 
     @cached_property
-    def image_url(self) -> str | None | UndefinedType:
+    def image_url(self) -> str | UndefinedType | None:
         """Return URL of image."""
         return self._attr_image_url
 
@@ -292,6 +297,7 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state."""
         if self.image_last_updated is None:
@@ -300,9 +306,10 @@ class ImageEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
 
     @final
     @property
+    @override
     def state_attributes(self) -> dict[str, str | None]:
         """Return the state attributes."""
-        return {"access_token": self.access_tokens[-1]}
+        return {ImageEntityStateAttribute.ACCESS_TOKEN: self.access_tokens[-1]}
 
     @callback
     def async_update_token(self) -> None:
@@ -468,6 +475,7 @@ class ImageStreamView(ImageView):
     url = "/api/image_proxy_stream/{entity_id}"
     name = "api:image:stream"
 
+    @override
     async def handle(
         self, request: web.Request, image_entity: ImageEntity
     ) -> web.StreamResponse:

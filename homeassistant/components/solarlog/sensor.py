@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from solarlog_cli.solarlog_models import (
     BatteryData,
@@ -403,6 +404,7 @@ class SolarLogBasicCoordinatorSensor(SolarLogBasicCoordinatorEntity, SensorEntit
     entity_description: SolarLogCoordinatorSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state for this sensor."""
 
@@ -417,6 +419,7 @@ class SolarLogLongtimeCoordinatorSensor(
     entity_description: SolarLogLongtimeSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state for this sensor."""
 
@@ -429,6 +432,7 @@ class SolarLogBatterySensor(SolarLogBasicCoordinatorEntity, SensorEntity):
     entity_description: SolarLogBatterySensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
         basic_data = (
@@ -445,6 +449,7 @@ class SolarLogInverterSensor(SolarLogInverterEntity, SensorEntity):
     entity_description: SolarLogInverterSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state for this sensor."""
 
