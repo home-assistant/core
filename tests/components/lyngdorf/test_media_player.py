@@ -287,23 +287,15 @@ async def test_availability(
     mock_receiver: MagicMock,
 ) -> None:
     """Test availability when device disconnects and reconnects."""
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-    assert callbacks
-
     mock_receiver.connected = False
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     assert hass.states.get(MAIN_ZONE).state == STATE_UNAVAILABLE
     assert hass.states.get(ZONE_B).state == STATE_UNAVAILABLE
 
     mock_receiver.connected = True
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     assert hass.states.get(MAIN_ZONE).state != STATE_UNAVAILABLE
@@ -316,11 +308,6 @@ async def test_main_zone_state_properties(
     mock_receiver: MagicMock,
 ) -> None:
     """Test main zone state properties are reported correctly."""
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-
     mock_receiver.power_on = True
     mock_receiver.volume = -40.0
     mock_receiver.mute_enabled = False
@@ -328,8 +315,7 @@ async def test_main_zone_state_properties(
     mock_receiver.sound_mode = "Movie"
     mock_receiver.available_sources = ["HDMI", "Optical"]
     mock_receiver.available_sound_modes = ["Movie", "Stereo"]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     state = hass.states.get(MAIN_ZONE)
@@ -342,15 +328,13 @@ async def test_main_zone_state_properties(
     assert state.attributes[ATTR_SOUND_MODE_LIST] == ["Movie", "Stereo"]
 
     mock_receiver.volume = None
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
     state = hass.states.get(MAIN_ZONE)
     assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is None
 
     mock_receiver.power_on = False
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
     state = hass.states.get(MAIN_ZONE)
     assert state.state == MediaPlayerState.OFF
@@ -362,18 +346,12 @@ async def test_zone_b_state_properties(
     mock_receiver: MagicMock,
 ) -> None:
     """Test zone B state properties are reported correctly."""
-    callbacks = [
-        call.args[0]
-        for call in mock_receiver.register_notification_callback.call_args_list
-    ]
-
     mock_receiver.zone_b_power_on = True
     mock_receiver.zone_b_volume = -30.0
     mock_receiver.zone_b_mute_enabled = True
     mock_receiver.zone_b_source = "Optical"
     mock_receiver.zone_b_available_sources = ["HDMI", "Optical"]
-    for cb in callbacks:
-        cb()
+    notify_receiver_update(mock_receiver)
     await hass.async_block_till_done()
 
     state = hass.states.get(ZONE_B)
