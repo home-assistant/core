@@ -1696,9 +1696,6 @@ nhc==0.8.0
 # homeassistant.components.nibe_heatpump
 nibe==2.24.0
 
-# homeassistant.components.nice_go
-nice-go==1.0.2
-
 # homeassistant.components.nilu
 niluclient==0.1.2
 

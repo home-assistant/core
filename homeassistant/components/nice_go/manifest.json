@@ -3,6 +3,7 @@
   "name": "Nice G.O.",
   "codeowners": ["@IceBotYT"],
   "config_flow": true,
+  "disabled": "nice-go has an upper bound on tenacity (<9), blocking other library updates",
   "documentation": "https://www.home-assistant.io/integrations/nice_go",
   "integration_type": "hub",
   "iot_class": "cloud_push",

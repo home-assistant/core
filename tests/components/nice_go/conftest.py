@@ -4,7 +4,7 @@ from collections.abc import Generator
 from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
-from nice_go import Barrier, BarrierState, ConnectionState
+# from nice_go import Barrier, BarrierState, ConnectionState
 import pytest
 
 from homeassistant.components.nice_go.const import (
@@ -13,8 +13,9 @@ from homeassistant.components.nice_go.const import (
     DOMAIN,
 )
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
-
 from tests.common import MockConfigEntry, load_json_array_fixture
+
+collect_ignore_glob = ["test_*.py"]
 
 
 @pytest.fixture

@@ -8,15 +8,14 @@ import json
 import logging
 from typing import TYPE_CHECKING, Any, override
 
-from nice_go import (
-    BARRIER_STATUS,
-    ApiError,
-    AuthFailedError,
-    BarrierState,
-    ConnectionState,
-    NiceGOApi,
-)
-
+# from nice_go import (
+#    BARRIER_STATUS,
+#    ApiError,
+#    AuthFailedError,
+#    BarrierState,
+#    ConnectionState,
+#    NiceGOApi,
+# )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_EMAIL, CONF_PASSWORD
 from homeassistant.core import Event, HomeAssistant, callback
@@ -31,6 +30,8 @@ from .const import (
     DOMAIN,
     REFRESH_TOKEN_EXPIRY_TIME,
 )
+
+# mypy: ignore-errors
 
 _LOGGER = logging.getLogger(__name__)
 
