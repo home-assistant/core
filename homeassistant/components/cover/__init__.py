@@ -303,7 +303,7 @@ class CoverEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
             CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
         )
 
-        if self._attr_supported_speeds:
+        if self.supported_speeds:
             supported_features |= CoverEntityFeature.SPEED
 
         if self.current_cover_position is not None:
