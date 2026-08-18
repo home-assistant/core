@@ -5232,6 +5232,8 @@ async def test_create_entry_spares_migration_flow(
         for flow in hass.config_entries.flow.async_progress()
     )
     hass.config_entries.flow.async_abort(migration_flow_id)
+    await hass.async_block_till_done()
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
