@@ -848,7 +848,7 @@ class EntityPlatform:
             integration_domain=self.platform_name,
         )
 
-    async def _async_add_entity(  # noqa: C901
+    async def _async_add_entity(
         self,
         entity: Entity,
         update_before_add: bool,
@@ -864,7 +864,26 @@ class EntityPlatform:
             self,
             self._get_parallel_updates_semaphore(hasattr(entity, "update")),
         )
+        try:
+            await self._async_add_entity_impl(
+                entity, update_before_add, entity_registry, config_subentry_id
+            )
+        except Exception:
+            entity.add_to_platform_abort()
+            raise
 
+    async def _async_add_entity_impl(  # noqa: C901
+        self,
+        entity: Entity,
+        update_before_add: bool,
+        entity_registry: EntityRegistry,
+        config_subentry_id: str | None,
+    ) -> None:
+        """Add an entity to the platform.
+
+        The caller must call add_to_platform_start before calling this method,
+        and add_to_platform_abort if this method raises.
+        """
         # Update properties before we generate the entity_id. This will happen
         # also for disabled entities.
         if update_before_add:
@@ -896,7 +915,6 @@ class EntityPlatform:
                             breaks_in_ha_version="2027.2.0",
                         )
                     else:
-                        entity.add_to_platform_abort()
                         raise HomeAssistantError(
                             f"Invalid entity ID: {entity.entity_id}"
                         )
@@ -915,7 +933,6 @@ class EntityPlatform:
                 except ValueError:
                     # This error handling should be removed once we remove
                     # the invalid entity ID deprecation above.
-                    entity.add_to_platform_abort()
                     raise HomeAssistantError(
                         f"Invalid entity ID: {entity.entity_id}"
                     ) from None
@@ -977,9 +994,11 @@ class EntityPlatform:
                                     },
                                 ),
                             )
-                    except dr.DeviceInfoError as exc:
+                    except (HomeAssistantError, TypeError) as exc:
+                        # A TypeError signals a bad key in the device info passed as
+                        # keyword arguments.
                         self.logger.error(
-                            "%s: Not adding entity with invalid device info: %s",
+                            "%s: Not adding entity, error adding device: %s",
                             self.platform_name,
                             str(exc),
                         )
@@ -1031,28 +1050,38 @@ class EntityPlatform:
                 entity.add_to_platform_abort()
                 return
 
-            entry = entity_registry.async_get_or_create(
-                self.domain,
-                self.platform_name,
-                entity.unique_id,
-                capabilities=entity.capability_attributes,
-                config_entry=self.config_entry,
-                config_subentry_id=config_subentry_id,
-                device_id=device.id if device else None,
-                disabled_by=disabled_by,
-                entity_category=entity.entity_category,
-                get_initial_options=entity.get_initial_entity_options,
-                has_entity_name=entity.has_entity_name,
-                hidden_by=hidden_by,
-                object_id_base=object_id_base,
-                original_device_class=entity.device_class,
-                original_icon=entity.icon,
-                original_name=entity_name,
-                suggested_object_id=suggested_object_id,
-                supported_features=entity.supported_features,
-                translation_key=entity.translation_key,
-                unit_of_measurement=entity.unit_of_measurement,
-            )
+            try:
+                entry = entity_registry.async_get_or_create(
+                    self.domain,
+                    self.platform_name,
+                    entity.unique_id,
+                    capabilities=entity.capability_attributes,
+                    config_entry=self.config_entry,
+                    config_subentry_id=config_subentry_id,
+                    device_id=device.id if device else None,
+                    disabled_by=disabled_by,
+                    entity_category=entity.entity_category,
+                    get_initial_options=entity.get_initial_entity_options,
+                    has_entity_name=entity.has_entity_name,
+                    hidden_by=hidden_by,
+                    object_id_base=object_id_base,
+                    original_device_class=entity.device_class,
+                    original_icon=entity.icon,
+                    original_name=entity_name,
+                    suggested_object_id=suggested_object_id,
+                    supported_features=entity.supported_features,
+                    translation_key=entity.translation_key,
+                    unit_of_measurement=entity.unit_of_measurement,
+                )
+            except HomeAssistantError as exc:
+                self.logger.error(
+                    "%s: Not adding entity %s, entity registry error: %s",
+                    self.platform_name,
+                    entity_name or entity.entity_id,
+                    str(exc),
+                )
+                entity.add_to_platform_abort()
+                return
 
             if device and device.disabled and not entry.disabled:
                 entry = entity_registry.async_update_entity(

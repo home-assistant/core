@@ -2964,7 +2964,10 @@ async def test_platform_state_no_platform(hass: HomeAssistant) -> None:
 async def test_platform_state_fail_to_add(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test platform state when raising from async_added_to_hass."""
+    """Test platform state when raising from async_added_to_hass.
+
+    The entity must be aborted instead of being left stuck in the ADDING state.
+    """
 
     entry = entity_registry.async_get_or_create(
         "test", "test_platform", "5678", suggested_object_id="test"
@@ -2982,13 +2985,15 @@ async def test_platform_state_fail_to_add(
     assert ent._platform_state is entity.EntityPlatformState.NOT_ADDED
     await platform.async_add_entities([ent])
     assert hass.states.get("test.test") is None
-    assert ent._platform_state is entity.EntityPlatformState.ADDING
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
+    assert ent.hass is None
+    assert ent.platform is None
 
-    entry = entity_registry.async_remove(entry.entity_id)
+    # Removing the registry entry of the aborted entity is a clean no-op
+    entity_registry.async_remove(entry.entity_id)
     await hass.async_block_till_done()
 
-    assert ent._platform_state == entity.EntityPlatformState.REMOVED
-
+    assert ent._platform_state is entity.EntityPlatformState.REMOVED
     assert hass.states.get("test.test") is None
 
 
