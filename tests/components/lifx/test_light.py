@@ -19,6 +19,7 @@ from lifx import (
 import pytest
 import voluptuous as vol
 
+from homeassistant.components import lifx
 from homeassistant.components.lifx import DOMAIN
 from homeassistant.components.lifx.const import ATTR_DURATION, ATTR_POWER, ATTR_THEME
 from homeassistant.components.lifx.light import (
@@ -83,6 +84,7 @@ from homeassistant.helpers import (
     entity_registry as er,
 )
 from homeassistant.util import dt as dt_util
+from homeassistant.util.yaml import load_yaml_dict
 
 from . import (
     SERIAL,
@@ -1615,3 +1617,19 @@ async def test_light_starts_off(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_ID)
     assert state
     assert state.state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    "service",
+    [SERVICE_EFFECT_MOVE, SERVICE_EFFECT_MORPH, SERVICE_PAINT_THEME],
+)
+def test_theme_selector_options_match_the_library(service: str) -> None:
+    """Test the action selectors offer every theme the library accepts.
+
+    The action schemas validate against the library, so a selector left behind
+    by a library bump would hide themes the action would have accepted.
+    """
+    services = load_yaml_dict(f"{lifx.__path__[0]}/services.yaml")
+    options = services[service]["fields"][ATTR_THEME]["selector"]["select"]["options"]
+
+    assert options == sorted(ThemeLibrary.get_available_themes())
