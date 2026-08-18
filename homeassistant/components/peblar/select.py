@@ -32,7 +32,7 @@ PARALLEL_UPDATES = 1
 class PeblarSelectEntityDescription(SelectEntityDescription):
     """Class describing Peblar select entities."""
 
-    has_fn: Callable[[PeblarRuntimeData], bool] = lambda x: True
+    has_fn: Callable[[PeblarRuntimeData], bool] = lambda _: True
     current_fn: Callable[[PeblarUserConfiguration], str | None]
     select_fn: Callable[[Peblar, str], Awaitable[Any]]
 

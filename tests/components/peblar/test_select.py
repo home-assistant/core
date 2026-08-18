@@ -223,8 +223,7 @@ async def test_select_hardware_entity(
         blocking=True,
     )
 
-    assert len(mocked_method.mock_calls) == 1
-    mocked_method.assert_called_with(**expected_kwargs)
+    mocked_method.assert_called_once_with(**expected_kwargs)
 
 
 @pytest.mark.parametrize(
