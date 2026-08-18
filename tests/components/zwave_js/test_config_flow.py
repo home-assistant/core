@@ -1972,6 +1972,42 @@ async def test_discovery_not_blocked_by_zeroconf_flow(hass: HomeAssistant) -> No
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "hassio_confirm"
 
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    # A zeroconf discovery of the same controller as the add-on discovery
+    # means another server is already connected to it, so it does block
+    # the add-on discovery, via the unique id in progress check.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "1234"},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+            uuid="1234",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
