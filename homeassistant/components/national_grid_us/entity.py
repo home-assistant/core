@@ -1,5 +1,6 @@
 """Base entity for the National Grid US integration."""
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -40,7 +41,11 @@ class NationalGridEntity(CoordinatorEntity[NationalGridDataUpdateCoordinator]):
 
         return DeviceInfo(
             identifiers={(DOMAIN, self._meter_key)},
-            via_device=(DOMAIN, meter_data.account_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, meter_data.account_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             serial_number=str(meter["meterNumber"]),
             # account_id + service point keeps the name unique across accounts
             # that may reuse the same service point number.
