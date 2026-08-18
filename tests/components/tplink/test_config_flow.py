@@ -736,7 +736,11 @@ async def test_manual(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
 
     assert result2["type"] is FlowResultType.ABORT
-    assert result2["reason"] == "already_configured"
+    assert result2["reason"] == "host_already_configured"
+    assert result2["description_placeholders"] == {
+        "host": IP_ADDRESS,
+        "title": DEFAULT_ENTRY_TITLE,
+    }
 
 
 async def test_manual_camera(
