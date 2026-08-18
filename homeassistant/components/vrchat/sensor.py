@@ -23,7 +23,6 @@ from .const import (
 from .coordinator import VRChatConfigEntry
 from .entity import VRChatUserDataEntity, VRChatUserLocationEntityMixin
 from .utils import (
-    VRCHAT_SPECIAL_LOCATION_STRINGS,
     VRCHAT_WORLD_ID_PREFIX,
     VRChatSpecialLocationString,
     is_user_in_game,
@@ -160,14 +159,21 @@ class VRChatUserLocationSensor(
     @override
     def options(self):
         """Dynamically return options based on known locations."""
-        return [
-            *VRCHAT_SPECIAL_LOCATION_STRINGS,
+        special_options = [
+            *VRChatSpecialLocationString,
             VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE,
-            *[
-                world.data["name"]
-                for world in VRChatWorldData.registry.values()
-                if world.data
-            ],
+        ]
+        return [
+            *special_options,
+            *sorted(
+                {
+                    name
+                    for world in VRChatWorldData.registry.values()
+                    if (data := world.data) is not None
+                    and (name := data.get("name")) is not None
+                    and name not in special_options
+                }
+            ),
         ]
 
     @property
