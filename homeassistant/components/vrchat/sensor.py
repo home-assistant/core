@@ -128,8 +128,8 @@ class VRChatUserStateSensor(VRChatUserDataSensorEntity):
         if is_in_game:
             return status
         if status == VRChatUserState.OFFLINE:
-            return VRChatUserState.OFFLINE
-        return VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE
+            return VRChatUserState.OFFLINE.value
+        return VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE.value
 
     @property
     @override
@@ -184,11 +184,11 @@ class VRChatUserLocationSensor(
             VRChatUserStateSensor.get_state_from_user_data(self.user.data)
             == VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE
         ):
-            self._attr_native_value = VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE
+            self._attr_native_value = VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE.value
         elif (
             location := self.get_state_from_user_data(self.user.data, "location")
         ) is not None and location.startswith(VRChatSpecialLocationString.TRAVELING):
-            self._attr_native_value = VRChatSpecialLocationString.TRAVELING
+            self._attr_native_value = VRChatSpecialLocationString.TRAVELING.value
         else:
             name = self.vrchat_user_world_data_get("name")
             if name is None:

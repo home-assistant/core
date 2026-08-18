@@ -10,7 +10,10 @@ from homeassistant.components.vrchat.const import (
     VRChatUserState,
 )
 from homeassistant.components.vrchat.coordinator import VRChatUserDataCoordinator
-from homeassistant.components.vrchat.sensor import VRChatUserLocationSensor
+from homeassistant.components.vrchat.sensor import (
+    VRChatUserLocationSensor,
+    VRChatUserStateSensor,
+)
 from homeassistant.components.vrchat.utils import VRChatSpecialLocationString
 from homeassistant.components.vrchat.world import VRChatWorldData
 
@@ -61,3 +64,27 @@ def test_user_state_options_are_strings() -> None:
         for options in (VRCHAT_USER_STATUS_OPTIONS, VRCHAT_USER_STATE_OPTIONS)
         for option in options
     )
+
+
+def test_state_sensor_returns_strings() -> None:
+    """Test state sensor enum values are plain strings."""
+    assert (
+        type(
+            VRChatUserStateSensor.get_state_from_user_data(
+                {"location": "offline", "status": "offline"}
+            )
+        )
+        is str
+    )
+    sensor = VRChatUserLocationSensor(
+        cast(
+            VRChatUserDataCoordinator,
+            SimpleNamespace(
+                data={"location": "traveling", "worldId": "traveling"},
+                world=None,
+                destination_world=None,
+            ),
+        )
+    )
+
+    assert type(sensor.native_value) is str
