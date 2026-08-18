@@ -515,14 +515,13 @@ def _async_get_full_entity_name(
 
     elif not use_legacy_naming or name is None:
         device_name: str | None = None
-        if (
-            device_id is not None
-            and (device := dr.async_get(hass).async_get(device_id)) is not None
-        ):
-            device_name = device.name_by_user or device.name
+        if device_id is not None:
+            device_registry = dr.async_get(hass)
+            if (device := device_registry.async_get(device_id)) is not None:
+                device_name = device.name_by_user or device.name
 
-            if area_id is None:
-                area_id = device.area_id
+                if area_id is None:
+                    area_id = dr.async_get_effective_area_id(hass, device)
 
         area_name: str | None = None
         floor_name: str | None = None
@@ -1168,7 +1167,10 @@ def _validate_item(
             )
     if device_id and device_id is not UNDEFINED:
         device_registry = dr.async_get(hass)
-        if device_id not in device_registry.devices:
+        if (
+            device_id not in device_registry.devices
+            and device_id not in device_registry.child_devices
+        ):
             raise ValueError(f"Device {device_id} does not exist")
     if (
         disabled_by
@@ -1684,11 +1686,10 @@ class EntityRegistry(BaseRegistry):
             )
             removed_device_dict = event.data["device"]
             for entity in entities:
-                config_entry_id = entity.config_entry_id
                 if (
-                    config_entry_id in removed_device_dict["config_entries"]
+                    entity.config_entry_id == removed_device_dict["config_entry_id"]
                     and entity.config_subentry_id
-                    in removed_device_dict["config_entries_subentries"][config_entry_id]
+                    == removed_device_dict["config_subentry_id"]
                 ):
                     self.async_remove(entity.entity_id)
                 else:
@@ -2176,8 +2177,13 @@ class EntityRegistry(BaseRegistry):
         ) -> str | None:
             """Map a device id to the split device matching the entity's config entry."""
             # Note: check container membership, not async_get, which returns a restored
-            # composite for a composite device id
-            if device_id is None or device_id in device_registry.devices:
+            # composite for a composite device id. Child devices are their own container
+            # and are never composites, so an entity on one keeps its device id.
+            if (
+                device_id is None
+                or device_id in device_registry.devices
+                or device_id in device_registry.child_devices
+            ):
                 return device_id
             successors = device_registry.async_get_devices_for_composite_device_id(
                 device_id
@@ -2514,6 +2520,25 @@ def async_entries_for_area(
 ) -> list[RegistryEntry]:
     """Return entries that match an area."""
     return registry.entities.get_entries_for_area_id(area_id)
+
+
+@callback
+def async_get_effective_area_id(
+    hass: HomeAssistant, entry: RegistryEntry
+) -> str | None:
+    """Return the effective area of an entity.
+
+    An entity without an area of its own inherits its device's effective area
+    (which a child device in turn inherits from its parent device).
+    """
+    if entry.area_id is not None:
+        return entry.area_id
+    if entry.device_id is None:
+        return None
+    device_registry = dr.async_get(hass)
+    if (device := device_registry.async_get(entry.device_id)) is None:
+        return None
+    return dr.async_get_effective_area_id(hass, device)
 
 
 @callback

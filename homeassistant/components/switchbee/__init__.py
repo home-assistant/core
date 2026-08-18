@@ -123,7 +123,6 @@ async def async_migrate_entry(
             for device_entry in dr.async_entries_for_config_entry(
                 dev_reg, config_entry.entry_id
             ):
-                assert isinstance(device_entry, dr.DeviceEntry)
                 for identifier in device_entry.identifiers:
                     if match := re.match(
                         rf"(?P<id>.+)-{old_unique_id}$", identifier[1]

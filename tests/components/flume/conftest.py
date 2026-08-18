@@ -28,7 +28,7 @@ DEVICE_LIST_URL = (
     "https://api.flumetech.com/users/test-user-id/devices?user=true&location=true"
 )
 BRIDGE_DEVICE = {
-    "id": "1234",
+    "id": "5678",
     "type": 1,  # Bridge
     "location": {
         "name": "Bridge Location",

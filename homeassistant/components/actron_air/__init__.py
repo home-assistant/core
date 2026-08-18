@@ -18,6 +18,7 @@ from .coordinator import (
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.COVER,
     Platform.SENSOR,
     Platform.SWITCH,
 ]

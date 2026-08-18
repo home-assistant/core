@@ -83,6 +83,7 @@ _LOGGER = logging.getLogger(__name__)
 
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
 _ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
+_DEVICE_REGISTRY_UPDATE_FIELDS = ["name", "name_by_user"]
 
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 
@@ -289,6 +290,15 @@ class DefaultAgent(ConversationEntity):
         )
 
     @callback
+    def _filter_device_registry_changes(
+        self, event_data: dr.EventDeviceRegistryUpdatedData
+    ) -> bool:
+        """Filter device registry changed events."""
+        return event_data["action"] == "update" and any(
+            field in event_data["changes"] for field in _DEVICE_REGISTRY_UPDATE_FIELDS
+        )
+
+    @callback
     def _filter_state_changes(self, event_data: EventStateChangedData) -> bool:
         """Filter state changed events."""
         return not event_data["old_state"] or not event_data["new_state"]
@@ -311,6 +321,11 @@ class DefaultAgent(ConversationEntity):
                 er.EVENT_ENTITY_REGISTRY_UPDATED,
                 self._async_clear_slot_list,
                 event_filter=self._filter_entity_registry_changes,
+            ),
+            self.hass.bus.async_listen(
+                dr.EVENT_DEVICE_REGISTRY_UPDATED,
+                self._async_clear_slot_list,
+                event_filter=self._filter_device_registry_changes,
             ),
             self.hass.bus.async_listen(
                 EVENT_STATE_CHANGED,
@@ -1254,12 +1269,10 @@ class DefaultAgent(ConversationEntity):
             area_id = entity_entry.area_id
             device_id = entity_entry.device_id
 
-        if (
-            area_id is None
-            and device_id is not None
-            and (device_entry := dr.async_get(hass).async_get(device_id)) is not None
-        ):
-            area_id = device_entry.area_id
+        if area_id is None and device_id is not None:
+            device_registry = dr.async_get(hass)
+            if (device_entry := device_registry.async_get(device_id)) is not None:
+                area_id = dr.async_get_effective_area_id(hass, device_entry)
 
         if area_id is None:
             return None, device_id
