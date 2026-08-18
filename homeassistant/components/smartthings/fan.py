@@ -17,11 +17,8 @@ from homeassistant.util.percentage import (
 )
 
 from . import FullDevice, SmartThingsConfigEntry, SmartThingsData
-from .const import MAIN, fan_speed_count_signal
+from .const import DEFAULT_FAN_SPEED_COUNT, MAIN, fan_speed_count_signal
 from .entity import SmartThingsEntity
-
-# off is not included, SmartThings never tells us the real speed count
-DEFAULT_SPEED_COUNT = 3
 
 SMART = 14
 PRESET_SMART = "smart"
@@ -110,7 +107,7 @@ class SmartThingsFan(SmartThingsEntity, FanEntity):
         config entity (see number.py), which lives on this same device page.
         """
         return self._entry_data.fan_speed_counts.get(
-            self.device.device.device_id, DEFAULT_SPEED_COUNT
+            self.device.device.device_id, DEFAULT_FAN_SPEED_COUNT
         )
 
     @property

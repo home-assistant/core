@@ -17,7 +17,15 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import FullDevice, SmartThingsConfigEntry, SmartThingsData
-from .const import DOMAIN, MAIN, UNIT_MAP, fan_speed_count_signal
+from .const import (
+    DEFAULT_FAN_SPEED_COUNT,
+    DOMAIN,
+    MAIN,
+    MAX_FAN_SPEED_COUNT,
+    MIN_FAN_SPEED_COUNT,
+    UNIT_MAP,
+    fan_speed_count_signal,
+)
 from .entity import SmartThingsEntity
 
 
@@ -279,8 +287,8 @@ class SmartThingsFanSpeedCountNumberEntity(RestoreNumber):
     _attr_has_entity_name = True
     _attr_translation_key = "fan_speed_count"
     _attr_entity_category = EntityCategory.CONFIG
-    _attr_native_min_value = 2
-    _attr_native_max_value = 6
+    _attr_native_min_value = MIN_FAN_SPEED_COUNT
+    _attr_native_max_value = MAX_FAN_SPEED_COUNT
     _attr_native_step = 1
     _attr_mode = NumberMode.BOX
     _attr_should_poll = False
@@ -296,10 +304,10 @@ class SmartThingsFanSpeedCountNumberEntity(RestoreNumber):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Restore the last configured value, or default to 3."""
+        """Restore the last configured value, or default to DEFAULT_FAN_SPEED_COUNT."""
         await super().async_added_to_hass()
         restored = await self.async_get_last_number_data()
-        value = 3
+        value = DEFAULT_FAN_SPEED_COUNT
         if restored is not None and restored.native_value is not None:
             value = int(restored.native_value)
             value = max(
@@ -313,11 +321,17 @@ class SmartThingsFanSpeedCountNumberEntity(RestoreNumber):
     @override
     def native_value(self) -> float | None:
         """Return the currently configured speed count."""
-        return self._entry_data.fan_speed_counts.get(self._device_id, 3)
+        return self._entry_data.fan_speed_counts.get(
+            self._device_id, DEFAULT_FAN_SPEED_COUNT
+        )
 
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Store the new speed count and tell the fan entity to refresh."""
-        self._entry_data.fan_speed_counts[self._device_id] = int(value)
+        clamped_value = max(
+            int(self._attr_native_min_value),
+            min(int(self._attr_native_max_value), int(value)),
+        )
+        self._entry_data.fan_speed_counts[self._device_id] = clamped_value
         self.async_write_ha_state()
         async_dispatcher_send(self.hass, fan_speed_count_signal(self._device_id))

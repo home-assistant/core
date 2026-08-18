@@ -6,6 +6,13 @@ from homeassistant.const import UnitOfTemperature
 
 DOMAIN = "smartthings"
 
+# SmartThings never tells us the real number of speeds a fan has (see
+# fan.py/number.py), so these are shared defaults/bounds for the per-device
+# "Fan speed count" override. off is not included in the count.
+DEFAULT_FAN_SPEED_COUNT = 3
+MIN_FAN_SPEED_COUNT = 2
+MAX_FAN_SPEED_COUNT = 6
+
 
 def fan_speed_count_signal(device_id: str) -> str:
     """Return the dispatcher signal name for a device's fan speed count changing.
