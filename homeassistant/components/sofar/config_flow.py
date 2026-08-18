@@ -1,7 +1,4 @@
-"""Config flow — TCP only for Phase 1.
-
-Probes the device to get its serial number for the unique_id.
-"""
+"""Config flow — TCP only for Phase 1; probes the device to get its serial number for the unique_id."""
 
 import logging
 from typing import TYPE_CHECKING, Any, override

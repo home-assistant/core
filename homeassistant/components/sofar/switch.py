@@ -1,7 +1,4 @@
-"""Switch platform: whether the active power control limit is armed.
-
-Register 1105's Bit0 must go out with 1106's limit percentage, so this stages a bool in coordinator.pending instead of writing on toggle — a paired button (follow-up PR) commits both together.
-"""
+"""Switch platform: whether the active power control limit is armed — staged in coordinator.pending rather than written on toggle, since register 1105's Bit0 must go out with 1106's limit percentage; a paired button (follow-up PR) commits both together."""
 
 from typing import Any, override
 

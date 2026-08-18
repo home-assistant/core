@@ -31,12 +31,7 @@ async def test_setup_and_unload_entry(
 async def test_setup_entry_unrecognized_inverter_raises_setup_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup fails permanently (no retry) when the serial isn't recognized.
-
-    Not expected via the real config flow (it already validated the serial
-    before creating the entry) — this covers the defensive check for e.g. an
-    existing entry outliving a sofar-modbus library downgrade.
-    """
+    """Test setup fails permanently (no retry) when the serial isn't recognized — not reachable via the real config flow, but covers e.g. an existing entry outliving a library downgrade."""
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id="UNRECOGNIZED_SERIAL_XYZ", data=MOCK_USER_INPUT
     )
