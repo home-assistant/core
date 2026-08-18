@@ -409,7 +409,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
             finally:
                 if not_timeout and self.ws is ws:
                     self.available = False
-                if self.auto_restart:
+                if self.auto_restart and self.ws is ws:
                     self.restart()
 
         return callback
