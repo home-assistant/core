@@ -29,11 +29,11 @@
     }
   },
   "services": {
-    "reconnect_client": {
-      "service": "mdi:sync"
-    },
     "block_client": {
       "service": "mdi:link-off"
+    },
+    "reconnect_client": {
+      "service": "mdi:sync"
     },
     "unblock_client": {
       "service": "mdi:link"

@@ -72,25 +72,23 @@ async def _handle_reconnect_client(call: ServiceCall) -> None:
 async def _handle_block_client(call: ServiceCall) -> None:
     """Handle the service action to block a network client."""
     controller = _get_controller(call)
+    mac: str = call.data[ATTR_MAC]
 
     try:
-        await controller.omada_client.block_client(call.data[ATTR_MAC])
+        await controller.omada_client.block_client(mac)
     except OmadaClientException as ex:
-        raise HomeAssistantError(
-            f"Failed to block client with MAC {call.data[ATTR_MAC]}"
-        ) from ex
+        raise HomeAssistantError(f"Failed to block client with MAC {mac}") from ex
 
 
 async def _handle_unblock_client(call: ServiceCall) -> None:
     """Handle the service action to unblock a network client."""
     controller = _get_controller(call)
+    mac: str = call.data[ATTR_MAC]
 
     try:
-        await controller.omada_client.unblock_client(call.data[ATTR_MAC])
+        await controller.omada_client.unblock_client(mac)
     except OmadaClientException as ex:
-        raise HomeAssistantError(
-            f"Failed to unblock client with MAC {call.data[ATTR_MAC]}"
-        ) from ex
+        raise HomeAssistantError(f"Failed to unblock client with MAC {mac}") from ex
 
 
 SERVICES = [
