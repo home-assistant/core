@@ -113,9 +113,6 @@
       "aux_heating": {
         "name": "Auxiliary heating"
       },
-      "breezeless": {
-        "name": "Breezeless"
-      },
       "dhw_power": {
         "name": "DHW power"
       },
@@ -154,9 +151,6 @@
       },
       "self_clean": {
         "name": "Self clean"
-      },
-      "silent_mode": {
-        "name": "Silent mode"
       },
       "smart_eye": {
         "name": "Smart eye"
