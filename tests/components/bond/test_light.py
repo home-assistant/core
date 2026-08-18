@@ -1,6 +1,7 @@
 """Tests for the Bond light device."""
 
 from datetime import timedelta
+from unittest.mock import call
 
 from bond_async import Action, DeviceType
 import pytest
@@ -849,7 +850,7 @@ async def test_turn_on_light_with_color(hass: HomeAssistant) -> None:
     await setup_platform(
         hass,
         LIGHT_DOMAIN,
-        dimmable_ceiling_fan("name-1"),
+        dimmable_color_temp_ceiling_fan("name-1"),
         bond_device_id="test-device-id",
     )
 
@@ -866,11 +867,11 @@ async def test_turn_on_light_with_color(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    mock_set_color.assert_called_with(
-        "test-device-id", Action(Action.SET_BRIGHTNESS, 50)
-    )
-    mock_set_color.assert_called_with(
-        "test-device-id", Action(Action.SET_COLOR_TEMP, 4000)
+    mock_set_color.assert_has_calls(
+        calls=[
+            call("test-device-id", Action(Action.SET_BRIGHTNESS, 50)),
+            call("test-device-id", Action(Action.SET_COLOR_TEMP, 4000)),
+        ]
     )
 
 
