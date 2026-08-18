@@ -1,8 +1,7 @@
 rules:
   # Bronze
   action-setup:
-    status: exempt
-    comment: The integration does not provide any actions.
+    status: done
   appropriate-polling: done
   brands: done
   common-modules: done
@@ -10,8 +9,7 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: exempt
-    comment: The integration does not provide any actions.
+    status: done
   docs-conditions:
     status: exempt
     comment: This integration does not have any conditions.
@@ -33,8 +31,7 @@ rules:
 
   # Silver
   action-exceptions:
-    status: exempt
-    comment: The integration does not provide any actions.
+    status: done
   config-entry-unloading: done
   docs-configuration-parameters:
     status: exempt
