@@ -50,13 +50,30 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+async def test_update_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_twinkly_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the entity becomes unavailable when the device stops answering."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_twinkly_client.get_details.side_effect = TimeoutError
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("light.tree_1").state == STATE_UNAVAILABLE
+
+
 async def test_turn_on_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_twinkly_client: AsyncMock,
 ) -> None:
     """Test support of the light.turn_on service."""
-    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_mode.return_value = {"mode": "off"}
 
     await setup_integration(hass, mock_config_entry)
 
@@ -78,7 +95,7 @@ async def test_turn_on_with_brightness(
     mock_twinkly_client: AsyncMock,
 ) -> None:
     """Test support of the light.turn_on service with a brightness parameter."""
-    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_mode.return_value = {"mode": "off"}
 
     await setup_integration(hass, mock_config_entry)
 
@@ -118,7 +135,7 @@ async def test_turn_on_with_color_rgbw(
     mock_twinkly_client: AsyncMock,
 ) -> None:
     """Test support of the light.turn_on service with a rgbw parameter."""
-    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_mode.return_value = {"mode": "off"}
     mock_twinkly_client.get_details.return_value["led_profile"] = "RGBW"
 
     await setup_integration(hass, mock_config_entry)
@@ -149,7 +166,7 @@ async def test_turn_on_with_color_rgb(
     mock_twinkly_client: AsyncMock,
 ) -> None:
     """Test support of the light.turn_on service with a rgb parameter."""
-    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_mode.return_value = {"mode": "off"}
     mock_twinkly_client.get_details.return_value["led_profile"] = "RGB"
 
     await setup_integration(hass, mock_config_entry)
@@ -177,7 +194,7 @@ async def test_turn_on_with_effect(
     mock_twinkly_client: AsyncMock,
 ) -> None:
     """Test support of the light.turn_on service with effects."""
-    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_mode.return_value = {"mode": "off"}
     mock_twinkly_client.get_details.return_value["led_profile"] = "RGB"
 
     await setup_integration(hass, mock_config_entry)
@@ -213,7 +230,7 @@ async def test_turn_on_with_missing_effect(
     data: dict[str, Any],
 ) -> None:
     """Test light.turn_on with rgbw color and missing effect support."""
-    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_mode.return_value = {"mode": "off"}
     mock_twinkly_client.get_firmware_version.return_value["version"] = "2.7.0"
 
     await setup_integration(hass, mock_config_entry)
@@ -242,7 +259,7 @@ async def test_turn_on_with_color_rgbw_and_missing_effect(
     mock_twinkly_client: AsyncMock,
 ) -> None:
     """Test support of the light.turn_on service with missing effect support."""
-    mock_twinkly_client.is_on.return_value = False
+    mock_twinkly_client.get_mode.return_value = {"mode": "off"}
     mock_twinkly_client.get_firmware_version.return_value["version"] = "2.7.0"
 
     await setup_integration(hass, mock_config_entry)
