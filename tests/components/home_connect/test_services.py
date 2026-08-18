@@ -9,10 +9,12 @@ from aiohomeconnect.model import (
     Option,
     OptionKey,
     Program,
+    ProgramDefinition,
     ProgramKey,
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
+from aiohomeconnect.model.program import ProgramDefinitionOption
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from voluptuous.error import MultipleInvalid
@@ -286,6 +288,18 @@ async def test_set_program_and_options_exceptions(
     ],
 )
 @pytest.mark.parametrize(
+    "non_writable_options",
+    [
+        None,
+        [
+            Option(
+                key=OptionKey.BSH_COMMON_WATER_FORECAST,
+                value=True,
+            )
+        ],
+    ],
+)
+@pytest.mark.parametrize(
     ("get_active_program_side_effect", "get_selected_program_call_count"),
     [(None, 0), (NoProgramActiveError("error.key"), 1)],
 )
@@ -298,6 +312,7 @@ async def test_start_selected_program(
     appliance: HomeAppliance,
     additional_service_data: dict[str, Any],
     options_already_set: list[Option] | None,
+    non_writable_options: list[Option] | None,
     get_active_program_side_effect: NoProgramActiveError | None,
     get_selected_program_call_count: int,
     snapshot: SnapshotAssertion,
@@ -306,14 +321,40 @@ async def test_start_selected_program(
     client.get_active_program = AsyncMock(
         return_value=Program(
             key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
-            options=options_already_set,
+            options=[*(options_already_set or []), *(non_writable_options or [])]
+            if options_already_set or non_writable_options
+            else None,
         ),
         side_effect=get_active_program_side_effect,
     )
     client.get_selected_program = AsyncMock(
         return_value=Program(
             key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
-            options=options_already_set,
+            options=[*(options_already_set or []), *(non_writable_options or [])]
+            if options_already_set or non_writable_options
+            else None,
+        )
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[
+                ProgramDefinitionOption(
+                    key=OptionKey.BSH_COMMON_FINISH_IN_RELATIVE,
+                    type="integer",
+                ),
+                ProgramDefinitionOption(
+                    key=OptionKey.BSH_COMMON_START_IN_RELATIVE,
+                    type="integer",
+                ),
+                *[
+                    ProgramDefinitionOption(
+                        key=option.key,
+                        type="boolean",  # Not relevant
+                    )
+                    for option in options_already_set or []
+                ],
+            ],
         )
     )
 
@@ -342,6 +383,92 @@ async def test_start_selected_program(
         assert call_args[0][0] == appliance.ha_id
     assert client.start_program.call_count == 1
     assert client.start_program.call_args == snapshot
+
+
+@pytest.mark.parametrize(
+    "get_active_program_side_effect", [None, NoProgramActiveError("error.key")]
+)
+@pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
+async def test_start_select_program_non_writtable_options_discarded(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    get_active_program_side_effect: NoProgramActiveError | None,
+) -> None:
+    """Test that non-writable options are discarded when starting the selected program."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    client.get_active_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[
+                Option(
+                    key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                    value=True,
+                ),
+                Option(
+                    key=OptionKey.BSH_COMMON_ENERGY_FORECAST,
+                    value=True,
+                ),
+            ],
+        ),
+        side_effect=get_active_program_side_effect,
+    )
+    client.get_selected_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[
+                Option(
+                    key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                    value=True,
+                ),
+                Option(
+                    key=OptionKey.BSH_COMMON_ENERGY_FORECAST,
+                    value=True,
+                ),
+            ],
+        )
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[
+                ProgramDefinitionOption(
+                    key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                    type="boolean",
+                )
+            ],
+        )
+    )
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+
+    await hass.services.async_call(
+        domain=DOMAIN,
+        service="start_selected_program",
+        service_data={
+            "device_id": device_entry.id,
+        },
+        blocking=True,
+    )
+
+    client.start_program.assert_awaited_once_with(
+        appliance.ha_id,
+        program_key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+        options=[
+            Option(
+                key=OptionKey.DISHCARE_DISHWASHER_HALF_LOAD,
+                value=True,
+            )
+        ],
+    )
 
 
 @pytest.mark.parametrize("appliance", ["Dishwasher"], indirect=True)
@@ -400,6 +527,51 @@ async def test_start_selected_program_and_options_exceptions(
             service="start_selected_program",
             service_data={
                 "device_id": device_entry.id,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
+async def test_start_selected_program_user_option_not_writable_raises(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+) -> None:
+    """A user-passed option that the program does not list as writable must raise."""
+    client.get_active_program = AsyncMock(
+        return_value=Program(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+        ),
+    )
+    client.get_available_program = AsyncMock(
+        return_value=ProgramDefinition(
+            key=ProgramKey.DISHCARE_DISHWASHER_ECO_50,
+            options=[],
+        )
+    )
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, appliance.ha_id)},
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=r".*BSH.Common.Option.StartInRelative.*is not writable",
+    ):
+        await hass.services.async_call(
+            domain=DOMAIN,
+            service="start_selected_program",
+            service_data={
+                "device_id": device_entry.id,
+                "b_s_h_common_option_start_in_relative": 1800,
             },
             blocking=True,
         )
