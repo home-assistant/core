@@ -13,7 +13,7 @@ DOMAIN = "truenas_ce"
 # old "truenas" integration. See migration.py.
 LEGACY_DOMAIN = "truenas"
 DEFAULT_NAME = "root"
-ATTRIBUTION = "Data provided by TrueNAS integration"
+ATTRIBUTION = "Data provided by TrueNAS CE integration"
 
 # Dispatcher signal used to (re)discover entities on each coordinator refresh.
 SIGNAL_UPDATE_SENSORS = "update_sensors"

@@ -36,7 +36,12 @@ async def test_create_fix_flow_routes_migration_rollback_issue() -> None:
         SimpleNamespace(), "migration_rollback_available_entry2", None
     )
     assert isinstance(flow, MigrationRollbackRepairFlow)
-    assert flow._entry_id == "entry2"
+
+    # Confirm the entry id was parsed out correctly by observing which entry
+    # the flow acts on, rather than reading the private ``_entry_id`` field.
+    flow.hass = _make_hass(SimpleNamespace(data={}))
+    await flow.async_step_init()
+    flow.hass.config_entries.async_get_entry.assert_called_once_with("entry2")
 
 
 async def test_create_fix_flow_raises_on_unknown_issue_id() -> None:

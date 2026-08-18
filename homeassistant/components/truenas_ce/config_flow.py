@@ -50,22 +50,27 @@ from .const import (
 
 _LOGGER = getLogger(__name__)
 
-# Shared selector for the API key field, reused by every schema (initial setup,
-# reauth) so both stay visually/behaviorally in sync.
+# Shared selector for the API key field, reused by every schema.
 _API_KEY_SELECTOR = selector.TextSelector(
     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
 )
 
 
 def _base_schema(truenas_config: Mapping[str, Any]) -> vol.Schema:
-    """Generate base schema."""
+    """Generate base schema.
+
+    The API key default is intentionally never pre-filled from
+    ``truenas_config`` (e.g. a taken-over legacy entry), even though every
+    other field is: a secret's value would otherwise be embedded in the
+    frontend's form state and re-submitted in cleartext. Leaving it blank is
+    safe because ``_async_apply_user_input`` keeps the previously known key
+    when the field comes back empty.
+    """
     base_schema = {
         vol.Required(
             CONF_HOST, default=truenas_config.get(CONF_HOST, DEFAULT_HOST)
         ): str,
-        vol.Required(
-            CONF_API_KEY, default=truenas_config.get(CONF_API_KEY, "")
-        ): _API_KEY_SELECTOR,
+        vol.Required(CONF_API_KEY, default=""): _API_KEY_SELECTOR,
         vol.Required(
             CONF_VERIFY_SSL,
             default=truenas_config.get(CONF_VERIFY_SSL, DEFAULT_SSL_VERIFY),
@@ -407,6 +412,11 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         if CONF_HOST in user_input:
             user_input[CONF_HOST] = _sanitize_host(user_input[CONF_HOST])
+        # An empty submission keeps a previously known key (from a taken-over
+        # legacy entry) rather than blanking it out -- the field is never
+        # pre-filled (see _base_schema), so a blank resubmit means "unchanged".
+        if user_input.get(CONF_API_KEY, "") == "" and truenas_config.get(CONF_API_KEY):
+            user_input.pop(CONF_API_KEY, None)
         truenas_config |= user_input
 
         # The same device must not be configurable twice: abort when another
@@ -531,9 +541,10 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
                     "failed to connect while checking for a rediscovery match",
                 ):
                     continue
-                # A failed identity lookup must not abort rediscovery either;
-                # fall back to the same best-effort match used for entries
-                # that predate this check (see docstring).
+                # A failed identity lookup must not abort rediscovery for the
+                # other entries; system_id stays None, which the stored_id
+                # check below treats as a mismatch (not a best-effort match)
+                # for any entry that has a stored id (see docstring).
                 system_id = await _async_get_system_id(api, host)
             finally:
                 await _async_safe_disconnect(api)

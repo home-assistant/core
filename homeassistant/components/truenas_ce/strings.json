@@ -39,7 +39,7 @@
           "verify_ssl": "Verify SSL certificate"
         },
         "data_description": {
-          "api_key": "An API key generated in TrueNAS under Credentials > API Keys.",
+          "api_key": "An API key generated in TrueNAS under Credentials > API Keys. Leave blank to keep a previously configured key when taking over an existing configuration.",
           "cronjob_skip_disabled": "Skip cron jobs that are disabled in TrueNAS when running the manual run action.",
           "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
           "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",

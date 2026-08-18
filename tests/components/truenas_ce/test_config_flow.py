@@ -489,6 +489,13 @@ async def test_migrate_import_prefills_and_creates_entry(hass: HomeAssistant) ->
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
 
+    # Non-secret fields are prefilled; the API key is deliberately left blank
+    # (never pre-filled into the form -- see _base_schema) even though the
+    # legacy entry's key is known internally.
+    defaults = result["data_schema"]({})
+    assert defaults[CONF_HOST] == "legacy.example.com"
+    assert defaults[CONF_API_KEY] == ""
+
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
@@ -503,6 +510,34 @@ async def test_migrate_import_prefills_and_creates_entry(hass: HomeAssistant) ->
     assert result["data"][CONF_HOST] == "legacy.example.com"
     assert result["data"][CONF_NAME] == "TrueNAS"
     assert result["options"] == {CONF_POLL_INTERVAL: "30"}
+
+
+@pytest.mark.usefixtures("_mock_connection_ok")
+async def test_migrate_import_blank_api_key_keeps_legacy_key(
+    hass: HomeAssistant,
+) -> None:
+    """Resubmitting the (blank) API key field keeps the taken-over legacy key."""
+    _legacy_entry().add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "migrate_import"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "legacy.example.com",
+            CONF_API_KEY: "",
+            CONF_VERIFY_SSL: True,
+            CONF_CRONJOB_SKIP_DISABLED: False,
+            CONF_DATA_UNIT: "GB",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_API_KEY] == "old-key"
 
 
 async def test_migrate_manual_skips_takeover(hass: HomeAssistant) -> None:
