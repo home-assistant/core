@@ -35,6 +35,7 @@ TRIM_LFE_ENTITY_ID = "number.mock_lyngdorf_trim_lfe"
 TRIM_SURROUND_ENTITY_ID = "number.mock_lyngdorf_trim_surround"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_entities(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -88,7 +89,7 @@ async def test_set_lipsync(
         ),
     ],
 )
-@pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
 async def test_set_trim(
     hass: HomeAssistant,
     mock_receiver: MagicMock,
@@ -130,7 +131,7 @@ async def test_number_none_values(
     assert hass.states.get(TRIM_BASS_ENTITY_ID).state == STATE_UNKNOWN
 
 
-@pytest.mark.usefixtures("mock_receiver")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_receiver")
 async def test_entities_absent_for_controls_the_model_lacks(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -154,3 +155,21 @@ async def test_entities_absent_for_controls_the_model_lacks(
     assert hass.states.get(LIPSYNC_ENTITY_ID) is None
     assert hass.states.get(TRIM_SURROUND_ENTITY_ID) is None
     assert hass.states.get(TRIM_BASS_ENTITY_ID) is not None
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_channel_trims_disabled_by_default(
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test only the commonly used trims are enabled by default."""
+    for entity_id in (LIPSYNC_ENTITY_ID, TRIM_BASS_ENTITY_ID, TRIM_TREBLE_ENTITY_ID):
+        assert entity_registry.async_get(entity_id).disabled_by is None
+
+    for entity_id in (
+        TRIM_CENTRE_ENTITY_ID,
+        TRIM_HEIGHT_ENTITY_ID,
+        TRIM_LFE_ENTITY_ID,
+        TRIM_SURROUND_ENTITY_ID,
+    ):
+        entry = entity_registry.async_get(entity_id)
+        assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION

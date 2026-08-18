@@ -65,6 +65,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="trim_centre",
         translation_key="trim_centre",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_centre,
@@ -74,6 +75,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="trim_height",
         translation_key="trim_height",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_height,
@@ -83,6 +85,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="trim_lfe",
         translation_key="trim_lfe",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_lfe,
@@ -92,6 +95,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="trim_surround",
         translation_key="trim_surround",
+        entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_surround,
