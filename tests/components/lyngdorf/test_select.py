@@ -2,7 +2,12 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant
 
@@ -20,7 +25,7 @@ async def test_select_entities_created(
     mock_receiver: MagicMock,
 ) -> None:
     """Test that select entities are created."""
-    assert init_integration.state.value == "loaded"
+    assert init_integration.state is ConfigEntryState.LOADED
     assert hass.states.get(ROOM_PERFECT_ENTITY_ID) is not None
     assert hass.states.get(VOICING_ENTITY_ID) is not None
 
@@ -56,10 +61,10 @@ async def test_room_perfect_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        "select_option",
+        SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: ROOM_PERFECT_ENTITY_ID,
-            "option": "global",
+            ATTR_OPTION: "global",
         },
         blocking=True,
     )
@@ -98,10 +103,10 @@ async def test_voicing_select_option(
 
     await hass.services.async_call(
         SELECT_DOMAIN,
-        "select_option",
+        SERVICE_SELECT_OPTION,
         {
             ATTR_ENTITY_ID: VOICING_ENTITY_ID,
-            "option": "Movie",
+            ATTR_OPTION: "Movie",
         },
         blocking=True,
     )
