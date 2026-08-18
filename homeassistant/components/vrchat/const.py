@@ -5,7 +5,7 @@ from typing import Final
 
 from homeassistant.const import __version__
 
-from .utils import VRChatSpecialLocationString, svg_file_uri
+from .utils import svg_file_uri
 
 DOMAIN = "vrchat"
 
@@ -59,14 +59,10 @@ VRCHAT_USER_STATUS_ICON_MAP = {
 
 VRCHAT_USER_STATUS_OPTIONS: list[str] = list(VRCHAT_USER_STATUS_ICON_MAP)
 
-VRCHAT_USER_STATE_ICON_MAP = {
-    **VRCHAT_USER_STATUS_ICON_MAP,
-    # VRChatUserState.ACTIVE_ON_WEB: "mdi:account-badge-outline",
-    # VRChatUserState.ACTIVE_ON_MOBILE: "mdi:account-badge-outline",
-    VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE: "mdi:account-badge-outline",
-}
-
-VRCHAT_USER_STATE_OPTIONS: list[str] = list(VRCHAT_USER_STATE_ICON_MAP)
+VRCHAT_USER_STATE_OPTIONS: list[str] = [
+    *VRCHAT_USER_STATUS_OPTIONS,
+    VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE,
+]
 
 VRCHAT_USER_STATUS_COLOR_MAP = {
     VRChatUserState.JOIN_ME: "#42caff",
@@ -120,13 +116,4 @@ VRCHAT_USER_STATUS_INDICATOR_MAP_IN_GAME = {
 VRCHAT_USER_STATUS_INDICATOR_MAP_NOT_IN_GAME = {
     status: svg_file_uri(_user_status_indicator_not_in_game(color))
     for status, color in VRCHAT_USER_STATUS_COLOR_MAP.items()
-}
-
-
-VRCHAT_USER_LOCATION_ICON_MAP = {
-    VRChatSpecialLocationString.TRAVELING: "mdi:map-marker-distance",
-    VRChatSpecialLocationString.PRIVATE: "mdi:map-marker-outline",
-    VRChatSpecialLocationString.OFFLINE: "mdi:map-marker-off-outline",
-    VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE: "mdi:cellphone-marker",
-    None: "mdi:map-marker-question-outline",
 }

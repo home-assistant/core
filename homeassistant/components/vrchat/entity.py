@@ -1,7 +1,7 @@
 """Entity base classes for the VRChat integration."""
 
 import re
-from typing import TYPE_CHECKING, Any, override
+from typing import TYPE_CHECKING, override
 
 from propcache.api import cached_property
 
@@ -21,8 +21,6 @@ class VRChatUserDataEntity(Entity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
-
-    icon_map: dict[Any, str] | None = None
 
     should_add_for_current_user = True
     should_add_for_non_current_user = True
@@ -82,17 +80,6 @@ class VRChatUserDataEntity(Entity):
     def translation_key(self):
         """Return the translation key."""
         return re.sub(r"(?<!^)(?=[A-Z])", "_", self.entity_description.key).lower()
-
-    @property
-    @override
-    def icon(self) -> str | None:
-        """Return an icon from the icon map or the default implementation."""
-        if (
-            self.icon_map is not None
-            and (icon := self.icon_map.get(self.vrchat_user_data_state)) is not None
-        ):
-            return icon
-        return super().icon
 
     @classmethod
     def get_raw_state_from_user_data(cls, user_data: User, key: str | None = None):

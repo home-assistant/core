@@ -13,14 +13,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import (
-    VRCHAT_USER_LOCATION_ICON_MAP,
-    VRCHAT_USER_STATE_ICON_MAP,
     VRCHAT_USER_STATE_OPTIONS,
     VRCHAT_USER_STATUS_ICON_MAP,
     VRCHAT_USER_STATUS_INDICATOR_MAP_IN_GAME,
     VRCHAT_USER_STATUS_INDICATOR_MAP_NOT_IN_GAME,
     VRCHAT_USER_STATUS_OPTIONS,
-    VRChatSpecialLocationString,
     VRChatUserState,
 )
 from .coordinator import VRChatConfigEntry
@@ -28,6 +25,7 @@ from .entity import VRChatUserDataEntity, VRChatUserLocationEntityMixin
 from .utils import (
     VRCHAT_SPECIAL_LOCATION_STRINGS,
     VRCHAT_WORLD_ID_PREFIX,
+    VRChatSpecialLocationString,
     is_user_in_game,
     normalize_vrchat_enum_value,
     process_vrchat_string,
@@ -64,8 +62,6 @@ class VRChatUserStatusSensor(VRChatUserDataSensorEntity):
         device_class=SensorDeviceClass.ENUM,
         options=VRCHAT_USER_STATUS_OPTIONS,
     )
-
-    icon_map = VRCHAT_USER_STATUS_ICON_MAP
 
     @classmethod
     @override
@@ -111,8 +107,6 @@ class VRChatUserStateSensor(VRChatUserDataSensorEntity):
         options=VRCHAT_USER_STATE_OPTIONS,
     )
 
-    icon_map = VRCHAT_USER_STATE_ICON_MAP
-
     @property
     @override
     def entity_picture(self):
@@ -153,10 +147,8 @@ class VRChatUserLocationSensor(
     _attr_native_value = None
 
     entity_description = SensorEntityDescription(
-        key="location", icon="mdi:map-marker", device_class=SensorDeviceClass.ENUM
+        key="location", device_class=SensorDeviceClass.ENUM
     )
-
-    icon_map = VRCHAT_USER_LOCATION_ICON_MAP
 
     @property
     @override
