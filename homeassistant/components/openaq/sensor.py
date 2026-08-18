@@ -104,21 +104,11 @@ async def async_setup_entry(
         )
 
 
-def _device_info(coordinator: OpenAQDataUpdateCoordinator) -> DeviceInfo:
-    """Return device info for an OpenAQ location."""
-    return DeviceInfo(
-        identifiers={(DOMAIN, str(coordinator.location_id))},
-        name=coordinator.data.name,
-        entry_type=DeviceEntryType.SERVICE,
-    )
-
-
 class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity):
     """Representation of an OpenAQ sensor."""
 
     _attr_attribution = ATTRIBUTION
     _attr_has_entity_name = True
-    entity_description: SensorEntityDescription
 
     def __init__(
         self,
@@ -129,19 +119,20 @@ class OpenAQSensor(CoordinatorEntity[OpenAQDataUpdateCoordinator], SensorEntity)
         super().__init__(coordinator)
         self.entity_description = entity_description
         self._attr_unique_id = f"{coordinator.location_id}_{entity_description.key}"
-        self._attr_device_info = _device_info(coordinator)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(coordinator.location_id))},
+            name=coordinator.data.name,
+            entry_type=DeviceEntryType.SERVICE,
+        )
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
-        measurement = self.coordinator.data.measurements.get(
-            self.entity_description.key
-        )
-        return measurement.value if measurement is not None else None
+        return self.coordinator.data.measurements.get(self.entity_description.key)
 
     @property
     @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the native unit of measurement."""
-        return self.coordinator.data.sensor_metadata[self.entity_description.key].unit
+        return self.coordinator.data.sensor_metadata[self.entity_description.key]
