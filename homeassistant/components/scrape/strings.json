@@ -93,10 +93,12 @@
         "user": {
           "data": {
             "index": "Index",
+            "name": "[%key:common::config_flow::data::name%]",
             "select": "Select"
           },
           "data_description": {
             "index": "Defines which of the elements returned by the CSS selector to use.",
+            "name": "Provide a name for the sensor.",
             "select": "Defines what tag to search for. Check Beautifulsoup CSS selectors for details."
           },
           "sections": {

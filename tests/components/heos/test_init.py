@@ -301,7 +301,7 @@ async def test_remove_config_entry_device(
     )
 
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"] == expected_result
 
 

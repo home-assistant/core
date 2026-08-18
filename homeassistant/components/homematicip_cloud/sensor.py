@@ -146,6 +146,12 @@ ATTR_TEMPERATURE_OFFSET = "temperature_offset"
 ATTR_WIND_DIRECTION = "wind_direction"
 ATTR_WIND_DIRECTION_VARIATION = "wind_direction_variation_in_degree"
 ATTR_ESI_TYPE = "type"
+
+CARBON_DIOXIDE_CHANNELS = (
+    FunctionalChannelType.CARBON_DIOXIDE_SENSOR_CHANNEL,
+    FunctionalChannelType.WALL_MOUNTED_THERMOSTAT_WITH_CARBON_CHANNEL,
+)
+
 ESI_TYPE_UNKNOWN = "UNKNOWN"
 ESI_CONNECTED_SENSOR_TYPE_IEC = "ES_IEC"
 ESI_CONNECTED_SENSOR_TYPE_GAS = "ES_GAS"
@@ -366,6 +372,14 @@ async def async_setup_entry(
         if isinstance(device, SmokeDetector)
         for description in SMOKE_DETECTOR_SENSORS
         if smoke_detector_channel_data_exists(device, description.channel_field)
+    )
+
+    entities.extend(
+        HomematicipCarbonDioxideSensor(hap, device, channel.index)
+        for device in hap.home.devices
+        for channel_type in CARBON_DIOXIDE_CHANNELS
+        for channel in get_channels_from_device(device, channel_type)
+        if getattr(channel, "carbonDioxideConcentration", None) is not None
     )
 
     async_add_entities(entities)
@@ -618,6 +632,33 @@ class HomematicipHeatingThermostat(HomematicipGenericEntity, SensorEntity):
         if self._device.valveState != ValveState.ADAPTION_DONE:
             return None
         return round(self._device.valvePosition * 100)
+
+
+class HomematicipCarbonDioxideSensor(HomematicipGenericEntity, SensorEntity):
+    """Representation of the HomematicIP carbon dioxide sensor."""
+
+    _attr_device_class = SensorDeviceClass.CO2
+    _attr_native_unit_of_measurement = UnitOfRatio.PARTS_PER_MILLION
+    _attr_state_class = SensorStateClass.MEASUREMENT
+
+    def __init__(self, hap: HomematicipHAP, device: Device, channel: int) -> None:
+        """Initialize the carbon dioxide sensor."""
+        super().__init__(
+            hap,
+            device,
+            channel=channel,
+            # the channel is not at the same index on every device
+            channel_real_index=channel,
+            is_multi_channel=True,
+            feature_id="carbon_dioxide",
+            use_description_name=True,
+        )
+
+    @property
+    @override
+    def native_value(self) -> float | None:
+        """Return the state."""
+        return self.get_channel_or_raise().carbonDioxideConcentration
 
 
 class HomematicipHumiditySensor(HomematicipGenericEntity, SensorEntity):
