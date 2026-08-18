@@ -182,6 +182,9 @@
       },
       "ptz_zoom_out": {
         "default": "mdi:magnify"
+      },
+      "sync_time": {
+        "default": "mdi:clock-outline"
       }
     },
     "light": {
@@ -378,6 +381,9 @@
       }
     },
     "select": {
+      "anti_flicker": {
+        "default": "mdi:camera-iris"
+      },
       "auto_quick_reply_message": {
         "default": "mdi:message-reply-text-outline"
       },

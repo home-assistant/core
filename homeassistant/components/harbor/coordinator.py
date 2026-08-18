@@ -7,7 +7,7 @@ from uuid import uuid4
 
 from harbor.config import HarborCameraConfig
 from harbor.devices.camera import HarborCamera
-from harbor.mqtt import DEFAULT_INITIAL_COMMANDS, HarborMQTTClient
+from harbor.mqtt import DEFAULT_INITIAL_COMMANDS, HarborMQTTClient, NightMode
 from harbor.state import HarborDeviceState
 
 from homeassistant.config_entries import ConfigEntry
@@ -179,6 +179,10 @@ class HarborCoordinator(DataUpdateCoordinator[HarborDeviceState]):
     async def async_set_clock_display(self, clock_display: bool) -> None:
         """Show or hide the clock overlay burned into the video."""
         await self._client.set_clock_display(clock_display)
+
+    async def async_set_night_mode(self, night_mode: NightMode) -> None:
+        """Set the camera night-mode preference."""
+        await self._client.set_night_mode(night_mode)
 
     def _handle_device_update(self, state: HarborDeviceState) -> None:
         """Mirror a library device update into Home Assistant."""

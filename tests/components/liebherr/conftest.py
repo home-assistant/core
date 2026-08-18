@@ -52,6 +52,8 @@ MOCK_DEVICE_STATE = DeviceState(
             min=2,
             max=8,
             unit=TemperatureUnit.CELSIUS,
+            set_temperature_steps=[2, 4, 6, 8],
+            set_temperature_steps_enabled=True,
         ),
         TemperatureControl(
             zone_id=2,

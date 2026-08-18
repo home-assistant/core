@@ -578,6 +578,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/flipr/ @cnico
 /homeassistant/components/flo/ @dmulcahey
 /tests/components/flo/ @dmulcahey
+/homeassistant/components/flow_it/ @albertogeniola
+/tests/components/flow_it/ @albertogeniola
 /homeassistant/components/flume/ @ChrisMandich @bdraco @jeeftor
 /tests/components/flume/ @ChrisMandich @bdraco @jeeftor
 /homeassistant/components/fluss/ @fluss @Marcello17
@@ -799,6 +801,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/honeywell_string_lights/ @balloob
 /homeassistant/components/hortimax/ @wildekek
 /tests/components/hortimax/ @wildekek
+/homeassistant/components/hotspring/ @Moustachauve
+/tests/components/hotspring/ @Moustachauve
 /homeassistant/components/hr_energy_qube/ @MattieGit
 /tests/components/hr_energy_qube/ @MattieGit
 /homeassistant/components/html5/ @alexyao2015 @tr4nt0r
@@ -1141,8 +1145,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/metoffice/ @MrHarcombe @avee87
 /homeassistant/components/microbees/ @microBeesTech
 /tests/components/microbees/ @microBeesTech
-/homeassistant/components/midea/ @chemelli74 @rokam @wuwentao @caibinqing
-/tests/components/midea/ @chemelli74 @rokam @wuwentao @caibinqing
+/homeassistant/components/midea/ @chemelli74 @rokam @caibinqing
+/tests/components/midea/ @chemelli74 @rokam @caibinqing
 /homeassistant/components/miele/ @astrandb
 /tests/components/miele/ @astrandb
 /homeassistant/components/mikrotik/ @engrbm87 @chemelli74
@@ -1724,6 +1728,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/solax/ @squishykid @Darsstar
 /homeassistant/components/soma/ @ratsept
 /tests/components/soma/ @ratsept
+/homeassistant/components/somfy_mylink/ @sslivins
+/tests/components/somfy_mylink/ @sslivins
 /homeassistant/components/sonarr/ @ctalkington
 /tests/components/sonarr/ @ctalkington
 /homeassistant/components/songpal/ @rytilahti @shenxn
@@ -2134,6 +2140,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/zeversolar/ @kvanzuijlen @mhuiskes
 /homeassistant/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
 /tests/components/zha/ @dmulcahey @adminiuga @puddly @TheJulianJES
+/homeassistant/components/zhong_hong/ @crhan
 /homeassistant/components/zimi/ @markhannon
 /tests/components/zimi/ @markhannon
 /homeassistant/components/zinvolt/ @joostlek
