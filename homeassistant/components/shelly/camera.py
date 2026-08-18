@@ -94,7 +94,7 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
             return False
 
         config = self.coordinator.device.config[self.key]
-        return not config["privacy"] and config["rtsp"]["enable"]
+        return not self.status["privacy"] and config["rtsp"]["enable"]
 
     @override
     @property

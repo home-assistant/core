@@ -469,8 +469,6 @@ MOCK_STATUS_RPC = {
 MOCK_CAMERA_CONFIG = {
     "camera:0": {
         "id": 0,
-        "privacy": False,
-        "arm": True,
         "rtsp": {"enable": True},
     }
 }
@@ -478,6 +476,8 @@ MOCK_CAMERA_CONFIG = {
 MOCK_CAMERA_STATUS = {
     "camera:0": {
         "id": 0,
+        "privacy": False,
+        "arm": True,
         "streamer": "running",
         "motion": False,
         "streams": 0,
