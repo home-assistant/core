@@ -1189,6 +1189,9 @@ async def test_usb_discovery_migration_new_stick(
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "restore_nvm"
+    # The entry is reloaded with the empty adapter's home id as unique id
+    # until the restore has completed.
+    assert entry.unique_id == "1234"
 
     await hass.async_block_till_done()
 
@@ -4632,7 +4635,9 @@ async def test_reconfigure_migrate_low_sdk_version(
             aiohttp.ClientError("Boom"),
             "5678",
             True,
-            # The stale devices, including the old controller device
+            # The failed version fetch leaves the unique id stale after the
+            # restore, so the reload hits the unknown adapter branch and
+            # the stale devices, including the old controller device
             # orphaned by the hardware identifier change, are kept until
             # the user confirms the unknown adapter repair issue.
             5,
