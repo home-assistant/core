@@ -57,7 +57,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import notify_receiver_update
+from .conftest import notify_position_jump, notify_receiver_update
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -538,15 +538,8 @@ async def test_position_jump_updates_state(
     playing_receiver: MagicMock,
 ) -> None:
     """Test a position discontinuity refreshes the reported position."""
-    jump_callbacks = [
-        call.args[0]
-        for call in playing_receiver.register_position_jump_callback.call_args_list
-    ]
-    assert jump_callbacks
-
     playing_receiver.position_ms = 1000
-    for cb in jump_callbacks:
-        cb(1000)
+    notify_position_jump(playing_receiver, 1000)
     await hass.async_block_till_done()
 
     state = hass.states.get(MAIN_ZONE)

@@ -149,6 +149,12 @@ def notify_receiver_update(receiver: MagicMock) -> None:
         call.args[0]()
 
 
+def notify_position_jump(receiver: MagicMock, position_ms: int | None) -> None:
+    """Fire every position jump callback the entities registered."""
+    for call in receiver.register_position_jump_callback.call_args_list:
+        call.args[0](position_ms)
+
+
 @pytest.fixture
 def platforms() -> list[Platform]:
     """Platforms to load; override per module to isolate a single platform."""
