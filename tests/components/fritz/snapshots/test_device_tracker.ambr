@@ -33,7 +33,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_device_tracker_setup[device_tracker.printer-entry]
+# name: test_device_tracker_setup[device_tracker.fritz_aa_bb_cc_00_11_22_tracker-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -49,7 +49,7 @@
     'disabled_by': None,
     'domain': 'device_tracker',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'device_tracker.printer',
+    'entity_id': 'device_tracker.fritz_aa_bb_cc_00_11_22_tracker',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -57,12 +57,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'printer',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'printer',
+    'original_name': None,
     'platform': 'fritz',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -72,12 +72,12 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_device_tracker_setup[device_tracker.printer-state]
+# name: test_device_tracker_setup[device_tracker.fritz_aa_bb_cc_00_11_22_tracker-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'connected_to': 'fritz.box',
       'connection_type': 'LAN',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'printer printer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'printer',
       <ScannerEntityStateAttribute.HOST_NAME: 'host_name'>: 'printer',
       <DeviceTrackerEntityStateAttribute.IN_ZONES: 'in_zones'>: list([
         'zone.home',
@@ -89,7 +89,7 @@
       <DeviceTrackerEntityCapabilityAttribute.TRACKING_TYPE: 'tracking_type'>: <TrackingType.CONNECTION: 'connection'>,
     }),
     'context': <ANY>,
-    'entity_id': 'device_tracker.printer',
+    'entity_id': 'device_tracker.fritz_aa_bb_cc_00_11_22_tracker',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
