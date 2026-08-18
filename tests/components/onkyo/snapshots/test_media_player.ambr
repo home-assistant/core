@@ -6,11 +6,11 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'sound_mode_list': list([
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Stereo',
         'THX',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
         'FM Radio',
       ]),
@@ -51,20 +51,20 @@
       'audio_information': dict({
         'auto_phase_control_phase': 'Normal',
       }),
-      'friendly_name': 'TX-NR7100',
-      'is_volume_muted': False,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
       'preset': 1,
-      'sound_mode': 'DIRECT',
-      'sound_mode_list': list([
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'DIRECT',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Stereo',
         'THX',
       ]),
-      'source': 'FM Radio',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'FM Radio',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
         'FM Radio',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 69516>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 69516>,
       'video_information': dict({
         'input_color_depth': '24bit',
       }),
@@ -85,10 +85,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'sound_mode_list': list([
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Stereo',
       ]),
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
         'FM Radio',
       ]),
@@ -126,18 +126,18 @@
 # name: test_entities[media_player.tx_nr7100_zone_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Zone 2',
-      'sound_mode': 'Stereo',
-      'sound_mode_list': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Zone 2',
+      <MediaPlayerEntityStateAttribute.SOUND_MODE: 'sound_mode'>: 'Stereo',
+      <MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST: 'sound_mode_list'>: list([
         'Stereo',
       ]),
-      'source': 'VIDEO1 ··· VCR/DVR ··· STB/DVR',
-      'source_list': list([
+      <MediaPlayerEntityStateAttribute.INPUT_SOURCE: 'source'>: 'VIDEO1 ··· VCR/DVR ··· STB/DVR',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
         'FM Radio',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 69516>,
-      'volume_level': 0.625,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 69516>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.625,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.tx_nr7100_zone_2',
@@ -154,7 +154,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
         'FM Radio',
       ]),
@@ -192,12 +192,12 @@
 # name: test_entities[media_player.tx_nr7100_zone_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'TX-NR7100 Zone 3',
-      'source_list': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'TX-NR7100 Zone 3',
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
         'FM Radio',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 2944>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 2944>,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.tx_nr7100_zone_3',

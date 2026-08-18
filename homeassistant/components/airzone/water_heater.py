@@ -1,6 +1,6 @@
 """Support for the Airzone water heater."""
 
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioairzone.common import HotWaterOperation
 from aioairzone.const import (
@@ -93,19 +93,23 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
 
         self._async_update_attrs()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         await self._async_update_dhw_params({API_ACS_ON: 0})
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the water heater off."""
         await self._async_update_dhw_params({API_ACS_ON: 1})
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new target operation mode."""
         params = OPERATION_MODE_TO_DHW_PARAMS.get(operation_mode, {})
         await self._async_update_dhw_params(params)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         params: dict[str, Any] = {}
@@ -114,6 +118,7 @@ class AirzoneWaterHeater(AirzoneHotWaterEntity, WaterHeaterEntity):
         await self._async_update_dhw_params(params)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()

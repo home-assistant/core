@@ -3,7 +3,7 @@
 from datetime import datetime
 import logging
 import re
-from typing import Any, cast
+from typing import Any, cast, override
 
 from uvcclient import camera as uvc_camera, nvr
 from uvcclient.camera import UVCCameraClient
@@ -104,6 +104,7 @@ class UnifiVideoCamera(Camera):
         self._camera: UVCCameraClient | None = None
 
     @property
+    @override
     def supported_features(self) -> CameraEntityFeature:
         """Return supported features."""
         channels = self._caminfo["channels"]
@@ -114,6 +115,7 @@ class UnifiVideoCamera(Camera):
         return CameraEntityFeature(0)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the camera state attributes."""
         attr = {}
@@ -124,6 +126,7 @@ class UnifiVideoCamera(Camera):
         return attr
 
     @property
+    @override
     def is_recording(self) -> bool:
         """Return true if the camera is recording."""
         recording_state = "DISABLED"
@@ -135,11 +138,13 @@ class UnifiVideoCamera(Camera):
         ] or recording_state in ("MOTION_INPROGRESS", "MOTION_FINISHED")
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Camera Motion Detection Status."""
         return bool(self._caminfo["recordingSettings"]["motionRecordEnabled"])
 
     @property
+    @override
     def model(self) -> str:
         """Return the model of this camera."""
         return cast(str, self._caminfo["model"])
@@ -185,6 +190,7 @@ class UnifiVideoCamera(Camera):
         self._caminfo = caminfo
         return True
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -218,14 +224,17 @@ class UnifiVideoCamera(Camera):
             _LOGGER.error("Unable to set recordmode to %s", set_mode)
             _LOGGER.debug(err)
 
+    @override
     def enable_motion_detection(self) -> None:
         """Enable motion detection in camera."""
         self.set_motion_detection(True)
 
+    @override
     def disable_motion_detection(self) -> None:
         """Disable motion detection in camera."""
         self.set_motion_detection(False)
 
+    @override
     async def stream_source(self) -> str | None:
         """Return the source of the stream."""
         for channel in self._caminfo["channels"]:

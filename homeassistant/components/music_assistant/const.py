@@ -74,6 +74,7 @@ ATTR_EXPLICIT = "explicit"
 ATTR_BITRATE = "bit_rate"
 ATTR_DISCART_IMAGE = "discart_image"
 ATTR_FANART_IMAGE = "fanart_image"
+ATTR_USERNAME = "username"
 
 ATTR_CONF_EXPOSE_PLAYER_TO_HA = "expose_player_to_ha"
 

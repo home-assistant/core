@@ -2,6 +2,7 @@
 
 from collections import Counter
 import logging
+from typing import override
 
 from py_nextbus import NextBusClient
 import voluptuous as vol
@@ -84,6 +85,7 @@ class NextBusFlowHandler(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, str] = {}
         self._client = NextBusClient()
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, str] | None = None,

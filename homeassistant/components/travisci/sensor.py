@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from travispy import TravisPy
 from travispy.errors import TravisError
@@ -153,6 +153,7 @@ class TravisCISensor(SensorEntity):
         self._attr_name = f"{repo_name} {description.name}"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs: dict[str, Any] = {}

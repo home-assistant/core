@@ -10,7 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import Context, HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import service
 from homeassistant.helpers.json import save_json
 from homeassistant.util.json import JsonValueType, load_json_array
 
@@ -98,7 +98,7 @@ class ShoppingData:
     async def async_complete(
         self, name: str, context: Context | None = None
     ) -> list[dict[str, JsonValueType]]:
-        """Mark all shopping list items with the given name as complete."""
+        """Mark all incomplete shopping list items with the given name as complete."""
         complete_items = [
             item for item in self.items if item["name"] == name and not item["complete"]
         ]
@@ -271,9 +271,5 @@ class ShoppingData:
 
 
 def _get_shopping_data(hass: HomeAssistant) -> ShoppingData:
-    entries: list[ShoppingListConfigEntry] = hass.config_entries.async_loaded_entries(
-        DOMAIN
-    )
-    if not entries:
-        raise HomeAssistantError("No shopping list config entry found")
-    return entries[0].runtime_data
+    entry: ShoppingListConfigEntry = service.async_get_config_entry(hass, DOMAIN, None)
+    return entry.runtime_data

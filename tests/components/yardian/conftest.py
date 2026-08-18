@@ -79,3 +79,17 @@ def sensor_platform_only() -> Generator[None]:
     """Limit the integration setup to the sensor platform for faster tests."""
     with patch("homeassistant.components.yardian.PLATFORMS", [Platform.SENSOR]):
         yield
+
+
+@pytest.fixture
+def switch_platform_only() -> Generator[None]:
+    """Limit the integration setup to the switch (child-only) platform."""
+    with patch("homeassistant.components.yardian.PLATFORMS", [Platform.SWITCH]):
+        yield
+
+
+@pytest.fixture(autouse=True)
+def mock_ui_refresh_delay() -> Generator[None]:
+    """Patch the Switch refresh delay to 0 seconds to speed up tests."""
+    with patch("homeassistant.components.yardian.switch.SWITCH_REFRESH_DELAY", 0):
+        yield

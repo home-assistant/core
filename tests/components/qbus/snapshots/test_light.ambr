@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.HS: 'hs'>,
       ]),
     }),
@@ -43,16 +43,16 @@
 # name: test_light[light.kitchen_kabinet-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'friendly_name': 'Kabinet',
-      'hs_color': None,
-      'rgb_color': None,
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kabinet',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': <LightEntityFeature: 32>,
-      'xy_color': None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 32>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'light.kitchen_kabinet',
@@ -69,7 +69,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
     }),
@@ -106,13 +106,13 @@
 # name: test_light[light.media_room_media_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'friendly_name': 'Media Room',
-      'supported_color_modes': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Media Room',
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
       ]),
-      'supported_features': <LightEntityFeature: 0>,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 0>,
     }),
     'context': <ANY>,
     'entity_id': 'light.media_room_media_room',
@@ -129,14 +129,14 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'off',
         'Summer',
         'Seq.2',
         'Seq.3',
         'Seq.4',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.HS: 'hs'>,
       ]),
     }),
@@ -173,24 +173,24 @@
 # name: test_light[light.media_room_tv-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': None,
-      'color_mode': None,
-      'effect': None,
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: None,
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         'off',
         'Summer',
         'Seq.2',
         'Seq.3',
         'Seq.4',
       ]),
-      'friendly_name': 'Tv',
-      'hs_color': None,
-      'rgb_color': None,
-      'supported_color_modes': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tv',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: None,
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: None,
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.HS: 'hs'>,
       ]),
-      'supported_features': <LightEntityFeature: 36>,
-      'xy_color': None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 36>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: None,
     }),
     'context': <ANY>,
     'entity_id': 'light.media_room_tv',

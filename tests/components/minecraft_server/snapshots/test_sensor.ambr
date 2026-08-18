@@ -2,8 +2,8 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Latency',
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_latency',
@@ -16,8 +16,8 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players online',
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players online',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_online',
@@ -30,8 +30,8 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players max',
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players max',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_max',
@@ -44,7 +44,7 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 World message',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 World message',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_world_message',
@@ -57,7 +57,7 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_version',
@@ -70,7 +70,7 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Protocol version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Protocol version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_protocol_version',
@@ -83,7 +83,7 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].6
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Map name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Map name',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_map_name',
@@ -96,7 +96,7 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].7
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Game mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Game mode',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_game_mode',
@@ -109,7 +109,7 @@
 # name: test_sensor[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].8
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Edition',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Edition',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_edition',
@@ -122,8 +122,8 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Latency',
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_latency',
@@ -136,13 +136,13 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players online',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players online',
       'players_list': list([
         'Player 1',
         'Player 2',
         'Player 3',
       ]),
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_online',
@@ -155,8 +155,8 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players max',
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players max',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_max',
@@ -169,7 +169,7 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 World message',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 World message',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_world_message',
@@ -182,7 +182,7 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_version',
@@ -195,7 +195,7 @@
 # name: test_sensor[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Protocol version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Protocol version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_protocol_version',
@@ -208,8 +208,8 @@
 # name: test_sensor[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Latency',
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_latency',
@@ -222,8 +222,8 @@
 # name: test_sensor[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players online',
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players online',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_online',
@@ -236,8 +236,8 @@
 # name: test_sensor[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players max',
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players max',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_max',
@@ -250,7 +250,7 @@
 # name: test_sensor[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 World message',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 World message',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_world_message',
@@ -263,7 +263,7 @@
 # name: test_sensor[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_version',
@@ -276,7 +276,7 @@
 # name: test_sensor[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2].5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Protocol version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Protocol version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_protocol_version',
@@ -289,8 +289,8 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Latency',
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_latency',
@@ -303,8 +303,8 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players online',
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players online',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_online',
@@ -317,8 +317,8 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players max',
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players max',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_max',
@@ -331,7 +331,7 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 World message',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 World message',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_world_message',
@@ -344,7 +344,7 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_version',
@@ -357,7 +357,7 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Protocol version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Protocol version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_protocol_version',
@@ -370,7 +370,7 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].6
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Map name',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Map name',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_map_name',
@@ -383,7 +383,7 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].7
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Game mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Game mode',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_game_mode',
@@ -396,7 +396,7 @@
 # name: test_sensor_update[bedrock_mock_config_entry-BedrockServer-lookup-status_response1-entity_ids1].8
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Edition',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Edition',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_edition',
@@ -409,8 +409,8 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Latency',
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_latency',
@@ -423,13 +423,13 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players online',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players online',
       'players_list': list([
         'Player 1',
         'Player 2',
         'Player 3',
       ]),
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_online',
@@ -442,8 +442,8 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players max',
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players max',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_max',
@@ -456,7 +456,7 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 World message',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 World message',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_world_message',
@@ -469,7 +469,7 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_version',
@@ -482,7 +482,7 @@
 # name: test_sensor_update[java_mock_config_entry-JavaServer-async_lookup-status_response0-entity_ids0].5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Protocol version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Protocol version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_protocol_version',
@@ -495,8 +495,8 @@
 # name: test_sensor_update[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Latency',
-      'unit_of_measurement': <UnitOfTime.MILLISECONDS: 'ms'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Latency',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.MILLISECONDS: 'ms'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_latency',
@@ -509,8 +509,8 @@
 # name: test_sensor_update[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2].1
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players online',
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players online',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_online',
@@ -523,8 +523,8 @@
 # name: test_sensor_update[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2].2
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Players max',
-      'unit_of_measurement': 'players',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Players max',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'players',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_players_max',
@@ -537,7 +537,7 @@
 # name: test_sensor_update[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2].3
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 World message',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 World message',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_world_message',
@@ -550,7 +550,7 @@
 # name: test_sensor_update[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2].4
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_version',
@@ -563,7 +563,7 @@
 # name: test_sensor_update[legacy_java_mock_config_entry-LegacyServer-async_lookup-status_response2-entity_ids2].5
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'mc.dummyserver.com:25566 Protocol version',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'mc.dummyserver.com:25566 Protocol version',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mc_dummyserver_com_25566_protocol_version',

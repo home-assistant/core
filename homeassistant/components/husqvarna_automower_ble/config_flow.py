@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import random
-from typing import Any
+from typing import Any, override
 
 from automower_ble.mower import Mower
 from automower_ble.protocol import ResponseResult
@@ -80,6 +80,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Supported device: %s", manufacturer_data)
         return True
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -128,6 +129,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

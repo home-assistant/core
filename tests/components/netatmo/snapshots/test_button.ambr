@@ -39,8 +39,8 @@
 # name: test_entity[button.bubendorff_blind_preferred_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Bubendorff blind Preferred position',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bubendorff blind Preferred position',
     }),
     'context': <ANY>,
     'entity_id': 'button.bubendorff_blind_preferred_position',
@@ -90,8 +90,8 @@
 # name: test_entity[button.entrance_blinds_preferred_position-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Netatmo',
-      'friendly_name': 'Entrance Blinds Preferred position',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Netatmo',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Entrance Blinds Preferred position',
     }),
     'context': <ANY>,
     'entity_id': 'button.entrance_blinds_preferred_position',

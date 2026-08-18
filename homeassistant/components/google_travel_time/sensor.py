@@ -2,7 +2,7 @@
 
 import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from google.api_core.client_options import ClientOptions
 from google.api_core.exceptions import GoogleAPIError, PermissionDenied
@@ -19,7 +19,6 @@ from homeassistant.const import (
     CONF_API_KEY,
     CONF_LANGUAGE,
     CONF_MODE,
-    CONF_NAME,
     EVENT_HOMEASSISTANT_STARTED,
     UnitOfTime,
 )
@@ -74,7 +73,7 @@ async def async_setup_entry(
     api_key = config_entry.data[CONF_API_KEY]
     origin = config_entry.data[CONF_ORIGIN]
     destination = config_entry.data[CONF_DESTINATION]
-    name = config_entry.data.get(CONF_NAME, DEFAULT_NAME)
+    name = config_entry.title
 
     client_options = ClientOptions(api_key=api_key)
     client = RoutesAsyncClient(client_options=client_options)
@@ -122,6 +121,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         self._resolved_origin: str | None = None
         self._resolved_destination: str | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle when entity is added."""
         if self.hass.state is not CoreState.running:
@@ -132,6 +132,7 @@ class GoogleTravelTimeSensor(SensorEntity):
             await self.first_update()
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if self._route is None:
@@ -140,6 +141,7 @@ class GoogleTravelTimeSensor(SensorEntity):
         return self._route.duration.seconds
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if self._route is None:

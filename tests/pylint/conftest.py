@@ -9,6 +9,9 @@ from pylint_home_assistant.checkers.config_flow.no_name import (
 from pylint_home_assistant.checkers.config_flow.no_polling import (
     HassEnforceConfigFlowNoPollingChecker,
 )
+from pylint_home_assistant.checkers.config_flow.serial_port_usb_dependency import (
+    HassEnforceSerialPortSelectorUsbChecker,
+)
 from pylint_home_assistant.checkers.config_flow.unique_id_no_ip import (
     HassEnforceConfigEntryUniqueIdNoIpChecker,
 )
@@ -91,6 +94,17 @@ def enforce_config_entry_unique_id_no_ip_checker_fixture(
     """Fixture to provide a unique_id_no_ip checker."""
     clear_caches()
     checker = HassEnforceConfigEntryUniqueIdNoIpChecker(linter)
+    checker.module = "homeassistant.components.pylint_test"
+    return checker
+
+
+@pytest.fixture(name="enforce_serial_port_selector_usb_checker")
+def enforce_serial_port_selector_usb_checker_fixture(
+    linter: UnittestLinter,
+) -> BaseChecker:
+    """Fixture to provide a serial_port_selector usb dependency checker."""
+    clear_caches()
+    checker = HassEnforceSerialPortSelectorUsbChecker(linter)
     checker.module = "homeassistant.components.pylint_test"
     return checker
 
