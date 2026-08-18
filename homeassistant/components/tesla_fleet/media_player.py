@@ -2,7 +2,7 @@
 
 from typing import override
 
-from tesla_fleet_api.const import Scope
+from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -46,6 +46,7 @@ async def async_setup_entry(
 class TeslaFleetMediaEntity(TeslaFleetVehicleEntity, MediaPlayerEntity):
     """Vehicle media player class."""
 
+    _endpoints = frozenset({VehicleDataEndpoint.VEHICLE_STATE})
     _attr_device_class = MediaPlayerDeviceClass.SPEAKER
     _attr_supported_features = (
         MediaPlayerEntityFeature.NEXT_TRACK

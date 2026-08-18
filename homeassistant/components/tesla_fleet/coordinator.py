@@ -143,6 +143,19 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             else [ep for ep in ENDPOINTS if ep != VehicleDataEndpoint.LOCATION_DATA]
         )
 
+    def _active_endpoints(self) -> list[VehicleDataEndpoint]:
+        """Return the endpoints needed by currently enabled entities.
+
+        Entities register the endpoint groups they read as their coordinator
+        context, so disabling every entity backed by a group drops it from the
+        request. Falls back to the full set when no entity has registered a
+        context yet, such as the unconditional first refresh at setup.
+        """
+        requested: set[VehicleDataEndpoint] = set()
+        for context in self.async_contexts():
+            requested.update(context)
+        return [ep for ep in self.endpoints if ep in requested] or self.endpoints
+
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update vehicle data using TeslaFleet API."""
@@ -155,7 +168,7 @@ class TeslaFleetVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if self.data["state"] != TeslaFleetState.ONLINE:
                 return self.data
 
-            response = await self.api.vehicle_data(endpoints=self.endpoints)
+            response = await self.api.vehicle_data(endpoints=self._active_endpoints())
             data = response["response"]
 
         except VehicleOffline:

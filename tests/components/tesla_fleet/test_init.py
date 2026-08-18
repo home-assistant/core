@@ -21,6 +21,11 @@ from tesla_fleet_api.exceptions import (
     VehicleOffline,
 )
 
+from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.tesla_fleet.const import DOMAIN, SCOPES
 from homeassistant.components.tesla_fleet.coordinator import (
     ENERGY_HISTORY_INTERVAL,
@@ -33,21 +38,28 @@ from homeassistant.components.tesla_fleet.coordinator import (
 )
 from homeassistant.components.tesla_fleet.models import TeslaFleetData
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
 )
+from homeassistant.setup import async_setup_component
 
 from . import setup_platform
 from .conftest import create_config_entry
-from .const import LIVE_STATUS, SITE_INFO, VEHICLE_ASLEEP, VEHICLE_DATA_ALT
+from .const import (
+    LIVE_STATUS,
+    SITE_INFO,
+    VEHICLE_ASLEEP,
+    VEHICLE_DATA,
+    VEHICLE_DATA_ALT,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -970,6 +982,58 @@ async def test_vehicle_with_location_scope(
     assert VehicleDataEndpoint.DRIVE_STATE in endpoints
     assert VehicleDataEndpoint.VEHICLE_STATE in endpoints
     assert VehicleDataEndpoint.VEHICLE_CONFIG in endpoints
+
+
+async def test_vehicle_endpoints_follow_enabled_entities(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a disabled entity's endpoint group is dropped from vehicle polling."""
+    assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential("CLIENT_ID", "CLIENT_SECRET", "Home Assistant"),
+        DOMAIN,
+    )
+    normal_config_entry.add_to_hass(hass)
+
+    # Disable every sensor enabled by default that is backed by the drive_state
+    # group, so nothing needs that group. Several charge_state sensors remain
+    # enabled by default.
+    vin = VEHICLE_DATA["response"]["vin"]
+    for key in (
+        "drive_state_active_route_miles_to_arrival",
+        "drive_state_active_route_minutes_to_arrival",
+    ):
+        entity_registry.async_get_or_create(
+            Platform.SENSOR,
+            DOMAIN,
+            f"{vin}-{key}",
+            config_entry=normal_config_entry,
+            disabled_by=er.RegistryEntryDisabler.USER,
+        )
+
+    with patch("homeassistant.components.tesla_fleet.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(normal_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Inspect a scheduled cycle, which reads the enabled entities' contexts.
+        mock_vehicle_data.reset_mock()
+        freezer.tick(VEHICLE_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    endpoints = mock_vehicle_data.call_args.kwargs["endpoints"]
+    # No enabled entity needs drive_state, so it and its coupled location_data
+    # endpoint are dropped from the request.
+    assert VehicleDataEndpoint.DRIVE_STATE not in endpoints
+    assert VehicleDataEndpoint.LOCATION_DATA not in endpoints
+    # A group still needed by enabled siblings is retained.
+    assert VehicleDataEndpoint.CHARGE_STATE in endpoints
 
 
 async def test_oauth_implementation_not_available(

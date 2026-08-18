@@ -5,7 +5,13 @@ from dataclasses import dataclass
 from itertools import chain
 from typing import override
 
-from tesla_fleet_api.const import EnergyExportMode, EnergyOperationMode, Scope, Seat
+from tesla_fleet_api.const import (
+    EnergyExportMode,
+    EnergyOperationMode,
+    Scope,
+    Seat,
+    VehicleDataEndpoint,
+)
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -112,6 +118,10 @@ async def async_setup_entry(
 class TeslaFleetSeatHeaterSelectEntity(TeslaFleetVehicleEntity, SelectEntity):
     """Select entity for vehicle seat heater."""
 
+    # available_fn additionally reads vehicle_config.
+    _endpoints = frozenset(
+        {VehicleDataEndpoint.CLIMATE_STATE, VehicleDataEndpoint.VEHICLE_CONFIG}
+    )
     entity_description: SeatHeaterDescription
 
     _attr_options = [

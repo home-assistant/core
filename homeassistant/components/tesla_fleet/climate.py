@@ -3,7 +3,11 @@
 from itertools import chain
 from typing import Any, cast, override
 
-from tesla_fleet_api.const import CabinOverheatProtectionTemp, Scope
+from tesla_fleet_api.const import (
+    CabinOverheatProtectionTemp,
+    Scope,
+    VehicleDataEndpoint,
+)
 
 from homeassistant.components.climate import (
     ATTR_HVAC_MODE,
@@ -61,6 +65,7 @@ async def async_setup_entry(
 class TeslaFleetClimateEntity(TeslaFleetVehicleEntity, ClimateEntity):
     """Tesla Fleet vehicle climate entity."""
 
+    _endpoints = frozenset({VehicleDataEndpoint.CLIMATE_STATE})
     _attr_precision = PRECISION_HALVES
 
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
@@ -212,6 +217,10 @@ TEMP_LEVELS = {
 class TeslaFleetCabinOverheatProtectionEntity(TeslaFleetVehicleEntity, ClimateEntity):
     """Tesla Fleet vehicle cabin overheat protection entity."""
 
+    # supported_features additionally reads vehicle_config.
+    _endpoints = frozenset(
+        {VehicleDataEndpoint.CLIMATE_STATE, VehicleDataEndpoint.VEHICLE_CONFIG}
+    )
     _attr_precision = PRECISION_WHOLE
     _attr_target_temperature_step = 5
     _attr_min_temp = COP_LEVELS["Low"]

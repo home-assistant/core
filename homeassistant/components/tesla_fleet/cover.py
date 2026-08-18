@@ -2,7 +2,13 @@
 
 from typing import Any, override
 
-from tesla_fleet_api.const import Scope, SunRoofCommand, Trunk, WindowCommand
+from tesla_fleet_api.const import (
+    Scope,
+    SunRoofCommand,
+    Trunk,
+    VehicleDataEndpoint,
+    WindowCommand,
+)
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -46,6 +52,7 @@ async def async_setup_entry(
 class TeslaFleetWindowEntity(TeslaFleetVehicleEntity, CoverEntity):
     """Cover entity for the windows."""
 
+    _endpoints = frozenset({VehicleDataEndpoint.VEHICLE_STATE})
     _attr_device_class = CoverDeviceClass.WINDOW
 
     def __init__(self, data: TeslaFleetVehicleData, scopes: list[Scope]) -> None:

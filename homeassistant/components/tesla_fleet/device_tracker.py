@@ -2,6 +2,8 @@
 
 from typing import override
 
+from tesla_fleet_api.const import VehicleDataEndpoint
+
 from homeassistant.components.device_tracker import TrackerEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityStateAttribute
@@ -36,6 +38,10 @@ class TeslaFleetDeviceTrackerEntity(
     TeslaFleetVehicleEntity, TrackerEntity, RestoreEntity
 ):
     """Base class for Tesla Fleet device tracker entities."""
+
+    _endpoints = frozenset(
+        {VehicleDataEndpoint.DRIVE_STATE, VehicleDataEndpoint.LOCATION_DATA}
+    )
 
     def __init__(
         self,

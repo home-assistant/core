@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from tesla_fleet_api.const import Scope
+from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
@@ -30,6 +30,7 @@ class TeslaFleetButtonEntityDescription(ButtonEntityDescription):
     """Describes a TeslaFleet Button entity."""
 
     func: Callable[[TeslaFleetButtonEntity], Awaitable[Any]]
+    endpoints: frozenset[VehicleDataEndpoint] = frozenset()
 
 
 DESCRIPTIONS: tuple[TeslaFleetButtonEntityDescription, ...] = (
@@ -51,6 +52,9 @@ DESCRIPTIONS: tuple[TeslaFleetButtonEntityDescription, ...] = (
     TeslaFleetButtonEntityDescription(
         key="homelink",
         func=lambda self: self.async_trigger_homelink(),
+        endpoints=frozenset(
+            {VehicleDataEndpoint.DRIVE_STATE, VehicleDataEndpoint.LOCATION_DATA}
+        ),
     ),
 )
 
@@ -82,6 +86,7 @@ class TeslaFleetButtonEntity(TeslaFleetVehicleEntity, ButtonEntity):
     ) -> None:
         """Initialize the button."""
         self.entity_description = description
+        self._endpoints = description.endpoints
         super().__init__(data, description.key)
 
     @override

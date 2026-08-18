@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from typing import Any, override
 
-from tesla_fleet_api.const import Scope
+from tesla_fleet_api.const import Scope, VehicleDataEndpoint
 from tesla_fleet_api.tesla.energysite import EnergySite
 from tesla_fleet_api.tesla.vehicle.fleet import VehicleFleet
 
@@ -21,6 +21,27 @@ from .coordinator import (
 )
 from .helpers import wake_up_vehicle
 from .models import TeslaFleetEnergyData, TeslaFleetVehicleData
+
+# Location data is returned within the drive_state group, so requesting a
+# drive_state field also requires the location_data endpoint.
+_VEHICLE_ENDPOINT_BY_PREFIX: tuple[tuple[str, frozenset[VehicleDataEndpoint]], ...] = (
+    ("charge_state", frozenset({VehicleDataEndpoint.CHARGE_STATE})),
+    ("climate_state", frozenset({VehicleDataEndpoint.CLIMATE_STATE})),
+    (
+        "drive_state",
+        frozenset({VehicleDataEndpoint.DRIVE_STATE, VehicleDataEndpoint.LOCATION_DATA}),
+    ),
+    ("vehicle_state", frozenset({VehicleDataEndpoint.VEHICLE_STATE})),
+    ("vehicle_config", frozenset({VehicleDataEndpoint.VEHICLE_CONFIG})),
+)
+
+
+def endpoints_for_key(key: str) -> frozenset[VehicleDataEndpoint]:
+    """Return the vehicle data endpoints a flattened data key is sourced from."""
+    for prefix, endpoints in _VEHICLE_ENDPOINT_BY_PREFIX:
+        if key.startswith(prefix):
+            return endpoints
+    return frozenset()
 
 
 class TeslaFleetEntity[_ApiT: VehicleFleet | EnergySite](
@@ -46,9 +67,10 @@ class TeslaFleetEntity[_ApiT: VehicleFleet | EnergySite](
         | TeslaFleetEnergySiteInfoCoordinator,
         api: _ApiT,
         key: str,
+        context: Any = None,
     ) -> None:
         """Initialize common aspects of a TeslaFleet entity."""
-        super().__init__(coordinator)
+        super().__init__(coordinator, context)
         self.api = api
         self.key = key
         self._attr_translation_key = self.key
@@ -108,6 +130,9 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity[VehicleFleet]):
     """Parent class for TeslaFleet Vehicle entities."""
 
     _last_update: int = 0
+    # Vehicle data endpoints this entity needs polled. None derives them from
+    # the flattened key prefix; set explicitly when the key does not encode it.
+    _endpoints: frozenset[VehicleDataEndpoint] | None = None
 
     def __init__(
         self,
@@ -120,7 +145,10 @@ class TeslaFleetVehicleEntity(TeslaFleetEntity[VehicleFleet]):
         self.vehicle = data
 
         self._attr_device_info = data.device
-        super().__init__(data.coordinator, data.api, key)
+        endpoints = (
+            self._endpoints if self._endpoints is not None else endpoints_for_key(key)
+        )
+        super().__init__(data.coordinator, data.api, key, endpoints)
 
     @property
     @override
