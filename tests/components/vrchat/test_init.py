@@ -227,6 +227,23 @@ async def test_use_api_reauthenticates_after_closing_temporary_api() -> None:
     assert callback.await_args_list[1].args == (primary_api,)
 
 
+async def test_websocket_handler_task_cleanup_is_removed_when_done(
+    hass: HomeAssistant,
+) -> None:
+    """Test completed websocket handler tasks are removed from cleanup."""
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    task = asyncio.create_task(asyncio.sleep(0))
+
+    coordinator._track_ws_handler_task(task)
+
+    assert task.cancel in coordinator._cleanups
+
+    await task
+    await hass.async_block_till_done()
+
+    assert task.cancel not in coordinator._cleanups
+
+
 async def test_get_friends_propagates_fetch_error() -> None:
     """Test friend fetch errors propagate from the task group."""
     coordinator = object.__new__(VRChatAccountDataCoordinator)

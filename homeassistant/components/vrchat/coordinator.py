@@ -279,13 +279,14 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
             self.ws_handler(),
             "vrchat websocket handler",
         )
+        self._track_ws_handler_task(self.ws_handler_task)
         self.ws_handler_task.add_done_callback(self.ws_handler_done(self.ws))
         self.add_to_cleanups(self.ws.close)
-        self.add_to_cleanups(self.ws_handler_task.cancel)
         if old_ws is not None:
             self.create_task(old_ws.close())
             self.remove_from_cleanups(old_ws.close)
         if old_ws_handler_task is not None:
+            self._untrack_ws_handler_task(old_ws_handler_task)
             old_ws_handler_task.cancel()
 
     async def ws_handler(self):
@@ -304,6 +305,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         except TimeoutError:
             # Keep receiving updates until the reconnecting handler replaces this one.
             self.ws_handler_task = self.create_task(self.ws_handler())
+            self._track_ws_handler_task(self.ws_handler_task)
             raise
 
     def _handle_ws_message(self, data: dict[str, Any]) -> None:
@@ -386,7 +388,6 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         """On websocket message handler done."""
 
         def callback(task: asyncio.Task):
-            self.remove_from_cleanups(task.cancel)
             not_timeout = True
             try:
                 task.result()
@@ -401,6 +402,15 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
                     self.restart()
 
         return callback
+
+    def _track_ws_handler_task(self, task: asyncio.Task) -> None:
+        """Track a websocket handler task for integration cleanup."""
+        self.add_to_cleanups(task.cancel)
+        task.add_done_callback(self._untrack_ws_handler_task)
+
+    def _untrack_ws_handler_task(self, task: asyncio.Task) -> None:
+        """Remove a completed websocket handler task from integration cleanup."""
+        self.remove_from_cleanups(task.cancel)
 
     def restart(self, delay=0):
         """Reauthenticate and start connection."""
