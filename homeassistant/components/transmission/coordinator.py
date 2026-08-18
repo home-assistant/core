@@ -69,6 +69,7 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
         self._started_torrents: list[transmission_rpc.Torrent] = []
         self._event_listeners: dict[str, EventCallback] = {}
         self.torrents: list[transmission_rpc.Torrent] = []
+        self.download_dir_free_space: int | None = None
         super().__init__(
             hass,
             config_entry=entry,
@@ -80,12 +81,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
     @property
     def limit(self) -> int:
         """Return limit."""
-        return self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT)  # type: ignore[no-any-return]
+        return self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT)
 
     @property
     def order(self) -> str:
         """Return order."""
-        return self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER)  # type: ignore[no-any-return]
+        return self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER)
 
     @callback
     def async_add_event_listener(
@@ -121,6 +122,9 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             data = self.api.session_stats()
             self.torrents = self.api.get_torrents()
             self._session = self.api.get_session()
+            self.download_dir_free_space = self.api.free_space(
+                self._session.download_dir
+            )
         except transmission_rpc.TransmissionError as err:
             raise UpdateFailed("Unable to connect to Transmission client") from err
 
@@ -146,7 +150,6 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in current_completed_torrents:
             if torrent.id not in old_completed_torrents:
-                # Once event triggers are out of labs we can remove the bus event
                 self.hass.bus.async_fire(
                     EVENT_DOWNLOADED_TORRENT,
                     {
@@ -177,7 +180,6 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in current_started_torrents:
             if torrent.id not in old_started_torrents:
-                # Once event triggers are out of labs we can remove the bus event
                 self.hass.bus.async_fire(
                     EVENT_STARTED_TORRENT,
                     {
@@ -204,7 +206,6 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
 
         for torrent in self._all_torrents:
             if torrent.id not in current_torrents:
-                # Once event triggers are out of labs we can remove the bus event
                 self.hass.bus.async_fire(
                     EVENT_REMOVED_TORRENT,
                     {
