@@ -4,7 +4,11 @@ from types import SimpleNamespace
 from typing import cast
 
 from homeassistant.components.vrchat.api_data_types import World
-from homeassistant.components.vrchat.const import VRChatUserState
+from homeassistant.components.vrchat.const import (
+    VRCHAT_USER_STATE_OPTIONS,
+    VRCHAT_USER_STATUS_OPTIONS,
+    VRChatUserState,
+)
 from homeassistant.components.vrchat.coordinator import VRChatUserDataCoordinator
 from homeassistant.components.vrchat.sensor import VRChatUserLocationSensor
 from homeassistant.components.vrchat.utils import VRChatSpecialLocationString
@@ -48,3 +52,12 @@ def test_location_sensor_options_are_stable_and_unique() -> None:
         "World two",
     ]
     assert all(type(option) is str for option in sensor.options)
+
+
+def test_user_state_options_are_strings() -> None:
+    """Test user state options use plain strings."""
+    assert all(
+        type(option) is str
+        for options in (VRCHAT_USER_STATUS_OPTIONS, VRCHAT_USER_STATE_OPTIONS)
+        for option in options
+    )

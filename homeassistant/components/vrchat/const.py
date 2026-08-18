@@ -57,11 +57,13 @@ VRCHAT_USER_STATUS_ICON_MAP = {
     VRChatUserState.OFFLINE: "mdi:account-outline",
 }
 
-VRCHAT_USER_STATUS_OPTIONS: list[str] = list(VRCHAT_USER_STATUS_ICON_MAP)
+VRCHAT_USER_STATUS_OPTIONS: list[str] = [
+    status.value for status in VRCHAT_USER_STATUS_ICON_MAP
+]
 
 VRCHAT_USER_STATE_OPTIONS: list[str] = [
     *VRCHAT_USER_STATUS_OPTIONS,
-    VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE,
+    VRChatUserState.ACTIVE_ON_WEB_OR_MOBILE.value,
 ]
 
 VRCHAT_USER_STATUS_COLOR_MAP = {
