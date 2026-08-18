@@ -1,9 +1,8 @@
 """Support for Rituals Perfume Genie sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyrituals import Diffuser
 
@@ -12,14 +11,14 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import DOMAIN
-from .coordinator import RitualsDataUpdateCoordinator
+from .coordinator import RitualsConfigEntry
 from .entity import DiffuserEntity
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -42,6 +41,7 @@ ENTITY_DESCRIPTIONS = (
         key="fill",
         translation_key="fill",
         value_fn=lambda diffuser: diffuser.fill,
+        has_fn=lambda diffuser: "fillc" in diffuser.hub_data.get("sensors", {}),
     ),
     RitualsSensorEntityDescription(
         key="perfume",
@@ -59,13 +59,11 @@ ENTITY_DESCRIPTIONS = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RitualsConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the diffuser sensors."""
-    coordinators: dict[str, RitualsDataUpdateCoordinator] = hass.data[DOMAIN][
-        config_entry.entry_id
-    ]
+    coordinators = config_entry.runtime_data
 
     async_add_entities(
         RitualsSensorEntity(coordinator, description)
@@ -82,6 +80,7 @@ class RitualsSensorEntity(DiffuserEntity, SensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def native_value(self) -> str | int:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.coordinator.diffuser)

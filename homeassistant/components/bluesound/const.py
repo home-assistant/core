@@ -1,4 +1,4 @@
-"""Constants for the Bluesound HiFi wireless speakers and audio integrations component."""
+"""Bluesound HiFi wireless speakers and audio integrations."""
 
 DOMAIN = "bluesound"
 INTEGRATION_TITLE = "Bluesound"

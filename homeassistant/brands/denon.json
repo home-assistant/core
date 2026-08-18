@@ -1,5 +1,5 @@
 {
   "domain": "denon",
   "name": "Denon",
-  "integrations": ["denon", "denonavr", "heos"]
+  "integrations": ["denon", "denonavr", "denon_rs232", "heos"]
 }

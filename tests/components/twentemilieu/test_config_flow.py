@@ -6,7 +6,6 @@ import pytest
 from twentemilieu import TwenteMilieuAddressError, TwenteMilieuConnectionError
 
 from homeassistant import config_entries
-from homeassistant.components.twentemilieu import config_flow
 from homeassistant.components.twentemilieu.const import (
     CONF_HOUSE_LETTER,
     CONF_HOUSE_NUMBER,
@@ -160,7 +159,7 @@ async def test_address_already_set_up(
     """Test we abort if address has already been set up."""
     mock_config_entry.add_to_hass(hass)
     result = await hass.config_entries.flow.async_init(
-        config_flow.DOMAIN,
+        DOMAIN,
         context={"source": config_entries.SOURCE_USER},
         data={
             CONF_POST_CODE: "1234AB",

@@ -1,6 +1,6 @@
 """Support for Tellstick switches using Tellstick Net."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components import switch
 from homeassistant.components.switch import SwitchEntity
@@ -22,6 +22,8 @@ async def async_setup_entry(
 
     async def async_discover_switch(device_id):
         """Discover and add a discovered sensor."""
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         client = hass.data[DOMAIN]
         async_add_entities([TelldusLiveSwitch(client, device_id)])
 
@@ -38,15 +40,18 @@ class TelldusLiveSwitch(TelldusLiveEntity, SwitchEntity):
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.device.is_on
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.device.turn_on()
         self.schedule_update_ha_state()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.device.turn_off()

@@ -1,9 +1,7 @@
 """Config flow for the Total Connect component."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from total_connect_client.client import TotalConnectClient
 from total_connect_client.exceptions import AuthenticationError
@@ -37,6 +35,7 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
         self.password: str | None = None
         self.usercodes: dict[int, str | None] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -185,6 +184,7 @@ class TotalConnectConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> TotalConnectOptionsFlowHandler:

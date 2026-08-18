@@ -22,8 +22,7 @@ Pass in parameter 'client_id' and 'redirect_url' validate by indieauth.
 Pass in parameter 'handler' to specify the auth provider to use. Auth providers
 are identified by type and id.
 
-And optional parameter 'type' has to set as 'link_user' if login flow used for
-link credential to exist user. Default 'type' is 'authorize'.
+The default 'type' is 'authorize'.
 
 {
     "client_id": "https://hassbian.local:8123/",
@@ -52,10 +51,8 @@ flow for details.
 
 Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
-have type FlowResultType.CREATE_ENTRY and "result" key will contain an authorization code.
-The authorization code associated with an authorized user by default, it will
-associate with an credential if "type" set to "link_user" in
-"/auth/login_flow"
+have type FlowResultType.CREATE_ENTRY and "result" key will contain
+an authorization code.
 
 {
     "flow_id": "8f7e42faab604bcab7ac43c44ca34d58",
@@ -66,8 +63,6 @@ associate with an credential if "type" set to "link_user" in
     "version": 1
 }
 """
-
-from __future__ import annotations
 
 from collections.abc import Callable
 from http import HTTPStatus
@@ -228,7 +223,8 @@ class AuthProvidersView(HomeAssistantView):
                         remote_address
                     )
                 except InvalidAuthError:
-                    # Not a trusted network, so we don't expose that trusted_network authenticator is setup
+                    # Not a trusted network, so we don't expose that
+                    # trusted_network authenticator is setup
                     continue
 
             providers.append(
@@ -251,12 +247,12 @@ class AuthProvidersView(HomeAssistantView):
 
 def _prepare_result_json(result: AuthFlowResult) -> dict[str, Any]:
     """Convert result to JSON serializable dict."""
-    if result["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY:
+    if result["type"] is data_entry_flow.FlowResultType.CREATE_ENTRY:
         return {
             key: val for key, val in result.items() if key not in ("result", "data")
         }
 
-    if result["type"] != data_entry_flow.FlowResultType.FORM:
+    if result["type"] is not data_entry_flow.FlowResultType.FORM:
         return result  # type: ignore[return-value]
 
     data = dict(result)
@@ -289,11 +285,11 @@ class LoginFlowBaseView(HomeAssistantView):
         result: AuthFlowResult,
     ) -> web.Response:
         """Convert the flow result to a response."""
-        if result["type"] != data_entry_flow.FlowResultType.CREATE_ENTRY:
+        if result["type"] is not data_entry_flow.FlowResultType.CREATE_ENTRY:
             # @log_invalid_auth does not work here since it returns HTTP 200.
             # We need to manually log failed login attempts.
             if (
-                result["type"] == data_entry_flow.FlowResultType.FORM
+                result["type"] is data_entry_flow.FlowResultType.FORM
                 and (errors := result.get("errors"))
                 and errors.get("base")
                 in (
@@ -351,7 +347,9 @@ class LoginFlowIndexView(LoginFlowBaseView):
                     [vol.Any(str, None)], vol.Length(2, 2), vol.Coerce(tuple)
                 ),
                 vol.Required("redirect_uri"): str,
-                vol.Optional("type", default="authorize"): str,
+                vol.Optional(
+                    "type", default="authorize"
+                ): str,  # not used, kept for backwards compatibility
             }
         )
     )
@@ -371,7 +369,6 @@ class LoginFlowIndexView(LoginFlowBaseView):
                 handler,
                 context=AuthFlowContext(
                     ip_address=ip_address(request.remote),  # type: ignore[arg-type]
-                    credential_only=data.get("type") == "link_user",
                     redirect_uri=redirect_uri,
                 ),
             )

@@ -20,10 +20,10 @@ from tests.common import async_fire_time_changed
 from tests.components.common import (
     TriggerStateDescription,
     arm_trigger,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -37,20 +37,29 @@ async def target_schedules(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.mark.parametrize(
-    "trigger_key",
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "schedule.turned_off",
-        "schedule.turned_on",
+        ("schedule.block_ended", {}, True, True),
+        ("schedule.block_started", {}, True, True),
     ],
 )
-async def test_schedule_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+async def test_schedule_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the schedule triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    """Test that schedule triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -59,18 +68,18 @@ async def test_schedule_triggers_gated_by_labs_flag(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="schedule.turned_off",
+            trigger="schedule.block_ended",
             target_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
             other_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
         ),
         *parametrize_trigger_states(
-            trigger="schedule.turned_on",
+            trigger="schedule.block_started",
             target_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
             other_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
         ),
     ],
 )
-async def test_schedule_state_trigger_behavior_any(
+async def test_schedule_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_schedules: dict[str, list[str]],
     trigger_target_config: dict,
@@ -80,8 +89,8 @@ async def test_schedule_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the schedule state trigger fires when any schedule state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test schedule state trigger fires on any state change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_schedules,
         trigger_target_config=trigger_target_config,
@@ -93,7 +102,6 @@ async def test_schedule_state_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -102,12 +110,12 @@ async def test_schedule_state_trigger_behavior_any(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="schedule.turned_off",
+            trigger="schedule.block_ended",
             target_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
             other_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
         ),
         *parametrize_trigger_states(
-            trigger="schedule.turned_on",
+            trigger="schedule.block_started",
             target_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
             other_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
         ),
@@ -123,7 +131,7 @@ async def test_schedule_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the schedule state trigger fires when the first schedule changes to a specific state."""
+    """Test schedule trigger fires on first schedule state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_schedules,
@@ -136,7 +144,6 @@ async def test_schedule_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities(DOMAIN),
@@ -145,18 +152,18 @@ async def test_schedule_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="schedule.turned_off",
+            trigger="schedule.block_ended",
             target_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
             other_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
         ),
         *parametrize_trigger_states(
-            trigger="schedule.turned_on",
+            trigger="schedule.block_started",
             target_states=[(STATE_ON, {ATTR_NEXT_EVENT: "2022-08-30T13:20:00-07:00"})],
             other_states=[(STATE_OFF, {ATTR_NEXT_EVENT: "2022-08-30T13:30:00-07:00"})],
         ),
     ],
 )
-async def test_schedule_state_trigger_behavior_last(
+async def test_schedule_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_schedules: dict[str, list[str]],
     trigger_target_config: dict,
@@ -166,8 +173,8 @@ async def test_schedule_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the schedule state trigger fires when the last schedule changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test schedule trigger fires when all schedules have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_schedules,
         trigger_target_config=trigger_target_config,
@@ -179,13 +186,12 @@ async def test_schedule_state_trigger_behavior_last(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_schedule_state_trigger_back_to_back(
     hass: HomeAssistant,
     schedule_setup: Callable[..., Coroutine[Any, Any, bool]],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that the schedule state trigger fires when transitioning between two back-to-back schedule blocks."""
+    """Test trigger fires when transitioning between back-to-back blocks."""
     calls: list[str] = []
     freezer.move_to("2022-08-30 13:20:00-07:00")
     entity_id = "schedule.from_yaml"
@@ -208,7 +214,7 @@ async def test_schedule_state_trigger_back_to_back(
 
     await arm_trigger(
         hass,
-        "schedule.turned_on",
+        "schedule.block_started",
         {},
         {"entity_id": [entity_id]},
         calls,

@@ -1,5 +1,7 @@
 """Platform for shared base classes for sensors."""
 
+from typing import override
+
 from pyintelliclima.intelliclima_types import IntelliClimaC800, IntelliClimaECO
 
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_MODEL, ATTR_SW_VERSION
@@ -18,6 +20,7 @@ class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
     """Define a generic class for IntelliClima entities."""
 
     _attr_has_entity_name = True
+    _attr_device_info: DeviceInfo
 
     def __init__(
         self,
@@ -50,8 +53,6 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
         """Class initializer."""
         super().__init__(coordinator, device)
 
-        self._attr_device_info: DeviceInfo = self.device_info or DeviceInfo()
-
         self._attr_device_info[ATTR_MODEL] = "ECOCOMFORT 2.0"
         self._attr_device_info[ATTR_SW_VERSION] = device.fw
         self._attr_device_info[ATTR_CONNECTIONS] = {
@@ -64,6 +65,7 @@ class IntelliClimaECOEntity(IntelliClimaEntity):
         return self.coordinator.data.ecocomfort2_devices[self._device_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (

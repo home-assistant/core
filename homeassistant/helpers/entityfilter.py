@@ -1,7 +1,5 @@
 """Helper class to implement include/exclude of entities and domains."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import fnmatch
 from functools import lru_cache, partial
@@ -32,7 +30,7 @@ CONF_ENTITY_GLOBS = "entity_globs"
 
 
 class EntityFilter:
-    """A entity filter."""
+    """An entity filter."""
 
     def __init__(self, config: dict[str, list[str]]) -> None:
         """Init the filter."""

@@ -1,9 +1,8 @@
 """Data Update Coordinator for IMGW-PIB integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from imgw_pib import ApiError, HydrologicalData, ImgwPib
 
@@ -58,6 +57,7 @@ class ImgwPibDataUpdateCoordinator(DataUpdateCoordinator[HydrologicalData]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> HydrologicalData:
         """Update data via internal method."""
         try:

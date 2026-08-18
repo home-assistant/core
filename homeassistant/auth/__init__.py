@@ -1,7 +1,5 @@
 """Provide an authentication layer for Home Assistant."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import OrderedDict
 from collections.abc import Mapping
@@ -9,7 +7,7 @@ from datetime import datetime, timedelta
 from functools import partial
 import logging
 import time
-from typing import Any, cast
+from typing import Any, cast, override
 
 import jwt
 
@@ -78,10 +76,12 @@ async def auth_manager_from_config(
         provider_hash[key] = provider
 
         if isinstance(provider, HassAuthProvider):
-            # Can be removed in 2026.7 with the legacy mode of homeassistant auth provider
-            # We need to initialize the provider to create the repair if needed as otherwise
-            # the provider will be initialized on first use, which could be rare as users
-            # don't frequently change auth settings
+            # Can be removed in 2026.7 with the legacy mode of
+            # homeassistant auth provider.
+            # We need to initialize the provider to create the repair
+            # if needed as otherwise the provider will be initialized
+            # on first use, which could be rare as users don't
+            # frequently change auth settings
             await provider.async_initialize()
 
     if module_configs:
@@ -112,6 +112,7 @@ class AuthManagerFlowManager(
         super().__init__(hass)
         self.auth_manager = auth_manager
 
+    @override
     async def async_create_flow(
         self,
         handler_key: tuple[str, str],
@@ -125,6 +126,7 @@ class AuthManagerFlowManager(
             raise KeyError(f"Unknown auth provider {handler_key}")
         return await auth_provider.async_login_flow(context)
 
+    @override
     async def async_finish_flow(
         self,
         flow: FlowHandler[AuthFlowContext, AuthFlowResult, tuple[str, str]],
@@ -137,7 +139,7 @@ class AuthManagerFlowManager(
         """
         flow = cast(LoginFlow, flow)
 
-        if result["type"] != FlowResultType.CREATE_ENTRY:
+        if result["type"] is not FlowResultType.CREATE_ENTRY:
             return result
 
         # we got final result
@@ -152,10 +154,6 @@ class AuthManagerFlowManager(
         credentials = await auth_provider.async_get_or_create_credentials(
             cast(Mapping[str, str], result["data"]),
         )
-
-        if flow.context.get("credential_only"):
-            result["result"] = credentials
-            return result
 
         # multi-factor module cannot enabled for new credential
         # which has not linked to a user yet
@@ -711,7 +709,7 @@ class AuthManager:
             jwt_wrapper.verify_and_decode(
                 token, jwt_key, leeway=10, issuer=issuer, algorithms=["HS256"]
             )
-        except jwt.InvalidTokenError:
+        except jwt.InvalidTokenError, jwt.InvalidKeyError:
             return None
 
         if refresh_token is None or not refresh_token.user.is_active:

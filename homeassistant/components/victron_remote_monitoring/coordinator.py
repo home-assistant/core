@@ -2,6 +2,7 @@
 
 from dataclasses import dataclass
 import datetime
+from typing import override
 
 from victron_vrm import VictronVRMClient
 from victron_vrm.exceptions import AuthenticationError, VictronVRMError
@@ -9,12 +10,13 @@ from victron_vrm.models.aggregations import ForecastAggregations
 from victron_vrm.utils import dt_now
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_API_TOKEN
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_API_TOKEN, CONF_SITE_ID, DOMAIN, LOGGER
+from .const import CONF_SITE_ID, DOMAIN, LOGGER
 
 type VictronRemoteMonitoringConfigEntry = ConfigEntry[
     VictronRemoteMonitoringDataUpdateCoordinator
@@ -86,6 +88,7 @@ class VictronRemoteMonitoringDataUpdateCoordinator(
             update_interval=datetime.timedelta(minutes=60),
         )
 
+    @override
     async def _async_update_data(self) -> VRMForecastStore:
         """Fetch data from VRM API."""
         try:

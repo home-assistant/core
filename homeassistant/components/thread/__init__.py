@@ -1,7 +1,5 @@
 """The Thread integration."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -36,7 +34,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
     async_setup_ws_api(hass)
-    hass.data[DOMAIN] = {}
     return True
 
 

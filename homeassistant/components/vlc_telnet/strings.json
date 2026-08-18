@@ -35,5 +35,13 @@
         }
       }
     }
+  },
+  "exceptions": {
+    "command_error": {
+      "message": "Command error: {error}"
+    },
+    "connect_error": {
+      "message": "Connection error: {error}"
+    }
   }
 }

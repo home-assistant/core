@@ -1,9 +1,8 @@
 """Support for getting collected information from PVOutput."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pvo import Status, System
 
@@ -26,6 +25,8 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_SYSTEM_ID, DOMAIN
 from .coordinator import PvOutputConfigEntry, PVOutputDataUpdateCoordinator
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -143,6 +144,7 @@ class PVOutputSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the state of the device."""
         return self.entity_description.value_fn(self.coordinator.data)

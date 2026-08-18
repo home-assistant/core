@@ -1,7 +1,5 @@
 """Provides device triggers for YoLink."""
 
-from __future__ import annotations
-
 from typing import Any
 
 import voluptuous as vol
@@ -74,7 +72,7 @@ async def async_get_triggers(
 ) -> list[dict[str, Any]]:
     """List device triggers for YoLink devices."""
     device_registry = dr.async_get(hass)
-    registry_device = device_registry.async_get(device_id)
+    registry_device = device_registry.async_get(device_id, include_child_devices=False)
     if not registry_device or registry_device.model not in [
         ATTR_DEVICE_SMART_REMOTER,
         ATTR_DEVICE_SWITCH,

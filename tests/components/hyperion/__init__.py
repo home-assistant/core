@@ -1,7 +1,5 @@
 """Tests for the Hyperion integration."""
 
-from __future__ import annotations
-
 from types import TracebackType
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch

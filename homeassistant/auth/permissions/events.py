@@ -1,7 +1,5 @@
 """Permission for events."""
 
-from __future__ import annotations
-
 from typing import Any, Final
 
 from homeassistant.const import (

@@ -6,7 +6,7 @@ from unittest.mock import AsyncMock, patch
 import pytest
 from roombapy import Roomba
 
-from homeassistant.components.roomba import CONF_BLID, CONF_CONTINUOUS, DOMAIN
+from homeassistant.components.roomba.const import CONF_BLID, CONF_CONTINUOUS, DOMAIN
 from homeassistant.const import CONF_DELAY, CONF_HOST, CONF_PASSWORD
 
 from tests.common import MockConfigEntry
@@ -54,6 +54,9 @@ def mock_roomba() -> Generator[AsyncMock]:
         }
     }
     mock_roomba.roomba_connected = True
+    mock_roomba.current_state = "Charging"
+    mock_roomba.error_code = 0
+    mock_roomba.error_message = None
 
     with patch(
         "homeassistant.components.roomba.RoombaFactory.create_roomba",

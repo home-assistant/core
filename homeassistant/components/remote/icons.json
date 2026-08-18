@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:remote-off"
+    },
+    "is_on": {
+      "condition": "mdi:remote"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:remote",

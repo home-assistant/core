@@ -1,7 +1,5 @@
 """The SSDP integration scanner."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine, Mapping
 from datetime import timedelta
@@ -390,7 +388,8 @@ class Scanner:
             ssdp_change = SSDP_SOURCE_SSDP_CHANGE_MAPPING[source]
             _async_process_callbacks(self.hass, callbacks, discovery_info, ssdp_change)
 
-        # Config flows should only be created for alive/update messages from alive devices
+        # Config flows should only be created for alive/update
+        # messages from alive devices
         if source == SsdpSource.ADVERTISEMENT_BYEBYE:
             self._async_dismiss_discoveries(discovery_info)
             return

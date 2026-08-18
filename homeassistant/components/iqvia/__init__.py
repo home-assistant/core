@@ -1,7 +1,5 @@
 """Support for IQVIA."""
 
-from __future__ import annotations
-
 import asyncio
 
 from pyiqvia import Client

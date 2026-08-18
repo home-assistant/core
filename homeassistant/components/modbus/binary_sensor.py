@@ -1,8 +1,6 @@
 """Support for Modbus Coil and Discrete Input sensors."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
@@ -23,11 +21,11 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .const import (
-    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
+    LOGGER,
 )
 from .entity import ModbusBaseEntity
 from .modbus import ModbusHub
@@ -86,7 +84,7 @@ class ModbusBinarySensor(ModbusBaseEntity, RestoreEntity, BinarySensorEntity):
         name = self._attr_name or "modbus_sensor"
         self._coordinator = DataUpdateCoordinator(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=None,
             name=name,
         )
@@ -95,12 +93,14 @@ class ModbusBinarySensor(ModbusBaseEntity, RestoreEntity, BinarySensorEntity):
             SlaveSensor(self._coordinator, idx, entry) for idx in range(slave_count)
         ]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         await self.async_base_added_to_hass()
         if state := await self.async_get_last_state():
             self._attr_is_on = state.state == STATE_ON
 
+    @override
     async def _async_update(self) -> None:
         """Update the state of the sensor."""
 
@@ -147,6 +147,7 @@ class SlaveSensor(
         self._result_inx = idx
         super().__init__(coordinator)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle entity which will be added."""
         if state := await self.async_get_last_state():
@@ -154,6 +155,7 @@ class SlaveSensor(
         await super().async_added_to_hass()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         result = self.coordinator.data

@@ -14,7 +14,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
@@ -120,7 +120,8 @@ async def async_migrate_entry(
                 Platform.SWITCH
             ):
                 _LOGGER.debug(
-                    "Migrating switch/outlet entity from unique_id: %s to unique_id: %s",
+                    "Migrating switch/outlet entity"
+                    " from unique_id: %s to unique_id: %s",
                     reg_entry.unique_id,
                     reg_entry.unique_id + "-device_status",
                 )
@@ -135,7 +136,7 @@ async def async_migrate_entry(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: VesyncConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: VesyncConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     manager = config_entry.runtime_data.manager

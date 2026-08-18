@@ -1,0 +1,54 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'data': dict({
+      'api_key': '**REDACTED**',
+    }),
+    'entities': dict({
+      'conversation.meta_llama_3_3_70b_instruct': dict({
+        'aliases': list([
+          None,
+        ]),
+        'area_id': None,
+        'capabilities': None,
+        'categories': dict({
+        }),
+        'device_class': None,
+        'disabled_by': None,
+        'entity_category': None,
+        'entity_id': 'conversation.meta_llama_3_3_70b_instruct',
+        'has_entity_name': True,
+        'hidden_by': None,
+        'icon': None,
+        'labels': list([
+        ]),
+        'name': None,
+        'options': dict({
+          'conversation': dict({
+            'should_expose': False,
+          }),
+        }),
+        'original_device_class': None,
+        'original_icon': None,
+        'original_name': None,
+        'platform': 'ovhcloud_ai_endpoints',
+        'translation_key': None,
+      }),
+    }),
+    'entry_version': '1.1',
+    'options': dict({
+    }),
+    'state': 'loaded',
+    'subentries': list([
+      dict({
+        'data': dict({
+          'model': 'Meta-Llama-3_3-70B-Instruct',
+          'prompt': '**REDACTED**',
+        }),
+        'subentry_type': 'conversation',
+        'title': 'Meta-Llama-3_3-70B-Instruct',
+      }),
+    ]),
+    'title': 'OVHcloud AI Endpoints',
+  })
+# ---

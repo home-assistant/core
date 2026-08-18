@@ -1,17 +1,41 @@
 """Common fixtures for the Husqvarna Automower Bluetooth tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 from automower_ble.protocol import ResponseResult
+from gardena_bluetooth.parse import ManufacturerData
 import pytest
 
+from homeassistant.components.bluetooth import async_last_service_info
 from homeassistant.components.husqvarna_automower_ble.const import DOMAIN
 from homeassistant.const import CONF_ADDRESS, CONF_CLIENT_ID, CONF_PIN
+from homeassistant.core import HomeAssistant
+from homeassistant.loader import async_get_bluetooth
 
 from . import AUTOMOWER_SERVICE_INFO_SERIAL
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True, scope="module")
+def only_discover_this_domain() -> Generator[None]:
+    """Only discover devices for this domain.
+
+    This is needed to avoid interference from domains like
+    gardena bluetooth that also matches on these devices.
+    Which can cause async_block_till_done to wait too long
+    waiting for advertisements that won't show up.
+    """
+
+    async def filtered_matches(hass: HomeAssistant):
+        matchers = await async_get_bluetooth(hass)
+        return [matcher for matcher in matchers if matcher["domain"] == DOMAIN]
+
+    with patch(
+        "homeassistant.components.bluetooth.async_get_bluetooth", new=filtered_matches
+    ):
+        yield
 
 
 @pytest.fixture
@@ -25,8 +49,36 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(autouse=True)
+def mock_get_manufacturer_data(
+    hass: HomeAssistant, enable_bluetooth: None
+) -> Generator[None]:
+    """Mock async_get_manufacturer_data to return injected data."""
+
+    async def _get_manufacturer_data(
+        addresses: set[str], **kwargs
+    ) -> dict[str, ManufacturerData]:
+        result: dict[str, ManufacturerData] = {}
+        for address in addresses:
+            mfg = ManufacturerData()
+            if service_info := async_last_service_info(hass, address):
+                raw = service_info.manufacturer_data.get(ManufacturerData.company)
+                if raw is not None:
+                    mfg.update(raw)
+            result[address] = mfg
+        return result
+
+    with patch(
+        "homeassistant.components.husqvarna_automower_ble.config_flow.async_get_manufacturer_data",
+        new=_get_manufacturer_data,
+    ):
+        yield
+
+
+@pytest.fixture(autouse=True)
 def mock_automower_client(enable_bluetooth: None) -> Generator[AsyncMock]:
     """Mock a BleakClient client."""
+    mock_device = Mock()
+    mock_device.name = "Mower"
     with (
         patch(
             "homeassistant.components.husqvarna_automower_ble.Mower",
@@ -35,6 +87,10 @@ def mock_automower_client(enable_bluetooth: None) -> Generator[AsyncMock]:
         patch(
             "homeassistant.components.husqvarna_automower_ble.config_flow.Mower",
             new=mock_client,
+        ),
+        patch(
+            "homeassistant.components.husqvarna_automower_ble.config_flow.bluetooth.async_ble_device_from_address",
+            return_value=mock_device,
         ),
     ):
         client = mock_client.return_value

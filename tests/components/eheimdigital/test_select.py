@@ -55,7 +55,7 @@ async def test_setup(
             "classic_vario_mock",
             [
                 (
-                    "select.mock_classicvario_filter_mode",
+                    "select.mock_aquarium_mock_classicvario_filter_mode",
                     "manual",
                     "pumpMode",
                     int(FilterMode.MANUAL),
@@ -66,29 +66,54 @@ async def test_setup(
             "filter_mock",
             [
                 (
-                    "select.mock_filter_filter_mode",
+                    "select.mock_aquarium_mock_filter_filter_mode",
                     "constant_flow",
                     "title",
                     "START_FILTER_NORMAL_MODE_WITH_COMP",
                 ),
                 (
-                    "select.mock_filter_manual_speed",
+                    "select.mock_aquarium_mock_filter_manual_speed",
                     "61.5",
                     "frequency",
                     int(61.5 * 100),
                 ),
-                ("select.mock_filter_constant_flow_speed", "440", "flow_rate", 1),
-                ("select.mock_filter_day_speed", "480", "dfs_soll_day", 2),
-                ("select.mock_filter_night_speed", "860", "dfs_soll_night", 14),
-                ("select.mock_filter_high_pulse_speed", "620", "dfs_soll_high", 6),
-                ("select.mock_filter_low_pulse_speed", "770", "dfs_soll_low", 11),
+                (
+                    "select.mock_aquarium_mock_filter_constant_flow_speed",
+                    "440",
+                    "flow_rate",
+                    1,
+                ),
+                (
+                    "select.mock_aquarium_mock_filter_day_speed",
+                    "480",
+                    "dfs_soll_day",
+                    2,
+                ),
+                (
+                    "select.mock_aquarium_mock_filter_night_speed",
+                    "860",
+                    "dfs_soll_night",
+                    14,
+                ),
+                (
+                    "select.mock_aquarium_mock_filter_high_pulse_speed",
+                    "620",
+                    "dfs_soll_high",
+                    6,
+                ),
+                (
+                    "select.mock_aquarium_mock_filter_low_pulse_speed",
+                    "770",
+                    "dfs_soll_low",
+                    11,
+                ),
             ],
         ),
         (
             "reeflex_mock",
             [
                 (
-                    "select.mock_reeflex_operation_mode",
+                    "select.mock_aquarium_mock_reeflex_operation_mode",
                     "constant",
                     "mode",
                     int(ReeflexMode.CONSTANT),
@@ -134,7 +159,7 @@ async def test_set_value(
             "classic_vario_mock",
             [
                 (
-                    "select.mock_classicvario_filter_mode",
+                    "select.mock_aquarium_mock_classicvario_filter_mode",
                     "classic_vario_data",
                     "pumpMode",
                     int(FilterMode.BIO),
@@ -146,49 +171,49 @@ async def test_set_value(
             "filter_mock",
             [
                 (
-                    "select.mock_filter_filter_mode",
+                    "select.mock_aquarium_mock_filter_filter_mode",
                     "filter_data",
                     "pumpMode",
                     int(FilterModeProf.CONSTANT_FLOW),
                     "constant_flow",
                 ),
                 (
-                    "select.mock_filter_manual_speed",
+                    "select.mock_aquarium_mock_filter_manual_speed",
                     "filter_data",
                     "freqSoll",
                     int(61.5 * 100),
                     "61.5",
                 ),
                 (
-                    "select.mock_filter_constant_flow_speed",
+                    "select.mock_aquarium_mock_filter_constant_flow_speed",
                     "filter_data",
                     "sollStep",
                     1,
                     "440",
                 ),
                 (
-                    "select.mock_filter_day_speed",
+                    "select.mock_aquarium_mock_filter_day_speed",
                     "filter_data",
                     "nm_dfs_soll_day",
                     2,
                     "480",
                 ),
                 (
-                    "select.mock_filter_night_speed",
+                    "select.mock_aquarium_mock_filter_night_speed",
                     "filter_data",
                     "nm_dfs_soll_night",
                     14,
                     "860",
                 ),
                 (
-                    "select.mock_filter_high_pulse_speed",
+                    "select.mock_aquarium_mock_filter_high_pulse_speed",
                     "filter_data",
                     "pm_dfs_soll_high",
                     6,
                     "620",
                 ),
                 (
-                    "select.mock_filter_low_pulse_speed",
+                    "select.mock_aquarium_mock_filter_low_pulse_speed",
                     "filter_data",
                     "pm_dfs_soll_low",
                     11,
@@ -200,7 +225,7 @@ async def test_set_value(
             "reeflex_mock",
             [
                 (
-                    "select.mock_reeflex_operation_mode",
+                    "select.mock_aquarium_mock_reeflex_operation_mode",
                     "reeflex_data",
                     "mode",
                     int(ReeflexMode.CONSTANT),

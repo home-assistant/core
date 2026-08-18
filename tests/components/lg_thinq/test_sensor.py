@@ -23,7 +23,7 @@ from tests.common import (
 )
 
 
-@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
+@pytest.mark.parametrize("device_fixture", ["air_conditioner", "kimchi_refrigerator"])
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 @pytest.mark.freeze_time(datetime(2024, 10, 10, tzinfo=UTC))
 async def test_sensor_entities(
@@ -82,3 +82,100 @@ async def test_update_energy_entity(
 
     state = hass.states.get(entity_id)
     assert float(state.state) == energy_usage
+
+
+@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
+@pytest.mark.freeze_time(datetime(2024, 10, 9, 10, 0, tzinfo=UTC))
+async def test_energy_today_updates_hourly(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_thinq_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that energy_today sensor updates every hour, not once per day."""
+    hass.config.time_zone = "UTC"
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.test_air_conditioner_energy_today"
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_UNKNOWN
+
+    mock_thinq_api.async_get_device_energy_usage.return_value = (
+        await async_load_json_object_fixture(
+            hass, "air_conditioner/energy_today.json", DOMAIN
+        )
+    )
+
+    # Advance by 1 hour — should trigger the hourly update
+    freezer.move_to(datetime(2024, 10, 9, 11, 0, tzinfo=UTC))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 150.0  # 80 + 70 from fixture
+
+
+@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
+@pytest.mark.freeze_time(datetime(2024, 10, 9, 10, 0, tzinfo=UTC))
+async def test_energy_today_last_reset_set_on_first_fetch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_thinq_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test last_reset is set to midnight of the fetched day after first successful fetch."""
+    hass.config.time_zone = "UTC"
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.test_air_conditioner_energy_today"
+    state = hass.states.get(entity_id)
+    assert state.attributes.get("last_reset") is None
+
+    mock_thinq_api.async_get_device_energy_usage.return_value = (
+        await async_load_json_object_fixture(
+            hass, "air_conditioner/energy_today.json", DOMAIN
+        )
+    )
+
+    freezer.move_to(datetime(2024, 10, 9, 11, 0, tzinfo=UTC))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert float(state.state) == 150.0
+    # last_reset is set to midnight of the *fetched* day, not the current clock time;
+    # HA serialises datetime attributes to ISO-8601 strings in the state dict.
+    assert state.attributes.get("last_reset") == "2024-10-09T00:00:00+00:00"
+
+
+@pytest.mark.parametrize("device_fixture", ["air_conditioner"])
+@pytest.mark.freeze_time(datetime(2024, 10, 9, 23, 30, tzinfo=UTC))
+async def test_energy_today_last_reset_advances_on_new_day_fetch(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    mock_thinq_api: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test last_reset advances to the new day's midnight only when its data is fetched."""
+    hass.config.time_zone = "UTC"
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.test_air_conditioner_energy_today"
+
+    mock_thinq_api.async_get_device_energy_usage.return_value = (
+        await async_load_json_object_fixture(
+            hass, "air_conditioner/energy_today.json", DOMAIN
+        )
+    )
+
+    # At 00:30 Oct 10, start_date_fn(local_now) resolves to Oct 10, so the
+    # hourly update fetches Oct 10 data and advances last_reset to Oct 10 midnight.
+    freezer.move_to(datetime(2024, 10, 10, 0, 30, tzinfo=UTC))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.attributes.get("last_reset") == "2024-10-10T00:00:00+00:00"

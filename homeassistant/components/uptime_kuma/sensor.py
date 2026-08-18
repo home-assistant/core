@@ -1,11 +1,9 @@
 """Sensor platform for the Uptime Kuma integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from pythonkuma import MonitorType, UptimeKumaMonitor
 from pythonkuma.models import MonitorStatus
@@ -266,17 +264,20 @@ class UptimeKumaSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
 
         return self.entity_description.value_fn(self.coordinator.data[self.monitor])
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.monitor in self.coordinator.data
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
         if (fn := self.entity_description.attributes_fn) is not None:

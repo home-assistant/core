@@ -1,12 +1,10 @@
 """Support for the DOODS service."""
 
-from __future__ import annotations
-
 import io
 import logging
 import os
 import time
-from typing import Any
+from typing import Any, override
 
 from PIL import Image, ImageDraw, UnidentifiedImageError
 from pydoods import PyDOODS
@@ -219,11 +217,13 @@ class Doods(ImageProcessingEntity):
         self._process_time = 0.0
 
     @property
+    @override
     def state(self) -> int:
         """Return the state of the entity."""
         return self._total_matches
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
@@ -277,6 +277,7 @@ class Doods(ImageProcessingEntity):
             os.makedirs(os.path.dirname(path), exist_ok=True)
             img.save(path)
 
+    @override
     def process_image(self, image: bytes) -> None:
         """Process the image."""
         try:

@@ -1,6 +1,6 @@
 """Fully Kiosk Browser sensor."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -64,6 +64,7 @@ class FullyBinarySensor(FullyKioskEntity, BinarySensorEntity):
         self._attr_unique_id = f"{coordinator.data['deviceID']}-{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return if the binary sensor is on."""
         if (value := self.coordinator.data.get(self.entity_description.key)) is None:

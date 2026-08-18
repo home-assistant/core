@@ -1,10 +1,9 @@
 """DataUpdateCoordinator for the Supla integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from asyncpysupla import SuplaAPI
 
@@ -34,6 +33,7 @@ class SuplaCoordinator(DataUpdateCoordinator[dict[int, dict]]):
         )
         self._server = server
 
+    @override
     async def _async_update_data(self) -> dict[int, dict]:
         """Fetch channels from the Supla API."""
         async with asyncio.timeout(SCAN_INTERVAL.total_seconds()):

@@ -3,13 +3,15 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
-from lunatone_rest_api_client import Device, Devices
+from lunatone_rest_api_client import Device, Devices, Info, Sensor, Sensors
+from lunatone_rest_api_client.models import InfoData, SensorsData
 import pytest
 
+from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
-from . import BASE_URL, INFO_DATA, PRODUCT_NAME, SERIAL_NUMBER, build_devices_data
+from . import BASE_URL, INFO_DATA, PRODUCT_NAME, SENSORS_DATA, UUID, build_devices_data
 
 from tests.common import MockConfigEntry
 
@@ -43,6 +45,30 @@ def mock_lunatone_devices() -> Generator[AsyncMock]:
                 if device.data.features.dimmable
                 else None
             )
+            device.color_temperature = (
+                device.data.features.color_kelvin.status
+                if device.data.features.color_kelvin
+                else None
+            )
+            device.rgb_color = (
+                (
+                    device.data.features.color_rgb.status.red,
+                    device.data.features.color_rgb.status.green,
+                    device.data.features.color_rgb.status.blue,
+                )
+                if device.data.features.color_rgb
+                else None
+            )
+            device.rgbw_color = (
+                (
+                    device.data.features.color_rgb.status.red,
+                    device.data.features.color_rgb.status.green,
+                    device.data.features.color_rgb.status.blue,
+                    device.data.features.color_waf.status.white,
+                )
+                if device.data.features.color_rgb and device.data.features.color_waf
+                else None
+            )
             device_list.append(device)
         return device_list
 
@@ -69,13 +95,24 @@ def mock_lunatone_info() -> Generator[AsyncMock]:
             "homeassistant.components.lunatone.config_flow.Info",
             new=mock_info,
         ),
+        patch(
+            "homeassistant.components.lunatone.coordinator.Info",
+            new=mock_info,
+        ),
     ):
         info = mock_info.return_value
-        info.data = INFO_DATA
-        info.name = info.data.name
-        info.version = info.data.version
-        info.serial_number = info.data.device.serial
-        info.product_name = PRODUCT_NAME
+
+        def _set_data(data: InfoData) -> Info:
+            info.data = data
+            info.name = info.data.name
+            info.product_name = PRODUCT_NAME
+            info.serial_number = info.data.device.serial
+            info.uid = info.data.uid
+            info.version = info.data.version
+            return info
+
+        info.set_data = _set_data
+        info.set_data(INFO_DATA)
         yield info
 
 
@@ -92,11 +129,46 @@ def mock_lunatone_dali_broadcast() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_lunatone_sensors() -> Generator[AsyncMock]:
+    """Mock a Lunatone sensors object."""
+
+    def build_sensors_mock(sensors: Sensors):
+        sensor_list = []
+        if sensors.data is None:
+            return sensor_list
+        for sensor_data in sensors.data.sensors:
+            sensor = AsyncMock(spec=Sensor)
+            sensor.data = sensor_data
+            sensor.id = sensor.data.id
+            sensor.name = sensor.data.name
+            sensor_list.append(sensor)
+        return sensor_list
+
+    with patch(
+        "homeassistant.components.lunatone.Sensors",
+        autospec=True,
+    ) as mock_info:
+        sensors = mock_info.return_value
+
+        def _set_data(data: SensorsData) -> None:
+            sensors.data = data
+            type(sensors).sensors = PropertyMock(
+                side_effect=lambda s=sensors: build_sensors_mock(s)
+            )
+
+        sensors.set_data = _set_data
+        sensors.set_data(SENSORS_DATA)
+        yield sensors
+
+
+@pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return the default mocked config entry."""
     return MockConfigEntry(
         title=BASE_URL,
         domain=DOMAIN,
         data={CONF_URL: BASE_URL},
-        unique_id=str(SERIAL_NUMBER),
+        unique_id=UUID.replace("-", ""),
+        version=LunatoneConfigFlow.VERSION,
+        minor_version=LunatoneConfigFlow.MINOR_VERSION,
     )

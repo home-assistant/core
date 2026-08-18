@@ -1,9 +1,8 @@
 """AI Task integration for Ollama."""
 
-from __future__ import annotations
-
 from json import JSONDecodeError
 import logging
+from typing import override
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.config_entries import ConfigEntry
@@ -44,6 +43,7 @@ class OllamaTaskEntity(
         | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
     )
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,

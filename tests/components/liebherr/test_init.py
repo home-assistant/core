@@ -60,7 +60,8 @@ async def test_setup_entry_errors(
     assert mock_config_entry.state is expected_state
 
 
-# Test errors during get_device() call in coordinator setup (after successful get_devices)
+# Test errors during get_device() call in coordinator setup
+# (after successful get_devices)
 @pytest.mark.parametrize(
     ("side_effect", "expected_state"),
     [
@@ -240,7 +241,9 @@ async def test_dynamic_device_discovery_coordinator_setup_failure(
     await hass.async_block_till_done()
 
     # New device should NOT be added
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "new_device_id")})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "new_device_id"), mock_config_entry.entry_id
+    )
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
@@ -293,8 +296,12 @@ async def test_dynamic_device_discovery(
     assert hass.states.get("sensor.test_fridge_top_zone") is not None
 
     # Both devices should be in the device registry
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "new_device_id")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "new_device_id"), mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "test_device_id"), mock_config_entry.entry_id
+    )
 
 
 async def test_stale_device_removal(
@@ -327,15 +334,21 @@ async def test_stale_device_removal(
         await hass.async_block_till_done()
 
     # Both devices should exist
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "new_device_id")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "test_device_id"), mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "new_device_id"), mock_config_entry.entry_id
+    )
     assert hass.states.get("sensor.test_fridge_top_zone") is not None
     assert hass.states.get("sensor.new_fridge") is not None
 
     # Verify both devices are in the device registry
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
-    new_device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "new_device_id")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "test_device_id"), mock_config_entry.entry_id
+    )
+    new_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "new_device_id"), mock_config_entry.entry_id
     )
     assert new_device_entry
 
@@ -358,8 +371,12 @@ async def test_stale_device_removal(
     await hass.async_block_till_done()
 
     # Stale device should be removed from device registry
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "new_device_id")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "test_device_id"), mock_config_entry.entry_id
+    )
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "new_device_id"), mock_config_entry.entry_id
+    )
 
     # Advance past the coordinator update interval to confirm the stale
     # coordinator is no longer polling (would raise AssertionError above)
@@ -389,7 +406,9 @@ async def test_stale_device_removal_without_coordinator(
         identifiers={(DOMAIN, "old_device_id")},
         name="Old Appliance",
     )
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "old_device_id")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "old_device_id"), mock_config_entry.entry_id
+    )
 
     # Start integration — only MOCK_DEVICE is returned, so no coordinator
     # is created for "old_device_id".
@@ -397,8 +416,12 @@ async def test_stale_device_removal_without_coordinator(
     await hass.async_block_till_done()
 
     # The orphaned device still exists in the registry after setup
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "old_device_id")})
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "old_device_id"), mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "test_device_id"), mock_config_entry.entry_id
+    )
 
     # Trigger the periodic device scan
     freezer.tick(timedelta(minutes=5, seconds=1))
@@ -406,7 +429,11 @@ async def test_stale_device_removal_without_coordinator(
     await hass.async_block_till_done()
 
     # The orphaned device should now be removed from the registry
-    assert not device_registry.async_get_device(identifiers={(DOMAIN, "old_device_id")})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "old_device_id"), mock_config_entry.entry_id
+    )
     # The active device should still be present
-    assert device_registry.async_get_device(identifiers={(DOMAIN, "test_device_id")})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, "test_device_id"), mock_config_entry.entry_id
+    )
     assert mock_config_entry.state is ConfigEntryState.LOADED

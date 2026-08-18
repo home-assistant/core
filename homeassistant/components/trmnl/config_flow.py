@@ -1,9 +1,7 @@
 """Config flow for TRMNL."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from trmnl import TRMNLClient
 from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
@@ -28,6 +26,7 @@ TRMNL_ACCOUNT_URL = "https://trmnl.com/account"
 class TRMNLConfigFlow(ConfigFlow, domain=DOMAIN):
     """TRMNL config flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

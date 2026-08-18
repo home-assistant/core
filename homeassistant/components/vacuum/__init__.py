@@ -1,39 +1,42 @@
 """Support for vacuum cleaner robots (botvacs)."""
 
-from __future__ import annotations
-
-import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 from datetime import timedelta
 from functools import partial
 import logging
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (  # noqa: F401 # STATE_PAUSED/IDLE are API
-    ATTR_BATTERY_LEVEL,
     ATTR_COMMAND,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers import (
+    config_validation as cv,
+    issue_registry as ir,
+    service as service_helper,
+)
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.entity_component import EntityComponent
-from homeassistant.helpers.entity_platform import EntityPlatform
-from homeassistant.helpers.frame import ReportBehavior, report_usage
-from homeassistant.helpers.icon import icon_for_battery_level
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.loader import bind_hass
 
-from .const import DATA_COMPONENT, DOMAIN, VacuumActivity, VacuumEntityFeature
+from .const import (
+    DATA_COMPONENT,
+    DOMAIN,
+    VacuumActivity,
+    VacuumEntityCapabilityAttribute,
+    VacuumEntityFeature,
+    VacuumEntityStateAttribute,
+)
 from .websocket import async_register_websocket_handlers
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +46,6 @@ PLATFORM_SCHEMA = cv.PLATFORM_SCHEMA
 PLATFORM_SCHEMA_BASE = cv.PLATFORM_SCHEMA_BASE
 SCAN_INTERVAL = timedelta(seconds=20)
 
-ATTR_BATTERY_ICON = "battery_icon"
 ATTR_CLEANED_AREA = "cleaned_area"
 ATTR_FAN_SPEED = "fan_speed"
 ATTR_FAN_SPEED_LIST = "fan_speed_list"
@@ -65,13 +67,10 @@ DEFAULT_NAME = "Vacuum cleaner robot"
 
 ISSUE_SEGMENTS_CHANGED = "segments_changed"
 
-_BATTERY_DEPRECATION_IGNORED_PLATFORMS = ("template",)
-
 
 # mypy: disallow-any-generics
 
 
-@bind_hass
 def is_on(hass: HomeAssistant, entity_id: str) -> bool:
     """Return if the vacuum is on based on the statemachine."""
     return hass.states.is_state(entity_id, STATE_ON)
@@ -111,12 +110,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         "async_clean_spot",
         [VacuumEntityFeature.CLEAN_SPOT],
     )
-    component.async_register_entity_service(
+    component.async_register_batched_entity_service(
         SERVICE_CLEAN_AREA,
         {
             vol.Required("cleaning_area_id"): vol.All(cv.ensure_list, [str]),
         },
-        "async_internal_clean_area",
+        StateVacuumEntity.async_internal_clean_area,
         [VacuumEntityFeature.CLEAN_AREA],
     )
     component.async_register_entity_service(
@@ -166,8 +165,6 @@ class StateVacuumEntityDescription(EntityDescription, frozen_or_thawed=True):
 
 STATE_VACUUM_CACHED_PROPERTIES_WITH_ATTR_ = {
     "supported_features",
-    "battery_level",
-    "battery_icon",
     "fan_speed",
     "fan_speed_list",
     "activity",
@@ -181,10 +178,10 @@ class StateVacuumEntity(
 
     entity_description: StateVacuumEntityDescription
 
-    _entity_component_unrecorded_attributes = frozenset({ATTR_FAN_SPEED_LIST})
+    _entity_component_unrecorded_attributes = frozenset(
+        {VacuumEntityCapabilityAttribute.FAN_SPEED_LIST}
+    )
 
-    _attr_battery_icon: str
-    _attr_battery_level: int | None = None
     _attr_fan_speed: str | None = None
     _attr_fan_speed_list: list[str]
     _attr_activity: VacuumActivity | None = None
@@ -193,121 +190,18 @@ class StateVacuumEntity(
     _segments_not_configured_issue_created: bool = False
     _segments_changed_last_seen: list[dict[str, Any]] | None = None
 
-    __vacuum_legacy_battery_level: bool = False
-    __vacuum_legacy_battery_icon: bool = False
-    __vacuum_legacy_battery_feature: bool = False
-
-    def __init_subclass__(cls, **kwargs: Any) -> None:
-        """Post initialisation processing."""
-        super().__init_subclass__(**kwargs)
-        if any(
-            method in cls.__dict__
-            for method in ("_attr_battery_level", "battery_level")
-        ):
-            # Integrations should use a separate battery sensor.
-            cls.__vacuum_legacy_battery_level = True
-        if any(
-            method in cls.__dict__ for method in ("_attr_battery_icon", "battery_icon")
-        ):
-            # Integrations should use a separate battery sensor.
-            cls.__vacuum_legacy_battery_icon = True
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        """Set attribute.
-
-        Deprecation warning if setting battery icon or battery level
-        attributes directly unless already reported.
-        """
-        if name in {"_attr_battery_level", "_attr_battery_icon"}:
-            self._report_deprecated_battery_properties(name[6:])
-        return super().__setattr__(name, value)
-
     @callback
-    def add_to_platform_start(
-        self,
-        hass: HomeAssistant,
-        platform: EntityPlatform,
-        parallel_updates: asyncio.Semaphore | None,
-    ) -> None:
-        """Start adding an entity to a platform."""
-        super().add_to_platform_start(hass, platform, parallel_updates)
-        if self.__vacuum_legacy_battery_level:
-            self._report_deprecated_battery_properties("battery_level")
-        if self.__vacuum_legacy_battery_icon:
-            self._report_deprecated_battery_properties("battery_icon")
-
-    @callback
+    @override
     def async_registry_entry_updated(self) -> None:
         """Run when the entity registry entry has been updated."""
         self._async_check_segments_issues()
 
-    @callback
-    def _report_deprecated_battery_properties(self, property: str) -> None:
-        """Report on deprecated use of battery properties.
-
-        Integrations should implement a sensor instead.
-        """
-        if (
-            self.platform
-            and self.platform.platform_name
-            not in _BATTERY_DEPRECATION_IGNORED_PLATFORMS
-        ):
-            # Don't report usage until after entity added to hass, after init
-            report_usage(
-                f"is setting the {property} which has been deprecated."
-                f" Integration {self.platform.platform_name} should implement a sensor"
-                " instead with a correct device class and link it to the same device",
-                core_integration_behavior=ReportBehavior.IGNORE,
-                custom_integration_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2026.8",
-                integration_domain=self.platform.platform_name,
-                exclude_integrations={DOMAIN},
-            )
-
-    @callback
-    def _report_deprecated_battery_feature(self) -> None:
-        """Report on deprecated use of battery supported features.
-
-        Integrations should remove the battery supported feature when migrating
-        battery level and icon to a sensor.
-        """
-        if (
-            self.platform
-            and self.platform.platform_name
-            not in _BATTERY_DEPRECATION_IGNORED_PLATFORMS
-        ):
-            # Don't report usage until after entity added to hass, after init
-            report_usage(
-                f"is setting the battery supported feature which has been deprecated."
-                f" Integration {self.platform.platform_name} should remove this as part of migrating"
-                " the battery level and icon to a sensor",
-                core_behavior=ReportBehavior.LOG,
-                core_integration_behavior=ReportBehavior.IGNORE,
-                custom_integration_behavior=ReportBehavior.LOG,
-                breaks_in_ha_version="2026.8",
-                integration_domain=self.platform.platform_name,
-                exclude_integrations={DOMAIN},
-            )
-
-    @cached_property
-    def battery_level(self) -> int | None:
-        """Return the battery level of the vacuum cleaner."""
-        return self._attr_battery_level
-
     @property
-    def battery_icon(self) -> str:
-        """Return the battery icon for the vacuum cleaner."""
-        charging = bool(self.activity == VacuumActivity.DOCKED)
-
-        return icon_for_battery_level(
-            battery_level=self.battery_level, charging=charging
-        )
-
-    @property
+    @override
     def capability_attributes(self) -> dict[str, Any] | None:
         """Return capability attributes."""
         if VacuumEntityFeature.FAN_SPEED in self.supported_features:
-            return {ATTR_FAN_SPEED_LIST: self.fan_speed_list}
+            return {VacuumEntityCapabilityAttribute.FAN_SPEED_LIST: self.fan_speed_list}
         return None
 
     @cached_property
@@ -321,25 +215,20 @@ class StateVacuumEntity(
         return self._attr_fan_speed_list
 
     @property
+    @override
     def state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the vacuum cleaner."""
         data: dict[str, Any] = {}
         supported_features = self.supported_features
 
-        if VacuumEntityFeature.BATTERY in supported_features:
-            if self.__vacuum_legacy_battery_feature is False:
-                self._report_deprecated_battery_feature()
-                self.__vacuum_legacy_battery_feature = True
-            data[ATTR_BATTERY_LEVEL] = self.battery_level
-            data[ATTR_BATTERY_ICON] = self.battery_icon
-
         if VacuumEntityFeature.FAN_SPEED in supported_features:
-            data[ATTR_FAN_SPEED] = self.fan_speed
+            data[VacuumEntityStateAttribute.FAN_SPEED] = self.fan_speed
 
         return data
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return the state of the vacuum cleaner."""
         if (activity := self.activity) is not None:
@@ -356,6 +245,7 @@ class StateVacuumEntity(
         return self._attr_activity
 
     @cached_property
+    @override
     def supported_features(self) -> VacuumEntityFeature:
         """Flag vacuum cleaner features that are supported."""
         return self._attr_supported_features
@@ -424,44 +314,67 @@ class StateVacuumEntity(
         return [Segment(**segment) for segment in last_seen_segments]
 
     @final
+    @staticmethod
     async def async_internal_clean_area(
-        self, cleaning_area_id: list[str], **kwargs: Any
+        entities: list[StateVacuumEntity], call: ServiceCall
     ) -> None:
         """Perform an area clean.
 
-        Calls async_clean_segments.
+        Calls async_clean_segments for each entity.
         """
-        if self.registry_entry is None:
-            raise RuntimeError(
-                "Cannot perform area clean, registry entry is not set for"
-                f" {self.entity_id}"
+        data = dict(call.data)
+        cleaning_area_id: list[str] = data.pop("cleaning_area_id")
+
+        entity_data: list[tuple[StateVacuumEntity, dict[str, Any]]] = []
+        handled_areas: set[str] = set()
+        for entity in entities:
+            if entity.registry_entry is None:
+                raise RuntimeError(
+                    "Cannot perform area clean, registry entry is not set for"
+                    f" {entity.entity_id}"
+                )
+
+            options: Mapping[str, Any] = entity.registry_entry.options.get(DOMAIN, {})
+            area_mapping: dict[str, list[str]] | None = options.get("area_mapping")
+
+            if area_mapping is None:
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="area_mapping_not_configured",
+                    translation_placeholders={"entity_id": entity.entity_id},
+                )
+
+            # We use a dict to preserve the order of segments.
+            segment_ids: dict[str, None] = {}
+            for area_id in cleaning_area_id:
+                if (segments := area_mapping.get(area_id)) is None:
+                    continue
+                handled_areas.add(area_id)
+                for segment_id in segments:
+                    segment_ids[segment_id] = None
+
+            if not segment_ids:
+                _LOGGER.debug(
+                    "No segments found for cleaning_area_id %s on vacuum %s",
+                    cleaning_area_id,
+                    entity.entity_id,
+                )
+                continue
+
+            entity_data.append((entity, {"segment_ids": list(segment_ids), **data}))
+
+        if entity_data:
+            await service_helper.async_handle_entity_calls(
+                "async_clean_segments", entity_data, context=call.context
             )
 
-        options: Mapping[str, Any] = self.registry_entry.options.get(DOMAIN, {})
-        area_mapping: dict[str, list[str]] | None = options.get("area_mapping")
-
-        if area_mapping is None:
+        unhandled_areas = set(cleaning_area_id) - handled_areas
+        if unhandled_areas:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
-                translation_key="area_mapping_not_configured",
-                translation_placeholders={"entity_id": self.entity_id},
+                translation_key="areas_not_mapped",
+                translation_placeholders={"areas": ", ".join(sorted(unhandled_areas))},
             )
-
-        # We use a dict to preserve the order of segments.
-        segment_ids: dict[str, None] = {}
-        for area_id in cleaning_area_id:
-            for segment_id in area_mapping.get(area_id, []):
-                segment_ids[segment_id] = None
-
-        if not segment_ids:
-            _LOGGER.debug(
-                "No segments found for cleaning_area_id %s on vacuum %s",
-                cleaning_area_id,
-                self.entity_id,
-            )
-            return
-
-        await self.async_clean_segments(list(segment_ids), **kwargs)
 
     def clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Perform an area clean."""

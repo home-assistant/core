@@ -1,7 +1,5 @@
 """Test Wyoming devices."""
 
-from __future__ import annotations
-
 from homeassistant.components.assist_pipeline import OPTION_PREFERRED
 from homeassistant.components.wyoming import DOMAIN
 from homeassistant.components.wyoming.devices import SatelliteDevice
@@ -22,8 +20,8 @@ async def test_device_registry_info(
 
     # Satellite uses config entry id since only one satellite per entry is
     # supported.
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, satellite_config_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, satellite_config_entry.entry_id), satellite_config_entry.entry_id
     )
     assert device is not None
     assert device.name == "Test Satellite"

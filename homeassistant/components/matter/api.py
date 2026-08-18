@@ -1,7 +1,5 @@
 """Handle websocket api for Matter."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from functools import wraps
 from typing import Any, Concatenate
@@ -278,7 +276,7 @@ async def websocket_open_commissioning_window(
     matter: MatterAdapter,
     node: MatterNode,
 ) -> None:
-    """Open a commissioning window to commission a device present on this controller to another."""
+    """Open a commissioning window to commission a device to another."""
     result = await matter.matter_client.open_commissioning_window(node_id=node.node_id)
     connection.send_result(msg[ID], dataclass_to_dict(result))
 

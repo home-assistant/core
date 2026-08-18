@@ -5,7 +5,7 @@ import socket
 from unittest.mock import Mock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from psutil._common import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr
+from psutil._ntuples import sdiskpart, sdiskusage, shwtemp, snetio, snicaddr
 import pytest
 from syrupy.assertion import SnapshotAssertion
 

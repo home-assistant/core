@@ -1,7 +1,5 @@
 """The devolo_home_control integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from functools import partial
@@ -17,7 +15,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import DOMAIN, PLATFORMS
 
@@ -93,7 +91,7 @@ async def async_unload_entry(
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: DevoloHomeControlConfigEntry,
-    device_entry: DeviceEntry,
+    device_entry: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     return True
@@ -108,7 +106,10 @@ def configure_mydevolo(conf: Mapping[str, Any]) -> Mydevolo:
 
 
 def check_mydevolo_and_get_gateway_ids(mydevolo: Mydevolo) -> list[str]:
-    """Check if the credentials are valid and return user's gateway IDs as long as mydevolo is not in maintenance mode."""
+    """Check credentials and return user's gateway IDs.
+
+    Raises if mydevolo is in maintenance mode.
+    """
     if not mydevolo.credentials_valid():
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,

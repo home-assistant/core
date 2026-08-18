@@ -6,6 +6,7 @@ from unittest.mock import ANY
 import pytest
 
 from homeassistant.components import mqtt
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -17,12 +18,8 @@ from tests.components.diagnostics import (
 )
 from tests.typing import ClientSessionGenerator, MqttMockHAClientGenerator
 
-default_entry_data = {
-    "broker": "mock-broker",
-}
-default_entry_options = {
-    "birth_message": {},
-}
+default_entry_data = {"broker": "mock-broker", "protocol": "5"}
+default_entry_options = {"birth_message": {}}
 
 
 async def test_entry_diagnostics(
@@ -33,7 +30,7 @@ async def test_entry_diagnostics(
 ) -> None:
     """Test config entry diagnostics."""
     mqtt_mock = await mqtt_mock_entry()
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     mqtt_mock.connected = True
 
     await get_diagnostics_for_config_entry(hass, hass_client, config_entry)
@@ -68,7 +65,9 @@ async def test_entry_diagnostics(
     )
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), config_entry.entry_id
+    )
 
     expected_debug_info = {
         "entities": [
@@ -145,6 +144,7 @@ async def test_entry_diagnostics(
         (
             {
                 mqtt.CONF_BROKER: "mock-broker",
+                mqtt.CONF_PROTOCOL: "5",
                 CONF_PASSWORD: "hunter2",
                 CONF_USERNAME: "my_user",
             },
@@ -170,7 +170,7 @@ async def test_redact_diagnostics(
     expected_config["data"]["password"] = "**REDACTED**"
     expected_config["data"]["username"] = "**REDACTED**"
 
-    config_entry = hass.config_entries.async_entries(mqtt.DOMAIN)[0]
+    config_entry = hass.config_entries.async_entries(DOMAIN)[0]
     mqtt_mock.connected = True
 
     # Discover a device with a device tracker
@@ -192,7 +192,9 @@ async def test_redact_diagnostics(
     async_fire_mqtt_message(hass, "attributes-topic", location_data)
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(identifiers={("mqtt", "0AFFD2")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        ("mqtt", "0AFFD2"), config_entry.entry_id
+    )
 
     expected_debug_info = {
         "entities": [
@@ -243,6 +245,7 @@ async def test_redact_diagnostics(
                         "latitude": "**REDACTED**",
                         "longitude": "**REDACTED**",
                         "source_type": "gps",
+                        "tracking_type": "position",
                     },
                     "entity_id": "device_tracker.mqtt_unique",
                     "last_changed": ANY,

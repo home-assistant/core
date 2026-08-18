@@ -1,8 +1,6 @@
 """Config flow for Google Translate text-to-speech integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -31,6 +29,7 @@ class GoogleTranslateConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

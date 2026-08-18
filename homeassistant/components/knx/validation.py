@@ -55,7 +55,8 @@ def ga_validator(value: Any) -> str | int:
     """Validate that value is parsable as GroupAddress or InternalGroupAddress."""
     if not isinstance(value, (str, int)):
         raise vol.Invalid(
-            f"'{value}' is not a valid KNX group address: Invalid type '{type(value).__name__}'"
+            f"'{value}' is not a valid KNX group address:"
+            f" Invalid type '{type(value).__name__}'"
         )
     try:
         parse_device_group_address(value)
@@ -118,6 +119,13 @@ sync_state_validator = vol.Any(
     vol.All(vol.Coerce(int), vol.Range(min=2, max=1440)),
     cv.boolean,
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
+)
+
+# entities having a writable group address can omit the state address
+# instead of disabling state updates entirely
+sync_state_no_false_validator = vol.All(
+    sync_state_validator,
+    vol.IsTrue("Sync state can not be disabled for this platform"),
 )
 
 
@@ -214,9 +222,12 @@ def validate_number_attributes(
         and (d_c_units := NUMBER_DEVICE_CLASS_UNITS.get(device_class)) is not None
         and unit_of_measurement not in d_c_units
     ):
+        _options = ", ".join(sorted(map(str, d_c_units), key=str.casefold))
         raise vol.Invalid(
-            f"Unit of measurement '{unit_of_measurement}' is not valid for device class '{device_class}'. "
-            f"Valid options are: {', '.join(sorted(map(str, d_c_units), key=str.casefold))}",
+            f"Unit of measurement '{unit_of_measurement}'"
+            f" is not valid for device class"
+            f" '{device_class}'."
+            f" Valid options are: {_options}",
             path=(
                 [CONF_DEVICE_CLASS]
                 if CONF_DEVICE_CLASS in config
@@ -230,7 +241,7 @@ def validate_number_attributes(
 def validate_sensor_attributes(
     dpt_info: DPTInfo, config: dict[str, Any]
 ) -> dict[str, Any]:
-    """Validate that state_class is compatible with device_class and unit_of_measurement.
+    """Validate state_class, device_class and unit compatibility.
 
     Works for both, UI and YAML configuration schema since they
     share same names for all tested attributes.
@@ -253,9 +264,11 @@ def validate_sensor_attributes(
         and (state_classes := DEVICE_CLASS_STATE_CLASSES.get(device_class)) is not None
         and state_class not in state_classes
     ):
+        _options = ", ".join(sorted(map(str, state_classes), key=str.casefold))
         raise vol.Invalid(
-            f"State class '{state_class}' is not valid for device class '{device_class}'. "
-            f"Valid options are: {', '.join(sorted(map(str, state_classes), key=str.casefold))}",
+            f"State class '{state_class}' is not valid"
+            f" for device class '{device_class}'."
+            f" Valid options are: {_options}",
             path=[CONF_SENSOR_STATE_CLASS],
         )
     if (
@@ -263,9 +276,12 @@ def validate_sensor_attributes(
         and (d_c_units := DEVICE_CLASS_UNITS.get(device_class)) is not None
         and unit_of_measurement not in d_c_units
     ):
+        _options = ", ".join(sorted(map(str, d_c_units), key=str.casefold))
         raise vol.Invalid(
-            f"Unit of measurement '{unit_of_measurement}' is not valid for device class '{device_class}'. "
-            f"Valid options are: {', '.join(sorted(map(str, d_c_units), key=str.casefold))}",
+            f"Unit of measurement '{unit_of_measurement}'"
+            f" is not valid for device class"
+            f" '{device_class}'."
+            f" Valid options are: {_options}",
             path=(
                 [CONF_DEVICE_CLASS]
                 if CONF_DEVICE_CLASS in config
@@ -277,9 +293,12 @@ def validate_sensor_attributes(
         and (s_c_units := STATE_CLASS_UNITS.get(state_class)) is not None
         and unit_of_measurement not in s_c_units
     ):
+        _options = ", ".join(sorted(map(str, s_c_units), key=str.casefold))
         raise vol.Invalid(
-            f"Unit of measurement '{unit_of_measurement}' is not valid for state class '{state_class}'. "
-            f"Valid options are: {', '.join(sorted(map(str, s_c_units), key=str.casefold))}",
+            f"Unit of measurement '{unit_of_measurement}'"
+            f" is not valid for state class"
+            f" '{state_class}'."
+            f" Valid options are: {_options}",
             path=(
                 [CONF_SENSOR_STATE_CLASS]
                 if CONF_SENSOR_STATE_CLASS in config

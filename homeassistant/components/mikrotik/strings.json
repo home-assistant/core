@@ -14,6 +14,9 @@
         "data": {
           "password": "[%key:common::config_flow::data::password%]"
         },
+        "data_description": {
+          "password": "The password for your Mikrotik device."
+        },
         "description": "The password for {username} is invalid.",
         "title": "[%key:common::config_flow::title::reauth%]"
       },
@@ -26,8 +29,95 @@
           "username": "[%key:common::config_flow::data::username%]",
           "verify_ssl": "[%key:common::config_flow::data::ssl%]"
         },
+        "data_description": {
+          "host": "The hostname or IP address of your Mikrotik router.",
+          "name": "The name of your Mikrotik router.",
+          "password": "The password for your Mikrotik router.",
+          "port": "The port of your Mikrotik router.",
+          "username": "The username for your Mikrotik router.",
+          "verify_ssl": "Verify SSL certificate of your Mikrotik router."
+        },
         "title": "Set up Mikrotik Router"
       }
+    }
+  },
+  "entity": {
+    "button": {
+      "backup": {
+        "name": "Backup"
+      },
+      "shutdown": {
+        "name": "Shutdown"
+      }
+    },
+    "select": {
+      "poe_out": {
+        "name": "PoE (out)",
+        "state": {
+          "auto_on": "On (automatic)",
+          "forced_on": "On (forced)",
+          "off": "[%key:common::state::off%]"
+        }
+      }
+    },
+    "sensor": {
+      "board_temperature": {
+        "name": "Board temperature {index}"
+      },
+      "cpu_load": {
+        "name": "CPU usage"
+      },
+      "cpu_temperature": {
+        "name": "CPU temperature"
+      },
+      "disk_usage": {
+        "name": "Disk usage"
+      },
+      "memory_usage": {
+        "name": "Memory usage"
+      },
+      "poe_out_consumption": {
+        "name": "PoE (out) consumption"
+      },
+      "psu_current": {
+        "name": "PSU {index} current"
+      },
+      "psu_voltage": {
+        "name": "PSU {index} voltage"
+      }
+    },
+    "switch": {
+      "ether": {
+        "name": "Ethernet"
+      },
+      "wlan": {
+        "name": "WLAN"
+      }
+    },
+    "update": {
+      "firmware_update": {
+        "name": "RouterOS"
+      },
+      "routerboard_update": {
+        "name": "RouterBOARD"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Error connecting: {error}"
+    },
+    "cannot_login": {
+      "message": "Cannot login: {error}"
+    },
+    "cannot_retrieve_data": {
+      "message": "Error retrieving data: {error}"
+    },
+    "invalid_auth": {
+      "message": "[%key:common::config_flow::error::invalid_auth%]"
+    },
+    "mikrotik_api_error": {
+      "message": "Mikrotik API error: {error}"
     }
   },
   "options": {
@@ -37,6 +127,11 @@
           "arp_ping": "Enable ARP ping",
           "detection_time": "Consider home interval",
           "force_dhcp": "Force scanning using DHCP"
+        },
+        "data_description": {
+          "arp_ping": "Enable ARP ping for device tracking. This will send an ARP request to the device to check if it is online.",
+          "detection_time": "The time interval in seconds to consider a device as home after it was last seen.",
+          "force_dhcp": "Force scanning using DHCP. This will use the DHCP leases to track devices."
         }
       }
     }

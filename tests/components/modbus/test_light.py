@@ -418,7 +418,8 @@ async def test_color_temp_brightness_light(
             call.args[0] == expected_register and call.kwargs["value"] == expected_value
             for call in calls
         ), (
-            f"Expected register {expected_register} with value {expected_value} not found in calls {calls}"
+            f"Expected register {expected_register} with value"
+            f" {expected_value} not found in calls {calls}"
         )
     await hass.services.async_call(
         LIGHT_DOMAIN,

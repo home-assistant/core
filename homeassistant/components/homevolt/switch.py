@@ -1,8 +1,6 @@
 """Support for Homevolt switch entities."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import EntityCategory
@@ -38,17 +36,20 @@ class HomevoltLocalModeSwitch(HomevoltEntity, SwitchEntity):
         super().__init__(coordinator, f"ems_{device_id}")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if local mode is enabled."""
         return self.coordinator.client.local_mode_enabled
 
     @homevolt_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable local mode."""
         await self.coordinator.client.enable_local_mode()
         await self.coordinator.async_request_refresh()
 
     @homevolt_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable local mode."""
         await self.coordinator.client.disable_local_mode()

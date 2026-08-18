@@ -1,11 +1,9 @@
 """DataUpdateCoordinator for NRGkick integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from nrgkick_api import (
@@ -58,6 +56,7 @@ class NRGkickDataUpdateCoordinator(DataUpdateCoordinator[NRGkickData]):
             always_update=False,
         )
 
+    @override
     async def _async_update_data(self) -> NRGkickData:
         """Update data via library."""
         try:

@@ -1,7 +1,5 @@
 """Device functions for Home Assistant templates."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import TYPE_CHECKING, Any
 
@@ -87,7 +85,8 @@ class DeviceExtension(BaseTemplateExtension):
         return next(
             (
                 device_id
-                for device_id, device in dev_reg.devices.items()
+                for container in (dev_reg.devices, dev_reg.child_devices)
+                for device_id, device in container.items()
                 if (name := device.name_by_user or device.name)
                 and (str(entity_id_or_device_name) == name)
             ),
@@ -95,7 +94,7 @@ class DeviceExtension(BaseTemplateExtension):
         )
 
     def device_name(self, lookup_value: str) -> str | None:
-        """Get the device name from an device id, or entity id."""
+        """Get the device name from a device or entity id."""
         device_reg = dr.async_get(self.hass)
         if device := device_reg.async_get(lookup_value):
             return device.name_by_user or device.name

@@ -941,10 +941,10 @@ async def test_integration_discovery_takes_precedence_over_bluetooth_uuid_addres
     assert len(flows) == 0
 
 
-async def test_integration_discovery_takes_precedence_over_bluetooth_non_unique_local_name(
+async def test_integration_discovery_precedence_over_bt_non_unique_name(
     hass: HomeAssistant,
 ) -> None:
-    """Test integration discovery dismisses bluetooth discovery with a non unique local name."""
+    """Test integration discovery dismisses non-unique BT discovery."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
@@ -993,9 +993,10 @@ async def test_integration_discovery_takes_precedence_over_bluetooth_non_unique_
 async def test_user_is_setting_up_lock_and_discovery_happens_in_the_middle(
     hass: HomeAssistant,
 ) -> None:
-    """Test that the user is setting up the lock and waiting for validation and the keys get discovered.
+    """Test user lock setup when discovery happens mid-validation.
 
-    In this case the integration discovery should abort and let the user continue setting up the lock.
+    In this case the integration discovery should abort and let the
+    user continue setting up the lock.
     """
     with patch(
         "homeassistant.components.yalexs_ble.config_flow.async_discovered_service_info",

@@ -2,7 +2,7 @@
 
 from contextlib import suppress
 import logging
-from typing import Any
+from typing import Any, override
 
 from fing_agent_api import FingAgent
 import httpx
@@ -22,6 +22,7 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -48,7 +49,9 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 devices_response = await fing_api.get_devices()
 
                 with suppress(httpx.ConnectError):
-                    # The suppression is needed because the get_agent_info method isn't available for desktop agents
+                    # The suppression is needed because the
+                    # get_agent_info method isn't available
+                    # for desktop agents
                     agent_info_response = await fing_api.get_agent_info()
 
             except httpx.NetworkError as _:
@@ -57,7 +60,8 @@ class FingConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "timeout_connect"
             except httpx.HTTPStatusError as exception:
                 description_placeholders["message"] = (
-                    f"{exception.response.status_code} - {exception.response.reason_phrase}"
+                    f"{exception.response.status_code}"
+                    f" - {exception.response.reason_phrase}"
                 )
                 if exception.response.status_code == 401:
                     errors["base"] = "invalid_api_key"

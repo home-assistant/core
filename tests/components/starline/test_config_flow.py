@@ -3,7 +3,7 @@
 import requests_mock
 
 from homeassistant import config_entries
-from homeassistant.components.starline import config_flow
+from homeassistant.components.starline import DOMAIN, config_flow
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -40,11 +40,21 @@ async def test_flow_works(hass: HomeAssistant) -> None:
         )
         mock.get(
             f"https://developer.starline.ru/json/v2/user/{TEST_APP_UID}/user_info",
-            text='{"code": 200, "devices": [{"device_id": "123", "imei": "123", "alias": "123", "battery": "123", "ctemp": "123", "etemp": "123", "fw_version": "123", "gsm_lvl": "123", "phone": "123", "status": "1", "ts_activity": "123", "typename": "123", "balance": {}, "car_state": {}, "car_alr_state": {}, "functions": [], "position": {}}], "shared_devices": []}',
+            text=(
+                '{"code": 200, "devices": [{"device_id": "123",'
+                ' "imei": "123", "alias": "123", "battery": "123",'
+                ' "ctemp": "123", "etemp": "123",'
+                ' "fw_version": "123", "gsm_lvl": "123",'
+                ' "phone": "123", "status": "1",'
+                ' "ts_activity": "123", "typename": "123",'
+                ' "balance": {}, "car_state": {},'
+                ' "car_alr_state": {}, "functions": [],'
+                ' "position": {}}], "shared_devices": []}'
+            ),
         )
 
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN, context={"source": config_entries.SOURCE_USER}
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
         )
         assert result["type"] is FlowResultType.FORM
         assert result["step_id"] == "auth_app"
@@ -77,7 +87,7 @@ async def test_step_auth_app_code_falls(hass: HomeAssistant) -> None:
             "https://id.starline.ru/apiV3/application/getCode/", text='{"state": 0}}'
         )
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
                 config_flow.CONF_APP_ID: TEST_APP_ID,
@@ -100,7 +110,7 @@ async def test_step_auth_app_token_falls(hass: HomeAssistant) -> None:
             "https://id.starline.ru/apiV3/application/getToken/", text='{"state": 0}'
         )
         result = await hass.config_entries.flow.async_init(
-            config_flow.DOMAIN,
+            DOMAIN,
             context={"source": config_entries.SOURCE_USER},
             data={
                 config_flow.CONF_APP_ID: TEST_APP_ID,

@@ -27,6 +27,9 @@
       "reset": {
         "default": "mdi:restart"
       },
+      "resume": {
+        "default": "mdi:play"
+      },
       "shutdown": {
         "default": "mdi:power"
       },

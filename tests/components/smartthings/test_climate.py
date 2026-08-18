@@ -22,6 +22,9 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
     PRESET_NONE,
@@ -36,7 +39,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.smartthings.const import MAIN
+from homeassistant.components.smartthings.const import DOMAIN, MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -47,7 +50,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     set_attribute_value,
@@ -85,7 +88,7 @@ async def test_ac_set_fan_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_FAN_MODE: "auto"},
+        {ATTR_ENTITY_ID: "climate.theater_ac_office_granit", ATTR_FAN_MODE: "auto"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -109,7 +112,10 @@ async def test_ac_set_hvac_mode_off(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_HVAC_MODE: HVACMode.OFF},
+        {
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
+            ATTR_HVAC_MODE: HVACMode.OFF,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -152,7 +158,7 @@ async def test_ac_set_hvac_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_HVAC_MODE: hvac_mode},
+        {ATTR_ENTITY_ID: "climate.theater_ac_office_granit", ATTR_HVAC_MODE: hvac_mode},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -178,7 +184,7 @@ async def test_ac_set_hvac_mode_turns_on(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
         {
-            ATTR_ENTITY_ID: "climate.ac_office_granit",
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
             ATTR_HVAC_MODE: HVACMode.AUTO,
         },
         blocking=True,
@@ -222,7 +228,10 @@ async def test_ac_set_hvac_mode_fan(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_HVAC_MODE,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
+        {
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
+            ATTR_HVAC_MODE: HVACMode.FAN_ONLY,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -246,7 +255,7 @@ async def test_ac_set_temperature(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_TEMPERATURE: 23},
+        {ATTR_ENTITY_ID: "climate.theater_ac_office_granit", ATTR_TEMPERATURE: 23},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -271,7 +280,7 @@ async def test_ac_set_temperature_and_hvac_mode_while_off(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.ac_office_granit",
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
             ATTR_TEMPERATURE: 23,
             ATTR_HVAC_MODE: HVACMode.AUTO,
         },
@@ -321,7 +330,7 @@ async def test_ac_set_temperature_and_hvac_mode(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.ac_office_granit",
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
             ATTR_TEMPERATURE: 23,
             ATTR_HVAC_MODE: HVACMode.AUTO,
         },
@@ -359,7 +368,7 @@ async def test_ac_set_temperature_and_hvac_mode_off(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
         {
-            ATTR_ENTITY_ID: "climate.ac_office_granit",
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
             ATTR_TEMPERATURE: 23,
             ATTR_HVAC_MODE: HVACMode.OFF,
         },
@@ -403,7 +412,7 @@ async def test_ac_toggle_power(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         service,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit"},
+        {ATTR_ENTITY_ID: "climate.theater_ac_office_granit"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -432,7 +441,10 @@ async def test_ac_set_swing_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_SWING_MODE,
-        {ATTR_ENTITY_ID: "climate.ac_office_granit", ATTR_SWING_MODE: SWING_OFF},
+        {
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
+            ATTR_SWING_MODE: SWING_OFF,
+        },
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -490,7 +502,7 @@ async def test_ac_state_update(
     """Test state update."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("climate.ac_office_granit").state == HVACMode.OFF
+    assert hass.states.get("climate.theater_ac_office_granit").state == HVACMode.OFF
 
     await trigger_update(
         hass,
@@ -501,7 +513,7 @@ async def test_ac_state_update(
         "on",
     )
 
-    assert hass.states.get("climate.ac_office_granit").state == HVACMode.HEAT
+    assert hass.states.get("climate.theater_ac_office_granit").state == HVACMode.HEAT
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -588,7 +600,7 @@ async def test_ac_state_attributes_update(
     await setup_integration(hass, mock_config_entry)
 
     assert (
-        hass.states.get("climate.ac_office_granit").attributes[state_attribute]
+        hass.states.get("climate.theater_ac_office_granit").attributes[state_attribute]
         == original_value
     )
 
@@ -602,9 +614,38 @@ async def test_ac_state_attributes_update(
     )
 
     assert (
-        hass.states.get("climate.ac_office_granit").attributes[state_attribute]
+        hass.states.get("climate.theater_ac_office_granit").attributes[state_attribute]
         == expected_value
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_setpoint_range_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the setpoint range is used when the device reports one."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.theater_ac_office_granit")
+    assert state.attributes[ATTR_MIN_TEMP] == DEFAULT_MIN_TEMP
+    assert state.attributes[ATTR_MAX_TEMP] == DEFAULT_MAX_TEMP
+    assert ATTR_TARGET_TEMP_STEP not in state.attributes
+
+    await trigger_update(
+        hass,
+        devices,
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.THERMOSTAT_COOLING_SETPOINT,
+        Attribute.COOLING_SETPOINT_RANGE,
+        {"minimum": 16, "maximum": 30, "step": 1},
+    )
+
+    state = hass.states.get("climate.theater_ac_office_granit")
+    assert state.attributes[ATTR_MIN_TEMP] == 16
+    assert state.attributes[ATTR_MAX_TEMP] == 30
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 1
 
 
 @pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
@@ -619,7 +660,7 @@ async def test_thermostat_set_fan_mode(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_FAN_MODE,
-        {ATTR_ENTITY_ID: "climate.virtual_thermostat", ATTR_FAN_MODE: "on"},
+        {ATTR_ENTITY_ID: "climate.theater_virtual_thermostat", ATTR_FAN_MODE: "on"},
         blocking=True,
     )
     devices.execute_device_command.assert_called_once_with(
@@ -744,7 +785,7 @@ async def test_thermostat_set_temperature(
     await hass.services.async_call(
         CLIMATE_DOMAIN,
         SERVICE_SET_TEMPERATURE,
-        {ATTR_ENTITY_ID: "climate.virtual_thermostat"} | data,
+        {ATTR_ENTITY_ID: "climate.theater_virtual_thermostat"} | data,
         blocking=True,
     )
     assert devices.execute_device_command.mock_calls == calls
@@ -762,7 +803,7 @@ async def test_humidity(
     ] = {Attribute.HUMIDITY: Status(50)}
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.virtual_thermostat")
+    state = hass.states.get("climate.theater_virtual_thermostat")
     assert state
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 50
 
@@ -779,7 +820,7 @@ async def test_updating_humidity(
     ] = {Attribute.HUMIDITY: Status(50)}
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("climate.virtual_thermostat")
+    state = hass.states.get("climate.theater_virtual_thermostat")
     assert state
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 50
 
@@ -793,7 +834,9 @@ async def test_updating_humidity(
     )
 
     assert (
-        hass.states.get("climate.virtual_thermostat").attributes[ATTR_CURRENT_HUMIDITY]
+        hass.states.get("climate.theater_virtual_thermostat").attributes[
+            ATTR_CURRENT_HUMIDITY
+        ]
         == 40
     )
 
@@ -873,7 +916,9 @@ async def test_thermostat_state_attributes_update(
     await setup_integration(hass, mock_config_entry)
 
     assert (
-        hass.states.get("climate.virtual_thermostat").attributes[state_attribute]
+        hass.states.get("climate.theater_virtual_thermostat").attributes[
+            state_attribute
+        ]
         == original_value
     )
 
@@ -887,7 +932,9 @@ async def test_thermostat_state_attributes_update(
     )
 
     assert (
-        hass.states.get("climate.virtual_thermostat").attributes[state_attribute]
+        hass.states.get("climate.theater_virtual_thermostat").attributes[
+            state_attribute
+        ]
         == expected_value
     )
 
@@ -1144,6 +1191,30 @@ async def test_heat_pump_state_attributes_update(
     )
 
 
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+@pytest.mark.usefixtures("devices")
+async def test_heat_pump_zone_via_device_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test heat pump zone devices are linked to their parent device."""
+    await setup_integration(hass, mock_config_entry)
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3810e5ad-5351-d9f9-12ff-000001200000"), mock_config_entry.entry_id
+    )
+    assert parent_device is not None
+
+    for component in ("INDOOR1", "INDOOR2"):
+        zone_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"3810e5ad-5351-d9f9-12ff-000001200000_{component}"),
+            mock_config_entry.entry_id,
+        )
+        assert zone_device is not None
+        assert zone_device.via_device_id == parent_device.id
+
+
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
 async def test_availability(
     hass: HomeAssistant,
@@ -1153,19 +1224,21 @@ async def test_availability(
     """Test availability."""
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("climate.ac_office_granit").state == STATE_OFF
+    assert hass.states.get("climate.theater_ac_office_granit").state == STATE_OFF
 
     await trigger_health_update(
         hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.OFFLINE
     )
 
-    assert hass.states.get("climate.ac_office_granit").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("climate.theater_ac_office_granit").state == STATE_UNAVAILABLE
+    )
 
     await trigger_health_update(
         hass, devices, "96a5ef74-5832-a84b-f1f7-ca799957065d", HealthStatus.ONLINE
     )
 
-    assert hass.states.get("climate.ac_office_granit").state == STATE_OFF
+    assert hass.states.get("climate.theater_ac_office_granit").state == STATE_OFF
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -1176,4 +1249,6 @@ async def test_availability_at_start(
 ) -> None:
     """Test unavailable at boot."""
     await setup_integration(hass, mock_config_entry)
-    assert hass.states.get("climate.ac_office_granit").state == STATE_UNAVAILABLE
+    assert (
+        hass.states.get("climate.theater_ac_office_granit").state == STATE_UNAVAILABLE
+    )

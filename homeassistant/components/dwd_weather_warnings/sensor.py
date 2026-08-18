@@ -9,16 +9,14 @@ Warnungen vor markantem Wetter (Stufe 2)  # codespell:ignore vor
 Wetterwarnungen (Stufe 1)
 """
 
-from __future__ import annotations
-
-from datetime import UTC, datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import (
     ADVANCE_WARNING_SENSOR,
@@ -102,10 +100,11 @@ class DwdWeatherWarningsSensor(
         if warnings is None:
             return []
 
-        now = datetime.now(UTC)
+        now = dt_util.utcnow()
         return [warning for warning in warnings if warning[API_ATTR_WARNING_END] > now]
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the state of the sensor."""
         if self.entity_description.key == CURRENT_WARNING_SENSOR:
@@ -117,6 +116,7 @@ class DwdWeatherWarningsSensor(
         return max((w.get(API_ATTR_WARNING_LEVEL, 0) for w in warnings), default=0)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         data = {
@@ -154,6 +154,7 @@ class DwdWeatherWarningsSensor(
         return data
 
     @property
+    @override
     def available(self) -> bool:
         """Could the device be accessed during the last update call."""
         return self.coordinator.api.data_valid

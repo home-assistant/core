@@ -125,7 +125,8 @@ async def test_incorrect_channel_type(
     with pytest.raises(
         vol.error.MultipleInvalid,
         match=re.escape(
-            "value must be one of ['controlled_load', 'feed_in', 'general'] for dictionary value @ data['channel_type']"
+            "value must be one of ['controlled_load', 'feed_in',"
+            " 'general'] for dictionary value @ data['channel_type']"
         ),
     ):
         await hass.services.async_call(

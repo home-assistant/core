@@ -3,6 +3,7 @@
 import asyncio
 import logging
 
+from aiohttp import ClientError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -25,6 +26,7 @@ from homeassistant.exceptions import (
     ConfigEntryError,
     ConfigEntryNotReady,
 )
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceInfo
 
@@ -49,6 +51,7 @@ PLATFORMS = [
     Platform.SELECT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TEXT,
     Platform.UPDATE,
 ]
 
@@ -81,6 +84,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
         ) from e
+    except ClientError as e:
+        raise ConfigEntryNotReady from e
 
     vehicles: list[TessieVehicleData] = []
     for vehicle in state_of_all_vehicles["results"]:
@@ -91,6 +96,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
         vehicle_api = tessie.vehicles.create(vin)
         vehicles.append(
             TessieVehicleData(
+                api=vehicle_api,
                 vin=vin,
                 data_coordinator=TessieStateUpdateCoordinator(
                     hass,
@@ -123,13 +129,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
 
     try:
         scopes = await tessie.scopes()
-    except TeslaFleetError as e:
+    except (TeslaFleetError, ClientError) as e:
         raise ConfigEntryNotReady from e
 
     if Scope.ENERGY_DEVICE_DATA in scopes:
         try:
             products = (await tessie.products())["response"]
-        except TeslaFleetError as e:
+        except (TeslaFleetError, ClientError) as e:
             raise ConfigEntryNotReady from e
 
         for product in products:
@@ -153,7 +159,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
                 except (InvalidToken, Forbidden, SubscriptionRequired) as e:
                     raise ConfigEntryAuthFailed from e
                 except TeslaFleetError as e:
-                    raise ConfigEntryNotReady(e.message) from e
+                    raise ConfigEntryNotReady(getattr(e, "message", str(e))) from e
+                except ClientError as e:
+                    raise ConfigEntryNotReady from e
 
                 powerwall = (
                     product["components"]["battery"] or product["components"]["solar"]
@@ -205,6 +213,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TessieConfigEntry) -> bo
         )
 
     entry.runtime_data = TessieData(vehicles, energysites)
+
+    # Register energy site devices before forwarding to platforms so wall
+    # connector entities can resolve their via_device parent at construction.
+    device_registry = dr.async_get(hass)
+    for energysite in energysites:
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id, **energysite.device
+        )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

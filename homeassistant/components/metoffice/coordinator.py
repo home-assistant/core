@@ -1,10 +1,8 @@
 """Data update coordinator for the Met Office integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import Literal
+from typing import Literal, override
 
 from datapoint.exceptions import APIException
 from datapoint.Forecast import Forecast
@@ -65,6 +63,7 @@ class MetOfficeUpdateCoordinator(TimestampDataUpdateCoordinator[Forecast]):
         self._longitude = longitude
         self._frequency = frequency
 
+    @override
     async def _async_update_data(self) -> Forecast:
         """Get data from Met Office."""
         return await self.hass.async_add_executor_job(

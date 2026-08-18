@@ -1,7 +1,5 @@
 """The Cync integration."""
 
-from __future__ import annotations
-
 from pycync import Auth, Cync, User
 from pycync.exceptions import AuthFailedError, CyncError
 

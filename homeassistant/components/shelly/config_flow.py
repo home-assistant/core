@@ -1,12 +1,10 @@
 """Config flow for Shelly integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any, Final, cast
+from typing import TYPE_CHECKING, Any, Final, cast, override
 
 from aioshelly.ble import get_name_from_model_id
 from aioshelly.ble.manufacturer_data import (
@@ -15,7 +13,12 @@ from aioshelly.ble.manufacturer_data import (
 )
 from aioshelly.block_device import BlockDevice
 from aioshelly.common import ConnectionOptions, get_info
-from aioshelly.const import BLOCK_GENERATIONS, DEFAULT_HTTP_PORT, RPC_GENERATIONS
+from aioshelly.const import (
+    BLOCK_GENERATIONS,
+    DEFAULT_HTTP_PORT,
+    DEFAULT_HTTPS_PORT,
+    RPC_GENERATIONS,
+)
 from aioshelly.exceptions import (
     CustomPortNotSupported,
     DeviceConnectionError,
@@ -53,6 +56,7 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
+    CONF_VERIFY_SSL,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
@@ -99,12 +103,14 @@ CONFIG_SCHEMA: Final = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_HTTP_PORT): vol.Coerce(int),
+        vol.Optional(CONF_VERIFY_SSL, default=False): bool,
     }
 )
 
 
 BLE_SCANNER_OPTIONS = [
     BLEScannerMode.DISABLED,
+    BLEScannerMode.AUTO,
     BLEScannerMode.ACTIVE,
     BLEScannerMode.PASSIVE,
 ]
@@ -145,6 +151,7 @@ async def validate_input(
     port: int,
     info: dict[str, Any],
     data: dict[str, Any],
+    verify_ssl: bool = False,
 ) -> dict[str, Any]:
     """Validate the user input allows us to connect.
 
@@ -156,6 +163,7 @@ async def validate_input(
         password=data.get(CONF_PASSWORD),
         device_mac=info[CONF_MAC],
         port=port,
+        verify_ssl=verify_ssl,
     )
 
     gen = get_info_gen(info)
@@ -207,10 +215,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Shelly."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     host: str = ""
     port: int = DEFAULT_HTTP_PORT
+    verify_ssl: bool = False
     info: dict[str, Any] = {}
     device_info: dict[str, Any] = {}
     ble_device: BLEDevice | None = None
@@ -223,6 +232,21 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     disable_ble_rpc_after_provision: bool = True
     _discovered_devices: dict[str, DiscoveredDeviceZeroconf | DiscoveredDeviceBluetooth]
     _ble_rpc_device: RpcDevice | None = None
+
+    @staticmethod
+    def _get_ssl_entry_data(port: int, verify_ssl: bool) -> dict[str, bool]:
+        """Return SSL verification config entry data for HTTPS devices only."""
+        if port != DEFAULT_HTTPS_PORT:
+            return {}
+        return {CONF_VERIFY_SSL: verify_ssl}
+
+    @staticmethod
+    def _check_enhanced_security(info: dict[str, Any], port: int) -> int:
+        """Return HTTPS port if device reports enhanced_security is enabled."""
+        if info.get("enhanced_security"):
+            return DEFAULT_HTTPS_PORT
+
+        return port
 
     @staticmethod
     def _get_name_from_mac_and_ble_model(
@@ -238,7 +262,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             and isinstance(model_id, int)
             and (model_name := get_name_from_model_id(model_id))
         ):
-            # Remove spaces from model name (e.g., "Shelly 1 Mini Gen4" -> "Shelly1MiniGen4")
+            # Remove spaces from model name
+            # (e.g., "Shelly 1 Mini Gen4" -> "Shelly1MiniGen4")
             return f"{model_name.replace(' ', '')}-{mac}"
         return f"Shelly-{mac}"
 
@@ -407,28 +432,31 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         return discovered
 
     async def _async_connect_and_get_info(
-        self, host: str, port: int
+        self, host: str, port: int, verify_ssl: bool = False
     ) -> ConfigFlowResult | None:
-        """Connect to device, validate, and create entry or return None to continue flow.
+        """Connect to device, validate, and create entry or return None.
 
-        This helper consolidates the common logic between Zeroconf device selection
-        and manual entry flows. Returns a ConfigFlowResult if the flow should end
-        (create_entry or abort), or None if the flow should continue (e.g., to credentials).
+        This helper consolidates the common logic between
+        Zeroconf device selection and manual entry flows.
+        Returns a ConfigFlowResult if the flow should end
+        (create_entry or abort), or None if the flow should
+        continue (e.g., to credentials).
 
         Sets self.info, self.host, and self.port on success.
         """
-        self.info = await self._async_get_info(host, port)
+        self.info = await self._async_get_info(host, port, verify_ssl)
         await self.async_set_unique_id(self.info[CONF_MAC], raise_on_progress=False)
         self._abort_if_unique_id_configured({CONF_HOST: host})
 
         self.host = host
-        self.port = port
+        self.port = self._check_enhanced_security(self.info, port)
+        self.verify_ssl = verify_ssl
 
         if get_info_auth(self.info):
             return None  # Continue to credentials step
 
         device_info = await validate_input(
-            self.hass, self.host, self.port, self.info, {}
+            self.hass, self.host, self.port, self.info, {}, self.verify_ssl
         )
 
         if device_info[CONF_MODEL]:
@@ -440,10 +468,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                     CONF_MODEL: device_info[CONF_MODEL],
                     CONF_GEN: device_info[CONF_GEN],
+                    **self._get_ssl_entry_data(self.port, self.verify_ssl),
                 },
             )
         return self.async_abort(reason="firmware_not_fully_provisioned")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -460,7 +490,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 # Zeroconf device - connect directly
                 try:
                     result = await self._async_connect_and_get_info(
-                        device_data.host, device_data.port
+                        device_data.host, device_data.port, verify_ssl=False
                     )
                 except AbortFlow:
                     raise  # Let AbortFlow propagate (e.g., already_configured)
@@ -548,7 +578,9 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 result = await self._async_connect_and_get_info(
-                    user_input[CONF_HOST], user_input[CONF_PORT]
+                    user_input[CONF_HOST],
+                    user_input[CONF_PORT],
+                    user_input[CONF_VERIFY_SSL],
                 )
             except AbortFlow:
                 raise  # Let AbortFlow propagate (e.g., already_configured)
@@ -583,7 +615,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 user_input[CONF_USERNAME] = "admin"
             try:
                 device_info = await validate_input(
-                    self.hass, self.host, self.port, self.info, user_input
+                    self.hass,
+                    self.host,
+                    self.port,
+                    self.info,
+                    user_input,
+                    self.verify_ssl,
                 )
             except InvalidAuthError:
                 errors["base"] = "invalid_auth"
@@ -605,6 +642,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                             CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                             CONF_MODEL: device_info[CONF_MODEL],
                             CONF_GEN: device_info[CONF_GEN],
+                            **self._get_ssl_entry_data(self.port, self.verify_ssl),
                         },
                     )
                 return self.async_abort(reason="firmware_not_fully_provisioned")
@@ -687,7 +725,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         await self._async_discovered_mac(mac, host)
 
     async def _async_discovered_mac(self, mac: str, host: str) -> None:
-        """Abort and reconnect soon if the device with the mac address is already configured."""
+        """Abort and reconnect soon if the device with the mac is already configured."""
         if (
             current_entry := await self.async_set_unique_id(mac)
         ) and current_entry.data.get(CONF_HOST) == host:
@@ -705,6 +743,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             self._abort_if_unique_id_configured({CONF_HOST: host})
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -807,7 +846,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         ssid_options = [network["ssid"] for network in sorted_networks]
 
-        # Pre-select SSID if returning from failed provisioning attempt
+        # Preselect SSID if returning from failed provisioning attempt
         suggested_values: dict[str, Any] = {}
         if self.selected_ssid:
             suggested_values[CONF_SSID] = self.selected_ssid
@@ -873,6 +912,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             None,
             device_mac=self.unique_id,
             port=port,
+            verify_ssl=self.verify_ssl,
         )
         device: RpcDevice | None = None
         try:
@@ -916,7 +956,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult | None:
         """Provision WiFi credentials via BLE and wait for zeroconf discovery.
 
-        Returns the flow result to be stored in self._provision_result, or None if failed.
+        Returns the flow result to be stored in
+        self._provision_result, or None if failed.
         """
         # Provision WiFi via BLE using persistent connection
         try:
@@ -976,7 +1017,8 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                     state.port = DEFAULT_HTTP_PORT
                 else:
                     LOGGER.debug("BLE fallback also failed - provisioning unsuccessful")
-                    # Store failure info and return None - provision_done will handle redirect
+                    # Store failure info and return None
+                    # provision_done will handle redirect
                     return None
             else:
                 state.host, state.port = result
@@ -994,11 +1036,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.port = state.port
 
         try:
-            self.info = await self._async_get_info(self.host, self.port)
+            self.info = await self._async_get_info(
+                self.host, self.port, self.verify_ssl
+            )
         except DeviceConnectionError as err:
             LOGGER.debug("Failed to connect to device after WiFi provisioning: %s", err)
             # Device appeared on network but can't connect - allow retry
             return None
+
+        self.port = self._check_enhanced_security(self.info, self.port)
 
         if get_info_auth(self.info):
             # Device requires authentication - show credentials step
@@ -1006,7 +1052,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             device_info = await validate_input(
-                self.hass, self.host, self.port, self.info, {}
+                self.hass,
+                self.host,
+                self.port,
+                self.info,
+                {},
+                self.verify_ssl,
             )
         except DeviceConnectionError as err:
             LOGGER.debug("Failed to validate device after WiFi provisioning: %s", err)
@@ -1035,6 +1086,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_SLEEP_PERIOD: device_info[CONF_SLEEP_PERIOD],
                 CONF_MODEL: device_info[CONF_MODEL],
                 CONF_GEN: device_info[CONF_GEN],
+                **self._get_ssl_entry_data(self.port, self.verify_ssl),
             },
         )
 
@@ -1086,7 +1138,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle failed provisioning - allow retry."""
         if user_input is not None:
-            # User wants to retry - keep selected_ssid so it's pre-selected
+            # User wants to retry - keep selected_ssid so it's preselected
             self.wifi_networks = []
             return await self.async_step_wifi_scan()
 
@@ -1108,6 +1160,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return result
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -1116,6 +1169,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="ipv6_not_supported")
         host = discovery_info.host
         port = discovery_info.port or DEFAULT_HTTP_PORT
+        verify_ssl = False
         # First try to get the mac address from the name
         # so we can avoid making another connection to the
         # device if we already have it configured
@@ -1125,7 +1179,7 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             # Devices behind range extender doesn't generate zeroconf packets
             # so port is always the default one
-            self.info = await self._async_get_info(host, port)
+            self.info = await self._async_get_info(host, port, verify_ssl)
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
 
@@ -1136,10 +1190,15 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
             await self._async_handle_zeroconf_mac_discovery(mac, host, port)
 
         self.host = host
+        self.port = self._check_enhanced_security(self.info, port)
+        self.verify_ssl = verify_ssl
         self.context.update(
             {
                 "title_placeholders": {"name": discovery_info.name.split(".")[0]},
-                "configuration_url": f"http://{discovery_info.host}",
+                "configuration_url": (
+                    f"{'https' if self.port == DEFAULT_HTTPS_PORT else 'http'}://"
+                    f"{discovery_info.host}"
+                ),
             }
         )
 
@@ -1148,7 +1207,12 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             self.device_info = await validate_input(
-                self.hass, self.host, self.port, self.info, {}
+                self.hass,
+                self.host,
+                self.port,
+                self.info,
+                {},
+                self.verify_ssl,
             )
         except DeviceConnectionError:
             return self.async_abort(reason="cannot_connect")
@@ -1169,9 +1233,11 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 title=self.device_info["title"],
                 data={
                     CONF_HOST: self.host,
+                    CONF_PORT: self.port,
                     CONF_SLEEP_PERIOD: self.device_info[CONF_SLEEP_PERIOD],
                     CONF_MODEL: self.device_info[CONF_MODEL],
                     CONF_GEN: self.device_info[CONF_GEN],
+                    **self._get_ssl_entry_data(self.port, self.verify_ssl),
                 },
             )
         self._set_confirm_only()
@@ -1199,24 +1265,33 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         reauth_entry = self._get_reauth_entry()
         host = reauth_entry.data[CONF_HOST]
         port = get_http_port(reauth_entry.data)
+        verify_ssl = reauth_entry.data.get(CONF_VERIFY_SSL, False)
 
         if user_input is not None:
             try:
-                info = await self._async_get_info(host, port)
+                info = await self._async_get_info(host, port, verify_ssl)
             except DeviceConnectionError, InvalidAuthError:
                 return self.async_abort(reason="reauth_unsuccessful")
 
             if get_device_entry_gen(reauth_entry) != 1:
                 user_input[CONF_USERNAME] = "admin"
+
+            port = self._check_enhanced_security(info, port)
+
             try:
-                await validate_input(self.hass, host, port, info, user_input)
+                await validate_input(
+                    self.hass, host, port, info, user_input, verify_ssl
+                )
             except DeviceConnectionError, InvalidAuthError:
                 return self.async_abort(reason="reauth_unsuccessful")
             except MacAddressMismatchError:
                 return self.async_abort(reason="mac_address_mismatch")
 
+            data_updates: dict[str, Any] = {CONF_PORT: port, **user_input}
+            data_updates.update(self._get_ssl_entry_data(port, verify_ssl))
+
             return self.async_update_reload_and_abort(
-                reauth_entry, data_updates=user_input
+                reauth_entry, data_updates=data_updates
             )
 
         if get_device_entry_gen(reauth_entry) in BLOCK_GENERATIONS:
@@ -1241,12 +1316,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
         self.host = reconfigure_entry.data[CONF_HOST]
         self.port = reconfigure_entry.data.get(CONF_PORT, DEFAULT_HTTP_PORT)
+        self.verify_ssl = reconfigure_entry.data.get(CONF_VERIFY_SSL, False)
 
         if user_input is not None:
             host = user_input[CONF_HOST]
             port = user_input.get(CONF_PORT, DEFAULT_HTTP_PORT)
+            verify_ssl = user_input.get(CONF_VERIFY_SSL, False)
             try:
-                info = await self._async_get_info(host, port)
+                info = await self._async_get_info(host, port, verify_ssl)
             except DeviceConnectionError:
                 errors["base"] = "cannot_connect"
             except CustomPortNotSupported:
@@ -1255,9 +1332,21 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(info[CONF_MAC])
                 self._abort_if_unique_id_mismatch(reason="another_device")
 
+                port = self._check_enhanced_security(info, port)
+
+                data_updates: dict[str, Any] = {
+                    CONF_HOST: host,
+                    CONF_PORT: port,
+                }
+                if (
+                    port == DEFAULT_HTTPS_PORT
+                    or CONF_VERIFY_SSL in reconfigure_entry.data
+                ):
+                    data_updates[CONF_VERIFY_SSL] = verify_ssl
+
                 return self.async_update_reload_and_abort(
                     reconfigure_entry,
-                    data_updates={CONF_HOST: host, CONF_PORT: port},
+                    data_updates=data_updates,
                 )
 
         return self.async_show_form(
@@ -1266,17 +1355,23 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
                 {
                     vol.Required(CONF_HOST, default=self.host): str,
                     vol.Required(CONF_PORT, default=self.port): vol.Coerce(int),
+                    vol.Optional(CONF_VERIFY_SSL, default=self.verify_ssl): bool,
                 }
             ),
             description_placeholders={"device_name": reconfigure_entry.title},
             errors=errors,
         )
 
-    async def _async_get_info(self, host: str, port: int) -> dict[str, Any]:
+    async def _async_get_info(
+        self, host: str, port: int, verify_ssl: bool
+    ) -> dict[str, Any]:
         """Get info from shelly device."""
-        return await get_info(async_get_clientsession(self.hass), host, port=port)
+        return await get_info(
+            async_get_clientsession(self.hass), host, port=port, verify_ssl=verify_ssl
+        )
 
     @callback
+    @override
     def async_remove(self) -> None:
         """Handle flow removal - cleanup BLE connection."""
         super().async_remove()
@@ -1289,12 +1384,14 @@ class ShellyConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ShellyConfigEntry) -> OptionsFlowHandler:
         """Get the options flow for this handler."""
         return OptionsFlowHandler()
 
     @classmethod
     @callback
+    @override
     def async_supports_options_flow(cls, config_entry: ShellyConfigEntry) -> bool:
         """Return options flow support for this handler."""
         return get_device_entry_gen(

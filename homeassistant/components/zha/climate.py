@@ -4,12 +4,11 @@ For more details on this platform, please refer to the documentation
 at https://home-assistant.io/components/zha.climate/
 """
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import functools
-from typing import Any
+from typing import Any, override
 
+from zha.application.platforms.climate import ThermostatState
 from zha.application.platforms.climate.const import (
     ClimateEntityFeature as ZHAClimateEntityFeature,
     HVACAction as ZHAHVACAction,
@@ -28,14 +27,13 @@ from homeassistant.components.climate import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PRECISION_TENTHS, Platform, UnitOfTemperature
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import ZHAEntity
+from .entity import ZHASupportedFeaturesEntity
 from .helpers import (
     SIGNAL_ADD_ENTITIES,
-    EntityData,
     async_add_entities as zha_async_add_entities,
     convert_zha_error_to_ha_error,
     exclude_none_values,
@@ -82,30 +80,21 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-class Thermostat(ZHAEntity, ClimateEntity):
+class Thermostat(ZHASupportedFeaturesEntity, ClimateEntity):
     """Representation of a ZHA Thermostat device."""
 
     _attr_precision = PRECISION_TENTHS
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
     _attr_translation_key: str = "thermostat"
 
-    def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
-        """Initialize the ZHA thermostat entity."""
-        super().__init__(entity_data, **kwargs)
-        self._attr_hvac_modes = [
-            ZHA_TO_HA_HVAC_MODE[mode] for mode in self.entity_data.entity.hvac_modes
-        ]
-        self._attr_hvac_mode = ZHA_TO_HA_HVAC_MODE.get(
-            self.entity_data.entity.hvac_mode
-        )
-        self._attr_hvac_action = ZHA_TO_HA_HVAC_ACTION.get(
-            self.entity_data.entity.hvac_action
-        )
-
-        features: ClimateEntityFeature = ClimateEntityFeature(0)
-        zha_features: ZHAClimateEntityFeature = (
-            self.entity_data.entity.supported_features
-        )
+    @staticmethod
+    @functools.cache
+    @override
+    def _convert_supported_features(
+        zha_features: ZHAClimateEntityFeature,
+    ) -> ClimateEntityFeature:
+        """Convert ZHA climate features to HA climate features."""
+        features = ClimateEntityFeature(0)
 
         if ZHAClimateEntityFeature.TARGET_TEMPERATURE in zha_features:
             features |= ClimateEntityFeature.TARGET_TEMPERATURE
@@ -124,106 +113,113 @@ class Thermostat(ZHAEntity, ClimateEntity):
         if ZHAClimateEntityFeature.TURN_ON in zha_features:
             features |= ClimateEntityFeature.TURN_ON
 
-        self._attr_supported_features = features
+        return features
+
+    @override
+    def _update_capability_attrs(self) -> None:
+        """Re-derive capability attributes from the cached state."""
+        super()._update_capability_attrs()
+
+        state = self._zha_state
+        self._attr_hvac_modes = [ZHA_TO_HA_HVAC_MODE[mode] for mode in state.hvac_modes]
+        self._attr_fan_modes = state.fan_modes
+        self._attr_preset_modes = state.preset_modes
+        self._attr_min_temp = state.min_temp
+        self._attr_max_temp = state.max_temp
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return entity specific state attributes."""
-        state = self.entity_data.entity.state
+        state = self._zha_state
+
+        if not isinstance(state, ThermostatState):
+            return None
 
         return exclude_none_values(
             {
-                "occupancy": state.get("occupancy"),
-                "occupied_cooling_setpoint": state.get("occupied_cooling_setpoint"),
-                "occupied_heating_setpoint": state.get("occupied_heating_setpoint"),
-                "pi_cooling_demand": state.get("pi_cooling_demand"),
-                "pi_heating_demand": state.get("pi_heating_demand"),
-                "system_mode": state.get("system_mode"),
-                "unoccupied_cooling_setpoint": state.get("unoccupied_cooling_setpoint"),
-                "unoccupied_heating_setpoint": state.get("unoccupied_heating_setpoint"),
+                "occupancy": state.occupancy,
+                "occupied_cooling_setpoint": state.occupied_cooling_setpoint,
+                "occupied_heating_setpoint": state.occupied_heating_setpoint,
+                "pi_cooling_demand": state.pi_cooling_demand,
+                "pi_heating_demand": state.pi_heating_demand,
+                "system_mode": state.sys_mode,
+                "unoccupied_cooling_setpoint": state.unoccupied_cooling_setpoint,
+                "unoccupied_heating_setpoint": state.unoccupied_heating_setpoint,
             }
         )
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
-        return self.entity_data.entity.current_temperature
+        return self._zha_state.current_temperature
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return current FAN mode."""
-        return self.entity_data.entity.fan_mode
+        return self._zha_state.fan_mode
 
     @property
-    def fan_modes(self) -> list[str] | None:
-        """Return supported FAN modes."""
-        return self.entity_data.entity.fan_modes
-
-    @property
+    @override
     def preset_mode(self) -> str:
         """Return current preset mode."""
-        return self.entity_data.entity.preset_mode
+        return self._zha_state.preset_mode
 
     @property
-    def preset_modes(self) -> list[str] | None:
-        """Return supported preset modes."""
-        return self.entity_data.entity.preset_modes
-
-    @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        return self.entity_data.entity.target_temperature
+        return self._zha_state.target_temperature
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the upper bound temperature we try to reach."""
-        return self.entity_data.entity.target_temperature_high
+        return self._zha_state.target_temperature_high
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lower bound temperature we try to reach."""
-        return self.entity_data.entity.target_temperature_low
+        return self._zha_state.target_temperature_low
 
     @property
-    def max_temp(self) -> float:
-        """Return the maximum temperature."""
-        return self.entity_data.entity.max_temp
+    @override
+    def hvac_mode(self) -> HVACMode | None:
+        """Return HVAC operation mode."""
+        return ZHA_TO_HA_HVAC_MODE.get(self._zha_state.hvac_mode)
 
     @property
-    def min_temp(self) -> float:
-        """Return the minimum temperature."""
-        return self.entity_data.entity.min_temp
+    @override
+    def hvac_action(self) -> HVACAction | None:
+        """Return the current HVAC action."""
+        return ZHA_TO_HA_HVAC_ACTION.get(self._zha_state.hvac_action)
 
-    @callback
-    def _handle_entity_events(self, event: Any) -> None:
-        """Entity state changed."""
-        self._attr_hvac_mode = self._attr_hvac_mode = ZHA_TO_HA_HVAC_MODE.get(
-            self.entity_data.entity.hvac_mode
-        )
-        self._attr_hvac_action = ZHA_TO_HA_HVAC_ACTION.get(
-            self.entity_data.entity.hvac_action
-        )
-        super()._handle_entity_events(event)
-
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set fan mode."""
         await self.entity_data.entity.async_set_fan_mode(fan_mode=fan_mode)
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target operation mode."""
         await self.entity_data.entity.async_set_hvac_mode(hvac_mode=hvac_mode)
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self.entity_data.entity.async_set_preset_mode(preset_mode=preset_mode)
         self.async_write_ha_state()
 
-    @convert_zha_error_to_ha_error
+    @convert_zha_error_to_ha_error()
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         await self.entity_data.entity.async_set_temperature(

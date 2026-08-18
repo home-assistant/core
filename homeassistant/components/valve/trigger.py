@@ -4,9 +4,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import Trigger, make_entity_transition_trigger
 
-from . import ATTR_IS_CLOSED, DOMAIN
+from .const import DOMAIN, ValveEntityStateAttribute
 
-VALVE_DOMAIN_SPECS = {DOMAIN: DomainSpec(value_source=ATTR_IS_CLOSED)}
+VALVE_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    DOMAIN: DomainSpec(value_source=ValveEntityStateAttribute.IS_CLOSED),
+}
 
 
 TRIGGERS: dict[str, type[Trigger]] = {

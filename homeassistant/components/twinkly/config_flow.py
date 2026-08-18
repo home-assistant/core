@@ -1,9 +1,7 @@
 """Config flow to configure the Twinkly integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from ttls.client import Twinkly
@@ -29,6 +27,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._discovered_device: tuple[dict[str, Any], str] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -57,14 +56,18 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=Schema(schema), errors=errors
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle dhcp discovery for twinkly."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
-        device_info = await Twinkly(
-            discovery_info.ip, async_get_clientsession(self.hass)
-        ).get_details()
+        try:
+            device_info = await Twinkly(
+                discovery_info.ip, async_get_clientsession(self.hass)
+            ).get_details()
+        except TimeoutError, ClientError:
+            return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(device_info["mac"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 

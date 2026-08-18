@@ -1,6 +1,6 @@
 """API for Electric Kiwi bound to Home Assistant OAuth."""
 
-from __future__ import annotations
+from typing import override
 
 from aiohttp import ClientSession
 from electrickiwi_api import AbstractAuth
@@ -20,10 +20,12 @@ class ConfigEntryElectricKiwiAuth(AbstractAuth):
         oauth_session: config_entry_oauth2_flow.OAuth2Session,
     ) -> None:
         """Initialize Electric Kiwi auth."""
-        # add host when ready for production "https://api.electrickiwi.co.nz" defaults to dev
+        # add host when ready for production
+        # "https://api.electrickiwi.co.nz" defaults to dev
         super().__init__(websession, API_BASE_URL)
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         await self._oauth_session.async_ensure_token_valid()
@@ -43,6 +45,7 @@ class ConfigFlowElectricKiwiAuth(AbstractAuth):
         super().__init__(aiohttp_client.async_get_clientsession(hass), API_BASE_URL)
         self._token = token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return the token for the Electric Kiwi API."""
         return self._token

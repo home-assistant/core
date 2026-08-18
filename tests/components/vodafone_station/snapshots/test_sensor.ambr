@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dsl',
         'fiber',
         'internet_key',
@@ -45,9 +45,9 @@
 # name: test_all_entities[sensor.vodafone_station_m123456789_active_connection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Vodafone Station (m123456789) Active connection',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vodafone Station (m123456789) Active connection',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'dsl',
         'fiber',
         'internet_key',
@@ -101,8 +101,8 @@
 # name: test_all_entities[sensor.vodafone_station_m123456789_cpu_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Vodafone Station (m123456789) CPU usage',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vodafone Station (m123456789) CPU usage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vodafone_station_m123456789_cpu_usage',
@@ -152,8 +152,8 @@
 # name: test_all_entities[sensor.vodafone_station_m123456789_memory_usage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Vodafone Station (m123456789) Memory usage',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vodafone Station (m123456789) Memory usage',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vodafone_station_m123456789_memory_usage',
@@ -203,7 +203,7 @@
 # name: test_all_entities[sensor.vodafone_station_m123456789_reboot_cause-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Vodafone Station (m123456789) Reboot cause',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vodafone Station (m123456789) Reboot cause',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vodafone_station_m123456789_reboot_cause',
@@ -238,14 +238,14 @@
     'object_id_base': 'Uptime',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_device_class': <SensorDeviceClass.UPTIME: 'uptime'>,
     'original_icon': None,
     'original_name': 'Uptime',
     'platform': 'vodafone_station',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'sys_uptime',
+    'translation_key': None,
     'unique_id': 'm123456789_sys_uptime',
     'unit_of_measurement': None,
   })
@@ -253,8 +253,8 @@
 # name: test_all_entities[sensor.vodafone_station_m123456789_uptime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Vodafone Station (m123456789) Uptime',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'uptime',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vodafone Station (m123456789) Uptime',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.vodafone_station_m123456789_uptime',

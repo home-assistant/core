@@ -26,12 +26,16 @@
           "avoid_ferries": "Avoid ferries?",
           "avoid_subscription_roads": "Avoid roads needing a vignette / subscription?",
           "avoid_toll_roads": "Avoid toll roads?",
+          "base_coordinates": "Base coordinates",
           "excl_filter": "Exact street name which must NOT be part of the selected route",
           "incl_filter": "Exact street name which must be part of the selected route",
           "realtime": "Realtime travel time?",
           "time_delta": "Time delta",
           "units": "Units",
           "vehicle_type": "Vehicle type"
+        },
+        "data_description": {
+          "base_coordinates": "When Waze finds multiple matching locations for an address, it selects the one closest to these coordinates."
         },
         "description": "Some options will allow you to force the integration to use a particular route or avoid a particular route in its time travel calculation."
       }
@@ -76,6 +80,10 @@
         "avoid_toll_roads": {
           "description": "Whether to avoid toll roads.",
           "name": "[%key:component::waze_travel_time::options::step::init::data::avoid_toll_roads%]"
+        },
+        "base_coordinates": {
+          "description": "[%key:component::waze_travel_time::options::step::init::data_description::base_coordinates%]",
+          "name": "[%key:component::waze_travel_time::options::step::init::data::base_coordinates%]"
         },
         "destination": {
           "description": "The destination of the route.",

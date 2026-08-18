@@ -24,12 +24,14 @@ async def upload_file_to_slack(
     Args:
         client (AsyncWebClient): The Slack WebClient instance.
         channel_ids (list[str | None]): List of channel IDs to upload the file to.
-        file_content (Union[bytes, str, None]): Content of the file (local or remote). If None, file_path is used.
+        file_content (Union[bytes, str, None]): Content of the
+            file (local or remote). If None, file_path is used.
         filename (str): The file's name.
         title (str | None): Title of the file in Slack.
         message (str): Initial comment to accompany the file.
         thread_ts (str | None): Thread timestamp for threading messages.
-        file_path (str | None): Path to the local file to be read if file_content is None.
+        file_path (str | None): Path to the local file to be
+            read if file_content is None.
 
     Raises:
         SlackApiError: If the Slack API call fails.

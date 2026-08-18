@@ -1,12 +1,14 @@
 """Support for custom shell commands to turn a switch on/off."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime, timedelta
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
-from homeassistant.components.switch import ENTITY_ID_FORMAT, SwitchEntity
+from homeassistant.components.switch import (
+    DOMAIN as SWITCH_DOMAIN,
+    ENTITY_ID_FORMAT,
+    SwitchEntity,
+)
 from homeassistant.const import (
     CONF_COMMAND_OFF,
     CONF_COMMAND_ON,
@@ -27,7 +29,11 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util, slugify
 
 from .const import CONF_COMMAND_TIMEOUT, LOGGER, TRIGGER_ENTITY_OPTIONS
-from .utils import async_call_shell_with_timeout, async_check_output_or_log
+from .utils import (
+    async_call_shell_with_timeout,
+    async_check_output_or_log,
+    create_platform_yaml_not_supported_issue,
+)
 
 SCAN_INTERVAL = timedelta(seconds=30)
 
@@ -40,6 +46,7 @@ async def async_setup_platform(
 ) -> None:
     """Find and return switches controlled by shell commands."""
     if not discovery_info:
+        create_platform_yaml_not_supported_issue(hass, SWITCH_DOMAIN)
         return
 
     switches = []
@@ -97,6 +104,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         self._scan_interval = scan_interval
         self._process_updates: asyncio.Lock | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to hass."""
         await super().async_added_to_hass()
@@ -138,6 +146,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         )
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return true if we do optimistic updates."""
         return self._command_state is None
@@ -156,7 +165,8 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
             self._process_updates = asyncio.Lock()
         if self._process_updates.locked():
             LOGGER.warning(
-                "Updating Command Line Switch %s took longer than the scheduled update interval %s",
+                "Updating Command Line Switch %s took longer than"
+                " the scheduled update interval %s",
                 self.name,
                 self._scan_interval,
             )
@@ -193,6 +203,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
         """
         await self._update_entity_state(dt_util.now())
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         if await self._switch(self._command_on) and not self._command_state:
@@ -200,6 +211,7 @@ class CommandSwitch(ManualTriggerEntity, SwitchEntity):
             self.async_write_ha_state()
         await self._update_entity_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if await self._switch(self._command_off) and not self._command_state:

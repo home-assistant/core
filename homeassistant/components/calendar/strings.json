@@ -1,6 +1,7 @@
 {
   "common": {
-    "condition_behavior_name": "Condition passes if"
+    "condition_behavior_name": "Condition passes if",
+    "condition_for_name": "For at least"
   },
   "conditions": {
     "is_event_active": {
@@ -8,6 +9,9 @@
       "fields": {
         "behavior": {
           "name": "[%key:component::calendar::common::condition_behavior_name%]"
+        },
+        "for": {
+          "name": "[%key:component::calendar::common::condition_for_name%]"
         }
       },
       "name": "Calendar event is active"
@@ -60,12 +64,6 @@
     }
   },
   "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
     "trigger_offset_type": {
       "options": {
         "after": "After",
@@ -134,7 +132,7 @@
   "title": "Calendar",
   "triggers": {
     "event_ended": {
-      "description": "Triggers when a calendar event ends.",
+      "description": "Triggers when one or more calendar events end.",
       "fields": {
         "offset": {
           "description": "Offset from the end of the event.",
@@ -148,7 +146,7 @@
       "name": "Calendar event ended"
     },
     "event_started": {
-      "description": "Triggers when a calendar event starts.",
+      "description": "Triggers when one or more calendar events start.",
       "fields": {
         "offset": {
           "description": "Offset from the start of the event.",

@@ -14,7 +14,10 @@ DESCRIPTOR_MAP: dict[str, str] = {
 
 
 def normalize_descriptor(descriptor: PriceDescriptor | None) -> str | None:
-    """Return the snake case versions of descriptor names. Returns None if the name is not recognized."""
+    """Return the snake case versions of descriptor names.
+
+    Returns None if the name is not recognized.
+    """
     if descriptor in DESCRIPTOR_MAP:
         return DESCRIPTOR_MAP[descriptor]
     return None

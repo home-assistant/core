@@ -1,11 +1,10 @@
 """Data Update Coordinator for Firefly III integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
+from typing import override
 
 from aiohttp import CookieJar
 from pyfirefly import (
@@ -19,9 +18,10 @@ from pyfirefly.models import Account, Bill, Budget, Category, Currency
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 
@@ -68,6 +68,7 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             ),
         )
 
+    @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
         try:
@@ -76,24 +77,22 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except FireflyConnectionError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except FireflyTimeoutError as err:
-            raise ConfigEntryNotReady(
+            raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
+    @override
     async def _async_update_data(self) -> FireflyCoordinatorData:
         """Fetch data from Firefly III API."""
-        now = datetime.now()
+        now = dt_util.now()
         start_date = now.replace(day=1, hour=0, minute=0, second=0, microsecond=0)
         end_date = now
 
@@ -126,19 +125,16 @@ class FireflyDataUpdateCoordinator(DataUpdateCoordinator[FireflyCoordinatorData]
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="invalid_auth",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except FireflyConnectionError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
         except FireflyTimeoutError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="timeout_connect",
-                translation_placeholders={"error": repr(err)},
             ) from err
 
         return FireflyCoordinatorData(

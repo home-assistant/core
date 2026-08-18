@@ -1,9 +1,7 @@
 """Support for Lutron Homeworks binary sensors."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhomeworks.pyhomeworks import HW_KEYPAD_LED_CHANGED, Homeworks
 
@@ -78,6 +76,7 @@ class HomeworksBinarySensor(HomeworksEntity, BinarySensorEntity):
         )
         self._keypad = keypad
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         signal = f"homeworks_entity_{self._controller_id}_{self._addr}"

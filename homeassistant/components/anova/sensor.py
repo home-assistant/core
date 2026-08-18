@@ -1,9 +1,8 @@
 """Support for Anova Sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from anova_wifi import AnovaMode, AnovaState, APCUpdateSensor
 
@@ -137,6 +136,7 @@ class AnovaSensor(AnovaDescriptionEntity, SensorEntity):
     entity_description: AnovaSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return self.entity_description.value_fn(self.coordinator.data.sensor)

@@ -5,6 +5,7 @@
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_supported": "Device not supported",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "error": {
@@ -44,11 +45,19 @@
       "dimming_time": {
         "name": "Dimming time"
       }
+    },
+    "sensor": {
+      "dimming_end_time": {
+        "name": "Dimming end time"
+      }
     }
   },
   "exceptions": {
     "communication_error": {
       "message": "An error occurred while communicating with the Casper Glow: {error}"
+    },
+    "device_not_found": {
+      "message": "Could not find Casper Glow device with address {address}: {reason}"
     }
   }
 }

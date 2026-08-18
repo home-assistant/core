@@ -5,7 +5,12 @@ from pathlib import Path
 from unittest.mock import AsyncMock, Mock, patch
 
 from awesomeversion import AwesomeVersion
-from go2rtc_client.rest import _SchemesClient, _StreamClient, _WebRTCClient
+from go2rtc_client.rest import (
+    _PreloadClient,
+    _SchemesClient,
+    _StreamClient,
+    _WebRTCClient,
+)
 import pytest
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
@@ -63,6 +68,8 @@ def rest_client() -> Generator[AsyncMock]:
             return_value=AwesomeVersion(RECOMMENDED_VERSION)
         )
         client.webrtc = Mock(spec_set=_WebRTCClient)
+        client.preload = preload = Mock(spec_set=_PreloadClient)
+        preload.list.return_value = {}
         yield client
 
 
@@ -186,9 +193,16 @@ def integration_config_entry(hass: HomeAssistant) -> ConfigEntry:
 
 
 @pytest.fixture
+def camera_unique_id() -> str | None:
+    """Camera unique ID."""
+    return "camera_unique_id"
+
+
+@pytest.fixture
 async def init_test_integration(
     hass: HomeAssistant,
     integration_config_entry: ConfigEntry,
+    camera_unique_id: str | None,
 ) -> MockCamera:
     """Initialize components."""
 
@@ -218,7 +232,7 @@ async def init_test_integration(
             async_unload_entry=async_unload_entry_init,
         ),
     )
-    test_camera = MockCamera()
+    test_camera = MockCamera(camera_unique_id)
     setup_test_component_platform(
         hass, CAMERA_DOMAIN, [test_camera], from_config_entry=True
     )

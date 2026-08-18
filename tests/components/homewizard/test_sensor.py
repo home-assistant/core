@@ -7,13 +7,13 @@ from homewizard_energy.models import CombinedModels, Measurement, State, System
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.homewizard.const import UPDATE_INTERVAL
+from homeassistant.components.homewizard.const import DOMAIN, UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 pytestmark = [
     pytest.mark.usefixtures("init_integration"),
@@ -29,6 +29,59 @@ pytestmark = [
             "HWE-P1",
             [
                 "sensor.device_average_demand",
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
+                "sensor.device_current_phase_1",
+                "sensor.device_current_phase_2",
+                "sensor.device_current_phase_3",
+                "sensor.device_dsmr_version",
+                "sensor.device_energy_export_tariff_1",
+                "sensor.device_energy_export_tariff_2",
+                "sensor.device_energy_export_tariff_3",
+                "sensor.device_energy_export_tariff_4",
+                "sensor.device_energy_export",
+                "sensor.device_energy_import_tariff_1",
+                "sensor.device_energy_import_tariff_2",
+                "sensor.device_energy_import_tariff_3",
+                "sensor.device_energy_import_tariff_4",
+                "sensor.device_energy_import",
+                "sensor.device_frequency",
+                "sensor.device_long_power_failures_detected",
+                "sensor.device_peak_demand_current_month",
+                "sensor.device_power_failures_detected",
+                "sensor.device_power_phase_1",
+                "sensor.device_power_phase_2",
+                "sensor.device_power_phase_3",
+                "sensor.device_power",
+                "sensor.device_smart_meter_identifier",
+                "sensor.device_smart_meter_model",
+                "sensor.device_tariff",
+                "sensor.device_total_water_usage",
+                "sensor.device_voltage_phase_1",
+                "sensor.device_voltage_phase_2",
+                "sensor.device_voltage_phase_3",
+                "sensor.device_voltage_sags_detected_phase_1",
+                "sensor.device_voltage_sags_detected_phase_2",
+                "sensor.device_voltage_sags_detected_phase_3",
+                "sensor.device_voltage_swells_detected_phase_1",
+                "sensor.device_voltage_swells_detected_phase_2",
+                "sensor.device_voltage_swells_detected_phase_3",
+                "sensor.device_water_usage",
+                "sensor.device_wi_fi_ssid",
+                "sensor.device_wi_fi_strength",
+                "sensor.gas_meter_gas",
+                "sensor.heat_meter_energy",
+                "sensor.inlet_heat_meter",
+                "sensor.warm_water_meter_water",
+                "sensor.water_meter_water",
+            ],
+        ),
+        (
+            "HWE-P1-predictive",
+            [
+                "sensor.device_average_demand",
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -340,12 +393,62 @@ async def test_sensors(
         assert snapshot(name=f"{entity_id}:device-registry") == device_entry
 
 
+async def test_external_device_via_device_id(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test an external device is linked to the main device via via_device_id."""
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "5c2fafabcdef"), init_integration.entry_id
+    )
+    assert main_device is not None
+
+    gas_meter_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "gas_meter_G001"), init_integration.entry_id
+    )
+    assert gas_meter_device is not None
+    assert gas_meter_device.via_device_id == main_device.id
+
+
 @pytest.mark.parametrize(
     ("device_fixture", "entity_ids"),
     [
         (
             "HWE-P1",
             [
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
+                "sensor.device_current_phase_1",
+                "sensor.device_current_phase_2",
+                "sensor.device_current_phase_3",
+                "sensor.device_frequency",
+                "sensor.device_voltage_phase_1",
+                "sensor.device_voltage_phase_2",
+                "sensor.device_voltage_phase_3",
+                "sensor.device_wi_fi_strength",
+            ],
+        ),
+        (
+            "HWE-P1-predictive",
+            [
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
+                "sensor.device_current_phase_1",
+                "sensor.device_current_phase_2",
+                "sensor.device_current_phase_3",
+                "sensor.device_frequency",
+                "sensor.device_voltage_phase_1",
+                "sensor.device_voltage_phase_2",
+                "sensor.device_voltage_phase_3",
+                "sensor.device_wi_fi_strength",
+            ],
+        ),
+        (
+            "HWE-P1-no-batteries",
+            [
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -530,6 +633,8 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power",
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -585,6 +690,8 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power_phase_3",
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -636,6 +743,8 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power",
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -694,6 +803,8 @@ async def test_external_sensors_unreachable(
                 "sensor.device_average_demand",
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -742,6 +853,8 @@ async def test_external_sensors_unreachable(
             [
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -787,6 +900,8 @@ async def test_external_sensors_unreachable(
                 "sensor.device_average_demand",
                 "sensor.device_average_demand",
                 "sensor.device_battery_cycles",
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -834,6 +949,8 @@ async def test_external_sensors_unreachable(
             "HWE-KWH3",
             [
                 "sensor.device_average_demand",
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
                 "sensor.device_battery_cycles",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
@@ -879,6 +996,8 @@ async def test_external_sensors_unreachable(
                 "sensor.device_apparent_power_phase_3",
                 "sensor.device_apparent_power",
                 "sensor.device_average_demand",
+                "sensor.device_battery_group_power",
+                "sensor.device_battery_group_target_power",
                 "sensor.device_current_phase_1",
                 "sensor.device_current_phase_2",
                 "sensor.device_current_phase_3",
@@ -938,7 +1057,7 @@ async def test_uptime_sensor_does_not_update_timestamp_on_data_update(
     hass: HomeAssistant,
     mock_homewizardenergy: MagicMock,
 ) -> None:
-    """Test that the uptime sensor does not update its timestamp when refreshing data."""
+    """Test uptime sensor does not update its timestamp when refreshing."""
     entity_id = "sensor.device_uptime"
 
     mock_homewizardenergy.combined.return_value = CombinedModels(

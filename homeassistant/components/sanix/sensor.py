@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
+from typing import override
 
 from sanix.const import (
     ATTR_API_BATTERY,
@@ -20,7 +21,6 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE, UnitOfLength
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -28,7 +28,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import SanixCoordinator
+from .coordinator import SanixConfigEntry, SanixCoordinator
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -83,11 +83,11 @@ SENSOR_TYPES: tuple[SanixSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: SanixConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Sanix Sensor entities based on a config entry."""
-    coordinator = hass.data[DOMAIN][entry.entry_id]
+    coordinator = entry.runtime_data
 
     async_add_entities(
         SanixSensorEntity(coordinator, description) for description in SENSOR_TYPES
@@ -120,6 +120,7 @@ class SanixSensorEntity(CoordinatorEntity[SanixCoordinator], SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int | datetime | date | str:
         """Return the state of the sensor."""
         return self.entity_description.native_value_fn(self.coordinator.data)
