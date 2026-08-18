@@ -1,6 +1,7 @@
 """Tests for the Lyngdorf media player platform."""
 
 from datetime import UTC, datetime
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from lyngdorf.const import LyngdorfModel
@@ -9,6 +10,7 @@ from lyngdorf.streaming import NowPlaying
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.lyngdorf.media_player import FEATURES_MAIN
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
@@ -17,6 +19,7 @@ from homeassistant.components.media_player import (
     ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_DURATION,
     ATTR_MEDIA_POSITION,
+    ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
     ATTR_MEDIA_SHUFFLE,
@@ -58,6 +61,8 @@ from .conftest import notify_receiver_update
 
 from tests.common import MockConfigEntry, snapshot_platform
 
+POSITION_UPDATED_AT = datetime(2026, 8, 17, 13, tzinfo=UTC)
+
 MAIN_ZONE = "media_player.mock_lyngdorf_main_zone"
 ZONE_B = "media_player.mock_lyngdorf_zone_b"
 
@@ -66,6 +71,38 @@ ZONE_B = "media_player.mock_lyngdorf_zone_b"
 def platforms() -> list[Platform]:
     """Only load the media player platform."""
     return [Platform.MEDIA_PLAYER]
+
+
+@pytest.fixture
+def playing_receiver(mock_receiver: MagicMock) -> MagicMock:
+    """Return a receiver that is streaming a track."""
+    mock_receiver.power_on = True
+    mock_receiver.now_playing = NowPlaying(
+        state=PlaybackState.PLAYING,
+        title="The Killing Moon",
+        artist="Echo & the Bunnymen",
+        album="Songs to Learn & Sing",
+        source="Total Solar Eclipse Playlist",
+        art_url="https://example.test/art.jpg",
+        duration_ms=346280,
+        controls=frozenset(
+            {
+                Control.PAUSE,
+                Control.NEXT_TRACK,
+                Control.PREVIOUS_TRACK,
+                Control.SEEK,
+            }
+        ),
+        play_modes=frozenset(),
+    )
+    mock_receiver.has_position = True
+    mock_receiver.position_ms = 318544
+    mock_receiver.position_updated_at = POSITION_UPDATED_AT
+    mock_receiver.shuffle = False
+    mock_receiver.repeat = Repeat.OFF
+    mock_receiver.can_shuffle = True
+    mock_receiver.available_repeat_modes = frozenset({Repeat.OFF, Repeat.ALL})
+    return mock_receiver
 
 
 async def test_entities(
@@ -347,49 +384,13 @@ async def test_zone_b_state_properties(
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["HDMI", "Optical"]
 
 
-@pytest.fixture
-def playing_receiver(mock_receiver: MagicMock) -> MagicMock:
-    """Return a receiver that is streaming a track."""
-    mock_receiver.power_on = True
-    mock_receiver.now_playing = NowPlaying(
-        state=PlaybackState.PLAYING,
-        title="The Killing Moon",
-        artist="Echo & the Bunnymen",
-        album="Songs to Learn & Sing",
-        source="Total Solar Eclipse Playlist",
-        art_url="https://example.test/art.jpg",
-        duration_ms=346280,
-        controls=frozenset(
-            {
-                Control.PAUSE,
-                Control.NEXT_TRACK,
-                Control.PREVIOUS_TRACK,
-                Control.SEEK,
-            }
-        ),
-        play_modes=frozenset(),
-    )
-    mock_receiver.has_position = True
-    mock_receiver.position_ms = 318544
-    mock_receiver.position_updated_at = datetime(2026, 8, 17, 13, tzinfo=UTC)
-    mock_receiver.shuffle = False
-    mock_receiver.repeat = Repeat.OFF
-    mock_receiver.can_shuffle = True
-    mock_receiver.available_repeat_modes = frozenset({Repeat.OFF, Repeat.ALL})
-    return mock_receiver
-
-
 @pytest.mark.usefixtures("init_integration")
 async def test_now_playing_metadata(
     hass: HomeAssistant,
     playing_receiver: MagicMock,
 ) -> None:
     """Test now-playing metadata and position are reported."""
-    for cb in [
-        call.args[0]
-        for call in playing_receiver.register_notification_callback.call_args_list
-    ]:
-        cb()
+    notify_receiver_update(playing_receiver)
     await hass.async_block_till_done()
 
     state = hass.states.get(MAIN_ZONE)
@@ -410,29 +411,24 @@ async def test_transport_features_follow_the_device(
     playing_receiver: MagicMock,
 ) -> None:
     """Test supported features track what the source currently offers."""
-    for cb in [
-        call.args[0]
-        for call in playing_receiver.register_notification_callback.call_args_list
-    ]:
-        cb()
+    notify_receiver_update(playing_receiver)
     await hass.async_block_till_done()
 
-    features = hass.states.get(MAIN_ZONE).attributes[ATTR_SUPPORTED_FEATURES]
-    for feature in (
-        MediaPlayerEntityFeature.PAUSE,
-        MediaPlayerEntityFeature.NEXT_TRACK,
-        MediaPlayerEntityFeature.PREVIOUS_TRACK,
-        MediaPlayerEntityFeature.SEEK,
-        MediaPlayerEntityFeature.SHUFFLE_SET,
-        MediaPlayerEntityFeature.REPEAT_SET,
-    ):
-        assert features & feature
+    assert hass.states.get(MAIN_ZONE).attributes[ATTR_SUPPORTED_FEATURES] == (
+        FEATURES_MAIN
+        | MediaPlayerEntityFeature.PAUSE
+        | MediaPlayerEntityFeature.NEXT_TRACK
+        | MediaPlayerEntityFeature.PREVIOUS_TRACK
+        | MediaPlayerEntityFeature.SEEK
+        | MediaPlayerEntityFeature.SHUFFLE_SET
+        | MediaPlayerEntityFeature.REPEAT_SET
+    )
 
 
 @pytest.mark.usefixtures("init_integration")
+@pytest.mark.usefixtures("mock_receiver")
 async def test_transport_features_absent_when_idle(
     hass: HomeAssistant,
-    mock_receiver: MagicMock,
 ) -> None:
     """Test no transport is offered when nothing is playing."""
     features = hass.states.get(MAIN_ZONE).attributes[ATTR_SUPPORTED_FEATURES]
@@ -481,26 +477,42 @@ async def test_seek_converts_to_milliseconds(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_set_shuffle_and_repeat(
+@pytest.mark.parametrize(
+    ("service", "payload", "method", "expected"),
+    [
+        pytest.param(
+            SERVICE_SHUFFLE_SET,
+            {ATTR_MEDIA_SHUFFLE: True},
+            "async_set_shuffle",
+            True,
+            id="shuffle",
+        ),
+        pytest.param(
+            SERVICE_REPEAT_SET,
+            {ATTR_MEDIA_REPEAT: RepeatMode.ALL},
+            "async_set_repeat",
+            Repeat.ALL,
+            id="repeat",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_set_play_mode(
     hass: HomeAssistant,
     playing_receiver: MagicMock,
+    service: str,
+    payload: dict[str, Any],
+    method: str,
+    expected: bool | Repeat,
 ) -> None:
     """Test shuffle and repeat are set on their own axes."""
     await hass.services.async_call(
         MEDIA_PLAYER_DOMAIN,
-        SERVICE_SHUFFLE_SET,
-        {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_MEDIA_SHUFFLE: True},
+        service,
+        {ATTR_ENTITY_ID: MAIN_ZONE} | payload,
         blocking=True,
     )
-    playing_receiver.async_set_shuffle.assert_awaited_once_with(True)
-
-    await hass.services.async_call(
-        MEDIA_PLAYER_DOMAIN,
-        SERVICE_REPEAT_SET,
-        {ATTR_ENTITY_ID: MAIN_ZONE, ATTR_MEDIA_REPEAT: RepeatMode.ALL},
-        blocking=True,
-    )
-    playing_receiver.async_set_repeat.assert_awaited_once_with(Repeat.ALL)
+    getattr(playing_receiver, method).assert_awaited_once_with(expected)
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -537,4 +549,6 @@ async def test_position_jump_updates_state(
         cb(1000)
     await hass.async_block_till_done()
 
-    assert hass.states.get(MAIN_ZONE).attributes[ATTR_MEDIA_POSITION] == 1
+    state = hass.states.get(MAIN_ZONE)
+    assert state.attributes[ATTR_MEDIA_POSITION] == 1
+    assert state.attributes[ATTR_MEDIA_POSITION_UPDATED_AT] == POSITION_UPDATED_AT

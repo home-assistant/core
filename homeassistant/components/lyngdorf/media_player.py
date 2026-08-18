@@ -54,6 +54,14 @@ CONTROL_FEATURES: tuple[tuple[Control, MediaPlayerEntityFeature], ...] = (
     (Control.SEEK, MediaPlayerEntityFeature.SEEK),
 )
 
+REPEAT_MODES: dict[Repeat, RepeatMode] = {
+    Repeat.OFF: RepeatMode.OFF,
+    Repeat.ONE: RepeatMode.ONE,
+    Repeat.ALL: RepeatMode.ALL,
+}
+
+LYNGDORF_REPEATS: dict[RepeatMode, Repeat] = {v: k for k, v in REPEAT_MODES.items()}
+
 PLAYBACK_STATES: dict[PlaybackState, MediaPlayerState] = {
     PlaybackState.PLAYING: MediaPlayerState.PLAYING,
     PlaybackState.PAUSED: MediaPlayerState.PAUSED,
@@ -114,7 +122,8 @@ class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
     ) -> None:
         """Initialize the device."""
         super().__init__(receiver, device_info)
-        assert config_entry.unique_id
+        if TYPE_CHECKING:
+            assert config_entry.unique_id
         self._attr_unique_id = f"{config_entry.unique_id}_{entity_id_suffix}"
         self._attr_translation_key = translation_key
         self._attr_supported_features = features
@@ -241,14 +250,10 @@ class LyngdorfMainDevice(LyngdorfDevice):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe to position discontinuities.
-
-        Position is deliberately not routed through the receiver's
-        notification callbacks. The jump callback fires only on a seek,
-        track change, play/pause or drift, rather than roughly once a
-        second, which is what Home Assistant wants: it stores the position
-        and a timestamp and the frontend extrapolates between them.
-        """
+        """Subscribe to position discontinuities."""
+        # The jump callback fires on a seek, track change, play/pause or
+        # drift, rather than once a second, which is all Home Assistant
+        # needs: it stores a position and a timestamp and extrapolates.
         await super().async_added_to_hass()
         if self._streaming:
             self.async_on_remove(
@@ -256,7 +261,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
             )
 
     @callback
-    def _handle_position(self, position_ms: int | None) -> None:
+    def _handle_position(self, _position_ms: int | None) -> None:
         """Handle a position discontinuity."""
         self.async_write_ha_state()
 
@@ -277,11 +282,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @override
     @property
     def supported_features(self) -> MediaPlayerEntityFeature:
-        """Return the features the device currently offers.
-
-        Transport is source-dependent and changes at runtime, so it is
-        recomputed rather than fixed at construction.
-        """
+        """Return the features the device currently offers."""
         features = FEATURES_MAIN
         if (now_playing := self._now_playing) is None:
             return features
@@ -376,16 +377,14 @@ class LyngdorfMainDevice(LyngdorfDevice):
         """Return the current repeat mode."""
         if not self._streaming or (repeat := self._receiver.repeat) is None:
             return None
-        return RepeatMode(repeat.value)
+        return REPEAT_MODES.get(repeat)
 
     @override
     async def async_media_pause(self) -> None:
-        """Pause playback.
-
-        On controller-driven sources such as AirPlay the device ends the
-        session outright and cannot restart it; only the controlling app
-        can. There is no separate resume command.
-        """
+        """Pause playback."""
+        # On a controller-driven source such as AirPlay the device ends the
+        # session rather than pausing, and only the controlling app can
+        # start it again.
         await self._receiver.async_pause()
 
     @override
@@ -411,7 +410,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set the repeat mode, leaving shuffle alone."""
-        await self._receiver.async_set_repeat(Repeat(repeat.value))
+        await self._receiver.async_set_repeat(LYNGDORF_REPEATS[repeat])
 
     @override
     @property
