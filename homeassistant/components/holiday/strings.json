@@ -8,10 +8,12 @@
       "options": {
         "data": {
           "categories": "Categories",
+          "local_only": "[%key:component::holiday::options::step::init::data::local_only%]",
           "province": "Province"
         },
         "data_description": {
           "categories": "Optionally choose additional holiday categories, public holidays are already included",
+          "local_only": "[%key:component::holiday::options::step::init::data_description::local_only%]",
           "province": "Optionally choose a province / subdivision of {country}"
         }
       },

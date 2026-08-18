@@ -19,6 +19,7 @@ from homeassistant.helpers.selector import (
     CountrySelector,
     CountrySelectorConfig,
     SelectOptionDict,
+    Selector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
@@ -66,9 +67,9 @@ def get_optional_categories(country: str) -> list[str]:
     ]
 
 
-def get_options_schema(country: str) -> vol.Schema:
+def get_options_schema(country: str, has_provinces: bool = False) -> vol.Schema:
     """Return the options schema."""
-    schema = {}
+    schema: dict[vol.Marker, Selector] = {}
     if provinces := get_optional_provinces(country):
         schema[vol.Optional(CONF_PROVINCE)] = SelectSelector(
             SelectSelectorConfig(
@@ -76,6 +77,7 @@ def get_options_schema(country: str) -> vol.Schema:
                 mode=SelectSelectorMode.DROPDOWN,
             )
         )
+        schema[vol.Optional(CONF_LOCAL_ONLY)] = BooleanSelector()
     if categories := get_optional_categories(country):
         schema[vol.Optional(CONF_CATEGORIES)] = SelectSelector(
             SelectSelectorConfig(
@@ -183,19 +185,21 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             country = self.data[CONF_COUNTRY]
             data = {CONF_COUNTRY: country}
-            options: dict[str, Any] | None = None
+            options: dict[str, Any] = {}
             province = user_input.get(CONF_PROVINCE)
             if province:
                 data[CONF_PROVINCE] = province
             if categories := user_input.get(CONF_CATEGORIES):
-                options = {CONF_CATEGORIES: categories}
+                options[CONF_CATEGORIES] = categories
+            if province and user_input.get(CONF_LOCAL_ONLY):
+                options[CONF_LOCAL_ONLY] = True
 
             if any(
                 _is_duplicate_entry(
                     entry,
                     country,
                     province,
-                    options[CONF_CATEGORIES] if options else None,
+                    options.get(CONF_CATEGORIES),
                 )
                 for entry in self._async_current_entries()
             ):
@@ -204,7 +208,9 @@ class HolidayConfigFlow(ConfigFlow, domain=DOMAIN):
             name = await self.hass.async_add_executor_job(
                 get_entry_name, self.hass.config.language, country, province
             )
-            return self.async_create_entry(title=name, data=data, options=options)
+            return self.async_create_entry(
+                title=name, data=data, options=options or None
+            )
 
         options_schema = await self.hass.async_add_executor_job(
             get_options_schema, self.data[CONF_COUNTRY]
