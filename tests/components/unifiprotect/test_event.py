@@ -23,6 +23,7 @@ from homeassistant.components.unifiprotect.const import (
     ATTR_EVENT_ID,
     ATTR_SMART_DETECT_TYPES,
     DEFAULT_ATTRIBUTION,
+    DOMAIN,
     EVENT_TYPE_PACKAGE_DETECTED,
 )
 from homeassistant.components.unifiprotect.event import (
@@ -1751,6 +1752,28 @@ async def test_aiport_no_event_entities(
     assert_entity_counts(hass, Platform.EVENT, 0, 0)
 
 
+async def test_camera_without_line_crossing_event(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    entity_registry: EntityRegistry,
+) -> None:
+    """A camera without line-crossing support has no line event entity."""
+    doorbell.feature_flags.has_line_crossing = False
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "line_crossing")
+    unique_id, _ = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+    assert (
+        entity_registry.async_get_entity_id(Platform.EVENT, DOMAIN, unique_id) is None
+    )
+    assert_entity_counts(hass, Platform.EVENT, 7, 7)
+
+
 async def test_motion_detection_event(
     hass: HomeAssistant,
     ufp: MockUFPFixture,
@@ -1785,6 +1808,81 @@ async def test_motion_detection_event(
     assert state
     assert state.attributes["event_type"] == "motion"
     assert state.attributes[ATTR_EVENT_ID] == "motion-1"
+
+
+async def test_line_crossing_event(
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    doorbell: Camera,
+    unadopted_camera: Camera,
+    fixed_now: datetime,
+) -> None:
+    """The line-crossing event fires only for smartDetectLine events."""
+    doorbell.feature_flags.has_line_crossing = True
+    setup_public_camera(ufp)
+    await init_entry(hass, ufp, [doorbell, unadopted_camera])
+
+    description = next(d for d in EVENT_DESCRIPTIONS if d.key == "line_crossing")
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.EVENT, doorbell, description
+    )
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    common = {
+        "channel": ProtectEventChannel.DETECTION,
+        "device_id": doorbell.id,
+        "device_mac": doorbell.mac,
+        "start": fixed_now - timedelta(seconds=1),
+    }
+
+    # Ordinary smart-zone and loitering events stay on their existing entities.
+    for event_type in (EventType.SMART_DETECT, EventType.SMART_DETECT_LOITER):
+        ufp.events_msg(
+            ProtectEvent(
+                id=f"ignored-{event_type.value}",
+                type=event_type,
+                end=fixed_now,
+                smart_detect_types=(SmartDetectObjectType.PERSON,),
+                **common,
+            ),
+            EventChange.STARTED,
+        )
+    await hass.async_block_till_done()
+    assert events == []
+
+    # A line crossing fires once for each co-detected object type.
+    ufp.events_msg(
+        ProtectEvent(
+            id="line-1",
+            type=EventType.SMART_DETECT_LINE,
+            end=fixed_now,
+            smart_detect_types=(
+                SmartDetectObjectType.PERSON,
+                SmartDetectObjectType.VEHICLE,
+            ),
+            **common,
+        ),
+        EventChange.STARTED,
+    )
+    await hass.async_block_till_done()
+    unsub()
+
+    states = [event.data["new_state"] for event in events]
+    assert len(states) == 2
+    fired = {state.attributes["event_type"]: state.attributes for state in states}
+    assert set(fired) == {"person", "vehicle"}
+    for attributes in fired.values():
+        assert attributes[ATTR_EVENT_ID] == "line-1"
+        assert set(attributes[ATTR_SMART_DETECT_TYPES]) == {
+            "person",
+            "vehicle",
+        }
 
 
 @pytest.mark.parametrize(
@@ -2072,7 +2170,12 @@ def test_detection_event_types_have_translations() -> None:
         ).read_text()
     )
     event_states = strings["entity"]["event"]
-    for key in ("motion_detection", "smart_detection", "sound_detection"):
+    for key in (
+        "line_crossing",
+        "motion_detection",
+        "smart_detection",
+        "sound_detection",
+    ):
         description = next(d for d in EVENT_DESCRIPTIONS if d.key == key)
         labels = event_states[key]["state_attributes"]["event_type"]["state"]
         missing = [t for t in description.event_types or () if t not in labels]

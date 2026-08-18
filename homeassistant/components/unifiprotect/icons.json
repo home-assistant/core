@@ -181,6 +181,9 @@
       "fingerprint": {
         "default": "mdi:fingerprint"
       },
+      "line_crossing": {
+        "default": "mdi:vector-line"
+      },
       "motion_detection": {
         "default": "mdi:motion-sensor"
       },

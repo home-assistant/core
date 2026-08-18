@@ -596,6 +596,14 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         entity_class=ProtectDeviceMotionEventEntity,
     ),
     ProtectDetectionEventEntityDescription(
+        key="line_crossing",
+        translation_key="line_crossing",
+        ufp_required_field="feature_flags.has_line_crossing",
+        event_types=_SMART_OBJECT_EVENT_TYPES,
+        ufp_public_event_types=(EventType.SMART_DETECT_LINE,),
+        entity_class=ProtectDeviceDetectionEventEntity,
+    ),
+    ProtectDetectionEventEntityDescription(
         key="smart_detection",
         translation_key="smart_detection",
         ufp_required_field="feature_flags.has_smart_detect",

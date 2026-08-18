@@ -289,6 +289,23 @@
           }
         }
       },
+      "line_crossing": {
+        "name": "Line crossing",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "animal": "[%key:component::unifiprotect::entity::event::smart_detection::state_attributes::event_type::state::animal%]",
+              "car": "[%key:component::unifiprotect::entity::event::smart_detection::state_attributes::event_type::state::car%]",
+              "face": "[%key:component::unifiprotect::entity::event::smart_detection::state_attributes::event_type::state::face%]",
+              "license_plate": "[%key:component::unifiprotect::entity::event::smart_detection::state_attributes::event_type::state::license_plate%]",
+              "package": "[%key:component::unifiprotect::entity::event::smart_detection::state_attributes::event_type::state::package%]",
+              "person": "[%key:component::unifiprotect::entity::event::smart_detection::state_attributes::event_type::state::person%]",
+              "pet": "[%key:component::unifiprotect::entity::event::smart_detection::state_attributes::event_type::state::pet%]",
+              "vehicle": "[%key:component::unifiprotect::entity::event::smart_detection::state_attributes::event_type::state::vehicle%]"
+            }
+          }
+        }
+      },
       "motion_detection": {
         "name": "Motion detection",
         "state_attributes": {
