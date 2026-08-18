@@ -32,7 +32,7 @@ class VRChatWorldData:
         cls.last_pruned = now
 
     @classmethod
-    def get(cls, world_id: str, data: World | None = None):
+    def get(cls, world_id: str, data: World | None = None) -> VRChatWorldData:
         """Get world data object. Update data if provided."""
         now = dt_util.utcnow()
         if now - cls.last_pruned >= timedelta(
