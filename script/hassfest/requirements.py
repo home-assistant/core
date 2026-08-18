@@ -3,7 +3,7 @@
 from collections import deque
 from collections.abc import Collection
 from functools import cache
-from importlib.metadata import files, metadata
+from importlib.metadata import PackageMetadata, files, metadata
 import json
 import os
 import re
@@ -99,6 +99,9 @@ FORBIDDEN_PACKAGES = {
     "codecov": "not be a runtime dependency",
     # Coloredlogs is unmaintained and contains a '.pth' file
     "coloredlogs": "be replaced with colorlog",
+    # dataclasses-json is no longer maintained
+    # Some uses will start to break in Python 3.15
+    "dataclasses-json": "be removed (it can break in Python 3.15)",
     # Only needed for docs
     "mkdocs": "not be a runtime dependency",
     # Does blocking I/O and should be replaced by pyserial-asyncio-fast
@@ -169,6 +172,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "imeon_inverter": {"imeon-inverter-api": {"async-timeout"}},
     "ipp": {"pyipp": {"backoff"}},
     "iqvia": {"pyiqvia": {"backoff"}},
+    "ista_ecotrend": {"pyecotrend-ista": {"dataclasses-json"}},
     "kef": {"aiokef": {"async-timeout"}},
     "kodi": {"jsonrpc-websocket": {"async-timeout"}},
     "lametric": {"demetriek": {"backoff"}},
@@ -212,11 +216,11 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     "roku": {"rokuecp": {"backoff"}},
     "screenlogic": {"screenlogicpy": {"async-timeout"}},
     "sense": {"sense-energy": {"async-timeout"}},
+    "simplefin": {"simplefin4py": {"dataclasses-json"}},
     "simplisafe": {"simplisafe-python": {"backoff"}},
     "slimproto": {"aioslimproto": {"async-timeout"}},
     "surepetcare": {"surepy": {"async-timeout"}},
     "tailwind": {"gotailwind": {"backoff"}},
-    "technove": {"python-technove": {"backoff"}},
     "tibber": {"gql": {"backoff"}},
     "toon": {"toonapi": {"backoff"}},
     "travisci": {
@@ -229,6 +233,7 @@ FORBIDDEN_PACKAGE_EXCEPTIONS: dict[str, dict[str, set[str]]] = {
     },
     "velbus": {"velbus-aio": {"backoff"}},
     "volkszaehler": {"volkszaehler": {"async-timeout"}},
+    "weatherflow_cloud": {"weatherflow4py": {"dataclasses-json"}},
     "whirlpool": {"whirlpool-sixth-sense": {"async-timeout"}},
     "zamg": {"zamg": {"async-timeout"}},
     "zha": {
@@ -329,6 +334,8 @@ FORBIDDEN_PACKAGE_FILES_EXCEPTIONS = {
     },
     # https://github.com/smappee/pysmappee
     "smappee": {"homeassistant": {"pysmappee"}},
+    # https://github.com/mosquito/caio/pull/75
+    "velbus": {"aiofile": {"caio"}},
     # https://github.com/watergate-ai/watergate-local-api-python
     "watergate": {"homeassistant": {"watergate-local-api"}},
     # https://github.com/markusressel/xs1-api-client
@@ -517,7 +524,7 @@ def get_pipdeptree() -> dict[str, dict[str, Any]]:
 
 
 @cache
-def metadata_cache(package: str) -> dict:
+def metadata_cache(package: str) -> PackageMetadata:
     """Return package metadata, cached."""
     return metadata(package)
 
@@ -570,7 +577,9 @@ def get_requirements(integration: Integration, packages: set[str]) -> set[str]:
             continue
 
         # Check for restrictive version limits on Python
-        if (requires_python := metadata_cache(package)["Requires-Python"]) and not all(
+        if (
+            requires_python := metadata_cache(package).get("Requires-Python")
+        ) and not all(
             _is_dependency_version_range_valid(version_part, "SemVer")
             for version_part in requires_python.split(",")
         ):

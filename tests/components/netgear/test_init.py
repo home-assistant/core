@@ -14,8 +14,10 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
+from tests.typing import WebSocketGenerator
 
 SERIAL = "5ER1AL0000001"
 HOST = "10.0.0.1"
@@ -87,3 +89,58 @@ async def test_tracked_device_links_to_router(
     )
     assert tracked_device is not None
     assert tracked_device.via_device_id == router_device.id
+
+
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing an unexpected child device is rejected."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: HOST,
+            CONF_PORT: 80,
+            CONF_SSL: False,
+            CONF_USERNAME: "admin",
+            CONF_PASSWORD: "password",
+        },
+        unique_id=SERIAL,
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.netgear.router.Netgear") as netgear_mock:
+        api = netgear_mock.return_value
+        api.login_try_port = Mock(return_value=True)
+        api.get_info = Mock(return_value=ROUTER_INFOS)
+        api.port = 80
+        api.ssl = False
+        api.get_attached_devices_2 = Mock(return_value=[TRACKED_DEVICE])
+        api.get_traffic_meter = Mock(return_value=None)
+        api.get_new_speed_test_result = Mock(return_value=None)
+        api.check_new_firmware = Mock(return_value=None)
+        api.get_system_info = Mock(return_value=None)
+        api.check_ethernet_link = Mock(return_value=None)
+
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert await async_setup_component(hass, "config", {})
+    router_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry.entry_id
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=router_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)

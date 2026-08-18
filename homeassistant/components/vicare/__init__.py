@@ -173,9 +173,41 @@ async def async_setup_entry(hass: HomeAssistant, entry: ViCareConfigEntry) -> bo
         # Migration can be removed in 2025.4.0
         await async_migrate_devices_and_entities(hass, entry, device)
 
+    await _async_register_zigbee_gateway_devices(hass, entry)
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
+
+
+async def _async_register_zigbee_gateway_devices(
+    hass: HomeAssistant, entry: ViCareConfigEntry
+) -> None:
+    """Register zigbee gateway devices before their sub-devices are added.
+
+    Zigbee sub-devices link to their gateway through via_device_id, which
+    requires the gateway device to already exist when the sub-device is added,
+    regardless of platform setup order. The gateway's remaining attributes are
+    filled in by its own entity. Sub-devices whose gateway is absent stay
+    unlinked, matching the previous via_device behavior.
+    """
+    device_registry = dr.async_get(hass)
+    for device in entry.runtime_data.devices:
+        device_serial = device.serial
+        # A gateway (main) device has a two-part zigbee serial; its channels add
+        # a third part and link back to it.
+        if (
+            device_serial is None
+            or not device_serial.startswith("zigbee-")
+            or len(device_serial.split("-", 2)) != 2
+        ):
+            continue
+        gateway_serial = device.config.getConfig().serial
+        identifier = f"{gateway_serial}_{device_serial.replace('-', '_')}"
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            identifiers={(DOMAIN, identifier)},
+        )
 
 
 def _remove_token_file(token_path: str) -> None:
@@ -215,11 +247,14 @@ def _setup_vicare_api(
             str(device.isOnline()),
         )
 
-    devices = [
-        ViCareDevice(config=device_config, api=device_config.asAutoDetectDevice())
-        for device_config in device_config_list
-        if bool(device_config.isOnline())
-    ]
+    devices = []
+    for device_config in device_config_list:
+        if not bool(device_config.isOnline()):
+            continue
+        api = device_config.asAutoDetectDevice()
+        devices.append(
+            ViCareDevice(config=device_config, api=api, serial=get_device_serial(api))
+        )
     return ViCareData(client=client, devices=devices)
 
 
@@ -237,9 +272,7 @@ async def async_migrate_devices_and_entities(
 
     gateway_serial: str = device.config.getConfig().serial
     device_id = device.config.getId()
-    device_serial: str | None = await hass.async_add_executor_job(
-        get_device_serial, device.api
-    )
+    device_serial: str | None = device.serial
     device_model = device.config.getModel()
 
     old_identifier = gateway_serial

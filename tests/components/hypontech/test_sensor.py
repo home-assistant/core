@@ -47,15 +47,15 @@ async def test_device_manufacturer_uses_oem(
         await setup_integration(hass, mock_config_entry)
 
     device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    overview_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.unique_id)}
+    overview_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
     )
     assert overview_device
     assert overview_device.manufacturer == "Nexen"
 
     plant = mock_hyponcloud.get_list.return_value[0]
-    plant_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, plant.plant_id)}
+    plant_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, plant.plant_id), mock_config_entry.entry_id
     )
     assert plant_device
     assert plant_device.manufacturer == "Nexen"

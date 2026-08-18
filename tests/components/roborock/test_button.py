@@ -72,7 +72,10 @@ async def test_dock_buttons_absent_for_non_wash_n_fill_dock(
         assert hass.states.get(entity_id) is not None
     # No phantom dock device should be registered for the non-wash-n-fill vacuum.
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, "abc123_dock")}) is None
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "abc123_dock"), setup_entry.entry_id
+        )
+        is None
     )
 
 

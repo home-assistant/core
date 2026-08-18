@@ -35,6 +35,7 @@ class IntelliClimaEntity(CoordinatorEntity[IntelliClimaCoordinator]):
     """Define a generic class for IntelliClima entities."""
 
     _attr_has_entity_name = True
+    _attr_device_info: DeviceInfo
 
     def __init__(
         self,

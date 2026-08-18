@@ -286,8 +286,21 @@ class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
     resource: EntertainmentConfiguration
 
     entity_description = BinarySensorEntityDescription(
-        key="entertainment_active_sensor", device_class=BinarySensorDeviceClass.RUNNING
+        key="entertainment_active_sensor",
+        device_class=BinarySensorDeviceClass.RUNNING,
+        has_entity_name=True,
+        translation_key="entertainment_area",
     )
+
+    def __init__(
+        self,
+        bridge: HueBridge,
+        controller: EntertainmentConfigurationController,
+        resource: EntertainmentConfiguration,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(bridge, controller, resource)
+        self._attr_translation_placeholders = {"area_name": resource.metadata.name}
 
     @property
     @override
@@ -295,11 +308,14 @@ class HueEntertainmentActiveSensor(HueBaseEntity, BinarySensorEntity):
         """Return true if the binary sensor is on."""
         return self.resource.status == EntertainmentStatus.ACTIVE
 
-    @property
+    @callback
     @override
-    def name(self) -> str:
-        """Return sensor name."""
-        return self.resource.metadata.name
+    def on_update(self) -> None:
+        """Call on update event."""
+        self._attr_translation_placeholders = {"area_name": self.resource.metadata.name}
+        # the entity name is cached, invalidate it so a rename
+        # of the entertainment area in the Hue app is picked up
+        self.__dict__.pop("name", None)
 
 
 # pylint: disable-next=home-assistant-enforce-class-module

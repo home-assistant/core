@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import timedelta
-from enum import Enum
 from typing import Final
 
 from homeassistant.const import Platform
@@ -36,60 +35,6 @@ HUMIDITY_LEVELS = {
     67: 102,  # Medium humidity mode
     100: 103,  # High humidity mode
 }
-
-
-class AirPurifierMode(Enum):
-    """Air Purifier Modes."""
-
-    NORMAL = 1
-    AUTO = 2
-    SLEEP = 3
-    PET = 4
-
-    @classmethod
-    def get_modes(cls) -> list[str]:
-        """Return a list of available air purifier modes as lowercase strings."""
-        return [mode.name.lower() for mode in cls]
-
-
-class Humidifier2Mode(Enum):
-    """Enumerates the available modes for a SwitchBot humidifier2."""
-
-    HIGH = 1
-    MEDIUM = 2
-    LOW = 3
-    QUIET = 4
-    TARGET_HUMIDITY = 5
-    SLEEP = 6
-    AUTO = 7
-    DRYING_FILTER = 8
-
-    @classmethod
-    def get_modes(cls) -> list[str]:
-        """Return a list of available humidifier2 modes as lowercase strings."""
-        return [mode.name.lower() for mode in cls]
-
-
-class SwitchbotCloudDeviceLockState(Enum):
-    """Lock State."""
-
-    LOCKED = "locked"
-    UNLOCKED = "unlocked"
-    LOCKING = "locking"
-    UNLOCKING = "unlocking"
-    JAMMED = "jammed"
-    LATCH_BOLT_LOCKED = "latchBoltLocked"
-    HALF_LOCKED = "halfLocked"
-
-    @classmethod
-    def get_states(cls) -> list[SwitchbotCloudDeviceLockState]:
-        """Get lock states."""
-        return list(cls)
-
-    @classmethod
-    def get_values(cls) -> list[str]:
-        """Get lock value."""
-        return [mode.value for mode in cls]
 
 
 @dataclass(frozen=True)
@@ -151,6 +96,32 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     "Smart Lock Pro Wifi": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.LOCK)
     ),
+    "Strip Light": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Strip Light 3": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Floor Lamp": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Color Bulb": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "RGBICWW Floor Lamp": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "Permanent Outdoor Lights": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "RGBICWW Strip Light": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "Ceiling Light": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.LIGHT,)),
+    "Ceiling Light Pro": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "RGBIC Neon Wire Rope Light": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "RGBIC Neon Rope Light": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
+    "Candle Warmer Lamp": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.LIGHT,)
+    ),
     "MeterPro(CO2)": SwitchbotCloudDeviceConfig(True, entity_config=(Platform.SENSOR,)),
     "AI Art Frame": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.BUTTON, Platform.IMAGE)
@@ -164,5 +135,23 @@ DEVICE_SUPPORT_MAP: Final[dict[str, SwitchbotCloudDeviceConfig]] = {
     ),
     "Battery Circulator Fan 2 Pro": SwitchbotCloudDeviceConfig(
         True, entity_config=(Platform.SENSOR, Platform.FAN)
+    ),
+    "Water Detector": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR)
+    ),
+    "Curtain": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+    ),
+    "Curtain3": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+    ),
+    "Roller Shade": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+    ),
+    "Blind Tilt": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.SENSOR, Platform.BINARY_SENSOR, Platform.COVER)
+    ),
+    "Garage Door Opener": SwitchbotCloudDeviceConfig(
+        True, entity_config=(Platform.BINARY_SENSOR, Platform.COVER)
     ),
 }

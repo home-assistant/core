@@ -1,6 +1,6 @@
 """Tests for HKDevice."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import dataclasses
 from typing import Any
 from unittest import mock
@@ -184,6 +184,27 @@ async def test_migrate_device_id_no_serial(
     assert device.manufacturer == variant.manufacturer
 
 
+@pytest.fixture
+def allow_deprecated_device_registry_apis() -> Generator[None]:
+    """Allow tests to call the deprecated device registry APIs without raising.
+
+    A restored composite device can only be retrieved with async_get_device, so tests
+    exercising composite devices keep calling it; downgrade the deprecation report to a
+    log instead of raising.
+    """
+    real_report_usage = dr.report_usage
+
+    def _log_only(what: str, **kwargs: Any) -> None:
+        kwargs["core_behavior"] = dr.ReportBehavior.LOG
+        kwargs["core_integration_behavior"] = dr.ReportBehavior.LOG
+        kwargs["custom_integration_behavior"] = dr.ReportBehavior.LOG
+        real_report_usage(what, **kwargs)
+
+    with mock.patch.object(dr, "report_usage", _log_only):
+        yield
+
+
+@pytest.mark.usefixtures("allow_deprecated_device_registry_apis")
 async def test_migrate_device_id_shared_identifier_only_migrates_own(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -748,3 +769,28 @@ async def test_async_setup_handles_unparsable_response(
     # though initial polling failed
     state = hass.states.get("light.testdevice")
     assert state is not None
+
+
+async def test_device_via_device_links(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test bridged accessories link to the bridge via via_device_id."""
+    accessories = await setup_accessories_from_file(
+        hass, "ryse_smart_bridge_four_shades.json"
+    )
+    config_entry, _ = await setup_test_accessories(hass, accessories)
+
+    bridge_device = device_registry.async_get_device_by_identifier(
+        (IDENTIFIER_ACCESSORY_ID, "00:00:00:00:00:00:aid:1"), config_entry.entry_id
+    )
+    assert bridge_device is not None
+    assert bridge_device.via_device_id is None
+
+    for aid in (2, 3, 4, 5):
+        shade_device = device_registry.async_get_device_by_identifier(
+            (IDENTIFIER_ACCESSORY_ID, f"00:00:00:00:00:00:aid:{aid}"),
+            config_entry.entry_id,
+        )
+        assert shade_device is not None
+        assert shade_device.via_device_id == bridge_device.id

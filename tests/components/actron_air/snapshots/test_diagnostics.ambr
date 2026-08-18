@@ -22,7 +22,7 @@
             'system_name': 'Test System',
           }),
           'alerts': dict({
-            'clean_filter': False,
+            'clean_filter': True,
             'defrosting': False,
           }),
           'is_online': True,

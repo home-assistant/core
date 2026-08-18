@@ -710,7 +710,9 @@ async def test_devices(
     await hass.async_block_till_done()
 
     for device_id in ("12345", "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"):
-        device = device_registry.async_get_device({(DOMAIN, device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), webhook_config_entry.entry_id
+        )
         assert device is not None
         assert device == snapshot(name=device_id)
 

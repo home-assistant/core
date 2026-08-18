@@ -71,6 +71,10 @@
         "Family": "Neo"
       }
     },
+    "Alerts": {
+      "CleanFilter": true,
+      "Defrosting": false
+    },
     "NV_Limits": {
       "UserSetpoint_oC": {
         "setCool_Min": 16.0,
