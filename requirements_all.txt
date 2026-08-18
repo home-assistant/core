@@ -1146,13 +1146,13 @@ google-cloud-texttospeech==2.25.1
 google-genai==2.16.0
 
 # homeassistant.components.google_health
-google-health-api==0.8.0
+google-health-api==0.9.0
 
 # homeassistant.components.google_travel_time
 google-maps-routing==0.6.15
 
 # homeassistant.components.nest
-google-nest-sdm==9.1.2
+google-nest-sdm==9.2.1
 
 # homeassistant.components.google_photos
 google-photos-library-api==0.12.1
@@ -1332,7 +1332,7 @@ ibeacon-ble==1.2.0
 # homeassistant.components.local_calendar
 # homeassistant.components.local_todo
 # homeassistant.components.remote_calendar
-ical==14.1.0
+ical==14.1.1
 
 # homeassistant.components.caldav
 icalendar==6.3.1
@@ -1592,7 +1592,7 @@ micloud==0.5
 microBeesPy==0.3.5
 
 # homeassistant.components.midea
-midea-local==8.0.1
+midea-local==9.0.0
 
 # homeassistant.components.mill
 mill-local==0.5.0
@@ -2626,7 +2626,7 @@ pyspeex-noise==1.0.2
 pysqueezebox==0.14.0
 
 # homeassistant.components.stiebel_eltron
-pystiebeleltron==0.6.3
+pystiebeleltron==0.7.0
 
 # homeassistant.components.suez_water
 pysuezV2==2.0.7
@@ -2786,7 +2786,7 @@ python-swisscom-internet-box==0.2.0
 python-tado==0.18.16
 
 # homeassistant.components.technove
-python-technove==2.1.2
+python-technove==2.1.3
 
 # homeassistant.components.telegram_bot
 python-telegram-bot[socks]==22.7
@@ -3333,7 +3333,7 @@ vilfo-api-client==0.5.0
 visionpluspython==1.1.0
 
 # homeassistant.components.vizio
-vizaio==0.4.0
+vizaio==0.5.0
 
 # homeassistant.components.caldav
 vobject==0.9.9
@@ -3436,7 +3436,7 @@ yalesmartalarmclient==0.4.3
 # homeassistant.components.august
 # homeassistant.components.yale
 # homeassistant.components.yalexs_ble
-yalexs-ble==3.3.1
+yalexs-ble==4.0.1
 
 # homeassistant.components.august
 # homeassistant.components.yale
@@ -3497,7 +3497,7 @@ zinvolt==1.0.0
 zm-py==0.5.4
 
 # homeassistant.components.zwave_js
-zwave-js-server-python==0.73.0
+zwave-js-server-python==0.73.1
 
 # homeassistant.components.zwave_me
 zwave-me-ws==0.4.3

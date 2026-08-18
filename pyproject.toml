@@ -491,8 +491,6 @@ filterwarnings = [
   # https://pypi.org/project/pyqwikswitch/ - >=1.0
   "ignore:client.loop property is deprecated:DeprecationWarning:pyqwikswitch.async_",
   "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:pyqwikswitch.async_",
-  # https://github.com/allenporter/python-google-nest-sdm/pull/1229 - >9.1.2
-  "ignore:datetime.*utcnow\\(\\) is deprecated:DeprecationWarning:google_nest_sdm.device",
   # https://github.com/rytilahti/python-miio/pull/1809 - >=0.6.0.dev0
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.protocol",
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",

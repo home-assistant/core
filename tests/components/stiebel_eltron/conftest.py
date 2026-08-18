@@ -36,7 +36,7 @@ async def mock_connect_tcp(
     mock_modbus_connection: MockModbusConnection,
 ) -> AsyncGenerator[AsyncMock]:
     """Patch connect_tcp to return the in-memory mock connection."""
-    assert mock_modbus_connection.connected
+    await mock_modbus_connection.connect()
     connect = AsyncMock(return_value=mock_modbus_connection)
     with (
         patch("homeassistant.components.stiebel_eltron.connect_tcp", new=connect),
