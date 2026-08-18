@@ -555,3 +555,33 @@ async def test_remove_entry_without_cookie_store(hass: HomeAssistant) -> None:
         await async_remove_entry(hass, entry)
 
     assert CURRENT_USER_ID not in VRChatAuthCookieStore
+
+
+async def test_remove_entry_without_unique_id(hass: HomeAssistant) -> None:
+    """Test removing an entry without a unique ID is a no-op."""
+    entry = MockConfigEntry(domain=DOMAIN, unique_id=None)
+
+    await async_remove_entry(hass, entry)
+
+
+async def test_remove_entry_continues_after_logout_error(
+    hass: HomeAssistant,
+) -> None:
+    """Test cookie cleanup continues when logout fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_USERNAME: "user@example.com", CONF_PASSWORD: "password"},
+        unique_id=CURRENT_USER_ID,
+    )
+    cookie_store = VRChatAuthCookieStore.setdefault(
+        CURRENT_USER_ID,
+        Mock(async_load=AsyncMock(return_value={}), async_remove=AsyncMock()),
+    )
+
+    with patch(
+        "homeassistant.components.vrchat.VRChatAPI.logout",
+        new=AsyncMock(side_effect=RuntimeError("test error")),
+    ):
+        await async_remove_entry(hass, entry)
+
+    cookie_store.async_remove.assert_awaited_once()

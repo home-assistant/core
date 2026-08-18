@@ -13,6 +13,8 @@ from homeassistant.components.vrchat.coordinator import VRChatUserDataCoordinato
 from homeassistant.components.vrchat.sensor import (
     VRChatUserLocationSensor,
     VRChatUserStateSensor,
+    VRChatUserStatusDescriptionSensor,
+    VRChatUserStatusSensor,
 )
 from homeassistant.components.vrchat.utils import VRChatSpecialLocationString
 from homeassistant.components.vrchat.world import VRChatWorldData
@@ -88,3 +90,93 @@ def test_state_sensor_returns_strings() -> None:
     )
 
     assert type(sensor.native_value) is str
+
+
+def test_status_sensor_picture_and_description_icon() -> None:
+    """Test status indicator and description icon selection."""
+    user = cast(
+        VRChatUserDataCoordinator,
+        SimpleNamespace(
+            data={"status": "active", "location": "offline"},
+            world=None,
+            destination_world=None,
+        ),
+    )
+    status_sensor = VRChatUserStatusSensor(user)
+    description_sensor = VRChatUserStatusDescriptionSensor(user)
+
+    assert status_sensor.entity_picture is not None
+    assert description_sensor.icon == "mdi:account-badge"
+
+    user.data = {"status": "unknown", "location": "offline"}
+    assert status_sensor.entity_picture is None
+    assert description_sensor.icon is None
+
+
+def test_status_sensor_handles_missing_status() -> None:
+    """Test status sensors return no value when status is missing."""
+    user = cast(
+        VRChatUserDataCoordinator,
+        SimpleNamespace(data={}, world=None, destination_world=None),
+    )
+
+    assert VRChatUserStatusSensor(user).entity_picture is None
+    assert VRChatUserStatusDescriptionSensor(user).icon is None
+
+
+def test_state_sensor_handles_unknown_presence() -> None:
+    """Test state sensor returns no state when presence is unknown."""
+    user = cast(
+        VRChatUserDataCoordinator,
+        SimpleNamespace(data={"status": "active"}, world=None, destination_world=None),
+    )
+
+    assert VRChatUserStateSensor(user).native_value is None
+
+
+def test_state_sensor_avatar_fallbacks() -> None:
+    """Test state sensor avatar URL fallback order."""
+    user = cast(
+        VRChatUserDataCoordinator,
+        SimpleNamespace(
+            data={
+                "location": "offline",
+                "status": "offline",
+                "currentAvatarThumbnailImageUrl": "https://example.com/avatar.png",
+            },
+            world=None,
+            destination_world=None,
+        ),
+    )
+
+    sensor = VRChatUserStateSensor(user)
+
+    assert sensor.entity_picture == "https://example.com/avatar.png"
+    user.data["currentAvatarThumbnailImageUrl"] = ""
+    user.data["imageUrl"] = "https://example.com/image.png"
+    assert sensor.entity_picture == "https://example.com/image.png"
+
+
+def test_location_sensor_world_attributes() -> None:
+    """Test location sensor exposes resolved world metadata."""
+    world = SimpleNamespace(data={"id": "wrld_test", "name": "Test world"})
+    user = cast(
+        VRChatUserDataCoordinator,
+        SimpleNamespace(
+            data={
+                "location": "wrld_test:instance",
+                "worldId": "wrld_test",
+                "instanceId": "instance",
+            },
+            world=world,
+            destination_world=None,
+        ),
+    )
+
+    sensor = VRChatUserLocationSensor(user)
+
+    assert sensor.extra_state_attributes == {
+        "instanceId": "instance",
+        "id": "wrld_test",
+        "name": "Test world",
+    }
