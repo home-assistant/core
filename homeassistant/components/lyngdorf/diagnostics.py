@@ -12,7 +12,10 @@ from homeassistant.helpers.service_info.ssdp import ATTR_UPNP_SERIAL
 from .const import CONF_SERIAL_NUMBER, SSDP_ST
 from .models import LyngdorfConfigEntry
 
-TRIMS = ("bass", "treble", "centre", "height", "lfe", "surround")
+_TRIM_NAMES = tuple(
+    f"trim_{trim}" for trim in ("bass", "treble", "centre", "height", "lfe", "surround")
+)
+_RANGE_NAMES = ("lipsync_range", *(f"{name}_range" for name in _TRIM_NAMES))
 
 # The serial doubles as the device MAC and as the config entry unique_id, so it
 # needs redacting wherever it surfaces, including inside the UPnP description.
@@ -85,11 +88,11 @@ async def async_get_config_entry_diagnostics(
         "zone_b_audio_input": receiver.zone_b_audio_input,
         "zone_b_streaming_source": receiver.zone_b_streaming_source,
     }
-    state |= {f"trim_{trim}": getattr(receiver, f"trim_{trim}") for trim in TRIMS}
+    state |= {name: getattr(receiver, name) for name in _TRIM_NAMES}
 
     ranges = {
         name: asdict(value) if (value := getattr(receiver, name)) is not None else None
-        for name in ("lipsync_range", *(f"trim_{trim}_range" for trim in TRIMS))
+        for name in _RANGE_NAMES
     }
 
     return async_redact_data(
