@@ -1,5 +1,6 @@
 """Tests for the Peblar select platform."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from peblar import (
@@ -210,7 +211,7 @@ async def test_select_hardware_entity(
     entity_id: str,
     method_name: str,
     option: str,
-    expected_kwargs: dict,
+    expected_kwargs: dict[str, Any],
 ) -> None:
     """Test the Peblar EV charger hardware select entities."""
     mocked_method = getattr(mock_peblar, method_name)
@@ -241,7 +242,12 @@ async def test_hw_entity_absent_when_hw_flag_false(
     entity_key: str,
 ) -> None:
     """Test hardware select entity is absent when the hardware flag is false."""
-    unique_id = f"{mock_config_entry.unique_id}_{entity_key}"
+    assert entity_registry.async_get_entity_id(
+        Platform.SELECT, DOMAIN, f"{mock_config_entry.unique_id}_smart_charging"
+    )
     assert (
-        entity_registry.async_get_entity_id(Platform.SELECT, DOMAIN, unique_id) is None
+        entity_registry.async_get_entity_id(
+            Platform.SELECT, DOMAIN, f"{mock_config_entry.unique_id}_{entity_key}"
+        )
+        is None
     )
