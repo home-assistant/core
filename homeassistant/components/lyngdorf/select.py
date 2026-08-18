@@ -26,28 +26,20 @@ class LyngdorfSelectEntityDescription(SelectEntityDescription):
     select_option_fn: Callable[[Receiver, str], None]
 
 
-def _set_room_perfect(receiver: Receiver, option: str) -> None:
-    receiver.room_perfect_position = option
-
-
-def _set_voicing(receiver: Receiver, option: str) -> None:
-    receiver.voicing = option
-
-
 SELECT_ENTITIES: tuple[LyngdorfSelectEntityDescription, ...] = (
     LyngdorfSelectEntityDescription(
         key="room_perfect_position",
         translation_key="room_perfect_position",
         current_option_fn=lambda r: r.room_perfect_position,
         options_fn=lambda r: r.available_room_perfect_positions or [],
-        select_option_fn=_set_room_perfect,
+        select_option_fn=lambda r, o: setattr(r, "room_perfect_position", o),
     ),
     LyngdorfSelectEntityDescription(
         key="voicing",
         translation_key="voicing",
         current_option_fn=lambda r: r.voicing,
         options_fn=lambda r: r.available_voicings or [],
-        select_option_fn=_set_voicing,
+        select_option_fn=lambda r, o: setattr(r, "voicing", o),
     ),
 )
 
