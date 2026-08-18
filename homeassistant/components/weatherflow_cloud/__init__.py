@@ -1,6 +1,7 @@
 """The WeatherflowCloud integration."""
 
 import asyncio
+from contextlib import suppress
 
 from weatherflow4py.api import WeatherFlowRestAPI
 from weatherflow4py.ws import WeatherFlowWebsocketAPI
@@ -72,7 +73,8 @@ async def async_setup_entry(
 
     async def _async_disconnect_websocket() -> None:
         """Disconnect the WeatherFlow websocket."""
-        await websocket_api.stop_all_listeners()
+        with suppress(WebSocketException):
+            await websocket_api.stop_all_listeners()
         await websocket_api.close()
 
     # Connect once because both websocket coordinators share this API instance.

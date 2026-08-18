@@ -3,7 +3,7 @@
 from unittest.mock import AsyncMock
 
 import pytest
-from websockets.exceptions import ConnectionClosedError
+from websockets.exceptions import ConnectionClosedError, ConnectionClosedOK
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -37,6 +37,26 @@ async def test_entry_unload(
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+
+    await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_websocket_api.stop_all_listeners.assert_awaited_once()
+    mock_websocket_api.close.assert_awaited_once()
+
+
+@pytest.mark.usefixtures("mock_rest_api")
+async def test_entry_unload_with_closed_websocket(
+    hass: HomeAssistant,
+    mock_websocket_api: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test unloading an entry whose websocket is already closed."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    mock_websocket_api.stop_all_listeners.side_effect = ConnectionClosedOK(None, None)
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
