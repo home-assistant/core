@@ -105,9 +105,7 @@ FORBIDDEN_PACKAGES = {
     # Only needed for docs
     "mkdocs": "not be a runtime dependency",
     # See https://developers.home-assistant.io/blog/2026/04/27/pyserial-to-serialx/
-    "pyserial": "be replaced by serialx",
     "pyserial-asyncio": "be replaced by serialx",
-    "pyserial-asyncio-fast": "be replaced by serialx",
     # Only needed for tests
     "pytest": "not be a runtime dependency",
     # Only needed for build
