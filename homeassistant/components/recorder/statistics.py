@@ -30,7 +30,7 @@ from sqlalchemy.orm.session import Session
 from sqlalchemy.sql.lambdas import StatementLambdaElement
 import voluptuous as vol
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.frame import report_usage
@@ -368,7 +368,7 @@ def get_display_unit(
 
     state_unit: str | None = statistic_unit
     if state := hass.states.get(statistic_id):
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
     if state_unit == statistic_unit or state_unit not in converter.VALID_UNITS:
         # Guard against invalid state unit in the DB
@@ -1973,7 +1973,7 @@ def statistic_during_period(
     unit_class = metadata[1]["unit_class"]
     state_unit = unit = metadata[1]["unit_of_measurement"]
     if state := hass.states.get(statistic_id):
-        state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        state_unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
     convert = _get_statistic_to_display_unit_converter(
         unit_class, unit, state_unit, units
     )
@@ -2062,7 +2062,9 @@ def _augment_result_with_change(
             unit_class = metadata_by_id["unit_class"]
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
-                state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                state_unit = state.attributes.get(
+                    EntityStateAttribute.UNIT_OF_MEASUREMENT
+                )
             convert = _get_statistic_to_display_unit_converter(
                 unit_class, unit, state_unit, units
             )
@@ -2688,7 +2690,9 @@ def _sorted_statistics_to_dict(
             unit_class = metadata_by_id["unit_class"]
             state_unit = unit = metadata_by_id["unit_of_measurement"]
             if state := hass.states.get(statistic_id):
-                state_unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+                state_unit = state.attributes.get(
+                    EntityStateAttribute.UNIT_OF_MEASUREMENT
+                )
             convert = _get_statistic_to_display_unit_converter(
                 unit_class, unit, state_unit, units, allow_none=False
             )

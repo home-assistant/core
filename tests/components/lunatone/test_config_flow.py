@@ -158,6 +158,7 @@ async def test_zeroconf_flow(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
 ) -> None:
     """Test zeroconf flow."""
     result = await hass.config_entries.flow.async_init(
@@ -180,6 +181,7 @@ async def test_zeroconf_flow_abort_duplicate(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test zeroconf flow aborts with duplicate."""

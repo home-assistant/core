@@ -34,7 +34,7 @@ infrared-protocols==9.0.0
 Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.48.1
-orjson==3.11.9
+orjson==3.12.0
 packaging>=23.1
 Pillow==12.3.0
 propcache==0.5.2
@@ -49,13 +49,13 @@ PyYAML==6.0.3
 requests==2.34.2
 rf-protocols==4.3.0
 securetar==2026.4.1
-SQLAlchemy==2.0.51
+SQLAlchemy==2.0.52
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.12.2
+uv==0.12.5
 voluptuous-openapi==0.4.1
 voluptuous-serialize==2.7.0
 voluptuous==0.15.2
