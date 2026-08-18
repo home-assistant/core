@@ -1,5 +1,6 @@
 """Tests for the Lyngdorf media player platform."""
 
+from collections.abc import Generator
 from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import MagicMock, patch
@@ -10,14 +11,9 @@ from lyngdorf.streaming import NowPlaying
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.lyngdorf.media_player import FEATURES_MAIN
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
     ATTR_INPUT_SOURCE_LIST,
-    ATTR_MEDIA_ALBUM_NAME,
-    ATTR_MEDIA_ARTIST,
-    ATTR_MEDIA_CONTENT_TYPE,
-    ATTR_MEDIA_DURATION,
     ATTR_MEDIA_POSITION,
     ATTR_MEDIA_POSITION_UPDATED_AT,
     ATTR_MEDIA_REPEAT,
@@ -37,7 +33,6 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
     MediaPlayerState,
-    MediaType,
     RepeatMode,
 )
 from homeassistant.const import (
@@ -71,6 +66,13 @@ ZONE_B = "media_player.mock_lyngdorf_zone_b"
 def platforms() -> list[Platform]:
     """Only load the media player platform."""
     return [Platform.MEDIA_PLAYER]
+
+
+@pytest.fixture(autouse=True)
+def media_proxy_token() -> Generator[None]:
+    """Freeze the media proxy token, which otherwise varies per run."""
+    with patch("secrets.token_hex", return_value="mock_token"):
+        yield
 
 
 @pytest.fixture
@@ -362,45 +364,18 @@ async def test_zone_b_state_properties(
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["HDMI", "Optical"]
 
 
-@pytest.mark.usefixtures("init_integration")
-async def test_now_playing_metadata(
+async def test_now_playing(
     hass: HomeAssistant,
+    init_integration: MockConfigEntry,
     playing_receiver: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test now-playing metadata and position are reported."""
+    """Test now-playing metadata, position and transport features while playing."""
     notify_receiver_update(playing_receiver)
     await hass.async_block_till_done()
 
-    state = hass.states.get(MAIN_ZONE)
-    assert state.state == MediaPlayerState.PLAYING
-    assert state.attributes[ATTR_MEDIA_TITLE] == "The Killing Moon"
-    assert state.attributes[ATTR_MEDIA_ARTIST] == "Echo & the Bunnymen"
-    assert state.attributes[ATTR_MEDIA_ALBUM_NAME] == "Songs to Learn & Sing"
-    assert state.attributes[ATTR_MEDIA_DURATION] == 346
-    assert state.attributes[ATTR_MEDIA_POSITION] == 319
-    assert state.attributes[ATTR_MEDIA_CONTENT_TYPE] == MediaType.MUSIC
-    assert state.attributes[ATTR_MEDIA_SHUFFLE] is False
-    assert state.attributes[ATTR_MEDIA_REPEAT] == RepeatMode.OFF
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_transport_features_follow_the_device(
-    hass: HomeAssistant,
-    playing_receiver: MagicMock,
-) -> None:
-    """Test supported features track what the source currently offers."""
-    notify_receiver_update(playing_receiver)
-    await hass.async_block_till_done()
-
-    assert hass.states.get(MAIN_ZONE).attributes[ATTR_SUPPORTED_FEATURES] == (
-        FEATURES_MAIN
-        | MediaPlayerEntityFeature.PAUSE
-        | MediaPlayerEntityFeature.NEXT_TRACK
-        | MediaPlayerEntityFeature.PREVIOUS_TRACK
-        | MediaPlayerEntityFeature.SEEK
-        | MediaPlayerEntityFeature.SHUFFLE_SET
-        | MediaPlayerEntityFeature.REPEAT_SET
-    )
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 @pytest.mark.usefixtures("init_integration")

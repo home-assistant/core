@@ -118,7 +118,6 @@ class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
         device_info: DeviceInfo,
         translation_key: str | None,
         entity_id_suffix: str,
-        features: MediaPlayerEntityFeature = MediaPlayerEntityFeature(0),
     ) -> None:
         """Initialize the device."""
         super().__init__(receiver, device_info)
@@ -126,11 +125,12 @@ class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
             assert config_entry.unique_id
         self._attr_unique_id = f"{config_entry.unique_id}_{entity_id_suffix}"
         self._attr_translation_key = translation_key
-        self._attr_supported_features = features
 
 
 class LyngdorfZoneBDevice(LyngdorfDevice):
     """Lyngdorf Zone B device."""
+
+    _attr_supported_features = FEATURES_ZONE_B
 
     def __init__(
         self,
@@ -145,7 +145,6 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
             device_info,
             None,
             "zone_b",
-            FEATURES_ZONE_B,
         )
 
     @override
@@ -245,7 +244,6 @@ class LyngdorfMainDevice(LyngdorfDevice):
             device_info,
             "main_zone",
             "main_zone",
-            FEATURES_MAIN,
         )
 
     @override
@@ -255,7 +253,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
         # drift, rather than once a second, which is all Home Assistant
         # needs: it stores a position and a timestamp and extrapolates.
         await super().async_added_to_hass()
-        if self._streaming:
+        if self._has_streamer:
             self.async_on_remove(
                 self._receiver.register_position_jump_callback(self._handle_position)
             )
@@ -266,7 +264,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
         self.async_write_ha_state()
 
     @property
-    def _streaming(self) -> bool:
+    def _has_streamer(self) -> bool:
         """Return whether this model has a streaming module at all."""
         return self._receiver.model is not None and (
             self._receiver.model.has_streaming_feature()
@@ -275,7 +273,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def _now_playing(self) -> NowPlaying | None:
         """Return the current track, or None if this model has no streamer."""
-        if not self._streaming:
+        if not self._has_streamer:
             return None
         return self._receiver.now_playing
 
@@ -353,7 +351,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def media_position(self) -> int | None:
         """Return the position of the current track, in seconds."""
-        if not self._streaming or not self._receiver.has_position:
+        if not self._has_streamer or not self._receiver.has_position:
             return None
         return round(self._receiver.position_ms / 1000)
 
@@ -361,7 +359,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def media_position_updated_at(self) -> datetime | None:
         """Return when the position was last valid."""
-        if not self._streaming or not self._receiver.has_position:
+        if not self._has_streamer or not self._receiver.has_position:
             return None
         return self._receiver.position_updated_at
 
@@ -369,13 +367,13 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def shuffle(self) -> bool | None:
         """Return whether shuffle is enabled."""
-        return self._receiver.shuffle if self._streaming else None
+        return self._receiver.shuffle if self._has_streamer else None
 
     @override
     @property
     def repeat(self) -> RepeatMode | None:
         """Return the current repeat mode."""
-        if not self._streaming or (repeat := self._receiver.repeat) is None:
+        if not self._has_streamer or (repeat := self._receiver.repeat) is None:
             return None
         return REPEAT_MODES.get(repeat)
 
