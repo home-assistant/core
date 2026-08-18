@@ -43,6 +43,7 @@ RPC_CAMERA_ENTITIES: Final = {
         stream=1,
         translation_key="stream",
         translation_placeholders={"stream_id": "1"},
+        entity_registry_enabled_default=False,
     ),
 }
 

@@ -38,6 +38,7 @@ def fixture_platforms() -> Generator[None]:
         yield
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_camera_entity_setup(
     hass: HomeAssistant,
     mock_camera_rpc_device: Mock,
@@ -114,6 +115,7 @@ async def test_camera_stream_source(
     assert result == "rtsp://192.168.1.37/stream/0"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_camera_stream_source_stream_1(
     hass: HomeAssistant,
     mock_camera_rpc_device: Mock,
