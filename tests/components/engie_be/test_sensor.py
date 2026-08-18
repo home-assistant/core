@@ -12,6 +12,7 @@ from aioengiebelgium import (
     CustomerAccount,
     CustomerAccountRelations,
     EanPrices,
+    EngieBeAuthenticationError,
     EngieBeCommunicationError,
     PricePeriod,
     PriceSlot,
@@ -305,15 +306,23 @@ async def test_duplicate_type_suffix(
     assert names[OFFTAKE_INJECTION_EAN] != names[SECOND_ELECTRICITY_EAN]
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(EngieBeCommunicationError("boom"), id="communication_error"),
+        pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
+    ],
+)
 async def test_type_fallback_when_service_point_lookup_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
+    exception: Exception,
 ) -> None:
     """Test a failed service-point lookup falls back to the untyped entity name."""
     mock_engie_client.return_value.async_get_service_point.side_effect = [
-        EngieBeCommunicationError("boom"),
+        exception,
         ServicePoint(ean_energy_types={bare_ean(OFFTAKE_INJECTION_EAN): "ELECTRICITY"}),
     ]
     mock_config_entry.add_to_hass(hass)

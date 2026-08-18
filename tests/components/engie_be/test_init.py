@@ -41,20 +41,10 @@ async def test_setup_and_unload(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state", "expected_flows"),
+    "side_effect",
     [
-        pytest.param(
-            EngieBeCommunicationError("boom"),
-            ConfigEntryState.SETUP_RETRY,
-            0,
-            id="communication_error",
-        ),
-        pytest.param(
-            EngieBeAuthenticationError("boom"),
-            ConfigEntryState.SETUP_ERROR,
-            1,
-            id="auth_error",
-        ),
+        pytest.param(EngieBeCommunicationError("boom"), id="communication_error"),
+        pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
     ],
 )
 async def test_setup_relations_error(
@@ -62,8 +52,6 @@ async def test_setup_relations_error(
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     side_effect: Exception,
-    expected_state: ConfigEntryState,
-    expected_flows: int,
 ) -> None:
     """Test setup handles a failure of the customer-account-relations fetch."""
     mock_engie_client.return_value.async_get_customer_account_relations.side_effect = (
@@ -74,25 +62,15 @@ async def test_setup_relations_error(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is expected_state
-    assert len(hass.config_entries.flow.async_progress()) == expected_flows
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state", "expect_reauth"),
+    "side_effect",
     [
-        pytest.param(
-            EngieBeCommunicationError("boom"),
-            ConfigEntryState.SETUP_RETRY,
-            False,
-            id="communication_error",
-        ),
-        pytest.param(
-            EngieBeAuthenticationError("boom"),
-            ConfigEntryState.SETUP_ERROR,
-            True,
-            id="auth_error",
-        ),
+        pytest.param(EngieBeCommunicationError("boom"), id="communication_error"),
+        pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
     ],
 )
 async def test_setup_prices_error(
@@ -100,8 +78,6 @@ async def test_setup_prices_error(
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     side_effect: Exception,
-    expected_state: ConfigEntryState,
-    expect_reauth: bool,
 ) -> None:
     """Test setup handles a failure of the initial prices fetch."""
     mock_engie_client.return_value.async_get_prices.side_effect = side_effect
@@ -110,9 +86,8 @@ async def test_setup_prices_error(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is expected_state
-    flows = hass.config_entries.flow.async_progress()
-    assert any(flow["context"]["source"] == "reauth" for flow in flows) == expect_reauth
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_partial_first_refresh(
@@ -171,25 +146,6 @@ async def test_all_bans_fail_first_refresh(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-
-
-async def test_service_point_auth_error_starts_reauth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-) -> None:
-    """Test setup triggers reauth when a service-point lookup fails to authenticate."""
-    mock_engie_client.return_value.async_get_service_point.side_effect = (
-        EngieBeAuthenticationError("boom")
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    flows = hass.config_entries.flow.async_progress()
-    assert any(flow["context"]["source"] == "reauth" for flow in flows)
 
 
 async def test_setup_no_active_agreements(

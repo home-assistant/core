@@ -2,21 +2,12 @@
 
 from dataclasses import dataclass
 
-from aioengiebelgium import (
-    BusinessAgreement,
-    EngieBeAuthenticationError,
-    EngieBeClient,
-    EngieBeError,
-)
+from aioengiebelgium import BusinessAgreement, EngieBeClient, EngieBeError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryError,
-    ConfigEntryNotReady,
-)
+from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -64,8 +55,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
 
     try:
         relations = await client.async_get_customer_account_relations()
-    except EngieBeAuthenticationError as err:
-        raise ConfigEntryAuthFailed from err
     except EngieBeError as err:
         raise ConfigEntryNotReady from err
 

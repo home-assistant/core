@@ -102,19 +102,25 @@ async def test_single_ban_transient_failure(
     assert state_ban_2.state == "0.2"
 
 
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(EngieBeCommunicationError("boom"), id="communication_error"),
+        pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
+    ],
+)
 async def test_all_bans_fail(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
+    exception: Exception,
 ) -> None:
     """Test all BANs failing on refresh makes every sensor unavailable."""
     await _setup_two_bans(hass, mock_config_entry, mock_engie_client)
 
-    mock_engie_client.return_value.async_get_prices.side_effect = (
-        EngieBeCommunicationError("boom")
-    )
+    mock_engie_client.return_value.async_get_prices.side_effect = exception
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -125,26 +131,7 @@ async def test_all_bans_fail(
     assert state_ban_2 is not None
     assert state_ban.state == STATE_UNAVAILABLE
     assert state_ban_2.state == STATE_UNAVAILABLE
-
-
-async def test_auth_error_on_refresh_starts_reauth(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test an auth error on refresh starts a reauth flow."""
-    await _setup_two_bans(hass, mock_config_entry, mock_engie_client)
-
-    mock_engie_client.return_value.async_get_prices.side_effect = (
-        EngieBeAuthenticationError("boom")
-    )
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    flows = hass.config_entries.flow.async_progress()
-    assert any(flow["context"]["source"] == "reauth" for flow in flows)
+    assert not hass.config_entries.flow.async_progress()
 
 
 async def test_unexpected_exception_is_not_swallowed(

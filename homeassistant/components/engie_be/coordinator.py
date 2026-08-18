@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, override
 
 from aioengiebelgium import (
     BusinessAgreement,
-    EngieBeAuthenticationError,
     EngieBeClient,
     EngieBeError,
     PricesResponse,
@@ -13,7 +12,6 @@ from aioengiebelgium import (
 )
 
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -82,8 +80,6 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
         first_error: EngieBeError | None = None
         any_success = False
         for ban, result in zip(self.business_agreement_numbers, results, strict=True):
-            if isinstance(result, EngieBeAuthenticationError):
-                raise ConfigEntryAuthFailed from result
             if isinstance(result, EngieBeError):
                 first_error = first_error or result
                 had_data = self.data is not None and ban in self.data
@@ -131,8 +127,6 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
                 return_exceptions=True,
             )
             for ean, service_point_result in zip(new_eans, service_points, strict=True):
-                if isinstance(service_point_result, EngieBeAuthenticationError):
-                    raise ConfigEntryAuthFailed from service_point_result
                 if isinstance(service_point_result, EngieBeError):
                     LOGGER.debug(
                         "Fetching service point for %s failed: %s",
