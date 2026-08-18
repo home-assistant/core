@@ -1,6 +1,5 @@
 """Implement the Ingress Panel feature for Hass.io Add-ons."""
 
-from dataclasses import replace
 from http import HTTPStatus
 import logging
 
@@ -33,7 +32,8 @@ def async_setup_addon_panel_coordinator(
     Registers the panels present after the coordinator's first refresh, then keeps
     the frontend in sync with coordinator.data.panels on every following update:
     periodic refreshes, a refresh triggered by a Supervisor restart, and a post/
-    delete pushed by Supervisor and cached via coordinator.async_set_updated_data.
+    delete pushed by Supervisor and cached via coordinator.async_push_panel /
+    coordinator.async_push_panel_removal.
 
     Returns a function that unsubscribes from the coordinator.
     """
@@ -87,12 +87,7 @@ class HassIOAddonPanel(HomeAssistantView):
 
         if (coordinator := self.hass.data.get(MAIN_COORDINATOR)) is not None:
             # Update the cache; the coordinator listener registers it with the frontend.
-            coordinator.async_set_updated_data(
-                replace(
-                    coordinator.data,
-                    panels={**coordinator.data.panels, addon: panels[addon]},
-                )
-            )
+            coordinator.async_push_panel(addon, panels[addon])
         else:
             _register_panel(self.hass, addon, panels[addon])
         return web.Response()
@@ -101,18 +96,8 @@ class HassIOAddonPanel(HomeAssistantView):
     async def delete(self, request: web.Request, addon: str) -> web.Response:
         """Handle remove add-on panel requests."""
         if (coordinator := self.hass.data.get(MAIN_COORDINATOR)) is not None:
-            if addon in coordinator.data.panels:
-                # Update the cache; the coordinator listener removes it from the frontend.
-                coordinator.async_set_updated_data(
-                    replace(
-                        coordinator.data,
-                        panels={
-                            slug: panel
-                            for slug, panel in coordinator.data.panels.items()
-                            if slug != addon
-                        },
-                    )
-                )
+            # Update the cache; the coordinator listener removes it from the frontend.
+            coordinator.async_push_panel_removal(addon)
         else:
             frontend.async_remove_panel(self.hass, addon, warn_if_unknown=False)
         return web.Response()

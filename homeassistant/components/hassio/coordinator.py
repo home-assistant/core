@@ -1495,6 +1495,25 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         ):
             self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
+    @callback
+    def async_push_panel(self, addon: str, panel: IngressPanel) -> None:
+        """Apply a Supervisor panel push to cached data without touching refresh state."""
+        self.data = replace(self.data, panels={**self.data.panels, addon: panel})
+        self.async_update_listeners()
+
+    @callback
+    def async_push_panel_removal(self, addon: str) -> None:
+        """Apply a Supervisor panel removal push to cached data."""
+        if addon not in self.data.panels:
+            return
+        self.data = replace(
+            self.data,
+            panels={
+                slug: panel for slug, panel in self.data.panels.items() if slug != addon
+            },
+        )
+        self.async_update_listeners()
+
     @override
     async def _async_update_data(self) -> HassioMainData:
         """Update data via library."""
