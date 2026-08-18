@@ -22,9 +22,9 @@ from .entity import MideaConfigEntry
 
 _PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
+    Platform.HUMIDIFIER,
     Platform.SWITCH,
 ]
-
 
 async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
     """Set up Midea from a config entry."""

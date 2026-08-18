@@ -2188,6 +2188,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             sw_version=sw_version,
         )
 
+        if disabled_by is DeviceEntryDisabler.DEVICE:
+            raise HomeAssistantError(
+                "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
+                "device"
+            )
+
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
             raise HomeAssistantError(
@@ -3576,6 +3582,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             can't be disabled by CONFIG_ENTRY when the owning config entry is enabled.
             An inconsistent disabled_by is deprecated and ignored; this will raise in
             HA Core 2027.8.
+        :param merge_connections: Deprecated. Adds connections to the device, keeping the
+            ones it already has. Pass the full set of connections as new_connections
+            instead.
+        :param merge_identifiers: Deprecated. Adds identifiers to the device, keeping the
+            ones it already has. Pass the full set of identifiers as new_identifiers
+            instead.
         :param new_config_entry_id: Move the device to this config entry. Unless a
             disabled_by consistent with the new config entry's disabled state is
             passed explicitly, the device's disabled state is updated to reflect the
@@ -3588,6 +3600,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             subentry of remove_config_entry_id. Use new_config_subentry_id to move, or
             async_remove_device to remove.
         """
+        if disabled_by is DeviceEntryDisabler.DEVICE:
+            raise HomeAssistantError(
+                "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
+                "device"
+            )
         if (
             underlying_ids := self._async_device_ids_for_composite_device_id(device_id)
         ) is not None:
@@ -3645,6 +3662,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "passes a suggested_area to device_registry.async_update device",
                 core_behavior=ReportBehavior.LOG,
                 breaks_in_ha_version="2026.9.0",
+            )
+        if merge_connections is not UNDEFINED or merge_identifiers is not UNDEFINED:
+            report_usage(
+                "calls `device_registry.async_update_device` with `merge_connections` "
+                "or `merge_identifiers`; these only add to the device's existing "
+                "connections or identifiers. Pass the full set as `new_connections` or "
+                "`new_identifiers` instead",
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                breaks_in_ha_version="2027.9.0",
             )
 
         validated_fields = _validate_device_info_fields(
@@ -4410,6 +4437,33 @@ def async_get_device_id_by_identifier(
             f"{config_entry_id}"
         )
     return device.id
+
+
+@callback
+def async_get_device_and_config_entry_for_domain(
+    hass: HomeAssistant, device_id: str, *, domain: str
+) -> tuple[DeviceEntry | None, ConfigEntry | None]:
+    """Get the device and the config entry of the domain owning it.
+
+    Returns (None, None) for an unknown device id or if the device is a child
+    device, and (device, None) when no config entry of the domain owns the
+    device. A returned pair is consistent: for a pre-migration composite
+    device id, the device is the domain's split device, not the composite; if
+    several splits belong to config entries of the domain, which pair is
+    returned is undefined. When no split matches the domain, the restored
+    composite is returned as the device.
+    """
+    registry = async_get(hass)
+    if (device := registry.devices.get(device_id)) is not None:
+        config_entry = hass.config_entries.async_get_entry(device.config_entry_id)
+        if config_entry is not None and config_entry.domain == domain:
+            return device, config_entry
+        return device, None
+    for split in registry.async_get_devices_for_composite_device_id(device_id):
+        config_entry = hass.config_entries.async_get_entry(split.config_entry_id)
+        if config_entry is not None and config_entry.domain == domain:
+            return split, config_entry
+    return registry.async_get(device_id, include_child_devices=False), None
 
 
 def async_setup(hass: HomeAssistant) -> None:

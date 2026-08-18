@@ -5149,7 +5149,7 @@ async def test_subscribe_node_statistics(
     assert msg["event"] == {
         "source": "node",
         "event": "statistics updated",
-        "nodeId": multisensor_6.node_id,
+        "node_id": multisensor_6.node_id,
         "commands_tx": 0,
         "commands_rx": 0,
         "commands_dropped_tx": 0,
