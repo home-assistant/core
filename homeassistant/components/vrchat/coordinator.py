@@ -87,7 +87,11 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         self.add_entities_callback_map: dict[str, AddConfigEntryEntitiesCallback] = {}
 
         self.starting_task = self.create_task(self.__async_init__())
-        self.add_to_cleanups(self.starting_task.cancel)
+        self.add_to_cleanups(self._cancel_starting_task)
+
+    def _cancel_starting_task(self) -> None:
+        """Cancel the current startup or restart task."""
+        self.starting_task.cancel()
 
     async def __async_init__(self):
         """Async part of initialization."""
@@ -470,7 +474,8 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
     async def close(self) -> None:
         """Close."""
         self.auto_restart = False
-        self.starting_task.cancel()
+        self._cancel_starting_task()
+        self.remove_from_cleanups(self._cancel_starting_task)
         await super().close()
 
 

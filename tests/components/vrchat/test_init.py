@@ -193,6 +193,21 @@ async def test_restart_does_not_cancel_current_task() -> None:
     assert current_task.cancelling() == 0
 
 
+async def test_cleanup_cancels_current_starting_task() -> None:
+    """Test cleanup cancels the startup task that replaced the original task."""
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    original_task = Mock()
+    current_task = Mock()
+    coordinator.starting_task = original_task
+    coordinator.add_to_cleanups(coordinator._cancel_starting_task)
+    coordinator.starting_task = current_task
+
+    await AsyncCleanups.close(coordinator)
+
+    current_task.cancel.assert_called_once()
+    original_task.cancel.assert_not_called()
+
+
 async def test_use_api_closes_temporary_api() -> None:
     """Test using an API copy closes it after a successful callback."""
     primary_api = Mock()
