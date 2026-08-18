@@ -82,7 +82,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
-_ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "name", "original_name"]
+_ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "device_id", "name", "original_name"]
 _DEVICE_REGISTRY_UPDATE_FIELDS = ["name", "name_by_user"]
 
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
