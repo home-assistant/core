@@ -134,12 +134,15 @@ def _sanitize_host(host: str) -> str:
     Users frequently paste a full URL (for example
     ``https://nas.example.com/ui?tab=1``). The API layer requires a bare host,
     so strip any scheme as well as a trailing path, query or fragment here
-    instead of erroring out, so the value just works.
+    instead of erroring out, so the value just works. Hostnames (and DNS in
+    general) are case-insensitive, so the result is also lowercased — this
+    keeps ``NAS.local`` and ``nas.local`` from being treated as two different
+    hosts by the exact-string duplicate/rediscovery matching elsewhere.
     """
     host = host.strip()
     host = _SCHEME_RE.sub("", host)  # drop a leading scheme
     host = _HOST_TAIL_RE.split(host, maxsplit=1)[0]  # drop path/query/fragment
-    return host.strip()
+    return host.strip().lower()
 
 
 # ---------------------------
