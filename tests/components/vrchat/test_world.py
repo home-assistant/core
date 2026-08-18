@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 
 import pytest
 
+from homeassistant.components.vrchat.api_data_types import World
 from homeassistant.components.vrchat.world import (
     VRCHAT_WORLD_DATA_CACHE_TTL,
     VRCHAT_WORLD_DATA_OBJECT_PRUNE_INTERVAL_SECOND,
@@ -43,6 +44,22 @@ def test_get_prunes_expired_unused_world_data(
     VRChatWorldData.get("wrld_current")
 
     assert ("wrld_expired" in VRChatWorldData.registry) is expected_retained
+
+
+def test_world_data_notifies_subscriber_snapshot() -> None:
+    """Test unsubscribing during notification does not skip later subscribers."""
+    world = VRChatWorldData.get("wrld_test")
+    second_callback = Mock()
+
+    def unsubscribe_second_callback(_: World | None) -> None:
+        world.unsubscribe(second_callback)
+
+    world.subscribe(unsubscribe_second_callback)
+    world.subscribe(second_callback)
+
+    world.data = None
+
+    second_callback.assert_called_once_with(None)
 
 
 async def test_get_data_retries_after_timeout() -> None:

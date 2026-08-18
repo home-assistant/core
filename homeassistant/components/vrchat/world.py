@@ -67,7 +67,7 @@ class VRChatWorldData:
     def data(self, new_data: World | None):
         self._data = new_data
         self.last_updated = dt_util.utcnow()
-        for callback in self.subscribers:
+        for callback in list(self.subscribers):
             callback(new_data)
 
     @property
