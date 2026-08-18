@@ -15,6 +15,7 @@ from wiim.models import (
     WiimTransportCapabilities,
 )
 from wiim.wiim_device import WiimDevice
+from yarl import URL
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -258,7 +259,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             return None, None
 
         if (image_hash := self.media_image_hash) is not None:
-            url = f"{url}#{image_hash}"
+            url = str(URL(url).with_fragment(image_hash))
 
         return await self._async_fetch_image_from_cache(url)
 

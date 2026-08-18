@@ -66,11 +66,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import fire_general_update, fire_transport_update, setup_integration
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.test_wiim_device"
@@ -1328,21 +1328,13 @@ async def test_media_image_hash_changes_for_same_local_artwork_url(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_wiim_device: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
 ) -> None:
     """Test the media proxy returns new artwork when its URL is reused."""
     await setup_integration(hass, mock_config_entry)
-    image_url = "https://192.168.1.100/changing-album-art.jpg"
+    image_url = "https://192.168.1.100/changing-album-art.jpg#existing-fragment"
 
-    responses = []
-    for image_bytes in (b"first-image", b"second-image"):
-        response = MagicMock()
-        response.status = 200
-        response.headers = {"Content-Type": "image/jpeg"}
-        response.read = AsyncMock(return_value=image_bytes)
-        responses.append(response)
-
-    websession = async_get_clientsession(hass)
     client = await hass_client()
 
     mock_wiim_device.current_media = WiimMediaMetadata(
@@ -1358,11 +1350,16 @@ async def test_media_image_hash_changes_for_same_local_artwork_url(
     assert state.attributes[ATTR_ENTITY_PICTURE] == image_url
     first_local_image = state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
 
-    with patch.object(websession, "get", AsyncMock(return_value=responses[0])):
-        media_response = await client.get(first_local_image)
+    aioclient_mock.get(
+        image_url,
+        content=b"first-image",
+        headers={"Content-Type": "image/jpeg"},
+    )
+    media_response = await client.get(first_local_image)
     assert media_response.status == 200
     first_image = await media_response.read()
     assert first_image == b"first-image"
+    assert "existing-fragment" not in aioclient_mock.mock_calls[0][1].fragment
 
     mock_wiim_device.current_media = WiimMediaMetadata(
         title="Second Song",
@@ -1379,8 +1376,13 @@ async def test_media_image_hash_changes_for_same_local_artwork_url(
     second_local_image = state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
     assert second_local_image != first_local_image
 
-    with patch.object(websession, "get", AsyncMock(return_value=responses[1])):
-        media_response = await client.get(second_local_image)
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        image_url,
+        content=b"second-image",
+        headers={"Content-Type": "image/jpeg"},
+    )
+    media_response = await client.get(second_local_image)
     assert media_response.status == 200
     second_image = await media_response.read()
     assert second_image == b"second-image"
