@@ -28,11 +28,6 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
         models=[DeviceType.AC, DeviceType.CC, DeviceType.CF],
     ),
     MideaSwitchEntityDescription(
-        key="breezeless",
-        translation_key="breezeless",
-        models=[DeviceType.AC],
-    ),
-    MideaSwitchEntityDescription(
         key="prompt_tone",
         translation_key="prompt_tone",
         models=[DeviceType.AC],
@@ -70,11 +65,6 @@ SWITCHES: list[MideaSwitchEntityDescription] = [
     MideaSwitchEntityDescription(
         key="disinfect",
         translation_key="disinfect",
-        models=[DeviceType.C3],
-    ),
-    MideaSwitchEntityDescription(
-        key="silent_mode",
-        translation_key="silent_mode",
         models=[DeviceType.C3],
     ),
     MideaSwitchEntityDescription(
