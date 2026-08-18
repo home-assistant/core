@@ -222,9 +222,11 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         async with asyncio.TaskGroup() as tg:
             for i in friend_ids:
                 if i not in fetched_friend_ids:
-                    tg.create_task(self.api.get_user(i)).add_done_callback(
-                        lambda task: self.set_user(task.result())
-                    )
+                    tg.create_task(self._fetch_and_set_user(i))
+
+    async def _fetch_and_set_user(self, user_id: str) -> None:
+        """Fetch a user and add it to the coordinator."""
+        self.set_user(await self.api.get_user(user_id))
 
     async def _get_friends(self, offline: bool) -> list[User]:
         friend_ids: list[str] = (

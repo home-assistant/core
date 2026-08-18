@@ -2,7 +2,7 @@
 
 import asyncio
 import json
-from typing import Never
+from typing import Never, cast
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -10,6 +10,7 @@ import vrchatapi
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vrchat import async_remove_entry
+from homeassistant.components.vrchat.api_data_types import CurrentUser
 from homeassistant.components.vrchat.const import DOMAIN
 from homeassistant.components.vrchat.coordinator import (
     VRChatAccountAuthFailed,
@@ -253,6 +254,33 @@ async def test_get_friends_propagates_fetch_error() -> None:
 
     with pytest.raises(ExceptionGroup) as exc_info:
         await coordinator._get_friends(False)
+
+    assert isinstance(exc_info.value.exceptions[0], RuntimeError)
+    assert str(exc_info.value.exceptions[0]) == "test error"
+
+
+async def test_fetch_users_propagates_missing_friend_fetch_error() -> None:
+    """Test missing friend fetch errors propagate from the task group."""
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.current_user_data = cast(
+        CurrentUser,
+        {
+            "id": CURRENT_USER_ID,
+            "friends": [FRIEND_USER_ID],
+            "onlineFriends": [],
+            "offlineFriends": [],
+        },
+    )
+    coordinator.users = {}
+    coordinator.api = Mock()
+    coordinator.api.get_friends = AsyncMock(return_value=[])
+    coordinator.api.get_user = AsyncMock(side_effect=RuntimeError("test error"))
+
+    with (
+        patch.object(VRChatAccountDataCoordinator, "set_user"),
+        pytest.raises(ExceptionGroup) as exc_info,
+    ):
+        await coordinator.fetch_users()
 
     assert isinstance(exc_info.value.exceptions[0], RuntimeError)
     assert str(exc_info.value.exceptions[0]) == "test error"
