@@ -34,7 +34,9 @@ rules:
     status: exempt
     comment: Integration provides no actions.
   config-entry-unloading: done
-  docs-configuration-parameters: todo
+  docs-configuration-parameters:
+    status: exempt
+    comment: Integration provides no options flow.
   docs-installation-parameters: todo
   entity-unavailable: done
   integration-owner: done
@@ -60,8 +62,8 @@ rules:
   docs-troubleshooting: todo
   docs-use-cases: todo
   dynamic-devices: done
-  entity-category: todo
-  entity-device-class: todo
+  entity-category: done
+  entity-device-class: done
   entity-disabled-by-default: done
   entity-translations: done
   exception-translations: todo
