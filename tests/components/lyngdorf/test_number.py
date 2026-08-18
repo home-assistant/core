@@ -66,18 +66,26 @@ async def test_set_lipsync(
         blocking=True,
     )
 
-    assert mock_receiver.lipsync == 75
+    mock_receiver.set_lipsync.assert_called_once_with(75)
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "attribute"),
+    ("entity_id", "attribute", "method"),
     [
-        pytest.param(TRIM_BASS_ENTITY_ID, "trim_bass", id="bass"),
-        pytest.param(TRIM_TREBLE_ENTITY_ID, "trim_treble", id="treble"),
-        pytest.param(TRIM_CENTRE_ENTITY_ID, "trim_centre", id="centre"),
-        pytest.param(TRIM_HEIGHT_ENTITY_ID, "trim_height", id="height"),
-        pytest.param(TRIM_LFE_ENTITY_ID, "trim_lfe", id="lfe"),
-        pytest.param(TRIM_SURROUND_ENTITY_ID, "trim_surround", id="surround"),
+        pytest.param(TRIM_BASS_ENTITY_ID, "trim_bass", "set_trim_bass", id="bass"),
+        pytest.param(
+            TRIM_TREBLE_ENTITY_ID, "trim_treble", "set_trim_treble", id="treble"
+        ),
+        pytest.param(
+            TRIM_CENTRE_ENTITY_ID, "trim_centre", "set_trim_centre", id="centre"
+        ),
+        pytest.param(
+            TRIM_HEIGHT_ENTITY_ID, "trim_height", "set_trim_height", id="height"
+        ),
+        pytest.param(TRIM_LFE_ENTITY_ID, "trim_lfe", "set_trim_lfe", id="lfe"),
+        pytest.param(
+            TRIM_SURROUND_ENTITY_ID, "trim_surround", "set_trim_surround", id="surround"
+        ),
     ],
 )
 @pytest.mark.usefixtures("init_integration")
@@ -86,6 +94,7 @@ async def test_set_trim(
     mock_receiver: MagicMock,
     entity_id: str,
     attribute: str,
+    method: str,
 ) -> None:
     """Test setting each trim value."""
     setattr(mock_receiver, attribute, 0.0)
@@ -103,7 +112,7 @@ async def test_set_trim(
         blocking=True,
     )
 
-    assert getattr(mock_receiver, attribute) == -6.0
+    getattr(mock_receiver, method).assert_called_once_with(-6.0)
 
 
 async def test_number_none_values(

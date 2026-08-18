@@ -41,7 +41,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: float(r.lipsync) if r.lipsync is not None else None,
         # The device takes lip sync as whole milliseconds.
-        set_value_fn=lambda r, v: setattr(r, "lipsync", round(v)),
+        set_value_fn=lambda r, v: r.set_lipsync(round(v)),
         range_fn=lambda r: r.lipsync_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -50,7 +50,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_bass,
-        set_value_fn=lambda r, v: setattr(r, "trim_bass", v),
+        set_value_fn=lambda r, v: r.set_trim_bass(v),
         range_fn=lambda r: r.trim_bass_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -59,7 +59,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_treble,
-        set_value_fn=lambda r, v: setattr(r, "trim_treble", v),
+        set_value_fn=lambda r, v: r.set_trim_treble(v),
         range_fn=lambda r: r.trim_treble_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -68,7 +68,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_centre,
-        set_value_fn=lambda r, v: setattr(r, "trim_centre", v),
+        set_value_fn=lambda r, v: r.set_trim_centre(v),
         range_fn=lambda r: r.trim_centre_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -77,7 +77,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_height,
-        set_value_fn=lambda r, v: setattr(r, "trim_height", v),
+        set_value_fn=lambda r, v: r.set_trim_height(v),
         range_fn=lambda r: r.trim_height_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -86,7 +86,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_lfe,
-        set_value_fn=lambda r, v: setattr(r, "trim_lfe", v),
+        set_value_fn=lambda r, v: r.set_trim_lfe(v),
         range_fn=lambda r: r.trim_lfe_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -95,7 +95,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_surround,
-        set_value_fn=lambda r, v: setattr(r, "trim_surround", v),
+        set_value_fn=lambda r, v: r.set_trim_surround(v),
         range_fn=lambda r: r.trim_surround_range,
     ),
 )
