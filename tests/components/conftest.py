@@ -117,15 +117,6 @@ def patch_zeroconf_multiple_catcher() -> Generator[None]:
         yield
 
 
-@pytest.fixture(scope="session", autouse=True)
-def prevent_io() -> Generator[None]:
-    """Fixture to prevent certain I/O from happening."""
-    with patch(
-        "homeassistant.components.http.ban.load_yaml_config_file",
-    ):
-        yield
-
-
 @pytest.fixture
 def entity_registry_enabled_by_default() -> Generator[None]:
     """Test fixture that ensures all entities are enabled in the registry."""
