@@ -675,7 +675,7 @@ async def websocket_network_neighbors(
             try:
                 rf_restored = await asyncio.shield(restore)
             except asyncio.CancelledError:
-                with suppress(FailedCommand):
+                with suppress(BaseZwaveJSServerError):
                     rf_restored = await asyncio.shield(restore)
                 raise
             finally:

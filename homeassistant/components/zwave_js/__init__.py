@@ -1154,6 +1154,11 @@ async def client_listen(
 
 async def async_unload_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
     """Unload a config entry."""
+    # Wait for a running network neighbors refresh, so the client is not
+    # disconnected before it has turned the radio back on
+    async with entry.runtime_data.network_neighbors_lock:
+        pass
+
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
     entry_runtime_data = entry.runtime_data

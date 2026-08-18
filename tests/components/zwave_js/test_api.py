@@ -775,6 +775,58 @@ async def test_network_neighbors_concurrent(
     ]
 
 
+async def test_network_neighbors_unload_waits(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test unloading the entry waits for the radio to be turned back on."""
+    ws_client = await hass_ws_client(hass)
+    read_started = asyncio.Event()
+    resume_read = asyncio.Event()
+
+    async def handler(message: dict[str, Any]) -> dict[str, Any]:
+        if message["command"] == "controller.get_node_neighbors":
+            read_started.set()
+            await resume_read.wait()
+            return {"neighbors": []}
+        return {"success": True}
+
+    commands = mock_neighbors_commands(client, handler)
+
+    async def mock_disconnect() -> None:
+        commands.append({"command": "disconnect"})
+
+    client.disconnect.side_effect = mock_disconnect
+
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/network_neighbors",
+            ENTRY_ID: integration.entry_id,
+        }
+    )
+    await read_started.wait()
+
+    unload_task = hass.async_create_task(
+        hass.config_entries.async_unload(integration.entry_id)
+    )
+    for _ in range(10):
+        await asyncio.sleep(0)
+    # The refresh is holding the lock, so the client must still be connected
+    assert not unload_task.done()
+
+    resume_read.set()
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert await unload_task
+    # The radio was turned back on before the client disconnected
+    assert commands[-2:] == [
+        {"command": "controller.toggle_rf", "enabled": True},
+        {"command": "disconnect"},
+    ]
+
+
 async def test_network_neighbors_invalid_entry(
     hass: HomeAssistant,
     integration: MockConfigEntry,
