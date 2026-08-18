@@ -297,6 +297,7 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Stop ringing
             _LOGGER.debug("Caller did not pick up in time")
             sip_protocol.cancel_call(call_info)
+            self.disconnect()
             raise
 
     async def _check_announcement_pickup(self) -> None:
@@ -340,12 +341,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
                 ):
                     # Caller hung up
                     _LOGGER.debug("Hang up")
-                    self._announcement = None
-                    if self._run_pipeline_task is not None:
-                        _LOGGER.debug("Cancelling running pipeline")
-                        self._run_pipeline_task.cancel()
-                    if not self._call_end_future.done():
-                        self._call_end_future.set_result(None)
                     self.disconnect()
                     break
 
@@ -370,15 +365,31 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
     def disconnect(self):
         """Server disconnected."""
         super().disconnect()
+        if self._check_announcement_pickup_task is not None:
+            self._check_announcement_pickup_task.cancel()
+            self._check_announcement_pickup_task = None
         if self._check_hangup_task is not None:
             self._check_hangup_task.cancel()
             self._check_hangup_task = None
+        self.voip_device.set_is_active(False)
+        self._announcement = None
+        if self._run_pipeline_task is not None:
+            _LOGGER.debug("Cancelling running pipeline")
+            self._run_pipeline_task.cancel()
+        if not self._call_end_future.done():
+            self._call_end_future.set_result(None)
+        self._last_chunk_time = None
         self._rtp_port = None
+        _LOGGER.debug("VoIP disconnected")
 
     def connection_made(self, transport):
         """Server is ready."""
         super().connection_made(transport)
-        self._last_chunk_time = time.monotonic()
+        self.voip_device.set_is_active(True)
+        # If announcement isn't set, assume it was an incoming call and
+        # initialize the chunk time for checking if the caller hung up
+        if self._announcement is None:
+            self._last_chunk_time = time.monotonic()
         # Check if caller hung up
         self._check_hangup_task = self.config_entry.async_create_background_task(
             self.hass,
@@ -419,7 +430,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
         _LOGGER.debug("Starting pipeline")
 
         self.async_set_context(Context(user_id=self.config_entry.data["user"]))
-        self.voip_device.set_is_active(True)
 
         async def stt_stream():
             retry: bool = True
@@ -471,7 +481,6 @@ class VoipAssistSatellite(VoIPEntity, AssistSatelliteEntity, RtpDatagramProtocol
             # Stop audio stream
             await self._audio_queue.put(None)
 
-            self.voip_device.set_is_active(False)
             self._run_pipeline_task = None
             _LOGGER.debug("Pipeline finished")
 

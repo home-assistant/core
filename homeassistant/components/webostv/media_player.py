@@ -1,11 +1,9 @@
 """Support for interface with an LG webOS TV."""
 
 import asyncio
-from collections.abc import Callable, Coroutine
 from contextlib import suppress
-from functools import wraps
 from http import HTTPStatus
-from typing import Any, Concatenate, cast, override
+from typing import Any, cast, override
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -18,10 +16,8 @@ from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.restore_state import RestoreEntity
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import (
     ATTR_PAYLOAD,
@@ -30,9 +26,9 @@ from .const import (
     DOMAIN,
     LIVE_TV_APP_ID,
     LOGGER,
-    WEBOSTV_EXCEPTIONS,
 )
-from .coordinator import WebOsTvConfigEntry, WebOsTvDataUpdateCoordinator
+from .coordinator import WebOsTvConfigEntry
+from .entity import WebOsTvEntity, cmd
 from .triggers.turn_on import async_get_turn_on_trigger
 
 SUPPORT_WEBOSTV = (
@@ -63,57 +59,16 @@ async def async_setup_entry(
     async_add_entities([LgWebOSMediaPlayerEntity(entry)])
 
 
-def cmd[_R, **_P](
-    func: Callable[Concatenate[LgWebOSMediaPlayerEntity, _P], Coroutine[Any, Any, _R]],
-) -> Callable[Concatenate[LgWebOSMediaPlayerEntity, _P], Coroutine[Any, Any, _R]]:
-    """Catch command exceptions."""
-
-    @wraps(func)
-    async def cmd_wrapper(
-        self: LgWebOSMediaPlayerEntity, *args: _P.args, **kwargs: _P.kwargs
-    ) -> _R:
-        """Wrap all command methods."""
-        if self.state is MediaPlayerState.OFF and func.__name__ != "async_turn_off":
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="device_off",
-                translation_placeholders={
-                    "name": str(self._entry.title),
-                    "func": func.__name__,
-                },
-            )
-        try:
-            return await func(self, *args, **kwargs)
-        except WEBOSTV_EXCEPTIONS as error:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="communication_error",
-                translation_placeholders={
-                    "name": str(self._entry.title),
-                    "func": func.__name__,
-                    "error": str(error),
-                },
-            ) from error
-
-    return cmd_wrapper
-
-
-class LgWebOSMediaPlayerEntity(
-    CoordinatorEntity[WebOsTvDataUpdateCoordinator], RestoreEntity, MediaPlayerEntity
-):
+class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
     """Representation of a LG webOS TV."""
 
     _attr_device_class = MediaPlayerDeviceClass.TV
-    _attr_has_entity_name = True
     _attr_name = None
 
     def __init__(self, entry: WebOsTvConfigEntry) -> None:
         """Initialize the webos device."""
-        super().__init__(entry.runtime_data)
-        self._entry = entry
-        self._client = entry.runtime_data.client
+        super().__init__(entry)
         self._attr_assumed_state = True
-        self._device_name = entry.title
         self._attr_unique_id = entry.unique_id
         self._sources = entry.options.get(CONF_SOURCES)
 
@@ -162,12 +117,6 @@ class LgWebOSMediaPlayerEntity(
         tv_state = self._client.tv_state
 
         self._attr_extra_state_attributes = {}
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, cast(str, self.unique_id))},
-            manufacturer="LG",
-            name=self._device_name,
-        )
 
         if tv_state.is_on or not self._supported_features:
             supported = SUPPORT_WEBOSTV

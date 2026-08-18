@@ -15,7 +15,13 @@ from .coordinator import (
     ActronAirSystemCoordinator,
 )
 
-PLATFORMS = [Platform.CLIMATE, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BINARY_SENSOR,
+    Platform.CLIMATE,
+    Platform.COVER,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> bool:
@@ -46,8 +52,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) ->
         await coordinator.async_config_entry_first_refresh()
         system_coordinators[system.serial] = coordinator
 
-        # Register the AC system device so zone entities can link to it as their
-        # via device when they are set up.
+        # Register the AC system device so zone and peripheral entities can link to
+        # it as their via device when they are set up.
         ac_system = coordinator.data.ac_system
         device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,

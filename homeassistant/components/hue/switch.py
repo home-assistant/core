@@ -12,6 +12,7 @@ from aiohue.v2.controllers.sensors import (
     Motion,
     MotionController,
 )
+from aiohue.v2.models.behavior_instance import PresenceMimickingState
 from aiohue.v2.models.behavior_script import BehaviorScriptCategory
 
 from homeassistant.components.switch import (
@@ -143,8 +144,13 @@ class HueResourceEnabledEntity(HueBaseEntity, SwitchEntity):
 
 
 class HueBehaviorInstanceEnabledEntity(HueResourceEnabledEntity):
-    """Representation of a Switch entity to enable/disable a Hue Behavior Instance."""
+    """Representation of a Switch entity to enable/disable a Hue Behavior Instance.
 
+    Automations that the Hue app runs with a play button, such as mimic
+    presence, are started and stopped. All others are enabled and disabled.
+    """
+
+    controller: BehaviorInstanceController
     resource: BehaviorInstance
 
     entity_description = SwitchEntityDescription(
@@ -158,6 +164,30 @@ class HueBehaviorInstanceEnabledEntity(HueResourceEnabledEntity):
     def name(self) -> str:
         """Return name for this entity."""
         return f"Automation: {self.resource.metadata.name}"
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return true if the switch is on."""
+        if (run_state := self.resource.presence_mimicking_state) is not None:
+            return run_state is PresenceMimickingState.STARTED
+        return self.resource.enabled
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Turn the entity on."""
+        if self.resource.presence_mimicking_state is None:
+            await super().async_turn_on(**kwargs)
+            return
+        await self.bridge.async_request_call(self.controller.start, self.resource.id)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turn the entity off."""
+        if self.resource.presence_mimicking_state is None:
+            await super().async_turn_off(**kwargs)
+            return
+        await self.bridge.async_request_call(self.controller.stop, self.resource.id)
 
 
 class HueMotionSensorEnabledEntity(HueResourceEnabledEntity):

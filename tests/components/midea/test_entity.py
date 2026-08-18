@@ -5,11 +5,13 @@ from collections.abc import Callable
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 import pytest
 
+from homeassistant.components.midea.const import DOMAIN
 from homeassistant.core import CoreState, HomeAssistant
+from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 from .conftest import DummyDevice, default_ac_device, entity_entries
-from .const import TEST_DEVICE_ID
+from .const import TEST_DEVICE_ID, TEST_MAC_ADDRESS, TEST_MODEL, TEST_SERIAL_NUMBER
 
 from tests.common import MockConfigEntry
 
@@ -77,6 +79,53 @@ async def test_entity_updates_from_device_callback(
     assert (state := hass.states.get(entity_entry.entity_id))
     assert state.attributes.get("current_temperature") == expected_current_temp
     assert (state.state == "unavailable") is expected_unavailable
+
+
+@pytest.mark.parametrize(
+    ("mac", "serial_number", "expected_connections", "expected_serial_number"),
+    [
+        pytest.param(
+            TEST_MAC_ADDRESS,
+            TEST_SERIAL_NUMBER,
+            {(dr.CONNECTION_NETWORK_MAC, TEST_MAC_ADDRESS)},
+            TEST_SERIAL_NUMBER,
+            id="populated",
+        ),
+        pytest.param(
+            "",
+            "",
+            set(),
+            None,
+            id="absent",
+        ),
+    ],
+)
+async def test_device_info_optional_metadata(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    mac: str,
+    serial_number: str,
+    expected_connections: set[tuple[str, str]],
+    expected_serial_number: str | None,
+) -> None:
+    """Test device registry entry reflects optional mac and serial number."""
+    device = default_ac_device()
+    device.mac = mac
+    device.serial_number = serial_number
+    config_entry = mock_config_entry(device)
+    await setup_integration(hass, config_entry, device)
+
+    assert (
+        device_entry := device_registry.async_get_device_by_identifier(
+            (DOMAIN, str(TEST_DEVICE_ID)), config_entry.entry_id
+        )
+    ) is not None
+
+    assert device_entry.model_id == device.device_type.name
+    assert device_entry.hw_version == TEST_MODEL
+    assert device_entry.connections == expected_connections
+    assert device_entry.serial_number == expected_serial_number
 
 
 async def test_entity_callback_ignored_while_hass_stopping(

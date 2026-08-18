@@ -51,16 +51,19 @@ async def async_setup_entry(
     """Set up the receiver from a config entry."""
     runtime_data = config_entry.runtime_data
 
-    async_add_entities(
-        [
-            LyngdorfMainDevice(
-                runtime_data.receiver, config_entry, runtime_data.device_info
-            ),
+    entities: list[LyngdorfDevice] = [
+        LyngdorfMainDevice(
+            runtime_data.receiver, config_entry, runtime_data.device_info
+        )
+    ]
+    if runtime_data.zone_b_device_info is not None:
+        entities.append(
             LyngdorfZoneBDevice(
                 runtime_data.receiver, config_entry, runtime_data.zone_b_device_info
-            ),
-        ]
-    )
+            )
+        )
+
+    async_add_entities(entities)
 
 
 def _to_ha_volume(volume_db: float) -> float:
@@ -139,30 +142,32 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
         return _to_ha_volume(self._receiver.zone_b_volume)
 
     @override
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn on media player."""
         self._receiver.zone_b_power_on = True
 
     @override
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off media player."""
         self._receiver.zone_b_power_on = False
 
-    def volume_up(self) -> None:
+    @override
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
         self._receiver.zone_b_volume_up()
 
-    def volume_down(self) -> None:
+    @override
+    async def async_volume_down(self) -> None:
         """Volume down the media player."""
         self._receiver.zone_b_volume_down()
 
     @override
-    def set_volume_level(self, volume: float) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._receiver.zone_b_volume = _to_lyngdorf_volume(volume)
 
     @override
-    def mute_volume(self, mute: bool) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._receiver.zone_b_mute_enabled = mute
 
@@ -179,7 +184,7 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
         return self._receiver.zone_b_available_sources
 
     @override
-    def select_source(self, source: str) -> None:
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         self._receiver.zone_b_source = source
 
@@ -250,39 +255,41 @@ class LyngdorfMainDevice(LyngdorfDevice):
         return self._receiver.sound_mode
 
     @override
-    def turn_on(self) -> None:
+    async def async_turn_on(self) -> None:
         """Turn on media player."""
         self._receiver.power_on = True
 
     @override
-    def turn_off(self) -> None:
+    async def async_turn_off(self) -> None:
         """Turn off media player."""
         self._receiver.power_on = False
 
-    def volume_up(self) -> None:
+    @override
+    async def async_volume_up(self) -> None:
         """Volume up the media player."""
         self._receiver.volume_up()
 
-    def volume_down(self) -> None:
+    @override
+    async def async_volume_down(self) -> None:
         """Volume down the media player."""
         self._receiver.volume_down()
 
     @override
-    def set_volume_level(self, volume: float) -> None:
+    async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         self._receiver.volume = _to_lyngdorf_volume(volume)
 
     @override
-    def mute_volume(self, mute: bool) -> None:
+    async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         self._receiver.mute_enabled = mute
 
     @override
-    def select_sound_mode(self, sound_mode: str) -> None:
+    async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         self._receiver.sound_mode = sound_mode
 
     @override
-    def select_source(self, source: str) -> None:
+    async def async_select_source(self, source: str) -> None:
         """Select input source."""
         self._receiver.source = source

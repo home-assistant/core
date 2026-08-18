@@ -86,8 +86,8 @@ async def test_removing_old_device(
     )
 
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_identifier_entry.entry_id)}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_identifier_entry.entry_id), mock_identifier_entry.entry_id
         )
         is not None
     )
@@ -96,8 +96,8 @@ async def test_removing_old_device(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_identifier_entry.entry_id)}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_identifier_entry.entry_id), mock_identifier_entry.entry_id
         )
         is None
     )

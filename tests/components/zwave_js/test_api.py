@@ -116,7 +116,9 @@ def get_device(hass: HomeAssistant, node):
     """Get device ID for a node."""
     dev_reg = dr.async_get(hass)
     device_id = get_device_id(node.client.driver, node)
-    return dev_reg.async_get_device(identifiers={device_id})
+    return dev_reg.async_get_device_by_identifier(
+        device_id, hass.config_entries.async_entries(DOMAIN)[0].entry_id
+    )
 
 
 async def test_no_driver(
@@ -180,8 +182,8 @@ async def test_network_status(
     assert result["controller"]["supports_long_range"]
 
     # Try API call with device ID
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "3245146787-52")},
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3245146787-52"), entry.entry_id
     )
     assert device
     with patch(
@@ -491,7 +493,9 @@ async def test_node_alerts(
     entry = integration
     ws_client = await hass_ws_client(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "3245146787-35")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3245146787-35"), entry.entry_id
+    )
     assert device
 
     await ws_client.send_json_auto_id(
@@ -1284,8 +1288,8 @@ async def test_provision_smart_start_node(
     assert msg["success"]
 
     # verify a device was created
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "provision_test")},
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "provision_test"), entry.entry_id
     )
     assert device is not None
     assert device.name == "test_name"
@@ -1945,8 +1949,8 @@ async def test_remove_node(
     assert msg["event"]["event"] == "node removed"
 
     # Verify device was removed from device registry
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "3245146787-67")},
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3245146787-67"), entry.entry_id
     )
     assert device is None
 
@@ -2133,8 +2137,8 @@ async def test_replace_failed_node(
 
     # Verify device was removed from device registry
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, "3245146787-67")},
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "3245146787-67"), entry.entry_id
         )
         is None
     )
@@ -2449,8 +2453,8 @@ async def test_remove_failed_node(
 
     # Verify device was removed from device registry
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, "3245146787-67")},
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "3245146787-67"), entry.entry_id
         )
         is None
     )
@@ -5290,8 +5294,8 @@ async def test_hard_reset_controller(
     msg = await ws_client.receive_json()
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, client.driver.controller.nodes[1]), entry.entry_id
     )
     assert device is not None
     assert msg["result"] == device.id
@@ -5315,8 +5319,8 @@ async def test_hard_reset_controller(
     msg = await ws_client.receive_json()
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, client.driver.controller.nodes[1]), entry.entry_id
     )
     assert device is not None
     assert msg["result"] == device.id
@@ -5350,8 +5354,8 @@ async def test_hard_reset_controller(
         msg = await ws_client.receive_json()
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, client.driver.controller.nodes[1]), entry.entry_id
     )
     assert device is not None
     assert msg["result"] == device.id

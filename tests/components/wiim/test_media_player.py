@@ -994,6 +994,33 @@ async def test_browse_media_service_returns_wiim_library(
     assert [child.title for child in queue_browse.children] == ["Song A", "Song B"]
 
 
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_browse_media_does_not_refresh_entity_state(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+) -> None:
+    """Test browsing media does not refresh entity state after success."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    original_volume = state.attributes[ATTR_MEDIA_VOLUME_LEVEL]
+    mock_wiim_device.volume = 75
+
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_BROWSE_MEDIA,
+        {ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID},
+        blocking=True,
+        return_response=True,
+    )
+
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == original_volume
+
+
 async def test_browse_media_service_includes_media_sources_when_supported(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -1097,6 +1124,57 @@ async def test_browse_media_error_uses_translation(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_placeholders == translation_placeholders
+
+
+@pytest.mark.parametrize(
+    ("sdk_method", "media_content_id"),
+    [
+        pytest.param(
+            "async_get_presets",
+            "wiim_library/library_root/favorites",
+            id="presets",
+        ),
+        pytest.param(
+            "async_get_queue_snapshot",
+            "wiim_library/library_root/playlists",
+            id="queue",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_browse_media_sdk_error_uses_translation(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    *,
+    sdk_method: str,
+    media_content_id: str,
+) -> None:
+    """Test browse media SDK errors raise a translated Home Assistant error."""
+    await setup_integration(hass, mock_config_entry)
+    getattr(mock_wiim_device, sdk_method).side_effect = WiimRequestException(
+        "request failed"
+    )
+
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            MEDIA_PLAYER_DOMAIN,
+            SERVICE_BROWSE_MEDIA,
+            {
+                ATTR_ENTITY_ID: MEDIA_PLAYER_ENTITY_ID,
+                ATTR_MEDIA_CONTENT_TYPE: MediaType.PLAYLIST,
+                ATTR_MEDIA_CONTENT_ID: media_content_id,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "command_failed"
+    assert exc_info.value.translation_placeholders == {
+        "command": "async_browse_media",
+        "entity_id": MEDIA_PLAYER_ENTITY_ID,
+    }
 
 
 async def test_join_and_unjoin_services_use_resolved_member_udns(

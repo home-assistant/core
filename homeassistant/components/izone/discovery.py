@@ -75,8 +75,6 @@ def async_note_integration_discovery(
     """Start a config flow when discovery reports an unclaimed endpoint."""
     if endpoint.uid in yaml_excluded_uids(hass):
         return
-    if _async_blocks_runtime_integration_discovery(hass):
-        return
     discovery_flow.async_create_flow(
         hass,
         DOMAIN,
@@ -86,18 +84,6 @@ def async_note_integration_discovery(
         },
         data={CONF_HOST: endpoint.host},
     )
-
-
-@callback
-def _async_blocks_runtime_integration_discovery(hass: HomeAssistant) -> bool:
-    """Return True when an interactive setup flow should own the UI."""
-    for flw in hass.config_entries.flow.async_progress_by_handler(
-        DOMAIN, include_uninitialized=True
-    ):
-        src = flw["context"].get("source")
-        if src == config_entries.SOURCE_USER:
-            return True
-    return False
 
 
 @callback
@@ -219,6 +205,19 @@ async def async_discover_all_endpoints(
     """
     service = await async_ensure_discovery(hass)
     return {endpoint.uid: endpoint for endpoint in await service.discover_all()}
+
+
+async def async_scan(hass: HomeAssistant) -> None:
+    """Broadcast IASD so ASPort replies fill the Discovered shelf.
+
+    Does not wait for replies or run ``discover_all``'s post-wait probe fan-out.
+    Callers that need replies to land should sleep after this (e.g. config flow).
+
+    Raises:
+        OSError: Discovery UDP socket could not be bound.
+    """
+    service = await async_ensure_discovery(hass)
+    await service.scan()
 
 
 async def async_discover_endpoint(
