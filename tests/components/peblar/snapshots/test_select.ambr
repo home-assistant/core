@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'low_medium',
@@ -47,8 +47,8 @@
 # name: test_entities[select][select.peblar_ev_charger_buzzer_volume-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Peblar EV Charger Buzzer volume',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peblar EV Charger Buzzer volume',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'low',
         'low_medium',
@@ -71,7 +71,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'off',
         'dim',
@@ -112,8 +112,8 @@
 # name: test_entities[select][select.peblar_ev_charger_led_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Peblar EV Charger LED brightness',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peblar EV Charger LED brightness',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'automatic',
         'off',
         'dim',
