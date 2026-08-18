@@ -153,6 +153,49 @@ def unload_entry_fixture() -> Generator[AsyncMock]:
         yield mock_unload_entry
 
 
+@pytest.fixture(name="backup_nvm")
+def backup_nvm_fixture(client: MagicMock) -> AsyncMock:
+    """Mock a successful NVM backup that emits progress."""
+
+    async def mock_backup_nvm_raw() -> bytes:
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm backup progress",
+            {"event": "nvm backup progress", "bytesRead": 100, "total": 200},
+        )
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+    return client.driver.controller.async_backup_nvm_raw
+
+
+@pytest.fixture(name="restore_nvm")
+def restore_nvm_fixture(client: MagicMock) -> AsyncMock:
+    """Mock a successful NVM restore that emits progress and driver ready."""
+
+    async def mock_restore_nvm(
+        data: bytes, options: dict[str, bool] | None = None
+    ) -> None:
+        client.driver.controller.emit(
+            "nvm convert progress",
+            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
+        )
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm restore progress",
+            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
+        )
+        client.driver.controller.data["homeId"] = 3245146787
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
+    return client.driver.controller.async_restore_nvm
+
+
 @pytest.fixture(name="supervisor")
 def mock_supervisor_fixture() -> Generator[None]:
     """Mock Supervisor."""
@@ -916,7 +959,7 @@ async def test_usb_discovery_addon_not_running(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm", "restore_nvm")
 async def test_usb_discovery_migration(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
@@ -945,34 +988,6 @@ async def test_usb_discovery_migration(
         client.driver.controller.data["homeId"] = 1234
 
     restart_addon.side_effect = mock_restart_addon
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
-
-    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
-        client.driver.controller.emit(
-            "nvm convert progress",
-            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
-        )
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm restore progress",
-            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
-        )
-        client.driver.controller.data["homeId"] = 3245146787
-        client.driver.emit(
-            "driver ready", {"event": "driver ready", "source": "driver"}
-        )
-
-    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
     events = async_capture_events(
         hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
@@ -1062,7 +1077,7 @@ async def test_usb_discovery_migration(
     assert entry.unique_id == "3245146787"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
 async def test_usb_discovery_migration_restore_driver_ready_timeout(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
@@ -1090,17 +1105,6 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
         client.driver.controller.data["homeId"] = 1234
 
     restart_addon.side_effect = mock_restart_addon
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
 
     async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
@@ -2027,6 +2031,131 @@ async def test_usb_discovery_with_existing_usb_flow(hass: HomeAssistant) -> None
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
+@pytest.mark.usefixtures("supervisor", "addon_installed")
+async def test_discovery_not_blocked_by_zeroconf_flow(hass: HomeAssistant) -> None:
+    """Test USB and add-on discovery are not blocked by a zeroconf prompt."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "5678"},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    # A USB flow does touch the add-on, so it still blocks add-on discovery.
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+            uuid="1234",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    # A zeroconf discovery of the same controller as the add-on discovery
+    # means another server is already connected to it, so it does block
+    # the add-on discovery, via the unique id in progress check.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "1234"},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+            uuid="1234",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_usb_discovery_leaves_manual_entry_alone(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test USB discovery does not rewrite a manual entry with add-on data.
+
+    A manual entry for the same controller may be created while the USB
+    flow is waiting at the installation type menu, e.g. by confirming a
+    zeroconf discovery of the server that already serves the controller.
+    """
+    addon_options["device"] = "/dev/ttyUSB0"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"url": "ws://external-server:3000"},
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {"url": "ws://external-server:3000"}
+    set_addon_options.assert_not_called()
+
+
 @pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
     """Test usb discovery aborted when existing entry not using add-on."""
@@ -2362,15 +2491,16 @@ async def test_addon_running_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == "/test_new"
-    assert entry.data["socket_path"] is None
-    assert entry.data["s0_legacy_key"] == "new123"
-    assert entry.data["s2_access_control_key"] == "new456"
-    assert entry.data["s2_authenticated_key"] == "new789"
-    assert entry.data["s2_unauthenticated_key"] == "new987"
-    assert entry.data["lr_s2_access_control_key"] == "new654"
-    assert entry.data["lr_s2_authenticated_key"] == "new321"
+    # The existing entry is not using the add-on,
+    # so it must not be rewritten with add-on data.
+    assert entry.data["url"] == "ws://localhost:3000"
+    assert entry.data["usb_path"] == "/test"
+    assert entry.data["s0_legacy_key"] == "old123"
+    assert entry.data["s2_access_control_key"] == "old456"
+    assert entry.data["s2_authenticated_key"] == "old789"
+    assert entry.data["s2_unauthenticated_key"] == "old987"
+    assert entry.data["lr_s2_access_control_key"] == "old654"
+    assert entry.data["lr_s2_authenticated_key"] == "old321"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
@@ -2913,15 +3043,16 @@ async def test_addon_installed_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == "/new"
-    assert entry.data["socket_path"] is None
-    assert entry.data["s0_legacy_key"] == "new123"
-    assert entry.data["s2_access_control_key"] == "new456"
-    assert entry.data["s2_authenticated_key"] == "new789"
-    assert entry.data["s2_unauthenticated_key"] == "new987"
-    assert entry.data["lr_s2_access_control_key"] == "new654"
-    assert entry.data["lr_s2_authenticated_key"] == "new321"
+    # The existing entry is not using the add-on,
+    # so it must not be rewritten with add-on data.
+    assert entry.data["url"] == "ws://localhost:3000"
+    assert entry.data["usb_path"] == "/test"
+    assert entry.data["s0_legacy_key"] == "old123"
+    assert entry.data["s2_access_control_key"] == "old456"
+    assert entry.data["s2_authenticated_key"] == "old789"
+    assert entry.data["s2_unauthenticated_key"] == "old987"
+    assert entry.data["lr_s2_access_control_key"] == "old654"
+    assert entry.data["lr_s2_authenticated_key"] == "old321"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
@@ -4494,6 +4625,7 @@ async def test_reconfigure_migrate_low_sdk_version(
         ),
     ],
 )
+@pytest.mark.usefixtures("backup_nvm", "restore_nvm")
 async def test_reconfigure_migrate_with_addon(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4560,34 +4692,6 @@ async def test_reconfigure_migrate_with_addon(
     device_registry.async_update_device(
         device.id, name_by_user="Custom Sensor Device Name"
     )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
-
-    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
-        client.driver.controller.emit(
-            "nvm convert progress",
-            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
-        )
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm restore progress",
-            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
-        )
-        client.driver.controller.data["homeId"] = 3245146787
-        client.driver.emit(
-            "driver ready", {"event": "driver ready", "source": "driver"}
-        )
-
-    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
     events = async_capture_events(
         hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
@@ -4705,7 +4809,7 @@ async def test_reconfigure_migrate_with_addon(
     assert client.driver.controller.home_id == 3245146787
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
 async def test_reconfigure_migrate_restore_driver_ready_timeout(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4731,17 +4835,6 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
         client.driver.controller.data["homeId"] = 1234
 
     restart_addon.side_effect = mock_restart_addon
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
 
     async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
@@ -4871,6 +4964,7 @@ async def test_reconfigure_migrate_backup_failure(
     assert "keep_old_devices" not in entry.data
 
 
+@pytest.mark.usefixtures("backup_nvm")
 async def test_reconfigure_migrate_backup_file_failure(
     hass: HomeAssistant,
     integration: MockConfigEntry,
@@ -4880,14 +4974,6 @@ async def test_reconfigure_migrate_backup_file_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     result = await entry.start_reconfigure_flow(hass)
@@ -4913,7 +4999,7 @@ async def test_reconfigure_migrate_backup_file_failure(
     assert "keep_old_devices" not in entry.data
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
 async def test_reconfigure_migrate_start_addon_failure(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4926,14 +5012,6 @@ async def test_reconfigure_migrate_start_addon_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     result = await entry.start_reconfigure_flow(hass)
@@ -4987,7 +5065,7 @@ async def test_reconfigure_migrate_start_addon_failure(
     assert "keep_old_devices" not in entry.data
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon", "backup_nvm")
 async def test_reconfigure_migrate_restore_failure(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4998,14 +5076,6 @@ async def test_reconfigure_migrate_restore_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     client.driver.controller.async_restore_nvm = AsyncMock(
@@ -5115,6 +5185,7 @@ async def test_get_driver_failure_intent_migrate(
     assert "keep_old_devices" not in entry.data
 
 
+@pytest.mark.usefixtures("backup_nvm")
 async def test_choose_serial_port_usb_ports_failure(
     hass: HomeAssistant,
     integration: MockConfigEntry,
@@ -5124,14 +5195,6 @@ async def test_choose_serial_port_usb_ports_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     result = await entry.start_reconfigure_flow(hass)
@@ -5157,13 +5220,147 @@ async def test_choose_serial_port_usb_ports_failure(
     assert result["step_id"] == "instruct_unplug"
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
-    with patch(
-        "homeassistant.components.zwave_js.config_flow.async_get_usb_ports",
-        side_effect=OSError("test_error"),
+    with (
+        patch(
+            "homeassistant.components.zwave_js.config_flow.async_get_usb_ports",
+            side_effect=OSError("test_error"),
+        ),
+        patch("homeassistant.components.zwave_js.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "usb_ports_failed"
+
+        # The aborted flow reloads the config entry it unloaded.
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_migrate_flow_abandoned_reloads_entry(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test an abandoned migration flow reloads the unloaded entry."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    # The user closes the migration dialog instead of continuing.
+    with patch(
+        "homeassistant.components.zwave_js.async_setup_entry", return_value=True
+    ):
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_create_entry_spares_migration_flow(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test entry creation does not abort a migration flow in progress."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="4321", data={**entry.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+    migration_flow_id = result["flow_id"]
+
+    # A manual flow for a different server creates an entry meanwhile.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": False}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    with (
+        patch("homeassistant.components.zwave_js.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"url": "ws://localhost:3000"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # The migration flow is still in progress.
+    assert any(
+        flow["flow_id"] == migration_flow_id
+        for flow in hass.config_entries.flow.async_progress()
+    )
+    hass.config_entries.flow.async_abort(migration_flow_id)
+    await hass.async_block_till_done()
+    assert not hass.config_entries.flow.async_progress()
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
@@ -5884,7 +6081,7 @@ async def test_addon_rf_region_new_network(
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm", "restore_nvm")
 async def test_addon_rf_region_migrate_network(
     hass: HomeAssistant,
     client: MagicMock,
@@ -5909,34 +6106,6 @@ async def test_addon_rf_region_migrate_network(
         },
     )
     addon_options["device"] = "/dev/ttyUSB0"
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
-
-    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
-        client.driver.controller.emit(
-            "nvm convert progress",
-            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
-        )
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm restore progress",
-            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
-        )
-        client.driver.controller.data["homeId"] = 3245146787
-        client.driver.emit(
-            "driver ready", {"event": "driver ready", "source": "driver"}
-        )
-
-    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
     events = async_capture_events(
         hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
