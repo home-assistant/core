@@ -382,7 +382,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         self.async_update_listeners()
 
     def set_dnd_state(self, serial_num: str, state: bool) -> None:
-        """Set the local DND state for a device, e.g. after a user-initiated change."""
+        """Set the local DND state; caller writes its own state, so listeners aren't notified."""
         self._dnd_states[serial_num] = state
 
     @property

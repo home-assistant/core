@@ -132,6 +132,7 @@ async def test_switch_dnd_created_by_late_pushed_event(
 
     assert hass.states.get(ENTITY_ID) is None
 
+    mock_amazon_devices_client.on_dnd_event.append.assert_called_once()
     event_handler = mock_amazon_devices_client.on_dnd_event.append.call_args.args[0]
     await event_handler({TEST_DEVICE_1_SN: True})
     await hass.async_block_till_done()
