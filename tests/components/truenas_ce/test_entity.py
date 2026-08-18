@@ -459,7 +459,7 @@ def test_device_info_non_system_group_uses_via_device_id_when_supported() -> Non
         return_value=True,
     ):
         info = entity.device_info
-    assert info["default_name"] == "TrueNAS Disks"
+    assert info["name"] == "TrueNAS Disks"
     assert info["via_device_id"] == "test-system-device-id"
     assert "via_device" not in info
 
@@ -479,7 +479,7 @@ def test_device_info_non_system_group_falls_back_to_via_device() -> None:
         return_value=False,
     ):
         info = entity.device_info
-    assert info["default_name"] == "TrueNAS Disks"
+    assert info["name"] == "TrueNAS Disks"
     assert info["via_device"] == ("truenas_ce", "TrueNAS_truenas.local")
     assert "via_device_id" not in info
 
@@ -497,7 +497,7 @@ def test_device_info_data_group_resolves_group_from_data() -> None:
         uid="d1", data={"guid": "g1", "pool": "tank"}, description=desc
     )
     info = entity.device_info
-    assert info["default_name"] == "TrueNAS tank"
+    assert info["name"] == "TrueNAS tank"
 
 
 def test_device_info_explicit_connection_and_value() -> None:
@@ -512,7 +512,7 @@ def test_device_info_explicit_connection_and_value() -> None:
     )
     entity = _make_entity(description=desc)
     info = entity.device_info
-    assert info["connections"] == {("custom_domain", "fixed-value")}
+    assert info["identifiers"] == {("custom_domain", "fixed-value")}
 
 
 def test_device_info_connection_value_from_data() -> None:
@@ -529,7 +529,7 @@ def test_device_info_connection_value_from_data() -> None:
         uid="d1", data={"guid": "g1", "pool": "tank"}, description=desc
     )
     info = entity.device_info
-    assert info["connections"] == {("truenas_ce", "TrueNAS_tank")}
+    assert info["identifiers"] == {("truenas_ce", "TrueNAS_tank")}
 
 
 def test_extra_state_attributes_includes_attribution_and_listed_fields() -> None:

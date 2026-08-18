@@ -518,7 +518,7 @@ def _process_val_sub(
             action = _validate_action(val["action"], name)
             continue
 
-        if not name and not action:
+        if name is None or action is None:
             break
 
         if action == "combine":

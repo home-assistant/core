@@ -559,7 +559,6 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
         if ha_group == "System":
             http_scheme = "https" if self.coordinator.api.scheme == "wss" else "http"
             return DeviceInfo(
-                connections={(dev_connection, f"{dev_connection_value}")},
                 identifiers={(dev_connection, f"{dev_connection_value}")},
                 name=self._inst,
                 model=f"{self.coordinator.data['system_info']['system_product']}",
@@ -572,12 +571,18 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
         # key below doesn't depend on whichever DeviceInfo TypedDict shape mypy
         # happens to resolve (via_device_id was only added to it upstream in HA
         # Core 2026.8 -- see _supports_via_device_id()).
+        # HA's device-registry validation only accepts specific key
+        # combinations (see DEVICE_INFO_TYPES in device_registry.py): the
+        # default_name/default_model/default_manufacturer trio is only valid
+        # together with "connections", not "identifiers" -- so pairing
+        # identifiers with a stable identity here requires the plain
+        # name/model/manufacturer keys instead.
         system_info = self.coordinator.data["system_info"]
         device_info: dict[str, Any] = {
-            "connections": {(dev_connection, f"{dev_connection_value}")},
-            "default_name": f"{self._inst} {dev_group}",
-            "default_model": f"{system_info['system_product']}",
-            "default_manufacturer": f"{system_info['system_manufacturer']}",
+            "identifiers": {(dev_connection, f"{dev_connection_value}")},
+            "name": f"{self._inst} {dev_group}",
+            "model": f"{system_info['system_product']}",
+            "manufacturer": f"{system_info['system_manufacturer']}",
         }
         system_device_id = self.coordinator.system_device_id
         if _supports_via_device_id() and system_device_id is not None:

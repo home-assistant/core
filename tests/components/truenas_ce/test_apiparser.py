@@ -632,3 +632,15 @@ def test_fill_vals_proc_ignores_group_starting_before_name_or_action() -> None:
     ]
     result = ap.fill_vals_proc({"uid-1": {}}, "uid-1", val_proc)
     assert result == {"uid-1": {}}
+
+
+def test_fill_vals_proc_aborts_group_when_only_name_is_set() -> None:
+    """A value item between ``name`` and ``action`` also aborts the group.
+
+    ``action`` is required to know how to process a value item, so a value
+    item seen while only ``name`` is set must abort just like the
+    both-missing case, not be silently skipped.
+    """
+    val_proc = [[{"name": "url"}, {"text": "x"}, {"action": "combine"}, {"text": "y"}]]
+    result = ap.fill_vals_proc({"uid-1": {}}, "uid-1", val_proc)
+    assert result == {"uid-1": {}}
