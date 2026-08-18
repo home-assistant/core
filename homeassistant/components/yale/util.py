@@ -61,7 +61,7 @@ def _activity_time_based(latest: Activity) -> Activity | None:
     """Get the latest state of the sensor."""
     start = latest.activity_start_time
     end = latest.activity_end_time + TIME_TO_DECLARE_DETECTION
-    if start <= datetime.now() <= end:
+    if start <= datetime.now() <= end:  # pylint: disable=home-assistant-enforce-naive-now
         return latest
     return None
 

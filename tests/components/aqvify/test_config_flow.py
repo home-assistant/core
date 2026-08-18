@@ -12,7 +12,7 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_load_json_object_fixture
 
 
 async def test_full_flow(
@@ -24,6 +24,36 @@ async def test_full_flow(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_API_KEY: "test-api-key",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Mr Aquarius"
+    assert result["data"] == {
+        CONF_API_KEY: "test-api-key",
+    }
+    assert result["result"].unique_id == "test_account_id"
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_missing_username(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_aqvify_client: MagicMock
+) -> None:
+    """Test full flow with missing name in account."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    mock_aqvify_client.async_get_account_id.return_value = AqvifyAccount(
+        await async_load_json_object_fixture(hass, "empty_name_account.json", DOMAIN)
+    )
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -88,7 +118,7 @@ async def test_form_invalid(
     await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Aqvify"
+    assert result["title"] == "Mr Aquarius"
     assert result["data"] == {
         CONF_API_KEY: "test-api-key",
     }
@@ -196,3 +226,36 @@ async def test_reauth_flow_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    ("return_value", "expected_reason"),
+    [
+        ("test_account_id", "reconfigure_successful"),
+        ("test_account_different_id", "unique_id_mismatch"),
+    ],
+    ids=["same_account", "different_account"],
+)
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_aqvify_client: MagicMock,
+    return_value: str,
+    expected_reason: str,
+) -> None:
+    """Test reconfiguration."""
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_aqvify_client.async_get_account_id.return_value = AqvifyAccount(
+        {"accountId": return_value}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_API_KEY: "fake-api-key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason

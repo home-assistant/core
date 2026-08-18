@@ -39,7 +39,7 @@
 # name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_child_lock_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy 20ECN4101 Child lock (top)',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Child lock (top)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_energy_20ecn4101_child_lock_top',
@@ -89,8 +89,8 @@
 # name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_switch_bottom-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Eve Energy 20ECN4101 Switch (bottom)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Switch (bottom)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_energy_20ecn4101_switch_bottom',
@@ -140,8 +140,8 @@
 # name: test_switches[eve_energy_20ecn4101][switch.eve_energy_20ecn4101_switch_top-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Eve Energy 20ECN4101 Switch (top)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy 20ECN4101 Switch (top)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_energy_20ecn4101_switch_top',
@@ -191,8 +191,8 @@
 # name: test_switches[eve_energy_plug][switch.eve_energy_plug-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Eve Energy Plug',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_energy_plug',
@@ -242,7 +242,7 @@
 # name: test_switches[eve_energy_plug][switch.eve_energy_plug_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy Plug Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_energy_plug_child_lock',
@@ -292,8 +292,8 @@
 # name: test_switches[eve_energy_plug_patched][switch.eve_energy_plug_patched-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Eve Energy Plug Patched',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Patched',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_energy_plug_patched',
@@ -343,7 +343,7 @@
 # name: test_switches[eve_energy_plug_patched][switch.eve_energy_plug_patched_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Energy Plug Patched Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Energy Plug Patched Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_energy_plug_patched_child_lock',
@@ -393,7 +393,7 @@
 # name: test_switches[eve_shutter][switch.eve_shutter_switch_20eci1701_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Shutter Switch 20ECI1701 Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Shutter Switch 20ECI1701 Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_shutter_switch_20eci1701_child_lock',
@@ -443,7 +443,7 @@
 # name: test_switches[eve_thermo_v4][switch.eve_thermo_20ebp1701_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20EBP1701 Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20EBP1701 Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_thermo_20ebp1701_child_lock',
@@ -493,7 +493,7 @@
 # name: test_switches[eve_thermo_v5][switch.eve_thermo_20ecd1701_child_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Eve Thermo 20ECD1701 Child lock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Eve Thermo 20ECD1701 Child lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.eve_thermo_20ecd1701_child_lock',
@@ -543,8 +543,8 @@
 # name: test_switches[ikea_air_quality_monitor][switch.alpstuga_air_quality_monitor-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'ALPSTUGA air quality monitor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'ALPSTUGA air quality monitor',
     }),
     'context': <ANY>,
     'entity_id': 'switch.alpstuga_air_quality_monitor',
@@ -594,8 +594,8 @@
 # name: test_switches[inovelli_vtm30][switch.white_series_onoff_switch_switch_load_control-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'White Series OnOff Switch Switch (Load Control)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'White Series OnOff Switch Switch (Load Control)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.white_series_onoff_switch_switch_load_control',
@@ -645,8 +645,8 @@
 # name: test_switches[longan_link_thermostat][switch.longan_link_hvac-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Longan link HVAC',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Longan link HVAC',
     }),
     'context': <ANY>,
     'entity_id': 'switch.longan_link_hvac',
@@ -696,8 +696,8 @@
 # name: test_switches[mock_cooktop][switch.mock_cooktop_power_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Cooktop Power (1)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Cooktop Power (1)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_cooktop_power_1',
@@ -747,8 +747,8 @@
 # name: test_switches[mock_cooktop][switch.mock_cooktop_power_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Cooktop Power (2)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Cooktop Power (2)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_cooktop_power_2',
@@ -798,8 +798,8 @@
 # name: test_switches[mock_door_lock][switch.mock_door_lock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Mock Door Lock',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_door_lock',
@@ -849,7 +849,7 @@
 # name: test_switches[mock_door_lock][switch.mock_door_lock_privacy_mode_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock Privacy mode button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock Privacy mode button',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_door_lock_privacy_mode_button',
@@ -899,8 +899,8 @@
 # name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Mock Door Lock with unbolt',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_door_lock_with_unbolt',
@@ -950,7 +950,7 @@
 # name: test_switches[mock_door_lock_with_unbolt][switch.mock_door_lock_with_unbolt_privacy_mode_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Door Lock with unbolt Privacy mode button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Door Lock with unbolt Privacy mode button',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_door_lock_with_unbolt_privacy_mode_button',
@@ -1000,8 +1000,8 @@
 # name: test_switches[mock_laundry_dryer][switch.mock_laundrydryer_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Laundrydryer Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Laundrydryer Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_laundrydryer_power',
@@ -1051,7 +1051,7 @@
 # name: test_switches[mock_lock][switch.mock_lock_privacy_mode_button-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Lock Privacy mode button',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lock Privacy mode button',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_lock_privacy_mode_button',
@@ -1101,8 +1101,8 @@
 # name: test_switches[mock_on_off_plugin_unit][switch.mock_onoffpluginunit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Mock OnOffPluginUnit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock OnOffPluginUnit',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_onoffpluginunit',
@@ -1152,8 +1152,8 @@
 # name: test_switches[mock_oven][switch.mock_oven_power_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Oven Power (3)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Power (3)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_oven_power_3',
@@ -1203,8 +1203,8 @@
 # name: test_switches[mock_oven][switch.mock_oven_power_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Oven Power (4)',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Oven Power (4)',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_oven_power_4',
@@ -1254,8 +1254,8 @@
 # name: test_switches[mock_pump][switch.mock_pump_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Mock Pump Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Pump Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_pump_power',
@@ -1305,8 +1305,8 @@
 # name: test_switches[mock_room_airconditioner][switch.room_airconditioner_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Room AirConditioner Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room AirConditioner Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.room_airconditioner_power',
@@ -1356,7 +1356,7 @@
 # name: test_switches[mock_speaker][switch.mock_speaker_mute-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock speaker Mute',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock speaker Mute',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_speaker_mute',
@@ -1406,8 +1406,8 @@
 # name: test_switches[mock_switch_unit][switch.mock_switchunit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Mock SwitchUnit',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock SwitchUnit',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_switchunit',
@@ -1457,7 +1457,7 @@
 # name: test_switches[silabs_evse_charging][switch.evse_enable_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'evse Enable charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'evse Enable charging',
     }),
     'context': <ANY>,
     'entity_id': 'switch.evse_enable_charging',
@@ -1507,8 +1507,8 @@
 # name: test_switches[silabs_refrigerator][switch.refrigerator_power-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Refrigerator Power',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Refrigerator Power',
     }),
     'context': <ANY>,
     'entity_id': 'switch.refrigerator_power',
@@ -1558,8 +1558,8 @@
 # name: test_switches[yandex_smart_socket][switch.yndx_00540-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'YNDX-00540',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'YNDX-00540',
     }),
     'context': <ANY>,
     'entity_id': 'switch.yndx_00540',

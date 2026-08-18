@@ -1,8 +1,20 @@
 {
   "entity": {
     "binary_sensor": {
+      "bonnet_removed": {
+        "default": "mdi:robot-vacuum-alert"
+      },
+      "drawer_removed": {
+        "default": "mdi:robot-vacuum-alert"
+      },
       "hopper_connected": {
         "default": "mdi:filter-check"
+      },
+      "laser_dirty": {
+        "default": "mdi:robot-vacuum-alert"
+      },
+      "online": {
+        "default": "mdi:cloud-check"
       },
       "sleep_mode": {
         "default": "mdi:sleep"
@@ -12,6 +24,9 @@
       }
     },
     "button": {
+      "change_filter": {
+        "default": "mdi:filter-cog"
+      },
       "give_snack": {
         "default": "mdi:candy-outline"
       },
@@ -65,6 +80,12 @@
           "motor_ot_amps": "mdi:flash-alert"
         }
       },
+      "next_filter_replacement": {
+        "default": "mdi:filter-cog"
+      },
+      "scoops_saved_count": {
+        "default": "mdi:counter"
+      },
       "total_cycles": {
         "default": "mdi:counter"
       },
@@ -84,6 +105,71 @@
         "state": {
           "on": "mdi:lock"
         }
+      },
+      "sleep_mode_friday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_monday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_saturday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_sunday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_thursday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_tuesday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_wednesday": {
+        "default": "mdi:sleep"
+      }
+    },
+    "time": {
+      "sleep_mode_end_time_friday": {
+        "default": "mdi:alarm"
+      },
+      "sleep_mode_end_time_monday": {
+        "default": "mdi:alarm"
+      },
+      "sleep_mode_end_time_saturday": {
+        "default": "mdi:alarm"
+      },
+      "sleep_mode_end_time_sunday": {
+        "default": "mdi:alarm"
+      },
+      "sleep_mode_end_time_thursday": {
+        "default": "mdi:alarm"
+      },
+      "sleep_mode_end_time_tuesday": {
+        "default": "mdi:alarm"
+      },
+      "sleep_mode_end_time_wednesday": {
+        "default": "mdi:alarm"
+      },
+      "sleep_mode_start_time_friday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_start_time_monday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_start_time_saturday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_start_time_sunday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_start_time_thursday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_start_time_tuesday": {
+        "default": "mdi:sleep"
+      },
+      "sleep_mode_start_time_wednesday": {
+        "default": "mdi:sleep"
       }
     }
   },

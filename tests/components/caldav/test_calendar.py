@@ -436,7 +436,9 @@ async def test_setup_component_config(
     await setup_platform_cb()
 
     all_calendar_entities = hass.states.async_entity_ids("calendar")
-    assert all_calendar_entities == expected_entities
+    # Entities are added after a concurrent first refresh, so order is not
+    # guaranteed; assert on the set of created entities instead.
+    assert sorted(all_calendar_entities) == sorted(expected_entities)
 
 
 @pytest.mark.parametrize("tz", [UTC])

@@ -1,7 +1,7 @@
 """Config flow for the Altruist integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from altruistclient import AltruistClient, AltruistDeviceModel, AltruistError
 import voluptuous as vol
@@ -21,6 +21,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
 
     device: AltruistDeviceModel
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -62,6 +63,7 @@ class AltruistConfigFlow(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

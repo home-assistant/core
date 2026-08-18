@@ -1,6 +1,6 @@
 """Support for IHC switches."""
 
-from typing import Any
+from typing import Any, override
 
 from ihcsdk.ihccontroller import IHCController
 
@@ -59,6 +59,7 @@ class IHCSwitch(IHCEntity, SwitchEntity):
         self._ihc_off_id = ihc_off_id
         self._ihc_on_id = ihc_on_id
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         if self._ihc_on_id:
@@ -66,6 +67,7 @@ class IHCSwitch(IHCEntity, SwitchEntity):
         else:
             await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         if self._ihc_off_id:
@@ -73,6 +75,7 @@ class IHCSwitch(IHCEntity, SwitchEntity):
         else:
             await async_set_bool(self.hass, self.ihc_controller, self.ihc_id, False)
 
+    @override
     def on_ihc_change(self, ihc_id, value):
         """Handle IHC resource change."""
         self._attr_is_on = value

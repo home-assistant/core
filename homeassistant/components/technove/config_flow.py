@@ -1,6 +1,6 @@
 """Config flow for TechnoVE."""
 
-from typing import Any
+from typing import Any, override
 
 from technove import Station as TechnoVEStation, TechnoVE, TechnoVEConnectionError
 import voluptuous as vol
@@ -25,6 +25,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
     discovered_host: str
     discovered_station: TechnoVEStation
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -82,6 +83,7 @@ class TechnoVEConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle reconfiguration of the TechnoVE station."""
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

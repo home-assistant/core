@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Callable
-import contextlib
 from datetime import timedelta
 from enum import IntEnum
 import io
@@ -88,7 +87,9 @@ def _get_entry_for_device(call: ServiceCall) -> OpenDisplayConfigEntry:
     device_id: str = call.data[ATTR_DEVICE_ID]
     device_registry = dr.async_get(call.hass)
 
-    if (device := device_registry.async_get(device_id)) is None:
+    if (
+        device := device_registry.async_get(device_id, include_child_devices=False)
+    ) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_device_id",
@@ -188,9 +189,7 @@ async def _async_upload_image(call: ServiceCall) -> None:
     current = asyncio.current_task()
     if (prev := entry.runtime_data.upload_task) is not None and not prev.done():
         prev.cancel()
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        with contextlib.suppress(asyncio.CancelledError):
-            await prev
+        await asyncio.wait({prev})
     entry.runtime_data.upload_task = current
 
     try:

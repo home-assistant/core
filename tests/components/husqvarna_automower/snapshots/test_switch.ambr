@@ -39,7 +39,7 @@
 # name: test_switch_snapshot[switch.garden_test_mower_1_avoid_danger_zone-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Avoid Danger Zone',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Avoid Danger Zone',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_test_mower_1_avoid_danger_zone',
@@ -89,7 +89,7 @@
 # name: test_switch_snapshot[switch.garden_test_mower_1_avoid_springflowers-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Avoid Springflowers',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Avoid Springflowers',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_test_mower_1_avoid_springflowers',
@@ -139,7 +139,7 @@
 # name: test_switch_snapshot[switch.garden_test_mower_1_back_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Back lawn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Back lawn',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_test_mower_1_back_lawn',
@@ -189,7 +189,7 @@
 # name: test_switch_snapshot[switch.garden_test_mower_1_enable_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Enable schedule',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Enable schedule',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_test_mower_1_enable_schedule',
@@ -239,7 +239,7 @@
 # name: test_switch_snapshot[switch.garden_test_mower_1_front_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 Front lawn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 Front lawn',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_test_mower_1_front_lawn',
@@ -289,7 +289,7 @@
 # name: test_switch_snapshot[switch.garden_test_mower_1_my_lawn-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 1 My lawn',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 1 My lawn',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_test_mower_1_my_lawn',
@@ -339,7 +339,7 @@
 # name: test_switch_snapshot[switch.garden_test_mower_2_enable_schedule-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test Mower 2 Enable schedule',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Mower 2 Enable schedule',
     }),
     'context': <ANY>,
     'entity_id': 'switch.garden_test_mower_2_enable_schedule',

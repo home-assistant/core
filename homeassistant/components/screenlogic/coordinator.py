@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from screenlogicpy import ScreenLogicGateway
 from screenlogicpy.const.common import (
@@ -14,7 +14,7 @@ from screenlogicpy.const.common import (
 from screenlogicpy.device_const.system import EQUIPMENT_FLAG
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT, CONF_SCAN_INTERVAL
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -64,15 +64,12 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
         """Initialize the Screenlogic Data Update Coordinator."""
         self.gateway = gateway
 
-        interval = timedelta(
-            seconds=config_entry.options.get(CONF_SCAN_INTERVAL, DEFAULT_SCAN_INTERVAL)
-        )
         super().__init__(
             hass,
             _LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
-            update_interval=interval,
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
             # Debounced option since the device takes
             # a moment to reflect the knock-on changes
             request_refresh_debouncer=Debouncer(
@@ -91,6 +88,7 @@ class ScreenlogicDataUpdateCoordinator(DataUpdateCoordinator[None]):
         if EQUIPMENT_FLAG.CHLORINATOR in self.gateway.equipment_flags:
             await self.gateway.async_get_scg()
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from the Screenlogic gateway."""
         try:

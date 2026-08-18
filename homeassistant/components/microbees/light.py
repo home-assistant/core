@@ -1,6 +1,6 @@
 """Light integration microBees."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import ATTR_RGBW_COLOR, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -43,15 +43,18 @@ class MBLight(MicroBeesActuatorEntity, LightEntity):
         self._attr_rgbw_color = self.actuator.configuration.color
 
     @property
+    @override
     def name(self) -> str:
         """Name of the cover."""
         return self.actuator.name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Status of the light."""
         return self.actuator.value
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the light."""
         if ATTR_RGBW_COLOR in kwargs:
@@ -65,6 +68,7 @@ class MBLight(MicroBeesActuatorEntity, LightEntity):
         self.actuator.value = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the light."""
         send_command = await self.coordinator.microbees.sendCommand(
