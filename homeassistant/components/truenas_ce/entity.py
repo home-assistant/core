@@ -252,7 +252,7 @@ def _is_uid_excluded(entity_description: TrueNASEntityDescription, vals: Any) ->
 def _new_referenced_entities(
     coordinator: TrueNASCoordinator,
     entity_description: TrueNASEntityDescription,
-    data: Any,
+    data: Mapping[str, Any],
     dispatcher: Mapping[str, Callable[..., Any]],
     seen: set[str],
 ) -> list[TrueNASEntity]:
@@ -260,10 +260,7 @@ def _new_referenced_entities(
     behaviors = coordinator.config_entry.options.get(CONF_BEHAVIORS, DEFAULT_BEHAVIORS)
     apply_exclude = BEHAVIOR_REMOVE_INACTIVE_NIC in behaviors
     new_entities: list[TrueNASEntity] = []
-    for uid in data:
-        # data is a mapping of uid -> values for reference descriptions;
-        # fall back to treating the iterated item itself as the values.
-        vals = data[uid] if isinstance(data, dict) else uid
+    for uid, vals in data.items():
         if apply_exclude and _is_uid_excluded(entity_description, vals):
             continue
         obj = dispatcher[entity_description.func](coordinator, entity_description, uid)

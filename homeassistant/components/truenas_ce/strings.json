@@ -6,7 +6,7 @@
     },
     "error": {
       "api_not_found": "Connection failed, API not found.",
-      "cannot_connect": "Failed to connect to host (TCP port {port} closed or timeout).",
+      "cannot_connect": "Failed to connect to host (TCP port closed or timeout).",
       "certificate_verify_failed": "Certificate verification failed.",
       "connection_refused": "Connection failed, connection refused.",
       "handshake_timeout": "Connection failed, timed out while waiting for handshake response.",

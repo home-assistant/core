@@ -345,7 +345,7 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
                 config[CONF_NAME] = await _async_get_hostname(
                     api, config.get(CONF_HOST, "")
                 )
-        await api.disconnect()
+        await _async_safe_disconnect(api)
 
         if not conn:
             ha_error = _map_error_to_ha(errorcode)
