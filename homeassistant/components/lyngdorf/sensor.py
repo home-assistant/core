@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from lyngdorf.device import Receiver
 
@@ -31,11 +31,7 @@ class LyngdorfSensorEntityDescription(SensorEntityDescription):
 
 
 def _known(value: str | None, options: list[str]) -> str | None:
-    """Return value only if the device reported a name we know.
-
-    Unrecognised values deliberately escape the library's lookup tables as
-    synthetic strings, which would fall outside an enum's options.
-    """
+    """Return the value only if it is one of the device's known names."""
     return value if value in options else None
 
 
@@ -142,7 +138,8 @@ class LyngdorfSensor(LyngdorfEntity, SensorEntity):
     ) -> None:
         """Initialize the sensor."""
         super().__init__(receiver, device_info)
-        assert config_entry.unique_id
+        if TYPE_CHECKING:
+            assert config_entry.unique_id
         self.entity_description = description
         self._attr_unique_id = f"{config_entry.unique_id}_{description.key}"
 

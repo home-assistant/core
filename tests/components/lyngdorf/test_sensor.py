@@ -3,14 +3,15 @@
 from unittest.mock import MagicMock
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import notify_receiver_update
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 @pytest.fixture
@@ -20,25 +21,14 @@ def platforms() -> list[Platform]:
 
 
 @pytest.mark.usefixtures("mock_receiver")
-async def test_sensor_entities_created(
+async def test_entities(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that sensor entities are created."""
-    assert init_integration.state is ConfigEntryState.LOADED
-
-    sensor_keys = [
-        "audio_information",
-        "video_information",
-        "audio_input",
-        "video_input",
-        "streaming_source",
-        "zone_b_audio_input",
-        "zone_b_streaming_source",
-    ]
-    for key in sensor_keys:
-        state = hass.states.get(f"sensor.mock_lyngdorf_{key}")
-        assert state is not None, f"sensor.mock_lyngdorf_{key} not found"
+    """Test the sensor entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 async def test_main_zone_sensor_values(
