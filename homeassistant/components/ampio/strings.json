@@ -1,0 +1,58 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "password": "[%key:common::config_flow::data::password%]",
+          "username": "[%key:common::config_flow::data::username%]"
+        },
+        "data_description": {
+          "host": "Hostname or IP address of the Ampio server (M-SERV).",
+          "password": "Your Ampio account password.",
+          "username": "Your Ampio account username."
+        },
+        "description": "Enter the address and credentials of your Ampio server. A standard user account is recommended. An administrator account additionally provides per-module device information and faster state updates.",
+        "title": "Connect to Ampio"
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "co2": {
+        "name": "CO2"
+      },
+      "loudness": {
+        "name": "Loudness"
+      },
+      "pressure_abs": {
+        "name": "Absolute pressure"
+      },
+      "pressure_rel": {
+        "name": "Relative pressure"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Cannot connect to the Ampio server."
+    },
+    "discovery_timeout": {
+      "message": "Connected to the Ampio server, but it did not finish reporting its configuration."
+    },
+    "invalid_auth": {
+      "message": "The Ampio server rejected the stored credentials."
+    },
+    "unexpected_device": {
+      "message": "The Ampio server at the configured address is not the one this entry was set up with."
+    }
+  }
+}
