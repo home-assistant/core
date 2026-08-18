@@ -14,7 +14,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_point_in_utc_time
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
+from .const import CONF_CATEGORIES, CONF_LOCAL_ONLY, CONF_PROVINCE, DOMAIN
 
 
 def _get_holidays_and_language(
@@ -86,6 +86,7 @@ def _get_obj_holidays_and_language(
     province: str | None,
     language: str,
     selected_categories: list[str] | None,
+    local_only: bool,
 ) -> tuple[HolidayBase, str]:
     """Get the object for the requested country and year."""
     years = {dt_util.now().year, dt_util.now().year + 1}
@@ -93,7 +94,7 @@ def _get_obj_holidays_and_language(
         country, province, years, language, selected_categories
     )
 
-    if province:
+    if province and local_only:
         _exclude_national_holidays(
             obj_holidays,
             country,
@@ -121,8 +122,15 @@ async def async_setup_entry(
     else:
         categories = [PUBLIC, *categories]
 
+    local_only: bool = config_entry.options.get(CONF_LOCAL_ONLY, False)
+
     obj_holidays, language = await hass.async_add_executor_job(
-        _get_obj_holidays_and_language, country, province, language, categories
+        _get_obj_holidays_and_language,
+        country,
+        province,
+        language,
+        categories,
+        local_only,
     )
 
     async_add_entities(
@@ -133,6 +141,7 @@ async def async_setup_entry(
                 province,
                 language,
                 categories,
+                local_only,
                 obj_holidays,
                 config_entry.entry_id,
             )
@@ -157,6 +166,7 @@ class HolidayCalendarEntity(CalendarEntity):
         province: str | None,
         language: str,
         categories: list[str] | None,
+        local_only: bool,
         obj_holidays: HolidayBase,
         unique_id: str,
     ) -> None:
@@ -166,6 +176,7 @@ class HolidayCalendarEntity(CalendarEntity):
         self._location = name
         self._language = language
         self._categories = categories
+        self._local_only = local_only
         self._attr_unique_id = unique_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, unique_id)},
@@ -245,7 +256,7 @@ class HolidayCalendarEntity(CalendarEntity):
             self._language,
             self._categories,
         )
-        if self._province:
+        if self._province and self._local_only:
             _exclude_national_holidays(
                 obj_holidays,
                 self._country,

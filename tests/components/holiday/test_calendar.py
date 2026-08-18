@@ -13,6 +13,7 @@ from homeassistant.components.calendar import (
 )
 from homeassistant.components.holiday.const import (
     CONF_CATEGORIES,
+    CONF_LOCAL_ONLY,
     CONF_PROVINCE,
     DOMAIN,
 )
@@ -41,6 +42,7 @@ async def test_holiday_calendar_entity(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_COUNTRY: "US", CONF_PROVINCE: "AK"},
+        options={CONF_LOCAL_ONLY: True},
         title="United States, AK",
     )
     config_entry.add_to_hass(hass)
@@ -129,6 +131,7 @@ async def test_default_language(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_COUNTRY: "FR", CONF_PROVINCE: "BL"},
+        options={CONF_LOCAL_ONLY: True},
         title="France, BL",
     )
     config_entry.add_to_hass(hass)
@@ -379,6 +382,7 @@ async def test_categories(
         },
         options={
             CONF_CATEGORIES: [CATHOLIC],
+            CONF_LOCAL_ONLY: True,
         },
         title="Germany",
     )
@@ -424,6 +428,80 @@ async def test_categories(
     assert response == {"calendar.germany": {"events": []}}
 
 
+async def test_local_only(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the local_only option."""
+    await hass.config.async_set_time_zone("Europe/Berlin")
+    zone = await dt_util.async_get_time_zone("Europe/Berlin")
+    freezer.move_to(datetime(2025, 12, 24, 12, tzinfo=zone))
+
+    # With local_only=True, national holiday (Dec 25) should NOT be returned
+    config_entry_local = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "DE", CONF_PROVINCE: "BW"},
+        options={CONF_LOCAL_ONLY: True},
+        title="Germany BW Local",
+    )
+    config_entry_local.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry_local.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.germany_bw_local",
+            "end_date_time": dt_util.now() + timedelta(days=2),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {"calendar.germany_bw_local": {"events": []}}
+
+    # With local_only=False (default), national holiday (Dec 25) SHOULD be returned
+    config_entry_all = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_COUNTRY: "DE", CONF_PROVINCE: "BY"},
+        title="Germany BY All",
+    )
+    config_entry_all.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(config_entry_all.entry_id)
+    await hass.async_block_till_done()
+
+    response = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            "entity_id": "calendar.germany_by_all",
+            "end_date_time": dt_util.now() + timedelta(days=2),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    assert response == {
+        "calendar.germany_by_all": {
+            "events": [
+                {
+                    "start": "2025-12-25",
+                    "end": "2025-12-26",
+                    "summary": "Christmas Day",
+                    "location": "Germany BY All",
+                },
+                {
+                    "start": "2025-12-26",
+                    "end": "2025-12-27",
+                    "summary": "Second Day of Christmas",
+                    "location": "Germany BY All",
+                },
+            ]
+        }
+    }
+
+
 async def test_no_update_when_disabled(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
@@ -436,6 +514,7 @@ async def test_no_update_when_disabled(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_COUNTRY: "US", CONF_PROVINCE: "AK"},
+        options={CONF_LOCAL_ONLY: True},
         title="United States, AK",
     )
     config_entry.add_to_hass(hass)

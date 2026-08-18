@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_COUNTRY
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     CountrySelector,
     CountrySelectorConfig,
     SelectOptionDict,
@@ -24,7 +25,7 @@ from homeassistant.helpers.selector import (
 )
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_CATEGORIES, CONF_PROVINCE, DOMAIN
+from .const import CONF_CATEGORIES, CONF_LOCAL_ONLY, CONF_PROVINCE, DOMAIN
 
 SUPPORTED_COUNTRIES = list_supported_countries(include_aliases=False)
 
@@ -279,21 +280,25 @@ class HolidayOptionsFlowHandler(OptionsFlowWithReload):
         categories = await self.hass.async_add_executor_job(
             get_optional_categories, self.config_entry.data[CONF_COUNTRY]
         )
-        if not categories:
+        schema_dict: dict[vol.Marker, Any] = {}
+
+        if categories:
+            schema_dict[vol.Optional(CONF_CATEGORIES)] = SelectSelector(
+                SelectSelectorConfig(
+                    options=categories,
+                    multiple=True,
+                    mode=SelectSelectorMode.DROPDOWN,
+                    translation_key="categories",
+                )
+            )
+
+        if self.config_entry.data.get(CONF_PROVINCE):
+            schema_dict[vol.Optional(CONF_LOCAL_ONLY)] = BooleanSelector()
+
+        if not schema_dict:
             return self.async_abort(reason="no_categories")
 
-        schema = vol.Schema(
-            {
-                vol.Optional(CONF_CATEGORIES): SelectSelector(
-                    SelectSelectorConfig(
-                        options=categories,
-                        multiple=True,
-                        mode=SelectSelectorMode.DROPDOWN,
-                        translation_key="categories",
-                    )
-                )
-            }
-        )
+        schema = vol.Schema(schema_dict)
 
         return self.async_show_form(
             data_schema=self.add_suggested_values_to_schema(
