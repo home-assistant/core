@@ -2,7 +2,10 @@
 
 from unittest.mock import MagicMock
 
-from homeassistant.const import STATE_UNKNOWN
+import pytest
+
+from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 
 from .conftest import notify_receiver_update
@@ -10,13 +13,19 @@ from .conftest import notify_receiver_update
 from tests.common import MockConfigEntry
 
 
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Only load the sensor platform."""
+    return [Platform.SENSOR]
+
+
+@pytest.mark.usefixtures("mock_receiver")
 async def test_sensor_entities_created(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_receiver: MagicMock,
 ) -> None:
     """Test that sensor entities are created."""
-    assert init_integration.state.value == "loaded"
+    assert init_integration.state is ConfigEntryState.LOADED
 
     sensor_keys = [
         "audio_information",
@@ -103,3 +112,25 @@ async def test_enum_sensor_ignores_unknown_device_value(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.mock_lyngdorf_audio_input").state == STATE_UNKNOWN
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_enum_options_follow_the_device(
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test enum options track the lists the device reports."""
+    mock_receiver.available_audio_inputs = ["HDMI", "optical"]
+    mock_receiver.audio_input = "HDMI"
+    notify_receiver_update(mock_receiver)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.mock_lyngdorf_audio_input")
+    assert state.attributes["options"] == ["HDMI", "optical"]
+
+    mock_receiver.available_audio_inputs = ["HDMI", "optical", "ARC"]
+    notify_receiver_update(mock_receiver)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.mock_lyngdorf_audio_input")
+    assert state.attributes["options"] == ["HDMI", "optical", "ARC"]
