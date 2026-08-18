@@ -447,7 +447,7 @@ def get_device_tuple_from_identifiers(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove config entry from a device.
 
