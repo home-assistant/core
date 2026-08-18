@@ -63,6 +63,7 @@ class FritzBoxTracker(FritzDeviceBase, ScannerEntity):
     """Class which queries a FRITZ!Box device."""
 
     _attr_translation_key = "device_tracker"
+    _attr_name = None
 
     def __init__(self, avm_wrapper: AvmWrapper, device: FritzDevice) -> None:
         """Initialize a FRITZ!Box device."""
