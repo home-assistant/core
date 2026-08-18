@@ -168,7 +168,7 @@ async def test_multiple_combinations_country_province(hass: HomeAssistant) -> No
     result_de_step4 = await hass.config_entries.flow.async_configure(
         result_de_step3["flow_id"],
         {
-            CONF_PROVINCE: data_de_step_1[CONF_PROVINCE],
+            CONF_PROVINCE: data_de_step_2[CONF_PROVINCE],
         },
     )
     assert result_de_step4["type"] is FlowResultType.ABORT
