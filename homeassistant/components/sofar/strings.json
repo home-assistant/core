@@ -19,7 +19,7 @@
           "host": "The hostname or IP address of the inverter, or of the Modbus TCP bridge it's connected through.",
           "modbus_addr": "The inverter's Modbus unit/slave ID.",
           "port": "The Modbus TCP port to connect on.",
-          "read_eps": "Also poll the EPS (backup power) register block, for inverters with EPS wiring."
+          "read_eps": "Also poll the EPS (Emergency Power Supply, i.e. off-grid backup output) register block. Only enable this if your inverter has EPS wiring — on models without it, these registers aren't populated."
         },
         "description": "Connect over Modbus TCP. The inverter model and register map are detected automatically from its serial number."
       }
