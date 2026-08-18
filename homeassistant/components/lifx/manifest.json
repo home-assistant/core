@@ -52,6 +52,6 @@
   "integration_type": "device",
   "iot_class": "local_polling",
   "loggers": ["lifx"],
-  "requirements": ["lifx-async==6.1.4"],
+  "requirements": ["lifx-async==6.5.1"],
   "zeroconf": ["_lifx._udp.local."]
 }
