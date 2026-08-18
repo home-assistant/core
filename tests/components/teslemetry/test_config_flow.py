@@ -1,30 +1,50 @@
 """Test the Teslemetry config flow."""
 
+import asyncio
 import time
 from typing import Any
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 from urllib.parse import parse_qs, urlparse
 
 from aiohttp import ClientConnectionError
+from bleak.exc import BleakError
 import pytest
 from tesla_fleet_api.exceptions import (
+    BluetoothTimeout,
+    BluetoothTransportError,
     InvalidToken,
+    NotOnWhitelistFault,
     SubscriptionRequired,
     TeslaFleetError,
+    WhitelistOperationAttemptingToAddExistingKey,
 )
+from tesla_fleet_api.tesla import VehicleRouter
+from tesla_fleet_api.tesla.bluetooth import TeslaBluetooth
 
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
+    CONF_VIN,
     DOMAIN,
+    SUBENTRY_TYPE_VEHICLE,
     TOKEN_URL,
 )
-from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
+from homeassistant.config_entries import (
+    SOURCE_USER,
+    ConfigEntryState,
+    ConfigSubentryData,
+    SubentryFlowResult,
+)
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import config_entry_oauth2_flow
+from homeassistant.helpers import (
+    config_entry_oauth2_flow,
+    device_registry as dr,
+    entity_registry as er,
+)
 
-from . import setup_platform
+from . import mock_config_entry, setup_platform
 from .const import CONFIG_V1, UNIQUE_ID
 
 from tests.common import MockConfigEntry
@@ -521,3 +541,657 @@ async def test_migrate_error_from_future(
 
     entry = hass.config_entries.async_get_entry(mock_entry.entry_id)
     assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
+VIN = "LRW3F7EK4NC700000"
+ADDRESS = "AA:BB:CC:DD:EE:FF"
+
+
+def _entry_with_ble() -> MockConfigEntry:
+    """Return a config entry whose vehicle subentry is already BLE-paired."""
+    entry = mock_config_entry()
+    return MockConfigEntry(
+        domain=entry.domain,
+        version=entry.version,
+        minor_version=entry.minor_version,
+        unique_id=entry.unique_id,
+        data=dict(entry.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_VEHICLE,
+                unique_id=VIN,
+                title="Test",
+                data={CONF_VIN: VIN, CONF_ADDRESS: ADDRESS},
+            )
+        ],
+    )
+
+
+def _discovered_info() -> MagicMock:
+    """Return a fake discovered service info matching the test VIN."""
+    info = MagicMock()
+    info.name = TeslaBluetooth().get_name(VIN)
+    info.address = ADDRESS
+    info.device = MagicMock()
+    return info
+
+
+def _mock_vehicle(*, on_whitelist: bool = True) -> AsyncMock:
+    """Return a mock VehicleBluetooth for the pairing flow."""
+    vehicle = AsyncMock()
+    if on_whitelist:
+        vehicle.handshakeVehicleSecurity = AsyncMock()
+    else:
+        vehicle.handshakeVehicleSecurity = AsyncMock(
+            side_effect=[NotOnWhitelistFault(), None]
+        )
+    return vehicle
+
+
+def _mock_ble_parent(vehicle: AsyncMock | None = None) -> MagicMock:
+    """Return a mock shared TeslaBluetooth parent for the pairing flow."""
+    parent = MagicMock()
+    parent.get_name.return_value = TeslaBluetooth().get_name(VIN)
+    if vehicle is not None:
+        parent.vehicles.createBluetooth.return_value = vehicle
+    return parent
+
+
+async def _setup_account_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up an account entry with no vehicle subentry.
+
+    Local control is opt-in: no Bluetooth subentry exists until the user pairs a
+    vehicle through the add flow, so a fresh account entry starts with none.
+    """
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return entry
+
+
+async def _setup_paired_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Set up an entry whose only account vehicle is already BLE-paired."""
+    entry = _entry_with_ble()
+    entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = AsyncMock()
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+    return entry
+
+
+async def _start_pairing_at_scan(
+    hass: HomeAssistant, entry: MockConfigEntry
+) -> SubentryFlowResult:
+    """Open the add flow and advance past VIN selection to the scan step."""
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_VIN: VIN}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scan"
+    return result
+
+
+async def test_subentry_pairing_already_whitelisted(hass: HomeAssistant) -> None:
+    """The add flow creates the subentry when the key is already whitelisted."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=True)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    # The subentry is created atomically with its credentials, never identity-only.
+    assert subentries[0].unique_id == VIN
+    assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+    vehicle.connect.assert_awaited_once()
+    vehicle.disconnect.assert_awaited_once()
+
+
+async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> None:
+    """Pairing walks through instructions and key install when not whitelisted."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=False)
+    release = asyncio.Event()
+
+    async def _pair() -> None:
+        await release.wait()
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        # scan -> connect -> handshake raises NotOnWhitelistFault -> instructions
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "instructions"
+
+        # confirm instructions -> authorize runs pair() as a progress task
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+        assert result["progress_action"] == "pair"
+
+        # pair() completes -> progress done -> handshake ok -> finish
+        release.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+    vehicle.pair.assert_awaited_once()
+
+
+async def test_subentry_scan_connect_fails(hass: HomeAssistant) -> None:
+    """The scan step re-shows the form with an error when BLE connect fails."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle()
+    vehicle.connect = AsyncMock(side_effect=BleakError("nope"))
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scan"
+    assert result["errors"] == {"base": "cannot_connect"}
+    # A failed pairing never creates a subentry.
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    vehicle.disconnect.assert_awaited_once()
+
+
+@pytest.mark.parametrize(
+    ("error", "expected"),
+    [
+        (BluetoothTimeout, "timeout"),
+        (BluetoothTransportError, "cannot_connect"),
+        (TeslaFleetError, "pair_failed"),
+    ],
+    ids=["timeout", "transport", "rejected"],
+)
+async def test_subentry_authorize_failure(
+    hass: HomeAssistant, error: type[TeslaFleetError], expected: str
+) -> None:
+    """Each pairing failure surfaces its own error, not a blanket timeout."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=False)
+    release = asyncio.Event()
+
+    async def _pair() -> None:
+        await release.wait()
+        raise error
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["step_id"] == "instructions"
+
+        # confirm instructions -> authorize runs pair() as a progress task
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        # pair() fails -> progress done -> instructions re-shown with the error
+        release.set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instructions"
+    assert result["errors"] == {"base": expected}
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    # pair() is a single bounded op; it is never re-sent.
+    vehicle.pair.assert_awaited_once()
+
+
+async def test_subentry_authorize_existing_key_finishes(hass: HomeAssistant) -> None:
+    """Approving the key after a timeout, then retrying, completes the pairing."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=False)
+    releases = [asyncio.Event(), asyncio.Event()]
+    attempts = iter(
+        zip(
+            releases,
+            [BluetoothTimeout(), WhitelistOperationAttemptingToAddExistingKey()],
+            strict=True,
+        )
+    )
+
+    async def _pair() -> None:
+        release, error = next(attempts)
+        await release.wait()
+        raise error
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["step_id"] == "instructions"
+
+        # confirm instructions -> authorize runs pair() as a progress task
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        # the vehicle never confirms -> instructions re-shown, asking for approval
+        releases[0].set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "timeout"}
+
+        # the user approves the key and retries -> pair() runs again
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        # the vehicle reports the key already exists -> handshake confirms -> finish
+        releases[1].set()
+        await hass.async_block_till_done()
+        result = await hass.config_entries.subentries.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+    assert vehicle.pair.await_count == 2
+    vehicle.disconnect.assert_awaited_once()
+
+
+async def test_subentry_handshake_error_aborts(hass: HomeAssistant) -> None:
+    """A handshake failure aborts with cannot_connect; a disconnect error is swallowed."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle()
+    vehicle.handshakeVehicleSecurity = AsyncMock(side_effect=TeslaFleetError())
+    vehicle.disconnect = AsyncMock(side_effect=BleakError("boom"))
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    vehicle.disconnect.assert_awaited_once()
+
+
+async def test_subentry_pairing_abandoned(hass: HomeAssistant) -> None:
+    """Abandoning the flow mid-pairing cancels the pair task and disconnects."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle(on_whitelist=False)
+    cancelled = asyncio.Event()
+
+    async def _pair() -> None:
+        try:
+            await asyncio.Event().wait()
+        except asyncio.CancelledError:
+            cancelled.set()
+            raise
+
+    vehicle.pair = AsyncMock(side_effect=_pair)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        # confirm instructions -> authorize runs pair() as a progress task
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        assert result["type"] is FlowResultType.SHOW_PROGRESS
+
+        # abandon the flow while pairing is still running
+        hass.config_entries.subentries.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert cancelled.is_set()
+    vehicle.disconnect.assert_awaited_once()
+    # An abandoned pairing never creates a subentry.
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+
+async def test_subentry_reconfigure_repairs_paired_vehicle(hass: HomeAssistant) -> None:
+    """Reconfiguring an already-paired vehicle re-pairs it and re-stores its address."""
+    entry = await _setup_paired_entry(hass)
+    subentry_id = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)[0].subentry_id
+    vehicle = _mock_vehicle(on_whitelist=True)
+    address_stored_at_reload = False
+
+    def _capture_reload(entry_id: str) -> None:
+        nonlocal address_stored_at_reload
+        address_stored_at_reload = (
+            entry.subentries[subentry_id].data.get(CONF_ADDRESS) == ADDRESS
+        )
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(
+            hass.config_entries, "async_schedule_reload", side_effect=_capture_reload
+        ) as mock_reload,
+    ):
+        # Reconfigure reads the VIN from the existing subentry, skipping selection.
+        result = await entry.start_subentry_reconfigure_flow(hass, subentry_id)
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    # The paired subentry keeps its credentials; no second subentry is created.
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    assert entry.subentries[subentry_id].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+    mock_reload.assert_called_once_with(entry.entry_id)
+    # The address must already be persisted by the time the reload is scheduled.
+    assert address_stored_at_reload
+    vehicle.connect.assert_awaited_once()
+    vehicle.disconnect.assert_awaited_once()
+
+
+async def test_subentry_scan_device_not_found(hass: HomeAssistant) -> None:
+    """The scan step re-shows the form with an error when no device is found."""
+    entry = await _setup_account_entry(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(),
+        ),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scan"
+    assert result["errors"] == {"base": "device_not_found"}
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+
+
+async def test_subentry_scan_finds_device_after_active_scan(
+    hass: HomeAssistant,
+) -> None:
+    """An awake in-range car only in scan responses is found via active scan."""
+    entry = await _setup_account_entry(hass)
+    vehicle = _mock_vehicle()
+    mock_discovered = MagicMock(return_value=[])
+
+    async def _active_scan(hass: HomeAssistant) -> None:
+        mock_discovered.return_value = [_discovered_info()]
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            mock_discovered,
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_request_active_scan",
+            AsyncMock(side_effect=_active_scan),
+        ) as mock_active_scan,
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload"),
+    ):
+        result = await _start_pairing_at_scan(hass, entry)
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    mock_active_scan.assert_awaited_once()
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    assert subentries[0].data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+    vehicle.connect.assert_awaited_once()
+
+
+async def test_subentry_add_flow_keeps_device_on_parent(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """The add flow pairs an account vehicle without moving its device off the parent entry."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    # No Bluetooth subentry exists until the user adds one.
+    assert not entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    existing_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, VIN), entry.entry_id
+    )
+    assert existing_device is not None
+    # The device and its entities start on the parent entry, owned by no subentry.
+    assert existing_device.config_subentry_id is None
+    vehicle_entities = er.async_entries_for_device(
+        entity_registry, existing_device.id, include_disabled_entities=True
+    )
+    assert vehicle_entities
+    assert all(entity.config_subentry_id is None for entity in vehicle_entities)
+
+    vehicle = _mock_vehicle(on_whitelist=True)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    # async_schedule_reload is deliberately left unpatched: the subentry is
+    # committed only after the flow step returns, so the real reload the parent
+    # entry's subentry-change listener schedules must run here with the BLE
+    # address present. Keep the setup-time Bluetooth mocks active so that reload
+    # neither writes the vehicle key file nor opens a real connection.
+    with (
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_discovered_service_info",
+            return_value=[_discovered_info()],
+        ),
+        patch(
+            "homeassistant.components.teslemetry.config_flow.async_get_ble_parent",
+            return_value=_mock_ble_parent(vehicle),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.async_ble_device_from_address",
+            return_value=MagicMock(),
+        ),
+        patch(
+            "homeassistant.components.teslemetry.helpers.TeslaBluetooth"
+        ) as mock_parent,
+    ):
+        mock_parent.return_value.get_private_key = AsyncMock()
+        mock_parent.return_value.vehicles.createBluetooth.return_value = MagicMock()
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {CONF_VIN: VIN}
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "scan"
+
+        result = await hass.config_entries.subentries.async_configure(
+            result["flow_id"], {}
+        )
+        # The subentry commits after the flow step returns; its change listener
+        # then schedules the reload, which runs to completion here.
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    subentries = entry.get_subentries_of_type(SUBENTRY_TYPE_VEHICLE)
+    assert len(subentries) == 1
+    subentry = subentries[0]
+    assert subentry.unique_id == VIN
+    assert subentry.data == {CONF_VIN: VIN, CONF_ADDRESS: ADDRESS}
+
+    # The real reload picked up the stored address: the reloaded vehicle now
+    # routes over Bluetooth instead of staying cloud-only.
+    assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
+
+    # The pairing reuses the vehicle's existing device, never a duplicate.
+    bound_devices = [
+        device
+        for device in device_registry.devices.values()
+        if (DOMAIN, VIN) in device.identifiers
+    ]
+    assert len(bound_devices) == 1
+    bound_device = bound_devices[0]
+    # The same device ID is kept and it stays on the parent entry, not the
+    # subentry, so removing the pairing never deletes the cloud vehicle.
+    assert bound_device.id == existing_device.id
+    assert bound_device.config_subentry_id is None
+
+    # The vehicle entities keep their unique IDs and stay on the parent entry.
+    bound_entities = er.async_entries_for_device(
+        entity_registry, bound_device.id, include_disabled_entities=True
+    )
+    assert {entity.unique_id for entity in bound_entities} == {
+        entity.unique_id for entity in vehicle_entities
+    }
+    assert all(entity.config_subentry_id is None for entity in bound_entities)
+
+
+async def test_subentry_add_flow_no_available_vehicles(hass: HomeAssistant) -> None:
+    """The add flow aborts when every account vehicle is already added."""
+    entry = await _setup_paired_entry(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, SUBENTRY_TYPE_VEHICLE),
+        context={"source": "user"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "no_vehicles"
