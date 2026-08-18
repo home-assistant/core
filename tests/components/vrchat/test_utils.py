@@ -56,7 +56,10 @@ def test_parse_vrchat_location_string(
     value: str | None, expected: tuple[str | None, str | None]
 ) -> None:
     """Test VRChat location parsing."""
-    assert parse_vrchat_location_string(value) == expected
+    result = parse_vrchat_location_string(value)
+
+    assert result == expected
+    assert all(type(part) is str for part in result if part is not None)
 
 
 @pytest.mark.parametrize(

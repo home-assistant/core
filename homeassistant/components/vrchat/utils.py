@@ -65,8 +65,9 @@ def parse_vrchat_location_string(s: str | None = None):
     if s is not None:
         for ss in VRCHAT_SPECIAL_LOCATION_STRINGS:
             if s.startswith(ss):
-                world_id = ss
-                instance_id = ss
+                world_id = ss.value
+                instance_id = ss.value
+                break
         if world_id is None:
             if VRCHAT_LOCATION_STRING_DELIMITER in s:
                 world_id, instance_id = s.split(VRCHAT_LOCATION_STRING_DELIMITER, 1)

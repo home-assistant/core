@@ -522,7 +522,7 @@ class VRChatUserDataCoordinator(AsyncCleanups):
                     process_vrchat_string(presence.get("location"))
                     or world_id
                     or instance_id
-                    or VRChatUserState.OFFLINE
+                    or VRChatUserState.OFFLINE.value
                 )
                 new_data["location"] = location
             if "worldId" not in new_data or "instanceId" not in new_data:
@@ -683,10 +683,10 @@ class VRChatUserDataCoordinator(AsyncCleanups):
             return
         if event_type == VRChatWebsocketEventType.FRIEND_OFFLINE:
             new_data = old_data.copy()
-            new_data["location"] = VRChatUserState.OFFLINE
-            new_data["worldId"] = VRChatUserState.OFFLINE
-            new_data["instanceId"] = VRChatUserState.OFFLINE
-            new_data["status"] = VRChatUserState.OFFLINE
+            new_data["location"] = VRChatUserState.OFFLINE.value
+            new_data["worldId"] = VRChatUserState.OFFLINE.value
+            new_data["instanceId"] = VRChatUserState.OFFLINE.value
+            new_data["status"] = VRChatUserState.OFFLINE.value
             new_data["statusDescription"] = ""
             self.data = new_data
             return
@@ -702,9 +702,9 @@ class VRChatUserDataCoordinator(AsyncCleanups):
         new_data.update(extra_data)
         if "location" not in new_data:
             if event_type == VRChatWebsocketEventType.FRIEND_ACTIVE:
-                new_data["location"] = VRChatUserState.OFFLINE
-                new_data["worldId"] = VRChatUserState.OFFLINE
-                new_data["instanceId"] = VRChatUserState.OFFLINE
+                new_data["location"] = VRChatUserState.OFFLINE.value
+                new_data["worldId"] = VRChatUserState.OFFLINE.value
+                new_data["instanceId"] = VRChatUserState.OFFLINE.value
             else:
                 new_data["location"] = old_data.get("location") or old_data.get(
                     "presence", {}
