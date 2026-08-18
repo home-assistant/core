@@ -102,6 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
                 hass,
                 household.prices.async_refresh(),
                 name=f"{household.prices.name} refresh",
+                eager_start=False,
             )
 
     entry.async_on_unload(relations.async_add_listener(_async_add_new_households))
