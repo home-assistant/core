@@ -142,10 +142,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
             await unregister_webhook()
             schedule_attempt()
 
+    entry.async_on_unload(cancel_pending_attempt)
+
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
             await ensure_registered()
-        entry.async_on_unload(cancel_pending_attempt)
         entry.async_on_unload(
             cloud.async_listen_connection_change(hass, manage_cloudhook)
         )

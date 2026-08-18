@@ -174,7 +174,12 @@ async def async_unregister_webhook(
 async def async_register_webhook(
     hass: HomeAssistant, entry: NetatmoConfigEntry
 ) -> bool:
-    """Register the webhook with the Netatmo backend."""
+    """Register the webhook with the Netatmo backend.
+
+    Return whether the registration is settled, which a caller that retries needs
+    to know. A URL that cannot work is settled without having been registered:
+    trying again cannot help until the configuration changes.
+    """
     if CONF_WEBHOOK_ID not in entry.data:
         data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
         hass.config_entries.async_update_entry(entry, data=data)

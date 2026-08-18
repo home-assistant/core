@@ -1738,6 +1738,50 @@ async def test_a_failed_registration_is_still_dropped_at_shutdown(
     mock_auth.return_value.async_dropwebhook.assert_called_once()
 
 
+async def test_an_unloaded_entry_cancels_a_pending_registration(
+    hass: HomeAssistant, config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that a retry armed without a cloud subscription dies with the entry."""
+    with (
+        _patched_retry_delays(),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+        patch(
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
+            return_value="https://example.com/api/webhook/ABCD",
+        ) as mock_generate_url,
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_addwebhook = AsyncMock(
+            side_effect=pyatmo.ApiError("Webhook listing timed out")
+        )
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # The failure armed a retry, which the unload below has to take with it
+        assert mock_auth.return_value.async_addwebhook.call_count == 1
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        freezer.tick(timedelta(seconds=TEST_RETRY_DELAY * 2))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    # Counted before the entry is touched, so a retry that fires is seen even
+    # though it dies on the runtime data the unload took away
+    assert mock_generate_url.call_count == 1
+
+
 async def test_a_failed_registration_is_retried_with_backoff(
     hass: HomeAssistant, config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
 ) -> None:
