@@ -2,6 +2,7 @@
 
 import asyncio
 import json
+import logging
 from typing import Never, cast
 from unittest.mock import AsyncMock, Mock, patch
 
@@ -243,6 +244,21 @@ async def test_websocket_handler_task_cleanup_is_removed_when_done(
     await hass.async_block_till_done()
 
     assert task.cancel not in coordinator._cleanups
+
+
+async def test_websocket_error_handler_logs_callback_exception(
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test WebSocket callback errors retain their exception information."""
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    error = RuntimeError("test error")
+
+    with caplog.at_level(
+        logging.ERROR, logger="homeassistant.components.vrchat.coordinator"
+    ):
+        await coordinator._ws_error_handler(error)
+
+    assert caplog.records[0].exc_info == (RuntimeError, error, None)
 
 
 async def test_get_friends_propagates_fetch_error() -> None:

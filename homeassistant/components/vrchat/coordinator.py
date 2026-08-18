@@ -384,7 +384,10 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
             except Exception:
                 _LOGGER.exception(EXCEPTION_MESSAGE_VRCHAT_WEBSOCKET_EVENT)
         else:
-            _LOGGER.exception(EXCEPTION_MESSAGE_VRCHAT_WEBSOCKET_EVENT, exc_info=exc)
+            _LOGGER.error(
+                EXCEPTION_MESSAGE_VRCHAT_WEBSOCKET_EVENT,
+                exc_info=(type(exc), exc, exc.__traceback__),
+            )
 
     def ws_handler_done(self, ws):
         """On websocket message handler done."""
