@@ -27,6 +27,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -35,6 +36,12 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 MAIN_ZONE = "media_player.mock_lyngdorf_main_zone"
 ZONE_B = "media_player.mock_lyngdorf_zone_b"
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Only load the media player platform."""
+    return [Platform.MEDIA_PLAYER]
 
 
 async def test_entities(
