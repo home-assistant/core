@@ -354,7 +354,7 @@ async def test_update_streaming_completed_while_scheduled(
                 Signal.SOFTWARE_UPDATE_INSTALLATION_PERCENT_COMPLETE: None,
                 Signal.VERSION: "2025.2.1",
             },
-            "createdAt": "2024-10-04T10:45:17.537Z",
+            "createdAt": "2024-10-04T10:45:18.537Z",
         }
     )
     await hass.async_block_till_done()
