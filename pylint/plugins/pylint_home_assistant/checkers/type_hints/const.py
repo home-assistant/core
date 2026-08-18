@@ -626,7 +626,7 @@ _ENTITY_MATCH: list[TypeHintMatch] = [
     ),
     TypeHintMatch(
         function_name="device_info",
-        return_type=["DeviceInfo", None],
+        return_type=["DeviceInfo", "ChildDeviceInfo", None],
         mandatory=True,
     ),
     TypeHintMatch(
