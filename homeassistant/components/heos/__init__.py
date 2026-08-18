@@ -72,9 +72,12 @@ async def async_unload_entry(hass: HomeAssistant, entry: HeosConfigEntry) -> boo
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: HeosConfigEntry, device: dr.DeviceEntry
+    hass: HomeAssistant, entry: HeosConfigEntry, device: dr.AnyDeviceEntry
 ) -> bool:
     """Remove config entry from device if no longer present."""
+    if not isinstance(device, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     return not any(
         (domain, key)
         for domain, key in device.identifiers

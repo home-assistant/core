@@ -20,6 +20,7 @@ async def test_load_unload_config_entry(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -50,6 +51,7 @@ async def test_config_entry_not_ready_info_api_fail(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry not ready due to info API failure."""
@@ -74,6 +76,7 @@ async def test_config_entry_not_ready_devices_api_fail(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry not ready due to devices API failure."""
@@ -100,6 +103,7 @@ async def test_config_entry_not_ready_sensors_api_fail(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test config entry not ready due to sensors API failure."""
@@ -120,6 +124,37 @@ async def test_config_entry_not_ready_sensors_api_fail(
     mock_lunatone_info.async_update.assert_called()
     mock_lunatone_devices.async_update.assert_called()
     mock_lunatone_sensors.async_update.assert_called()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_config_entry_not_ready_scan_api_fail(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test config entry not ready due to sensors API failure."""
+    mock_lunatone_scan.async_update.side_effect = aiohttp.ClientConnectionError()
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_lunatone_info.async_update.assert_called_once()
+    mock_lunatone_devices.async_update.assert_called_once()
+    mock_lunatone_sensors.async_update.assert_called_once()
+    mock_lunatone_scan.async_update.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+    mock_lunatone_scan.async_update.side_effect = None
+
+    await hass.config_entries.async_reload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_lunatone_info.async_update.assert_called()
+    mock_lunatone_devices.async_update.assert_called()
+    mock_lunatone_sensors.async_update.assert_called()
+    mock_lunatone_scan.async_update.assert_called()
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
@@ -172,6 +207,26 @@ async def test_config_entry_not_ready_no_sensors_data(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_config_entry_not_ready_no_dali_scan_data(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the Lunatone configuration entry not ready due to missing DALI scan data."""
+    mock_lunatone_scan.data = None
+
+    await setup_integration(hass, mock_config_entry)
+
+    mock_lunatone_info.async_update.assert_called_once()
+    mock_lunatone_devices.async_update.assert_called_once()
+    mock_lunatone_sensors.async_update.assert_called_once()
+    mock_lunatone_scan.async_update.assert_called_once()
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
 async def test_config_entry_not_ready_no_serial_number(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
@@ -192,6 +247,7 @@ async def test_config_entry_unique_id_update(
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
