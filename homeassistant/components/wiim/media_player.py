@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 from hashlib import sha256
+import json
 from typing import Any, Concatenate, override
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
@@ -15,7 +16,6 @@ from wiim.models import (
     WiimTransportCapabilities,
 )
 from wiim.wiim_device import WiimDevice
-from yarl import URL
 
 from homeassistant.components import media_source
 from homeassistant.components.media_player import (
@@ -247,7 +247,11 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_image_hash = None
             return
 
-        digest_source = repr((image_url, media_uri, title, artist, album))
+        digest_source = json.dumps(
+            [image_url, media_uri, title, artist, album],
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
         self._attr_media_image_hash = sha256(
             digest_source.encode("utf-8"), usedforsecurity=False
         ).hexdigest()
@@ -259,7 +263,7 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             return None, None
 
         if (image_hash := self.media_image_hash) is not None:
-            url = str(URL(url).with_fragment(image_hash))
+            url = f"{url.partition('#')[0]}#{image_hash}"
 
         return await self._async_fetch_image_from_cache(url)
 
