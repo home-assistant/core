@@ -159,7 +159,7 @@ OPTIONS_FLOW = {
 class StatisticsConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
     """Handle a config flow for Statistics."""
 
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     config_flow = CONFIG_FLOW
     options_flow = OPTIONS_FLOW

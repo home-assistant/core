@@ -624,16 +624,6 @@ async def async_setup_entry(
     sampling_size = entry.options.get(CONF_SAMPLES_MAX_BUFFER_SIZE)
     if sampling_size is not None:
         sampling_size = int(sampling_size)
-        if sampling_size == 0:
-            # A sampling size of 0 was accepted by an older config flow but
-            # produces a zero-length buffer that retains no samples. Treat it as
-            # unset so the sensor stays functional (relying on max_age instead).
-            _LOGGER.warning(
-                "Statistics sensor %s has a sampling size of 0; ignoring the "
-                "sampling size limit. Please update the helper's configuration",
-                entry.options.get(CONF_NAME),
-            )
-            sampling_size = None
 
     max_age = None
     if max_age := entry.options.get(CONF_MAX_AGE):
@@ -1089,7 +1079,7 @@ class StatisticsSensor(SensorEntity):
 
     def _update_extra_state_attributes(self) -> None:
         """Calculate and update the various attributes."""
-        if self._samples_max_buffer_size:
+        if self._samples_max_buffer_size is not None:
             self._attr_extra_state_attributes[STAT_BUFFER_USAGE_RATIO] = round(
                 len(self.states) / self._samples_max_buffer_size, 2
             )

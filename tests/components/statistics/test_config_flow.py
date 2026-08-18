@@ -80,11 +80,7 @@ async def test_form_sensor(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
 async def test_form_sampling_size_zero_rejected(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test the options step rejects a sampling_size of 0.
-
-    The selector enforces a minimum of 1, so a submitted 0 must fail schema
-    validation rather than create a wedged helper with a zero-length buffer.
-    """
+    """Test the options step rejects a sampling_size of 0."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -112,6 +108,20 @@ async def test_form_sampling_size_zero_rejected(
                 CONF_MAX_AGE: {"hours": 1, "minutes": 0, "seconds": 0},
             },
         )
+
+    # A valid sampling size finalizes the flow successfully.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_SAMPLES_MAX_BUFFER_SIZE: 1,
+            CONF_MAX_AGE: {"hours": 1, "minutes": 0, "seconds": 0},
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"][CONF_SAMPLES_MAX_BUFFER_SIZE] == 1
+    assert len(mock_setup_entry.mock_calls) == 1
 
 
 async def test_form_binary_sensor(
