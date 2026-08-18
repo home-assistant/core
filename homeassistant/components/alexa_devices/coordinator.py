@@ -1,6 +1,6 @@
 """Support for Alexa Devices."""
 
-from collections.abc import AsyncGenerator
+from collections.abc import AsyncGenerator, Mapping
 from contextlib import asynccontextmanager
 from datetime import timedelta
 from typing import override
@@ -378,10 +378,14 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
 
     async def dnd_event_handler(self, dnd_states: dict[str, bool]) -> None:
         """Handle pushed dnd events."""
-        self._dnd_states = {**self._dnd_states, **dnd_states}
+        self._dnd_states.update(dnd_states)
         self.async_update_listeners()
 
+    def set_dnd_state(self, serial_num: str, state: bool) -> None:
+        """Set the local DND state for a device, e.g. after a user-initiated change."""
+        self._dnd_states[serial_num] = state
+
     @property
-    def dnd_states(self) -> dict[str, bool]:
+    def dnd_states(self) -> Mapping[str, bool]:
         """DND states of devices."""
         return self._dnd_states

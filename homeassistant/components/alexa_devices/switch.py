@@ -42,7 +42,7 @@ class AmazonSwitchEntityDescription(SwitchEntityDescription):
 DND_SWITCH: Final = AmazonSwitchEntityDescription(
     key="dnd",
     translation_key="do_not_disturb",
-    is_available_fn=lambda device, key: device.online,
+    is_available_fn=lambda device, _key: device.online,
     method="set_do_not_disturb",
     switch_type=TYPE_DND,
 )
@@ -142,7 +142,7 @@ class AmazonSwitchEntity(AmazonEntity, SwitchEntity):
         async with alexa_api_call(self.coordinator):
             await method(self.device, state)
         if self.entity_description.switch_type == TYPE_DND:
-            self.coordinator.dnd_states[self.device.serial_number] = state
+            self.coordinator.set_dnd_state(self.device.serial_number, state)
         elif self.entity_description.switch_type == TYPE_COMMUNICATION:
             self.coordinator.data[self.device.serial_number].communication_settings[
                 self.entity_description.key

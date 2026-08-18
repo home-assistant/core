@@ -245,14 +245,14 @@ async def test_sync_media_state_auth_failed(
         ),
     ],
 )
-async def test_sync_dnd_state_auth_failed(
+async def test_sync_dnd_state_error(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: type[Exception],
     expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup fails with ConfigEntryAuthFailed when sync_dnd_state raises CannotAuthenticate."""
+    """Test setup state when sync_dnd_state raises during setup."""
     mock_amazon_devices_client.sync_dnd_state.side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
