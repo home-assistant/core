@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiosteamist import SteamistStatus
 
@@ -91,6 +92,7 @@ class SteamistSensorEntity(SteamistEntity, SensorEntity):
             ]
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self._status)

@@ -1,6 +1,6 @@
 """Support for Nanoleaf Lights."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -47,16 +47,19 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         self._attr_min_color_temp_kelvin = self._nanoleaf.color_temperature_min
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of the light."""
         return int(self._nanoleaf.brightness * 2.55)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         return self._nanoleaf.color_temperature
 
     @property
+    @override
     def effect(self) -> str | None:
         """Return the current effect."""
         # The API returns the *Solid* effect if the Nanoleaf is in HS or CT mode.
@@ -68,21 +71,25 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         )
 
     @property
+    @override
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._nanoleaf.effects_list
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._nanoleaf.is_on
 
     @property
+    @override
     def hs_color(self) -> tuple[int, int]:
         """Return the color in HS."""
         return self._nanoleaf.hue, self._nanoleaf.saturation
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         # According to API docs, color mode is "ct", "effect" or "hs"
@@ -92,6 +99,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
         # Home Assistant does not have an "effect" color mode, just report hs
         return ColorMode.HS
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Instruct the light to turn on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -125,6 +133,7 @@ class NanoleafLight(NanoleafEntity, LightEntity):
                 await self._nanoleaf.set_brightness(int(brightness / 2.55))
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Instruct the light to turn off."""
         transition: float | None = kwargs.get(ATTR_TRANSITION)

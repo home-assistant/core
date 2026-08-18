@@ -11,7 +11,8 @@ from freezegun import freeze_time
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components import binary_sensor, mqtt
+from homeassistant.components import binary_sensor
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import (
     EVENT_STATE_CHANGED,
     STATE_OFF,
@@ -63,7 +64,7 @@ from tests.common import (
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         binary_sensor.DOMAIN: {
             "name": "test",
             "state_topic": "test-topic",
@@ -76,7 +77,7 @@ DEFAULT_CONFIG = {
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -111,7 +112,7 @@ async def test_setting_sensor_value_expires_availability_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -288,7 +289,7 @@ async def test_expiration_on_discovery_and_discovery_update_of_binary_sensor(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -326,7 +327,7 @@ async def test_setting_sensor_value_via_mqtt_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -370,7 +371,7 @@ async def test_invalid_sensor_value_via_mqtt_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -405,7 +406,7 @@ async def test_setting_sensor_value_via_mqtt_message_and_template(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -446,7 +447,7 @@ async def test_setting_sensor_value_via_mqtt_message_and_template2(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "encoding": "",
@@ -485,7 +486,7 @@ async def test_setting_sensor_value_via_mqtt_msg_and_template_and_raw_state_enco
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -520,7 +521,7 @@ async def test_setting_sensor_value_via_mqtt_message_empty_template(
     [
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     binary_sensor.DOMAIN: {
                         "name": "test",
                         "device_class": "motion",
@@ -532,7 +533,7 @@ async def test_setting_sensor_value_via_mqtt_message_empty_template(
         ),
         (
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     binary_sensor.DOMAIN: {
                         "name": "test",
                         "device_class": None,
@@ -560,7 +561,7 @@ async def test_valid_device_class(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "device_class": "abc123",
@@ -622,7 +623,7 @@ async def test_custom_availability_payload(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -661,7 +662,7 @@ async def test_force_update_disabled(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -701,7 +702,7 @@ async def test_force_update_enabled(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: {
                     "name": "test",
                     "state_topic": "test-topic",
@@ -801,7 +802,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 binary_sensor.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -829,7 +830,7 @@ async def test_discovery_removal_binary_sensor(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered binary_sensor."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][binary_sensor.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, binary_sensor.DOMAIN, data)
 
 
@@ -837,8 +838,8 @@ async def test_discovery_update_binary_sensor_topic_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered binary_sensor."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][binary_sensor.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][binary_sensor.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "sensor/state1"
@@ -873,8 +874,8 @@ async def test_discovery_update_binary_sensor_template(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered binary_sensor."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
-    config2 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][binary_sensor.DOMAIN])
+    config2 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][binary_sensor.DOMAIN])
     config1["name"] = "Beer"
     config2["name"] = "Milk"
     config1["state_topic"] = "sensor/state1"
@@ -929,7 +930,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         binary_sensor.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][binary_sensor.DOMAIN],
         topic,
         value,
         attribute,
@@ -941,7 +942,7 @@ async def test_discovery_update_unchanged_binary_sensor(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test update of discovered binary_sensor."""
-    config1 = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][binary_sensor.DOMAIN])
+    config1 = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][binary_sensor.DOMAIN])
     config1["name"] = "Beer"
 
     data1 = json.dumps(config1)
@@ -1097,9 +1098,7 @@ async def test_cleanup_triggers_and_restoring_state(
 
     freezer.move_to("2022-02-02 12:01:10+01:00")
 
-    await help_test_reload_with_config(
-        hass, caplog, tmp_path, {mqtt.DOMAIN: hass_config}
-    )
+    await help_test_reload_with_config(hass, caplog, tmp_path, {DOMAIN: hass_config})
 
     state = hass.states.get("binary_sensor.test1")
     assert state.state == state1
@@ -1137,7 +1136,7 @@ async def test_skip_restoring_state_with_over_due_expire_trigger(
 
     freezer.move_to("2022-02-02 12:02:00+01:00")
     domain = binary_sensor.DOMAIN
-    config3: ConfigType = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][domain])
+    config3: ConfigType = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][domain])
     config3["name"] = "test3"
     config3["expire_after"] = 10
     config3["state_topic"] = "test-topic3"

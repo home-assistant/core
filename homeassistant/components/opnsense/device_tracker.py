@@ -1,6 +1,6 @@
 """Device tracker support for OPNsense routers."""
 
-from typing import Any
+from typing import override
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant
@@ -67,6 +67,7 @@ class OPNsenseDeviceTrackerEntity(
         return None
 
     @property
+    @override
     def is_connected(self) -> bool:
         """Return true if the device is connected to the network."""
         return (
@@ -75,6 +76,7 @@ class OPNsenseDeviceTrackerEntity(
         )
 
     @property
+    @override
     def name(self) -> str:
         """Return device name."""
         device_data = self.device_data
@@ -83,6 +85,7 @@ class OPNsenseDeviceTrackerEntity(
         return f"OPNsense {self.mac_address}"
 
     @property
+    @override
     def ip_address(self) -> str | None:
         """Return the primary IP address of the device."""
         device_data = self.device_data
@@ -91,6 +94,7 @@ class OPNsenseDeviceTrackerEntity(
         return None
 
     @property
+    @override
     def hostname(self) -> str | None:
         """Return hostname of the device."""
         device_data = self.device_data
@@ -98,20 +102,3 @@ class OPNsenseDeviceTrackerEntity(
             hostname = device_data.get("hostname")
             return hostname or None
         return None
-
-    @property
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        device_data = self.device_data
-        if not device_data:
-            return {}
-
-        attrs = {}
-        if manufacturer := device_data.get("manufacturer"):
-            attrs["manufacturer"] = manufacturer
-        if interface := device_data.get("intf_description"):
-            attrs["interface"] = interface
-        if expires := device_data.get("expires"):
-            attrs["expires"] = expires
-
-        return attrs

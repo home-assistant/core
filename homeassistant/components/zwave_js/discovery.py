@@ -110,6 +110,8 @@ class ZWaveDiscoverySchema:
     firmware_version_range: FirmwareVersionRange | None = None
     # [optional] the node's generic device class must match ANY of these values
     device_class_generic: set[str] | None = None
+    # [optional] the node's or endpoint's generic device class must NOT match ANY of these values
+    not_device_class_generic: set[str] | None = None
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: set[str] | None = None
     # [optional] additional values that ALL need to be present
@@ -1318,6 +1320,29 @@ def async_discover_single_value(
                 or not any(
                     device_class.generic.label == val
                     for val in schema.device_class_generic
+                )
+            )
+        ):
+            continue
+
+        # check not_device_class_generic
+        # Skip the schema if the endpoint's or the node's generic device class
+        # matches any of the excluded values.
+        if schema.not_device_class_generic and (
+            (
+                (endpoint := value.endpoint) is not None
+                and (node_endpoint := value.node.endpoints.get(endpoint)) is not None
+                and (device_class := node_endpoint.device_class) is not None
+                and any(
+                    device_class.generic.label == val
+                    for val in schema.not_device_class_generic
+                )
+            )
+            or (
+                (device_class := value.node.device_class) is not None
+                and any(
+                    device_class.generic.label == val
+                    for val in schema.not_device_class_generic
                 )
             )
         ):

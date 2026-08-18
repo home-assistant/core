@@ -6,6 +6,7 @@ from typing import Any
 from unittest.mock import MagicMock
 
 import growattServer
+from growattServer import GrowattV1ApiErrorCode
 import pytest
 import requests
 import voluptuous as vol
@@ -23,8 +24,6 @@ from homeassistant.components.growatt_server.const import (
     ERROR_INVALID_AUTH,
     LOGIN_INVALID_AUTH_CODE,
     SERVER_URLS_NAMES,
-    V1_API_ERROR_NO_PRIVILEGE,
-    V1_API_ERROR_RATE_LIMITED,
 )
 from homeassistant.const import (
     CONF_NAME,
@@ -355,8 +354,8 @@ async def test_password_auth_multiple_plants(
 @pytest.mark.parametrize(
     ("error_code", "expected_error"),
     [
-        (V1_API_ERROR_NO_PRIVILEGE, ERROR_INVALID_AUTH),
-        (V1_API_ERROR_RATE_LIMITED, ERROR_CANNOT_CONNECT),
+        (GrowattV1ApiErrorCode.NO_PRIVILEGE, ERROR_INVALID_AUTH),
+        (GrowattV1ApiErrorCode.RATE_LIMITED, ERROR_CANNOT_CONNECT),
     ],
 )
 @pytest.mark.usefixtures("mock_setup_entry")

@@ -3,7 +3,7 @@
 from collections.abc import Mapping
 import dataclasses
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from xiaomi_ble import (
@@ -82,6 +82,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             ADDITIONAL_DISCOVERY_TIMEOUT,
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -270,6 +271,7 @@ class XiaomiConfigFlow(ConfigFlow, domain=DOMAIN):
             description_placeholders=self.context["title_placeholders"],
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

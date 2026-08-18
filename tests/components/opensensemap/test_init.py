@@ -30,10 +30,9 @@ async def test_setup_entry(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get("air_quality.test_station")
+    state = hass.states.get("sensor.test_station_pm2_5")
     assert state is not None
-    assert state.attributes["particulate_matter_2_5"] == 5.42
-    assert state.attributes["particulate_matter_10"] == 9.17
+    assert state.state == "5.42"
 
 
 async def test_async_update_failure_marks_unavailable(
@@ -46,21 +45,21 @@ async def test_async_update_failure_marks_unavailable(
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-    assert hass.states.get("air_quality.test_station").state != "unavailable"
+    assert hass.states.get("sensor.test_station_pm2_5").state != "unavailable"
 
     mock_opensensemap_api.get_data.side_effect = OpenSenseMapError
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("air_quality.test_station").state == "unavailable"
+    assert hass.states.get("sensor.test_station_pm2_5").state == "unavailable"
 
     mock_opensensemap_api.get_data.side_effect = None
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get("air_quality.test_station").state != "unavailable"
+    assert hass.states.get("sensor.test_station_pm2_5").state != "unavailable"
 
 
 async def test_setup_entry_cannot_connect(

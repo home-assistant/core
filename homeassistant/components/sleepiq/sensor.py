@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from asyncsleepiq import SleepIQBed, SleepIQSleeper
 
@@ -152,6 +153,7 @@ class SleepIQSensorEntity(
         super().__init__(coordinator, bed, sleeper, description.key)
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
         self._attr_native_value = self.entity_description.value_fn(self.sleeper)

@@ -11,7 +11,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     other_states,
     parametrize_condition_states_all,
@@ -27,24 +26,6 @@ async def target_lawn_mowers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "lawn_mower")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "lawn_mower.is_docked",
-        "lawn_mower.is_encountering_an_error",
-        "lawn_mower.is_mowing",
-        "lawn_mower.is_paused",
-        "lawn_mower.is_returning",
-    ],
-)
-async def test_lawn_mower_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the lawn mower conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
@@ -72,7 +53,6 @@ async def test_lawn_mower_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("lawn_mower"),
@@ -130,7 +110,6 @@ async def test_lawn_mower_state_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("lawn_mower"),

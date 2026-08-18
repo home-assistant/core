@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyprosegur.auth import COUNTRY, Auth
 from pyprosegur.installation import Installation
@@ -50,6 +50,7 @@ class ProsegurConfigFlow(ConfigFlow, domain=DOMAIN):
     user_input: dict
     contracts: list[dict[str, str]]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

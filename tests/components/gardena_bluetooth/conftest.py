@@ -11,11 +11,10 @@ from gardena_bluetooth.client import Client
 from gardena_bluetooth.const import DeviceInformation
 from gardena_bluetooth.exceptions import CharacteristicNotFound
 from gardena_bluetooth.parse import Characteristic, Service
-from gardena_bluetooth.scan import (
-    async_get_manufacturer_data as _async_get_manufacturer_data,
-)
 import pytest
 
+from homeassistant.components import bluetooth
+from homeassistant.components.gardena_bluetooth import async_get_product
 from homeassistant.components.gardena_bluetooth.const import DOMAIN
 from homeassistant.components.gardena_bluetooth.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -76,8 +75,8 @@ def mock_setup_entry(mock_unload_entry) -> Generator[AsyncMock]:
 def mock_read_char_raw():
     """Mock data on device."""
     return {
-        DeviceInformation.firmware_version.uuid: b"1.2.3",
-        DeviceInformation.model_number.uuid: b"Mock Model",
+        DeviceInformation.firmware_version.unique_id: b"1.2.3",
+        DeviceInformation.model_number.unique_id: b"Mock Model",
     }
 
 
@@ -123,13 +122,24 @@ def mock_client(
 
     SENTINEL = object()
 
+    def _chars() -> list[Characteristic]:
+        product_type = client_class.call_args.args[1]
+        return [
+            char
+            for service in Service.services_for_product_type(product_type)
+            for char in service.characteristics.values()
+        ]
+
     def _read_char(char: Characteristic, default: Any = SENTINEL):
         try:
-            return char.decode(mock_read_char_raw[char.uuid])
+            val = mock_read_char_raw[char.unique_id]
         except KeyError:
             if default is SENTINEL:
                 raise CharacteristicNotFound from KeyError
             return default
+        if isinstance(val, Exception):
+            raise val
+        return char.decode(val)
 
     def _read_char_raw(uuid: str, default: Any = SENTINEL):
         try:
@@ -143,17 +153,13 @@ def mock_client(
         return val
 
     def _all_char_uuid():
-        return set(mock_read_char_raw.keys())
+        """Physical uuids the device exposes."""
+        return {char.uuid for char in _chars() if char.unique_id in mock_read_char_raw}
 
     def _all_char():
-        product_type = client_class.call_args.args[1]
-        services = Service.services_for_product_type(product_type)
-        return {
-            char.unique_id: char
-            for service in services
-            for char in service.characteristics.values()
-            if char.uuid in mock_read_char_raw
-        }
+        """Every characteristic on an exposed uuid, virtual ones included."""
+        uuids = _all_char_uuid()
+        return {char.unique_id: char for char in _chars() if char.uuid in uuids}
 
     client = Mock(spec_set=Client)
     client.read_char.side_effect = _read_char
@@ -178,23 +184,43 @@ def enable_all_entities(entity_registry_enabled_by_default: None) -> None:
 
 
 @pytest.fixture
-def manufacturer_request_event() -> Generator[asyncio.Event]:
-    """Track manufacturer data requests with an event."""
+def get_product_event() -> Generator[asyncio.Event]:
+    """Track product data requests with an event."""
 
     event = asyncio.Event()
 
     async def _get(*args, **kwargs):
         event.set()
-        return await _async_get_manufacturer_data(*args, **kwargs)
+        return await async_get_product(*args, **kwargs)
 
-    with (
-        patch(
-            "homeassistant.components.gardena_bluetooth.async_get_manufacturer_data",
-            wraps=_get,
-        ),
-        patch(
-            "homeassistant.components.gardena_bluetooth.config_flow.async_get_manufacturer_data",
-            wraps=_get,
-        ),
+    with patch(
+        "homeassistant.components.gardena_bluetooth.async_get_product",
+        wraps=_get,
     ):
         yield event
+
+
+@pytest.fixture
+def constant_advertisements() -> Generator[None]:
+    """Ensure async_process_advertisements only return a constant list."""
+
+    async def _advertisements(
+        hass: HomeAssistant,
+        callback: bluetooth.models.ProcessAdvertisementCallback,
+        match_dict: bluetooth.match.BluetoothCallbackMatcher,
+        mode: bluetooth.BluetoothScanningMode,
+        timeout: int,
+    ) -> bluetooth.BluetoothServiceInfoBleak:
+
+        last = None
+        for advertisement in bluetooth.async_discovered_service_info(hass):
+            callback(advertisement)
+            last = advertisement
+        if not last:
+            raise TimeoutError
+        return last
+
+    with (
+        patch.object(bluetooth, "async_process_advertisements", new=_advertisements),
+    ):
+        yield

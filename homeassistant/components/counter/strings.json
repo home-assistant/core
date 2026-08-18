@@ -74,15 +74,15 @@
   "title": "Counter",
   "triggers": {
     "decremented": {
-      "description": "Triggers after one or more counters decrement.",
+      "description": "Triggers when one or more counters decrement.",
       "name": "Counter decremented"
     },
     "incremented": {
-      "description": "Triggers after one or more counters increment.",
+      "description": "Triggers when one or more counters increment.",
       "name": "Counter incremented"
     },
     "maximum_reached": {
-      "description": "Triggers after one or more counters reach their maximum value.",
+      "description": "Triggers when one or more counters reach their maximum value.",
       "fields": {
         "behavior": {
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
@@ -94,7 +94,7 @@
       "name": "Counter reached maximum"
     },
     "minimum_reached": {
-      "description": "Triggers after one or more counters reach their minimum value.",
+      "description": "Triggers when one or more counters reach their minimum value.",
       "fields": {
         "behavior": {
           "name": "[%key:component::counter::common::trigger_behavior_name%]"
@@ -106,7 +106,7 @@
       "name": "Counter reached minimum"
     },
     "reset": {
-      "description": "Triggers after one or more counters are reset.",
+      "description": "Triggers when one or more counters are reset.",
       "fields": {
         "behavior": {
           "name": "[%key:component::counter::common::trigger_behavior_name%]"

@@ -3,7 +3,7 @@
 import asyncio
 from datetime import datetime
 from logging import DEBUG as LOG_LEVEL_DEBUG
-from typing import TYPE_CHECKING, Any, TypedDict
+from typing import TYPE_CHECKING, Any, TypedDict, override
 
 from pytraccar import (
     ApiClient,
@@ -78,6 +78,7 @@ class TraccarServerCoordinator(DataUpdateCoordinator[TraccarServerCoordinatorDat
         self._last_event_import: datetime | None = None
         self._should_log_subscription_error: bool = True
 
+    @override
     async def _async_update_data(self) -> TraccarServerCoordinatorData:
         """Fetch data from Traccar Server."""
         LOGGER.debug("Updating device data")

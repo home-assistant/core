@@ -2,26 +2,26 @@
 
 from collections.abc import Callable
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
 from homeassistant.components import device_tracker
 from homeassistant.components.device_tracker import (
     ATTR_IN_ZONES,
+    DeviceTrackerEntityStateAttribute,
     SourceType,
     TrackerEntity,
+    TrackerEntityStateAttribute,
 )
 from homeassistant.components.zone import DOMAIN as ZONE_DOMAIN
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_NAME,
     CONF_VALUE_TEMPLATE,
     STATE_HOME,
     STATE_NOT_HOME,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -144,10 +144,12 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
     _value_template: Callable[[ReceivePayloadType], ReceivePayloadType]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._payloads = {
@@ -183,12 +185,14 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             self._attr_location_name = msg.payload
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
             CONF_STATE_TOPIC, self._tracker_message_received, {"_attr_location_name"}
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -200,21 +204,24 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
         return f"zone.{zone_id}" if object_id == "" else zone_id
 
     @callback
+    @override
     def _process_update_extra_state_attributes(
         self, extra_state_attributes: dict[str, Any]
     ) -> None:
         """Extract the location or zone from the extra state attributes."""
         if (
-            ATTR_LATITUDE in extra_state_attributes
-            or ATTR_LONGITUDE in extra_state_attributes
+            EntityStateAttribute.LATITUDE in extra_state_attributes
+            or EntityStateAttribute.LONGITUDE in extra_state_attributes
         ):
             latitude: float | None
             longitude: float | None
             gps_accuracy: float
             if isinstance(
-                latitude := extra_state_attributes.get(ATTR_LATITUDE), (int, float)
+                latitude := extra_state_attributes.get(EntityStateAttribute.LATITUDE),
+                (int, float),
             ) and isinstance(
-                longitude := extra_state_attributes.get(ATTR_LONGITUDE), (int, float)
+                longitude := extra_state_attributes.get(EntityStateAttribute.LONGITUDE),
+                (int, float),
             ):
                 self._attr_latitude = latitude
                 self._attr_longitude = longitude
@@ -231,9 +238,11 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
                     extra_state_attributes,
                 )
 
-            if ATTR_GPS_ACCURACY in extra_state_attributes:
+            if TrackerEntityStateAttribute.GPS_ACCURACY in extra_state_attributes:
                 if isinstance(
-                    gps_accuracy := extra_state_attributes[ATTR_GPS_ACCURACY],
+                    gps_accuracy := extra_state_attributes[
+                        TrackerEntityStateAttribute.GPS_ACCURACY
+                    ],
                     (int, float),
                 ):
                     self._attr_location_accuracy = gps_accuracy
@@ -290,5 +299,10 @@ class MqttDeviceTracker(MqttEntity, TrackerEntity):
             attribute: value
             for attribute, value in extra_state_attributes.items()
             if attribute
-            not in {ATTR_GPS_ACCURACY, ATTR_IN_ZONES, ATTR_LATITUDE, ATTR_LONGITUDE}
+            not in {
+                TrackerEntityStateAttribute.GPS_ACCURACY,
+                EntityStateAttribute.LATITUDE,
+                EntityStateAttribute.LONGITUDE,
+                DeviceTrackerEntityStateAttribute.IN_ZONES,
+            }
         }

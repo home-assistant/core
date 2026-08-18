@@ -1,7 +1,7 @@
 """Fan platform for IntelliClima VMC."""
 
 import math
-from typing import Any
+from typing import Any, override
 
 from pyintelliclima.const import FanMode, FanSpeed
 from pyintelliclima.intelliclima_types import IntelliClimaECO
@@ -65,11 +65,13 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         self._attr_unique_id = device.id
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if fan is on."""
         return bool(self._device_data.mode_set != FanMode.off)
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         device_data = self._device_data
@@ -80,11 +82,13 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         return ranged_value_to_percentage(self._speed_range, int(device_data.speed_set))
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(self._speed_range)
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode."""
         device_data = self._device_data
@@ -99,6 +103,7 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
 
         return None
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -113,15 +118,18 @@ class IntelliClimaVMCFan(IntelliClimaECOEntity, FanEntity):
         percentage = 25 if percentage == 0 else percentage
         await self.async_set_mode_speed(preset_mode=preset_mode, percentage=percentage)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the fan."""
         await self.coordinator.api.ecocomfort.turn_off(self._device_sn)
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage."""
         await self.async_set_mode_speed(percentage=percentage)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set preset mode."""
         await self.async_set_mode_speed(preset_mode=preset_mode)

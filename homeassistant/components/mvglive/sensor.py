@@ -4,7 +4,7 @@ from collections.abc import Mapping
 from copy import deepcopy
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from mvg import MvgApi, MvgApiError, TransportType
 import voluptuous as vol
@@ -121,6 +121,7 @@ class MVGLiveSensor(SensorEntity):
         self._icon = ICONS["-"]
 
     @property
+    @override
     def name(self) -> str | None:
         """Return the name of the sensor."""
         if self._name:
@@ -128,11 +129,13 @@ class MVGLiveSensor(SensorEntity):
         return self._station_name
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the next departure time."""
         return self._state
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the state attributes."""
         if not (dep := self.data.departures):
@@ -142,11 +145,13 @@ class MVGLiveSensor(SensorEntity):
         return attr
 
     @property
+    @override
     def icon(self) -> str | None:
         """Icon to use in the frontend, if any."""
         return self._icon
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit this state is expressed in."""
         return UnitOfTime.MINUTES

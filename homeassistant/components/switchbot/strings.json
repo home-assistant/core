@@ -100,11 +100,23 @@
       "door_unlocked_alarm": {
         "name": "Unlocked alarm"
       },
+      "duress_alarm": {
+        "name": "Duress alarm"
+      },
       "half_lock_calibration": {
         "name": "Half-lock calibration"
       },
       "half_locked": {
         "name": "Half locked"
+      },
+      "high_temperature": {
+        "name": "High temperature"
+      },
+      "lockout_alarm": {
+        "name": "Lockout alarm"
+      },
+      "low_temperature": {
+        "name": "Low temperature"
       }
     },
     "button": {
@@ -184,6 +196,19 @@
               "natural": "Natural",
               "normal": "[%key:common::state::normal%]",
               "sleep": "Sleep"
+            }
+          }
+        }
+      },
+      "standing_fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "[%key:component::switchbot::entity::fan::fan::state_attributes::preset_mode::state::baby%]",
+              "custom_natural": "Custom natural",
+              "natural": "[%key:component::switchbot::entity::fan::fan::state_attributes::preset_mode::state::natural%]",
+              "normal": "[%key:common::state::normal%]",
+              "sleep": "[%key:component::switchbot::entity::fan::fan::state_attributes::preset_mode::state::sleep%]"
             }
           }
         }
@@ -287,9 +312,23 @@
     "number": {
       "display_time_offset": {
         "name": "Display time offset"
+      },
+      "horizontal_oscillation_angle": {
+        "name": "Horizontal oscillation angle"
+      },
+      "vertical_oscillation_angle": {
+        "name": "Vertical oscillation angle"
       }
     },
     "select": {
+      "night_light": {
+        "name": "Night light",
+        "state": {
+          "bright": "Bright",
+          "off": "[%key:common::state::off%]",
+          "soft": "Soft"
+        }
+      },
       "time_format": {
         "name": "Time format",
         "state": {
@@ -323,6 +362,15 @@
       "light_level": {
         "name": "Light level"
       },
+      "pir_triggered_level": {
+        "name": "PIR triggered level"
+      },
+      "radar_triggered_distance": {
+        "name": "Radar triggered distance"
+      },
+      "radar_triggered_level": {
+        "name": "Radar triggered level"
+      },
       "water_level": {
         "name": "Water level",
         "state": {
@@ -355,6 +403,12 @@
       },
       "child_lock": {
         "name": "Child lock"
+      },
+      "horizontal_oscillation": {
+        "name": "Horizontal oscillation"
+      },
+      "vertical_oscillation": {
+        "name": "Vertical oscillation"
       },
       "wireless_charging": {
         "name": "Wireless charging"
@@ -397,6 +451,9 @@
     },
     "operation_error": {
       "message": "An error occurred while performing the action: {error}"
+    },
+    "set_fan_state_failed": {
+      "message": "Failed to send the command to the fan."
     },
     "value_error": {
       "message": "Switchbot device initialization failed because of incorrect configuration parameters: {error}"

@@ -1,7 +1,7 @@
 """Config flow to configure the Freebox integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from freebox_api.exceptions import AuthorizationError, HttpRequestError
 import voluptuous as vol
@@ -25,6 +25,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
         """Initialize config flow."""
         self._data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -100,6 +101,7 @@ class FreeboxFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(step_id="link", errors=errors)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

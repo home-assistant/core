@@ -39,8 +39,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_2_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Roborock S7 2 Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_2_charging',
@@ -90,8 +90,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_2_cleaning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Roborock S7 2 Cleaning',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Cleaning',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_2_cleaning',
@@ -141,8 +141,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_clean_water_box-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Roborock S7 2 Dock Clean water box',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Clean water box',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_2_dock_clean_water_box',
@@ -150,6 +150,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_cleaning_fluid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.roborock_s7_2_dock_cleaning_fluid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cleaning fluid',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Cleaning fluid',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_fluid_empty',
+    'unique_id': 'clean_fluid_empty_device_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_cleaning_fluid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Cleaning fluid',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.roborock_s7_2_dock_cleaning_fluid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_dirty_water_box-entry]
@@ -192,8 +243,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_dirty_water_box-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Roborock S7 2 Dock Dirty water box',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Dirty water box',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_2_dock_dirty_water_box',
@@ -201,6 +252,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_mop_drying-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.roborock_s7_2_dock_mop_drying',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mop drying',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Mop drying',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mop_drying_status',
+    'unique_id': 'dry_status_device_2',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.roborock_s7_2_dock_mop_drying-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Dock Mop drying',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.roborock_s7_2_dock_mop_drying',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.roborock_s7_2_mop_attached-entry]
@@ -243,8 +345,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_2_mop_attached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Roborock S7 2 Mop attached',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Mop attached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_2_mop_attached',
@@ -294,8 +396,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_2_water_box_attached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Roborock S7 2 Water box attached',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Water box attached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_2_water_box_attached',
@@ -345,8 +447,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_2_water_shortage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Roborock S7 2 Water shortage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 2 Water shortage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_2_water_shortage',
@@ -396,8 +498,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_maxv_charging-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery_charging',
-      'friendly_name': 'Roborock S7 MaxV Charging',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery_charging',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Charging',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_maxv_charging',
@@ -447,8 +549,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_maxv_cleaning-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Roborock S7 MaxV Cleaning',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Cleaning',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_maxv_cleaning',
@@ -498,8 +600,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_clean_water_box-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Roborock S7 MaxV Dock Clean water box',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Clean water box',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_maxv_dock_clean_water_box',
@@ -507,6 +609,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_cleaning_fluid-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_cleaning_fluid',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Cleaning fluid',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
+    'original_icon': None,
+    'original_name': 'Cleaning fluid',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'clean_fluid_empty',
+    'unique_id': 'clean_fluid_empty_abc123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_cleaning_fluid-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Cleaning fluid',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_cleaning_fluid',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_dirty_water_box-entry]
@@ -549,8 +702,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_dirty_water_box-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Roborock S7 MaxV Dock Dirty water box',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Dirty water box',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_maxv_dock_dirty_water_box',
@@ -558,6 +711,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'on',
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_mop_drying-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'binary_sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_mop_drying',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Mop drying',
+    'options': dict({
+    }),
+    'original_device_class': <BinarySensorDeviceClass.RUNNING: 'running'>,
+    'original_icon': None,
+    'original_name': 'Mop drying',
+    'platform': 'roborock',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'mop_drying_status',
+    'unique_id': 'dry_status_abc123',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_binary_sensors[binary_sensor.roborock_s7_maxv_dock_mop_drying-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Dock Mop drying',
+    }),
+    'context': <ANY>,
+    'entity_id': 'binary_sensor.roborock_s7_maxv_dock_mop_drying',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'off',
   })
 # ---
 # name: test_binary_sensors[binary_sensor.roborock_s7_maxv_mop_attached-entry]
@@ -600,8 +804,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_maxv_mop_attached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Roborock S7 MaxV Mop attached',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Mop attached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_maxv_mop_attached',
@@ -651,8 +855,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_maxv_water_box_attached-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'connectivity',
-      'friendly_name': 'Roborock S7 MaxV Water box attached',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'connectivity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Water box attached',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_maxv_water_box_attached',
@@ -702,8 +906,8 @@
 # name: test_binary_sensors[binary_sensor.roborock_s7_maxv_water_shortage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Roborock S7 MaxV Water shortage',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Roborock S7 MaxV Water shortage',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.roborock_s7_maxv_water_shortage',
@@ -753,8 +957,8 @@
 # name: test_binary_sensors[binary_sensor.zeo_one_detergent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Zeo One Detergent',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zeo One Detergent',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zeo_one_detergent',
@@ -804,8 +1008,8 @@
 # name: test_binary_sensors[binary_sensor.zeo_one_softener-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Zeo One Softener',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Zeo One Softener',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.zeo_one_softener',

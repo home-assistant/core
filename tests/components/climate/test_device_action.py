@@ -199,8 +199,8 @@ async def test_action(
         },
     )
 
-    set_hvac_mode_calls = async_mock_service(hass, "climate", "set_hvac_mode")
-    set_preset_mode_calls = async_mock_service(hass, "climate", "set_preset_mode")
+    set_hvac_mode_calls = async_mock_service(hass, DOMAIN, "set_hvac_mode")
+    set_preset_mode_calls = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     hass.bus.async_fire("test_event_set_hvac_mode")
     await hass.async_block_till_done()
@@ -273,7 +273,7 @@ async def test_action_legacy(
         },
     )
 
-    set_hvac_mode_calls = async_mock_service(hass, "climate", "set_hvac_mode")
+    set_hvac_mode_calls = async_mock_service(hass, DOMAIN, "set_hvac_mode")
 
     hass.bus.async_fire("test_event_set_hvac_mode")
     await hass.async_block_till_done()

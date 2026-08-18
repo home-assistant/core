@@ -2,7 +2,7 @@
 
 from functools import partial
 import logging
-from typing import Any
+from typing import Any, override
 
 import wakeonlan
 
@@ -64,9 +64,10 @@ class WolButton(ButtonEntity):
         self._attr_unique_id = dr.format_mac(mac_address)
         self._attr_device_info = dr.DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._attr_unique_id)},
-            default_name=name,
+            name=name,
         )
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         service_kwargs: dict[str, Any] = {}
