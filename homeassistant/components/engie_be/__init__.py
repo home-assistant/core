@@ -1,5 +1,8 @@
 """The ENGIE Belgium integration."""
 
+import asyncio
+from dataclasses import dataclass
+
 from aioengiebelgium import EngieBeClient
 
 from homeassistant.config_entries import ConfigEntry
@@ -9,11 +12,28 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import CONF_REFRESH_TOKEN
-from .coordinator import EngieBePricesCoordinator, household_device_info
+from .coordinator import EngieBePricesCoordinator, EngieBeRelationsCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type EngieBeConfigEntry = ConfigEntry[EngieBePricesCoordinator]
+
+@dataclass
+class EngieBeHouseholdCoordinators:
+    """Per-household coordinators."""
+
+    prices: EngieBePricesCoordinator
+
+
+@dataclass
+class EngieBeRuntimeData:
+    """Runtime data for the ENGIE Belgium integration."""
+
+    client: EngieBeClient
+    relations: EngieBeRelationsCoordinator
+    households: dict[str, EngieBeHouseholdCoordinators]
+
+
+type EngieBeConfigEntry = ConfigEntry[EngieBeRuntimeData]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> bool:
@@ -42,28 +62,52 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
         on_token_refresh=_persist_tokens,
     )
 
-    coordinator = EngieBePricesCoordinator(hass, entry, client)
-    await coordinator.async_config_entry_first_refresh()
-
-    entry.runtime_data = coordinator
+    relations = EngieBeRelationsCoordinator(hass, entry, client)
+    await relations.async_config_entry_first_refresh()
 
     device_registry = dr.async_get(hass)
-    known_agreements: set[str] = set()
 
     @callback
-    def _async_register_devices() -> None:
-        """Register a device for every business agreement not seen yet."""
-        for ban, household in coordinator.data.items():
-            if ban in known_agreements:
-                continue
-            known_agreements.add(ban)
-            device_registry.async_get_or_create(
-                config_entry_id=entry.entry_id,
-                **household_device_info(ban, household.agreement),
+    def _async_create_household(ban: str) -> EngieBeHouseholdCoordinators:
+        """Build the coordinators for a business agreement and register its device."""
+        household = EngieBeHouseholdCoordinators(
+            prices=EngieBePricesCoordinator(
+                hass, entry, client, ban, relations.data[ban]
+            )
+        )
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id, **household.prices.device_info
+        )
+        return household
+
+    households = {ban: _async_create_household(ban) for ban in relations.data}
+    await asyncio.gather(
+        *(household.prices.async_refresh() for household in households.values())
+    )
+
+    entry.runtime_data = EngieBeRuntimeData(
+        client=client, relations=relations, households=households
+    )
+
+    known_bans: set[str] = set(households)
+
+    @callback
+    def _async_add_new_households() -> None:
+        """Create a coordinator and device for every newly discovered business agreement."""
+        new_bans = set(relations.data) - known_bans
+        if not new_bans:
+            return
+        known_bans.update(new_bans)
+        for ban in new_bans:
+            household = _async_create_household(ban)
+            entry.runtime_data.households[ban] = household
+            entry.async_create_task(
+                hass,
+                household.prices.async_refresh(),
+                name=f"{household.prices.name} refresh",
             )
 
-    _async_register_devices()
-    entry.async_on_unload(coordinator.async_add_listener(_async_register_devices))
+    entry.async_on_unload(relations.async_add_listener(_async_add_new_households))
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

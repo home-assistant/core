@@ -14,9 +14,8 @@ from aioengiebelgium import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.engie_be.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.engie_be.const import DOMAIN, RELATIONS_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -80,17 +79,27 @@ async def test_setup_prices_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     side_effect: Exception,
 ) -> None:
-    """Test setup handles a failure of the initial prices fetch."""
+    """Test setup succeeds with a device but no entities when the initial prices fetch fails."""
     mock_engie_client.return_value.async_get_prices.side_effect = side_effect
     mock_config_entry.add_to_hass(hass)
 
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert not hass.config_entries.flow.async_progress()
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, BAN), mock_config_entry.entry_id
+        )
+        is not None
+    )
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
 
 
 async def test_partial_first_refresh(
@@ -126,17 +135,19 @@ async def test_partial_first_refresh(
         )
         is None
     )
-    assert "no previous data" in caplog.text
+    assert "Error fetching" in caplog.text
     assert BAN_2 not in caplog.text
     assert BAN_2[-4:] in caplog.text
 
 
-async def test_all_bans_fail_first_refresh(
+async def test_all_households_loaded_despite_prices_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test setup retries when every BAN fails on the first refresh."""
+    """Test setup succeeds with devices but no entities when every household's first refresh fails."""
     mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
         build_relations(BAN, BAN_2)
     )
@@ -145,10 +156,17 @@ async def test_all_bans_fail_first_refresh(
     )
     mock_config_entry.add_to_hass(hass)
 
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    device_entries = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry.entry_id
+    )
+    assert len(device_entries) == 2
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
 
 
 async def test_setup_without_active_agreements(
@@ -278,23 +296,34 @@ async def test_token_refresh_persists_tokens(
     assert mock_config_entry.data["mfa_method"] == "sms"
 
 
-async def test_unexpected_service_point_error_aborts_refresh(
+async def test_unexpected_service_point_error_does_not_prevent_setup(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an unexpected non-EngieBeError from a service-point lookup aborts the refresh and retries."""
+    """Test an unexpected non-EngieBeError from a service-point lookup leaves the household without entities but still loads the entry."""
     mock_engie_client.return_value.async_get_service_point.side_effect = ValueError(
         "boom"
     )
     mock_config_entry.add_to_hass(hass)
 
-    assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert "Unexpected error fetching engie_be data" in caplog.text
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert "Unexpected error fetching" in caplog.text
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, BAN), mock_config_entry.entry_id
+        )
+        is not None
+    )
+    assert not er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
 
 
 async def test_agreement_added_on_later_refresh(
@@ -319,7 +348,7 @@ async def test_agreement_added_on_later_refresh(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+        freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
         async_fire_time_changed(hass)
         await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -344,7 +373,7 @@ async def test_agreement_added_on_later_refresh(
         pytest.param(EngieBeAuthenticationError("boom"), id="auth_error"),
     ],
 )
-async def test_relations_error_after_setup(
+async def test_relations_error_after_setup_keeps_sensors_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
@@ -352,7 +381,7 @@ async def test_relations_error_after_setup(
     freezer: FrozenDateTimeFactory,
     side_effect: Exception,
 ) -> None:
-    """Test a relations fetch failure after setup fails the update and marks sensors unavailable."""
+    """Test a relations fetch failure after setup does not affect existing price sensors."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -365,15 +394,14 @@ async def test_relations_error_after_setup(
     mock_engie_client.return_value.async_get_customer_account_relations.side_effect = (
         side_effect
     )
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(RELATIONS_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.last_update_success is False
+    assert mock_config_entry.runtime_data.relations.last_update_success is False
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    float(state.state)
     assert not hass.config_entries.flow.async_progress()
 
 

@@ -1,12 +1,14 @@
 """Test the ENGIE Belgium prices coordinator."""
 
+from collections.abc import Callable, Mapping
 from datetime import timedelta
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import MagicMock
 
 from aioengiebelgium import (
     EanPrices,
     EngieBeAuthenticationError,
     EngieBeCommunicationError,
+    EngieBeError,
     PricePeriod,
     PriceSlot,
     PricesResponse,
@@ -16,7 +18,7 @@ from aioengiebelgium import (
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
-from homeassistant.components.engie_be.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.engie_be.const import DOMAIN, PRICES_SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -59,6 +61,20 @@ def _entity_id(entity_registry: er.EntityRegistry, ban: str) -> str:
     return entity_id
 
 
+def _prices_by_ban(
+    mapping: Mapping[str, PricesResponse | EngieBeError],
+) -> Callable[[str], PricesResponse]:
+    """Return an async_get_prices side_effect that resolves independently per BAN."""
+
+    def _side_effect(ban: str) -> PricesResponse:
+        result = mapping[ban]
+        if isinstance(result, EngieBeError):
+            raise result
+        return result
+
+    return _side_effect
+
+
 async def _setup_two_bans(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -68,29 +84,28 @@ async def _setup_two_bans(
     mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
         build_relations(BAN, BAN_2)
     )
-    mock_engie_client.return_value.async_get_prices = AsyncMock(
-        side_effect=[_build_prices(0.1), _build_prices(0.2)]
+    mock_engie_client.return_value.async_get_prices.side_effect = _prices_by_ban(
+        {BAN: _build_prices(0.1), BAN_2: _build_prices(0.2)}
     )
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
 
-async def test_single_ban_transient_failure(
+async def test_single_ban_transient_failure_goes_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a transient failure for one BAN keeps its previous value."""
+    """Test a transient failure for one BAN makes only that BAN's sensor unavailable."""
     await _setup_two_bans(hass, mock_config_entry, mock_engie_client)
 
-    mock_engie_client.return_value.async_get_prices.side_effect = [
-        _build_prices(0.3),
-        EngieBeCommunicationError("boom"),
-    ]
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    mock_engie_client.return_value.async_get_prices.side_effect = _prices_by_ban(
+        {BAN: _build_prices(0.3), BAN_2: EngieBeCommunicationError("boom")}
+    )
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -99,7 +114,7 @@ async def test_single_ban_transient_failure(
     assert state_ban is not None
     assert state_ban_2 is not None
     assert state_ban.state == "0.3"
-    assert state_ban_2.state == "0.2"
+    assert state_ban_2.state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize(
@@ -121,7 +136,7 @@ async def test_all_bans_fail(
     await _setup_two_bans(hass, mock_config_entry, mock_engie_client)
 
     mock_engie_client.return_value.async_get_prices.side_effect = exception
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -141,17 +156,18 @@ async def test_unexpected_exception_is_not_swallowed(
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test an unexpected non-EngieBeError exception propagates instead of being swallowed."""
+    """Test an unexpected non-EngieBeError exception is logged instead of being swallowed."""
     await _setup_two_bans(hass, mock_config_entry, mock_engie_client)
 
     mock_engie_client.return_value.async_get_prices.side_effect = ValueError("boom")
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "Unexpected error fetching engie_be data" in caplog.text
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.last_update_success is False
+    assert "Unexpected error fetching" in caplog.text
+    households = mock_config_entry.runtime_data.households
+    assert households[BAN].prices.last_update_success is False
+    assert households[BAN_2].prices.last_update_success is False
 
 
 async def test_failure_and_recovery_are_logged_once(
@@ -162,39 +178,36 @@ async def test_failure_and_recovery_are_logged_once(
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a failing BAN logs one WARNING, then DEBUG on repeat failures, then one recovery INFO."""
+    """Test a failing BAN logs one error, stays quiet on repeat failures, then logs one recovery."""
     await _setup_two_bans(hass, mock_config_entry, mock_engie_client)
-
-    mock_engie_client.return_value.async_get_prices.side_effect = [
-        EngieBeCommunicationError("boom"),
-        _build_prices(0.2),
-    ]
     caplog.set_level("DEBUG", logger="homeassistant.components.engie_be")
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+
+    mock_engie_client.return_value.async_get_prices.side_effect = _prices_by_ban(
+        {BAN: EngieBeCommunicationError("boom"), BAN_2: _build_prices(0.2)}
+    )
+    caplog.clear()
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert caplog.text.count("failed") == 1
+    assert caplog.text.count("Error fetching") == 1
     assert "recovered" not in caplog.text
     caplog.clear()
 
-    mock_engie_client.return_value.async_get_prices.side_effect = [
-        EngieBeCommunicationError("boom"),
-        _build_prices(0.2),
-    ]
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    mock_engie_client.return_value.async_get_prices.side_effect = _prices_by_ban(
+        {BAN: EngieBeCommunicationError("boom"), BAN_2: _build_prices(0.3)}
+    )
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "still failing" in caplog.text
-    assert "failed" not in caplog.text
+    assert "Error fetching" not in caplog.text
     caplog.clear()
 
-    mock_engie_client.return_value.async_get_prices.side_effect = [
-        _build_prices(0.3),
-        _build_prices(0.4),
-    ]
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    mock_engie_client.return_value.async_get_prices.side_effect = _prices_by_ban(
+        {BAN: _build_prices(0.4), BAN_2: _build_prices(0.5)}
+    )
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -204,8 +217,8 @@ async def test_failure_and_recovery_are_logged_once(
     state_ban_2 = hass.states.get(_entity_id(entity_registry, BAN_2))
     assert state_ban is not None
     assert state_ban_2 is not None
-    assert state_ban.state == "0.3"
-    assert state_ban_2.state == "0.4"
+    assert state_ban.state == "0.4"
+    assert state_ban_2.state == "0.5"
 
 
 async def test_recovery_after_all_bans_fail(
@@ -221,15 +234,14 @@ async def test_recovery_after_all_bans_fail(
     mock_engie_client.return_value.async_get_prices.side_effect = (
         EngieBeCommunicationError("boom")
     )
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    mock_engie_client.return_value.async_get_prices.side_effect = [
-        _build_prices(0.4),
-        _build_prices(0.5),
-    ]
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    mock_engie_client.return_value.async_get_prices.side_effect = _prices_by_ban(
+        {BAN: _build_prices(0.4), BAN_2: _build_prices(0.5)}
+    )
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -257,10 +269,10 @@ async def test_service_point_transient_failure_is_retried(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data
+    coordinator = mock_config_entry.runtime_data.households[BAN].prices
     assert bare_ean(OFFTAKE_ONLY_EAN) not in coordinator.ean_energy_types
 
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -283,10 +295,10 @@ async def test_service_point_success_without_ean_is_cached_once(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data
+    coordinator = mock_config_entry.runtime_data.households[BAN].prices
     assert coordinator.ean_energy_types[bare_ean(OFFTAKE_ONLY_EAN)] is None
 
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

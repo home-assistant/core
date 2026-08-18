@@ -1,6 +1,6 @@
 """Test the ENGIE Belgium sensor platform."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
 import dataclasses
 from datetime import timedelta
 from unittest.mock import MagicMock
@@ -14,6 +14,7 @@ from aioengiebelgium import (
     EanPrices,
     EngieBeAuthenticationError,
     EngieBeCommunicationError,
+    EngieBeError,
     PricePeriod,
     PriceSlot,
     PricesResponse,
@@ -24,8 +25,8 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.engie_be.const import DOMAIN, SCAN_INTERVAL
-from homeassistant.components.engie_be.coordinator import EngieBeHouseholdData
+from homeassistant.components.engie_be.const import DOMAIN, PRICES_SCAN_INTERVAL
+from homeassistant.components.engie_be.coordinator import EngieBePricesData
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -40,6 +41,20 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+
+
+def _prices_by_ban(
+    mapping: Mapping[str, PricesResponse | EngieBeError],
+) -> Callable[[str], PricesResponse]:
+    """Return an async_get_prices side_effect that resolves independently per BAN."""
+
+    def _side_effect(ban: str) -> PricesResponse:
+        result = mapping[ban]
+        if isinstance(result, EngieBeError):
+            raise result
+        return result
+
+    return _side_effect
 
 
 @pytest.mark.usefixtures("mock_engie_client", "entity_registry_enabled_by_default")
@@ -437,79 +452,61 @@ async def test_period_window_skips_sensors(
     assert entity_entries == []
 
 
-def _household(prices: PricesResponse) -> EngieBeHouseholdData:
-    """Wrap a prices response into household data for the given BAN's agreement."""
-    return EngieBeHouseholdData(
-        agreement=BusinessAgreement(
-            business_agreement_number=BAN, active=True, consumption_address=None
-        ),
-        prices=prices,
+def _degraded_slots_empty() -> EngieBePricesData:
+    """Return prices data with no slots or EANs at all."""
+    return EngieBePricesData(slots={}, eans=())
+
+
+def _degraded_period_expired() -> EngieBePricesData:
+    """Return prices data whose only period for the EAN has expired."""
+    return EngieBePricesData(slots={}, eans=(OFFTAKE_ONLY_EAN,))
+
+
+def _degraded_slot_code_absent() -> EngieBePricesData:
+    """Return prices data whose current period has no matching offtake slot."""
+    return EngieBePricesData(
+        slots={
+            (OFFTAKE_ONLY_EAN, "offtake", "OTHER_CODE"): PriceSlot(
+                time_of_use_slot_code="OTHER_CODE",
+                price_value=0.5,
+                price_value_excl_vat=0.5,
+            )
+        },
+        eans=(OFFTAKE_ONLY_EAN,),
     )
 
 
-def _degraded_ban_missing() -> dict[str, EngieBeHouseholdData]:
-    """Return coordinator data with no entry for the BAN at all."""
-    return {}
-
-
-def _degraded_period_expired() -> dict[str, EngieBeHouseholdData]:
-    """Return coordinator data whose only period for the BAN has expired."""
-    return {
-        BAN: _household(build_prices(valid_from="2000-01-01", valid_to="2000-02-01"))
-    }
-
-
-def _degraded_slot_code_absent() -> dict[str, EngieBeHouseholdData]:
-    """Return coordinator data whose current period has no matching offtake slot."""
-    return {
-        BAN: _household(
-            PricesResponse(
-                items=(
-                    EanPrices(
-                        ean=OFFTAKE_ONLY_EAN,
-                        periods=(
-                            PricePeriod(
-                                valid_from="2000-01-01",
-                                valid_to="2099-12-31",
-                                vat_tariff=6.0,
-                                offtake=(
-                                    PriceSlot(
-                                        time_of_use_slot_code="OTHER_CODE",
-                                        price_value=0.5,
-                                        price_value_excl_vat=0.5,
-                                    ),
-                                ),
-                            ),
-                        ),
-                    ),
-                )
+def _degraded_ean_absent() -> EngieBePricesData:
+    """Return prices data whose slots belong to a different EAN entirely."""
+    return EngieBePricesData(
+        slots={
+            (OFFTAKE_INJECTION_EAN, "offtake", "TOTAL_HOURS"): PriceSlot(
+                time_of_use_slot_code="TOTAL_HOURS",
+                price_value=0.5,
+                price_value_excl_vat=0.5,
             )
-        )
-    }
-
-
-def _degraded_ean_absent() -> dict[str, EngieBeHouseholdData]:
-    """Return coordinator data whose PricesResponse has no items for the EAN."""
-    return {BAN: _household(PricesResponse(items=()))}
+        },
+        eans=(OFFTAKE_INJECTION_EAN,),
+    )
 
 
 @pytest.mark.usefixtures("mock_engie_client")
 @pytest.mark.parametrize(
     "degraded_data",
     [
-        pytest.param(_degraded_ban_missing, id="ban-missing"),
+        pytest.param(_degraded_slots_empty, id="slots-empty"),
         pytest.param(_degraded_period_expired, id="period-expired"),
         pytest.param(_degraded_slot_code_absent, id="slot-code-absent"),
         pytest.param(_degraded_ean_absent, id="ean-absent"),
     ],
 )
-async def test_native_value_degrades_to_unavailable(
+async def test_available_degrades_for_missing_slot(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    degraded_data: Callable[[], dict[str, EngieBeHouseholdData]],
+    degraded_data: Callable[[], EngieBePricesData],
 ) -> None:
-    """Test native_value returning None makes the entity unavailable for every degraded-data branch."""
+    """Test a missing slot key makes the entity unavailable for every degraded-data branch."""
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -519,58 +516,13 @@ async def test_native_value_degrades_to_unavailable(
     )
     assert entity_id is not None
 
-    coordinator = mock_config_entry.runtime_data
+    coordinator = mock_config_entry.runtime_data.households[BAN].prices
     coordinator.async_set_updated_data(degraded_data())
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == STATE_UNAVAILABLE
-
-
-async def test_stale_reused_prices_go_unavailable_past_period_end(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
-    freezer: FrozenDateTimeFactory,
-) -> None:
-    """Test a failing BAN's reused prices go unavailable once its period no longer covers today, leaving an unaffected BAN's sensor available."""
-    freezer.move_to("2026-08-13T12:00:00+02:00")
-    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
-        build_relations(BAN, BAN_2)
-    )
-    mock_engie_client.return_value.async_get_prices.side_effect = [
-        build_prices(valid_from="2026-08-01", valid_to="2026-08-14"),
-        build_prices(),
-    ]
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
-    )
-    other_entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{BAN_2}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS"
-    )
-    assert entity_id is not None
-    assert other_entity_id is not None
-
-    mock_engie_client.return_value.async_get_prices.side_effect = [
-        EngieBeCommunicationError("boom"),
-        build_prices(),
-    ]
-    freezer.tick(timedelta(days=2))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
-
-    state = hass.states.get(entity_id)
-    other_state = hass.states.get(other_entity_id)
-    assert state is not None
-    assert other_state is not None
-    assert state.state == STATE_UNAVAILABLE
-    float(other_state.state)
 
 
 async def test_recovering_ban_adds_entities(
@@ -602,7 +554,7 @@ async def test_recovering_ban_adds_entities(
         build_prices(),
         build_prices(),
     ]
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -693,7 +645,7 @@ async def test_new_slot_code_appears(
     mock_engie_client.return_value.async_get_prices.return_value = _add_offtake_slot(
         build_prices(), OFFTAKE_INJECTION_EAN, extra_slot
     )
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -730,7 +682,7 @@ async def test_no_duplicate_entities_on_repeated_refresh(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     )
 
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -762,14 +714,13 @@ async def test_late_service_point_failure_falls_back(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mock_engie_client.return_value.async_get_prices.side_effect = [
-        build_prices(),
-        ban_2_prices,
-    ]
+    mock_engie_client.return_value.async_get_prices.side_effect = _prices_by_ban(
+        {BAN: build_prices(), BAN_2: ban_2_prices}
+    )
     mock_engie_client.return_value.async_get_service_point.side_effect = (
         EngieBeCommunicationError("boom")
     )
-    freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
+    freezer.tick(PRICES_SCAN_INTERVAL + timedelta(seconds=30))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

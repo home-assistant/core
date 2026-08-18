@@ -2,20 +2,22 @@
 
 from collections import Counter
 from collections.abc import Iterable, Mapping
-from datetime import date, datetime
 from typing import TYPE_CHECKING, override
 
-from aioengiebelgium import ConsumptionAddress, EanPrices, PricePeriod, bare_ean
+from aioengiebelgium import ConsumptionAddress, bare_ean
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import dt as dt_util, slugify
+from homeassistant.util import slugify
 
 from .const import ATTRIBUTION
-from .coordinator import EngieBePricesCoordinator, household_device_info
+from .coordinator import (
+    EngieBePricesCoordinator,
+    EngieBePricesData,
+    normalize_slot_code,
+)
 
 if TYPE_CHECKING:
     from . import EngieBeConfigEntry
@@ -23,9 +25,6 @@ if TYPE_CHECKING:
 PARALLEL_UPDATES = 0
 
 _UNIT = "EUR/kWh"
-_DIRECTIONS = ("offtake", "injection")
-_DIRECTION_PREFIXES = ("OFFTAKE_", "INJECTION_")
-_BLENDED_SLOT_CODE = "EN"
 _SLOT_CODE_SUFFIXES = {
     "TOTAL_HOURS": "",
     "PEAK": "_peak",
@@ -35,41 +34,6 @@ _SLOT_CODE_SUFFIXES = {
 _FALLBACK_SLOT_SUFFIX = "_slot"
 _ENERGY_TYPE_KEYS = {"ELECTRICITY": "electricity", "GAS": "gas"}
 _FALLBACK_TYPE_KEY = "energy"
-
-
-def _normalize_slot_code(raw_code: str) -> str:
-    """Strip a redundant direction prefix from a raw time-of-use slot code."""
-    for prefix in _DIRECTION_PREFIXES:
-        idx = raw_code.rfind(prefix)
-        if idx != -1:
-            return raw_code[idx + len(prefix) :]
-    return raw_code
-
-
-def _parse_date(value: str) -> date | None:
-    """Parse a date or datetime string into a date."""
-    try:
-        return date.fromisoformat(value)
-    except ValueError:
-        pass
-    try:
-        return datetime.fromisoformat(value).date()
-    except ValueError:
-        return None
-
-
-def _current_period(
-    periods: tuple[PricePeriod, ...], today: date
-) -> PricePeriod | None:
-    """Return the price period covering today, if any."""
-    for period in periods:
-        from_date = _parse_date(period.valid_from)
-        to_date = _parse_date(period.valid_to)
-        if from_date is None or to_date is None:
-            continue
-        if from_date <= today < to_date:
-            return period
-    return None
 
 
 def _energy_type_key(ean: str, ean_energy_types: Mapping[str, str | None]) -> str:
@@ -126,89 +90,65 @@ def _entity_id_words(
     return words
 
 
-def _build_entities(
-    coordinator: EngieBePricesCoordinator,
-    device_info: DeviceInfo,
-    ban: str,
-    ean_prices: EanPrices,
-    today: date,
-    *,
-    type_key: str,
-    ean_suffix: str,
-    consumption_address: ConsumptionAddress | None,
-) -> list[EngieBePriceSensor]:
-    """Build the price sensors for one EAN's current period."""
-    period = _current_period(ean_prices.periods, today)
-    if period is None:
-        return []
-    return [
-        EngieBePriceSensor(
-            coordinator,
-            device_info=device_info,
-            business_agreement_number=ban,
-            ean=ean_prices.ean,
-            direction=direction,
-            slot_code=slot.time_of_use_slot_code,
-            excl_vat=excl_vat,
-            type_key=type_key,
-            ean_suffix=ean_suffix,
-            consumption_address=consumption_address,
-        )
-        for direction in _DIRECTIONS
-        for slot in (period.offtake if direction == "offtake" else period.injection)
-        if _normalize_slot_code(slot.time_of_use_slot_code) != _BLENDED_SLOT_CODE
-        for excl_vat in (False, True)
-    ]
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: EngieBeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = entry.runtime_data
+    runtime_data = entry.runtime_data
     known_unique_ids: set[str] = set()
+    subscribed_bans: set[str] = set()
 
     @callback
     def _async_add_new_entities() -> None:
         """Add price sensors for any household/EAN/slot combination not yet known."""
-        today = dt_util.now().date()
         new_entities: list[EngieBePriceSensor] = []
-        for ban, household in coordinator.data.items():
-            device_info = household_device_info(ban, household.agreement)
-            consumption_address = household.agreement.consumption_address
-            eans = [ean_prices.ean for ean_prices in household.prices.items]
-            duplicate_eans = _duplicate_type_eans(eans, coordinator.ean_energy_types)
-            for ean_prices in household.prices.items:
-                new_entities.extend(
-                    entity
-                    for entity in _build_entities(
-                        coordinator,
-                        device_info,
-                        ban,
-                        ean_prices,
-                        today,
-                        type_key=_energy_type_key(
-                            ean_prices.ean, coordinator.ean_energy_types
-                        ),
-                        ean_suffix=(
-                            bare_ean(ean_prices.ean)[-4:]
-                            if ean_prices.ean in duplicate_eans
-                            else ""
-                        ),
-                        consumption_address=consumption_address,
+        for ban, household in runtime_data.households.items():
+            prices_data: EngieBePricesData | None = household.prices.data
+            if prices_data is None:
+                continue
+            duplicate_eans = _duplicate_type_eans(
+                prices_data.eans, household.prices.ean_energy_types
+            )
+            for ean, direction, slot_code in prices_data.slots:
+                type_key = _energy_type_key(ean, household.prices.ean_energy_types)
+                ean_suffix = bare_ean(ean)[-4:] if ean in duplicate_eans else ""
+                for excl_vat in (False, True):
+                    entity = EngieBePriceSensor(
+                        household.prices,
+                        business_agreement_number=ban,
+                        ean=ean,
+                        direction=direction,
+                        slot_code=slot_code,
+                        excl_vat=excl_vat,
+                        type_key=type_key,
+                        ean_suffix=ean_suffix,
                     )
-                    if entity.unique_id not in known_unique_ids
-                )
+                    if entity.unique_id not in known_unique_ids:
+                        new_entities.append(entity)
         if new_entities:
             known_unique_ids.update(
                 unique_id for entity in new_entities if (unique_id := entity.unique_id)
             )
             async_add_entities(new_entities)
 
-    _async_add_new_entities()
-    entry.async_on_unload(coordinator.async_add_listener(_async_add_new_entities))
+    @callback
+    def _async_subscribe_new_households() -> None:
+        """Subscribe to price updates for every household not yet subscribed."""
+        for ban, household in runtime_data.households.items():
+            if ban in subscribed_bans:
+                continue
+            subscribed_bans.add(ban)
+            entry.async_on_unload(
+                household.prices.async_add_listener(_async_add_new_entities)
+            )
+        _async_add_new_entities()
+
+    _async_subscribe_new_households()
+    entry.async_on_unload(
+        runtime_data.relations.async_add_listener(_async_subscribe_new_households)
+    )
 
 
 class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEntity):
@@ -224,7 +164,6 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self,
         coordinator: EngieBePricesCoordinator,
         *,
-        device_info: DeviceInfo,
         business_agreement_number: str,
         ean: str,
         direction: str,
@@ -232,12 +171,10 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         excl_vat: bool,
         type_key: str,
         ean_suffix: str,
-        consumption_address: ConsumptionAddress | None,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        self._attr_device_info = device_info
-        self._business_agreement_number = business_agreement_number
+        self._attr_device_info = coordinator.device_info
         self._ean = ean
         self._direction = direction
         self._slot_code = slot_code
@@ -246,7 +183,7 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         unique_id = f"{business_agreement_number}_{ean}_{direction}_{slot_code}"
         self._attr_unique_id = f"{unique_id}_excl_vat" if excl_vat else unique_id
 
-        normalized_slot_code = _normalize_slot_code(slot_code)
+        normalized_slot_code = normalize_slot_code(slot_code)
         suffix = _SLOT_CODE_SUFFIXES.get(normalized_slot_code, _FALLBACK_SLOT_SUFFIX)
         translation_key = f"{type_key}_price_{direction}{suffix}"
         self._attr_translation_key = (
@@ -261,7 +198,9 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         if excl_vat:
             self._attr_entity_registry_enabled_default = False
 
-        location = _location_words(business_agreement_number, consumption_address)
+        location = _location_words(
+            business_agreement_number, coordinator.agreement.consumption_address
+        )
         entity_words = _entity_id_words(
             type_key=type_key,
             direction=direction,
@@ -276,32 +215,16 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
     @property
     @override
     def available(self) -> bool:
-        """Return True only when a current price is available."""
-        return super().available and self.native_value is not None
+        """Return True only when this entity's slot is present in the current data."""
+        return (
+            super().available
+            and (self._ean, self._direction, self._slot_code)
+            in self.coordinator.data.slots
+        )
 
     @property
     @override
     def native_value(self) -> float | None:
         """Return the current price."""
-        household = self.coordinator.data.get(self._business_agreement_number)
-        if household is None:
-            return None
-        today = dt_util.now().date()
-        for ean_prices in household.prices.items:
-            if ean_prices.ean != self._ean:
-                continue
-            period = _current_period(ean_prices.periods, today)
-            if period is None:
-                return None
-            direction_slots = (
-                period.offtake if self._direction == "offtake" else period.injection
-            )
-            for slot in direction_slots:
-                if slot.time_of_use_slot_code == self._slot_code:
-                    return (
-                        slot.price_value_excl_vat
-                        if self._excl_vat
-                        else slot.price_value
-                    )
-            return None
-        return None
+        slot = self.coordinator.data.slots[self._ean, self._direction, self._slot_code]
+        return slot.price_value_excl_vat if self._excl_vat else slot.price_value

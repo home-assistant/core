@@ -2,24 +2,31 @@
 
 import asyncio
 from dataclasses import dataclass
+from datetime import date, datetime
 from typing import TYPE_CHECKING, override
 
 from aioengiebelgium import (
     BusinessAgreement,
     EngieBeClient,
     EngieBeError,
-    PricesResponse,
+    PricePeriod,
+    PriceSlot,
     bare_ean,
 )
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER, SCAN_INTERVAL
+from .const import DOMAIN, LOGGER, PRICES_SCAN_INTERVAL, RELATIONS_SCAN_INTERVAL
 
 if TYPE_CHECKING:
     from . import EngieBeConfigEntry
+
+_DIRECTIONS = ("offtake", "injection")
+_DIRECTION_PREFIXES = ("OFFTAKE_", "INJECTION_")
+_BLENDED_SLOT_CODE = "EN"
 
 
 def _mask(identifier: str) -> str:
@@ -27,31 +34,51 @@ def _mask(identifier: str) -> str:
     return f"…{identifier[-4:]}"
 
 
-def household_device_info(ban: str, agreement: BusinessAgreement) -> DeviceInfo:
-    """Build the shared household device identity for a business agreement."""
-    device_name = (
-        agreement.consumption_address.format()
-        if agreement.consumption_address is not None
-        else ban
-    )
-    return DeviceInfo(
-        identifiers={(DOMAIN, ban)},
-        entry_type=DeviceEntryType.SERVICE,
-        manufacturer="ENGIE Belgium",
-        name=device_name,
-    )
+def normalize_slot_code(raw_code: str) -> str:
+    """Strip a redundant direction prefix from a raw time-of-use slot code."""
+    for prefix in _DIRECTION_PREFIXES:
+        idx = raw_code.rfind(prefix)
+        if idx != -1:
+            return raw_code[idx + len(prefix) :]
+    return raw_code
+
+
+def _parse_date(value: str) -> date | None:
+    """Parse a date or datetime string into a date."""
+    try:
+        return date.fromisoformat(value)
+    except ValueError:
+        pass
+    try:
+        return datetime.fromisoformat(value).date()
+    except ValueError:
+        return None
+
+
+def _current_period(
+    periods: tuple[PricePeriod, ...], today: date
+) -> PricePeriod | None:
+    """Return the price period covering today, if any."""
+    for period in periods:
+        from_date = _parse_date(period.valid_from)
+        to_date = _parse_date(period.valid_to)
+        if from_date is None or to_date is None:
+            continue
+        if from_date <= today < to_date:
+            return period
+    return None
 
 
 @dataclass
-class EngieBeHouseholdData:
-    """Fetched data for one business agreement."""
+class EngieBePricesData:
+    """Pre-processed price lookup for one business agreement."""
 
-    agreement: BusinessAgreement
-    prices: PricesResponse
+    slots: dict[tuple[str, str, str], PriceSlot]
+    eans: tuple[str, ...]
 
 
-class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, EngieBeHouseholdData]]):
-    """Coordinator that fetches ENGIE Belgium energy prices for every business agreement."""
+class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreement]]):
+    """Coordinator that tracks the account's active business agreements."""
 
     config_entry: EngieBeConfigEntry
 
@@ -61,21 +88,19 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, EngieBeHouseholdD
         config_entry: EngieBeConfigEntry,
         client: EngieBeClient,
     ) -> None:
-        """Initialize the coordinator."""
+        """Initialize the relations coordinator."""
         super().__init__(
             hass,
             LOGGER,
             config_entry=config_entry,
-            name=DOMAIN,
-            update_interval=SCAN_INTERVAL,
+            name=f"{DOMAIN}_relations",
+            update_interval=RELATIONS_SCAN_INTERVAL,
         )
         self.client = client
-        self.ean_energy_types: dict[str, str | None] = {}
-        self._logged_failures: set[str] = set()
 
     @override
-    async def _async_update_data(self) -> dict[str, EngieBeHouseholdData]:
-        """Fetch relations and prices for every active business agreement."""
+    async def _async_update_data(self) -> dict[str, BusinessAgreement]:
+        """Fetch the account's active business agreements."""
         try:
             relations = await self.client.async_get_customer_account_relations()
         except EngieBeError as err:
@@ -89,55 +114,58 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, EngieBeHouseholdD
         }
         if not agreements:
             LOGGER.debug("No active business agreements found")
+        return agreements
 
-        results = await asyncio.gather(
-            *(self.client.async_get_prices(ban) for ban in agreements),
-            return_exceptions=True,
+
+class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
+    """Coordinator that fetches energy prices for one business agreement."""
+
+    config_entry: EngieBeConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: EngieBeConfigEntry,
+        client: EngieBeClient,
+        ban: str,
+        agreement: BusinessAgreement,
+    ) -> None:
+        """Initialize the prices coordinator for one business agreement."""
+        super().__init__(
+            hass,
+            LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}_prices_{_mask(ban)}",
+            update_interval=PRICES_SCAN_INTERVAL,
         )
-        data: dict[str, EngieBeHouseholdData] = {}
-        first_error: EngieBeError | None = None
-        any_success = False
-        for ban, result in zip(agreements, results, strict=True):
-            if isinstance(result, EngieBeError):
-                first_error = first_error or result
-                had_data = self.data is not None and ban in self.data
-                if ban in self._logged_failures:
-                    LOGGER.debug(
-                        "Fetching prices for %s still failing: %s", _mask(ban), result
-                    )
-                elif had_data:
-                    LOGGER.warning(
-                        "Fetching prices for %s failed: %s", _mask(ban), result
-                    )
-                else:
-                    LOGGER.warning(
-                        "Fetching prices for %s failed and no previous data is"
-                        " available: %s",
-                        _mask(ban),
-                        result,
-                    )
-                self._logged_failures.add(ban)
-                if had_data:
-                    data[ban] = EngieBeHouseholdData(
-                        agreement=agreements[ban], prices=self.data[ban].prices
-                    )
-                continue
-            if isinstance(result, BaseException):
-                raise result
-            any_success = True
-            if ban in self._logged_failures:
-                LOGGER.info("Fetching prices for %s recovered", _mask(ban))
-                self._logged_failures.discard(ban)
-            data[ban] = EngieBeHouseholdData(agreement=agreements[ban], prices=result)
+        self.client = client
+        self.ban = ban
+        self.agreement = agreement
+        self.ean_energy_types: dict[str, str | None] = {}
+        device_name = (
+            agreement.consumption_address.format()
+            if agreement.consumption_address is not None
+            else ban
+        )
+        self.device_info = DeviceInfo(
+            identifiers={(DOMAIN, ban)},
+            entry_type=DeviceEntryType.SERVICE,
+            manufacturer="ENGIE Belgium",
+            name=device_name,
+        )
 
-        if first_error is not None and not any_success:
-            raise UpdateFailed(str(first_error)) from first_error
+    @override
+    async def _async_update_data(self) -> EngieBePricesData:
+        """Fetch this household's prices and pre-process them into a slot lookup."""
+        try:
+            prices = await self.client.async_get_prices(self.ban)
+        except EngieBeError as err:
+            raise UpdateFailed(str(err)) from err
 
         new_eans = list(
             dict.fromkeys(
                 ean_prices.ean
-                for household in data.values()
-                for ean_prices in household.prices.items
+                for ean_prices in prices.items
                 if bare_ean(ean_prices.ean) not in self.ean_energy_types
             )
         )
@@ -159,4 +187,23 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, EngieBeHouseholdD
                 self.ean_energy_types.update(service_point_result.ean_energy_types)
                 self.ean_energy_types.setdefault(bare_ean(ean), None)
 
-        return data
+        today = dt_util.now().date()
+        slots: dict[tuple[str, str, str], PriceSlot] = {}
+        for ean_prices in prices.items:
+            period = _current_period(ean_prices.periods, today)
+            if period is None:
+                continue
+            for direction in _DIRECTIONS:
+                direction_slots = (
+                    period.offtake if direction == "offtake" else period.injection
+                )
+                for slot in direction_slots:
+                    normalized = normalize_slot_code(slot.time_of_use_slot_code)
+                    if normalized == _BLENDED_SLOT_CODE:
+                        continue
+                    slots[ean_prices.ean, direction, slot.time_of_use_slot_code] = slot
+
+        return EngieBePricesData(
+            slots=slots,
+            eans=tuple(ean_prices.ean for ean_prices in prices.items),
+        )
