@@ -81,12 +81,12 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
     @property
     def limit(self) -> int:
         """Return limit."""
-        return self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT)
+        return self.config_entry.options.get(CONF_LIMIT, DEFAULT_LIMIT)  # type: ignore[no-any-return]
 
     @property
     def order(self) -> str:
         """Return order."""
-        return self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER)
+        return self.config_entry.options.get(CONF_ORDER, DEFAULT_ORDER)  # type: ignore[no-any-return]
 
     @callback
     def async_add_event_listener(
@@ -122,11 +122,16 @@ class TransmissionDataUpdateCoordinator(DataUpdateCoordinator[SessionStats]):
             data = self.api.session_stats()
             self.torrents = self.api.get_torrents()
             self._session = self.api.get_session()
+        except transmission_rpc.TransmissionError as err:
+            raise UpdateFailed("Unable to connect to Transmission client") from err
+
+        try:
             self.download_dir_free_space = self.api.free_space(
                 self._session.download_dir
             )
-        except transmission_rpc.TransmissionError as err:
-            raise UpdateFailed("Unable to connect to Transmission client") from err
+        except (transmission_rpc.TransmissionError, KeyError) as err:
+            _LOGGER.debug("Unable to fetch download directory free space: %s", err)
+            self.download_dir_free_space = None
 
         return data
 
