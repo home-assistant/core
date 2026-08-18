@@ -2,7 +2,6 @@
 
 from typing import override
 
-from homeassistant.const import CONF_MAXIMUM, CONF_MINIMUM
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.trigger import (
@@ -12,7 +11,8 @@ from homeassistant.helpers.trigger import (
     Trigger,
 )
 
-from . import CONF_INITIAL, DOMAIN
+from . import DOMAIN
+from .const import CounterEntityStateAttribute
 
 
 def _is_integer_state(state: State) -> bool:
@@ -74,7 +74,9 @@ class CounterMaxReachedTrigger(CounterValueBaseTrigger):
         report_not_triggered: NotTriggeredReasonReporter,
     ) -> bool:
         """Check if the new state matches the expected state(s)."""
-        if (max_value := state.attributes.get(CONF_MAXIMUM)) is None:
+        if (
+            max_value := state.attributes.get(CounterEntityStateAttribute.MAXIMUM)
+        ) is None:
             return False
         return state.state == str(max_value)
 
@@ -89,7 +91,9 @@ class CounterMinReachedTrigger(CounterValueBaseTrigger):
         report_not_triggered: NotTriggeredReasonReporter,
     ) -> bool:
         """Check if the new state matches the expected state(s)."""
-        if (min_value := state.attributes.get(CONF_MINIMUM)) is None:
+        if (
+            min_value := state.attributes.get(CounterEntityStateAttribute.MINIMUM)
+        ) is None:
             return False
         return state.state == str(min_value)
 
@@ -104,7 +108,9 @@ class CounterResetTrigger(CounterValueBaseTrigger):
         report_not_triggered: NotTriggeredReasonReporter,
     ) -> bool:
         """Check if the new state matches the expected state(s)."""
-        if (init_state := state.attributes.get(CONF_INITIAL)) is None:
+        if (
+            init_state := state.attributes.get(CounterEntityStateAttribute.INITIAL)
+        ) is None:
             return False
         return state.state == str(init_state)
 

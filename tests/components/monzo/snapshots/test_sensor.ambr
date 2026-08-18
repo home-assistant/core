@@ -148,7 +148,7 @@
     'supported_features': 0,
     'translation_key': 'balance',
     'unique_id': 'acc_flex_balance',
-    'unit_of_measurement': 'GBP',
+    'unit_of_measurement': 'EUR',
   })
 # ---
 # name: test_all_entities[sensor.flex_balance-state]
@@ -157,7 +157,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monzo',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flex Balance',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GBP',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flex_balance',
@@ -204,7 +204,7 @@
     'supported_features': 0,
     'translation_key': 'total_balance',
     'unique_id': 'acc_flex_total_balance',
-    'unit_of_measurement': 'GBP',
+    'unit_of_measurement': 'EUR',
   })
 # ---
 # name: test_all_entities[sensor.flex_total_balance-state]
@@ -213,7 +213,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monzo',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flex Total balance',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GBP',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.flex_total_balance',
@@ -260,7 +260,7 @@
     'supported_features': 0,
     'translation_key': 'pot_balance',
     'unique_id': 'pot_savings_pot_balance',
-    'unit_of_measurement': 'GBP',
+    'unit_of_measurement': 'USD',
   })
 # ---
 # name: test_all_entities[sensor.savings_balance-state]
@@ -269,7 +269,7 @@
       <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Monzo',
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Savings Balance',
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'GBP',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.savings_balance',

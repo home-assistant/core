@@ -68,14 +68,14 @@ class OAuth2FlowHandler(
     ) -> ConfigFlowResult:
         """Handle a DHCP discovery."""
         device_registry = dr.async_get(self.hass)
-        if device_entry := device_registry.async_get_device(
+        for device in device_registry.async_get_devices(
             identifiers={
                 (DOMAIN, discovery_info.hostname),
                 (DOMAIN, discovery_info.hostname.split("-")[-1]),
             }
         ):
             device_registry.async_update_device(
-                device_entry.id,
+                device.id,
                 new_connections={
                     (dr.CONNECTION_NETWORK_MAC, discovery_info.macaddress)
                 },

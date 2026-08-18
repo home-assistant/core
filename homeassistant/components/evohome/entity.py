@@ -8,10 +8,13 @@ from typing import Any, override
 
 import evohomeasync2 as evo
 from evohomeasync2.const import (
+    SZ_SINCE,
+    SZ_TIME_UNTIL,
+    SZ_UNTIL,
     ZoneModelType as EvoZoneModelType,
     ZoneType as EvoZoneType,
 )
-from evohomeasync2.typedefs import EvoDayOfWeekDhwT
+from evohomeasync2.typedefs import EvoDhwScheduleDayOfWeekT, EvoZonScheduleDayOfWeekT
 
 from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -28,7 +31,7 @@ def _recurse_and_revert(val: Any, _key: str | None = None) -> Any:
         return {k: _recurse_and_revert(v, k) for k, v in val.items()}
     if isinstance(val, (list, tuple)):
         return type(val)(_recurse_and_revert(v) for v in val)
-    if isinstance(val, datetime) and _key in ("since", "time_until", "until"):
+    if isinstance(val, datetime) and _key in (SZ_SINCE, SZ_TIME_UNTIL, SZ_UNTIL):
         return val.isoformat()
     if isinstance(val, StrEnum):
         return "".join(word.capitalize() for word in val.value.split("_"))
@@ -115,7 +118,9 @@ class EvoChild(EvoEntity):
         self._evo_id = evo_device.id
         self._evo_tcs = evo_device.tcs
 
-        self._schedule: list[EvoDayOfWeekDhwT] | None = None
+        self._schedule: (
+            list[EvoDhwScheduleDayOfWeekT] | list[EvoZonScheduleDayOfWeekT] | None
+        ) = None
         self._setpoints: dict[str, Any] = {}
 
     @property

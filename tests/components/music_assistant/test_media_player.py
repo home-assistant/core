@@ -15,9 +15,12 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
 
+from homeassistant.auth.models import Credentials
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
+    ATTR_MEDIA_CONTENT_ID,
+    ATTR_MEDIA_CONTENT_TYPE,
     ATTR_MEDIA_ENQUEUE,
     ATTR_MEDIA_REPEAT,
     ATTR_MEDIA_SEEK_POSITION,
@@ -28,6 +31,7 @@ from homeassistant.components.media_player import (
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_CLEAR_PLAYLIST,
     SERVICE_JOIN,
+    SERVICE_PLAY_MEDIA,
     SERVICE_SELECT_SOUND_MODE,
     SERVICE_SELECT_SOURCE,
     SERVICE_UNJOIN,
@@ -72,7 +76,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
@@ -82,7 +86,7 @@ from .common import (
     trigger_subscription_callback,
 )
 
-from tests.common import AsyncMock
+from tests.common import AsyncMock, MockUser
 
 MOCK_TRACK = Track(
     item_id="1",
@@ -822,6 +826,149 @@ async def test_media_player_play_media_action(
             },
             blocking=True,
         )
+
+
+async def _add_ha_user(hass: HomeAssistant, login_username: str | None) -> MockUser:
+    """Add a Home Assistant user, optionally with a local login username."""
+    user = MockUser(is_owner=True).add_to_hass(hass)
+    if login_username is not None:
+        await hass.auth.async_link_user(
+            user,
+            Credentials(
+                auth_provider_type="homeassistant",
+                auth_provider_id=None,
+                data={"username": login_username},
+                is_new=False,
+            ),
+        )
+    return user
+
+
+@pytest.mark.parametrize(
+    ("login_username", "expected_username"),
+    [
+        ("user_user", "user_user"),
+        ("USER_USER", "user_user"),
+        ("user_admin", "user_admin"),
+        ("does_not_exist", None),
+        ("user_disabled", None),
+        ("party_guest", None),
+        (None, None),
+    ],
+    ids=[
+        "match",
+        "match_case_insensitive",
+        "match_admin",
+        "no_match",
+        "disabled_user",
+        "guest_user",
+        "no_login_username",
+    ],
+)
+async def test_media_player_play_media_default_username(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+    login_username: str | None,
+    expected_username: str | None,
+) -> None:
+    """Test that play media defaults to the username of the calling user."""
+    music_assistant_client.server_info.schema_version = 33
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+
+    user = await _add_ha_user(hass, login_username)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://track/1234",
+        },
+        blocking=True,
+        context=Context(user_id=user.id),
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+        username=expected_username,
+        sort_by=None,
+    )
+
+
+async def test_media_player_play_media_default_username_explicit_override(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that an explicit username takes precedence over the calling user."""
+    music_assistant_client.server_info.schema_version = 33
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+
+    user = await _add_ha_user(hass, "user_user")
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "spotify://track/1234",
+            ATTR_USERNAME: "user_admin",
+        },
+        blocking=True,
+        context=Context(user_id=user.id),
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+        username="user_admin",
+        sort_by=None,
+    )
+
+
+async def test_media_player_standard_play_media_default_username(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that the standard play_media action also defaults to the calling user."""
+    music_assistant_client.server_info.schema_version = 33
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+
+    user = await _add_ha_user(hass, "user_user")
+    await hass.services.async_call(
+        MEDIA_PLAYER_DOMAIN,
+        SERVICE_PLAY_MEDIA,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_CONTENT_ID: "spotify://track/1234",
+            ATTR_MEDIA_CONTENT_TYPE: "music",
+        },
+        blocking=True,
+        context=Context(user_id=user.id),
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["spotify://track/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+        username="user_user",
+        sort_by=None,
+    )
 
 
 async def test_media_player_play_announcement_action(

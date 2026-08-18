@@ -941,6 +941,49 @@ async def test_device_id(
     assert derivative_entity.device_id == source_entity.device_id
 
 
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured Derivative."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "derivative",
+                "name": "Derivative",
+                "source": "sensor.test_source",
+                "unique_id": "derivative_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    derivative_entity = entity_registry.async_get("sensor.derivative")
+    assert derivative_entity is not None
+    assert derivative_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
+
+
 @pytest.mark.parametrize("bad_state", [STATE_UNAVAILABLE, STATE_UNKNOWN, "foo"])
 async def test_unavailable(
     bad_state: str,

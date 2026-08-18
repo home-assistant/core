@@ -63,7 +63,6 @@ def mock_client():
         client.ct_connected = True
         client.cap_available = True
         client.cap_enabled = True
-        client.energy = 1000
         client.device_info = {
             "name": "Ohme Home Pro",
             "model": "Home Pro",

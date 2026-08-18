@@ -51,7 +51,7 @@ rules:
     status: done
     comment: |
       The coordinator handles this.
-  parallel-updates: todo
+  parallel-updates: done
   reauthentication-flow:
     status: exempt
     comment: |

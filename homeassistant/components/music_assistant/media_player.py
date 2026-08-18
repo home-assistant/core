@@ -6,7 +6,6 @@ from contextlib import suppress
 import os
 from typing import TYPE_CHECKING, Any, override
 
-from music_assistant_models.auth import UserRole
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
 from music_assistant_models.enums import (
     EventType,
@@ -61,7 +60,11 @@ from .const import (
     DOMAIN,
 )
 from .entity import MusicAssistantEntity
-from .helpers import catch_musicassistant_error
+from .helpers import (
+    async_resolve_mass_username,
+    async_verify_mass_username_availability,
+    catch_musicassistant_error,
+)
 from .media_browser import async_browse_media, async_search_media
 from .schemas import QUEUE_DETAILS_SCHEMA, queue_item_dict_from_mass_item
 
@@ -460,23 +463,15 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         username: str | None = None,
     ) -> None:
         """Send the play_media command to the media player."""
-        # verify username availability
+        # An explicit username is validated strictly; when omitted we default to
+        # the Home Assistant user that made the call (best-effort, never raises).
+        user_id = self._context.user_id if self._context is not None else None
         if username is not None:
-            users = await self.mass.auth.list_users()
-            available_usernames = [
-                user.username
-                for user in users
-                if user.enabled and user.role != UserRole.GUEST
-            ]
-            if username not in available_usernames:
-                raise ServiceValidationError(
-                    translation_domain=DOMAIN,
-                    translation_key="invalid_username",
-                    translation_placeholders={
-                        "username": username,
-                        "available_usernames": ", ".join(available_usernames),
-                    },
-                )
+            await async_verify_mass_username_availability(
+                mass=self.mass, username=username
+            )
+        elif user_id is not None:
+            username = await async_resolve_mass_username(self.hass, self.mass, user_id)
 
         media_uris: list[str] = []
         item: MediaItemType | ItemMapping | None = None

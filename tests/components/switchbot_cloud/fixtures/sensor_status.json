@@ -31,7 +31,21 @@
     "nightStatus": "off",
     "oscillation": "on",
     "verticalOscillation": "on",
-    "fanSpeed": 3
+    "fanSpeed": 3,
+    "battery": 22
+  },
+  {
+    "deviceId": "A1C3E5F7D9B0",
+    "deviceType": "Battery Circulator Fan 2 Pro",
+    "hubDeviceId": "FFFFFFFFFFF",
+    "mode": "direct",
+    "version": "V6.3",
+    "power": "on",
+    "nightStatus": "off",
+    "oscillation": "on",
+    "verticalOscillation": "on",
+    "fanSpeed": 3,
+    "battery": 22
   },
   {
     "deviceId": "9B0D2F4A6C8E",

@@ -5,11 +5,12 @@ from collections.abc import Callable
 from functools import partial
 from typing import Any, Final, cast
 
-from aiohttp import ClientError, ClientResponseError
+from aiohttp import ClientError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
     InvalidToken,
+    LoginRequired,
     SubscriptionRequired,
     TeslaFleetError,
 )
@@ -20,10 +21,15 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import ConfigEntry
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -89,18 +95,32 @@ async def _get_access_token(oauth_session: OAuth2Session) -> str:
         oauth_session.valid_token,
         oauth_session.token.get("expires_at"),
     )
+    setup_in_progress = (
+        oauth_session.config_entry.state is ConfigEntryState.SETUP_IN_PROGRESS
+    )
     try:
         await oauth_session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if err.status == 401:
+    except OAuth2TokenRequestReauthError as err:
+        if setup_in_progress:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
                 translation_key="auth_failed",
             ) from err
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="not_ready_connection_error",
-        ) from err
+        # Not in setup: let the coordinator's own OAuth2TokenRequestError
+        # handling stop polling and (re)start reauth without tearing
+        # down the already-loaded entry.
+        oauth_session.config_entry.async_start_reauth(oauth_session.hass)
+        raise
+    except OAuth2TokenRequestError as err:
+        # Recoverable (e.g. 429/5xx). During setup this backs off via the
+        # normal ConfigEntryNotReady retry; once loaded, let it propagate so
+        # the coordinator treats it as a transient failed update instead.
+        if setup_in_progress:
+            raise ConfigEntryNotReady(
+                translation_domain=DOMAIN,
+                translation_key="not_ready_connection_error",
+            ) from err
+        raise
     except (KeyError, TypeError) as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -265,6 +285,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             translation_domain=DOMAIN,
             translation_key="auth_failed_invalid_token",
         ) from e
+    except LoginRequired as e:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed_login_required",
+        ) from e
     except SubscriptionRequired as e:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
@@ -402,6 +427,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                     translation_domain=DOMAIN,
                     translation_key="auth_failed_invalid_token",
                 ) from e
+            except LoginRequired as e:
+                raise ConfigEntryAuthFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="auth_failed_login_required",
+                ) from e
             except SubscriptionRequired as e:
                 raise ConfigEntryAuthFailed(
                     translation_domain=DOMAIN,
@@ -461,7 +491,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             entry.async_on_unload(
                 vehicle_data.coordinator.async_add_listener(
                     create_vehicle_polling_listener(
-                        hass, vehicle_data.vin, vehicle_data.coordinator
+                        hass, vehicle_data.vin, entry.entry_id, vehicle_data.coordinator
                     )
                 )
             )
@@ -478,10 +508,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
             identifier in current_devices for identifier in device_entry.identifiers
         ):
             LOGGER.debug("Removing stale device %s", device_entry.id)
-            device_registry.async_update_device(
-                device_id=device_entry.id,
-                remove_config_entry_id=entry.entry_id,
-            )
+            device_registry.async_remove_device(device_entry.id)
 
     entry.runtime_data = TeslemetryData(
         vehicles=vehicles,
@@ -597,7 +624,7 @@ def async_setup_energy_device(
     entry.async_on_unload(
         energysite.info_coordinator.async_add_listener(
             create_energy_info_listener(
-                hass, energysite.id, energysite.info_coordinator
+                hass, energysite.id, entry.entry_id, energysite.info_coordinator
             )
         )
     )
@@ -616,13 +643,13 @@ async def async_setup_stream(
 
     entry.async_on_unload(
         vehicle.stream_vehicle.listen_Version(
-            create_vehicle_streaming_listener(hass, vehicle.vin)
+            create_vehicle_streaming_listener(hass, vehicle.vin, entry.entry_id)
         )
     )
 
 
 def create_vehicle_streaming_listener(
-    hass: HomeAssistant, vin: str
+    hass: HomeAssistant, vin: str, config_entry_id: str
 ) -> Callable[[str | None], None]:
     """Create a listener for vehicle streaming version updates."""
 
@@ -631,13 +658,16 @@ def create_vehicle_streaming_listener(
         if value is not None:
             # Remove build from version (e.g., "2024.44.25 abc123" -> "2024.44.25")
             sw_version = value.split(" ")[0]
-            async_update_device_sw_version(hass, vin, sw_version)
+            async_update_device_sw_version(hass, vin, config_entry_id, sw_version)
 
     return handle_version
 
 
 def create_vehicle_polling_listener(
-    hass: HomeAssistant, vin: str, coordinator: TeslemetryVehicleDataCoordinator
+    hass: HomeAssistant,
+    vin: str,
+    config_entry_id: str,
+    coordinator: TeslemetryVehicleDataCoordinator,
 ) -> Callable[[], None]:
     """Create a listener for vehicle polling coordinator updates."""
 
@@ -646,7 +676,7 @@ def create_vehicle_polling_listener(
         if version := coordinator.data.get("vehicle_state_car_version"):
             # Remove build from version (e.g., "2024.44.25 abc123" -> "2024.44.25")
             sw_version = version.split(" ")[0]
-            async_update_device_sw_version(hass, vin, sw_version)
+            async_update_device_sw_version(hass, vin, config_entry_id, sw_version)
 
     return handle_update
 
@@ -654,6 +684,7 @@ def create_vehicle_polling_listener(
 def create_energy_info_listener(
     hass: HomeAssistant,
     site_id: int,
+    config_entry_id: str,
     coordinator: TeslemetryEnergySiteInfoCoordinator,
 ) -> Callable[[], None]:
     """Create a listener for energy site info coordinator updates."""
@@ -661,6 +692,6 @@ def create_energy_info_listener(
     def handle_update() -> None:
         """Handle coordinator update."""
         if version := coordinator.data.get("version"):
-            async_update_device_sw_version(hass, str(site_id), version)
+            async_update_device_sw_version(hass, str(site_id), config_entry_id, version)
 
     return handle_update

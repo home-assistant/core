@@ -8,6 +8,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.template import DOMAIN
+from homeassistant.components.template.button import DEFAULT_NAME
 from homeassistant.components.template.const import CONF_PICTURE
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
@@ -29,6 +30,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_extra_template_attributes,
     async_trigger,
     make_test_action,
     setup_and_test_nested_unique_id,
@@ -381,3 +383,31 @@ async def test_invalid_availability_template_keeps_component_available(
     """Test that an invalid availability keeps the device available."""
     assert hass.states.get(TEST_BUTTON.entity_id).state != STATE_UNAVAILABLE
     assert "UndefinedError: 'x' is undefined" in caplog_setup_text
+
+
+async def test_extra_template_attributes(hass: HomeAssistant) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_BUTTON, ConfigurationStyle.MODERN, {"press": []}
+    )
+
+
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_BUTTON,
+        ConfigurationStyle.MODERN,
+        0,
+        {
+            "press": [],
+            "attributes": {"device_class": "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: device_class"
+        in caplog.text
+    )

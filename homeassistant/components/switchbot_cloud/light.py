@@ -70,11 +70,13 @@ class SwitchBotCloudLight(SwitchBotCloudEntity, LightEntity):
         """Set attributes from coordinator data."""
         if self.coordinator.data is None:
             return
-        power: str | None = self.coordinator.data.get("power")
+        power: str | None = self.coordinator.data.get(
+            "power"
+        ) or self.coordinator.data.get("powerState")
         brightness: int | None = self.coordinator.data.get("brightness")
         color: str | None = self.coordinator.data.get("color")
         color_temperature: int | None = self.coordinator.data.get("colorTemperature")
-        self._attr_is_on = power == "on" if power else None
+        self._attr_is_on = power.lower() == "on" if power else None
         self._attr_brightness: int | None = (
             brightness_map_value(brightness) if brightness else None
         )

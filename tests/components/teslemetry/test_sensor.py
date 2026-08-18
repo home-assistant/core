@@ -7,11 +7,18 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from teslemetry_stream import Signal
 
+from homeassistant.components.teslemetry.const import DOMAIN
 from homeassistant.components.teslemetry.coordinator import VEHICLE_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
+from homeassistant.const import (
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+    Platform,
+    UnitOfPressure,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.unit_conversion import PressureConverter
 
 from . import assert_entities, assert_entities_alt, setup_platform
 from .const import ENERGY_HISTORY_EMPTY, VEHICLE_DATA_ALT
@@ -114,6 +121,153 @@ async def test_sensors_streaming(
     assert hass.states.get("sensor.teslemetry_command_credits").state == "1980"
     assert (quota_state := hass.states.get("sensor.teslemetry_command_quota_used"))
     assert quota_state.state == "21.2"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("signal", "entity_id", "streamed_value", "expected_state"),
+    [
+        (
+            Signal.TPMS_PRESSURE_FL,
+            "sensor.test_tire_pressure_front_left",
+            2.7,
+            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
+            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+        ),
+        (
+            Signal.TPMS_PRESSURE_FR,
+            "sensor.test_tire_pressure_front_right",
+            2.7,
+            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
+            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+        ),
+        (
+            Signal.TPMS_PRESSURE_RL,
+            "sensor.test_tire_pressure_rear_left",
+            2.7,
+            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
+            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+        ),
+        (
+            Signal.TPMS_PRESSURE_RR,
+            "sensor.test_tire_pressure_rear_right",
+            2.7,
+            # 2.7 atm independently hand-converted to bar (2.7 * 1.01325 = 2.735775)
+            PressureConverter.convert(2.735775, UnitOfPressure.BAR, UnitOfPressure.PSI),
+        ),
+        (
+            Signal.ISOLATION_RESISTANCE,
+            "sensor.test_isolation_resistance",
+            2.5,
+            2.5,
+        ),
+    ],
+    ids=["tpms_fl", "tpms_fr", "tpms_rl", "tpms_rr", "isolation_resistance"],
+)
+async def test_sensors_streaming_unit_conversion(
+    hass: HomeAssistant,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    signal: Signal,
+    entity_id: str,
+    streamed_value: float,
+    expected_state: float,
+) -> None:
+    """Test streamed TPMS pressure and isolation resistance are converted to their declared units."""
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    mock_add_listener.send(
+        {
+            "vin": VEHICLE_DATA_ALT["response"]["vin"],
+            "data": {signal: streamed_value},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert float(state.state) == pytest.approx(expected_state)
+
+
+@pytest.mark.parametrize(
+    ("key", "signal", "raw_value", "state"),
+    [
+        ("di_state_f", Signal.DI_STATE_F, "Standby", "standby"),
+        ("di_state_r", Signal.DI_STATE_R, "Standby", "standby"),
+        ("di_state_rel", Signal.DI_STATE_REL, "Standby", "standby"),
+        ("di_state_rer", Signal.DI_STATE_RER, "Standby", "standby"),
+        ("sentry_mode", Signal.SENTRY_MODE, "Armed", "armed"),
+        (
+            "forward_collision_warning",
+            Signal.FORWARD_COLLISION_WARNING,
+            "Average",
+            "average",
+        ),
+        (
+            "guest_mode_mobile_access_state",
+            Signal.GUEST_MODE_MOBILE_ACCESS_STATE,
+            "Authenticated",
+            "authenticated",
+        ),
+        (
+            "lane_departure_avoidance",
+            Signal.LANE_DEPARTURE_AVOIDANCE,
+            "Warning",
+            "warning",
+        ),
+        ("powershare_status", Signal.POWERSHARE_STATUS, "Enabled", "enabled"),
+        ("powershare_stop_reason", Signal.POWERSHARE_STOP_REASON, "Fault", "fault"),
+        ("powershare_type", Signal.POWERSHARE_TYPE, "Home", "home"),
+        (
+            "scheduled_charging_mode",
+            Signal.SCHEDULED_CHARGING_MODE,
+            "StartAt",
+            "start_at",
+        ),
+        ("speed_limit_warning", Signal.SPEED_LIMIT_WARNING, "Chime", "chime"),
+        ("tonneau_tent_mode", Signal.TONNEAU_TENT_MODE, "Active", "active"),
+        ("lights_turn_signal", Signal.LIGHTS_TURN_SIGNAL, "Left", "left"),
+        ("hvac_power_state", Signal.HVAC_POWER, "On", "on"),
+    ],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_streaming_enum_none_clears_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_add_listener: AsyncMock,
+    key: str,
+    signal: Signal,
+    raw_value: str,
+    state: str,
+) -> None:
+    """A None streamed value must clear the entity, not leave it stale."""
+    await setup_platform(hass, [Platform.SENSOR])
+    vin = VEHICLE_DATA_ALT["response"]["vin"]
+    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, f"{vin}-{key}")
+    assert entity_id is not None
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {signal: raw_value},
+            "createdAt": "2024-10-04T10:45:17.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == state
+
+    mock_add_listener.send(
+        {
+            "vin": vin,
+            "data": {signal: None},
+            "createdAt": "2024-10-04T10:45:18.537Z",
+        }
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_UNKNOWN
 
 
 async def test_energy_history_no_time_series(
