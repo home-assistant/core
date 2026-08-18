@@ -129,7 +129,7 @@ def _resolve_config_entry(
     device_id: str = service_call.data[ATTR_DEVICE_ID]
 
     device_registry = dr.async_get(service_call.hass)
-    device_entry = device_registry.async_get(device_id)
+    device_entry = device_registry.async_get(device_id, include_child_devices=False)
 
     if device_entry is None:
         raise ServiceValidationError(
@@ -165,9 +165,27 @@ def _resolve_config_entry(
     return entry, device_entry
 
 
+def _device_name(device_entry: dr.DeviceEntry) -> str:
+    """Return the best available display name for a device."""
+    return device_entry.name_by_user or device_entry.name or device_entry.id
+
+
+def _ensure_water_heater_device(device_entry: dr.DeviceEntry) -> None:
+    """Validate the service targets the water heater sub-device."""
+    for domain, identifier in device_entry.identifiers:
+        if domain == DOMAIN and identifier.endswith("-water-heater"):
+            return
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="not_a_water_heater_device",
+        translation_placeholders={"device_name": _device_name(device_entry)},
+    )
+
+
 async def set_hot_water_schedule(service_call: ServiceCall) -> None:
     """Set hot water heating schedule."""
-    entry, _ = _resolve_config_entry(service_call)
+    entry, device_entry = _resolve_config_entry(service_call)
+    _ensure_water_heater_device(device_entry)
     client = entry.runtime_data.client
 
     days = _build_weekly_schedule_days(service_call)

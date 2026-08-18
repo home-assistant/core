@@ -22,6 +22,9 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
     PRESET_NONE,
@@ -36,7 +39,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.smartthings.const import MAIN
+from homeassistant.components.smartthings.const import DOMAIN, MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -47,7 +50,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     set_attribute_value,
@@ -616,6 +619,35 @@ async def test_ac_state_attributes_update(
     )
 
 
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_setpoint_range_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the setpoint range is used when the device reports one."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.theater_ac_office_granit")
+    assert state.attributes[ATTR_MIN_TEMP] == DEFAULT_MIN_TEMP
+    assert state.attributes[ATTR_MAX_TEMP] == DEFAULT_MAX_TEMP
+    assert ATTR_TARGET_TEMP_STEP not in state.attributes
+
+    await trigger_update(
+        hass,
+        devices,
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.THERMOSTAT_COOLING_SETPOINT,
+        Attribute.COOLING_SETPOINT_RANGE,
+        {"minimum": 16, "maximum": 30, "step": 1},
+    )
+
+    state = hass.states.get("climate.theater_ac_office_granit")
+    assert state.attributes[ATTR_MIN_TEMP] == 16
+    assert state.attributes[ATTR_MAX_TEMP] == 30
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 1
+
+
 @pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
 async def test_thermostat_set_fan_mode(
     hass: HomeAssistant,
@@ -1157,6 +1189,30 @@ async def test_heat_pump_state_attributes_update(
         hass.states.get("climate.eco_heating_system_indoor").attributes[state_attribute]
         == expected_value
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+@pytest.mark.usefixtures("devices")
+async def test_heat_pump_zone_via_device_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test heat pump zone devices are linked to their parent device."""
+    await setup_integration(hass, mock_config_entry)
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3810e5ad-5351-d9f9-12ff-000001200000"), mock_config_entry.entry_id
+    )
+    assert parent_device is not None
+
+    for component in ("INDOOR1", "INDOOR2"):
+        zone_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"3810e5ad-5351-d9f9-12ff-000001200000_{component}"),
+            mock_config_entry.entry_id,
+        )
+        assert zone_device is not None
+        assert zone_device.via_device_id == parent_device.id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

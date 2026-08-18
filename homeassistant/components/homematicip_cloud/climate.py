@@ -1,6 +1,6 @@
 """Support for HomematicIP Cloud climate devices."""
 
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from homematicip.base.enums import AbsenceType
 from homematicip.device import (
@@ -24,6 +24,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -104,12 +105,18 @@ class HomematicipHeatingGroup(HomematicipGenericEntity, ClimateEntity):
     @override
     def device_info(self) -> DeviceInfo:
         """Return device specific attributes."""
+        if TYPE_CHECKING:
+            assert self.platform.config_entry is not None
         return DeviceInfo(
             identifiers={(DOMAIN, self._device.id)},
             manufacturer="eQ-3",
             model=self._device.modelType,
             name=self._device.label,
-            via_device=(DOMAIN, self._device.homeId),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._device.homeId),
+                config_entry_id=self.platform.config_entry.entry_id,
+            ),
         )
 
     @property

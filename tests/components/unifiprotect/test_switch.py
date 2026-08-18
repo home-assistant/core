@@ -24,7 +24,14 @@ from homeassistant.components.unifiprotect.switch import (
     PRIVACY_MODE_SWITCH,
     ProtectSwitchEntityDescription,
 )
-from homeassistant.const import ATTR_ATTRIBUTION, ATTR_ENTITY_ID, STATE_OFF, Platform
+from homeassistant.const import (
+    ATTR_ATTRIBUTION,
+    ATTR_ENTITY_ID,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -37,7 +44,10 @@ from .utils import (
     enable_entity,
     ids_from_device_description,
     init_entry,
+    make_public_light,
+    public_device_ws_message,
     remove_entities,
+    setup_public_light,
 )
 
 CAMERA_SWITCHES_BASIC = [
@@ -139,6 +149,7 @@ async def test_switch_setup_light(
 ) -> None:
     """Test switch entity setup for light devices."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SWITCH, 4, 3)
 
@@ -269,6 +280,7 @@ async def test_switch_light_status(
 ) -> None:
     """Tests status light switch for lights."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
     assert_entity_counts(hass, Platform.SWITCH, 4, 3)
 
@@ -279,7 +291,7 @@ async def test_switch_light_status(
     )
 
     with patch_ufp_method(
-        light, "set_status_light", new_callable=AsyncMock
+        light, "set_status_light_public", new_callable=AsyncMock
     ) as mock_method:
         await hass.services.async_call(
             "switch", "turn_on", {ATTR_ENTITY_ID: entity_id}, blocking=True
@@ -292,6 +304,40 @@ async def test_switch_light_status(
         )
 
         mock_method.assert_called_with(False)
+
+
+async def test_switch_light_status_public_value(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """Status light switch reads from the public object and refreshes on a WS update."""
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, light, LIGHT_SWITCHES[1]
+    )
+    assert hass.states.get(entity_id).state == STATE_OFF
+
+    # The private fixture has the indicator disabled; the public ON proves the source.
+    public = make_public_light(light, is_indicator_enabled=True)
+    ufp.devices_ws_subscription(public_device_ws_message(public))
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_ON
+
+
+async def test_switch_light_status_unavailable_without_public(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """The migrated status light switch is unavailable without a public object."""
+
+    await init_entry(hass, ufp, [light])
+
+    _, entity_id = await ids_from_device_description(
+        hass, Platform.SWITCH, light, LIGHT_SWITCHES[1]
+    )
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 async def test_switch_camera_ssh(
@@ -569,6 +615,7 @@ async def test_switch_turn_on_client_error(
 ) -> None:
     """Test switch turn on with ClientError raises HomeAssistantError."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
 
     description = LIGHT_SWITCHES[1]
@@ -580,7 +627,7 @@ async def test_switch_turn_on_client_error(
     with (
         patch_ufp_method(
             light,
-            "set_status_light",
+            "set_status_light_public",
             new_callable=AsyncMock,
             side_effect=ClientError("Test error"),
         ),
@@ -596,6 +643,7 @@ async def test_switch_turn_on_not_authorized(
 ) -> None:
     """Test switch turn on with NotAuthorized raises HomeAssistantError."""
 
+    setup_public_light(ufp)
     await init_entry(hass, ufp, [light])
 
     description = LIGHT_SWITCHES[1]
@@ -607,7 +655,7 @@ async def test_switch_turn_on_not_authorized(
     with (
         patch_ufp_method(
             light,
-            "set_status_light",
+            "set_status_light_public",
             new_callable=AsyncMock,
             side_effect=NotAuthorized("Not authorized"),
         ),

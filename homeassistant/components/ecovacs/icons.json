@@ -21,6 +21,9 @@
       "reset_lifespan_brush": {
         "default": "mdi:broom"
       },
+      "reset_lifespan_cleaning_solution": {
+        "default": "mdi:flask-outline"
+      },
       "reset_lifespan_dust_bag": {
         "default": "mdi:delete-outline"
       },
@@ -36,17 +39,29 @@
       "reset_lifespan_round_mop": {
         "default": "mdi:broom"
       },
+      "reset_lifespan_sewage_box": {
+        "default": "mdi:trash-can-outline"
+      },
       "reset_lifespan_side_brush": {
         "default": "mdi:broom"
       },
       "reset_lifespan_station_filter": {
         "default": "mdi:air-filter"
       },
+      "reset_lifespan_trimmer_brush": {
+        "default": "mdi:broom"
+      },
       "reset_lifespan_unit_care": {
         "default": "mdi:robot-vacuum"
       },
       "reset_lifespan_uv_sanitizer": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "reset_lifespan_water_sink": {
+        "default": "mdi:water-outline"
+      },
+      "reset_lifespan_weed_rope": {
+        "default": "mdi:grass"
       },
       "station_action_clean_base": {
         "default": "mdi:home"
@@ -104,6 +119,9 @@
       "lifespan_brush": {
         "default": "mdi:broom"
       },
+      "lifespan_cleaning_solution": {
+        "default": "mdi:flask-outline"
+      },
       "lifespan_dust_bag": {
         "default": "mdi:delete-outline"
       },
@@ -119,17 +137,29 @@
       "lifespan_round_mop": {
         "default": "mdi:broom"
       },
+      "lifespan_sewage_box": {
+        "default": "mdi:trash-can-outline"
+      },
       "lifespan_side_brush": {
         "default": "mdi:broom"
       },
       "lifespan_station_filter": {
         "default": "mdi:air-filter"
       },
+      "lifespan_trimmer_brush": {
+        "default": "mdi:broom"
+      },
       "lifespan_unit_care": {
         "default": "mdi:robot-vacuum"
       },
       "lifespan_uv_sanitizer": {
         "default": "mdi:lightbulb-on-outline"
+      },
+      "lifespan_water_sink": {
+        "default": "mdi:water-outline"
+      },
+      "lifespan_weed_rope": {
+        "default": "mdi:grass"
       },
       "network_ip": {
         "default": "mdi:ip-network-outline"
@@ -146,16 +176,31 @@
       "stats_area": {
         "default": "mdi:floor-plan"
       },
+      "stats_area_mower": {
+        "default": "mdi:floor-plan"
+      },
       "stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "stats_time_mower": {
         "default": "mdi:timer-outline"
       },
       "total_stats_area": {
         "default": "mdi:floor-plan"
       },
+      "total_stats_area_mower": {
+        "default": "mdi:floor-plan"
+      },
       "total_stats_cleanings": {
         "default": "mdi:counter"
       },
+      "total_stats_cleanings_mower": {
+        "default": "mdi:counter"
+      },
       "total_stats_time": {
+        "default": "mdi:timer-outline"
+      },
+      "total_stats_time_mower": {
         "default": "mdi:timer-outline"
       }
     },

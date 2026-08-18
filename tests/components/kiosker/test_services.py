@@ -65,7 +65,9 @@ async def test_navigate_url(
     """Test navigate_url service calls the API with the correct URL."""
     await _setup(hass, mock_kiosker_api, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, KIOSKER_DEVICE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, KIOSKER_DEVICE_ID), mock_config_entry.entry_id
+    )
     assert device is not None
 
     await hass.services.async_call(
@@ -114,7 +116,9 @@ async def test_set_blackout(
     """Test set_blackout service builds the correct Blackout object."""
     await _setup(hass, mock_kiosker_api, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, KIOSKER_DEVICE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, KIOSKER_DEVICE_ID), mock_config_entry.entry_id
+    )
     assert device is not None
 
     await hass.services.async_call(
@@ -136,7 +140,9 @@ async def test_service_entry_not_loaded(
     """Test services raise HomeAssistantError when the config entry is not loaded."""
     await _setup(hass, mock_kiosker_api, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, KIOSKER_DEVICE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, KIOSKER_DEVICE_ID), mock_config_entry.entry_id
+    )
     assert device is not None
 
     await hass.config_entries.async_unload(mock_config_entry.entry_id)
@@ -186,7 +192,9 @@ async def test_schema_rejects_invalid_input(
     """Test that invalid service data is rejected by schema validation."""
     await _setup(hass, mock_kiosker_api, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, KIOSKER_DEVICE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, KIOSKER_DEVICE_ID), mock_config_entry.entry_id
+    )
     assert device is not None
 
     with pytest.raises(vol.Invalid):
@@ -222,7 +230,9 @@ async def test_api_errors_are_wrapped(
     """Test that kiosker API exceptions are translated to HA exceptions."""
     await _setup(hass, mock_kiosker_api, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, KIOSKER_DEVICE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, KIOSKER_DEVICE_ID), mock_config_entry.entry_id
+    )
     assert device is not None
 
     mock_kiosker_api.navigate_url.side_effect = exception

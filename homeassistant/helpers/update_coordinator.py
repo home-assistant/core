@@ -75,7 +75,7 @@ class DataUpdateCoordinator(BaseDataUpdateCoordinatorProtocol, Generic[_DataT]):
         hass: HomeAssistant,
         logger: logging.Logger,
         *,
-        config_entry: config_entries.ConfigEntry | None | UndefinedType = UNDEFINED,
+        config_entry: config_entries.ConfigEntry | UndefinedType | None = UNDEFINED,
         name: str,
         update_interval: timedelta | None = None,
         update_method: Callable[[], Awaitable[_DataT]] | None = None,

@@ -14,7 +14,11 @@ from anthropic.types import (
     DocumentBlock,
     EncryptedCodeExecutionResultBlock,
     Message,
+    MessageDeltaUsage,
     PlainTextSource,
+    RawMessageDeltaEvent,
+    RawMessageStartEvent,
+    RawMessageStopEvent,
     ServerToolCaller20260120,
     TextBlock,
     TextEditorCodeExecutionCreateResultBlock,
@@ -29,6 +33,7 @@ from anthropic.types import (
     WebSearchResultBlock,
     WebSearchToolResultError,
 )
+from anthropic.types.raw_message_delta_event import Delta
 from anthropic.types.text_editor_code_execution_tool_result_block import (
     Content as TextEditorCodeExecutionToolResultBlockContent,
 )
@@ -62,8 +67,10 @@ from homeassistant.components.anthropic.entity import (
     ContentDetails,
     _convert_content,
 )
+from homeassistant.components.conversation import trace
 from homeassistant.components.homeassistant.exposed_entities import async_expose_entity
 from homeassistant.components.intent import async_register_timer_handler
+from homeassistant.components.llm import LLMTools
 from homeassistant.const import CONF_LLM_HASS_API
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -130,7 +137,9 @@ async def test_device(
 ) -> None:
     """Test device parameters."""
     subentry = next(iter(mock_config_entry.subentries.values()))
-    device = device_registry.async_get_device({(DOMAIN, subentry.subentry_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
+    )
 
     assert device is not None
     assert device.name == "Claude conversation"
@@ -258,6 +267,71 @@ async def test_conversation_agent(
     assert agent.supported_languages == "*"
 
 
+async def test_token_stats_reported(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_init_component: None,
+) -> None:
+    """Test that cache reads, not cache creation, are reported as cached tokens."""
+    trace.async_clear_traces()
+
+    async def mock_stream(**kwargs: Any):
+        """Stream a single response carrying distinct cache read and creation usage."""
+        yield RawMessageStartEvent(
+            type="message_start",
+            message=Message(
+                type="message",
+                id="msg_1234567890ABCDEFGHIJKLMN",
+                content=[],
+                role="assistant",
+                model=kwargs["model"],
+                usage=Usage(
+                    input_tokens=100,
+                    output_tokens=0,
+                    cache_creation_input_tokens=20,
+                    cache_read_input_tokens=80,
+                ),
+            ),
+        )
+        for event in create_content_block(0, ["ok"]):
+            yield event
+        yield RawMessageDeltaEvent(
+            type="message_delta",
+            delta=Delta(stop_reason="end_turn", stop_sequence=""),
+            usage=MessageDeltaUsage(output_tokens=10),
+        )
+        yield RawMessageStopEvent(type="message_stop")
+
+    with patch(
+        "anthropic.resources.messages.AsyncMessages.create",
+        new_callable=AsyncMock,
+        side_effect=mock_stream,
+    ):
+        await conversation.async_converse(
+            hass,
+            "hello",
+            None,
+            Context(),
+            agent_id="conversation.claude_conversation",
+        )
+
+    trace_obj = next(iter(trace.async_get_traces()))
+    events = trace_obj.as_dict().get("events", [])
+    stats = next(
+        event["data"]["stats"]
+        for event in events
+        if event.get("event_type") == "agent_detail"
+        and event.get("data", {}).get("stats")
+    )
+    # cache_read_input_tokens (80) is the served-from-cache count, distinct from
+    # cache_creation_input_tokens (20); only the read count should surface as cached.
+    assert stats == {
+        "input_tokens": 100,
+        "cached_input_tokens": 80,
+        "output_tokens": 10,
+    }
+
+
 async def test_prompt_caching_system_prompt(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -324,7 +398,7 @@ async def test_prompt_caching_automatic(
     assert isinstance(system, str)
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 @pytest.mark.parametrize(
     ("tool_call_json_parts", "expected_call_tool_args"),
     [
@@ -361,7 +435,7 @@ async def test_function_call(
     )
     mock_tool.async_call.return_value = "Test response"
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -421,7 +495,7 @@ async def test_function_call(
     )
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_function_exception(
     mock_get_tools,
     hass: HomeAssistant,
@@ -441,7 +515,7 @@ async def test_function_exception(
     )
     mock_tool.async_call.side_effect = HomeAssistantError("Test tool exception")
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (
@@ -852,7 +926,7 @@ async def test_redacted_thinking(
     assert chat_log.content[1:] == snapshot
 
 
-@patch("homeassistant.components.anthropic.entity.llm.AssistAPI._async_get_tools")
+@patch("homeassistant.components.llm.async_get_tools", new_callable=AsyncMock)
 async def test_extended_thinking_tool_call(
     mock_get_tools,
     hass: HomeAssistant,
@@ -884,7 +958,7 @@ async def test_extended_thinking_tool_call(
     )
     mock_tool.async_call.return_value = "Test response"
 
-    mock_get_tools.return_value = [mock_tool]
+    mock_get_tools.return_value = LLMTools(tools=[mock_tool])
 
     mock_create_stream.return_value = [
         (

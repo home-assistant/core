@@ -485,6 +485,59 @@
     'state': 'unknown',
   })
 # ---
+# name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_living_room_screen-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'cover',
+    'entity_category': None,
+    'entity_id': 'cover.palm_court_living_room_screen',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': None,
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': None,
+    'platform': 'overkiz',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': <CoverEntityFeature: 11>,
+    'translation_key': None,
+    'unique_id': 'rts://1234-1234-6362/16718220',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_living_room_screen-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Screen',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: None,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 11>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'cover.palm_court_living_room_screen',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
 # name: test_cover_entities_snapshot[cloud_somfy_connexoon_rts_asia.json][cover.palm_court_office_venetian_blind-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
