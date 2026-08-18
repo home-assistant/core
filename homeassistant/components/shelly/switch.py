@@ -423,6 +423,24 @@ RPC_SWITCHES = {
         method_off="cury_set_away_mode",
         method_params_fn=lambda id, value: (id, value),
     ),
+    "camera_privacy": RpcSwitchDescription(
+        key="camera",
+        sub_key="privacy",
+        translation_key="camera_privacy",
+        is_on=lambda status: status["privacy"],
+        method_on="set_camera_privacy",
+        method_off="set_camera_privacy",
+        method_params_fn=lambda id, value: (id, value),
+    ),
+    "camera_arm": RpcSwitchDescription(
+        key="camera",
+        sub_key="arm",
+        translation_key="camera_arm",
+        is_on=lambda status: status["arm"],
+        method_on="arm_camera",
+        method_off="disarm_camera",
+        method_params_fn=lambda id, value: (id,),
+    ),
 }
 
 
