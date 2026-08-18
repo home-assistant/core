@@ -4,9 +4,9 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 from midealocal.const import DeviceType
-from midealocal.devices.a1 import DeviceAttributes as A1Attributes
+from midealocal.devices.a1 import DeviceAttributes as A1Attributes, MideaA1Device
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
-from midealocal.devices.fd import DeviceAttributes as FDAttributes
+from midealocal.devices.fd import DeviceAttributes as FDAttributes, MideaFDDevice
 from midealocal.exceptions import SocketException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -58,12 +58,12 @@ def _a1_device() -> DummyDevice:
         DeviceType.A1,
         attributes={
             A1Attributes.power: True,
-            A1Attributes.mode: "Auto",
+            A1Attributes.mode: "auto",
             A1Attributes.target_humidity: 55,
             A1Attributes.current_humidity: 60,
         },
     )
-    device.modes = ["Manual", "Continuous", "Auto", "Clothes-Dry", "Shoes-Dry"]
+    device.modes = list(MideaA1Device._default_modes.values())
     return device
 
 
@@ -72,20 +72,12 @@ def _fd_device() -> DummyDevice:
         DeviceType.FD,
         attributes={
             FDAttributes.power: True,
-            FDAttributes.mode: "Continuous",
+            FDAttributes.mode: "continuous",
             FDAttributes.target_humidity: 45,
             FDAttributes.current_humidity: 40,
         },
     )
-    device.modes = [
-        "Manual",
-        "Auto",
-        "Continuous",
-        "Living-Room",
-        "Bed-Room",
-        "Kitchen",
-        "Sleep",
-    ]
+    device.modes = list(MideaFDDevice._modes)
     return device
 
 
@@ -151,12 +143,11 @@ async def test_a1_humidifier_services(
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_humidifier"]
 
-    state = hass.states.get(entity_entry.entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "on"
     assert state.attributes[ATTR_HUMIDITY] == 55
     assert state.attributes[ATTR_CURRENT_HUMIDITY] == 60
-    assert state.attributes[ATTR_MODE] == "Auto"
+    assert state.attributes[ATTR_MODE] == "auto"
     assert state.attributes[ATTR_AVAILABLE_MODES] == device.modes
 
     await _assert_service_call(
@@ -171,8 +162,8 @@ async def test_a1_humidifier_services(
         hass,
         entity_entry.entity_id,
         SERVICE_SET_MODE,
-        {ATTR_MODE: "Continuous"},
-        [("set_attribute", "mode", "Continuous")],
+        {ATTR_MODE: "continuous"},
+        [("set_attribute", "mode", "continuous")],
         device,
     )
     await _assert_service_call(
@@ -234,8 +225,7 @@ async def test_humidifier_unknown_mode_and_power_return_none(
         await setup_integration(hass, config_entry, device)
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_humidifier"]
-    state = hass.states.get(entity_entry.entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "unknown"
     assert state.attributes.get(ATTR_HUMIDITY) is None
     assert state.attributes.get(ATTR_CURRENT_HUMIDITY) is None
