@@ -39,7 +39,9 @@ class LunatoneDALIScanStatus(
     """Representation of a Lunatone DALI scan status."""
 
     _attr_device_class = BinarySensorDeviceClass.RUNNING
+    _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
+    _attr_translation_key = "scan_status"
 
     def __init__(
         self,
@@ -48,7 +50,6 @@ class LunatoneDALIScanStatus(
     ) -> None:
         """Initialize a Lunatone DALI scan status."""
         super().__init__(coordinator)
-        self.entity_category = EntityCategory.DIAGNOSTIC
 
         self._config_entry_unique_id = config_entry_unique_id
 
@@ -56,7 +57,6 @@ class LunatoneDALIScanStatus(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._config_entry_unique_id)},
         )
-        self._attr_translation_key = "scan_status"
 
     @property
     @override
