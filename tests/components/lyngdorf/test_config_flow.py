@@ -452,3 +452,61 @@ async def test_reconfigure_errors(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "error"),
+    [
+        (TimeoutError, "timeout_connect"),
+        (OSError, "cannot_connect"),
+    ],
+)
+@pytest.mark.usefixtures("mock_find_receiver_model")
+async def test_user_flow_serial_errors(
+    hass: HomeAssistant,
+    mock_get_device_serial: AsyncMock,
+    side_effect: type[Exception],
+    error: str,
+) -> None:
+    """Test a failure to read the serial is surfaced on the form."""
+    mock_get_device_serial.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.50"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+
+@pytest.mark.parametrize(
+    ("model", "serial", "error"),
+    [
+        pytest.param(None, "0050c27c76b2", "unsupported_model", id="unsupported"),
+        pytest.param(LyngdorfModel.MP_60, None, "cannot_determine_id", id="no_serial"),
+    ],
+)
+async def test_reconfigure_device_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_find_receiver_model: AsyncMock,
+    mock_get_device_serial: AsyncMock,
+    model: LyngdorfModel | None,
+    serial: str | None,
+    error: str,
+) -> None:
+    """Test reconfigure surfaces a device it cannot identify."""
+    mock_config_entry.add_to_hass(hass)
+    mock_find_receiver_model.return_value = model
+    mock_get_device_serial.return_value = serial
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.50"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}

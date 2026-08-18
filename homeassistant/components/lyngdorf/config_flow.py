@@ -1,7 +1,5 @@
 """Config flow for Lyngdorf integration."""
 
-from collections.abc import Iterator
-from contextlib import contextmanager
 import logging
 from typing import Any, override
 from urllib.parse import urlparse
@@ -59,8 +57,17 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             self._host = user_input[CONF_HOST]
             try:
                 model, serial = await self._async_probe(self._host)
-            except _ProbeError as err:
-                errors["base"] = str(err)
+            except TimeoutConnect:
+                errors["base"] = "timeout_connect"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except UnsupportedModel:
+                errors["base"] = "unsupported_model"
+            except CannotDetermineId:
+                errors["base"] = "cannot_determine_id"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
                 self._device_model = model.model_name
                 self._name = model.model_name
@@ -81,15 +88,23 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
 
     async def _async_probe(self, host: str) -> tuple[LyngdorfModel, str]:
         """Return the model and serial of the device at a host."""
-        with _probe_errors():
+        try:
             model = await async_find_receiver_model(host)
+        except TimeoutError as err:
+            raise TimeoutConnect from err
+        except OSError as err:
+            raise CannotConnect from err
         if not model:
-            raise _ProbeError("unsupported_model")
+            raise UnsupportedModel
 
-        with _probe_errors():
+        try:
             serial = await async_get_device_serial(host)
+        except TimeoutError as err:
+            raise TimeoutConnect from err
+        except OSError as err:
+            raise CannotConnect from err
         if not serial:
-            raise _ProbeError("cannot_determine_id")
+            raise CannotDetermineId
 
         return model, serial.lower()
 
@@ -109,8 +124,17 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
             host = user_input[CONF_HOST]
             try:
                 model, serial = await self._async_probe(host)
-            except _ProbeError as err:
-                errors["base"] = str(err)
+            except TimeoutConnect:
+                errors["base"] = "timeout_connect"
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            except UnsupportedModel:
+                errors["base"] = "unsupported_model"
+            except CannotDetermineId:
+                errors["base"] = "cannot_determine_id"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
             else:
                 await self.async_set_unique_id(serial)
                 self._abort_if_unique_id_mismatch()
@@ -225,21 +249,17 @@ class LyngdorfFlowHandler(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: self._host})
 
 
-class _ProbeError(Exception):
-    """Raised when a host could not be identified as a supported device.
-
-    Its argument is the key of the error to show on the form.
-    """
+class CannotConnect(Exception):
+    """Error to indicate we cannot connect."""
 
 
-@contextmanager
-def _probe_errors() -> Iterator[None]:
-    """Map a failure to reach the device onto a form error."""
-    try:
-        yield
-    except TimeoutError:
-        raise _ProbeError("timeout_connect") from None
-    except OSError:
-        raise _ProbeError("cannot_connect") from None
-    except Exception:  # noqa: BLE001
-        raise _ProbeError("unknown") from None
+class TimeoutConnect(Exception):
+    """Error to indicate the device did not answer in time."""
+
+
+class UnsupportedModel(Exception):
+    """Error to indicate the device is not a model we support."""
+
+
+class CannotDetermineId(Exception):
+    """Error to indicate the device did not report a serial."""
