@@ -47,7 +47,7 @@ async def test_user_step_success(
 async def test_user_step_success_without_model(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test successful flow falls back to the default title when the model is unknown."""
+    """Test the flow falls back to the default title for an unknown model."""
     mock_conn = MockModbusConnection()
     seed_pv_inverter(mock_conn.for_unit(1), serial=_UNMODELED_SERIAL)
 
@@ -72,7 +72,7 @@ def _seed_unreachable(unit: MockModbusUnit) -> None:
 
 
 def _seed_unrecognized(unit: MockModbusUnit) -> None:
-    pass  # unseeded registers decode to an empty, unrecognized serial
+    """No-op: unseeded registers already decode to an unrecognized serial."""
 
 
 @pytest.mark.parametrize(
@@ -90,7 +90,7 @@ async def test_user_step_errors(
     seed: Callable[[MockModbusUnit], None],
     expected_error: str,
 ) -> None:
-    """Test the user step reports the right error for each probe failure and recovers."""
+    """Test the user step reports the right error and recovers, per failure."""
     mock_conn = MockModbusConnection()
     seed(mock_conn.for_unit(1))
 

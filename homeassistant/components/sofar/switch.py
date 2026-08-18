@@ -1,4 +1,4 @@
-"""Switch platform: whether the active power control limit is armed — staged in coordinator.pending rather than written on toggle, since register 1105's Bit0 must go out with 1106's limit percentage; a paired button (follow-up PR) commits both together."""
+"""Stages active power control; a paired button (later PR) commits it."""
 
 from typing import Any, override
 
@@ -12,15 +12,6 @@ from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator
 from .entity import SofarEntity
 
 _KEY = "active_power_control_enabled"
-
-
-def resolve_active_power_control_enabled(
-    coordinator: SofarDataUpdateCoordinator,
-) -> bool | None:
-    """The enabled state this switch is currently showing — pending or live. Shared with the button platform (follow-up PR) so its commit uses this exact value."""
-    flags = coordinator.device.active_power_control.power_control
-    live = None if flags is None else PowerControlFlags.ACTIVE_POWER in flags
-    return coordinator.pending_or_live(_KEY, live)
 
 
 async def async_setup_entry(
@@ -38,6 +29,9 @@ async def async_setup_entry(
 class ActivePowerControlSwitch(SofarEntity, SwitchEntity):
     """Active Power Control — staged; a paired button applies it."""
 
+    # Register 1105's Bit0 must go out with 1106's limit percentage,
+    # so toggling here only stages; the paired button writes both.
+
     _attr_translation_key = _KEY
 
     def __init__(self, coordinator: SofarDataUpdateCoordinator) -> None:
@@ -48,7 +42,9 @@ class ActivePowerControlSwitch(SofarEntity, SwitchEntity):
     @override
     def is_on(self) -> bool | None:
         """Return whether active power control is currently staged or live-armed."""
-        return resolve_active_power_control_enabled(self.coordinator)
+        flags = self.coordinator.device.active_power_control.power_control
+        live = None if flags is None else PowerControlFlags.ACTIVE_POWER in flags
+        return self.coordinator.pending_or_live(_KEY, live)
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:

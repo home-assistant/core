@@ -1,4 +1,4 @@
-"""Sofar Inverter Modbus — owns the ModbusConnection and coordinator; sofar-modbus is the HA-free device library doing the register work."""
+"""Owns ModbusConnection and coordinator; sofar-modbus does register work."""
 
 import logging
 

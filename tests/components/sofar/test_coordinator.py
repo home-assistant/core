@@ -43,7 +43,7 @@ async def test_consecutive_timeouts_resets_on_recovery(
     freezer: FrozenDateTimeFactory,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test a successful poll resets the timeout counter before the disconnect threshold."""
+    """Test a successful poll resets the timeout counter before disconnect."""
     coordinator = init_integration.runtime_data
     unit = coordinator.connection.for_unit(1)
 

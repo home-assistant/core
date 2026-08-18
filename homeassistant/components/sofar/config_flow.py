@@ -1,4 +1,4 @@
-"""Config flow — TCP only for Phase 1; probes the device to get its serial number for the unique_id."""
+"""TCP-only config flow (Phase 1); probes the device for its unique_id."""
 
 import logging
 from typing import TYPE_CHECKING, Any, override
@@ -10,7 +10,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers.selector import TextSelector
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 
 from .const import (
     CONF_MODBUS_ADDR,
@@ -25,7 +25,7 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(),
+        vol.Required(CONF_HOST): TextSelector(TextSelectorConfig(autocomplete="url")),
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_MODBUS_ADDR, default=DEFAULT_MODBUS_ADDR): int,
         vol.Optional(CONF_READ_EPS, default=False): bool,

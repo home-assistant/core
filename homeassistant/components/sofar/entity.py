@@ -37,7 +37,7 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
 
     @property
     def _link_available(self) -> bool:
-        """Whether the link itself is up, ignoring this entity's own component — exposed separately so a subclass can stay available through a per-component failure without masking a dead link."""
+        """Link status alone, so a subclass can survive a per-component failure."""
         return super().available
 
     @property

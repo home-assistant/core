@@ -19,7 +19,7 @@ MOCK_USER_INPUT = {
 
 
 def seed_pv_inverter(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
-    """Seed a MockModbusUnit with enough registers for a PV-only Sofar inverter — enough for identify() and a coherent active_power_control reading."""
+    """Seed registers for a PV-only inverter: identify() plus power control."""
     padded = serial.ljust(14, "\x00")
     for i in range(7):
         hi, lo = ord(padded[2 * i]), ord(padded[2 * i + 1])

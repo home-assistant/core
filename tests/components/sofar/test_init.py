@@ -17,7 +17,7 @@ from tests.common import MockConfigEntry
 async def test_setup_and_unload_entry(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """Test a config entry sets up and unloads cleanly, with runtime_data populated."""
+    """Test a config entry sets up and unloads with runtime_data populated."""
     entry = init_integration
     assert entry.state is ConfigEntryState.LOADED
     assert isinstance(entry.runtime_data, SofarDataUpdateCoordinator)
@@ -31,7 +31,9 @@ async def test_setup_and_unload_entry(
 async def test_setup_entry_unrecognized_inverter_raises_setup_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test setup fails permanently (no retry) when the serial isn't recognized — not reachable via the real config flow, but covers e.g. an existing entry outliving a library downgrade."""
+    """Test setup fails permanently (no retry) for an unrecognized serial."""
+    # Not reachable via the config flow; covers an existing entry
+    # outliving a sofar-modbus library downgrade.
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id="UNRECOGNIZED_SERIAL_XYZ", data=MOCK_USER_INPUT
     )

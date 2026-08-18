@@ -1,4 +1,4 @@
-"""DataUpdateCoordinator wrapping SofarInverter's readings/settings polls, with retry-before-fail and tiered cadence."""
+"""Wraps SofarInverter's polls: retry-before-fail, tiered cadence."""
 
 from collections import deque
 from datetime import datetime, timedelta
@@ -91,7 +91,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @property
     def success_rate(self) -> float | None:
-        """Percent of the last _HEALTH_WINDOW cycles with no failed component. Whole-device, not per-component; None until the first poll lands."""
+        """Success rate over recent cycles — whole-device, not per-component."""
         if not self._poll_outcomes:
             return None
         return round(100 * sum(self._poll_outcomes) / len(self._poll_outcomes), 1)
@@ -104,13 +104,13 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @property
     def served_components(self) -> frozenset[str]:
-        """All component names served by this inverter type. Empty until the first refresh lands."""
+        """Component names this inverter type serves; empty before first refresh."""
         if self.data is not None:
             return frozenset(self.data.updated | set(self.data.failed))
         return frozenset()
 
     def pending_or_live(self, key: str, live_value: _T) -> _T:
-        """What a staged number/select/switch entity should show: the pending value if set this session, else the last live read. In-memory only — these registers are volatile on the device anyway, so there's nothing to persist."""
+        """Staged value this session, else live read; volatile, so in-memory only."""
         return cast("_T", self.pending.get(key, live_value))
 
     @override
@@ -121,7 +121,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @override
     async def async_refresh(self) -> None:
-        """Refresh data immediately, polling the slow tier too regardless of cadence."""
+        """Refresh immediately, polling the slow tier regardless of cadence."""
         self._force_slow_tier = True
         await super().async_refresh()
 
@@ -161,8 +161,8 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             self._record_poll_outcome(False, err)
             raise UpdateFailed(str(err)) from err
         except ModbusError as err:
-            # ModbusConnectionError (dead link) reaches here,
-            # while per-block failures once alive are contained in UpdateReport.failed.
+            # ModbusConnectionError (dead link) reaches here; per-block failures
+            # once alive land in UpdateReport.failed instead.
             self._record_poll_outcome(False, err)
             raise UpdateFailed(str(err)) from err
         else:
@@ -173,7 +173,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             return report
 
     async def _retry_failed(self, report: UpdateReport) -> UpdateReport:
-        """Give every failed component one more try; skipped entirely if nothing answered, to avoid doubling the timeout latency during an outage."""
+        """Retry failures once; skip if none answered, to avoid doubling timeout."""
         if report.failed and report.updated:
             updated: set[str] = set()
             failed: dict[str, ModbusError] = {}
