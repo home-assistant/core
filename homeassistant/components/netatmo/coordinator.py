@@ -170,9 +170,7 @@ class NetatmoDataHandler:
         self.auth = auth
         self.publisher: dict[str, NetatmoPublisher] = {}
         self._queue: deque = deque()
-        self._webhook: bool = False
-        # Distinct from _webhook, which only turns true once a delivery proves the
-        # registration works. This one says we asked Netatmo for one, so we owe a drop
+        self._webhook_delivering: bool = False
         self.webhook_registered: bool = False
         if config_entry.data["auth_implementation"] == cloud.DOMAIN:
             self._interval_factor = CLOUD_FACTOR
@@ -279,11 +277,11 @@ class NetatmoDataHandler:
         """Handle webhook events."""
         if event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_ACTIVATION:
             _LOGGER.debug("%s webhook successfully registered", MANUFACTURER)
-            self._webhook = True
+            self._webhook_delivering = True
 
         elif event["data"][WEBHOOK_PUSH_TYPE] == WEBHOOK_DEACTIVATION:
             _LOGGER.debug("%s webhook unregistered", MANUFACTURER)
-            self._webhook = False
+            self._webhook_delivering = False
 
         elif event["data"][WEBHOOK_PUSH_TYPE] in CAMERA_CONNECTION_WEBHOOKS:
             _LOGGER.debug("%s camera reconnected", MANUFACTURER)
@@ -385,9 +383,9 @@ class NetatmoDataHandler:
             _LOGGER.debug("Publisher %s removed", signal_name)
 
     @property
-    def webhook(self) -> bool:
-        """Return the webhook state."""
-        return self._webhook
+    def webhook_delivering(self) -> bool:
+        """Return whether a delivery has proven the webhook works."""
+        return self._webhook_delivering
 
     async def async_dispatch(self) -> None:
         """Dispatch the creation of entities."""
