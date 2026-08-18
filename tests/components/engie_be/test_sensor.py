@@ -157,114 +157,6 @@ async def test_excl_vat_disabled_by_default(
     assert all(entry.disabled_by is None for entry in incl_vat_entries)
 
 
-def _setup_default(mock_engie_client: MagicMock) -> None:
-    """Use the fixture's default typed household address and prices."""
-
-
-def _setup_fallback_type(mock_engie_client: MagicMock) -> None:
-    """Force only the offtake-only EAN's energy type to be unresolved."""
-    mock_engie_client.return_value.async_get_service_point.side_effect = [
-        EngieBeCommunicationError("boom"),
-        ServicePoint(ean_energy_types={bare_ean(OFFTAKE_INJECTION_EAN): "ELECTRICITY"}),
-    ]
-
-
-def _setup_no_address(mock_engie_client: MagicMock) -> None:
-    """Drop the consumption address so entity_ids fall back to the BAN."""
-    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
-        build_relations(with_address=False)
-    )
-
-
-def _setup_empty_address(mock_engie_client: MagicMock) -> None:
-    """Set an address with empty street and house number so entity_ids fall back to the BAN."""
-    mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
-        CustomerAccountRelations(
-            accounts=(
-                AccountRelation(
-                    id="account-1",
-                    admin=True,
-                    customer_account=CustomerAccount(
-                        customer_account_number="can-1",
-                        business_agreements=(
-                            BusinessAgreement(
-                                business_agreement_number=BAN,
-                                active=True,
-                                consumption_address=ConsumptionAddress(
-                                    street="",
-                                    house_number="",
-                                    postal_code="1000",
-                                    city="Brussels",
-                                ),
-                            ),
-                        ),
-                    ),
-                ),
-            )
-        )
-    )
-
-
-@pytest.mark.parametrize(
-    ("setup", "unique_id", "expected_entity_id"),
-    [
-        pytest.param(
-            _setup_default,
-            f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS",
-            "sensor.main_street_1_gas_offtake_price",
-            id="typed",
-        ),
-        pytest.param(
-            _setup_default,
-            f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_PEAK",
-            "sensor.main_street_1_electricity_peak_offtake_price",
-            id="slot-variant",
-        ),
-        pytest.param(
-            _setup_default,
-            f"{BAN}_{OFFTAKE_INJECTION_EAN}_offtake_S_TOU1_OFFTAKE_PEAK_excl_vat",
-            "sensor.main_street_1_electricity_peak_offtake_price_excl_vat",
-            id="excl-vat",
-        ),
-        pytest.param(
-            _setup_fallback_type,
-            f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS",
-            "sensor.main_street_1_offtake_price",
-            id="fallback-typed",
-        ),
-        pytest.param(
-            _setup_no_address,
-            f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS",
-            "sensor.000000000001_gas_offtake_price",
-            id="no-address-ban-fallback",
-        ),
-        pytest.param(
-            _setup_empty_address,
-            f"{BAN}_{OFFTAKE_ONLY_EAN}_offtake_TOTAL_HOURS",
-            "sensor.000000000001_gas_offtake_price",
-            id="empty-address-ban-fallback",
-        ),
-    ],
-)
-async def test_entity_id_format(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_engie_client: MagicMock,
-    entity_registry: er.EntityRegistry,
-    setup: Callable[[MagicMock], None],
-    unique_id: str,
-    expected_entity_id: str,
-) -> None:
-    """Test entity_ids use street-based slugs, falling back to the BAN without an address."""
-    setup(mock_engie_client)
-    mock_config_entry.add_to_hass(hass)
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
-    assert entity_id == expected_entity_id
-
-
 SECOND_ELECTRICITY_EAN = "541448820000000003_ID1"
 
 
@@ -354,15 +246,50 @@ async def test_type_fallback_when_service_point_lookup_fails(
     assert state.name.endswith("Offtake price")
 
 
+def _empty_address_relations() -> CustomerAccountRelations:
+    """Build relations for a single BAN with an all-empty consumption address."""
+    return CustomerAccountRelations(
+        accounts=(
+            AccountRelation(
+                id="account-1",
+                admin=True,
+                customer_account=CustomerAccount(
+                    customer_account_number="can-1",
+                    business_agreements=(
+                        BusinessAgreement(
+                            business_agreement_number=BAN,
+                            active=True,
+                            consumption_address=ConsumptionAddress(
+                                street="",
+                                house_number="",
+                                postal_code="",
+                                city="",
+                            ),
+                        ),
+                    ),
+                ),
+            ),
+        )
+    )
+
+
+@pytest.mark.parametrize(
+    "relations",
+    [
+        pytest.param(build_relations(with_address=False), id="no-address"),
+        pytest.param(_empty_address_relations(), id="empty-address"),
+    ],
+)
 async def test_device_name_falls_back_to_ban(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_engie_client: MagicMock,
     device_registry: dr.DeviceRegistry,
+    relations: CustomerAccountRelations,
 ) -> None:
-    """Test the device name falls back to the bare BAN without a consumption address."""
+    """Test the device name falls back to the bare BAN without a usable consumption address."""
     mock_engie_client.return_value.async_get_customer_account_relations.return_value = (
-        build_relations(with_address=False)
+        relations
     )
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)

@@ -145,8 +145,8 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[EngieBePricesData]):
         device_name = (
             agreement.consumption_address.format()
             if agreement.consumption_address is not None
-            else ban
-        )
+            else ""
+        ) or ban
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, ban)},
             entry_type=DeviceEntryType.SERVICE,

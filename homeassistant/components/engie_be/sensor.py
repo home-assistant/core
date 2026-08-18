@@ -4,13 +4,12 @@ from collections import Counter
 from collections.abc import Iterable, Mapping
 from typing import TYPE_CHECKING, override
 
-from aioengiebelgium import ConsumptionAddress, bare_ean
+from aioengiebelgium import bare_ean
 
 from homeassistant.components.sensor import SensorEntity, SensorStateClass
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from .const import ATTRIBUTION
 from .coordinator import (
@@ -49,45 +48,6 @@ def _duplicate_type_eans(
     type_keys = {ean: _energy_type_key(ean, ean_energy_types) for ean in eans}
     counts = Counter(type_keys.values())
     return {ean for ean, type_key in type_keys.items() if counts[type_key] > 1}
-
-
-def _location_words(ban: str, consumption_address: ConsumptionAddress | None) -> str:
-    """Return the street-based entity_id location, falling back to the bare BAN."""
-    if consumption_address is not None:
-        parts = [
-            part
-            for part in (consumption_address.street, consumption_address.house_number)
-            if part
-        ]
-        if parts:
-            return " ".join(parts)
-    return ban
-
-
-def _entity_id_words(
-    *,
-    type_key: str,
-    direction: str,
-    slot_suffix: str,
-    normalized_slot_code: str,
-    excl_vat: bool,
-    ean_suffix: str,
-) -> list[str]:
-    """Build the entity_id object-id words in display-name word order."""
-    words: list[str] = []
-    if type_key != _FALLBACK_TYPE_KEY:
-        words.append(type_key)
-    if slot_suffix not in ("", _FALLBACK_SLOT_SUFFIX):
-        words.append(slot_suffix.removeprefix("_"))
-    words.append(direction)
-    words.append("price")
-    if excl_vat:
-        words.extend(("excl", "vat"))
-    if slot_suffix == _FALLBACK_SLOT_SUFFIX:
-        words.append(normalized_slot_code.lower())
-    if ean_suffix:
-        words.append(ean_suffix)
-    return words
 
 
 async def async_setup_entry(
@@ -197,20 +157,6 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         self._attr_translation_placeholders = translation_placeholders
         if excl_vat:
             self._attr_entity_registry_enabled_default = False
-
-        location = _location_words(
-            business_agreement_number, coordinator.agreement.consumption_address
-        )
-        entity_words = _entity_id_words(
-            type_key=type_key,
-            direction=direction,
-            slot_suffix=suffix,
-            normalized_slot_code=normalized_slot_code,
-            excl_vat=excl_vat,
-            ean_suffix=ean_suffix,
-        )
-        object_id = slugify(f"{location} {' '.join(entity_words)}")
-        self.entity_id = f"sensor.{object_id}"
 
     @property
     @override
