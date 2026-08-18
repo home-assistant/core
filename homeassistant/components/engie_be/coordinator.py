@@ -1,6 +1,7 @@
 """DataUpdateCoordinator for the ENGIE Belgium integration."""
 
 import asyncio
+from dataclasses import dataclass
 from typing import TYPE_CHECKING, override
 
 from aioengiebelgium import (
@@ -41,7 +42,15 @@ def household_device_info(ban: str, agreement: BusinessAgreement) -> DeviceInfo:
     )
 
 
-class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]]):
+@dataclass
+class EngieBeHouseholdData:
+    """Fetched data for one business agreement."""
+
+    agreement: BusinessAgreement
+    prices: PricesResponse
+
+
+class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, EngieBeHouseholdData]]):
     """Coordinator that fetches ENGIE Belgium energy prices for every business agreement."""
 
     config_entry: EngieBeConfigEntry
@@ -51,7 +60,6 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
         hass: HomeAssistant,
         config_entry: EngieBeConfigEntry,
         client: EngieBeClient,
-        business_agreement_numbers: list[str],
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -62,24 +70,34 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
             update_interval=SCAN_INTERVAL,
         )
         self.client = client
-        self.business_agreement_numbers = business_agreement_numbers
         self.ean_energy_types: dict[str, str | None] = {}
         self._logged_failures: set[str] = set()
 
     @override
-    async def _async_update_data(self) -> dict[str, PricesResponse]:
-        """Fetch prices for every business agreement."""
+    async def _async_update_data(self) -> dict[str, EngieBeHouseholdData]:
+        """Fetch relations and prices for every active business agreement."""
+        try:
+            relations = await self.client.async_get_customer_account_relations()
+        except EngieBeError as err:
+            raise UpdateFailed(str(err)) from err
+
+        agreements = {
+            agreement.business_agreement_number: agreement
+            for account in relations.accounts
+            for agreement in account.customer_account.business_agreements
+            if agreement.active
+        }
+        if not agreements:
+            LOGGER.debug("No active business agreements found")
+
         results = await asyncio.gather(
-            *(
-                self.client.async_get_prices(ban)
-                for ban in self.business_agreement_numbers
-            ),
+            *(self.client.async_get_prices(ban) for ban in agreements),
             return_exceptions=True,
         )
-        data: dict[str, PricesResponse] = {}
+        data: dict[str, EngieBeHouseholdData] = {}
         first_error: EngieBeError | None = None
         any_success = False
-        for ban, result in zip(self.business_agreement_numbers, results, strict=True):
+        for ban, result in zip(agreements, results, strict=True):
             if isinstance(result, EngieBeError):
                 first_error = first_error or result
                 had_data = self.data is not None and ban in self.data
@@ -100,7 +118,9 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
                     )
                 self._logged_failures.add(ban)
                 if had_data:
-                    data[ban] = self.data[ban]
+                    data[ban] = EngieBeHouseholdData(
+                        agreement=agreements[ban], prices=self.data[ban].prices
+                    )
                 continue
             if isinstance(result, BaseException):
                 raise result
@@ -108,7 +128,7 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
             if ban in self._logged_failures:
                 LOGGER.info("Fetching prices for %s recovered", _mask(ban))
                 self._logged_failures.discard(ban)
-            data[ban] = result
+            data[ban] = EngieBeHouseholdData(agreement=agreements[ban], prices=result)
 
         if first_error is not None and not any_success:
             raise UpdateFailed(str(first_error)) from first_error
@@ -116,8 +136,8 @@ class EngieBePricesCoordinator(DataUpdateCoordinator[dict[str, PricesResponse]])
         new_eans = list(
             dict.fromkeys(
                 ean_prices.ean
-                for prices in data.values()
-                for ean_prices in prices.items
+                for household in data.values()
+                for ean_prices in household.prices.items
                 if bare_ean(ean_prices.ean) not in self.ean_energy_types
             )
         )

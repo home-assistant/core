@@ -150,7 +150,7 @@ async def test_unexpected_exception_is_not_swallowed(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Unexpected error fetching engie_be data" in caplog.text
-    coordinator = mock_config_entry.runtime_data.coordinator
+    coordinator = mock_config_entry.runtime_data
     assert coordinator.last_update_success is False
 
 
@@ -257,7 +257,7 @@ async def test_service_point_transient_failure_is_retried(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data.coordinator
+    coordinator = mock_config_entry.runtime_data
     assert bare_ean(OFFTAKE_ONLY_EAN) not in coordinator.ean_energy_types
 
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))
@@ -283,7 +283,7 @@ async def test_service_point_success_without_ean_is_cached_once(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = mock_config_entry.runtime_data.coordinator
+    coordinator = mock_config_entry.runtime_data
     assert coordinator.ean_energy_types[bare_ean(OFFTAKE_ONLY_EAN)] is None
 
     freezer.tick(SCAN_INTERVAL + timedelta(seconds=30))

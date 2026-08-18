@@ -1,30 +1,19 @@
 """The ENGIE Belgium integration."""
 
-from dataclasses import dataclass
-
-from aioengiebelgium import BusinessAgreement, EngieBeClient, EngieBeError
+from aioengiebelgium import EngieBeClient
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
-from .const import CONF_REFRESH_TOKEN, DOMAIN
+from .const import CONF_REFRESH_TOKEN
 from .coordinator import EngieBePricesCoordinator, household_device_info
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
-type EngieBeConfigEntry = ConfigEntry[EngieBeRuntimeData]
-
-
-@dataclass
-class EngieBeRuntimeData:
-    """Runtime data for the ENGIE Belgium integration."""
-
-    coordinator: EngieBePricesCoordinator
-    agreements: dict[str, BusinessAgreement]
+type EngieBeConfigEntry = ConfigEntry[EngieBePricesCoordinator]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> bool:
@@ -53,37 +42,28 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
         on_token_refresh=_persist_tokens,
     )
 
-    try:
-        relations = await client.async_get_customer_account_relations()
-    except EngieBeError as err:
-        raise ConfigEntryNotReady from err
-
-    agreements = {
-        agreement.business_agreement_number: agreement
-        for account in relations.accounts
-        for agreement in account.customer_account.business_agreements
-        if agreement.active
-    }
-    if not agreements:
-        raise ConfigEntryError(
-            translation_domain=DOMAIN,
-            translation_key="no_active_agreements",
-        )
-
-    device_registry = dr.async_get(hass)
-    for ban, agreement in agreements.items():
-        device_registry.async_get_or_create(
-            config_entry_id=entry.entry_id,
-            **household_device_info(ban, agreement),
-        )
-
-    coordinator = EngieBePricesCoordinator(hass, entry, client, list(agreements))
+    coordinator = EngieBePricesCoordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = EngieBeRuntimeData(
-        coordinator=coordinator,
-        agreements=agreements,
-    )
+    entry.runtime_data = coordinator
+
+    device_registry = dr.async_get(hass)
+    known_agreements: set[str] = set()
+
+    @callback
+    def _async_register_devices() -> None:
+        """Register a device for every business agreement not seen yet."""
+        for ban, household in coordinator.data.items():
+            if ban in known_agreements:
+                continue
+            known_agreements.add(ban)
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                **household_device_info(ban, household.agreement),
+            )
+
+    _async_register_devices()
+    entry.async_on_unload(coordinator.async_add_listener(_async_register_devices))
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 

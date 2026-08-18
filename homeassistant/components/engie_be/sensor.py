@@ -167,8 +167,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the sensor platform."""
-    coordinator = entry.runtime_data.coordinator
-    agreements = entry.runtime_data.agreements
+    coordinator = entry.runtime_data
     known_unique_ids: set[str] = set()
 
     @callback
@@ -176,12 +175,12 @@ async def async_setup_entry(
         """Add price sensors for any household/EAN/slot combination not yet known."""
         today = dt_util.now().date()
         new_entities: list[EngieBePriceSensor] = []
-        for ban, prices in coordinator.data.items():
-            device_info = household_device_info(ban, agreements[ban])
-            consumption_address = agreements[ban].consumption_address
-            eans = [ean_prices.ean for ean_prices in prices.items]
+        for ban, household in coordinator.data.items():
+            device_info = household_device_info(ban, household.agreement)
+            consumption_address = household.agreement.consumption_address
+            eans = [ean_prices.ean for ean_prices in household.prices.items]
             duplicate_eans = _duplicate_type_eans(eans, coordinator.ean_energy_types)
-            for ean_prices in prices.items:
+            for ean_prices in household.prices.items:
                 new_entities.extend(
                     entity
                     for entity in _build_entities(
@@ -284,11 +283,11 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
     @override
     def native_value(self) -> float | None:
         """Return the current price."""
-        prices = self.coordinator.data.get(self._business_agreement_number)
-        if prices is None:
+        household = self.coordinator.data.get(self._business_agreement_number)
+        if household is None:
             return None
         today = dt_util.now().date()
-        for ean_prices in prices.items:
+        for ean_prices in household.prices.items:
             if ean_prices.ean != self._ean:
                 continue
             period = _current_period(ean_prices.periods, today)

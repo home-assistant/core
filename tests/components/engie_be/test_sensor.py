@@ -25,6 +25,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.engie_be.const import DOMAIN, SCAN_INTERVAL
+from homeassistant.components.engie_be.coordinator import EngieBeHouseholdData
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -436,46 +437,60 @@ async def test_period_window_skips_sensors(
     assert entity_entries == []
 
 
-def _degraded_ban_missing() -> dict[str, PricesResponse]:
+def _household(prices: PricesResponse) -> EngieBeHouseholdData:
+    """Wrap a prices response into household data for the given BAN's agreement."""
+    return EngieBeHouseholdData(
+        agreement=BusinessAgreement(
+            business_agreement_number=BAN, active=True, consumption_address=None
+        ),
+        prices=prices,
+    )
+
+
+def _degraded_ban_missing() -> dict[str, EngieBeHouseholdData]:
     """Return coordinator data with no entry for the BAN at all."""
     return {}
 
 
-def _degraded_period_expired() -> dict[str, PricesResponse]:
+def _degraded_period_expired() -> dict[str, EngieBeHouseholdData]:
     """Return coordinator data whose only period for the BAN has expired."""
-    return {BAN: build_prices(valid_from="2000-01-01", valid_to="2000-02-01")}
+    return {
+        BAN: _household(build_prices(valid_from="2000-01-01", valid_to="2000-02-01"))
+    }
 
 
-def _degraded_slot_code_absent() -> dict[str, PricesResponse]:
+def _degraded_slot_code_absent() -> dict[str, EngieBeHouseholdData]:
     """Return coordinator data whose current period has no matching offtake slot."""
     return {
-        BAN: PricesResponse(
-            items=(
-                EanPrices(
-                    ean=OFFTAKE_ONLY_EAN,
-                    periods=(
-                        PricePeriod(
-                            valid_from="2000-01-01",
-                            valid_to="2099-12-31",
-                            vat_tariff=6.0,
-                            offtake=(
-                                PriceSlot(
-                                    time_of_use_slot_code="OTHER_CODE",
-                                    price_value=0.5,
-                                    price_value_excl_vat=0.5,
+        BAN: _household(
+            PricesResponse(
+                items=(
+                    EanPrices(
+                        ean=OFFTAKE_ONLY_EAN,
+                        periods=(
+                            PricePeriod(
+                                valid_from="2000-01-01",
+                                valid_to="2099-12-31",
+                                vat_tariff=6.0,
+                                offtake=(
+                                    PriceSlot(
+                                        time_of_use_slot_code="OTHER_CODE",
+                                        price_value=0.5,
+                                        price_value_excl_vat=0.5,
+                                    ),
                                 ),
                             ),
                         ),
                     ),
-                ),
+                )
             )
         )
     }
 
 
-def _degraded_ean_absent() -> dict[str, PricesResponse]:
+def _degraded_ean_absent() -> dict[str, EngieBeHouseholdData]:
     """Return coordinator data whose PricesResponse has no items for the EAN."""
-    return {BAN: PricesResponse(items=())}
+    return {BAN: _household(PricesResponse(items=()))}
 
 
 @pytest.mark.usefixtures("mock_engie_client")
@@ -492,7 +507,7 @@ async def test_native_value_degrades_to_unavailable(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    degraded_data: Callable[[], dict[str, PricesResponse]],
+    degraded_data: Callable[[], dict[str, EngieBeHouseholdData]],
 ) -> None:
     """Test native_value returning None makes the entity unavailable for every degraded-data branch."""
     mock_config_entry.add_to_hass(hass)
@@ -504,7 +519,7 @@ async def test_native_value_degrades_to_unavailable(
     )
     assert entity_id is not None
 
-    coordinator = mock_config_entry.runtime_data.coordinator
+    coordinator = mock_config_entry.runtime_data
     coordinator.async_set_updated_data(degraded_data())
     await hass.async_block_till_done()
 

@@ -188,11 +188,6 @@
       }
     }
   },
-  "exceptions": {
-    "no_active_agreements": {
-      "message": "No active ENGIE Belgium business agreements found."
-    }
-  },
   "selector": {
     "mfa_method": {
       "options": {
