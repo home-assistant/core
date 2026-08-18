@@ -128,6 +128,12 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         if device.supports_set_color_temp():
             self._attr_color_mode = ColorMode.COLOR_TEMP
             self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+            self._attr_min_color_temp_kelvin = (
+                device.props.get("min_color_temp") or self._attr_min_color_temp_kelvin
+            )
+            self._attr_max_color_temp_kelvin = (
+                device.props.get("max_color_temp") or self._attr_max_color_temp_kelvin
+            )
         elif device.supports_set_brightness():
             self._attr_color_mode = ColorMode.BRIGHTNESS
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -138,7 +144,7 @@ class BondLight(BondBaseLight, BondEntity, LightEntity):
         self._attr_is_on = state.get("light") == 1
         brightness = state.get("brightness")
         self._attr_brightness = round(brightness * 255 / 100) if brightness else None
-        color_temp_kelvin = state.get("color_temp_kelvin")
+        color_temp_kelvin = state.get("color_temp")
         # API resolution is 100K
         self._attr_color_temp_kelvin = (
             round(color_temp_kelvin, -2) if color_temp_kelvin else None
