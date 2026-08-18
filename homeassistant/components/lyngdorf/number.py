@@ -32,20 +32,6 @@ class LyngdorfNumberEntityDescription(NumberEntityDescription):
     range_fn: Callable[[Receiver], NumericRange | None]
 
 
-def _set_lipsync(receiver: Receiver, value: float) -> None:
-    """Set lip sync, which the device takes as whole milliseconds."""
-    receiver.lipsync = round(value)
-
-
-def _set_trim(trim: str) -> Callable[[Receiver, float], None]:
-    """Return a setter for one of the receiver's trims."""
-
-    def _set(receiver: Receiver, value: float) -> None:
-        setattr(receiver, trim, value)
-
-    return _set
-
-
 NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="lipsync",
@@ -54,7 +40,8 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: float(r.lipsync) if r.lipsync is not None else None,
-        set_value_fn=_set_lipsync,
+        # The device takes lip sync as whole milliseconds.
+        set_value_fn=lambda r, v: setattr(r, "lipsync", round(v)),
         range_fn=lambda r: r.lipsync_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -63,7 +50,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_bass,
-        set_value_fn=_set_trim("trim_bass"),
+        set_value_fn=lambda r, v: setattr(r, "trim_bass", v),
         range_fn=lambda r: r.trim_bass_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -72,7 +59,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_treble,
-        set_value_fn=_set_trim("trim_treble"),
+        set_value_fn=lambda r, v: setattr(r, "trim_treble", v),
         range_fn=lambda r: r.trim_treble_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -81,7 +68,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_centre,
-        set_value_fn=_set_trim("trim_centre"),
+        set_value_fn=lambda r, v: setattr(r, "trim_centre", v),
         range_fn=lambda r: r.trim_centre_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -90,7 +77,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_height,
-        set_value_fn=_set_trim("trim_height"),
+        set_value_fn=lambda r, v: setattr(r, "trim_height", v),
         range_fn=lambda r: r.trim_height_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -99,7 +86,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_lfe,
-        set_value_fn=_set_trim("trim_lfe"),
+        set_value_fn=lambda r, v: setattr(r, "trim_lfe", v),
         range_fn=lambda r: r.trim_lfe_range,
     ),
     LyngdorfNumberEntityDescription(
@@ -108,7 +95,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_surround,
-        set_value_fn=_set_trim("trim_surround"),
+        set_value_fn=lambda r, v: setattr(r, "trim_surround", v),
         range_fn=lambda r: r.trim_surround_range,
     ),
 )
@@ -153,11 +140,11 @@ class LyngdorfNumber(LyngdorfEntity, NumberEntity):
     @property
     def _range(self) -> NumericRange:
         """Return the device's range for this setting."""
-        range_ = self.entity_description.range_fn(self._receiver)
+        device_range = self.entity_description.range_fn(self._receiver)
         # Entities are only created for controls the model actually has.
         if TYPE_CHECKING:
-            assert range_ is not None
-        return range_
+            assert device_range is not None
+        return device_range
 
     @override
     @property
@@ -185,9 +172,5 @@ class LyngdorfNumber(LyngdorfEntity, NumberEntity):
 
     @override
     async def async_set_native_value(self, value: float) -> None:
-        """Set the value.
-
-        Async so the library's write lands on the event loop: it enqueues
-        onto an asyncio primitive, which is not safe from an executor thread.
-        """
+        """Set the value."""
         self.entity_description.set_value_fn(self._receiver, value)
