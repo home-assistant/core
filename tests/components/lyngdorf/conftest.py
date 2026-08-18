@@ -111,10 +111,14 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver.can_shuffle = False
         receiver.available_repeat_modes = frozenset()
 
-        receiver.lipsync = None
+        receiver.lipsync = 50
         receiver.lipsync_range = NumericRange(0, 500, 1)
-        for _trim in ("bass", "treble", "centre", "height", "lfe", "surround"):
-            setattr(receiver, f"trim_{_trim}", None)
+        receiver.trim_bass = 3.0
+        receiver.trim_treble = 0.0
+        receiver.trim_centre = 0.0
+        receiver.trim_height = 4.0
+        receiver.trim_lfe = 3.0
+        receiver.trim_surround = 0.0
         receiver.trim_bass_range = NumericRange(-12.0, 12.0, 0.1)
         receiver.trim_treble_range = NumericRange(-12.0, 12.0, 0.1)
         for _trim in ("centre", "height", "lfe", "surround"):

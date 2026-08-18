@@ -57,7 +57,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '50.0',
   })
 # ---
 # name: test_entities[number.mock_lyngdorf_trim_bass-entry]
@@ -118,7 +118,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3.0',
   })
 # ---
 # name: test_entities[number.mock_lyngdorf_trim_centre-entry]
@@ -179,7 +179,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_entities[number.mock_lyngdorf_trim_height-entry]
@@ -240,7 +240,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '4.0',
   })
 # ---
 # name: test_entities[number.mock_lyngdorf_trim_lfe-entry]
@@ -301,7 +301,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '3.0',
   })
 # ---
 # name: test_entities[number.mock_lyngdorf_trim_surround-entry]
@@ -362,7 +362,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
 # name: test_entities[number.mock_lyngdorf_trim_treble-entry]
@@ -423,6 +423,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': '0.0',
   })
 # ---
