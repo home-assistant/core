@@ -10,12 +10,10 @@ import pytest
 from homeassistant.components.openaq.const import CONF_LOCATION_ID, DOMAIN
 from homeassistant.components.openaq.coordinator import (
     OpenAQDataUpdateCoordinator,
-    OpenAQMeasurement,
-    OpenAQSensorMetadata,
+    _build_sensor_metadata,
     async_create_openaq_client,
     create_openaq_client,
     normalize_latest_measurements,
-    normalize_sensor_metadata,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.const import CONF_API_KEY, UnitOfDensity
@@ -55,26 +53,11 @@ async def test_async_create_openaq_client_uses_executor(
     mock_create.assert_called_once_with("api-key")
 
 
-@pytest.mark.parametrize(
-    ("first_exception", "expected_translation_key"),
-    [
-        (
-            ServerError("API error"),
-            "unable_to_fetch",
-        ),
-        (
-            RuntimeError("Unexpected error"),
-            "unable_to_fetch",
-        ),
-    ],
-)
-async def test_initial_refresh_exception_group_maps_error(
+async def test_initial_refresh_sdk_error_raises_update_failed(
     hass: HomeAssistant,
     mock_openaq_client: MagicMock,
-    first_exception: Exception,
-    expected_translation_key: str,
 ) -> None:
-    """Test initial refresh errors raise UpdateFailed."""
+    """Test initial refresh SDK errors raise UpdateFailed."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="OpenAQ",
@@ -96,15 +79,15 @@ async def test_initial_refresh_exception_group_maps_error(
         next(iter(config_entry.subentries.values())),
         mock_openaq_client,
     )
-    mock_openaq_client.locations.get.side_effect = first_exception
-    mock_openaq_client.locations.latest.side_effect = RuntimeError("Unexpected error")
+    api_error = ServerError("API error")
+    mock_openaq_client.locations.get.side_effect = api_error
 
     with pytest.raises(UpdateFailed) as err:
         await coordinator._async_update_data()
 
-    assert err.value.__cause__ is first_exception
+    assert err.value.__cause__ is api_error
     assert err.value.translation_domain == DOMAIN
-    assert err.value.translation_key == expected_translation_key
+    assert err.value.translation_key == "unable_to_fetch"
 
 
 async def test_initial_refresh_auth_error_raises_update_failed(
@@ -167,48 +150,37 @@ async def test_initial_refresh_runs_sdk_calls_in_executor(
 
 def test_normalize_latest_measurements() -> None:
     """Test normalizing latest measurements by sensor metadata."""
+    by_id, _ = _build_sensor_metadata(
+        [
+            make_sensor(1, "pm2.5", "µg/m3"),
+            make_sensor(2, "pm10"),
+        ],
+    )
     measurements = normalize_latest_measurements(
         [
             make_latest(1, 8.5),
             make_latest(999, 44.1),
             make_latest(2, None),
         ],
-        [
-            make_sensor(1, "pm2.5", "µg/m3"),
-            make_sensor(2, "pm10"),
-        ],
+        by_id,
     )
 
-    assert measurements == MappingProxyType(
-        {
-            "pm25": OpenAQMeasurement(
-                parameter="pm25",
-                value=8.5,
-                unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
-            ),
-        }
-    )
+    assert measurements == MappingProxyType({"pm25": 8.5})
 
 
-def test_normalize_sensor_metadata() -> None:
+def test_build_sensor_metadata() -> None:
     """Test normalizing sensor metadata by parameter."""
-    metadata = normalize_sensor_metadata(
+    _, units = _build_sensor_metadata(
         [
             make_sensor(1, "pm2.5", "µg/m3"),
             make_sensor(2, "pm10"),
         ]
     )
 
-    assert metadata == MappingProxyType(
+    assert units == MappingProxyType(
         {
-            "pm25": OpenAQSensorMetadata(
-                parameter="pm25",
-                unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
-            ),
-            "pm10": OpenAQSensorMetadata(
-                parameter="pm10",
-                unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
-            ),
+            "pm25": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
+            "pm10": UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         }
     )
 
@@ -225,38 +197,28 @@ def test_normalize_latest_measurements_normalizes_unit_aliases(
     unit: str, expected_unit: str
 ) -> None:
     """Test normalizing measurement unit aliases."""
+    by_id, units = _build_sensor_metadata([make_sensor(1, "pm10", unit)])
     measurements = normalize_latest_measurements(
         [make_latest(1, 12.1)],
-        [make_sensor(1, "pm10", unit)],
+        by_id,
     )
 
-    assert measurements == MappingProxyType(
-        {
-            "pm10": OpenAQMeasurement(
-                parameter="pm10",
-                value=12.1,
-                unit=expected_unit,
-            )
-        }
-    )
+    assert measurements == MappingProxyType({"pm10": 12.1})
+    assert units == MappingProxyType({"pm10": expected_unit})
 
 
 def test_normalize_latest_measurements_allows_missing_units() -> None:
     """Test normalizing a measurement without a reported unit."""
-    measurements = normalize_latest_measurements(
-        [make_latest(1, 12.1)],
+    by_id, units = _build_sensor_metadata(
         [make_sensor(1, "pm10", cast(str, None))],
     )
-
-    assert measurements == MappingProxyType(
-        {
-            "pm10": OpenAQMeasurement(
-                parameter="pm10",
-                value=12.1,
-                unit=None,
-            )
-        }
+    measurements = normalize_latest_measurements(
+        [make_latest(1, 12.1)],
+        by_id,
     )
+
+    assert measurements == MappingProxyType({"pm10": 12.1})
+    assert units == MappingProxyType({"pm10": None})
 
 
 async def test_update_data_auth_error_raises_update_failed(
