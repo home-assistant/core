@@ -421,11 +421,11 @@ def _restore_overrides(
 ) -> None:
     """Re-apply the user's name/icon/area/disabled overrides to an adopted entity."""
     updates: dict[str, Any] = {}
-    if record.get(_R_NAME):
+    if record.get(_R_NAME) is not None:
         updates["name"] = record[_R_NAME]
-    if record.get(_R_ICON):
+    if record.get(_R_ICON) is not None:
         updates["icon"] = record[_R_ICON]
-    if record.get(_R_AREA):
+    if record.get(_R_AREA) is not None:
         updates["area_id"] = record[_R_AREA]
     if record.get(_R_DISABLED):
         updates["disabled_by"] = er.RegistryEntryDisabler.USER

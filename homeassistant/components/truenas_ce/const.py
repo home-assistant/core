@@ -109,7 +109,7 @@ ISSUE_MIGRATION_ROLLBACK = "migration_rollback_available"
 # the adoption can always be fully rolled back; MIGRATION_RESOLVED_UNIQUE_IDS
 # tracks which of those records have already reclaimed their id, so retries of
 # the still-pending ones (see pending_legacy_records) never revisit a resolved
-# record and fight a user's later manual rename; MIGRATION_LEGACY_ENTRY_ID/​
+# record and fight a user's later manual rename; MIGRATION_LEGACY_ENTRY_ID/
 # _CONFIG remember the disabled legacy entry and a snapshot of its data+options
 # for a clean rollback; MIGRATION_BACKUP_KEY is the .storage key of the
 # standalone safety snapshot. See migration.py.

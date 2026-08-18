@@ -229,10 +229,8 @@ def _skip_keyless_description(
     entity_description: TrueNASEntityDescription, data: dict[str, Any]
 ) -> bool:
     """Return True if a keyless description has no value to expose."""
-    attr_name: str | None = getattr(
-        entity_description,
-        "data_attribute",
-        getattr(entity_description, "data_is_on", None),
+    attr_name = getattr(entity_description, "data_attribute", None) or getattr(
+        entity_description, "data_is_on", None
     )
     return data.get(attr_name) is None if attr_name else False
 

@@ -45,7 +45,7 @@
           "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",
           "verify_ssl": "Verify the TrueNAS instance's SSL certificate. Disable only if you use a self-signed certificate you cannot otherwise validate."
         },
-        "description": "Set up TrueNAS integration."
+        "description": "Set up TrueNAS CE integration."
       },
       "zeroconf_confirm": {
         "description": "A TrueNAS instance was discovered at {host}. Do you want to set it up?",
@@ -100,16 +100,16 @@
         "name": "Status"
       },
       "pool_allocated": {
-        "name": "allocated"
+        "name": "Allocated"
       },
       "pool_errors": {
-        "name": "errors"
+        "name": "Errors"
       },
       "pool_fragmentation": {
-        "name": "fragmentation"
+        "name": "Fragmentation"
       },
       "pool_free": {
-        "name": "free"
+        "name": "Free"
       },
       "pool_scrub_end": {
         "name": "Scrub finished"
@@ -121,7 +121,7 @@
         "name": "Scrub state"
       },
       "pool_size": {
-        "name": "size"
+        "name": "Size"
       },
       "system_cache_size_arc_value": {
         "name": "ARC size"
