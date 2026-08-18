@@ -28,7 +28,6 @@ class EngieBeHouseholdCoordinators:
 class EngieBeRuntimeData:
     """Runtime data for the ENGIE Belgium integration."""
 
-    client: EngieBeClient
     relations: EngieBeRelationsCoordinator
     households: dict[str, EngieBeHouseholdCoordinators]
 
@@ -85,9 +84,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
         *(household.prices.async_refresh() for household in households.values())
     )
 
-    entry.runtime_data = EngieBeRuntimeData(
-        client=client, relations=relations, households=households
-    )
+    entry.runtime_data = EngieBeRuntimeData(relations=relations, households=households)
 
     known_bans: set[str] = set(households)
 
