@@ -460,10 +460,10 @@ async def test_network_neighbors(
     }
     # The nodes are read one at a time while the radio is off
     assert commands == [
-        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.toggle_rf", "enabled": False},
         {"command": "controller.get_node_neighbors", "nodeId": 1},
         {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
-        {"command": "controller.toggle_rf", "enable": True},
+        {"command": "controller.toggle_rf", "enabled": True},
     ]
 
 
@@ -496,7 +496,7 @@ async def test_network_neighbors_node_failure(
 
     assert msg["success"]
     assert msg["result"] == {str(multisensor_6.node_id): []}
-    assert commands[-1] == {"command": "controller.toggle_rf", "enable": True}
+    assert commands[-1] == {"command": "controller.toggle_rf", "enabled": True}
 
 
 async def test_network_neighbors_node_added_while_reading(
@@ -532,7 +532,7 @@ async def test_network_neighbors_node_added_while_reading(
         str(multisensor_6.node_id): [],
         str(wallmote_central_scene.node_id): [],
     }
-    assert commands[-1] == {"command": "controller.toggle_rf", "enable": True}
+    assert commands[-1] == {"command": "controller.toggle_rf", "enabled": True}
 
 
 async def test_network_neighbors_rf_disable_rejected(
@@ -546,7 +546,7 @@ async def test_network_neighbors_rf_disable_rejected(
 
     async def handler(message: dict[str, Any]) -> dict[str, Any]:
         if message["command"] == "controller.toggle_rf":
-            return {"success": message["enable"]}
+            return {"success": message["enabled"]}
         return {"neighbors": []}
 
     commands = mock_neighbors_commands(client, handler)
@@ -562,8 +562,8 @@ async def test_network_neighbors_rf_disable_rejected(
     assert not msg["success"]
     assert msg["error"]["code"] == "rf_toggle_failed"
     assert commands == [
-        {"command": "controller.toggle_rf", "enable": False},
-        {"command": "controller.toggle_rf", "enable": True},
+        {"command": "controller.toggle_rf", "enabled": False},
+        {"command": "controller.toggle_rf", "enabled": True},
     ]
 
 
@@ -579,7 +579,7 @@ async def test_network_neighbors_rf_restore_rejected(
 
     async def handler(message: dict[str, Any]) -> dict[str, Any]:
         if message["command"] == "controller.toggle_rf":
-            return {"success": not message["enable"]}
+            return {"success": not message["enabled"]}
         return {"neighbors": []}
 
     commands = mock_neighbors_commands(client, handler)
@@ -594,7 +594,7 @@ async def test_network_neighbors_rf_restore_rejected(
 
     assert not msg["success"]
     assert msg["error"]["code"] == "rf_toggle_failed"
-    assert commands[-1] == {"command": "controller.toggle_rf", "enable": True}
+    assert commands[-1] == {"command": "controller.toggle_rf", "enabled": True}
     assert "Failed to re-enable RF" in caplog.text
 
 
@@ -608,7 +608,7 @@ async def test_network_neighbors_rf_toggle_error(
     ws_client = await hass_ws_client(hass)
 
     async def handler(message: dict[str, Any]) -> dict[str, Any]:
-        if message["enable"]:
+        if message["enabled"]:
             raise FailedZWaveCommand("failed_command", 1, "error message")
         return {"success": False}
 
@@ -641,7 +641,7 @@ async def test_network_neighbors_cancelled(
     ws_client = await hass_ws_client(hass)
 
     async def handler(message: dict[str, Any]) -> dict[str, Any]:
-        if message["command"] == "controller.toggle_rf" and not message["enable"]:
+        if message["command"] == "controller.toggle_rf" and not message["enabled"]:
             raise asyncio.CancelledError
         return {"success": True}
 
@@ -660,8 +660,8 @@ async def test_network_neighbors_cancelled(
     await hass.async_block_till_done()
 
     assert commands == [
-        {"command": "controller.toggle_rf", "enable": False},
-        {"command": "controller.toggle_rf", "enable": True},
+        {"command": "controller.toggle_rf", "enabled": False},
+        {"command": "controller.toggle_rf", "enabled": True},
     ]
 
 
@@ -682,7 +682,7 @@ async def test_network_neighbors_cancelled_while_restoring_rf(
             # the reads run in the handler task, the restore does not
             handler_tasks.append(asyncio.current_task())
             return {"neighbors": []}
-        if message["enable"]:
+        if message["enabled"]:
             restore_started.set()
             await resume_restore.wait()
         return {"success": True}
@@ -753,7 +753,7 @@ async def test_network_neighbors_concurrent(
     assert msg["type"] == "pong"
     # The second request must not have touched the radio yet
     assert commands == [
-        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.toggle_rf", "enabled": False},
         {"command": "controller.get_node_neighbors", "nodeId": 1},
     ]
 
@@ -764,14 +764,14 @@ async def test_network_neighbors_concurrent(
     assert msg["success"]
     # The second request turns the radio off only after the first turned it on
     assert commands == [
-        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.toggle_rf", "enabled": False},
         {"command": "controller.get_node_neighbors", "nodeId": 1},
         {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
-        {"command": "controller.toggle_rf", "enable": True},
-        {"command": "controller.toggle_rf", "enable": False},
+        {"command": "controller.toggle_rf", "enabled": True},
+        {"command": "controller.toggle_rf", "enabled": False},
         {"command": "controller.get_node_neighbors", "nodeId": 1},
         {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
-        {"command": "controller.toggle_rf", "enable": True},
+        {"command": "controller.toggle_rf", "enabled": True},
     ]
 
 
