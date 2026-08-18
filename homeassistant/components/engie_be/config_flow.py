@@ -1,6 +1,5 @@
 """Config flow for the ENGIE Belgium integration."""
 
-from collections.abc import Mapping
 from typing import Any, override
 
 from aioengiebelgium import (
@@ -136,71 +135,4 @@ class EngieBeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="mfa", data_schema=_CODE_SCHEMA, errors=errors
-        )
-
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the reauthentication confirmation step."""
-        errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
-
-        if user_input is not None:
-            await self.async_set_unique_id(reauth_entry.data[CONF_USERNAME].lower())
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
-
-            errors = await self._async_start_authentication(
-                {
-                    CONF_USERNAME: reauth_entry.data[CONF_USERNAME],
-                    CONF_PASSWORD: user_input[CONF_PASSWORD],
-                    CONF_MFA_METHOD: user_input[CONF_MFA_METHOD],
-                }
-            )
-            if not errors:
-                return await self.async_step_reauth_mfa()
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_PASSWORD): str,
-                    vol.Required(
-                        CONF_MFA_METHOD,
-                        default=reauth_entry.data.get(
-                            CONF_MFA_METHOD, MfaMethod.SMS.value
-                        ),
-                    ): _MFA_METHOD_SELECTOR,
-                }
-            ),
-            description_placeholders={"username": reauth_entry.data[CONF_USERNAME]},
-            errors=errors,
-        )
-
-    async def async_step_reauth_mfa(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the MFA code entry step during reauthentication."""
-        errors: dict[str, str] = {}
-
-        if user_input is not None:
-            errors, tokens = await self._async_submit_mfa(user_input["code"])
-            if not errors and tokens is not None:
-                access_token, refresh_token = tokens
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={
-                        CONF_MFA_METHOD: self._mfa_method.value,
-                        CONF_ACCESS_TOKEN: access_token,
-                        CONF_REFRESH_TOKEN: refresh_token,
-                    },
-                )
-
-        return self.async_show_form(
-            step_id="reauth_mfa", data_schema=_CODE_SCHEMA, errors=errors
         )
