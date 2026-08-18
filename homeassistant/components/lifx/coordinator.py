@@ -199,4 +199,4 @@ class LIFXUpdateCoordinator(DataUpdateCoordinator[LIFXState]):
             await self.device.apply_theme(ThemeLibrary.get(theme_name))
         except LifxError as err:
             raise device_error(err) from err
-        self.last_used_theme = theme_name
+        self.last_used_theme = theme_name.lower()
