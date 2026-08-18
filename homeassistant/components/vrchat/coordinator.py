@@ -136,11 +136,16 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         Get a fresh copy of the API in the callback.
         The callback will be called a second time after reauthentication if an authentication error happened in the first try.
         """
+        api = self.api.copy()
         try:
-            return await callback(self.api.copy())
+            return await callback(api)
         except vrchatapi.exceptions.UnauthorizedException:
-            await self.restart()
-            return await callback(self.api)
+            pass
+        finally:
+            await api.close()
+
+        await self.restart()
+        return await callback(self.api)
 
     @cached_property
     def current_user(self):

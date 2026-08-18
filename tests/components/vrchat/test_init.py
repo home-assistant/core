@@ -6,6 +6,7 @@ from typing import Never
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
+import vrchatapi
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.vrchat import async_remove_entry
@@ -165,6 +166,65 @@ async def test_restart_closes_replacement_api() -> None:
     await AsyncCleanups.close(coordinator)
 
     replacement_api.close.assert_awaited_once()
+
+
+async def test_use_api_closes_temporary_api() -> None:
+    """Test using an API copy closes it after a successful callback."""
+    primary_api = Mock()
+    temporary_api = Mock()
+    temporary_api.close = AsyncMock()
+    primary_api.copy.return_value = temporary_api
+    callback = AsyncMock(return_value="result")
+
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.api = primary_api
+
+    assert await coordinator.use_api(callback) == "result"
+
+    callback.assert_awaited_once_with(temporary_api)
+    temporary_api.close.assert_awaited_once()
+
+
+async def test_use_api_closes_temporary_api_after_error() -> None:
+    """Test using an API copy closes it when the callback fails."""
+    primary_api = Mock()
+    temporary_api = Mock()
+    temporary_api.close = AsyncMock()
+    primary_api.copy.return_value = temporary_api
+    callback = AsyncMock(side_effect=RuntimeError("test error"))
+
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.api = primary_api
+
+    with pytest.raises(RuntimeError, match="test error"):
+        await coordinator.use_api(callback)
+
+    temporary_api.close.assert_awaited_once()
+
+
+async def test_use_api_reauthenticates_after_closing_temporary_api() -> None:
+    """Test authentication errors close the temporary API before retrying."""
+    primary_api = Mock()
+    temporary_api = Mock()
+    temporary_api.close = AsyncMock()
+    primary_api.copy.return_value = temporary_api
+    callback = AsyncMock(
+        side_effect=[
+            vrchatapi.exceptions.UnauthorizedException(status=401, reason="expired"),
+            "result",
+        ]
+    )
+
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    coordinator.api = primary_api
+    coordinator.restart = AsyncMock()
+
+    assert await coordinator.use_api(callback) == "result"
+
+    temporary_api.close.assert_awaited_once()
+    coordinator.restart.assert_awaited_once()
+    assert callback.await_args_list[0].args == (temporary_api,)
+    assert callback.await_args_list[1].args == (primary_api,)
 
 
 async def test_get_friends_propagates_fetch_error() -> None:
