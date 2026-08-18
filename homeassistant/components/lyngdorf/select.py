@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from lyngdorf.device import Receiver
 
@@ -82,7 +82,8 @@ class LyngdorfSelect(LyngdorfEntity, SelectEntity):
     ) -> None:
         """Initialize the select entity."""
         super().__init__(receiver, device_info)
-        assert config_entry.unique_id
+        if TYPE_CHECKING:
+            assert config_entry.unique_id
         self.entity_description = description
         self._attr_unique_id = f"{config_entry.unique_id}_{description.key}"
 

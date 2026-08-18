@@ -2,32 +2,41 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+from syrupy.assertion import SnapshotAssertion
+
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import notify_receiver_update
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Only load the select platform."""
+    return [Platform.SELECT]
+
 
 ROOM_PERFECT_ENTITY_ID = "select.mock_lyngdorf_roomperfect_position"
 VOICING_ENTITY_ID = "select.mock_lyngdorf_voicing"
 
 
-async def test_select_entities_created(
+async def test_entities(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_receiver: MagicMock,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that select entities are created."""
-    assert init_integration.state is ConfigEntryState.LOADED
-    assert hass.states.get(ROOM_PERFECT_ENTITY_ID) is not None
-    assert hass.states.get(VOICING_ENTITY_ID) is not None
+    """Test the select entities."""
+    await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
 async def test_room_perfect_current_option(
