@@ -61,7 +61,7 @@ async def test_room_perfect_select_option(
         blocking=True,
     )
 
-    assert mock_receiver.room_perfect_position == "global"
+    mock_receiver.set_room_perfect_position.assert_called_once_with("global")
 
 
 async def test_voicing_select_option(
@@ -86,4 +86,4 @@ async def test_voicing_select_option(
         blocking=True,
     )
 
-    assert mock_receiver.voicing == "Movie"
+    mock_receiver.set_voicing.assert_called_once_with("Movie")
