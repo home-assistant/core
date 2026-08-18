@@ -5,7 +5,12 @@ from copy import deepcopy
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from lunatone_rest_api_client import Device, Devices, Info, Sensor, Sensors
-from lunatone_rest_api_client.models import InfoData, ScanData, SensorsData
+from lunatone_rest_api_client.models import (
+    InfoData,
+    ScanData,
+    ScanLineData,
+    SensorsData,
+)
 import pytest
 
 from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
@@ -169,7 +174,9 @@ def mock_lunatone_scan() -> Generator[AsyncMock]:
         ),
     ):
         scan = mock_dali_scan.return_value
-        scan.data = ScanData()
+        scan.data = ScanData(
+            lines=[ScanLineData(line=int(line_id)) for line_id in INFO_DATA.lines]
+        )
         yield scan
 
 
