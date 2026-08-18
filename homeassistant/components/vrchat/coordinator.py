@@ -577,7 +577,8 @@ class VRChatUserDataCoordinator(AsyncCleanups):
         self._entity_update_listeners.append(listener)
 
         def remove_listener() -> None:
-            self._entity_update_listeners.remove(listener)
+            if listener in self._entity_update_listeners:
+                self._entity_update_listeners.remove(listener)
 
         return remove_listener
 

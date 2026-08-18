@@ -291,6 +291,19 @@ def test_entity_update_listener_snapshot() -> None:
     second_listener.assert_called_once_with(True, False)
 
 
+def test_entity_update_listener_removal_is_idempotent() -> None:
+    """Test removing an entity update listener multiple times is safe."""
+    coordinator = object.__new__(VRChatUserDataCoordinator)
+    coordinator._entity_update_listeners = []
+
+    remove_listener = coordinator.async_add_entity_update_listener(Mock())
+
+    remove_listener()
+    remove_listener()
+
+    assert not coordinator._entity_update_listeners
+
+
 async def test_get_friends_propagates_fetch_error() -> None:
     """Test friend fetch errors propagate from the task group."""
     coordinator = object.__new__(VRChatAccountDataCoordinator)
