@@ -1,0 +1,47 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "invalid_station": "Station could not be found."
+    },
+    "error": {
+      "invalid_station": "No station matched your search."
+    },
+    "step": {
+      "select": {
+        "data": {
+          "station_id": "Station"
+        },
+        "description": "Multiple stations matched your search. Pick the one to add.",
+        "title": "Select station"
+      },
+      "user": {
+        "data": {
+          "station": "Station"
+        },
+        "description": "Search for a station or stop in the Munich public transport network.",
+        "title": "Add MVG station"
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "MVG stations configured in `configuration.yaml` have been imported automatically as config entries. You can now remove the `sensor: - platform: mvglive` block from `configuration.yaml`.",
+      "title": "The MVG YAML configuration is deprecated"
+    }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "destinations": "Destinations (comma-separated)",
+          "enable_messages": "Show incident messages",
+          "lines": "Lines (comma-separated)",
+          "number": "Number of departures",
+          "products": "Modes of transport",
+          "timeoffset": "Time offset (minutes)"
+        }
+      }
+    }
+  }
+}

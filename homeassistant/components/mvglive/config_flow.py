@@ -1,0 +1,211 @@
+"""Config flow for the MVG integration."""
+
+from typing import Any, override
+
+from mvg import MvgApi, TransportType
+import voluptuous as vol
+
+from homeassistant import config_entries
+from homeassistant.core import callback
+from homeassistant.helpers.selector import (
+    SelectOptionDict,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
+)
+
+from .const import (
+    CONF_DESTINATIONS,
+    CONF_ENABLE_MESSAGES,
+    CONF_LINES,
+    CONF_NUMBER,
+    CONF_PRODUCTS,
+    CONF_STATION,
+    CONF_STATION_ID,
+    CONF_STATION_NAME,
+    CONF_TIMEOFFSET,
+    DEFAULT_DESTINATIONS,
+    DEFAULT_ENABLE_MESSAGES,
+    DEFAULT_LINES,
+    DEFAULT_NUMBER,
+    DEFAULT_PRODUCTS,
+    DEFAULT_TIMEOFFSET,
+    DOMAIN,
+)
+
+ALL_PRODUCTS = [product.value[0] for product in TransportType.all()]
+
+MAX_STATION_MATCHES = 25
+
+
+def _csv_to_list(value: str) -> list[str]:
+    """Convert a comma-separated string to a list, matching the legacy YAML behavior."""
+    items = [item.strip() for item in value.split(",")]
+    return items or [""]
+
+
+def _list_to_csv(value: list[str] | None) -> str:
+    """Convert a list back to a comma-separated string for form pre-fill."""
+    return ", ".join(value) if value else ""
+
+
+class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
+    """Handle a config flow for MVG."""
+
+    VERSION = 1
+
+    def __init__(self) -> None:
+        """Initialize the config flow."""
+        self._matches: dict[str, dict[str, Any]] = {}
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Handle the initial step: search for a station by (partial) name."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            query = user_input[CONF_STATION].strip().lower()
+            all_stations = await MvgApi.stations_async()
+            matches = sorted(
+                (
+                    station
+                    for station in all_stations
+                    if query in station["name"].lower()
+                ),
+                key=lambda station: station["name"],
+            )[:MAX_STATION_MATCHES]
+            if not matches:
+                errors["base"] = "invalid_station"
+            else:
+                self._matches = {station["id"]: station for station in matches}
+                return await self.async_step_select()
+
+        schema = vol.Schema({vol.Required(CONF_STATION): str})
+        return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
+
+    async def async_step_select(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Let the user pick the exact station from the search matches."""
+        if user_input is not None:
+            station = self._matches[user_input[CONF_STATION_ID]]
+            await self.async_set_unique_id(station["id"])
+            self._abort_if_unique_id_configured()
+            return self.async_create_entry(
+                title=station["name"],
+                data={
+                    CONF_STATION_ID: station["id"],
+                    CONF_STATION_NAME: station["name"],
+                },
+            )
+
+        options = [
+            SelectOptionDict(
+                value=station["id"],
+                label=f"{station['name']} ({station['place']})"
+                if station.get("place")
+                else station["name"],
+            )
+            for station in self._matches.values()
+        ]
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_STATION_ID): SelectSelector(
+                    SelectSelectorConfig(
+                        options=options, mode=SelectSelectorMode.DROPDOWN
+                    )
+                )
+            }
+        )
+        return self.async_show_form(step_id="select", data_schema=schema)
+
+    async def async_step_import(
+        self, import_data: dict[str, Any]
+    ) -> config_entries.ConfigFlowResult:
+        """Import a single `nextdeparture` entry from YAML configuration."""
+        station = await MvgApi.station_async(import_data[CONF_STATION])
+        if station is None:
+            return self.async_abort(reason="invalid_station")
+
+        await self.async_set_unique_id(station["id"])
+        self._abort_if_unique_id_configured()
+
+        options = {
+            CONF_DESTINATIONS: import_data.get(CONF_DESTINATIONS, DEFAULT_DESTINATIONS),
+            CONF_LINES: import_data.get(CONF_LINES, DEFAULT_LINES),
+            CONF_PRODUCTS: import_data.get(CONF_PRODUCTS, DEFAULT_PRODUCTS),
+            CONF_TIMEOFFSET: import_data.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET),
+            CONF_NUMBER: import_data.get(CONF_NUMBER, DEFAULT_NUMBER),
+        }
+        return self.async_create_entry(
+            title=station["name"],
+            data={
+                CONF_STATION_ID: station["id"],
+                CONF_STATION_NAME: station["name"],
+            },
+            options=options,
+        )
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: config_entries.ConfigEntry,
+    ) -> MvgOptionsFlowHandler:
+        """Create the options flow."""
+        return MvgOptionsFlowHandler()
+
+
+class MvgOptionsFlowHandler(config_entries.OptionsFlow):
+    """Handle MVG options: destinations, lines, products, timeoffset, number and messages."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> config_entries.ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            options = {
+                CONF_DESTINATIONS: _csv_to_list(user_input[CONF_DESTINATIONS]),
+                CONF_LINES: _csv_to_list(user_input[CONF_LINES]),
+                CONF_PRODUCTS: user_input.get(CONF_PRODUCTS) or None,
+                CONF_TIMEOFFSET: user_input[CONF_TIMEOFFSET],
+                CONF_NUMBER: user_input[CONF_NUMBER],
+                CONF_ENABLE_MESSAGES: user_input[CONF_ENABLE_MESSAGES],
+            }
+            return self.async_create_entry(data=options)
+
+        current = self.config_entry.options
+        schema = vol.Schema(
+            {
+                vol.Optional(
+                    CONF_DESTINATIONS,
+                    default=_list_to_csv(
+                        current.get(CONF_DESTINATIONS, DEFAULT_DESTINATIONS)
+                    ),
+                ): str,
+                vol.Optional(
+                    CONF_LINES,
+                    default=_list_to_csv(current.get(CONF_LINES, DEFAULT_LINES)),
+                ): str,
+                vol.Optional(
+                    CONF_PRODUCTS,
+                    default=current.get(CONF_PRODUCTS) or [],
+                ): SelectSelector(
+                    SelectSelectorConfig(options=ALL_PRODUCTS, multiple=True)
+                ),
+                vol.Optional(
+                    CONF_TIMEOFFSET,
+                    default=current.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET),
+                ): int,
+                vol.Optional(
+                    CONF_NUMBER,
+                    default=current.get(CONF_NUMBER, DEFAULT_NUMBER),
+                ): int,
+                vol.Optional(
+                    CONF_ENABLE_MESSAGES,
+                    default=current.get(CONF_ENABLE_MESSAGES, DEFAULT_ENABLE_MESSAGES),
+                ): bool,
+            }
+        )
+        return self.async_show_form(step_id="init", data_schema=schema)
