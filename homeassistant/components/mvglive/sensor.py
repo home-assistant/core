@@ -200,7 +200,7 @@ class MVGSensor(CoordinatorEntity[MvgDataUpdateCoordinator], SensorEntity):
         """Icon to use in the frontend, if any."""
         if not self._departures:
             return NONE_ICON
-        return self._departures[0]["icon"]
+        return str(self._departures[0]["icon"])
 
     @property
     @override

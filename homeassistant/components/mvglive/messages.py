@@ -5,7 +5,7 @@ The upstream ``mvg`` package (https://pypi.org/project/mvg/) dropped the
 minimal client for it here.
 """
 
-from typing import Any
+from typing import Any, cast
 
 import aiohttp
 from mvg import MvgApiError, TransportType
@@ -21,7 +21,7 @@ UNKNOWN_TRANSPORT_TYPE = ("Unbekannt", "mdi:help-circle-outline")
 def _transport_type_value(name: str) -> tuple[str, str]:
     """Resolve a transport type name to (label, icon), falling back for unknown types."""
     try:
-        return TransportType[name].value
+        return cast(tuple[str, str], TransportType[name].value)
     except KeyError:
         return UNKNOWN_TRANSPORT_TYPE
 
