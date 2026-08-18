@@ -5,13 +5,12 @@ from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 from functools import partial
-import logging
 import re
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 from xml.etree.ElementTree import ParseError
 
 from fritzconnection import FritzConnection
-from fritzconnection.core.exceptions import FritzActionError
+from fritzconnection.core.exceptions import FritzActionError, FritzConnectionException
 from fritzconnection.lib.fritzcall import FritzCall
 from fritzconnection.lib.fritzhosts import FritzHosts
 from fritzconnection.lib.fritzstatus import FritzStatus
@@ -44,6 +43,7 @@ from .const import (
     DOMAIN,
     FRITZ_AUTH_EXCEPTIONS,
     FRITZ_EXCEPTIONS,
+    LOGGER,
     SCAN_INTERVAL,
     MeshRoles,
 )
@@ -56,8 +56,6 @@ from .models import (
     HostInfo,
     Interface,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 FRITZ_DATA_KEY: HassKey[FritzData] = HassKey(DOMAIN)
 
@@ -96,7 +94,7 @@ class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
     def clear_cache(self) -> None:
         """Clear cached calls."""
         self._call_cache = {}
-        _LOGGER.debug("Cleared FritzConnection call action cache")
+        LOGGER.debug("Cleared FritzConnection call action cache")
 
     def call_action(
         self,
@@ -119,7 +117,7 @@ class FritzConnectionCached(FritzConnection):  # type: ignore[misc]
 
         cache_key = slugify(f"{service_name}:{action_name}:{arguments}:{kwargs_key}")
         if (result := self._call_cache.get(cache_key)) is not None:
-            _LOGGER.debug("Using cached result for %s %s", service_name, action_name)
+            LOGGER.debug("Using cached result for %s %s", service_name, action_name)
             return result
 
         result = super().call_action(
@@ -154,7 +152,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         super().__init__(
             hass=hass,
             config_entry=config_entry,
-            logger=_LOGGER,
+            logger=LOGGER,
             name=f"{DOMAIN}-{host}-coordinator",
             update_interval=timedelta(seconds=SCAN_INTERVAL),
         )
@@ -215,13 +213,14 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             use_tls=self.use_tls,
             timeout=60.0,
             pool_maxsize=30,
+            redact_debug_log=True,
         )
 
         if not self.connection:
-            _LOGGER.error("Unable to establish a connection with %s", self.host)
+            LOGGER.error("Unable to establish a connection with %s", self.host)
             return
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "detected services on %s %s",
             self.host,
             list(self.connection.services.keys()),
@@ -239,13 +238,15 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 translation_key="error_parse_device_info",
             ) from ex
 
-        _LOGGER.debug(
+        LOGGER.debug(
             "gathered device info of %s %s",
             self.host,
             {
                 **vars(info),
                 "NewDeviceLog": "***omitted***",
+                "device_log": "***omitted***",
                 "NewSerialNumber": "***omitted***",
+                "serial_number": "***omitted***",
             },
         )
 
@@ -267,9 +268,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         ) = self._update_device_info()
 
         if self.fritz_status.has_wan_support:
-            self.device_conn_type = (
-                self.fritz_status.get_default_connection_service().connection_service
-            )
+            self.device_conn_type = self.fritz_status.connection_service
             self.device_is_router = self.fritz_status.has_wan_enabled
 
         self.has_call_deflections = "X_AVM-DE_OnTel1" in self.connection.services
@@ -282,11 +281,11 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         def unregister_entity_updates() -> None:
             """Unregister an entity to be updated by coordinator."""
             if key in self._entity_update_functions:
-                _LOGGER.debug("unregister entity %s from updates", key)
+                LOGGER.debug("unregister entity %s from updates", key)
                 self._entity_update_functions.pop(key)
 
         if key not in self._entity_update_functions:
-            _LOGGER.debug("register entity %s for updates", key)
+            LOGGER.debug("register entity %s for updates", key)
             self._entity_update_functions[key] = update_fn
             if self.fritz_status:
                 self.data["entity_states"][
@@ -301,12 +300,13 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         entity_states = {}
         for key in list(self._entity_update_functions):
             if (update_fn := self._entity_update_functions.get(key)) is not None:
-                _LOGGER.debug("update entity %s", key)
+                LOGGER.debug("update entity %s", key)
                 entity_states[key] = update_fn(
                     self.fritz_status, self.data["entity_states"].get(key)
                 )
         return entity_states
 
+    @override
     async def _async_update_data(self) -> UpdateCoordinatorDataType:
         """Update FritzboxTools data."""
         entity_data: UpdateCoordinatorDataType = {
@@ -329,7 +329,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                     "call_deflections"
                 ] = await self.async_update_call_deflections()
         except FRITZ_EXCEPTIONS as ex:
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Reload %s due to error '%s' to ensure proper re-login",
                 self.config_entry.title,
                 ex,
@@ -341,7 +341,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 translation_placeholders={"error": str(ex)},
             ) from ex
 
-        _LOGGER.debug("entity_data: %s", entity_data)
+        LOGGER.debug("entity_data: %s", entity_data)
 
         await self.async_trigger_cleanup()
 
@@ -420,7 +420,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             )
             return not wan_access.get("NewDisallow")
         except FRITZ_EXCEPTIONS as ex:
-            _LOGGER.debug(
+            LOGGER.debug(
                 (
                     "could not get WAN access rule for client device with IP '%s',"
                     " error: %s"
@@ -532,7 +532,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self, dev_info: Device, dev_mac: str, consider_home: float
     ) -> bool:
         """Update device lists and return if device is new."""
-        _LOGGER.debug("Client dev_info: %s", dev_info)
+        LOGGER.debug("Client dev_info: %s", dev_info)
 
         if dev_mac in self._devices:
             self._devices[dev_mac].update(dev_info, consider_home)
@@ -542,13 +542,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         self._devices[dev_mac] = device
 
         # manually register device entry for new connected device
-        dr.async_get(self.hass).async_get_or_create(
+        device_registry = dr.async_get(self.hass)
+        device_registry.async_get_or_create(
             config_entry_id=self.config_entry.entry_id,
             connections={(CONNECTION_NETWORK_MAC, dev_mac)},
-            default_manufacturer="FRITZ!",
-            default_model="FRITZ!Box Tracked device",
-            default_name=device.hostname,
-            via_device=(DOMAIN, self.unique_id),
+            manufacturer="FRITZ!",
+            model="FRITZ!Box Tracked device",
+            name=device.hostname,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self.unique_id),
+                config_entry_id=self.config_entry.entry_id,
+            ),
         )
         return True
 
@@ -561,7 +566,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
     async def async_update_device_info(self, now: datetime | None = None) -> None:
         """Update own device information."""
 
-        _LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
+        LOGGER.debug("Checking host info for FRITZ!Box device %s", self.host)
         (
             self._update_available,
             self._latest_firmware,
@@ -575,7 +580,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             ha_is_stopping("scan devices")
             return
 
-        _LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
+        LOGGER.debug("Checking devices for FRITZ!Box device %s", self.host)
         _default_consider_home = DEFAULT_CONSIDER_HOME.total_seconds()
         if self._options:
             consider_home = self._options.get(
@@ -591,11 +596,15 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             self._options
             and self._options.get(CONF_OLD_DISCOVERY, DEFAULT_CONF_OLD_DISCOVERY)
         ):
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Using old hosts discovery method. (Mesh not supported or user option)"
             )
             self.mesh_role = MeshRoles.NONE
             for mac, info in hosts.items():
+                # The box lists its own LAN MAC in the Hosts table; skip it so it
+                # is not tracked as a child of itself, as the mesh path does.
+                if dr.format_mac(mac) == self.mac:
+                    continue
                 if self.manage_device_info(info, mac, consider_home):
                     new_device = True
             await self.async_send_signal_device_update(new_device)
@@ -681,7 +690,18 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def async_trigger_reconnect(self) -> None:
         """Trigger device reconnect."""
-        await self.hass.async_add_executor_job(self.connection.reconnect)
+        try:
+            await self.hass.async_add_executor_job(
+                self.connection.call_action,
+                f"{self.device_conn_type}1",
+                "ForceTermination",
+            )
+        except FritzConnectionException as ex:
+            # ignore UPnPError:
+            # errorCode: 707
+            # errorDescription: DisconnectInProgress
+            if "disconnectinprogress" not in str(ex).lower():
+                raise
 
     async def async_trigger_set_guest_password(
         self, password: str | None, length: int
@@ -701,7 +721,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
 
     async def async_trigger_cleanup(self) -> None:
         """Trigger device trackers cleanup."""
-        _LOGGER.debug("Device tracker cleanup triggered")
+        LOGGER.debug("Device tracker cleanup triggered")
         device_hosts = {self.mac: Device(True, "", "", "", "", None)}
         if self.device_discovery_enabled:
             device_hosts.update(await self._async_update_hosts_info())
@@ -717,7 +737,7 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
                 entity.domain == DEVICE_TRACKER_DOMAIN
                 or "_internet_access" in entity.unique_id
             ) and entry_mac not in device_hosts:
-                _LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
+                LOGGER.debug("Removing orphan entity entry %s", entity.entity_id)
                 entity_reg.async_remove(entity.entity_id)
                 self._devices.pop(entry_mac, None)
 
@@ -729,10 +749,8 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
             device_reg, config_entry.entry_id
         ):
             if not any(con in device.connections for con in valid_connections):
-                _LOGGER.debug("Removing obsolete device entry %s", device.name)
-                device_reg.async_update_device(
-                    device.id, remove_config_entry_id=config_entry.entry_id
-                )
+                LOGGER.debug("Removing obsolete device entry %s", device.name)
+                device_reg.async_remove_device(device.id)
 
         fritz_data = self.hass.data[FRITZ_DATA_KEY]
 
@@ -740,21 +758,21 @@ class FritzBoxTools(DataUpdateCoordinator[UpdateCoordinatorDataType]):
         for mac in tracked.copy():
             if mac in device_hosts:
                 continue
-            _LOGGER.debug("Removing orphan mac address %s from device trackers", mac)
+            LOGGER.debug("Removing orphan mac address %s from device trackers", mac)
             tracked.remove(mac)
 
         profile_switches = fritz_data.profile_switches.get(self.unique_id, set())
         for mac in profile_switches.copy():
             if mac in device_hosts:
                 continue
-            _LOGGER.debug("Removing orphan mac address %s from profile switches", mac)
+            LOGGER.debug("Removing orphan mac address %s from profile switches", mac)
             profile_switches.remove(mac)
 
         wol_buttons = fritz_data.wol_buttons.get(self.unique_id, set())
         for mac in wol_buttons.copy():
             if mac in device_hosts:
                 continue
-            _LOGGER.debug("Removing orphan mac address %s from WOL buttons", mac)
+            LOGGER.debug("Removing orphan mac address %s from WOL buttons", mac)
             wol_buttons.remove(mac)
 
 
@@ -787,13 +805,13 @@ class AvmWrapper(FritzBoxTools):
                 )
             )
         except FRITZ_AUTH_EXCEPTIONS:
-            _LOGGER.exception(
+            LOGGER.exception(
                 "Authorization Error: Please check the provided credentials and"
                 " verify that you can log into the web interface"
             )
             return {}
         except FRITZ_EXCEPTIONS:
-            _LOGGER.exception(
+            LOGGER.exception(
                 "Service/Action Error: cannot execute service %s with action %s",
                 service_name,
                 action_name,
@@ -836,7 +854,7 @@ class AvmWrapper(FritzBoxTools):
             wan_enabled=self.device_is_router,
             ipv6_active=await self.async_ipv6_active(),
         )
-        _LOGGER.debug(
+        LOGGER.debug(
             "ConnectionInfo for FritzBox %s: %s",
             self.host,
             connection_info,

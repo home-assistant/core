@@ -13,6 +13,8 @@ from .models import CheckKind, CheckRunResult, CheckStatus, PackageChange
 
 MARKER = "<!-- requirements-check -->"
 HEADER = "## Check requirements"
+REPO_URL = "https://github.com/home-assistant/core"
+COMMIT_PATH = "/commit/"
 
 # Column / bullet labels per check kind, in display order.
 _CHECK_DISPLAY: tuple[tuple[CheckKind, str], ...] = (
@@ -21,6 +23,7 @@ _CHECK_DISPLAY: tuple[tuple[CheckKind, str], ...] = (
     (CheckKind.REPO_PUBLIC, "Repo Public"),
     (CheckKind.CI_UPLOAD, "CI Upload"),
     (CheckKind.RELEASE_PIPELINE, "Release Pipeline"),
+    (CheckKind.SECURITY, "Security"),
     (CheckKind.PR_LINK, "PR Link"),
     (CheckKind.ASYNC_BLOCKING, "Async Safe"),
 )
@@ -31,6 +34,14 @@ _ICONS: dict[CheckStatus, str] = {
     CheckStatus.FAIL: "❌",
 }
 SKIPPED = "—"
+
+SUMMARY_PASS = "All requirements checks passed. ✅"
+SUMMARY_ATTENTION = "⚠️ Some checks require attention — see the details below."
+# Emitted when at least one check still needs the agent. The agent resolves it
+# to one of the two lines above once it has replaced the cell/detail
+# placeholders, so the summary reflects the final verdicts rather than the
+# deterministic-stage state.
+SUMMARY_PLACEHOLDER = "{{SUMMARY}}"
 
 
 def _placeholder(slot: str, pkg: PackageChange, kind: CheckKind) -> str:
@@ -55,9 +66,12 @@ def _overall_status(pkg: PackageChange) -> CheckStatus | None:
 
 
 def _summary_line(packages: list[PackageChange]) -> str:
-    if all(_overall_status(p) == CheckStatus.PASS for p in packages):
-        return "All requirements checks passed. ✅"
-    return "⚠️ Some checks require attention — see the details below."
+    statuses = [_overall_status(p) for p in packages]
+    if None in statuses:
+        return SUMMARY_PLACEHOLDER
+    if all(status == CheckStatus.PASS for status in statuses):
+        return SUMMARY_PASS
+    return SUMMARY_ATTENTION
 
 
 def _cell(pkg: PackageChange, kind: CheckKind) -> str:
@@ -110,13 +124,22 @@ def _details_block(pkg: PackageChange) -> str:
     )
 
 
+def _intro(result: CheckRunResult) -> str:
+    """Marker, header, and the optional commit line the gate reads back."""
+    parts: list[str] = []
+    if result.head_sha:
+        commit = f"[`{result.head_sha[:7]}`]({REPO_URL}{COMMIT_PATH}{result.head_sha})"
+        parts.append(f"Checked at commit {commit}.")
+    return "\n\n".join([f"{MARKER}\n{HEADER}", *parts])
+
+
 def render_comment(result: CheckRunResult) -> str:
     """Build the full markdown comment, including placeholder markers."""
     if not result.packages:
-        return f"{MARKER}\n{HEADER}\n\nNo tracked requirement changes detected. ✅"
+        return f"{_intro(result)}\n\nNo tracked requirement changes detected. ✅"
     return "\n\n".join(
         [
-            f"{MARKER}\n{HEADER}\n\n{_summary_line(result.packages)}",
+            f"{_intro(result)}\n\n{_summary_line(result.packages)}",
             _table(result.packages),
             *[_details_block(p) for p in result.packages],
         ]

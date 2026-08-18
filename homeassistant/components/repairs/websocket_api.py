@@ -1,7 +1,7 @@
 """The repairs websocket API."""
 
 from http import HTTPStatus
-from typing import Any
+from typing import Any, override
 
 from aiohttp import web
 import voluptuous as vol
@@ -121,6 +121,7 @@ class RepairsFlowIndexView(FlowManagerIndexView):
             extra=vol.ALLOW_EXTRA,
         )
     )
+    @override
     async def post(self, request: web.Request, data: dict[str, Any]) -> web.Response:
         """Handle a POST request."""
         try:
@@ -147,11 +148,13 @@ class RepairsFlowResourceView(FlowManagerResourceView):
     name = "api:repairs:issues:fix:resource"
 
     @require_admin(permission=POLICY_EDIT)
+    @override
     async def get(self, request: web.Request, /, flow_id: str) -> web.Response:
         """Get the current state of a data_entry_flow."""
         return await super().get(request, flow_id)
 
     @require_admin(permission=POLICY_EDIT)
+    @override
     async def post(self, request: web.Request, flow_id: str) -> web.Response:
         """Handle a POST request."""
         return await super().post(request, flow_id)

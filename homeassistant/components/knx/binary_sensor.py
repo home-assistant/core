@@ -1,6 +1,6 @@
 """Support for KNX binary sensor entities."""
 
-from typing import Any
+from typing import Any, override
 
 from xknx.devices import BinarySensor as XknxBinarySensor
 
@@ -8,7 +8,6 @@ from homeassistant import config_entries
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.const import (
     CONF_DEVICE_CLASS,
-    CONF_ENTITY_CATEGORY,
     CONF_NAME,
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -35,7 +34,12 @@ from .const import (
     DOMAIN,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_SENSOR
 from .storage.util import ConfigExtractor
@@ -80,6 +84,7 @@ class _KnxBinarySensor(BinarySensorEntity, RestoreEntity):
 
     _device: XknxBinarySensor
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         if (
@@ -89,11 +94,13 @@ class _KnxBinarySensor(BinarySensorEntity, RestoreEntity):
         await super().async_added_to_hass()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self._device.is_on()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return device specific state attributes."""
         attr: dict[str, Any] = {}
@@ -125,9 +132,10 @@ class KnxYamlBinarySensor(_KnxBinarySensor, KnxYamlEntity):
         )
         super().__init__(
             knx_module=knx_module,
-            unique_id=str(self._device.remote_value.group_address_state),
-            name=config[CONF_NAME],
-            entity_category=config.get(CONF_ENTITY_CATEGORY),
+            unique_id=build_yaml_unique_id(
+                self._device.remote_value.group_address_state
+            ),
+            entity_config=config,
         )
 
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)

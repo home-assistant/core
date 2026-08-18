@@ -5,7 +5,8 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import mqtt, text
+from homeassistant.components import text
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.const import ATTR_ASSUMED_STATE, ATTR_ENTITY_ID, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 
@@ -44,7 +45,7 @@ from tests.common import async_fire_mqtt_message
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {text.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
+    DOMAIN: {text.DOMAIN: {"name": "test", "command_topic": "test-topic"}}
 }
 
 
@@ -64,7 +65,7 @@ async def async_set_value(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -106,7 +107,7 @@ async def test_controlling_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -163,7 +164,7 @@ async def test_forced_text_length(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -237,7 +238,7 @@ async def test_controlling_validation_state_via_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -260,7 +261,7 @@ async def test_attribute_validation_max_greater_then_min(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -283,7 +284,7 @@ async def test_attribute_validation_max_not_greater_then_max_state_length(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -313,7 +314,7 @@ async def test_validation_payload_greater_then_max_state_length(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -356,7 +357,7 @@ async def test_sending_mqtt_commands_and_optimistic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -421,7 +422,7 @@ async def test_default_availability_payload(
 ) -> None:
     """Test availability by default payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             text.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -439,7 +440,7 @@ async def test_custom_availability_payload(
 ) -> None:
     """Test availability by custom payload with defined topic."""
     config = {
-        mqtt.DOMAIN: {
+        DOMAIN: {
             text.DOMAIN: {
                 "name": "test",
                 "state_topic": "state-topic",
@@ -515,7 +516,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 text.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -758,7 +759,7 @@ async def test_encoding_subscribable_topics(
         hass,
         mqtt_mock_entry,
         text.DOMAIN,
-        DEFAULT_CONFIG[mqtt.DOMAIN][text.DOMAIN],
+        DEFAULT_CONFIG[DOMAIN][text.DOMAIN],
         topic,
         value,
         attribute,

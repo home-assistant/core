@@ -12,7 +12,6 @@ from tests.components.common import (
     assert_trigger_behavior_all,
     assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_gated_by_labs_flag,
     assert_trigger_options_supported,
     other_states,
     parametrize_target_entities,
@@ -28,27 +27,9 @@ async def target_vacuums(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.mark.parametrize(
-    "trigger_key",
-    [
-        "vacuum.docked",
-        "vacuum.errored",
-        "vacuum.paused_cleaning",
-        "vacuum.started_cleaning",
-        "vacuum.started_returning",
-    ],
-)
-async def test_vacuum_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
-) -> None:
-    """Test the vacuum triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
     ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("vacuum.docked", {}, True, True),
+        ("vacuum.returned_to_dock", {}, True, True),
         ("vacuum.errored", {}, True, True),
         ("vacuum.paused_cleaning", {}, True, True),
         ("vacuum.started_cleaning", {}, True, True),
@@ -72,7 +53,6 @@ async def test_vacuum_trigger_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
@@ -81,7 +61,7 @@ async def test_vacuum_trigger_options_validation(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="vacuum.docked",
+            trigger="vacuum.returned_to_dock",
             target_states=[VacuumActivity.DOCKED],
             other_states=other_states(VacuumActivity.DOCKED),
         ),
@@ -130,7 +110,6 @@ async def test_vacuum_state_trigger_behavior_each(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
@@ -139,7 +118,7 @@ async def test_vacuum_state_trigger_behavior_each(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="vacuum.docked",
+            trigger="vacuum.returned_to_dock",
             target_states=[VacuumActivity.DOCKED],
             other_states=other_states(VacuumActivity.DOCKED),
         ),
@@ -188,7 +167,6 @@ async def test_vacuum_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("vacuum"),
@@ -197,7 +175,7 @@ async def test_vacuum_state_trigger_behavior_first(
     ("trigger", "trigger_options", "states"),
     [
         *parametrize_trigger_states(
-            trigger="vacuum.docked",
+            trigger="vacuum.returned_to_dock",
             target_states=[VacuumActivity.DOCKED],
             other_states=other_states(VacuumActivity.DOCKED),
         ),

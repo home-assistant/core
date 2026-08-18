@@ -1,6 +1,6 @@
 """Support for lights under the iGlo brand."""
 
-from typing import Any
+from typing import Any, override
 
 from iglo import Lamp
 from iglo.lamp import MODE_WHITE
@@ -61,16 +61,19 @@ class IGloLamp(LightEntity):
         self._lamp = Lamp(0, host, port)
 
     @property
+    @override
     def name(self):
         """Return the name of the light."""
         return self._name
 
     @property
+    @override
     def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int((self._lamp.state()["brightness"] / 200.0) * 255)
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._lamp.state()["mode"] == MODE_WHITE:
@@ -80,40 +83,48 @@ class IGloLamp(LightEntity):
         return ColorMode.HS
 
     @property
+    @override
     def color_temp_kelvin(self) -> int | None:
         """Return the color temperature value in Kelvin."""
         return self._lamp.state()["white"]
 
     @property
+    @override
     def max_color_temp_kelvin(self) -> int:
         """Return the coldest color_temp_kelvin that this light supports."""
         return self._lamp.max_kelvin
 
     @property
+    @override
     def min_color_temp_kelvin(self) -> int:
         """Return the warmest color_temp_kelvin that this light supports."""
         return self._lamp.min_kelvin
 
     @property
+    @override
     def hs_color(self) -> tuple[float, float]:
         """Return the hs value."""
         return color_util.color_RGB_to_hs(*self._lamp.state()["rgb"])
 
     @property
+    @override
     def effect(self) -> str:
         """Return the current effect."""
         return self._lamp.state()["effect"]
 
     @property
+    @override
     def effect_list(self) -> list[str]:
         """Return the list of supported effects."""
         return self._lamp.effect_list()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if light is on."""
         return self._lamp.state()["on"]
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if not self.is_on:
@@ -137,6 +148,7 @@ class IGloLamp(LightEntity):
             self._lamp.effect(effect)
             return
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self._lamp.switch(False)

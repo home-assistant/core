@@ -1,7 +1,7 @@
 """Matter event entities from Node events."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from chip.clusters import Objects as clusters
 from matter_server.client.models import device_types
@@ -90,6 +90,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
 
         self._attr_event_types = event_types
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
         await super().async_added_to_hass()
@@ -103,6 +104,7 @@ class MatterEventEntity(MatterEntity, EventEntity):
             )
         )
 
+    @override
     def _update_from_device(self) -> None:
         """Call when Node attribute(s) changed."""
 

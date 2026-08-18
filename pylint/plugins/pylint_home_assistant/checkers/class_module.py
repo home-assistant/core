@@ -93,7 +93,6 @@ _ENTITY_COMPONENTS: set[str] = set(ENTITY_COMPONENTS).union(
         "input_number",
         "input_select",
         "input_text",
-        "microsoft_face",
         "person",
         "plant",
         "remember_the_milk",

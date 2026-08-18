@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from pyfritzhome.fritzhomedevice import FritzhomeDevice
 
@@ -255,11 +255,13 @@ class FritzBoxSensor(FritzBoxDeviceEntity, SensorEntity):
     entity_description: FritzSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.native_value(self.data)
 
     @property
+    @override
     def entity_category(self) -> EntityCategory | None:
         """Return the category of the entity, if any."""
         if self.entity_description.entity_category_fn is not None:

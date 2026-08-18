@@ -1,6 +1,6 @@
 """Support for AVM FRITZ!SmartHome cover devices."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -56,6 +56,7 @@ class FritzboxCover(FritzBoxDeviceEntity, CoverEntity):
     )
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position."""
         position = None
@@ -64,28 +65,33 @@ class FritzboxCover(FritzBoxDeviceEntity, CoverEntity):
         return position
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         if self.data.levelpercentage is None:
             return None
         return self.data.levelpercentage == 100  # type: ignore [no-any-return]
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.hass.async_add_executor_job(self.data.set_blind_open, True)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.hass.async_add_executor_job(self.data.set_blind_close, True)
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.hass.async_add_executor_job(
             self.data.set_level_percentage, 100 - kwargs[ATTR_POSITION], True
         )
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.hass.async_add_executor_job(self.data.set_blind_stop, True)

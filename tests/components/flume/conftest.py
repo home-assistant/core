@@ -28,7 +28,7 @@ DEVICE_LIST_URL = (
     "https://api.flumetech.com/users/test-user-id/devices?user=true&location=true"
 )
 BRIDGE_DEVICE = {
-    "id": "1234",
+    "id": "5678",
     "type": 1,  # Bridge
     "location": {
         "name": "Bridge Location",
@@ -99,7 +99,7 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
 
 def encode_access_token() -> str:
     """Encode the payload of the access token."""
-    expiration_time = datetime.datetime.now() + datetime.timedelta(hours=12)
+    expiration_time = datetime.datetime.now() + datetime.timedelta(hours=12)  # pylint: disable=home-assistant-enforce-naive-now
     payload = {
         "user_id": USER_ID,
         "exp": int(expiration_time.timestamp()),

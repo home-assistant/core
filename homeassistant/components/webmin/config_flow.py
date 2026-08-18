@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 from http import HTTPStatus
-from typing import Any, cast
+from typing import Any, cast, override
 from xmlrpc.client import Fault
 
 from aiohttp.client_exceptions import ClientConnectionError, ClientResponseError
@@ -88,6 +88,7 @@ class WebminConfigFlowHandler(SchemaConfigFlowHandler, domain=DOMAIN):
 
     config_flow = CONFIG_FLOW
 
+    @override
     def async_config_entry_title(self, options: Mapping[str, Any]) -> str:
         """Return config entry title."""
         return str(options[CONF_HOST])

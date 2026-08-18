@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 from httpx import HTTPError, InvalidURL, TimeoutException
 import voluptuous as vol
@@ -43,6 +43,7 @@ class RemoteCalendarConfigFlow(ConfigFlow, domain=DOMAIN):
         super().__init__()
         self.data: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,5 +1,7 @@
 """Support for SensorPro sensors."""
 
+from typing import override
+
 from sensorpro_ble import (
     SensorDeviceClass as SensorProSensorDeviceClass,
     SensorUpdate,
@@ -137,6 +139,7 @@ class SensorProBluetoothSensorEntity(
     """Representation of a SensorPro sensor."""
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the native value."""
         return self.processor.entity_data.get(self.entity_key)
