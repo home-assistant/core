@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import override
 
 from tesla_fleet_api import firmware_at_least
-from tesla_fleet_api.const import Scope, VehicleDataEndpoint
+from tesla_fleet_api.const import Scope
 from teslemetry_stream import TeslemetryStreamVehicle
 from teslemetry_stream.const import TeslaLocation
 
@@ -111,13 +111,7 @@ class TeslemetryVehiclePollingDeviceTrackerEntity(
     ) -> None:
         """Initialize the device tracker."""
         self.entity_description = description
-        # Location and route fields come from the location endpoint, not the
-        # drive_state group their flattened keys sit under.
-        super().__init__(
-            vehicle,
-            description.key,
-            frozenset((VehicleDataEndpoint.LOCATION_DATA,)),
-        )
+        super().__init__(vehicle, description.key)
 
     @override
     def _async_update_attrs(self) -> None:
