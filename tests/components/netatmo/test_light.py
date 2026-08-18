@@ -1,5 +1,6 @@
 """The tests for Netatmo light."""
 
+from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from syrupy.assertion import SnapshotAssertion
@@ -113,7 +114,7 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
     """Test setup with no devices."""
     fake_post_hits = 0
 
-    async def fake_post_request_no_data(*args, **kwargs):
+    async def fake_post_request_no_data(*args: Any, **kwargs: Any):
         """Fake error during requesting backend data."""
         nonlocal fake_post_hits
         fake_post_hits += 1
@@ -127,12 +128,12 @@ async def test_setup_component_no_devices(hass: HomeAssistant, config_entry) -> 
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
-        patch("homeassistant.components.netatmo.data_handler.PLATFORMS", ["light"]),
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", ["light"]),
         patch(
             "homeassistant.components.netatmo.async_get_config_entry_implementation",
         ),
         patch(
-            "homeassistant.components.netatmo.webhook_generate_url",
+            "homeassistant.components.netatmo.webhook.webhook_generate_url",
         ),
     ):
         mock_auth.return_value.async_post_api_request.side_effect = (

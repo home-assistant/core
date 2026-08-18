@@ -70,7 +70,7 @@ def test_naive_now() -> None:
     naive_now = dt_util.naive_now()
 
     assert naive_now.tzinfo is None
-    assert abs(naive_now - datetime.now()) < timedelta(seconds=1)
+    assert abs(naive_now - datetime.now()) < timedelta(seconds=1)  # pylint: disable=home-assistant-enforce-naive-now
 
 
 def test_as_utc_with_naive_object() -> None:

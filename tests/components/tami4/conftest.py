@@ -95,11 +95,11 @@ def mock_get_device(
 
     water_quality = WaterQuality(
         uv=UV(
-            upcoming_replacement=int(datetime.now().timestamp()),
+            upcoming_replacement=int(datetime.now().timestamp()),  # pylint: disable=home-assistant-enforce-naive-now
             installed=True,
         ),
         filter=Filter(
-            upcoming_replacement=int(datetime.now().timestamp()),
+            upcoming_replacement=int(datetime.now().timestamp()),  # pylint: disable=home-assistant-enforce-naive-now
             milli_litters_passed=1000,
             installed=True,
         ),

@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date
+from typing import override
 
 from vehicle import Vehicle
 
@@ -70,6 +71,7 @@ class RDWSensorEntity(RDWEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.license_plate}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> date | str | float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

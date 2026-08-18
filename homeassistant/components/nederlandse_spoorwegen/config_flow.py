@@ -1,7 +1,7 @@
 """Config flow for Nederlandse Spoorwegen integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from ns_api import NSAPI, Station
 from requests.exceptions import (
@@ -76,6 +76,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
                 return {"base": "already_configured"}
         return {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -124,6 +125,7 @@ class NSConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:

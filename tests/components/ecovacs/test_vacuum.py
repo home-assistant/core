@@ -390,7 +390,7 @@ async def test_raise_segment_changed_issue(
 
     entity_entry = entity_registry.async_get(entity_id)
     issue_id = f"{vacuum.ISSUE_SEGMENTS_CHANGED}_{entity_entry.id}"
-    issue = ir.async_get(hass).async_get_issue(vacuum.DOMAIN, issue_id)
+    issue = ir.async_get(hass).async_get_issue(vacuum.DOMAIN, issue_id)  # pylint: disable=home-assistant-tests-registry-fixtures
     assert issue is not None
 
 

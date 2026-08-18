@@ -82,7 +82,7 @@ async def test_upload_file_to_album(
 
     mock_immich.assets.async_upload_asset.assert_called_with("/media/screenshot.jpg")
     mock_immich.albums.async_get_album_info.assert_called_with(
-        "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6", True
+        "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6"
     )
     mock_immich.albums.async_add_assets_to_album.assert_called_with(
         "721e1a4b-aa12-441e-8d3b-5ac7ab283bb6", ["abcdef-0123456789"]

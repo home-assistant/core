@@ -13,5 +13,5 @@
   "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["PyViCare"],
-  "requirements": ["PyViCare==2.60.2"]
+  "requirements": ["PyViCare==2.61.0"]
 }

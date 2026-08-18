@@ -1,0 +1,93 @@
+"""Fixtures for the luci integration tests."""
+
+from collections.abc import Generator
+from typing import NamedTuple
+from unittest.mock import AsyncMock, MagicMock, patch
+
+import pytest
+
+from homeassistant.components.luci.const import DOMAIN
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+)
+
+from tests.common import MockConfigEntry
+
+
+class MockDevice(NamedTuple):
+    """Mock device from OpenWrt."""
+
+    mac: str
+    hostname: str
+    ip: str
+    reachable: bool
+    host: str
+
+
+MOCK_DEVICE_1 = MockDevice(
+    mac="AA:BB:CC:DD:EE:FF",
+    hostname="device1",
+    ip="192.168.1.100",
+    reachable=True,
+    host="192.168.1.1",
+)
+MOCK_DEVICE_2 = MockDevice(
+    mac="11:22:33:44:55:66",
+    hostname="device2",
+    ip="192.168.1.101",
+    reachable=True,
+    host="192.168.1.1",
+)
+
+
+@pytest.fixture
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Override async_setup_entry."""
+    with patch(
+        "homeassistant.components.luci.async_setup_entry",
+        return_value=True,
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
+def mock_config_entry() -> MockConfigEntry:
+    """Return a mock config entry."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        entry_id="01JBVVVJ87F6G5V0QJX6HBC94T",
+        data={
+            CONF_HOST: "192.168.1.1",
+            CONF_USERNAME: "root",
+            CONF_PASSWORD: "password",
+            CONF_SSL: False,
+            CONF_VERIFY_SSL: True,
+        },
+    )
+
+
+@pytest.fixture
+def mock_luci_client() -> Generator[MagicMock]:
+    """Return a mock OpenWrtRpc client."""
+    with (
+        patch(
+            "homeassistant.components.luci.coordinator.OpenWrtRpc",
+            autospec=True,
+        ) as mock_client_class,
+        patch(
+            "homeassistant.components.luci.config_flow.OpenWrtRpc",
+            new=mock_client_class,
+        ),
+        patch(
+            "homeassistant.components.luci.OpenWrtRpc",
+            new=mock_client_class,
+        ),
+    ):
+        client = mock_client_class.return_value
+        client.is_logged_in.return_value = True
+        client.get_all_connected_devices.return_value = [MOCK_DEVICE_1, MOCK_DEVICE_2]
+        yield client

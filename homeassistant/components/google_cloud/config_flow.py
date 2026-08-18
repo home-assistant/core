@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from google.cloud import texttospeech
 import voluptuous as vol
@@ -69,6 +69,7 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
             contents = file_path.read_text()
         return cast(dict[str, Any], json.loads(contents))
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -129,6 +130,7 @@ class GoogleCloudConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> GoogleCloudOptionsFlowHandler:

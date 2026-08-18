@@ -1,7 +1,7 @@
 """DataUpdateCoordinator for Fluss+ integration."""
 
 import asyncio
-from typing import Any
+from typing import Any, override
 
 from fluss_api import (
     FlussApiClient,
@@ -55,6 +55,7 @@ class FlussDataUpdateCoordinator(DataUpdateCoordinator[dict[str, dict[str, Any]]
             raise UpdateFailed(f"Error fetching Fluss device status: {err}") from err
         return response["status"]
 
+    @override
     async def _async_update_data(self) -> dict[str, dict[str, Any]]:
         """Fetch Fluss+ devices and merge per-device status."""
         try:

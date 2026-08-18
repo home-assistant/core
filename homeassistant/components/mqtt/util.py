@@ -443,12 +443,13 @@ async def async_cleanup_device_registry(
         device_id
         and device_id not in device_registry.deleted_devices
         and config_entry_id
+        and (device := device_registry.async_get(device_id)) is not None
+        # Only remove the device if it is owned by the MQTT config entry
+        and device.config_entry_id == config_entry_id
         and not er.async_entries_for_device(
             entity_registry, device_id, include_disabled_entities=False
         )
         and not await device_trigger.async_get_triggers(hass, device_id)
         and not tag.async_has_tags(hass, device_id)
     ):
-        device_registry.async_update_device(
-            device_id, remove_config_entry_id=config_entry_id
-        )
+        device_registry.async_remove_device(device_id)

@@ -1,7 +1,7 @@
 """Config flow for Kodi integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pykodi import CannotConnectError, InvalidAuthError, Kodi, get_kodi_connection
 import voluptuous as vol
@@ -100,6 +100,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
         self._ssl: bool | None = DEFAULT_SSL
         self._discovery_name: str | None = None
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -151,6 +152,7 @@ class KodiConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self._create_entry()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
