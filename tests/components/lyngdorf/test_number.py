@@ -35,7 +35,6 @@ TRIM_LFE_ENTITY_ID = "number.mock_lyngdorf_trim_lfe"
 TRIM_SURROUND_ENTITY_ID = "number.mock_lyngdorf_trim_surround"
 
 
-@pytest.mark.usefixtures("mock_receiver")
 async def test_entities(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,

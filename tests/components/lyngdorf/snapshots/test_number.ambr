@@ -90,7 +90,7 @@
     'object_id_base': 'Trim bass',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trim bass',
     'platform': 'lyngdorf',
@@ -105,7 +105,6 @@
 # name: test_entities[number.mock_lyngdorf_trim_bass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound_pressure',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Trim bass',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.0,
@@ -151,7 +150,7 @@
     'object_id_base': 'Trim centre',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trim centre',
     'platform': 'lyngdorf',
@@ -166,7 +165,6 @@
 # name: test_entities[number.mock_lyngdorf_trim_centre-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound_pressure',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Trim centre',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
@@ -212,7 +210,7 @@
     'object_id_base': 'Trim height',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trim height',
     'platform': 'lyngdorf',
@@ -227,7 +225,6 @@
 # name: test_entities[number.mock_lyngdorf_trim_height-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound_pressure',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Trim height',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
@@ -273,7 +270,7 @@
     'object_id_base': 'Trim LFE',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trim LFE',
     'platform': 'lyngdorf',
@@ -288,7 +285,6 @@
 # name: test_entities[number.mock_lyngdorf_trim_lfe-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound_pressure',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Trim LFE',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
@@ -334,7 +330,7 @@
     'object_id_base': 'Trim surround',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trim surround',
     'platform': 'lyngdorf',
@@ -349,7 +345,6 @@
 # name: test_entities[number.mock_lyngdorf_trim_surround-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound_pressure',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Trim surround',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 10.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10.0,
@@ -395,7 +390,7 @@
     'object_id_base': 'Trim treble',
     'options': dict({
     }),
-    'original_device_class': <NumberDeviceClass.SOUND_PRESSURE: 'sound_pressure'>,
+    'original_device_class': None,
     'original_icon': None,
     'original_name': 'Trim treble',
     'platform': 'lyngdorf',
@@ -410,7 +405,6 @@
 # name: test_entities[number.mock_lyngdorf_trim_treble-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound_pressure',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Lyngdorf Trim treble',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 12.0,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -12.0,

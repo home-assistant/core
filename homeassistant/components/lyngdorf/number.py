@@ -60,7 +60,6 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="trim_bass",
         translation_key="trim_bass",
-        device_class=NumberDeviceClass.SOUND_PRESSURE,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_bass,
@@ -70,7 +69,6 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="trim_treble",
         translation_key="trim_treble",
-        device_class=NumberDeviceClass.SOUND_PRESSURE,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_treble,
@@ -80,7 +78,6 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="trim_centre",
         translation_key="trim_centre",
-        device_class=NumberDeviceClass.SOUND_PRESSURE,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_centre,
@@ -90,7 +87,6 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="trim_height",
         translation_key="trim_height",
-        device_class=NumberDeviceClass.SOUND_PRESSURE,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_height,
@@ -100,7 +96,6 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="trim_lfe",
         translation_key="trim_lfe",
-        device_class=NumberDeviceClass.SOUND_PRESSURE,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_lfe,
@@ -110,7 +105,6 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
     LyngdorfNumberEntityDescription(
         key="trim_surround",
         translation_key="trim_surround",
-        device_class=NumberDeviceClass.SOUND_PRESSURE,
         native_unit_of_measurement=UnitOfSoundPressure.DECIBEL,
         entity_category=EntityCategory.CONFIG,
         value_fn=lambda r: r.trim_surround,
