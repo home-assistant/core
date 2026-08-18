@@ -28,6 +28,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.util import dt as dt_util
 
 from . import HuaweiLteConfigEntry, Router
 from .const import (
@@ -76,11 +77,10 @@ def format_last_reset_elapsed_seconds(value: str | None) -> datetime | None:
     if value is None:
         return None
     try:
-        last_reset = datetime.now() - timedelta(seconds=int(value))  # pylint: disable=home-assistant-enforce-naive-now
-        last_reset.replace(microsecond=0)
+        elapsed = timedelta(seconds=int(value))
     except ValueError:
         return None
-    return last_reset
+    return (dt_util.utcnow() - elapsed).replace(microsecond=0)
 
 
 def format_ipv6(value: StateType) -> tuple[StateType, str | None]:
