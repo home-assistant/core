@@ -19,9 +19,8 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_PERSONS,
     CONF_WEBHOOK_ID,
-    EVENT_HOMEASSISTANT_STOP,
 )
-from homeassistant.core import Event, HomeAssistant
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import (
@@ -165,7 +164,7 @@ async def async_unregister_webhook(
 
 async def async_register_webhook(
     hass: HomeAssistant, entry: NetatmoConfigEntry
-) -> None:
+) -> bool:
     """Register the webhook with the Netatmo backend."""
     if CONF_WEBHOOK_ID not in entry.data:
         data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
@@ -183,7 +182,7 @@ async def async_register_webhook(
             "Webhook not registered - "
             "https and port 443 is required to register the webhook"
         )
-        return
+        return True
 
     # Registering twice raises. Cloud connection changes can land in an order that
     # asks for a second registration, so drop any handler we already hold first.
@@ -196,16 +195,14 @@ async def async_register_webhook(
         async_handle_webhook,
     )
 
-    async def _handle_stop(_: Event) -> None:
-        await async_unregister_webhook(hass, entry)
-
     try:
         await entry.runtime_data.auth.async_addwebhook(webhook_url)
-        _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
     except pyatmo.ApiError as err:
-        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
+        # Kept in place deliberately. A registration may still be live at Netatmo -
+        # the listing this call starts with can fail on its own - and a handler that
+        # receives nothing costs nothing, where a missing one drops every delivery
         _LOGGER.error("Error during webhook registration - %s", err)
+        return False
     else:
-        entry.async_on_unload(
-            hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _handle_stop)
-        )
+        _LOGGER.debug("Register Netatmo webhook: %s", webhook_url)
+        return True

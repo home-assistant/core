@@ -8,8 +8,8 @@ import pyatmo
 
 from homeassistant.components import cloud
 from homeassistant.components.webhook import async_unregister as webhook_unregister
-from homeassistant.const import CONF_WEBHOOK_ID
-from homeassistant.core import CALLBACK_TYPE, HomeAssistant
+from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryNotReady,
@@ -42,7 +42,8 @@ _LOGGER = logging.getLogger(__name__)
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-MAX_WEBHOOK_RETRIES = 3
+WEBHOOK_RETRY_DELAY = 30
+MAX_WEBHOOK_RETRY_DELAY = 3600
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -90,37 +91,70 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     entry.runtime_data = data_handler
     await data_handler.async_setup()
 
-    async def register_webhook(_: Any = None) -> None:
-        await async_register_webhook(hass, entry)
-
     async def unregister_webhook(_: Any = None) -> None:
         await async_unregister_webhook(hass, entry)
 
-    cancel_retry: CALLBACK_TYPE | None = None
+    attempt_delay = WEBHOOK_RETRY_DELAY
+    cancel_attempt: CALLBACK_TYPE | None = None
+
+    @callback
+    def cancel_pending_attempt() -> None:
+        """Drop a scheduled registration attempt, if one is pending."""
+        nonlocal cancel_attempt
+        if cancel_attempt is not None:
+            cancel_attempt()
+            cancel_attempt = None
+
+    @callback
+    def schedule_attempt() -> None:
+        """Arm the next attempt, replacing any already pending."""
+        nonlocal cancel_attempt
+        cancel_pending_attempt()
+        cancel_attempt = async_call_later(hass, attempt_delay, ensure_registered)
+
+    async def ensure_registered(_: Any = None) -> None:
+        """Register the webhook, and keep trying until it sticks."""
+        nonlocal attempt_delay, cancel_attempt
+        cancel_attempt = None
+
+        # Registering while the cloud is down points Netatmo at an endpoint that
+        # cannot answer, and the failed deliveries suspend the URL
+        settled = False
+        if not cloud.async_active_subscription(hass) or cloud.async_is_connected(hass):
+            settled = await async_register_webhook(hass, entry)
+
+        if settled:
+            attempt_delay = WEBHOOK_RETRY_DELAY
+            return
+
+        schedule_attempt()
+        attempt_delay = min(attempt_delay * 2, MAX_WEBHOOK_RETRY_DELAY)
 
     async def manage_cloudhook(state: cloud.CloudConnectionState) -> None:
-        nonlocal cancel_retry
+        nonlocal attempt_delay
+        attempt_delay = WEBHOOK_RETRY_DELAY
 
         if state is cloud.CloudConnectionState.CLOUD_CONNECTED:
-            # Reconnecting inside the retry window would register twice
-            if cancel_retry is not None:
-                cancel_retry()
-                cancel_retry = None
-            await register_webhook()
+            cancel_pending_attempt()
+            await ensure_registered()
 
         if state is cloud.CloudConnectionState.CLOUD_DISCONNECTED:
             await unregister_webhook()
-            cancel_retry = async_call_later(hass, 30, register_webhook)
-            entry.async_on_unload(cancel_retry)
+            schedule_attempt()
 
     if cloud.async_active_subscription(hass):
         if cloud.async_is_connected(hass):
-            await register_webhook()
+            await ensure_registered()
+        entry.async_on_unload(cancel_pending_attempt)
         entry.async_on_unload(
             cloud.async_listen_connection_change(hass, manage_cloudhook)
         )
     else:
-        entry.async_on_unload(async_at_started(hass, register_webhook))
+        entry.async_on_unload(async_at_started(hass, ensure_registered))
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, unregister_webhook)
+    )
 
     entry.async_on_unload(entry.add_update_listener(async_config_entry_updated))
 
