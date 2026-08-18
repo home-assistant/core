@@ -317,15 +317,25 @@ def get_uid(
 #   generate_keymap
 # ---------------------------
 def generate_keymap(
-    data: dict[str, dict[str, Any]], key_search: str | None
+    data: dict[str, Any], key_search: str | None
 ) -> dict[Hashable, str] | None:
-    """Generate keymap."""
+    """Generate keymap.
+
+    ``data``'s values are typed ``Any`` rather than ``dict[str, Any]``: this
+    is a general-purpose helper, and a future/unexpected caller could pass a
+    non-dict value for some uid, so the entry must be runtime-checked rather
+    than trusted from the static type. Entries whose value is not a dict, or
+    that lack ``key_search``, are silently ignored and excluded from the
+    returned keymap.
+    """
     if not key_search:
         return None
     return {
-        data[uid][key_search]: uid
+        entry[key_search]: uid
         for uid in data
-        if key_search in data[uid] and isinstance(data[uid][key_search], Hashable)
+        if isinstance(entry := data[uid], dict)
+        and key_search in entry
+        and isinstance(entry[key_search], Hashable)
     }
 
 

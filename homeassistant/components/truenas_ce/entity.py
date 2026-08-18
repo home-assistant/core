@@ -20,6 +20,7 @@ from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
+from .api import _summarize_payload
 from .const import (
     ATTRIBUTION,
     BEHAVIOR_REMOVE_INACTIVE_NIC,
@@ -290,6 +291,18 @@ def _collect_new_entities(
             continue
         data = coordinator.data.get(entity_description.data_path or "")
         if data is None:
+            continue
+        if not isinstance(data, dict):
+            # A malformed coordinator payload for this data_path would
+            # otherwise raise AttributeError in _skip_keyless_description's
+            # or _new_referenced_entities' unconditional .get() access.
+            _LOGGER.debug(
+                "Skipping non-dict coordinator payload for data_path %s"
+                " (entity description key %s): %s",
+                entity_description.data_path or "",
+                entity_description.key,
+                _summarize_payload(data),
+            )
             continue
 
         if entity_description.data_reference:

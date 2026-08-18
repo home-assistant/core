@@ -181,6 +181,19 @@ def test_generate_keymap_ignores_non_dict_values() -> None:
     assert ap.generate_keymap(data, "guid") == {"guid-2": "uid-2"}
 
 
+def test_generate_keymap_ignores_non_dict_value_containing_key_search_substring() -> (
+    None
+):
+    """A non-dict value whose text happens to contain key_search is still skipped.
+
+    Without the isinstance(dict) guard, ``key_search in data[uid]`` degrades to a
+    substring check for a string value, so a string containing "guid" would pass
+    the membership test and then raise on ``data[uid][key_search]`` subscripting.
+    """
+    data = {"uid-1": "has a guid in it", "uid-2": {"guid": "guid-2"}}
+    assert ap.generate_keymap(data, "guid") == {"guid-2": "uid-2"}
+
+
 def test_generate_keymap_skips_entries_missing_key_search() -> None:
     """Entries missing the key_search field are skipped when building the keymap."""
     data = {

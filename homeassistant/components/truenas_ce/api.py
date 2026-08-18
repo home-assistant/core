@@ -156,8 +156,13 @@ def _classify_exception(exc: TrueNASError, *, during_call: bool) -> str:
     )
 
 
-def _log_call_error(host: str, exc: TrueNASCallError) -> None:
+def _log_call_error(host: str, context: str, exc: TrueNASCallError) -> None:
     """Log a TrueNAS call error, quietly for expected permission errors.
+
+    ``context`` is the service/event/subscription identifier the error
+    occurred on, so recurring errors (e.g. a method unsupported by the
+    TrueNAS version) can be traced back to their source instead of only
+    showing the bare exception text.
 
     A read-only-scoped API key gets an ``EACCES`` response from admin-only
     methods (e.g. ``smb.status``). That is a permanent, expected condition
@@ -170,6 +175,7 @@ def _log_call_error(host: str, exc: TrueNASCallError) -> None:
         DEBUG if permission_denied else ERROR,
         ERROR_API_FORMAT,
         host,
+        context,
         exc,
         exc_info=None if permission_denied else exc,
     )
@@ -334,7 +340,7 @@ class TrueNASAPI:
             data = await self._client.call(service, params)
         except TrueNASCallError as exc:
             self._error = exc.reason or str(exc) or ERR_UNKNOWN
-            _log_call_error(self._host, exc)
+            _log_call_error(self._host, service, exc)
             return None
         except TrueNASError as exc:
             self._error = _classify_exception(exc, during_call=True)
@@ -389,7 +395,7 @@ class TrueNASAPI:
             return await self._client.subscribe(event)
         except TrueNASCallError as exc:
             self._error = exc.reason or str(exc) or ERR_UNKNOWN
-            _log_call_error(self._host, exc)
+            _log_call_error(self._host, event, exc)
             return None, None
         except TrueNASError as exc:
             self._error = _classify_exception(exc, during_call=True)
@@ -426,7 +432,6 @@ class TrueNASAPI:
                 subscription_id,
                 exc,
             )
-            _LOGGER.exception("TrueNAS %s unsubscribe cleanup failed", self._host)
         except TrueNASError as exc:
             self._error = _classify_exception(exc, during_call=True)
             _LOGGER.warning(
@@ -460,7 +465,7 @@ class TrueNASAPI:
             )
         except TrueNASCallError as exc:
             self._error = exc.reason or str(exc) or ERR_UNKNOWN
-            _log_call_error(self._host, exc)
+            _log_call_error(self._host, subscription_id, exc)
             return []
         except TrueNASError as exc:
             self._error = _classify_exception(exc, during_call=True)

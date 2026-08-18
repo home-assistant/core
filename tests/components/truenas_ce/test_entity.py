@@ -211,6 +211,20 @@ def test_collect_new_entities_skips_missing_data_path() -> None:
     assert not result
 
 
+def test_collect_new_entities_skips_non_dict_data_path_payload() -> None:
+    """A malformed, non-dict coordinator payload for data_path is skipped, not raised."""
+    desc = TrueNASSensorEntityDescription(
+        key="uptime",
+        name="Uptime",
+        data_path="system_info",
+        data_attribute="hostname",
+        func="TrueNASEntity",
+    )
+    coordinator = make_coordinator(data={"system_info": "not-a-dict"})
+    result = _collect_new_entities(coordinator, [desc], _dispatcher(), set())
+    assert not result
+
+
 def test_collect_new_entities_skips_app_stats_sensor_descriptions() -> None:
     """App-stats sensor descriptions are handled elsewhere and skipped here."""
     desc = TrueNASSensorEntityDescription(
