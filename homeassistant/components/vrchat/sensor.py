@@ -1,6 +1,7 @@
 """Setup sensors for the VRChat integration."""
 
-from typing import override
+from collections.abc import Mapping
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -97,7 +98,7 @@ class VRChatUserStatusDescriptionSensor(VRChatUserDataSensorEntity):
 
     @property
     @override
-    def icon(self):
+    def icon(self) -> str | None:
         """Show icon based on user status."""
         return VRCHAT_USER_STATUS_ICON_MAP.get(
             VRChatUserStatusSensor.get_state_from_user_data(self.user.data)
@@ -142,7 +143,7 @@ class VRChatUserStateSensor(VRChatUserDataSensorEntity):
 
     @property
     @override
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """User data."""
         return self.user.data
 
@@ -204,7 +205,7 @@ class VRChatUserLocationSensor(
 
     @property
     @override
-    def extra_state_attributes(self):
+    def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """World data."""
         user_data_get = self.user.data.get
         if (world := self.user.world) is not None and (data := world.data) is not None:

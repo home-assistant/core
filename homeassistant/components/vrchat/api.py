@@ -1,10 +1,11 @@
 """VRChat API."""
 
-from functools import cache, cached_property, wraps
+from functools import lru_cache, wraps
 from http.cookiejar import Cookie
 import json
 from typing import Any, cast
 
+from propcache.api import cached_property
 import vrchatapi
 from vrchatapi.websocket import VRChatWebSocket
 
@@ -29,7 +30,7 @@ class VRChatAPI(AsyncCleanups):
         self,
         config: VRChatConfigData | None = None,
         cookie: VRChatAuthCookie | None = None,
-    ):
+    ) -> None:
         """Create API client."""
         self._config = config
         api_config: vrchatapi.Configuration | None = None
@@ -191,7 +192,7 @@ class _ApiWrapper:
     def __init__(self, obj):
         self._obj = obj
 
-    @cache
+    @lru_cache(maxsize=32)
     def __getattr__(self, name):
         # Retrieve the attribute from the original object
         attr = getattr(self._obj, name)

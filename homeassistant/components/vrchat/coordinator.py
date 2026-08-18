@@ -2,13 +2,14 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from functools import cache, cached_property
+from functools import lru_cache
 import json
 import logging
 import math
 import re
 from typing import Any, Final, cast, override
 
+from propcache.api import cached_property
 import vrchatapi
 import vrchatapi.exceptions
 from vrchatapi.websocket import VRChatWebSocket, VRChatWebSocketError
@@ -26,7 +27,7 @@ from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .api import VRChatAPI
-from .api_data_types import User, WebsocketUserEvent, World
+from .api_data_types import CurrentUser, User, WebsocketUserEvent, World
 from .const import (
     DOMAIN,
     RETRY_DELAY_SECOND,
@@ -65,7 +66,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
         self,
         hass: HomeAssistant,
         entry: VRChatConfigEntry,
-    ):
+    ) -> None:
         """Initialization."""
 
         self.hass = hass
@@ -78,6 +79,8 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
 
         self.ws: VRChatWebSocket | None = None
         self.ws_handler_task: asyncio.Task | None = None
+        self.api: VRChatAPI
+        self.current_user_data: CurrentUser
 
         self._available = False
 
@@ -161,7 +164,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
             return
         self._available = new_value
         if new_value:
-            _LOGGER.info("Account %s is available.", self.username)
+            _LOGGER.info("Account %s is available", self.username)
         else:
             _LOGGER.warning("Account %s is unavailable", self.username)
         for user in self.users.values():
@@ -188,7 +191,6 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
                 translation_domain=DOMAIN,
                 translation_key="unique_id_mismatch",
                 translation_placeholders={
-                    "config_entry_title": self.config_entry.title,
                     "expected_id": self.config_entry.unique_id,
                     "got_id": current_user_data["id"],
                 },
@@ -212,7 +214,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
             self.set_user(f)
         for f in online_friends:
             self.set_user(f)
-        fetched_friend_ids = [f["id"] for f in [*offline_friends, *online_friends]]
+        fetched_friend_ids = [f["id"] for f in (*offline_friends, *online_friends)]
         async with asyncio.TaskGroup() as tg:
             for i in friend_ids:
                 if i not in fetched_friend_ids:
@@ -302,6 +304,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
 
     def _handle_ws_message(self, data: dict[str, Any]) -> None:
         """Handle a single websocket message."""
+        # pylint: disable=too-many-nested-blocks
         data["account_id"] = self.config_entry.unique_id
         data["config_entry_id"] = self.config_entry.entry_id
         try:
@@ -389,7 +392,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
     def restart(self, delay=0):
         """Reauthenticate and start connection."""
         _LOGGER.warning(
-            "Restart scheduled for account %s in %s seconds.",
+            "Restart scheduled for account %s in %s seconds",
             self.username,
             delay,
         )
@@ -412,7 +415,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
             self.auto_restart = False
             self.available = False
             _LOGGER.error(
-                "VRChat authentication expired; reload the entry to sign in again."
+                "VRChat authentication expired; reload the entry to sign in again"
             )
         except ConfigEntryError:
             raise
@@ -439,7 +442,7 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
 class VRChatAccountSetupFailed(ConfigEntryNotReady):
     """VRChat account setup failed error."""
 
-    def __init__(self, config_entry: VRChatConfigEntry):
+    def __init__(self, config_entry: VRChatConfigEntry) -> None:
         """Fill in info."""
         super().__init__(
             translation_domain=DOMAIN,
@@ -456,7 +459,7 @@ class VRChatAccountAuthFailed(ConfigEntryAuthFailed):
         config_entry: VRChatConfigEntry,
         translation_key: str = "auth_failed",
         translation_placeholders: dict[str, str] | None = None,
-    ):
+    ) -> None:
         """Fill in info."""
         super().__init__(
             translation_domain=DOMAIN,
@@ -471,7 +474,7 @@ class VRChatAccountAuthFailed(ConfigEntryAuthFailed):
 class VRChatUserDataCoordinator(AsyncCleanups):
     """Data update coordinator for VRChat user."""
 
-    def __init__(self, account: VRChatAccountDataCoordinator, data: User):
+    def __init__(self, account: VRChatAccountDataCoordinator, data: User) -> None:
         """Initialization."""
 
         self.added_entity_map: dict[
@@ -529,7 +532,7 @@ class VRChatUserDataCoordinator(AsyncCleanups):
                     self.account.create_task(world.get_data())
                     self.world = world
         except Exception:
-            _LOGGER.exception("Error processing user data.")
+            _LOGGER.exception("Error processing user data")
         finally:
             self._data = new_data
             self.setup_entities()
@@ -577,7 +580,7 @@ class VRChatUserDataCoordinator(AsyncCleanups):
         data_get = self.data.get
         return self._calculate_device_info(data_get("displayName"), data_get("bio"))
 
-    @cache
+    @lru_cache(maxsize=128)
     def _calculate_device_info(self, name: str, bio: str):
         user_id = self.data["id"]
         return DeviceInfo(
@@ -703,7 +706,7 @@ class VRChatUserDataCoordinator(AsyncCleanups):
         await super().close()
 
 
-class VRChatUserDataEntity(Entity):
+class VRChatUserDataEntity(Entity):  # pylint: disable=home-assistant-enforce-class-module
     """ABC for an entity that represents a VRChat user data point."""
 
     _attr_should_poll = False
@@ -727,7 +730,7 @@ class VRChatUserDataEntity(Entity):
             cls._register_vrchat_user_data_entity_subclass(platform)
         return super().__init_subclass__(**kwargs)
 
-    def __init__(self, user: VRChatUserDataCoordinator):
+    def __init__(self, user: VRChatUserDataCoordinator) -> None:
         """Initialization."""
         self.user = user
 
@@ -762,6 +765,8 @@ class VRChatUserDataEntity(Entity):
     @override
     def unique_id(self):
         """Unique ID."""
+        # Preserve existing entity IDs.
+        # pylint: disable-next=home-assistant-entity-unique-id-redundant-domain
         return f"{DOMAIN}.{self.entity_description.key}.{next(iter(self.device_info['identifiers']))[1]}"
 
     @cached_property

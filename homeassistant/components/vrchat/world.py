@@ -5,6 +5,8 @@ from collections.abc import Callable
 from datetime import UTC, datetime, timedelta
 import logging
 
+from homeassistant.util import dt as dt_util
+
 from .api import VRChatAPI
 from .api_data_types import World
 from .const import RETRY_DELAY_SECOND
@@ -32,7 +34,7 @@ class VRChatWorldData:
     @classmethod
     def get(cls, world_id: str, data: World | None = None):
         """Get world data object. Update data if provided."""
-        now = datetime.now(UTC)
+        now = dt_util.utcnow()
         if now - cls.last_pruned >= timedelta(
             seconds=VRCHAT_WORLD_DATA_OBJECT_PRUNE_INTERVAL_SECOND
         ):
@@ -46,7 +48,7 @@ class VRChatWorldData:
             world.data = data
         return world
 
-    def __init__(self, world_id: str, data: World | None = None):
+    def __init__(self, world_id: str, data: World | None = None) -> None:
         """Initialization."""
 
         self.task: asyncio.Task[World] | None = None
@@ -64,14 +66,14 @@ class VRChatWorldData:
     @data.setter
     def data(self, new_data: World | None):
         self._data = new_data
-        self.last_updated = datetime.now(UTC)
+        self.last_updated = dt_util.utcnow()
         for callback in self.subscribers:
             callback(new_data)
 
     @property
     def should_invalidate(self):
         """Check if the data cache should be invalidated."""
-        return datetime.now(UTC) - self.last_updated > VRCHAT_WORLD_DATA_CACHE_TTL
+        return dt_util.utcnow() - self.last_updated > VRCHAT_WORLD_DATA_CACHE_TTL
 
     async def get_data(self):
         """Get data. Fetch if not exist."""

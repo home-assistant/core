@@ -4,10 +4,11 @@ import asyncio
 import base64
 from collections.abc import Awaitable, Callable
 from enum import StrEnum
-from functools import cached_property
 import inspect
 import logging
 from typing import Any, Final
+
+from propcache.api import cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -86,7 +87,7 @@ async def _async_run_cleanup(awaitable: Awaitable[Any]) -> None:
         async with asyncio.timeout(ASYNC_CLEANUP_TIMEOUT_SECOND):
             await awaitable
     except TimeoutError:
-        _LOGGER.warning("Timed out during async clean up.")
+        _LOGGER.warning("Timed out during async clean up")
     except Exception:
         _LOGGER.exception(EXCEPTION_MESSAGE_ASYNC_CLEANUP)
 
@@ -100,11 +101,11 @@ class AsyncCleanups:
 
     @property
     def _closed(self):
-        return getattr(self, "__closed", False)
+        return getattr(self, "_closed_value", False)
 
     @_closed.setter
     def _closed(self, new_value):
-        self.__closed = new_value
+        self._closed_value = new_value
 
     @property
     def closed(self):

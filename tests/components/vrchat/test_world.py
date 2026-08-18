@@ -11,6 +11,7 @@ from homeassistant.components.vrchat.world import (
     VRCHAT_WORLD_DATA_OBJECT_PRUNE_INTERVAL_SECOND,
     VRChatWorldData,
 )
+from homeassistant.util import dt as dt_util
 
 
 @pytest.fixture(autouse=True)
@@ -32,10 +33,10 @@ def test_get_prunes_expired_unused_world_data(
 ) -> None:
     """Test expired world data is pruned when the cache is next accessed."""
     world = VRChatWorldData.get("wrld_expired")
-    world.last_updated = datetime.now(UTC) - VRCHAT_WORLD_DATA_CACHE_TTL
+    world.last_updated = dt_util.utcnow() - VRCHAT_WORLD_DATA_CACHE_TTL
     if subscribe:
         world.subscribe(Mock())
-    VRChatWorldData.last_pruned = datetime.now(UTC) - timedelta(
+    VRChatWorldData.last_pruned = dt_util.utcnow() - timedelta(
         seconds=VRCHAT_WORLD_DATA_OBJECT_PRUNE_INTERVAL_SECOND
     )
 
@@ -53,7 +54,7 @@ async def test_get_data_retries_after_timeout() -> None:
     api_context.__aexit__ = AsyncMock(return_value=None)
     world = VRChatWorldData.get("wrld_test")
     world._data = {"id": "wrld_test"}
-    world.last_updated = datetime.now(UTC) - VRCHAT_WORLD_DATA_CACHE_TTL
+    world.last_updated = dt_util.utcnow() - VRCHAT_WORLD_DATA_CACHE_TTL
 
     with patch(
         "homeassistant.components.vrchat.world.VRChatAPI", return_value=api_context
@@ -80,7 +81,7 @@ async def test_get_data_clears_task_after_cancellation() -> None:
     api_context.__aexit__ = AsyncMock(return_value=None)
     world = VRChatWorldData.get("wrld_test")
     world._data = {"id": "wrld_test"}
-    world.last_updated = datetime.now(UTC) - VRCHAT_WORLD_DATA_CACHE_TTL
+    world.last_updated = dt_util.utcnow() - VRCHAT_WORLD_DATA_CACHE_TTL
 
     with patch(
         "homeassistant.components.vrchat.world.VRChatAPI", return_value=api_context
