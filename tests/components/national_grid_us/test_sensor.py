@@ -64,21 +64,20 @@ async def test_sensor_entities_created(
 async def test_meter_devices_linked_to_account_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test meter devices are linked to a pre-registered account device."""
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
-
-    account_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_ACCOUNT_ID)}
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_ACCOUNT_ID), mock_config_entry.entry_id
     )
     assert account_device is not None
     assert account_device.entry_type is dr.DeviceEntryType.SERVICE
 
-    meter_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_ACCOUNT_ID}_{MOCK_SERVICE_POINT}")}
+    meter_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_ACCOUNT_ID}_{MOCK_SERVICE_POINT}"), mock_config_entry.entry_id
     )
     assert meter_device is not None
     assert meter_device.via_device_id == account_device.id
@@ -123,6 +122,7 @@ async def test_cost_sensor_uses_date_not_month_across_year_boundary(
 
 async def test_shared_service_point_across_accounts_no_collision(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test meters sharing a service point across accounts do not collide.
 
@@ -157,13 +157,11 @@ async def test_shared_service_point_across_accounts_no_collision(
         await hass.config_entries.async_setup(entries[0].entry_id)
         await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
-
-    device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_ACCOUNT_ID}_{MOCK_SERVICE_POINT}")}
+    device_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_ACCOUNT_ID}_{MOCK_SERVICE_POINT}"), entries[0].entry_id
     )
-    device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_ACCOUNT_ID_2}_{MOCK_SERVICE_POINT}")}
+    device_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_ACCOUNT_ID_2}_{MOCK_SERVICE_POINT}"), entries[1].entry_id
     )
     assert device_1 is not None
     assert device_2 is not None
