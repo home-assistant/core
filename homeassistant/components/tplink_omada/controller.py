@@ -15,6 +15,7 @@ from .coordinator import (
     OmadaClientsCoordinator,
     OmadaDevicesCoordinator,
     OmadaGatewayCoordinator,
+    OmadaKnownClientsCoordinator,
     OmadaSwitchPortCoordinator,
 )
 
@@ -42,9 +43,14 @@ class OmadaSiteController:
         self._clients_coordinator = OmadaClientsCoordinator(
             hass, config_entry, omada_client
         )
+        self._known_clients_coordinator = OmadaKnownClientsCoordinator(
+            hass, config_entry, omada_client
+        )
+        self._device_entity_registrations: list[set[str]] = []
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""
+        await self._known_clients_coordinator.async_config_entry_first_refresh()
         await self._devices_coordinator.async_config_entry_first_refresh()
 
         devices = self._devices_coordinator.data.values()
@@ -74,6 +80,7 @@ class OmadaSiteController:
         """
         # Track which devices have been processed already
         processed_devices: set[str] = set()
+        self._device_entity_registrations.append(processed_devices)
 
         async def _async_register_entities() -> None:
             """Register entities for devices that match the filter."""
@@ -100,6 +107,11 @@ class OmadaSiteController:
 
         # Call once on initial setup
         await _async_register_entities()
+
+    def async_mark_device_removed(self, mac: str) -> None:
+        """Allow entities for a removed device to be re-registered if it reappears."""
+        for processed in self._device_entity_registrations:
+            processed.discard(mac)
 
     @property
     def omada_client(self) -> OmadaSiteClient:
@@ -131,3 +143,8 @@ class OmadaSiteController:
     def clients_coordinator(self) -> OmadaClientsCoordinator:
         """Gets the coordinator for site's clients."""
         return self._clients_coordinator
+
+    @property
+    def known_clients_coordinator(self) -> OmadaKnownClientsCoordinator:
+        """Gets the coordinator for all wireless clients known to the controller."""
+        return self._known_clients_coordinator
