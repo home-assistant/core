@@ -1,6 +1,6 @@
 """The Samsung ExLink integration."""
 
-from samsung_exlink import MODELS, SamsungTV, TVState
+from samsung_exlink import MODELS, SamsungTV, SamsungTVError, TVState
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_MODEL, Platform
@@ -23,13 +23,13 @@ async def async_setup_entry(
         await tv.connect()
         # refresh() tolerates a powered-off TV; it only raises on a broken link.
         await tv.refresh()
-    except (ConnectionError, OSError, TimeoutError) as err:
+    except (SamsungTVError, ConnectionError, OSError, TimeoutError) as err:
         if tv.connected:
             await tv.disconnect()
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"error": str(err)},
+            translation_placeholders={"error": str(err) or type(err).__name__},
         ) from err
 
     entry.runtime_data = tv

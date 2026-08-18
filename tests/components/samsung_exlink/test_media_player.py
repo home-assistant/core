@@ -5,7 +5,7 @@ from unittest.mock import call
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from samsung_exlink import CommandRejected, InputSource, TVState
+from samsung_exlink import CommandRejected, InputSource, SamsungTVError, TVState
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.media_player import (
@@ -267,7 +267,12 @@ async def test_source_state_and_controls(
 
 @pytest.mark.parametrize(
     "exception",
-    [CommandRejected("rejected"), ConnectionError("connection lost"), TimeoutError],
+    [
+        CommandRejected("rejected"),
+        SamsungTVError("unexpected response"),
+        ConnectionError("connection lost"),
+        TimeoutError,
+    ],
 )
 async def test_command_error_raises(
     hass: HomeAssistant, mock_samsung_tv: MockSamsungTV, exception: Exception

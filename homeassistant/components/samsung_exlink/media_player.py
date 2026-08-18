@@ -5,7 +5,13 @@ from datetime import timedelta
 from functools import wraps
 from typing import Any, override
 
-from samsung_exlink import MAX_VOLUME, CommandRejected, InputSource, TVState
+from samsung_exlink import (
+    MAX_VOLUME,
+    CommandRejected,
+    InputSource,
+    SamsungTVError,
+    TVState,
+)
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -69,13 +75,13 @@ def catch_command_errors[**_P](
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_rejected",
-                translation_placeholders={"error": str(err)},
+                translation_placeholders={"error": str(err) or type(err).__name__},
             ) from err
-        except (ConnectionError, OSError, TimeoutError) as err:
+        except (SamsungTVError, ConnectionError, OSError, TimeoutError) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_failed",
-                translation_placeholders={"error": str(err)},
+                translation_placeholders={"error": str(err) or type(err).__name__},
             ) from err
 
     return wrapper

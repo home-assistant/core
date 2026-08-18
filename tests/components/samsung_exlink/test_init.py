@@ -2,6 +2,9 @@
 
 from unittest.mock import AsyncMock, patch
 
+import pytest
+from samsung_exlink import SamsungTVError
+
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -10,13 +13,24 @@ from .conftest import MockSamsungTV
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.parametrize(
+    ("failing_method", "exception"),
+    [
+        pytest.param("connect", TimeoutError, id="connect-timeout"),
+        pytest.param(
+            "refresh", SamsungTVError("unexpected response"), id="refresh-tv-error"
+        ),
+    ],
+)
 async def test_setup_connection_error(
     hass: HomeAssistant,
     mock_samsung_tv: MockSamsungTV,
     mock_config_entry: MockConfigEntry,
+    failing_method: str,
+    exception: Exception,
 ) -> None:
     """Test a connection failure results in a retry."""
-    mock_samsung_tv.connect.side_effect = TimeoutError
+    getattr(mock_samsung_tv, failing_method).side_effect = exception
 
     with patch(
         "homeassistant.components.samsung_exlink.SamsungTV",
