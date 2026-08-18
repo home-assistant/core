@@ -1,7 +1,4 @@
-"""Sofar Inverter Modbus — owns the ModbusConnection and coordinator; sofar-modbus is the HA-free device library doing the register work.
-
-Only the switch platform is wired up so far — added to Core one platform per PR.
-"""
+"""Sofar Inverter Modbus — owns the ModbusConnection and coordinator; sofar-modbus is the HA-free device library doing the register work."""
 
 import logging
 

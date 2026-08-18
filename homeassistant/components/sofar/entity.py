@@ -26,12 +26,10 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
         serial = device.serial_number
         if TYPE_CHECKING:
             assert serial is not None
-            assert coordinator.config_entry is not None
         self._component = component
         self._attr_unique_id = f"{serial}_{unique_id_suffix}"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
-            name=coordinator.config_entry.title,
             manufacturer=ATTR_MANUFACTURER,
             model=device.model or None,
             serial_number=serial,

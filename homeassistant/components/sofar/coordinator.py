@@ -41,6 +41,9 @@ _T = TypeVar("_T")
 class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     """Polls one Sofar inverter's components, tiered by how often they change."""
 
+    config_entry: SofarConfigEntry
+    device: SofarInverter
+
     def __init__(
         self,
         hass: HomeAssistant,
@@ -55,9 +58,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             name=entry.title,
             update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
-        self.config_entry: SofarConfigEntry = entry
         self.connection = connection
-        self.device: SofarInverter
         self._consecutive_timeouts = 0
         self._consecutive_failures: dict[str, int] = {}
         self._poll_outcomes: deque[bool] = deque(maxlen=_HEALTH_WINDOW)
@@ -144,14 +145,9 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                 self._record_poll_outcome(False, errors[0] if errors else None)
                 if not errors:
                     raise UpdateFailed(f"{self.name}: no component answered")
-                cause = (
-                    errors[0]
-                    if len(errors) == 1
-                    else ExceptionGroup("all components failed to refresh", errors)
-                )
                 raise UpdateFailed(
-                    f"{self.name}: no component answered: {errors[0]}"
-                ) from cause
+                    f"{self.name}: no component answered"
+                ) from ExceptionGroup("all components failed to refresh", errors)
         except ModbusTimeoutError as err:
             self._consecutive_timeouts += 1
             if self._consecutive_timeouts >= _TIMEOUT_DISCONNECT_THRESHOLD:
