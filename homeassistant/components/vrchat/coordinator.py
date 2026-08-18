@@ -2,7 +2,6 @@
 
 import asyncio
 from collections.abc import Callable, Coroutine
-from functools import lru_cache
 import json
 import logging
 import math
@@ -596,7 +595,6 @@ class VRChatUserDataCoordinator(AsyncCleanups):
         data_get = self.data.get
         return self._calculate_device_info(data_get("displayName"), data_get("bio"))
 
-    @lru_cache(maxsize=128)
     def _calculate_device_info(self, name: str | None, bio: str | None) -> DeviceInfo:
         user_id = self.data["id"]
         return DeviceInfo(
