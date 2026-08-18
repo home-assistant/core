@@ -492,6 +492,77 @@ async def test_duplicated_names_resolved_with_device_area(
         assert result.response.intent.slots.get("name", {}).get("text") == name
 
 
+@pytest.mark.xfail(
+    reason=(
+        "The slot list cache is not invalidated when a device is renamed, so the new "
+        "computed entity name is not matchable until another event clears the cache"
+    ),
+    strict=True,
+)
+@pytest.mark.usefixtures("init_components")
+async def test_device_rename_refreshes_slot_list(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test renaming a device makes the entity matchable by its new computed name.
+
+    The default agent's slot list is a cache invalidated only by area/floor registry
+    changes, entity registry name/alias/original_name changes, entity add/remove state
+    changes, and exposed-entity changes (see ``_listen_clear_slot_list`` and
+    ``_ENTITY_REGISTRY_UPDATE_FIELDS``). Renaming a device changes the exposed name of
+    a ``has_entity_name`` entity but is none of those events, so the stale name keeps
+    matching and the new one does not.
+
+    Marked xfail as a demonstration of that limitation.
+    """
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections=set(),
+        identifiers={("demo", "device-1")},
+        name="Kitchen",
+    )
+
+    light = entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "1234",
+        device_id=device.id,
+        has_entity_name=True,
+        original_name="Light",
+    )
+    # COMPUTED_NAME resolves to the full "<device name> <entity name>" name.
+    light = entity_registry.async_update_entity(
+        light.entity_id, aliases=[er.COMPUTED_NAME]
+    )
+    hass.states.async_set(
+        light.entity_id, "off", attributes={ATTR_FRIENDLY_NAME: "Kitchen Light"}
+    )
+    expose_entity(hass, light.entity_id, True)
+
+    # Populate the slot list cache: the current computed name matches.
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on Kitchen Light", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+
+    # Rename the device; the light's computed name becomes "Bedroom Light".
+    device_registry.async_update_device(device.id, name_by_user="Bedroom")
+    await hass.async_block_till_done()
+
+    # The new name should now be matchable, but the slot list cache is stale.
+    calls = async_mock_service(hass, "light", "turn_on")
+    result = await conversation.async_converse(
+        hass, "turn on Bedroom Light", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+
+
 @pytest.mark.usefixtures("init_components")
 async def test_trigger_sentences(hass: HomeAssistant) -> None:
     """Test registering/unregistering/matching a few trigger sentences."""
