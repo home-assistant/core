@@ -1695,6 +1695,66 @@ async def test_esphome_discovery_migration(
     assert entry.data["use_addon"] is True
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_placeholder_then_home_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test a home ID discovery dedups against a pending placeholder prompt."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    # The same adapter now reports a home ID while its prompt is open.
+    home_id_info = ESPHomeServiceInfo(
+        name=ESPHOME_DISCOVERY_INFO_CLEAN.name,
+        zwave_home_id=1234,
+        ip_address=ESPHOME_DISCOVERY_INFO_CLEAN.ip_address,
+        port=ESPHOME_DISCOVERY_INFO_CLEAN.port,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=home_id_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_placeholder_ignored_then_home_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test a home ID discovery honors a placeholder-based ignore."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id="esphome_mock-name",
+    )
+    entry.add_to_hass(hass)
+
+    # The adapter that was ignored without a home ID now reports one.
+    home_id_info = ESPHomeServiceInfo(
+        name="mock-name",
+        zwave_home_id=1234,
+        ip_address="192.168.1.100",
+        port=6053,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=home_id_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
 async def test_esphome_discovery_same_socket_no_reload(
     hass: HomeAssistant,

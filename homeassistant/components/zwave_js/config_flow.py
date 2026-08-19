@@ -1650,6 +1650,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
+        # The adapter may first be discovered without a home ID and get the
+        # placeholder unique id below, then report a home ID on a later
+        # discovery. Track the placeholder id so such a discovery can be
+        # deduplicated against a pending prompt or an ignored entry.
+        placeholder_unique_id = f"esphome_{discovery_info.name}"
         if discovery_info.zwave_home_id:
             existing_entry: ConfigEntry | None = None
             if (
@@ -1697,6 +1702,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="already_configured")
 
+            if any(
+                flow["context"].get("unique_id") == placeholder_unique_id
+                for flow in self._async_in_progress()
+            ):
+                return self.async_abort(reason="already_in_progress")
             # We are not aborting if home ID configured
             # here, we just want to make sure that it's set
             # We will update a USB based config entry
@@ -1710,10 +1720,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # also when the adapter doesn't report a home ID yet.
             # It is replaced with the home ID before an entry is created.
             self._unique_id_is_placeholder = True
-            await self.async_set_unique_id(f"esphome_{discovery_info.name}")
+            await self.async_set_unique_id(placeholder_unique_id)
 
         if any(
-            entry.source == SOURCE_IGNORE and entry.unique_id == self.unique_id
+            entry.source == SOURCE_IGNORE
+            and entry.unique_id in (self.unique_id, placeholder_unique_id)
             for entry in self._async_current_entries(include_ignore=True)
         ):
             return self.async_abort(reason="already_configured")
