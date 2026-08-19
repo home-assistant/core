@@ -140,6 +140,7 @@
       "battery_charger_status": {
         "name": "Charging status",
         "state": {
+          "charged": "Charged",
           "charging": "[%key:common::state::charging%]",
           "disabled": "[%key:common::state::disabled%]",
           "discharging": "[%key:common::state::discharging%]",
