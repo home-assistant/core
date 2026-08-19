@@ -142,7 +142,7 @@ _FUNCTION_MATCH: dict[str, list[TypeHintMatch]] = {
             arg_types={
                 0: "HomeAssistant",
                 1: "ConfigEntry",
-                2: "DeviceEntry",
+                2: "AnyDeviceEntry",
             },
             return_type="bool",
             mandatory=True,
