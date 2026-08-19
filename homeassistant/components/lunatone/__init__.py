@@ -81,11 +81,8 @@ async def _update_unique_id(
 async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> bool:
     """Set up Lunatone from a config entry."""
     auth_api = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
-    info_api = Info(auth_api)
-    dali_scan_api = DALIScan(auth_api)
-    devices_api = Devices(info_api)
-    sensors_api = Sensors(auth_api)
 
+    info_api = Info(auth_api)
     coordinator_info = LunatoneInfoDataUpdateCoordinator(hass, entry, info_api)
     await coordinator_info.async_config_entry_first_refresh()
 
@@ -111,18 +108,21 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         hw_version=coordinator_info.data.device.pcb,
         configuration_url=entry.data[CONF_URL],
         serial_number=str(info_api.data.device.serial),
-        model=info_api.product_name,
+        model=info_api.data.product_name,
         model_id=(
-            f"{coordinator_info.data.device.article_number}{coordinator_info.data.device.article_info}"
+            f"{coordinator_info.data.device.article_number}{coordinator_info.data.article_suffix}"
         ),
     )
 
+    devices_api = Devices(auth_api, info_api.data.version)
     coordinator_devices = LunatoneDevicesDataUpdateCoordinator(hass, entry, devices_api)
     await coordinator_devices.async_config_entry_first_refresh()
 
+    sensors_api = Sensors(auth_api)
     coordinator_sensors = LunatoneSensorsDataUpdateCoordinator(hass, entry, sensors_api)
     await coordinator_sensors.async_config_entry_first_refresh()
 
+    dali_scan_api = DALIScan(auth_api)
     coordinator_scan = LunatoneScanDataUpdateCoordinator(hass, entry, dali_scan_api)
     await coordinator_scan.async_config_entry_first_refresh()
 

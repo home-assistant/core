@@ -4,14 +4,14 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from lunatone_rest_api_client import Device, Devices, Info, Sensor, Sensors
-from lunatone_rest_api_client.models import InfoData, ScanData, ScanState, SensorsData
+from lunatone_rest_api_client.models import InfoData, ScanData, SensorsData
 import pytest
 
 from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
 from homeassistant.components.lunatone.const import DOMAIN
 from homeassistant.const import CONF_URL
 
-from . import BASE_URL, INFO_DATA, PRODUCT_NAME, SENSORS_DATA, UUID, build_devices_data
+from . import BASE_URL, INFO_DATA, SENSORS_DATA, UUID, build_devices_data
 
 from tests.common import MockConfigEntry
 
@@ -104,11 +104,6 @@ def mock_lunatone_info() -> Generator[AsyncMock]:
 
         def _set_data(data: InfoData) -> Info:
             info.data = data
-            info.name = info.data.name
-            info.product_name = PRODUCT_NAME
-            info.serial_number = info.data.device.serial
-            info.uid = info.data.uid
-            info.version = info.data.version
             return info
 
         info.set_data = _set_data
@@ -174,11 +169,6 @@ def mock_lunatone_scan() -> Generator[AsyncMock]:
     ):
         scan = mock_dali_scan.return_value
         scan.data = ScanData()
-        type(scan).is_busy = PropertyMock(
-            side_effect=lambda: (
-                scan.data.status in {ScanState.ADDRESSING, ScanState.IN_PROGRESS}
-            )
-        )
         yield scan
 
 
