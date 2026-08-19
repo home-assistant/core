@@ -1,6 +1,7 @@
 """Support for departure information for public transport in Munich."""
 
 from copy import deepcopy
+from datetime import timedelta
 import logging
 from typing import Any, override
 
@@ -25,6 +26,7 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DESTINATIONS,
+    CONF_DIRECTIONS,
     CONF_LINES,
     CONF_NUMBER,
     CONF_PRODUCTS,
@@ -42,13 +44,11 @@ _LOGGER = logging.getLogger(__name__)
 
 CONF_NEXT_DEPARTURE = "nextdeparture"
 
-# Deprecated since the legacy platform-only setup; kept here only so existing
-# YAML with this key still validates and can be imported as a config entry.
-CONF_DIRECTIONS = "directions"
-
 NONE_ICON = "mdi:clock"
 
 ATTRIBUTION = "Data provided by mvg.de"
+
+SCAN_INTERVAL = timedelta(seconds=30)
 
 PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
     {
@@ -86,7 +86,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version=None,
+        breaks_in_ha_version="2027.3.0",
         is_fixable=False,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_yaml",
@@ -123,7 +123,6 @@ def _filter_departures(
     departures: list[dict[str, Any]],
     destinations: list[str],
     lines: list[str],
-    products: list[str] | None,
     timeoffset: int,
 ) -> list[dict[str, Any]]:
     """Filter and shape raw departures according to the entity's options."""
@@ -133,9 +132,6 @@ def _filter_departures(
             continue
 
         if "" not in lines[:1] and departure["line"] not in lines:
-            continue
-
-        if products and departure["type"] not in products:
             continue
 
         time_to_departure = _get_minutes_until_departure(departure["time"])
@@ -190,13 +186,13 @@ class MVGSensor(SensorEntity):
             )
         except MvgApiError as err:
             _LOGGER.warning("Could not update MVG departures: %s", err)
+            self._departures = []
             return
 
         self._departures = _filter_departures(
             departures,
             self._destinations,
             self._lines,
-            None,
             self._timeoffset,
         )
 
@@ -214,7 +210,7 @@ class MVGSensor(SensorEntity):
         """Icon to use in the frontend, if any."""
         if not self._departures:
             return NONE_ICON
-        return str(self._departures[0]["icon"])
+        return str(self._departures[0]["icon"]) or NONE_ICON
 
     @property
     @override

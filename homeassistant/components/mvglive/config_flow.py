@@ -16,6 +16,7 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_DESTINATIONS,
+    CONF_DIRECTIONS,
     CONF_LINES,
     CONF_NUMBER,
     CONF_PRODUCTS,
@@ -55,12 +56,13 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self._matches: dict[str, dict[str, Any]] = {}
+        self._products: list[str] | None = None
 
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:
-        """Handle the initial step: search for a station by (partial) name."""
+        """Handle the initial step: search for a station and pick modes of transport."""
         errors: dict[str, str] = {}
         if user_input is not None:
             query = user_input[CONF_STATION].strip().lower()
@@ -81,9 +83,17 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_station"
                 else:
                     self._matches = {station["id"]: station for station in matches}
+                    self._products = user_input.get(CONF_PRODUCTS) or None
                     return await self.async_step_select()
 
-        schema = vol.Schema({vol.Required(CONF_STATION): str})
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_STATION): str,
+                vol.Optional(CONF_PRODUCTS, default=[]): SelectSelector(
+                    SelectSelectorConfig(options=ALL_PRODUCTS, multiple=True)
+                ),
+            }
+        )
         return self.async_show_form(step_id="user", data_schema=schema, errors=errors)
 
     async def async_step_select(
@@ -100,6 +110,7 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     CONF_STATION_ID: station["id"],
                     CONF_STATION_NAME: station["name"],
                 },
+                options={CONF_PRODUCTS: self._products},
             )
 
         options = [
@@ -136,8 +147,13 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(station["id"])
         self._abort_if_unique_id_configured()
 
+        # `directions` is a fallback: only used if `destinations` wasn't set.
+        destinations = import_data.get(CONF_DESTINATIONS, DEFAULT_DESTINATIONS)
+        if destinations == DEFAULT_DESTINATIONS and import_data.get(CONF_DIRECTIONS):
+            destinations = import_data[CONF_DIRECTIONS]
+
         options = {
-            CONF_DESTINATIONS: import_data.get(CONF_DESTINATIONS, DEFAULT_DESTINATIONS),
+            CONF_DESTINATIONS: destinations,
             CONF_LINES: import_data.get(CONF_LINES, DEFAULT_LINES),
             CONF_PRODUCTS: import_data.get(CONF_PRODUCTS, DEFAULT_PRODUCTS),
             CONF_TIMEOFFSET: import_data.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET),

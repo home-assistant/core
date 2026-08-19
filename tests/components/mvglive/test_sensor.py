@@ -1,23 +1,20 @@
 """Test the mvglive sensor platform."""
 
-from unittest.mock import AsyncMock
+from freezegun.api import FrozenDateTimeFactory
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.mvglive.sensor import PLATFORM_SCHEMA
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
 def test_platform_schema_accepts_deprecated_directions() -> None:
-    """Test that a legacy `directions` key still validates so the YAML can be imported.
-
-    `directions` was deprecated in the old platform-only setup; existing
-    users may still have it in `configuration.yaml`. It must not cause
-    schema validation to fail, or the automatic YAML-to-config-entry import
-    would break for them.
-    """
+    """Test that a legacy `directions` key still validates."""
     PLATFORM_SCHEMA(
         {
             "platform": "mvglive",
@@ -26,13 +23,16 @@ def test_platform_schema_accepts_deprecated_directions() -> None:
     )
 
 
-async def test_sensor_created(
-    hass: HomeAssistant, config_entry: MockConfigEntry, mvg_api: dict[str, AsyncMock]
+@pytest.mark.usefixtures("mvg_api")
+async def test_sensor(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that the departures sensor is created and polls departures."""
+    """Test the departures sensor entity."""
+    freezer.move_to("2026-08-19 12:00:00+00:00")
     await setup_integration(hass, config_entry)
 
-    state = hass.states.get("sensor.hauptbahnhof")
-    assert state is not None
-    assert int(state.state) > 0
-    mvg_api["departures_async"].assert_called_once()
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

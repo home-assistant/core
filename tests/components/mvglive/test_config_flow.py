@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.mvglive.const import (
     CONF_DESTINATIONS,
+    CONF_DIRECTIONS,
     CONF_LINES,
     CONF_NUMBER,
     CONF_PRODUCTS,
@@ -36,7 +37,8 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
     assert result["step_id"] == "user"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], user_input={CONF_STATION: "Hauptbahnhof"}
+        result["flow_id"],
+        user_input={CONF_STATION: "Hauptbahnhof", CONF_PRODUCTS: ["U-Bahn"]},
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "select"
@@ -48,10 +50,12 @@ async def test_full_user_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_STATION["name"]
+    assert result["result"].unique_id == TEST_STATION["id"]
     assert result["data"] == {
         CONF_STATION_ID: TEST_STATION["id"],
         CONF_STATION_NAME: TEST_STATION["name"],
     }
+    assert result["options"] == {CONF_PRODUCTS: ["U-Bahn"]}
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
@@ -106,10 +110,11 @@ async def test_invalid_station(
     assert result["errors"] == {"base": "invalid_station"}
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_cannot_connect(
     hass: HomeAssistant, mvg_api: dict[str, AsyncMock]
 ) -> None:
-    """Test that an API failure while searching shows an error instead of crashing."""
+    """Test that an API failure while searching shows an error, and that it can be retried."""
     mvg_api["stations_async"].side_effect = MvgApiError("boom")
 
     result = await hass.config_entries.flow.async_init(
@@ -122,11 +127,27 @@ async def test_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
+    mvg_api["stations_async"].side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_STATION: "Hauptbahnhof"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "select"
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={CONF_STATION_ID: TEST_STATION["id"]}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_STATION["id"]
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_flow_cannot_connect(
     hass: HomeAssistant, mvg_api: dict[str, AsyncMock]
 ) -> None:
-    """Test that an API failure while importing YAML aborts cleanly."""
+    """Test that an API failure while importing YAML aborts, and that a retry succeeds."""
     mvg_api["station_async"].side_effect = MvgApiError("boom")
 
     result = await hass.config_entries.flow.async_init(
@@ -137,6 +158,17 @@ async def test_import_flow_cannot_connect(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_connect"
+
+    mvg_api["station_async"].side_effect = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION: "Hauptbahnhof"},
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["result"].unique_id == TEST_STATION["id"]
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mvg_api")
@@ -178,6 +210,7 @@ async def test_import_flow(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TEST_STATION["name"]
+    assert result["result"].unique_id == TEST_STATION["id"]
     assert result["data"] == {
         CONF_STATION_ID: TEST_STATION["id"],
         CONF_STATION_NAME: TEST_STATION["name"],
@@ -189,6 +222,23 @@ async def test_import_flow(hass: HomeAssistant) -> None:
         CONF_TIMEOFFSET: 5,
         CONF_NUMBER: 3,
     }
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mvg_api")
+async def test_import_flow_legacy_directions(hass: HomeAssistant) -> None:
+    """Test that a legacy `directions` entry is imported as `destinations`."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_STATION: "Hauptbahnhof",
+            CONF_DIRECTIONS: ["Feldmoching"],
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"][CONF_DESTINATIONS] == ["Feldmoching"]
 
 
 async def test_import_flow_invalid_station(

@@ -19,6 +19,7 @@
       },
       "user": {
         "data": {
+          "products": "Modes of transport (all if none selected)",
           "station": "Station"
         },
         "description": "Search for a station or stop in the Munich public transport network.",
