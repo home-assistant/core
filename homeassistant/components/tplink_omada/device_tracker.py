@@ -1,28 +1,123 @@
 """Connected Wi-Fi device scanners for TP-Link Omada access points."""
 
-from typing import Literal, override
+from typing import Literal, cast, override
 
 from tplink_omada_client.clients import OmadaWirelessClient
 from tplink_omada_client.exceptions import OmadaClientException
+import voluptuous as vol
 
 from homeassistant.components.device_tracker import ScannerEntity
-from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
+from homeassistant.config_entries import ConfigEntry, ConfigEntryState
+from homeassistant.const import ATTR_CONFIG_ENTRY_ID
+from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import config_validation as cv, selector
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
-from .controller import OmadaClientsCoordinator
-from .services import SERVICE_BLOCK, SERVICE_RECONNECT, SERVICE_UNBLOCK
+from .const import DOMAIN
+from .controller import OmadaClientsCoordinator, OmadaSiteController
 
 PARALLEL_UPDATES = 0
+
+SERVICE_RECONNECT_CLIENT = "reconnect_client"
+SERVICE_RECONNECT = "reconnect"
+SERVICE_BLOCK = "block"
+SERVICE_UNBLOCK = "unblock"
+
+ATTR_MAC = "mac"
+
+SERVICE_ACTIONS: dict[str, Literal["reconnect", "block", "unblock"]] = {
+    SERVICE_RECONNECT_CLIENT: "reconnect",
+    SERVICE_RECONNECT: "reconnect",
+    SERVICE_BLOCK: "block",
+    SERVICE_UNBLOCK: "unblock",
+}
+
+
+def _get_controller(call: ServiceCall) -> OmadaSiteController:
+    if call.data.get(ATTR_CONFIG_ENTRY_ID):
+        entry = call.hass.config_entries.async_get_entry(
+            call.data[ATTR_CONFIG_ENTRY_ID]
+        )
+        if not entry:
+            raise ServiceValidationError("Specified TP-Link Omada controller not found")
+    else:
+        # Assume first loaded entry if none specified
+        # (for backward compatibility/99% use case)
+        entries = call.hass.config_entries.async_entries(DOMAIN)
+        if len(entries) == 0:
+            raise ServiceValidationError("No active TP-Link Omada controllers found")
+        entry = entries[0]
+
+    entry = cast(ConfigEntry[OmadaSiteController], entry)
+
+    if entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            "The TP-Link Omada integration is not currently available"
+        )
+    return entry.runtime_data
+
+
+SCHEMA_RECONNECT_CLIENT = vol.Schema(
+    {
+        vol.Optional(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
+            {
+                "integration": DOMAIN,
+            }
+        ),
+        vol.Required(ATTR_MAC): cv.string,
+    }
+)
+
+
+async def _handle_client_action(call: ServiceCall) -> None:
+    """Handle a service action for a network client."""
+    controller = _get_controller(call)
+    mac: str = call.data[ATTR_MAC]
+    action = SERVICE_ACTIONS[call.service]
+
+    try:
+        if action == "reconnect":
+            await controller.omada_client.reconnect_client(mac)
+        elif action == "block":
+            await controller.omada_client.block_client(mac)
+        else:
+            await controller.omada_client.unblock_client(mac)
+    except OmadaClientException as ex:
+        raise HomeAssistantError(f"Failed to {action} client with MAC {mac}") from ex
+
+
+@callback
+def async_setup_services(hass: HomeAssistant) -> None:
+    """Set up the services for the TP-Link Omada integration."""
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        _handle_client_action,
+        schema=SCHEMA_RECONNECT_CLIENT,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RECONNECT,
+        _handle_client_action,
+        schema=SCHEMA_RECONNECT_CLIENT,
+    )
+    for service in (SERVICE_BLOCK, SERVICE_UNBLOCK):
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            service,
+            _handle_client_action,
+            schema=SCHEMA_RECONNECT_CLIENT,
+        )
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: OmadaConfigEntry,
+    config_entry: ConfigEntry[OmadaSiteController],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device trackers and scanners."""
@@ -42,11 +137,6 @@ async def async_setup_entry(
             if isinstance(client, OmadaWirelessClient)
         ]
     )
-
-    platform = entity_platform.async_get_current_platform()
-    platform.async_register_entity_service(SERVICE_RECONNECT, {}, "async_reconnect")
-    platform.async_register_entity_service(SERVICE_BLOCK, {}, "async_block")
-    platform.async_register_entity_service(SERVICE_UNBLOCK, {}, "async_unblock")
 
 
 class OmadaClientScannerEntity(
@@ -72,36 +162,6 @@ class OmadaClientScannerEntity(
 
     def _do_update(self) -> None:
         self._client_details = self.coordinator.data.get(self._client_id)
-
-    async def _async_client_action(
-        self, action: Literal["reconnect", "block", "unblock"]
-    ) -> None:
-        """Run an action for this client."""
-        try:
-            if action == "reconnect":
-                await self.coordinator.omada_client.reconnect_client(self._client_id)
-            elif action == "block":
-                await self.coordinator.omada_client.block_client(self._client_id)
-            elif action == "unblock":
-                await self.coordinator.omada_client.unblock_client(self._client_id)
-            else:
-                raise ValueError(f"Unknown client action: {action}")
-        except OmadaClientException as ex:
-            raise HomeAssistantError(
-                f"Failed to {action} client with MAC {self._client_id}"
-            ) from ex
-
-    async def async_reconnect(self) -> None:
-        """Reconnect this wireless client."""
-        await self._async_client_action("reconnect")
-
-    async def async_block(self) -> None:
-        """Block this client from the network."""
-        await self._async_client_action("block")
-
-    async def async_unblock(self) -> None:
-        """Allow this client to access the network."""
-        await self._async_client_action("unblock")
 
     @override
     async def async_added_to_hass(self) -> None:
