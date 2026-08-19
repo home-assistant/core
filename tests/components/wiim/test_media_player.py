@@ -1,6 +1,7 @@
 """Tests for the WiiM media player via services and the state machine."""
 
 from collections.abc import Callable
+from functools import partial
 from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -1416,7 +1417,7 @@ async def test_media_image_ssl_verification(
     ("status", "exception_factory"),
     [
         (HTTPStatus.NOT_FOUND, lambda: None),
-        (HTTPStatus.OK, aiohttp.ClientError),
+        (HTTPStatus.OK, partial(aiohttp.ClientError)),
     ],
 )
 @pytest.mark.usefixtures("mock_wiim_controller")
