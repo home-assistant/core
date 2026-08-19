@@ -890,24 +890,46 @@ async def test_hassio_discovery_flow_404(
     assert result["reason"] == "unknown"
 
 
+@pytest.mark.parametrize(
+    ("entry_url", "entry_unique_id"),
+    [
+        pytest.param(
+            f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}",
+            HASSIO_DATA.uuid,
+            id="new_port",
+        ),
+        pytest.param(
+            f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}",
+            None,
+            id="new_port_missing_unique_id",
+        ),
+        pytest.param(
+            f"http://core-silabs-multiprotocol-old:{HASSIO_DATA.config['port']}",
+            HASSIO_DATA.uuid,
+            id="new_host",
+        ),
+        pytest.param(
+            f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+            None,
+            id="same_url_missing_unique_id",
+        ),
+    ],
+)
 @pytest.mark.usefixtures("get_border_agent_id")
-async def test_hassio_discovery_flow_new_port_missing_unique_id(
-    hass: HomeAssistant,
+async def test_hassio_discovery_flow_updates_entry(
+    hass: HomeAssistant, entry_url: str, entry_unique_id: str | None
 ) -> None:
-    """Test the port can be updated when the unique id is missing."""
+    """Test the URL and the unique id of the existing entry are updated."""
     mock_integration(hass, MockModule("hassio"))
 
     # Setup the config entry
     config_entry = MockConfigEntry(
-        data={
-            "url": (
-                f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}"
-            )
-        },
+        data={"url": entry_url},
         domain=otbr.DOMAIN,
         options={},
         source="hassio",
         title="Open Thread Border Router",
+        unique_id=entry_unique_id,
     )
     config_entry.add_to_hass(hass)
 
@@ -921,42 +943,9 @@ async def test_hassio_discovery_flow_new_port_missing_unique_id(
     expected_data = {
         "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
     }
-    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
+    assert hass.config_entries.async_entries(otbr.DOMAIN) == [config_entry]
     assert config_entry.data == expected_data
-
-
-@pytest.mark.usefixtures("get_border_agent_id")
-async def test_hassio_discovery_flow_new_port(hass: HomeAssistant) -> None:
-    """Test the port can be updated."""
-    mock_integration(hass, MockModule("hassio"))
-
-    # Setup the config entry
-    config_entry = MockConfigEntry(
-        data={
-            "url": (
-                f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}"
-            )
-        },
-        domain=otbr.DOMAIN,
-        options={},
-        source="hassio",
-        title="Open Thread Border Router",
-        unique_id=HASSIO_DATA.uuid,
-    )
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-    expected_data = {
-        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
-    }
-    config_entry = hass.config_entries.async_entries(otbr.DOMAIN)[0]
-    assert config_entry.data == expected_data
+    assert config_entry.unique_id == HASSIO_DATA.uuid
 
 
 @pytest.mark.usefixtures(
@@ -993,38 +982,6 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
         "url": f"http://openthread_border_router:{HASSIO_DATA.config['port'] + 1}",
     }
     config_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
-    assert config_entry.data == expected_data
-
-
-@pytest.mark.usefixtures("get_border_agent_id")
-async def test_hassio_discovery_flow_new_host(hass: HomeAssistant) -> None:
-    """Test the host can be updated."""
-    mock_integration(hass, MockModule("hassio"))
-
-    # Setup the config entry
-    config_entry = MockConfigEntry(
-        data={
-            "url": f"http://core-silabs-multiprotocol_old:{HASSIO_DATA.config['port']}"
-        },
-        domain=otbr.DOMAIN,
-        options={},
-        source="hassio",
-        title="Open Thread Border Router",
-        unique_id=HASSIO_DATA.uuid,
-    )
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-
-    expected_data = {
-        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
-    }
-    assert hass.config_entries.async_entries(otbr.DOMAIN) == [config_entry]
     assert config_entry.data == expected_data
 
 

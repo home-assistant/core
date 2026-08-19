@@ -213,18 +213,17 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 if unique_id != discovery_info.uuid:
                     continue
 
-                if (
-                    current_url.host != config["host"]
-                    or current_url.port != config["port"]
-                ):
-                    # Update URL with the new host and port
-                    self.hass.config_entries.async_update_entry(
-                        current_entry,
-                        data=config_entry_data,
-                        unique_id=unique_id,  # Remove in HA Core 2025.9
-                    )
-                elif current_entry.state is ConfigEntryState.LOADED:
-                    # Reload the entry since OTBR has restarted
+                # The entry is updated in place when the add-on has moved, the
+                # unique_id is only missing for entries created by the first version
+                # Remove the unique_id update in HA Core 2025.9
+                updated = self.hass.config_entries.async_update_entry(
+                    current_entry,
+                    data=config_entry_data,
+                    unique_id=unique_id,
+                )
+                if not updated and current_entry.state is ConfigEntryState.LOADED:
+                    # Reload the entry since OTBR has restarted, an entry which was
+                    # updated is reloaded by its update listener
                     await self.hass.config_entries.async_reload(current_entry.entry_id)
 
                 return self.async_abort(reason="already_configured")
