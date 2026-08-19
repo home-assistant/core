@@ -1798,10 +1798,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         synthesized on demand and never stored, so it stays invisible to enumeration,
         identifier search and the frontend device list.
 
-        With include_child_devices=False a child-device id resolves to None (the child
-        is treated as absent) and the return type excludes children. With
-        include_main_devices=False a main-device id resolves to None. With
-        include_composite_devices=False a composite-device id resolved to None.
+        include_composite_devices=False a composite-device id resolves to None.
         """
         if (
             include_main_devices
