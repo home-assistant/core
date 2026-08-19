@@ -40,22 +40,16 @@ def mock_api_client():
             "homeassistant.components.papouch.config_flow.PapouchHTTPClient.get_device_mac",
             return_value="00:11:22:33:44:55",
         ) as mock_mac,
+        patch(
+            "homeassistant.components.papouch.utils.PapouchHTTPClient.get_device_info",
+            return_value=("Quido", "Lab"),
+        ) as mock_info,
     ):
-        yield mock_fetch, mock_mode, mock_mac
-
-
-@pytest.fixture
-def mock_device_name():
-    """Fixture to mock the device name retrieval function from utils."""
-    with patch(
-        "homeassistant.components.papouch.config_flow._get_device_name",
-        return_value="Quido (Lab)",
-    ) as mock_name:
-        yield mock_name
+        yield mock_fetch, mock_mode, mock_mac, mock_info
 
 
 async def test_user_success(
-    hass: HomeAssistant, mock_api_client, mock_device_name, mock_setup_entry
+    hass: HomeAssistant, mock_api_client, mock_setup_entry
 ) -> None:
     """Test successful manual setup of the integration."""
     result = await hass.config_entries.flow.async_init(
@@ -95,7 +89,7 @@ async def test_invalid_ip_format(hass: HomeAssistant) -> None:
 
 async def test_user_connection_error(hass: HomeAssistant, mock_api_client) -> None:
     """Test handling of connection errors during first step."""
-    mock_fetch, _, _ = mock_api_client
+    mock_fetch, _, _, _ = mock_api_client
     mock_fetch.side_effect = DeviceConnectionError
 
     result = await hass.config_entries.flow.async_init(
@@ -113,7 +107,7 @@ async def test_user_connection_error(hass: HomeAssistant, mock_api_client) -> No
 
 async def test_user_auth_error(hass: HomeAssistant, mock_api_client) -> None:
     """Test handling of authentication errors during first step."""
-    mock_fetch, _, _ = mock_api_client
+    mock_fetch, _, _, _ = mock_api_client
     mock_fetch.side_effect = DeviceAuthError
 
     result = await hass.config_entries.flow.async_init(
@@ -131,7 +125,7 @@ async def test_user_auth_error(hass: HomeAssistant, mock_api_client) -> None:
 
 async def test_user_mode_missing(hass: HomeAssistant, mock_api_client) -> None:
     """Test config flow aborts when the device mode is missing."""
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = -1
 
     result = await hass.config_entries.flow.async_init(
@@ -149,7 +143,7 @@ async def test_user_mode_missing(hass: HomeAssistant, mock_api_client) -> None:
 
 async def test_user_web_mode_required(hass: HomeAssistant, mock_api_client) -> None:
     """Test config flow aborts when the device is not in web mode."""
-    _, mock_mode, _ = mock_api_client
+    _, mock_mode, _, _ = mock_api_client
     mock_mode.return_value = 1  # Using a mode other than WEB_MODE_INDEX
 
     result = await hass.config_entries.flow.async_init(
@@ -166,10 +160,11 @@ async def test_user_web_mode_required(hass: HomeAssistant, mock_api_client) -> N
 
 
 async def test_user_mac_auth_error(
-    hass: HomeAssistant, mock_api_client, mock_device_name
+    hass: HomeAssistant,
+    mock_api_client,
 ) -> None:
     """Test auth error gracefully failing when retrieving MAC address."""
-    _, _, mock_mac = mock_api_client
+    _, _, mock_mac, _ = mock_api_client
     mock_mac.side_effect = DeviceAuthError("Bad password")
 
     result = await hass.config_entries.flow.async_init(
@@ -190,10 +185,11 @@ async def test_user_mac_auth_error(
 
 
 async def test_user_mac_connection_error(
-    hass: HomeAssistant, mock_api_client, mock_device_name
+    hass: HomeAssistant,
+    mock_api_client,
 ) -> None:
     """Test manual flow aborts if getting MAC address fails due to logic/connection error."""
-    _, _, mock_mac = mock_api_client
+    _, _, mock_mac, _ = mock_api_client
     mock_mac.side_effect = DeviceLogicError("No MAC found")
 
     result = await hass.config_entries.flow.async_init(
