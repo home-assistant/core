@@ -58,7 +58,7 @@ async def setup_ports_fixture(
 
 async def _async_get_serial_ports(
     hass_ws_client: WebSocketGenerator, hass: HomeAssistant
-) -> list[dict[str, Any]]:
+) -> dict[str, Any]:
     """Return the result of the `usb/serial_ports` command."""
     ws_client = await hass_ws_client(hass)
     await ws_client.send_json({"id": 1, "type": "usb/serial_ports"})
@@ -99,8 +99,10 @@ async def test_config_entry_consumers(
         "homeassistant.components.usb.consumers.os.path.realpath",
         side_effect=lambda path: TTY_USB0 if path == TTY_USB0_BY_ID else path,
     ):
-        ports = await _async_get_serial_ports(hass_ws_client, hass)
+        result = await _async_get_serial_ports(hass_ws_client, hass)
 
+    ports = result["ports"]
+    assert result["missing"] == []
     assert [(port["device"], port["consumers"]) for port in ports] == [
         (
             TTY_USB0,
@@ -139,9 +141,10 @@ async def test_config_entry_non_serial_values(
     mock_integration(hass, MockModule("test_usb", dependencies=["usb"]))
     MockConfigEntry(domain="test_usb", title="Test USB", data=data).add_to_hass(hass)
 
-    ports = await _async_get_serial_ports(hass_ws_client, hass)
+    result = await _async_get_serial_ports(hass_ws_client, hass)
 
-    assert [port["consumers"] for port in ports] == [[], []]
+    assert result["missing"] == []
+    assert [port["consumers"] for port in result["ports"]] == [[], []]
 
 
 @pytest.mark.usefixtures("setup_ports")
@@ -171,9 +174,9 @@ async def test_config_entry_ignored_and_disabled(
         disabled_by=disabled_by,
     ).add_to_hass(hass)
 
-    ports = await _async_get_serial_ports(hass_ws_client, hass)
+    result = await _async_get_serial_ports(hass_ws_client, hass)
 
-    assert [len(port["consumers"]) for port in ports] == [num_consumers, 0]
+    assert [len(port["consumers"]) for port in result["ports"]] == [num_consumers, 0]
 
 
 @pytest.mark.usefixtures("setup_ports")
@@ -187,9 +190,10 @@ async def test_config_entry_without_usb_dependency(
         domain="test_no_usb", title="Test", data={"device": TTY_USB0}
     ).add_to_hass(hass)
 
-    ports = await _async_get_serial_ports(hass_ws_client, hass)
+    result = await _async_get_serial_ports(hass_ws_client, hass)
 
-    assert [port["consumers"] for port in ports] == [[], []]
+    assert result["missing"] == []
+    assert [port["consumers"] for port in result["ports"]] == [[], []]
 
 
 @pytest.mark.usefixtures("setup_ports")
@@ -206,9 +210,9 @@ async def test_config_entry_after_dependency(
         domain="test_after_usb", title="Test", data={"device": TTY_USB0}
     ).add_to_hass(hass)
 
-    ports = await _async_get_serial_ports(hass_ws_client, hass)
+    result = await _async_get_serial_ports(hass_ws_client, hass)
 
-    assert [len(port["consumers"]) for port in ports] == [1, 0]
+    assert [len(port["consumers"]) for port in result["ports"]] == [1, 0]
 
 
 @pytest.mark.usefixtures("setup_ports")
@@ -222,9 +226,10 @@ async def test_remote_port_consumer(
         domain="test_usb", title="Test USB", data={"device": ESPHOME_PORT}
     ).add_to_hass(hass)
 
-    ports = await _async_get_serial_ports(hass_ws_client, hass)
+    result = await _async_get_serial_ports(hass_ws_client, hass)
 
-    assert [(port["device"], len(port["consumers"])) for port in ports] == [
+    assert result["missing"] == []
+    assert [(port["device"], len(port["consumers"])) for port in result["ports"]] == [
         (TTY_USB0, 0),
         (ESPHOME_PORT, 1),
     ]
@@ -241,28 +246,26 @@ async def test_absent_configured_port(
         domain="test_usb", title="Test USB", data={"device": TTY_USB1}
     ).add_to_hass(hass)
 
-    ports = await _async_get_serial_ports(hass_ws_client, hass)
+    result = await _async_get_serial_ports(hass_ws_client, hass)
 
-    assert ports[-1] == {
-        "device": TTY_USB1,
-        "serial_number": None,
-        "manufacturer": None,
-        "description": None,
-        "interface_description": None,
-        "interface_num": None,
-        "present": False,
-        "matching_integrations": [],
-        "consumers": [
-            {
-                "kind": "config_entry",
-                "title": "Test USB",
-                "active": False,
-                "domain": "test_usb",
-                "config_entry_id": ports[-1]["consumers"][0]["config_entry_id"],
-                "slug": None,
-            }
-        ],
-    }
+    assert [port["consumers"] for port in result["ports"]] == [[], []]
+    assert result["missing"] == [
+        {
+            "device": TTY_USB1,
+            "consumers": [
+                {
+                    "kind": "config_entry",
+                    "title": "Test USB",
+                    "active": False,
+                    "domain": "test_usb",
+                    "config_entry_id": result["missing"][0]["consumers"][0][
+                        "config_entry_id"
+                    ],
+                    "slug": None,
+                }
+            ],
+        }
+    ]
 
 
 @pytest.mark.usefixtures("setup_ports")
@@ -296,9 +299,10 @@ async def test_app_consumers(
             side_effect=lambda path: TTY_USB0 if path == TTY_USB0_BY_ID else path,
         ),
     ):
-        ports = await _async_get_serial_ports(hass_ws_client, hass)
+        result = await _async_get_serial_ports(hass_ws_client, hass)
 
-    assert [(port["device"], port["consumers"]) for port in ports] == [
+    assert result["missing"] == []
+    assert [(port["device"], port["consumers"]) for port in result["ports"]] == [
         (
             TTY_USB0,
             [
@@ -325,10 +329,10 @@ async def test_app_consumers_without_supervisor(
     with patch(
         "homeassistant.components.usb.consumers.get_addons_info"
     ) as mock_apps_info:
-        ports = await _async_get_serial_ports(hass_ws_client, hass)
+        result = await _async_get_serial_ports(hass_ws_client, hass)
 
     assert len(mock_apps_info.mock_calls) == 0
-    assert [port["consumers"] for port in ports] == [[], []]
+    assert [port["consumers"] for port in result["ports"]] == [[], []]
 
 
 @pytest.mark.usefixtures("setup_ports")
@@ -354,10 +358,11 @@ async def test_multiple_consumers(
             return_value=apps_info,
         ),
     ):
-        ports = await _async_get_serial_ports(hass_ws_client, hass)
+        result = await _async_get_serial_ports(hass_ws_client, hass)
 
     assert [
-        (consumer["kind"], consumer["title"]) for consumer in ports[0]["consumers"]
+        (consumer["kind"], consumer["title"])
+        for consumer in result["ports"][0]["consumers"]
     ] == [("config_entry", "Test USB"), ("app", "Some App")]
 
 
