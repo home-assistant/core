@@ -5,8 +5,11 @@ from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
 from airgradient import (
+    AirGradientBusyError,
     AirGradientConnectionError,
     AirGradientError,
+    AirGradientForbiddenError,
+    AirGradientNotSupportedError,
     ApiVersion,
     LedBarMode,
 )
@@ -151,6 +154,89 @@ async def test_v1_config_capabilities(
     ) is entity_exists
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_v1_entities(
+    hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test V1 select entities."""
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("select.airgradient_co2_automatic_baseline_duration")
+    assert state is not None
+    assert state.state == "7"
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("entity_id", "option", "method", "expected"),
+    [
+        ("select.airgradient_gps_mode", "always", "set_gps_mode", "always"),
+        (
+            "select.airgradient_front_led_brightness",
+            "bright",
+            "set_front_led_brightness",
+            3,
+        ),
+        (
+            "select.airgradient_back_led_brightness",
+            "dim",
+            "set_back_led_brightness",
+            1,
+        ),
+        (
+            "select.airgradient_touch_led_intensity",
+            "bright",
+            "set_touch_led_intensity",
+            2,
+        ),
+        (
+            "select.airgradient_co2_automatic_baseline_duration",
+            "0",
+            "set_co2_automatic_baseline_calibration",
+            0,
+        ),
+        (
+            "select.airgradient_measurement_interval",
+            "300",
+            "set_measurement_interval",
+            300,
+        ),
+    ],
+)
+async def test_v1_select_writes(
+    hass: HomeAssistant,
+    mock_v1_airgradient_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_id: str,
+    option: str,
+    method: str,
+    expected: int | str,
+) -> None:
+    """Test V1 select values use the documented wire values."""
+    mock_v1_airgradient_client.get_config.return_value = load_config_fixture(
+        "config_v1_local.json", ApiVersion.V1
+    )
+    with patch("homeassistant.components.airgradient.PLATFORMS", [Platform.SELECT]):
+        await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        SELECT_DOMAIN,
+        SERVICE_SELECT_OPTION,
+        {ATTR_ENTITY_ID: entity_id, ATTR_OPTION: option},
+        blocking=True,
+    )
+
+    getattr(mock_v1_airgradient_client, method).assert_awaited_once_with(expected)
+
+
 @pytest.mark.parametrize(
     ("exception", "error_message"),
     [
@@ -164,6 +250,18 @@ async def test_v1_config_capabilities(
             "An unknown error occurred while communicating"
             " with the Airgradient device:"
             " Something else happened",
+        ),
+        (
+            AirGradientForbiddenError(status=403, message="forbidden"),
+            "The Airgradient device currently rejects local changes: forbidden",
+        ),
+        (
+            AirGradientBusyError(status=503, message="busy"),
+            "The Airgradient device is busy. Retry the operation later: busy",
+        ),
+        (
+            AirGradientNotSupportedError(status=404, message="unsupported"),
+            "The Airgradient device does not support this operation: unsupported",
         ),
     ],
 )

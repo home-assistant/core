@@ -43,6 +43,24 @@ POST_DATA_TO_AIRGRADIENT = AirGradientSwitchEntityDescription(
     set_value_fn=lambda client, value: client.enable_sharing_data(enable=value),
 )
 
+BUZZER_ENABLED = AirGradientSwitchEntityDescription(
+    key="buzzer_enabled",
+    translation_key="buzzer_enabled",
+    entity_category=EntityCategory.CONFIG,
+    config_key="buzzer_enabled",
+    value_fn=lambda config: config.buzzer_enabled,
+    set_value_fn=lambda client, value: client.set_buzzer_enabled(value),
+)
+
+CLOUD_CONNECTION = AirGradientSwitchEntityDescription(
+    key="cloud_connection",
+    translation_key="cloud_connection",
+    entity_category=EntityCategory.CONFIG,
+    config_key="cloud_connection",
+    value_fn=lambda config: config.cloud_connection,
+    set_value_fn=lambda client, value: client.set_cloud_connection(value),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -51,7 +69,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up AirGradient switch entities based on a config entry."""
     coordinator = entry.runtime_data
-    descriptions = (POST_DATA_TO_AIRGRADIENT,)
+    descriptions = (POST_DATA_TO_AIRGRADIENT, BUZZER_ENABLED, CLOUD_CONNECTION)
     descriptions_by_key = {description.key: description for description in descriptions}
     added_entities: set[str] = set()
 

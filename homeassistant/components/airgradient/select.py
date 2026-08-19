@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import override
 
-from airgradient import AirGradientClient, Config
+from airgradient import AirGradientClient, Config, GpsMode
 from airgradient.models import ConfigurationControl, LedBarMode, TemperatureUnit
 
 from homeassistant.components.select import (
@@ -97,8 +97,11 @@ LEARNING_TIME_OFFSET_OPTIONS = [
     "720",
 ]
 
+MEASUREMENT_INTERVAL_OPTIONS = ["3", "10", "30", "60", "300", "900", "3600"]
+
 ABC_DAYS = [
     "1",
+    "7",
     "8",
     "30",
     "90",
@@ -110,6 +113,15 @@ ABC_DAYS = [
 def _get_value(value: int | None, values: list[str]) -> str | None:
     str_value = str(value)
     return str_value if str_value in values else None
+
+
+def _get_led_level(value: int | None, options: list[str]) -> str | None:
+    """Return a semantic LED-level option."""
+    return options[value] if value is not None and 0 <= value < len(options) else None
+
+
+LED_BRIGHTNESS_OPTIONS = ["off", "dim", "mid", "bright"]
+TOUCH_LED_INTENSITY_OPTIONS = ["off", "dim", "bright"]
 
 
 CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
@@ -150,6 +162,68 @@ CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
     ),
 )
 
+GO_SELECT_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
+    AirGradientSelectEntityDescription(
+        key="measurement_interval",
+        translation_key="measurement_interval",
+        options=MEASUREMENT_INTERVAL_OPTIONS,
+        entity_category=EntityCategory.CONFIG,
+        config_key="measurement_interval",
+        value_fn=lambda config: _get_value(
+            config.measurement_interval, MEASUREMENT_INTERVAL_OPTIONS
+        ),
+        set_value_fn=lambda client, value: client.set_measurement_interval(int(value)),
+    ),
+    AirGradientSelectEntityDescription(
+        key="gps_mode",
+        translation_key="gps_mode",
+        options=[mode.value for mode in GpsMode],
+        entity_category=EntityCategory.CONFIG,
+        config_key="gps_mode",
+        value_fn=lambda config: config.gps_mode,
+        set_value_fn=lambda client, value: client.set_gps_mode(GpsMode(value)),
+    ),
+    AirGradientSelectEntityDescription(
+        key="front_led_brightness",
+        translation_key="front_led_brightness",
+        options=LED_BRIGHTNESS_OPTIONS,
+        entity_category=EntityCategory.CONFIG,
+        config_key="front_led_brightness",
+        value_fn=lambda config: _get_led_level(
+            config.front_led_brightness, LED_BRIGHTNESS_OPTIONS
+        ),
+        set_value_fn=lambda client, value: client.set_front_led_brightness(
+            LED_BRIGHTNESS_OPTIONS.index(value)
+        ),
+    ),
+    AirGradientSelectEntityDescription(
+        key="back_led_brightness",
+        translation_key="back_led_brightness",
+        options=LED_BRIGHTNESS_OPTIONS,
+        entity_category=EntityCategory.CONFIG,
+        config_key="back_led_brightness",
+        value_fn=lambda config: _get_led_level(
+            config.back_led_brightness, LED_BRIGHTNESS_OPTIONS
+        ),
+        set_value_fn=lambda client, value: client.set_back_led_brightness(
+            LED_BRIGHTNESS_OPTIONS.index(value)
+        ),
+    ),
+    AirGradientSelectEntityDescription(
+        key="touch_led_intensity",
+        translation_key="touch_led_intensity",
+        options=TOUCH_LED_INTENSITY_OPTIONS,
+        entity_category=EntityCategory.CONFIG,
+        config_key="touch_led_intensity",
+        value_fn=lambda config: _get_led_level(
+            config.touch_led_intensity, TOUCH_LED_INTENSITY_OPTIONS
+        ),
+        set_value_fn=lambda client, value: client.set_touch_led_intensity(
+            TOUCH_LED_INTENSITY_OPTIONS.index(value)
+        ),
+    ),
+)
+
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -165,6 +239,7 @@ async def async_setup_entry(
         *DISPLAY_SELECT_TYPES,
         *LED_BAR_ENTITIES,
         *CONTROL_ENTITIES,
+        *GO_SELECT_ENTITIES,
     )
     descriptions_by_key = {description.key: description for description in descriptions}
     added_entities: set[str] = set()
