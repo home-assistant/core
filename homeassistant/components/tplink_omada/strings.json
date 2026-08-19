@@ -119,8 +119,18 @@
     },
     "reconnect": {
       "description": "Tries to get a wireless client to reconnect to the Omada network.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The instance of the Omada integration to which the client is connected.",
+          "name": "Omada controller"
+        },
+        "mac": {
+          "description": "MAC address of the device.",
+          "name": "[%key:component::device_tracker::services::see::fields::mac::name%]"
+        }
+      },
       "name": "Reconnect wireless client"
-    },
+    }
     "reconnect_client": {
       "description": "Tries to get a wireless client to reconnect to the Omada network.",
       "fields": {
