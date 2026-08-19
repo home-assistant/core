@@ -18,7 +18,7 @@ from homeassistant.components.camera import Image
 from homeassistant.components.conversation import async_get_chat_log
 from homeassistant.components.llm import AssistAPI
 from homeassistant.const import STATE_UNKNOWN
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import chat_session
 from homeassistant.util import dt as dt_util
@@ -27,6 +27,28 @@ from .conftest import TEST_ENTITY_ID, MockAITaskEntity
 
 from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
+
+
+async def test_generate_data_llm_context_carries_context(
+    hass: HomeAssistant,
+    init_components: None,
+    mock_ai_task_entity: MockAITaskEntity,
+) -> None:
+    """Test the context reaches the LLM API, which uses it to check permissions."""
+    context = Context()
+
+    await async_generate_data(
+        hass,
+        task_name="Test Task",
+        entity_id=TEST_ENTITY_ID,
+        instructions="Test prompt",
+        llm_api=AssistAPI(hass),
+        context=context,
+    )
+
+    chat_log = mock_ai_task_entity.mock_chat_logs[0]
+    assert chat_log.llm_api is not None
+    assert chat_log.llm_api.llm_context.context is context
 
 
 async def test_generate_data_preferred_entity(

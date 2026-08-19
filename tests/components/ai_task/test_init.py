@@ -15,7 +15,7 @@ from homeassistant.components.ai_task.const import (
     DATA_PREFERENCES,
     DOMAIN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
@@ -125,6 +125,31 @@ async def test_generate_data_service(
         assert attachment.mime_type == "video/mp4"
         assert attachment.media_content_id == msg_attachment["media_content_id"]
         assert attachment.path == Path("media.mp4")
+
+
+@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
+@pytest.mark.usefixtures("init_components", "mock_ai_task_entity")
+async def test_generate_service_forwards_context(
+    hass: HomeAssistant,
+    service: str,
+) -> None:
+    """Test the generate services attribute the task to the caller."""
+    context = Context()
+
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {
+            "entity_id": TEST_ENTITY_ID,
+            "task_name": "Test Name",
+            "instructions": "Test prompt",
+        },
+        blocking=True,
+        return_response=True,
+        context=context,
+    )
+
+    assert hass.states.get(TEST_ENTITY_ID).context is context
 
 
 async def test_generate_data_service_structure_fields(
