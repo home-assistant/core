@@ -5339,7 +5339,6 @@ async def test_node_statistics_route_with_removed_node(
 
     assert msg["event"]["commands_tx"] == 1
     assert msg["event"]["lwr"] is None
-    # only the unresolvable route is dropped
     assert msg["event"]["nlwr"] == {
         "protocol_data_rate": 2,
         "rssi": 2,
