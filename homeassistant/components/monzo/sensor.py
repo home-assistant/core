@@ -16,6 +16,8 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoData
 from .entity import MonzoBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class MonzoSensorEntityDescription(SensorEntityDescription):
