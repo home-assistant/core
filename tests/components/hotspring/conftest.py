@@ -33,16 +33,6 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_onboarding() -> Generator[MagicMock]:
-    """Mock that Home Assistant is currently onboarding."""
-    with patch(
-        "homeassistant.components.onboarding.async_is_onboarded",
-        return_value=False,
-    ) as mock_onboarding:
-        yield mock_onboarding
-
-
-@pytest.fixture
 def device_fixture() -> Spa:
     """Return the device fixture for a Hot Spring spa."""
     spa = MagicMock(spec=Spa)

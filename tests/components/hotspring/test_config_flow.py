@@ -147,23 +147,8 @@ async def test_full_zeroconf_flow_implementation(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     assert result["description_placeholders"] == {"name": "ConnectedSpa_DDEEFF"}
 
-    result2 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
-    )
-
-    assert result2["title"] == "ConnectedSpa_DDEEFF"
-    assert result2["type"] is FlowResultType.CREATE_ENTRY
-    assert result2["data"] == {CONF_HOST: "192.168.1.100"}
-    assert result2["result"].unique_id == "AA:BB:CC:DD:EE:FF"
-
-
-@pytest.mark.usefixtures("mock_setup_entry", "mock_hotspring", "mock_onboarding")
-async def test_zeroconf_during_onboarding(hass: HomeAssistant) -> None:
-    """Test we create a config entry when discovered during onboarding."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": SOURCE_ZEROCONF},
-        data=MOCK_ZEROCONF_DATA,
     )
 
     assert result["title"] == "ConnectedSpa_DDEEFF"

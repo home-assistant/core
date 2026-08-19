@@ -6,7 +6,6 @@ from typing import Any, override
 from hotspring import HotSpring, HotSpringConnectionError, HotSpringError, Spa
 import voluptuous as vol
 
-from homeassistant.components import onboarding
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigFlow,
@@ -110,9 +109,6 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.discovered_title = self.discovered_spa.info.hostname or "Hot Spring Spa"
         self.context["title_placeholders"] = {"name": self.discovered_title}
-
-        if not onboarding.async_is_onboarded(self.hass):
-            return self._async_create_entry()
 
         self._set_confirm_only()
         return self.async_show_form(
