@@ -230,7 +230,11 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 data=config_entry_data,
                 unique_id=discovery_info.uuid,
             )
-            if not updated and matching_entry.state is ConfigEntryState.LOADED:
+            if matching_entry.state is ConfigEntryState.SETUP_RETRY:
+                # The discovery means the add-on is back, don't wait for the
+                # setup retry backoff to expire
+                self.hass.config_entries.async_schedule_reload(matching_entry.entry_id)
+            elif not updated and matching_entry.state is ConfigEntryState.LOADED:
                 # Reload the entry since OTBR has restarted, an entry which was
                 # updated is reloaded by its update listener
                 await self.hass.config_entries.async_reload(matching_entry.entry_id)

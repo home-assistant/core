@@ -4,7 +4,7 @@ import asyncio
 from http import HTTPStatus
 import re
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import aiohttp
 import pytest
@@ -1049,10 +1049,10 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
 
 
 @pytest.mark.parametrize(
-    "entry_state",
+    ("entry_state", "expected_reloads"),
     [
-        ConfigEntryState.NOT_LOADED,
-        ConfigEntryState.SETUP_RETRY,
+        (ConfigEntryState.NOT_LOADED, 0),
+        (ConfigEntryState.SETUP_RETRY, 1),
     ],
 )
 @pytest.mark.usefixtures(
@@ -1062,12 +1062,13 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
     "get_extended_address",
 )
 async def test_hassio_discovery_flow_addon_restarted_entry_not_loaded(
-    hass: HomeAssistant, entry_state: ConfigEntryState
+    hass: HomeAssistant, entry_state: ConfigEntryState, expected_reloads: int
 ) -> None:
     """Test no duplicate entry is created when the add-on restarts while unloaded.
 
     The config entry is unloaded while the ZBT-1 or ZBT-2 firmware is updated, and
-    the add-on is restarted before the entry is set up again.
+    the add-on is restarted before the entry is set up again. An entry which is
+    retrying its setup is reloaded, the discovery means the add-on is back.
     """
     mock_integration(hass, MockModule("hassio"))
 
@@ -1085,13 +1086,20 @@ async def test_hassio_discovery_flow_addon_restarted_entry_not_loaded(
     config_entry.add_to_hass(hass)
     config_entry.mock_state(hass, entry_state)
 
-    result = await hass.config_entries.flow.async_init(
-        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
-    )
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_init(
+            otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+        )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert hass.config_entries.async_entries(otbr.DOMAIN) == [config_entry]
+    assert (
+        mock_schedule_reload.mock_calls
+        == [call(config_entry.entry_id)] * expected_reloads
+    )
 
 
 @pytest.mark.parametrize(
