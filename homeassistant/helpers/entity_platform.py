@@ -9,9 +9,9 @@ from typing import TYPE_CHECKING, Any, Protocol, cast, overload, override
 
 from homeassistant import config_entries
 from homeassistant.const import (
-    ATTR_RESTORED,
     DEVICE_DEFAULT_NAME,
     EVENT_HOMEASSISTANT_STARTED,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -827,7 +827,10 @@ class EntityPlatform:
 
         if not already_exists and not self.hass.states.async_available(entity_id):
             existing = self.hass.states.get(entity_id)
-            if existing is not None and ATTR_RESTORED in existing.attributes:
+            if (
+                existing is not None
+                and EntityStateAttribute.RESTORED in existing.attributes
+            ):
                 restored = True
             else:
                 already_exists = True
