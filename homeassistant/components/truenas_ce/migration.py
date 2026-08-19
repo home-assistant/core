@@ -312,11 +312,13 @@ async def _write_migration_backup(
     on the config entry remains the primary undo), so it must not abort the
     migration. Returns the ``.storage`` key on success, else ``None``.
     """
-    timestamp = dt_util.utcnow().strftime("%Y%m%d_%H%M%S")
+    now = dt_util.utcnow()
     prefix = _entry_backup_prefix(config_entry.entry_id)
-    store: Store[dict[str, Any]] = Store(hass, _BACKUP_VERSION, f"{prefix}_{timestamp}")
+    store: Store[dict[str, Any]] = Store(
+        hass, _BACKUP_VERSION, f"{prefix}_{now.strftime('%Y%m%d_%H%M%S')}"
+    )
     payload = {
-        "created": dt_util.utcnow().isoformat(),
+        "created": now.isoformat(),
         "ce_entry_id": config_entry.entry_id,
         "legacy_entry_id": legacy_entry.entry_id,
         "legacy_config": _redacted_legacy_snapshot(legacy_entry),
@@ -598,6 +600,7 @@ async def async_rollback_to_legacy(
         return False
 
     records = config_entry.data.get(MIGRATION_RECORDS, [])
+    prefix = _entry_backup_prefix(config_entry.entry_id)
 
     _LOGGER.info(
         "Rolling back '%s' adoption: returning %d entities to legacy entry %s",
@@ -628,8 +631,6 @@ async def async_rollback_to_legacy(
     _remap_and_restore(ent_reg, pairs)
 
     # The migration is fully undone — drop this entry's safety snapshots.
-    await _remove_backups(
-        hass, _entry_backup_prefix(config_entry.entry_id), keep_key=None
-    )
+    await _remove_backups(hass, prefix, keep_key=None)
 
     return True
