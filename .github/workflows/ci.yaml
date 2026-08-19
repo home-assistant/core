@@ -55,10 +55,12 @@ env:
   # and some queries that work on MariaDB do not work on MySQL
   MARIADB_VERSIONS: "['mariadb:10.3.32','mariadb:10.6.10','mariadb:10.10.3','mariadb:10.11.2','mariadb:11.4.9','mysql:8.0.32']"
   # 12 is the oldest supported version
-  # - 12.14 is the latest (as of 9 Feb 2023)
-  # 15 is the latest version
-  # - 15.2 is the latest (as of 9 Feb 2023)
-  POSTGRESQL_VERSIONS: "['postgres:12.14','postgres:15.2']"
+  # - 12.22 is the latest (as of 19 Aug 2026)
+  # 15 is a supported version
+  # - 15.19 is the latest (as of 19 Aug 2026)
+  # 18 is the latest version
+  # - 18.6 is the latest (as of 19 Aug 2026)
+  POSTGRESQL_VERSIONS: "['postgres:12.22','postgres:15.19', 'postgres:18.6']"
   UV_CACHE_DIR: /tmp/uv-cache
   APT_CACHE_VERSION: 1
   SQLALCHEMY_WARN_20: 1
