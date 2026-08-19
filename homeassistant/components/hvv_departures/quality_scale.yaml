@@ -103,6 +103,7 @@ rules:
     comment: >-
       The HVV GTI API requires user-supplied credentials and cannot be
       auto-discovered.
+  docs-conditions: todo
   docs-data-update:
     status: todo
     comment: >-
@@ -119,6 +120,7 @@ rules:
     comment: >-
       The integration connects to a cloud transit data service and does not
       integrate physical devices.
+  docs-triggers: todo
   docs-supported-functions: done
   docs-troubleshooting:
     status: todo
