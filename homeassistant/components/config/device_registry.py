@@ -65,7 +65,7 @@ def websocket_list_composite_splits(
                     None,
                 ),
             }
-            for composite_id, devices in registry.devices.get_composite_splits().items()
+            for composite_id, devices in registry._devices.get_composite_splits().items()  # noqa: SLF001
         },
     )
 
@@ -92,7 +92,7 @@ def websocket_list_devices(
     inner = b",".join(
         [
             entry.json_repr
-            for container in (registry.devices, registry.child_devices)
+            for container in (registry._devices, registry.child_devices)  # noqa: SLF001
             for entry in container.values()
             if entry.json_repr is not None
         ]

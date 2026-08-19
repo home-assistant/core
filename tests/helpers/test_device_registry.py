@@ -78,7 +78,9 @@ def _get_device_for_config_entry(
     connections: set[tuple[str, str]] | None = None,
 ) -> dr.DeviceEntry | None:
     """Return the device for a config entry matching identifiers or connections."""
-    for device in device_registry.devices.get_entries(identifiers, connections):
+    for device in device_registry.async_get_devices(
+        identifiers=identifiers, connections=connections
+    ):
         if device.config_entry_id == config_entry_id:
             return device
     return None
@@ -2034,7 +2036,7 @@ async def test_migration_from_1_12(
     assert single.has_composite_identifiers is False
 
     # The composite spanning two config entries is split into one device per config entry
-    assert "composite0000000000000000000000" not in registry.devices
+    assert "composite0000000000000000000000" not in registry._devices
     entry_splits = registry.async_get_devices_for_composite_device_id(
         "composite0000000000000000000000"
     )
@@ -2063,7 +2065,7 @@ async def test_migration_from_1_12(
     # on one subentry - preferring a real subentry over the main entry (None) - rather
     # than split into duplicate devices sharing the same identifiers/connections. It
     # keeps its id and gains no composite bookkeeping.
-    assert "subentries00000000000000000000" in registry.devices
+    assert "subentries00000000000000000000" in registry._devices
     assert (
         registry.async_get_devices_for_composite_device_id(
             "subentries00000000000000000000"
@@ -2304,7 +2306,7 @@ async def test_migration_clears_composite_via_device_self_reference(
     await dr.async_load(hass)
     registry = dr.async_get(hass)
 
-    splits = registry.devices.get_devices_for_composite_device_id(composite_id)
+    splits = registry._devices.get_devices_for_composite_device_id(composite_id)
     assert len(splits) == 2
     assert all(split.via_device_id is None for split in splits)
 
@@ -2489,7 +2491,7 @@ async def test_async_get_device_returns_first_match_for_ambiguous_lookup(
     match = device_registry.async_get_device(identifiers={("test", "shared")})
     # A real registry device (the first match), not a synthesized composite
     assert match is device_1
-    assert match.id in device_registry.devices
+    assert match.id in device_registry._devices
     assert match.config_entries == {entry_1.entry_id}
 
 
@@ -2736,17 +2738,17 @@ async def test_async_remove_device_fans_out_to_migration_composite(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
     device_registry.async_remove_device(old_id)
 
-    assert device_1.id not in device_registry.devices
-    assert device_2.id not in device_registry.devices
+    assert device_1.id not in device_registry._devices
+    assert device_2.id not in device_registry._devices
 
 
 async def test_async_update_device_fans_out_to_migration_composite(
@@ -2765,10 +2767,10 @@ async def test_async_update_device_fans_out_to_migration_composite(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
@@ -2788,7 +2790,7 @@ async def test_get_entry_by_connection_without_config_entry_scope(
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id, connections={connection}
     )
-    assert device_registry.devices.get_entry(connections={connection}) is device
+    assert device_registry._devices.get_entry(connections={connection}) is device
 
 
 async def test_update_unknown_device_id_raises(
@@ -2818,7 +2820,7 @@ async def test_cleanup_removes_device_referencing_missing_config_entry(
     with patch.object(hass.config_entries, "async_entry_ids", return_value=[]):
         dr.async_cleanup(hass, device_registry, entity_registry)
 
-    assert device.id not in device_registry.devices
+    assert device.id not in device_registry._devices
 
 
 async def test_clear_config_entry_removes_device_with_pending_move(
@@ -2840,7 +2842,7 @@ async def test_clear_config_entry_removes_device_with_pending_move(
 
     device_registry.async_clear_config_entry(entry_1.entry_id)
 
-    assert device.id not in device_registry.devices
+    assert device.id not in device_registry._devices
     assert device_registry.async_get_device(identifiers={("test", "1")}) is None
 
 
@@ -2872,7 +2874,7 @@ async def test_clear_config_entry_clears_pending_move_targeting_it(
         device.id, remove_config_entry_id=entry_1.entry_id
     )
     assert result is None
-    assert device.id not in device_registry.devices
+    assert device.id not in device_registry._devices
 
 
 async def test_move_to_config_entry_clears_target_entry_deleted_device(
@@ -2968,7 +2970,7 @@ async def test_add_current_config_entry_is_noop(
     )
 
     assert result is None
-    assert device.id not in device_registry.devices
+    assert device.id not in device_registry._devices
 
 
 @pytest.mark.parametrize(
@@ -3231,7 +3233,7 @@ async def test_clear_config_subentry_removes_device_with_pending_move(
 
     device_registry.async_clear_config_subentry(entry_1.entry_id, "mock-subentry-id-1")
 
-    assert device.id not in device_registry.devices
+    assert device.id not in device_registry._devices
     assert device_registry.async_get_device(identifiers={("test", "1")}) is None
 
 
@@ -3277,7 +3279,7 @@ async def test_clear_config_subentry_clears_pending_move_targeting_it(
         device.id, remove_config_entry_id=entry_1.entry_id
     )
     assert result is None
-    assert device.id not in device_registry.devices
+    assert device.id not in device_registry._devices
 
 
 async def test_async_is_composite_device_id(
@@ -3296,10 +3298,10 @@ async def test_async_is_composite_device_id(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
@@ -3519,12 +3521,12 @@ async def test_async_get_device_composite_reuses_pre_migration_id(
     )
     assert composite is not None
     assert composite.id == "composite00000000000000000000"
-    assert composite.id not in registry.devices
+    assert composite.id not in registry._devices
     # It is the same composite async_get resolves for the old id
     assert registry.async_get("composite00000000000000000000").id == composite.id
     # An identifier lookup still domain-resolves to the single owning split (real id)
     resolved = registry.async_get_device(identifiers={("domain_a", "1")})
-    assert resolved.id in registry.devices
+    assert resolved.id in registry._devices
     assert resolved.config_entry_id == entry_a.entry_id
 
 
@@ -3563,10 +3565,10 @@ async def test_async_update_device_composite_drops_identity_args(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
@@ -3598,10 +3600,10 @@ async def test_async_update_device_composite_drops_only_disallowed_args(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
@@ -3647,10 +3649,10 @@ async def test_async_update_device_composite_drops_move_args(
         config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
     )
     old_id = "composite00000000000000000000ab"
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
@@ -3739,7 +3741,7 @@ async def test_migration_drops_device_without_config_entries(
 
     # The orphan device was dropped, the normal device kept
     assert registry.async_get("orphan00000000000000000000000") is None
-    assert "orphan00000000000000000000000" not in registry.devices
+    assert "orphan00000000000000000000000" not in registry._devices
     kept = registry.async_get("keptdevice0000000000000000000")
     assert kept is not None
     assert kept.config_entry_id == mock_config_entry.entry_id
@@ -4343,6 +4345,102 @@ async def test_update_device_unknown_via_device_id_raises_before_removal(
     assert device_registry.async_get(device.id) == device
 
 
+async def test_devices_collection_operations(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the supported `Collection[DeviceEntry]` surface of `DeviceRegistry.devices`.
+
+    Iteration yields the entries (not the ids), `len()` returns the count, and
+    `DeviceEntry` membership works.
+    """
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+
+    assert list(device_registry.devices) == [entry]
+    assert [device.id for device in device_registry.devices] == [entry.id]
+    assert len(device_registry.devices) == 1
+    assert entry in device_registry.devices
+
+
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_devices_mapping_access_deprecated(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test mapping-style access to `DeviceRegistry.devices` is deprecated.
+
+    It logs for custom integrations and raises for core and core integrations, while
+    iterating the view keeps working for every caller.
+    """
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    what = "accesses `device_registry.devices` as a mapping"
+
+    # Iterating the view is the supported API and is never reported.
+    assert list(device_registry.devices) == [entry]
+    assert caplog.text.count(what) == 0
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        _ = device_registry.devices[entry.id]
+
+    assert caplog.text.count(what) == expected_log
+
+
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_devices_membership_by_entry_supported_by_id_deprecated(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test `DeviceEntry` membership is supported while device-id (str) membership warns."""
+    entry = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("bridgeid", "0123")},
+    )
+    what = "accesses `device_registry.devices` as a mapping"
+
+    # DeviceEntry (value) membership is supported and never reported.
+    assert entry in device_registry.devices
+    assert caplog.text.count(what) == 0
+
+    # Device-id (str) membership is the deprecated key lookup; it warns here (custom
+    # integration).
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        assert entry.id in device_registry.devices
+    assert caplog.text.count(what) == 1
+
+
 @pytest.mark.parametrize(
     ("integration_frame_path", "expectation", "expected_log"),
     [
@@ -4721,10 +4819,10 @@ async def test_update_device_composite_via_device_id_self_reference_raises_befor
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
@@ -4739,7 +4837,7 @@ async def test_update_device_composite_via_device_id_self_reference_raises_befor
             via_device_id=old_id,
         )
 
-    assert device_1.id in device_registry.devices
+    assert device_1.id in device_registry._devices
 
 
 async def test_get_or_create_composite_via_device_id_resolved(
@@ -4764,10 +4862,10 @@ async def test_get_or_create_composite_via_device_id_resolved(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[split_1.id] = attr.evolve(
+    device_registry._devices[split_1.id] = attr.evolve(
         split_1, composite_device_id=old_id
     )
-    device_registry.devices[split_2.id] = attr.evolve(
+    device_registry._devices[split_2.id] = attr.evolve(
         split_2, composite_device_id=old_id
     )
 
@@ -4815,10 +4913,10 @@ async def test_update_device_composite_via_device_id_resolved(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[split_1.id] = attr.evolve(
+    device_registry._devices[split_1.id] = attr.evolve(
         split_1, composite_device_id=old_id
     )
-    device_registry.devices[split_2.id] = attr.evolve(
+    device_registry._devices[split_2.id] = attr.evolve(
         split_2, composite_device_id=old_id
     )
     child = device_registry.async_get_or_create(
@@ -5014,7 +5112,7 @@ async def test_loading_saving_data(
     await registry2.async_load()
 
     # Ensure same order
-    assert list(device_registry.devices) == list(registry2.devices)
+    assert list(device_registry._devices) == list(registry2._devices)
     assert list(device_registry.deleted_devices) == list(registry2.deleted_devices)
 
     new_via = registry2.async_get_device(identifiers={("hue", "0123")})
@@ -6262,20 +6360,20 @@ async def test_migration_from_3_1_rewrites_stale_via_device_id(
     registry = dr.async_get(hass)
 
     assert (
-        registry.devices["childa000000000000000000000000"].via_device_id
+        registry._devices["childa000000000000000000000000"].via_device_id
         == "splita000000000000000000000000"
     )
     assert (
-        registry.devices["childa200000000000000000000000"].via_device_id
+        registry._devices["childa200000000000000000000000"].via_device_id
         == "splita000000000000000000000000"
     )
-    assert registry.devices["childc000000000000000000000000"].via_device_id in {
+    assert registry._devices["childc000000000000000000000000"].via_device_id in {
         "splita000000000000000000000000",
         "splitb000000000000000000000000",
     }
-    assert registry.devices["childx000000000000000000000000"].via_device_id is None
+    assert registry._devices["childx000000000000000000000000"].via_device_id is None
     assert (
-        registry.devices["childl000000000000000000000000"].via_device_id
+        registry._devices["childl000000000000000000000000"].via_device_id
         == "splitb000000000000000000000000"
     )
 
@@ -8431,7 +8529,7 @@ async def test_remove_shadowed_collision_keeps_index_consistent(
         ("test", "1"),
         ("test", "2"),
     }
-    assert shadowed.id in device_registry.devices
+    assert shadowed.id in device_registry._devices
 
     # Remove the shadowed device, then the indexed one - neither must raise
     device_registry.async_remove_device(shadowed.id)
@@ -9496,10 +9594,10 @@ async def test_composite_move_clears_sibling_pending_moves(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
@@ -9550,10 +9648,10 @@ async def test_composite_move_unknown_via_device_id_keeps_sibling_moves(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
@@ -9723,8 +9821,8 @@ async def test_async_get_returns_restored_composite(
     assert composite.serial_number == "SERIAL"
 
     # Invisible to membership, enumeration and identifier search
-    assert COMPOSITE_ID not in device_registry.devices
-    assert COMPOSITE_ID not in {d.id for d in device_registry.devices.values()}
+    assert COMPOSITE_ID not in device_registry._devices
+    assert COMPOSITE_ID not in {d.id for d in device_registry.devices}
     assert (
         device_registry.async_get_device(identifiers={("domain_a", "1")}).id
         != COMPOSITE_ID
@@ -9786,7 +9884,7 @@ async def test_get_composite_splits(
         device_registry, entry_b.entry_id, identifiers={("domain_b", "1")}
     )
 
-    splits = device_registry.devices.get_composite_splits()
+    splits = device_registry._devices.get_composite_splits()
     assert set(splits) == {COMPOSITE_ID}
     assert {device.id for device in splits[COMPOSITE_ID]} == {split_a.id, split_b.id}
 
@@ -9794,18 +9892,18 @@ async def test_get_composite_splits(
     device_registry.async_get_or_create(
         config_entry_id=entry_a.entry_id, identifiers={("domain_a", "2")}
     )
-    splits = device_registry.devices.get_composite_splits()
+    splits = device_registry._devices.get_composite_splits()
     assert set(splits) == {COMPOSITE_ID}
     assert {device.id for device in splits[COMPOSITE_ID]} == {split_a.id, split_b.id}
 
     # A removed split is dropped from the mapping
     device_registry.async_remove_device(split_a.id)
-    splits = device_registry.devices.get_composite_splits()
+    splits = device_registry._devices.get_composite_splits()
     assert {device.id for device in splits[COMPOSITE_ID]} == {split_b.id}
 
     # Removing the last split drops the composite id from the mapping
     device_registry.async_remove_device(split_b.id)
-    assert device_registry.devices.get_composite_splits() == {}
+    assert device_registry._devices.get_composite_splits() == {}
 
 
 async def test_async_get_device_and_config_entry_for_domain(
@@ -11025,7 +11123,7 @@ async def test_convert_device_to_child_detaches_via_links(
     # No live device links to a child device through via_device_id
     child_via_targets = [
         device.id
-        for device in device_registry.devices.values()
+        for device in device_registry.devices
         if device.via_device_id is not None
         and device_registry.async_get(device.via_device_id, include_main_devices=False)
         is not None
@@ -11212,7 +11310,7 @@ async def test_child_device_orphan_restore(
     device_registry.async_update_child_device(child_device.id, area_id="garden")
 
     device_registry.async_clear_config_entry(mock_config_entry.entry_id)
-    assert not device_registry.devices
+    assert not device_registry._devices
     assert not device_registry.child_devices
 
     new_entry = MockConfigEntry(title=None)
@@ -11252,7 +11350,7 @@ async def test_child_device_load_and_save(
     first_save = deepcopy(hass_storage[dr.STORAGE_KEY]["data"])
     await registry2.async_load()
 
-    assert list(device_registry.devices) == list(registry2.devices)
+    assert list(device_registry._devices) == list(registry2._devices)
     assert list(device_registry.child_devices) == list(registry2.child_devices)
     loaded_child = registry2.async_get(child_device.id, include_main_devices=False)
     assert loaded_child is not None
@@ -11529,7 +11627,7 @@ async def test_async_cleanup_removes_child_device_with_missing_parent(
         device_registry, mock_config_entry.entry_id
     )
     # Simulate store corruption: drop the parent without the remove cascade
-    del device_registry.devices[parent.id]
+    del device_registry._devices[parent.id]
 
     dr.async_cleanup(hass, device_registry, entity_registry)
 
@@ -12435,7 +12533,7 @@ async def test_clear_config_entry_removes_orphaned_child_device(
     parent, child_device = _create_parent_and_child(
         device_registry, mock_config_entry.entry_id
     )
-    del device_registry.devices[parent.id]
+    del device_registry._devices[parent.id]
 
     device_registry.async_clear_config_entry(mock_config_entry.entry_id)
 
@@ -12483,8 +12581,8 @@ async def test_clear_config_subentry_removes_orphaned_child_device(
         parent_device_id=parent_2.id,
         name="Outlet 2",
     )
-    del device_registry.devices[parent_1.id]
-    del device_registry.devices[parent_2.id]
+    del device_registry._devices[parent_1.id]
+    del device_registry._devices[parent_2.id]
 
     device_registry.async_clear_config_subentry(entry_id, "mock-subentry-id-1-1")
 

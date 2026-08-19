@@ -119,7 +119,7 @@ async def test_start_charging_action(
         DOMAIN,
         SERVICE_START_CHARGE_SESSION,
         {
-            CONF_DEVICE_ID: list(device_registry.devices)[0],
+            CONF_DEVICE_ID: list(device_registry._devices)[0],
             CHARGING_CARD_ID: "TEST_CARD",
         },
         blocking=True,
@@ -139,7 +139,7 @@ async def test_start_charging_action_without_card(
         DOMAIN,
         SERVICE_START_CHARGE_SESSION,
         {
-            CONF_DEVICE_ID: list(device_registry.devices)[0],
+            CONF_DEVICE_ID: list(device_registry._devices)[0],
         },
         blocking=True,
     )
@@ -187,7 +187,7 @@ async def test_start_charging_action_errors(
             DOMAIN,
             SERVICE_START_CHARGE_SESSION,
             {
-                CONF_DEVICE_ID: list(device_registry.devices)[0],
+                CONF_DEVICE_ID: list(device_registry._devices)[0],
             },
             blocking=True,
         )
@@ -207,7 +207,7 @@ async def test_start_charging_action_errors(
             DOMAIN,
             SERVICE_START_CHARGE_SESSION,
             {
-                CONF_DEVICE_ID: list(device_registry.devices)[0],
+                CONF_DEVICE_ID: list(device_registry._devices)[0],
             },
             blocking=True,
         )
