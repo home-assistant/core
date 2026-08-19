@@ -22,8 +22,15 @@ CONF_SITE_ID = "site_id"
 
 # File holding the integration's RSA private key used to sign local TEDAPI v1r
 # requests. The matching public key is what gets registered as an authorized
-# client on the energy gateway when pairing.
-POWERWALL_KEY_FILE = "tesla_powerwall.key"
+# client on the energy gateway when pairing. Stored under the storage dir with a
+# domain-namespaced name so the private key is not written to the user-browsable
+# config root (which also lands in backups).
+POWERWALL_KEY_FILE = "teslemetry_powerwall_key.pem"
+
+# Legacy location at the config root, migrated to POWERWALL_KEY_FILE on setup.
+# The gateway's retained authorization is bound to this key, so it must be moved
+# rather than regenerated.
+LEGACY_POWERWALL_KEY_FILE = "tesla_powerwall.key"
 
 # hass.data key caching the RSA private key PEM shared across energy sites.
 RSA_PARENT_KEY = f"{DOMAIN}_rsa_parent"
