@@ -441,6 +441,7 @@ class AssistSatelliteEntity(entity.Entity):
         start_stage: PipelineStage = PipelineStage.STT,
         end_stage: PipelineStage = PipelineStage.TTS,
         wake_word_phrase: str | None = None,
+        *,
         context: Context | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
