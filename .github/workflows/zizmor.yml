@@ -59,6 +59,18 @@ jobs:
             echo "relevant=true" >> "$GITHUB_OUTPUT"
           fi
 
+      - name: Load trusted zizmor policy
+        if: steps.changes.outputs.relevant == 'true'
+        shell: bash
+        run: |
+          rm -f .zizmor-base.yml
+          if git cat-file -e HEAD^1:.github/zizmor.yml 2>/dev/null; then
+            git show HEAD^1:.github/zizmor.yml > .zizmor-base.yml
+          else
+            # A missing base policy means no rule exceptions.
+            printf 'rules: {}\n' > .zizmor-base.yml
+          fi
+
       - name: Block medium and high pull request findings
         if: steps.changes.outputs.relevant == 'true'
         uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
@@ -67,7 +79,7 @@ jobs:
           persona: pedantic
           advanced-security: false
           annotations: true
-          config: .github/zizmor.yml
+          config: .zizmor-base.yml
           min-severity: medium
           version: 1.29.0
 
