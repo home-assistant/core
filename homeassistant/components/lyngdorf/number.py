@@ -39,7 +39,7 @@ NUMBER_ENTITIES: tuple[LyngdorfNumberEntityDescription, ...] = (
         device_class=NumberDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MILLISECONDS,
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda r: float(r.lipsync) if r.lipsync is not None else None,
+        value_fn=lambda r: r.lipsync,
         # The device takes lip sync as whole milliseconds.
         set_value_fn=lambda r, v: r.set_lipsync(round(v)),
         range_fn=lambda r: r.lipsync_range,

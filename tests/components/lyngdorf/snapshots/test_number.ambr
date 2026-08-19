@@ -57,7 +57,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '50.0',
+    'state': '50',
   })
 # ---
 # name: test_entities[number.mock_lyngdorf_trim_bass-entry]
