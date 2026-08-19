@@ -4235,12 +4235,12 @@ async def test_async_get_device_deprecated(
 
 
 @pytest.mark.parametrize(
-    ("parameter", "value"),
+    ("parameter", "value", "replacement"),
     [
-        ("default_manufacturer", "manufacturer"),
-        ("default_model", "model"),
-        ("default_name", "name"),
-        ("via_device", ("some_domain", "via_id")),
+        ("default_manufacturer", "manufacturer", "manufacturer"),
+        ("default_model", "model", "model"),
+        ("default_name", "name", "name"),
+        ("via_device", ("some_domain", "via_id"), "via_device_id"),
     ],
 )
 @pytest.mark.parametrize(
@@ -4270,6 +4270,7 @@ async def test_async_get_or_create_deprecated_parameters(
     caplog: pytest.LogCaptureFixture,
     parameter: str,
     value: Any,
+    replacement: str,
     expectation: AbstractContextManager,
     expected_log: int,
 ) -> None:
@@ -4285,7 +4286,7 @@ async def test_async_get_or_create_deprecated_parameters(
 
     what = (
         "calls `device_registry.async_get_or_create` with a deprecated "
-        f"`{parameter}` parameter"
+        f"`{parameter}` parameter; use `{replacement}` instead"
     )
     with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
         device_registry.async_get_or_create(

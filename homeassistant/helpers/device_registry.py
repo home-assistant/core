@@ -265,10 +265,10 @@ def _validate_device_info(
 # Deprecated `async_get_or_create` parameters, mapped to the HA Core version they are
 # removed in.
 _DEPRECATED_DEVICE_INFO_PARAMETERS = {
-    "default_manufacturer": "2027.9.0",
-    "default_model": "2027.9.0",
-    "default_name": "2027.9.0",
-    "via_device": "2027.8.0",
+    "default_manufacturer": ("2027.9.0", "manufacturer"),
+    "default_model": ("2027.9.0", "model"),
+    "default_name": ("2027.9.0", "name"),
+    "via_device": ("2027.8.0", "via_device_id"),
 }
 
 
@@ -2176,12 +2176,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             "default_name": default_name,
             "via_device": via_device,
         }
-        for parameter, version in _DEPRECATED_DEVICE_INFO_PARAMETERS.items():
+        for parameter, deprecation in _DEPRECATED_DEVICE_INFO_PARAMETERS.items():
             if deprecated_values[parameter] is UNDEFINED:
                 continue
+            version, replacement = deprecation
             report_usage(
                 "calls `device_registry.async_get_or_create` with a deprecated "
-                f"`{parameter}` parameter",
+                f"`{parameter}` parameter; use `{replacement}` instead",
                 core_behavior=ReportBehavior.ERROR,
                 core_integration_behavior=ReportBehavior.ERROR,
                 breaks_in_ha_version=version,
