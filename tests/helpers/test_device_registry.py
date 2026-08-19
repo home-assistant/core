@@ -4235,9 +4235,13 @@ async def test_async_get_device_deprecated(
 
 
 @pytest.mark.parametrize(
-    "via_device",
-    [("some_domain", "via_id"), None],
-    ids=["value", "none"],
+    ("parameter", "value", "replacement"),
+    [
+        ("default_manufacturer", "manufacturer", "manufacturer"),
+        ("default_model", "model", "model"),
+        ("default_name", "name", "name"),
+        ("via_device", ("some_domain", "via_id"), "via_device_id"),
+    ],
 )
 @pytest.mark.parametrize(
     ("integration_frame_path", "expectation", "expected_log"),
@@ -4260,17 +4264,19 @@ async def test_async_get_device_deprecated(
     ],
 )
 @pytest.mark.usefixtures("mock_integration_frame")
-async def test_async_get_or_create_via_device_deprecated(
+async def test_async_get_or_create_deprecated_parameters(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     caplog: pytest.LogCaptureFixture,
-    via_device: tuple[str, str] | None,
+    parameter: str,
+    value: Any,
+    replacement: str,
     expectation: AbstractContextManager,
     expected_log: int,
 ) -> None:
-    """Test passing via_device to async_get_or_create is deprecated.
+    """Test passing deprecated parameters to async_get_or_create.
 
-    It logs for custom integrations and raises for core and core integrations.
+    They log for custom integrations and raise for core and core integrations.
     """
     config_entry = MockConfigEntry()
     config_entry.add_to_hass(hass)
@@ -4278,23 +4284,37 @@ async def test_async_get_or_create_via_device_deprecated(
         config_entry_id=config_entry.entry_id, identifiers={("some_domain", "via_id")}
     )
 
-    what = "calls `device_registry.async_get_or_create` with a `via_device`"
+    what = (
+        "calls `device_registry.async_get_or_create` with a deprecated "
+        f"`{parameter}` parameter; use `{replacement}` instead"
+    )
     with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={("some_domain", "some_id")},
-            via_device=via_device,
+            **{parameter: value},
         )
 
     assert caplog.text.count(what) == expected_log
 
 
+@pytest.mark.parametrize(
+    ("parameter", "value"),
+    [
+        ("default_manufacturer", "manufacturer"),
+        ("default_model", "model"),
+        ("default_name", "name"),
+        ("via_device", ("some_domain", "via_id")),
+    ],
+)
 @pytest.mark.usefixtures("mock_integration_frame")
-async def test_async_get_or_create_via_device_reported_before_mutation(
+async def test_async_get_or_create_deprecated_parameter_reported_before_mutation(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    parameter: str,
+    value: Any,
 ) -> None:
-    """The via_device deprecation is reported before the registry is mutated.
+    """A deprecated parameter is reported before the registry is mutated.
 
     The default frame is a core integration, so the report raises; the new device must
     not be left partially created.
@@ -4309,7 +4329,7 @@ async def test_async_get_or_create_via_device_reported_before_mutation(
         device_registry.async_get_or_create(
             config_entry_id=config_entry.entry_id,
             identifiers={("some_domain", "new_device")},
-            via_device=("some_domain", "via_id"),
+            **{parameter: value},
         )
 
     # The report raised before insertion, so no partial device was left behind.
@@ -4319,6 +4339,25 @@ async def test_async_get_or_create_via_device_reported_before_mutation(
         )
         is None
     )
+
+
+async def test_async_get_or_create_unexpected_keyword_argument(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test passing an unexpected keyword argument to async_get_or_create raises."""
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+
+    with pytest.raises(
+        TypeError,
+        match="got unexpected keyword arguments 'unexpected'",
+    ):
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id,
+            identifiers={("some_domain", "some_id")},
+            unexpected="value",
+        )
 
 
 @pytest.mark.parametrize(

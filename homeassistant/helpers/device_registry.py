@@ -131,9 +131,6 @@ class DeviceInfo(TypedDict, total=False):
     configuration_url: str | URL | None
     connections: set[tuple[str, str]]
     created_at: str
-    default_manufacturer: str
-    default_model: str
-    default_name: str
     entry_type: DeviceEntryType | None
     identifiers: set[tuple[str, str]]
     manufacturer: str | None
@@ -263,6 +260,16 @@ def _validate_device_info(
                 device_info,
                 f"passing both `{field}` and `default_{field}` is not allowed",
             )
+
+
+# Deprecated `async_get_or_create` parameters, mapped to the HA Core version they are
+# removed in.
+_DEPRECATED_DEVICE_INFO_PARAMETERS = {
+    "default_manufacturer": ("2027.9.0", "manufacturer"),
+    "default_model": ("2027.9.0", "model"),
+    "default_name": ("2027.9.0", "name"),
+    "via_device": ("2027.8.0", "via_device_id"),
+}
 
 
 class _ValidatedDeviceInfoFields(TypedDict):
@@ -2093,9 +2100,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         configuration_url: str | URL | UndefinedType | None = UNDEFINED,
         connections: set[tuple[str, str]] | UndefinedType | None = UNDEFINED,
         created_at: str | datetime | UndefinedType = UNDEFINED,  # will be ignored
-        default_manufacturer: str | UndefinedType | None = UNDEFINED,
-        default_model: str | UndefinedType | None = UNDEFINED,
-        default_name: str | UndefinedType | None = UNDEFINED,
         # To disable a device if it gets created, does not affect existing devices
         disabled_by: DeviceEntryDisabler | UndefinedType | None = UNDEFINED,
         entry_type: DeviceEntryType | UndefinedType | None = UNDEFINED,
@@ -2111,10 +2115,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         sw_version: str | UndefinedType | None = UNDEFINED,
         translation_key: str | None = None,
         translation_placeholders: Mapping[str, str] | None = None,
-        # via_device is deprecated and will be removed in HA Core 2027.8, use
-        # via_device_id instead
-        via_device: tuple[str, str] | UndefinedType | None = UNDEFINED,
         via_device_id: str | UndefinedType | None = UNDEFINED,
+        **kwargs: Any,
     ) -> DeviceEntry:
         """Get device. Create if it doesn't exist.
 
@@ -2122,6 +2124,18 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         If identifiers overlap with a child device, the method raises.
         """
+        # Extract deprecated parameters, and reject any other unexpected keyword
+        # argument.
+        default_manufacturer = kwargs.pop("default_manufacturer", UNDEFINED)
+        default_model = kwargs.pop("default_model", UNDEFINED)
+        default_name = kwargs.pop("default_name", UNDEFINED)
+        via_device = kwargs.pop("via_device", UNDEFINED)
+        if kwargs:
+            raise TypeError(
+                "async_get_or_create() got unexpected keyword arguments "
+                f"{', '.join(map(repr, kwargs))}"
+            )
+
         default_manufacturer = _validate_str(
             "default_manufacturer", default_manufacturer
         )
@@ -2155,15 +2169,23 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "Passing both `via_device` and `via_device_id` is not allowed; "
                 "`via_device` is deprecated, pass `via_device_id` only"
             )
-        # Report the deprecated `via_device` here, before any registry mutation.
-        if via_device is not UNDEFINED:
+        # Report the deprecated parameters here, before any registry mutation.
+        deprecated_values = {
+            "default_manufacturer": default_manufacturer,
+            "default_model": default_model,
+            "default_name": default_name,
+            "via_device": via_device,
+        }
+        for parameter, deprecation in _DEPRECATED_DEVICE_INFO_PARAMETERS.items():
+            if deprecated_values[parameter] is UNDEFINED:
+                continue
+            version, replacement = deprecation
             report_usage(
-                "calls `device_registry.async_get_or_create` with a `via_device`, "
-                "which is deprecated because device identifiers are no longer unique; "
-                "pass `via_device_id` instead",
+                "calls `device_registry.async_get_or_create` with a deprecated "
+                f"`{parameter}` parameter; use `{replacement}` instead",
                 core_behavior=ReportBehavior.ERROR,
                 core_integration_behavior=ReportBehavior.ERROR,
-                breaks_in_ha_version="2027.8.0",
+                breaks_in_ha_version=version,
             )
         if (
             config_subentry_id is not UNDEFINED
