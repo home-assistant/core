@@ -3,16 +3,25 @@
 from collections.abc import Callable
 from unittest.mock import AsyncMock, patch
 
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import IllegalDataAddressError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
 from homeassistant import config_entries
-from homeassistant.components.sofar.const import DEFAULT_NAME, DOMAIN
+from homeassistant.components.sofar.const import CONF_READ_EPS, DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
-from . import MOCK_MODEL, MOCK_SERIAL, MOCK_USER_INPUT, seed_pv_inverter
+from . import (
+    MOCK_FORM_INPUT,
+    MOCK_HYBRID_MODEL,
+    MOCK_HYBRID_SERIAL,
+    MOCK_MODEL,
+    MOCK_SERIAL,
+    MOCK_USER_INPUT,
+    seed_hybrid_inverter,
+    seed_pv_inverter,
+)
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +43,7 @@ async def test_user_step_success(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
+            data=MOCK_FORM_INPUT,
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -58,7 +67,7 @@ async def test_user_step_success_without_model(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
+            data=MOCK_FORM_INPUT,
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -101,7 +110,7 @@ async def test_user_step_errors(
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
+            data=MOCK_FORM_INPUT,
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -116,7 +125,7 @@ async def test_user_step_errors(
         return_value=working_conn,
     ):
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], MOCK_USER_INPUT
+            result["flow_id"], MOCK_FORM_INPUT
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -137,8 +146,49 @@ async def test_user_step_already_configured(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
-            data=MOCK_USER_INPUT,
+            data=MOCK_FORM_INPUT,
         )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+@pytest.mark.parametrize(
+    ("seed_eps", "expected_read_eps"),
+    [
+        pytest.param(lambda unit: None, True, id="eps_supported"),
+        pytest.param(
+            lambda unit: unit.fail_read(
+                0x1029, IllegalDataAddressError(), register_type="holding"
+            ),
+            False,
+            id="eps_unsupported",
+        ),
+    ],
+)
+async def test_user_step_probes_eps(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    seed_eps: Callable[[MockModbusUnit], None],
+    expected_read_eps: bool,
+) -> None:
+    """Test the EPS option is detected by probing, not asked of the user."""
+    mock_conn = MockModbusConnection()
+    unit = mock_conn.for_unit(1)
+    seed_hybrid_inverter(unit)
+    seed_eps(unit)
+
+    with patch(
+        "homeassistant.components.sofar.config_flow.ModbusConnection",
+        return_value=mock_conn,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_FORM_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_HYBRID_MODEL
+    assert result["data"][CONF_READ_EPS] is expected_read_eps
+    assert result["result"].unique_id == MOCK_HYBRID_SERIAL

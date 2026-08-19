@@ -1,11 +1,11 @@
-"""TCP-only config flow (Phase 1); probes the device for its unique_id."""
+"""TCP-only config flow (Phase 1); probes for unique_id and EPS support."""
 
 import logging
 from typing import TYPE_CHECKING, Any, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
 from modbus_connection.tmodbus import ModbusConnection
-from sofar_modbus.modern.device import SofarInverter
+from sofar_modbus.modern.device import SofarInverter, identify
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -28,7 +28,6 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_HOST): TextSelector(TextSelectorConfig(autocomplete="url")),
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         vol.Optional(CONF_MODBUS_ADDR, default=DEFAULT_MODBUS_ADDR): int,
-        vol.Optional(CONF_READ_EPS, default=False): bool,
     }
 )
 
@@ -56,21 +55,27 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
                     connection.for_unit(
                         int(user_input.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR))
                     ),
-                    read_eps=user_input.get(CONF_READ_EPS, False),
+                    read_eps=True,
                 )
-                await device.async_update()
+                report = await device.async_update()
             except ModbusError:
                 errors["base"] = "cannot_connect"
             else:
-                if not device.inverter_type:
+                if TYPE_CHECKING:
+                    assert device.serial_number is not None
+                # inverter_type always carries the EPS bit from read_eps=True,
+                # so check identify() directly instead of inverter_type.
+                if not identify(device.serial_number)[0]:
                     errors["base"] = "unrecognized_inverter"
                 else:
-                    if TYPE_CHECKING:
-                        assert device.serial_number is not None
                     await self.async_set_unique_id(device.serial_number)
                     self._abort_if_unique_id_configured()
                     return self.async_create_entry(
-                        title=device.model or DEFAULT_NAME, data=user_input
+                        title=device.model or DEFAULT_NAME,
+                        data={
+                            **user_input,
+                            CONF_READ_EPS: "eps" in report.updated,
+                        },
                     )
             finally:
                 await connection.close()
