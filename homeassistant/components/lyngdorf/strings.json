@@ -40,6 +40,29 @@
       "main_zone": {
         "name": "Main zone"
       }
+    },
+    "sensor": {
+      "audio_information": {
+        "name": "Audio information"
+      },
+      "audio_input": {
+        "name": "Audio input"
+      },
+      "streaming_source": {
+        "name": "Streaming source"
+      },
+      "video_information": {
+        "name": "Video information"
+      },
+      "video_input": {
+        "name": "Video input"
+      },
+      "zone_b_audio_input": {
+        "name": "Zone B audio input"
+      },
+      "zone_b_streaming_source": {
+        "name": "Zone B streaming source"
+      }
     }
   },
   "exceptions": {

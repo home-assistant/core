@@ -92,7 +92,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: HiveConfigEntry) -> Non
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: HiveConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: HiveConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return True
