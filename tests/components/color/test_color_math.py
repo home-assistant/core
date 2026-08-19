@@ -10,7 +10,6 @@ import pytest
 
 from homeassistant.components.color.color_math import (
     ColorInputError,
-    compute_source_hex,
     derive_hex,
     derive_hs,
     derive_kelvin,
@@ -38,27 +37,21 @@ def test_normalize_requires_exactly_one_shape() -> None:
 
 
 @pytest.mark.parametrize(
-    ("hex_in", "bounds"),
+    ("hex_in", "expected_rgb"),
     [
-        pytest.param("#FF0000", [(200, 255), (0, 30), (0, 30)], id="red"),
-        pytest.param("ff0000", [(200, 255), (0, 30), (0, 30)], id="red-no-hash"),
-        pytest.param("#00ff00", [(0, 30), (200, 255), (0, 30)], id="green"),
-        pytest.param("#0000FF", [(0, 30), (0, 30), (200, 255)], id="blue"),
+        pytest.param("#FF0000", (255, 0, 0), id="red"),
+        pytest.param("ff0000", (255, 0, 0), id="red-no-hash"),
+        pytest.param("#00ff00", (0, 255, 0), id="green"),
+        pytest.param("#0000FF", (0, 0, 255), id="blue"),
     ],
 )
-def test_normalize_hex_round_trips_via_xy(
-    hex_in: str, bounds: list[tuple[int, int]]
+def test_normalize_hex_round_trips_exactly(
+    hex_in: str, expected_rgb: tuple[int, int, int]
 ) -> None:
-    """Test hex inputs normalize and derive back to a similar RGB.
-
-    xy is chromaticity only; the round-trip introduces a small per-channel
-    drift (more pronounced at the gamut edges), so each channel is checked
-    against a tolerance band rather than exact equality.
-    """
+    """Hex inputs derive back to the exact RGB, bypassing the lossy xy path."""
     canonical = normalize({FIELD_HEX: hex_in})
     assert canonical.kind == KIND_CHROMATIC
-    for got, (low, high) in zip(derive_rgb(canonical), bounds, strict=True):
-        assert low <= got <= high
+    assert derive_rgb(canonical) == expected_rgb
 
 
 def test_normalize_invalid_hex() -> None:
@@ -187,20 +180,54 @@ def test_normalize_rejects_malformed_shapes(inputs: dict) -> None:
 
 
 @pytest.mark.parametrize(
-    ("inputs", "expected"),
+    ("inputs", "field", "value"),
     [
-        pytest.param({FIELD_HEX: "#FF8000"}, "#FF8000", id="hex-echoed"),
-        pytest.param({FIELD_HEX: "nope"}, None, id="hex-invalid"),
-        pytest.param({FIELD_RGB: [255, 128, 0]}, "#FF8000", id="rgb-converted"),
-        pytest.param({FIELD_RGB: [999, 0, 0]}, None, id="rgb-invalid"),
-        pytest.param({FIELD_HS: [0, 100]}, "#FF0000", id="hs-converted"),
-        pytest.param({FIELD_HS: [999, 100]}, None, id="hs-invalid"),
-        pytest.param({FIELD_COLOR_NAME: "red"}, "#FF0000", id="name-converted"),
-        pytest.param({FIELD_COLOR_NAME: "not-a-color"}, None, id="name-invalid"),
-        pytest.param({FIELD_XY: [0.4, 0.4]}, None, id="xy-has-no-source-hex"),
-        pytest.param({FIELD_KELVIN: 4000}, None, id="kelvin-has-no-source-hex"),
+        pytest.param(
+            {FIELD_HEX: "#ff9e4d"}, FIELD_HEX, "#FF9E4D", id="hex-normalized-upper"
+        ),
+        pytest.param(
+            {FIELD_RGB: [255, 158, 77]}, FIELD_RGB, (255, 158, 77), id="rgb-exact"
+        ),
+        pytest.param({FIELD_HS: [200.5, 37.2]}, FIELD_HS, (200.5, 37.2), id="hs-exact"),
+        pytest.param(
+            {FIELD_XY: [0.44481, 0.40663]},
+            FIELD_XY,
+            (0.44481, 0.40663),
+            id="xy-exact",
+        ),
+        pytest.param({FIELD_KELVIN: 2700}, FIELD_KELVIN, 2700, id="kelvin-exact"),
+        pytest.param(
+            {FIELD_COLOR_NAME: "goldenrod"},
+            FIELD_COLOR_NAME,
+            "goldenrod",
+            id="name-kept",
+        ),
     ],
 )
-def test_compute_source_hex(inputs: dict, expected: str | None) -> None:
-    """Test source hex derivation per input shape."""
-    assert compute_source_hex(inputs) == expected
+def test_normalize_records_exact_source(
+    inputs: dict, field: str, value: object
+) -> None:
+    """The canonical color keeps the validated input for exact echoes."""
+    canonical = normalize(inputs)
+    assert canonical.source_field == field
+    assert canonical.source_value == value
+
+
+def test_derive_hex_echoes_hex_source() -> None:
+    """A hex source derives back byte for byte (uppercased)."""
+    assert derive_hex(normalize({FIELD_HEX: "#ff9e4d"})) == "#FF9E4D"
+
+
+def test_derive_rgb_echoes_rgb_source() -> None:
+    """An rgb source derives back as the exact triple."""
+    assert derive_rgb(normalize({FIELD_RGB: [255, 158, 77]})) == (255, 158, 77)
+
+
+def test_derive_hs_echoes_hs_source_unrounded() -> None:
+    """An hs source derives back as the exact floats, unrounded."""
+    assert derive_hs(normalize({FIELD_HS: [200.51, 37.29]})) == (200.51, 37.29)
+
+
+def test_derive_rgb_for_name_uses_color_table() -> None:
+    """A color name derives the exact CSS3 table triple, not a gamut round-trip."""
+    assert derive_rgb(normalize({FIELD_COLOR_NAME: "goldenrod"})) == (218, 165, 32)

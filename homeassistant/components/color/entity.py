@@ -11,13 +11,11 @@ from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from .color_math import (
     CanonicalColor,
     ColorInputError,
-    compute_source_hex,
     derive_hex,
     derive_hs,
     derive_kelvin,
     derive_rgb,
     normalize,
-    valid_hex,
     valid_xy,
 )
 from .const import (
@@ -28,7 +26,6 @@ from .const import (
     ATTR_HS_COLOR,
     ATTR_KIND,
     ATTR_RGB_COLOR,
-    ATTR_SOURCE_HEX,
     ATTR_XY_COLOR,
     CONF_INITIAL_BRIGHTNESS,
     CONF_INITIAL_COLOR,
@@ -37,7 +34,9 @@ from .const import (
     DEFAULT_HEX,
     DEFAULT_KELVIN,
     FIELD_HEX,
+    FIELD_HS,
     FIELD_KELVIN,
+    FIELD_XY,
     KIND_CHROMATIC,
     KIND_WHITE,
     MAX_KELVIN,
@@ -54,28 +53,56 @@ type ColorConfigEntry = ConfigEntry[ColorEntity]
 class _StoredColor(ExtraStoredData):
     """Restore payload preserving canonical precision across restarts."""
 
-    def __init__(
-        self,
-        canonical: CanonicalColor,
-        brightness: int | None,
-        source_hex: str | None,
-    ) -> None:
+    def __init__(self, canonical: CanonicalColor, brightness: int | None) -> None:
         """Initialize stored color data."""
         self.canonical = canonical
         self.brightness = brightness
-        self.source_hex = source_hex
 
     @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the stored color."""
+        source_value = self.canonical.source_value
         return {
             "brightness": self.brightness,
             "kelvin": self.canonical.kelvin,
             "kind": self.canonical.kind,
-            "source_hex": self.source_hex,
+            "source_field": self.canonical.source_field,
+            "source_value": list(source_value)
+            if isinstance(source_value, tuple)
+            else source_value,
             "version": STATE_SCHEMA_VERSION,
             "xy": list(self.canonical.xy),
         }
+
+    @staticmethod
+    def _restored_canonical(
+        data: dict[str, Any],
+        version: int,
+        x: float,
+        y: float,
+        kind: str,
+        kelvin: int | None,
+    ) -> CanonicalColor:
+        """Rebuild the canonical color, preferring the stored exact source.
+
+        A malformed source only costs the exact-input echo, so fall back to
+        the canonical xy/kelvin rather than rejecting an otherwise-restorable
+        color.
+        """
+        if version == 1:
+            # v1 stored the sRGB inputs' normalized hex as source_hex.
+            source = {FIELD_HEX: data.get("source_hex")}
+        else:
+            source = {str(data.get("source_field")): data.get("source_value")}
+        try:
+            canonical = normalize(source)
+        except ColorInputError:
+            canonical = None
+        if canonical is not None and canonical.kind == kind:
+            return canonical
+        if kind == KIND_WHITE:
+            return normalize({FIELD_KELVIN: kelvin})
+        return normalize({FIELD_XY: [x, y]})
 
     @classmethod
     def from_dict(cls, data: dict[str, Any]) -> Self | None:
@@ -88,15 +115,10 @@ class _StoredColor(ExtraStoredData):
             brightness = data.get("brightness")
             if brightness is not None:
                 brightness = int(brightness)
-            # A malformed source_hex only costs the exact-input echo, so drop
-            # it rather than rejecting an otherwise-restorable color.
-            source_hex = data.get("source_hex")
-            if not valid_hex(source_hex):
-                source_hex = None
         except KeyError, TypeError, ValueError, OverflowError:
             return None
         if (
-            version != STATE_SCHEMA_VERSION
+            version not in (1, STATE_SCHEMA_VERSION)
             or not valid_xy(x, y)
             or kind not in (KIND_CHROMATIC, KIND_WHITE)
             or (
@@ -108,7 +130,7 @@ class _StoredColor(ExtraStoredData):
         ):
             return None
         return cls(
-            CanonicalColor(xy=(x, y), kind=kind, kelvin=kelvin), brightness, source_hex
+            cls._restored_canonical(data, version, x, y, kind, kelvin), brightness
         )
 
 
@@ -125,7 +147,6 @@ class ColorEntity(RestoreEntity):
             ATTR_HEX_COLOR,
             ATTR_HS_COLOR,
             ATTR_RGB_COLOR,
-            ATTR_SOURCE_HEX,
             ATTR_XY_COLOR,
         }
     )
@@ -144,7 +165,6 @@ class ColorEntity(RestoreEntity):
             self._attr_icon = entry.data.get(CONF_ICON)
         self._canonical = self._initial_canonical(entry)
         self._brightness = self._initial_brightness(entry)
-        self._source_hex = self._initial_source_hex(entry)
 
     @staticmethod
     def _initial_canonical(entry: ColorConfigEntry) -> CanonicalColor:
@@ -174,16 +194,6 @@ class ColorEntity(RestoreEntity):
             return None
         return max(0, min(255, value))
 
-    @staticmethod
-    def _initial_source_hex(entry: ColorConfigEntry) -> str | None:
-        """Return the source hex for the initial color, if any."""
-        if entry.data.get(CONF_INITIAL_MODE) == MODE_WHITE:
-            return None
-        initial = entry.data.get(CONF_INITIAL_COLOR)
-        if not initial:
-            return None
-        return compute_source_hex({FIELD_HEX: initial})
-
     @property
     @override
     def state(self) -> str:
@@ -194,19 +204,25 @@ class ColorEntity(RestoreEntity):
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
-        x, y = self._canonical.xy
-        r, g, b = derive_rgb(self._canonical)
-        hue, sat = derive_hs(self._canonical)
+        canonical = self._canonical
+        x, y = canonical.xy
+        r, g, b = derive_rgb(canonical)
+        hue, sat = derive_hs(canonical)
+        # Rounding applies only to derived views; the shape the user set is
+        # echoed exactly as given.
         return {
             ATTR_BRIGHTNESS: self._brightness,
             ATTR_COLOR_PARAMS: self._color_params(),
-            ATTR_COLOR_TEMP_KELVIN: derive_kelvin(self._canonical),
-            ATTR_HEX_COLOR: derive_hex(self._canonical),
-            ATTR_HS_COLOR: [round(hue, 2), round(sat, 2)],
-            ATTR_KIND: self._canonical.kind,
+            ATTR_COLOR_TEMP_KELVIN: derive_kelvin(canonical),
+            ATTR_HEX_COLOR: derive_hex(canonical),
+            ATTR_HS_COLOR: [hue, sat]
+            if canonical.source_field == FIELD_HS
+            else [round(hue, 2), round(sat, 2)],
+            ATTR_KIND: canonical.kind,
             ATTR_RGB_COLOR: [r, g, b],
-            ATTR_SOURCE_HEX: self._source_hex,
-            ATTR_XY_COLOR: [round(x, 4), round(y, 4)],
+            ATTR_XY_COLOR: [x, y]
+            if canonical.source_field == FIELD_XY
+            else [round(x, 4), round(y, 4)],
         }
 
     def _color_params(self) -> dict[str, Any]:
@@ -226,7 +242,7 @@ class ColorEntity(RestoreEntity):
     @override
     def extra_restore_state_data(self) -> ExtraStoredData | None:
         """Return entity data to restore."""
-        return _StoredColor(self._canonical, self._brightness, self._source_hex)
+        return _StoredColor(self._canonical, self._brightness)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -238,14 +254,12 @@ class ColorEntity(RestoreEntity):
             if stored is not None:
                 self._canonical = stored.canonical
                 self._brightness = stored.brightness
-                self._source_hex = stored.source_hex
 
     async def async_set_color(self, **shape: Any) -> None:
         """Set the color from one accepted input shape."""
         color_shape = dict(shape)
         brightness = color_shape.pop(ATTR_BRIGHTNESS, None)
         self._canonical = normalize(color_shape)
-        self._source_hex = compute_source_hex(color_shape)
         if brightness is not None:
             self._brightness = max(0, min(255, int(brightness)))
         self.async_write_ha_state()

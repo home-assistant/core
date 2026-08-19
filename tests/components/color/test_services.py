@@ -9,6 +9,8 @@ from homeassistant.components.color.const import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_PARAMS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_HEX_COLOR,
+    ATTR_HS_COLOR,
     ATTR_KIND,
     ATTR_RGB_COLOR,
     ATTR_XY_COLOR,
@@ -58,12 +60,10 @@ async def test_set_color_via_hex(hass: HomeAssistant) -> None:
         blocking=True,
     )
     state = hass.states.get(ENTITY_ID)
-    # Hex round-trips through xy with some gamut loss; the red component
-    # should still dominate.
-    r, g, b = state.attributes[ATTR_RGB_COLOR]
-    assert r > 200
-    assert g < 50
-    assert b < 50
+    # sRGB inputs echo exactly; only xy/hs are derived from them.
+    assert state.state == "#FF0000"
+    assert state.attributes[ATTR_HEX_COLOR] == "#FF0000"
+    assert state.attributes[ATTR_RGB_COLOR] == [255, 0, 0]
 
 
 async def test_set_color_via_kelvin_marks_white(hass: HomeAssistant) -> None:
@@ -90,8 +90,80 @@ async def test_set_color_via_color_name(hass: HomeAssistant) -> None:
         blocking=True,
     )
     state = hass.states.get(ENTITY_ID)
-    _r, _g, b = state.attributes[ATTR_RGB_COLOR]
-    assert b > 200
+    # Named colors resolve to their exact CSS3 sRGB triple.
+    assert state.attributes[ATTR_RGB_COLOR] == [0, 0, 255]
+    assert state.attributes[ATTR_HEX_COLOR] == "#0000FF"
+
+
+@pytest.mark.parametrize(
+    ("payload", "attr", "expected"),
+    [
+        pytest.param(
+            {"hex_value": "#FF9E4D"}, ATTR_HEX_COLOR, "#FF9E4D", id="hex-exact"
+        ),
+        pytest.param(
+            {"hex_value": "ff9e4d"}, ATTR_HEX_COLOR, "#FF9E4D", id="hex-normalized"
+        ),
+        pytest.param(
+            {"rgb_color": [255, 158, 77]},
+            ATTR_RGB_COLOR,
+            [255, 158, 77],
+            id="rgb-exact",
+        ),
+        pytest.param(
+            {"hs_color": [200.5, 37.2]},
+            ATTR_HS_COLOR,
+            [200.5, 37.2],
+            id="hs-exact-unrounded",
+        ),
+        pytest.param(
+            {"xy_color": [0.44481, 0.40663]},
+            ATTR_XY_COLOR,
+            [0.44481, 0.40663],
+            id="xy-exact-unrounded",
+        ),
+        pytest.param(
+            {"color_temp_kelvin": 2700},
+            ATTR_COLOR_TEMP_KELVIN,
+            2700,
+            id="kelvin-exact",
+        ),
+        pytest.param(
+            {"color_name": "goldenrod"},
+            ATTR_RGB_COLOR,
+            [218, 165, 32],
+            id="name-exact-table-rgb",
+        ),
+    ],
+)
+async def test_set_color_round_trips_exactly(
+    hass: HomeAssistant, payload: dict, attr: str, expected: object
+) -> None:
+    """The attribute matching the input shape echoes the input exactly."""
+    await _create_entry(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COLOR,
+        {ATTR_ENTITY_ID: ENTITY_ID, **payload},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).attributes[attr] == expected
+
+
+async def test_hex_input_is_the_state(hass: HomeAssistant) -> None:
+    """A typed hex is the state string, byte for byte."""
+    await _create_entry(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COLOR,
+        {ATTR_ENTITY_ID: ENTITY_ID, "hex_value": "#FF9E4D"},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "#FF9E4D"
+    assert state.attributes[ATTR_HEX_COLOR] == "#FF9E4D"
+    # rgb is the exact triple of that hex; hs/xy are derived.
+    assert state.attributes[ATTR_RGB_COLOR] == [255, 158, 77]
 
 
 async def test_set_brightness_then_clear(hass: HomeAssistant) -> None:

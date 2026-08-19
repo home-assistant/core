@@ -11,16 +11,18 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 
-from .color_math import ColorInputError, normalize, valid_hex, valid_xy
+from .color_math import ColorInputError, derive_hex, normalize, valid_hex, valid_xy
 from .const import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_HEX_COLOR,
+    ATTR_HS_COLOR,
     ATTR_KIND,
-    ATTR_SOURCE_HEX,
     ATTR_XY_COLOR,
     DOMAIN,
     FIELD_BRIGHTNESS,
     FIELD_HEX,
+    FIELD_HS,
     FIELD_KELVIN,
     FIELD_XY,
     KIND_WHITE,
@@ -58,26 +60,24 @@ def _is_valid_xy_pair(x: Any, y: Any) -> bool:
         return False
 
 
-def _source_hex_matches(source_hex: Any, xy: Any) -> bool:
-    """Return True if source_hex is a hex whose canonical xy matches the snapshot.
+def _snapshot_source_pair(
+    field: str, value: Any, snapshot_hex: Any
+) -> list[float] | None:
+    """Return the pair to restore if `field: value` re-derives the snapshot's hex.
 
-    Snapshots store xy rounded to 4 decimals, so an honest snapshot's
-    source_hex always re-normalizes onto its own xy attribute.
+    Snapshots do not record which shape the user set, but the source shape's
+    echo always re-derives the snapshot's hex state, while a rounded derived
+    view generally does not — so this identifies the exact source to restore.
     """
-    if not valid_hex(source_hex):
-        return False
+    if not valid_hex(snapshot_hex) or not isinstance(value, (list, tuple)):
+        return None
     try:
-        canonical = normalize({FIELD_HEX: source_hex})
+        canonical = normalize({field: list(value)})
     except ColorInputError:
-        return False
-    if not (isinstance(xy, (list, tuple)) and len(xy) == 2):
-        return True
-    try:
-        return round(canonical.xy[0], 4) == round(float(xy[0]), 4) and round(
-            canonical.xy[1], 4
-        ) == round(float(xy[1]), 4)
-    except TypeError, ValueError, OverflowError:
-        return False
+        return None
+    if derive_hex(canonical) != str(snapshot_hex).upper():
+        return None
+    return [float(value[0]), float(value[1])]
 
 
 async def _async_reproduce_state(
@@ -102,7 +102,10 @@ async def _async_reproduce_state(
 
     color_data: dict[str, Any] | None = None
     xy = attrs.get(ATTR_XY_COLOR)
-    source_hex = attrs.get(ATTR_SOURCE_HEX)
+    hs = attrs.get(ATTR_HS_COLOR)
+    # The state string is the hex echo; older/minimal snapshots may only
+    # carry the attribute.
+    snapshot_hex = state.state if valid_hex(state.state) else attrs.get(ATTR_HEX_COLOR)
     if attrs.get(ATTR_KIND) == KIND_WHITE and not attrs.get(ATTR_COLOR_TEMP_KELVIN):
         _LOGGER.debug(
             "Snapshot for %s is kind=white without kelvin; restoring as chromatic",
@@ -114,19 +117,23 @@ async def _async_reproduce_state(
         and _valid_kelvin(attrs[ATTR_COLOR_TEMP_KELVIN])
     ):
         color_data = {FIELD_KELVIN: int(attrs[ATTR_COLOR_TEMP_KELVIN])}
-    elif _source_hex_matches(source_hex, xy):
-        # The canonical value was derived from this exact hex, so restoring
-        # via hex loses nothing and preserves the source_hex attribute.
-        color_data = {FIELD_HEX: source_hex}
+    elif (xy_pair := _snapshot_source_pair(FIELD_XY, xy, snapshot_hex)) is not None:
+        # The snapshot's hex derives from this exact xy, so xy was the
+        # user's shape (or an equivalent one); restore it unchanged.
+        color_data = {FIELD_XY: xy_pair}
+    elif (hs_pair := _snapshot_source_pair(FIELD_HS, hs, snapshot_hex)) is not None:
+        color_data = {FIELD_HS: hs_pair}
+    elif valid_hex(snapshot_hex):
+        # sRGB shapes (hex/rgb/color_name) all re-derive exactly from the
+        # hex echo, so nothing is lost restoring them via hex.
+        color_data = {FIELD_HEX: str(snapshot_hex)}
     elif (
         isinstance(xy, (list, tuple))
         and len(xy) == 2
         and _is_valid_xy_pair(xy[0], xy[1])
     ):
-        # Canonical xy beats the derived hex state (hex -> xy is lossy).
+        # Hex-less snapshot: the canonical xy is the best remaining data.
         color_data = {FIELD_XY: [float(xy[0]), float(xy[1])]}
-    elif valid_hex(state.state):
-        color_data = {FIELD_HEX: state.state}
     else:
         _LOGGER.debug(
             "Skipping color restore for %s: state %r not a valid representation",

@@ -7,7 +7,6 @@ from homeassistant.components.color.const import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_KIND,
     ATTR_RGB_COLOR,
-    ATTR_SOURCE_HEX,
     ATTR_XY_COLOR,
     CONF_INITIAL_BRIGHTNESS,
     CONF_INITIAL_COLOR,
@@ -79,7 +78,7 @@ async def test_white_entry_with_invalid_kelvin_falls_back(hass: HomeAssistant) -
 
 
 async def test_chromatic_entry_without_initial_color(hass: HomeAssistant) -> None:
-    """A chromatic entry without an initial color uses the default, no source hex."""
+    """A chromatic entry without an initial color uses the default."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Couch Color",
@@ -95,7 +94,7 @@ async def test_chromatic_entry_without_initial_color(hass: HomeAssistant) -> Non
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.attributes[ATTR_KIND] == KIND_CHROMATIC
-    assert state.attributes[ATTR_SOURCE_HEX] is None
+    assert state.state == "#FFFFFF"
 
 
 async def test_registry_entry_linked_to_config_entry(

@@ -9,9 +9,10 @@ from homeassistant.components.color.const import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_PARAMS,
     ATTR_COLOR_TEMP_KELVIN,
+    ATTR_HEX_COLOR,
+    ATTR_HS_COLOR,
     ATTR_KIND,
     ATTR_RGB_COLOR,
-    ATTR_SOURCE_HEX,
     ATTR_XY_COLOR,
     CONF_INITIAL_BRIGHTNESS,
     CONF_INITIAL_COLOR,
@@ -62,10 +63,12 @@ async def test_restore_round_trip_preserves_white_kind_and_kelvin(
     """The extra_data payload must survive a restart round-trip intact."""
     extra = {
         "version": STATE_SCHEMA_VERSION,
-        "xy": [0.4341, 0.4036],  # 2700K-ish Planckian xy
+        "xy": [0.4599, 0.4106],  # 2700K Planckian xy
         "kind": KIND_WHITE,
         "kelvin": 2700,
         "brightness": 180,
+        "source_field": "color_temp_kelvin",
+        "source_value": 2700,
     }
     mock_restore_cache_with_extra_data(
         hass,
@@ -86,8 +89,6 @@ async def test_restore_round_trip_preserves_white_kind_and_kelvin(
     assert state.attributes[ATTR_KIND] == KIND_WHITE
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 2700
     assert state.attributes[ATTR_BRIGHTNESS] == 180
-    # xy preserved to 4 decimals (the round() in extra_state_attributes)
-    assert state.attributes[ATTR_XY_COLOR] == [0.4341, 0.4036]
 
 
 async def test_restore_round_trip_with_malformed_extra_falls_back(
@@ -113,11 +114,63 @@ async def test_restore_round_trip_with_malformed_extra_falls_back(
     assert r > 200
 
 
-async def test_source_hex_persists_across_restart(hass: HomeAssistant) -> None:
-    """The source_hex must survive the restore round-trip."""
+@pytest.mark.parametrize(
+    ("source_field", "source_value", "attr", "expected"),
+    [
+        pytest.param("hex_value", "#FF9E4D", ATTR_HEX_COLOR, "#FF9E4D", id="hex-exact"),
+        pytest.param(
+            "rgb_color", [255, 158, 77], ATTR_RGB_COLOR, [255, 158, 77], id="rgb-exact"
+        ),
+        pytest.param(
+            "hs_color",
+            [200.5, 37.2],
+            ATTR_HS_COLOR,
+            [200.5, 37.2],
+            id="hs-exact-unrounded",
+        ),
+        pytest.param(
+            "xy_color",
+            [0.44481, 0.40663],
+            ATTR_XY_COLOR,
+            [0.44481, 0.40663],
+            id="xy-exact-unrounded",
+        ),
+        pytest.param(
+            "color_name", "goldenrod", ATTR_RGB_COLOR, [218, 165, 32], id="name-exact"
+        ),
+    ],
+)
+async def test_exact_source_persists_across_restart(
+    hass: HomeAssistant,
+    source_field: str,
+    source_value: Any,
+    attr: str,
+    expected: Any,
+) -> None:
+    """The exact input echo must survive the restore round-trip."""
     extra = {
         "version": STATE_SCHEMA_VERSION,
         "xy": [0.4, 0.4],
+        "kind": KIND_CHROMATIC,
+        "kelvin": None,
+        "brightness": None,
+        "source_field": source_field,
+        "source_value": source_value,
+    }
+    mock_restore_cache_with_extra_data(
+        hass,
+        [(State(ENTITY_ID, "#0000FF", {}), extra)],
+    )
+
+    await _setup_entity(hass)
+    assert hass.states.get(ENTITY_ID).attributes[attr] == expected
+
+
+async def test_restore_migrates_v1_source_hex(hass: HomeAssistant) -> None:
+    """A version-1 payload's source_hex becomes the exact hex source."""
+    extra = {
+        "version": 1,
+        "xy": [0.2093, 0.2076],  # what #0050FF normalized to when stored
         "kind": KIND_CHROMATIC,
         "kelvin": None,
         "brightness": None,
@@ -129,24 +182,59 @@ async def test_source_hex_persists_across_restart(hass: HomeAssistant) -> None:
     )
 
     await _setup_entity(hass)
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_SOURCE_HEX] == "#0050FF"
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "#0050FF"
+    assert state.attributes[ATTR_HEX_COLOR] == "#0050FF"
+    assert state.attributes[ATTR_RGB_COLOR] == [0, 80, 255]
+
+
+async def test_restore_migrates_v1_white_without_source_hex(
+    hass: HomeAssistant,
+) -> None:
+    """A version-1 white payload falls back to its kelvin as the source."""
+    extra = {
+        "version": 1,
+        "xy": [0.4599, 0.4106],
+        "kind": KIND_WHITE,
+        "kelvin": 2700,
+        "brightness": 42,
+        "source_hex": None,
+    }
+    mock_restore_cache_with_extra_data(
+        hass,
+        [(State(ENTITY_ID, "#FFFFFF", {ATTR_KIND: KIND_WHITE}), extra)],
+    )
+
+    await _setup_entity(hass)
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_KIND] == KIND_WHITE
+    assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 2700
+    assert state.attributes[ATTR_BRIGHTNESS] == 42
 
 
 @pytest.mark.parametrize(
-    "stored_source_hex",
-    ["not-a-color", "#12345", "#GGGGGG", "0050FF", 123, ["#0050FF"]],
+    ("source_field", "source_value"),
+    [
+        pytest.param("hex_value", "not-a-color", id="bad-hex"),
+        pytest.param("hex_value", 123, id="hex-not-a-string"),
+        pytest.param("rgb_color", [999, 0, 0], id="rgb-out-of-range"),
+        pytest.param("bogus_field", "#0050FF", id="unknown-field"),
+        pytest.param("hex_value", None, id="missing-value"),
+        pytest.param(None, None, id="missing-source"),
+    ],
 )
-async def test_restore_drops_malformed_source_hex(
-    hass: HomeAssistant, stored_source_hex: Any
+async def test_restore_falls_back_when_source_is_malformed(
+    hass: HomeAssistant, source_field: Any, source_value: Any
 ) -> None:
-    """A malformed source_hex is dropped, but the color still restores."""
+    """A malformed source only costs the exact echo; the color still restores."""
     extra = {
         "version": STATE_SCHEMA_VERSION,
         "xy": [0.4, 0.4],
         "kind": KIND_CHROMATIC,
         "kelvin": None,
         "brightness": None,
-        "source_hex": stored_source_hex,
+        "source_field": source_field,
+        "source_value": source_value,
     }
     mock_restore_cache_with_extra_data(
         hass,
@@ -157,8 +245,7 @@ async def test_restore_drops_malformed_source_hex(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.attributes[ATTR_SOURCE_HEX] is None
-    # The canonical value is unaffected by the bad echo.
+    # The canonical xy becomes the source, echoed exactly.
     assert state.attributes[ATTR_XY_COLOR] == [0.4, 0.4]
 
 
@@ -329,8 +416,22 @@ async def test_initial_brightness_garbage_is_safe(hass: HomeAssistant) -> None:
     assert hass.states.get(ENTITY_ID).attributes[ATTR_BRIGHTNESS] is None
 
 
-async def test_source_hex_exact_for_hex_input(hass: HomeAssistant) -> None:
-    """The source_hex echoes the user's bytes exactly, normalized to uppercase."""
+async def test_hex_input_is_the_state_exactly(hass: HomeAssistant) -> None:
+    """A typed hex is the state and hex_color, normalized to uppercase only."""
+    await _setup_entity(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COLOR,
+        {ATTR_ENTITY_ID: ENTITY_ID, "hex_value": "#0050ff"},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "#0050FF"
+    assert state.attributes[ATTR_HEX_COLOR] == "#0050FF"
+
+
+async def test_derived_shapes_stay_rounded(hass: HomeAssistant) -> None:
+    """Non-source shapes keep the display rounding (hs 2 dp, xy 4 dp)."""
     await _setup_entity(hass)
     await hass.services.async_call(
         DOMAIN,
@@ -338,35 +439,17 @@ async def test_source_hex_exact_for_hex_input(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, "hex_value": "#0050FF"},
         blocking=True,
     )
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_SOURCE_HEX] == "#0050FF"
+    state = hass.states.get(ENTITY_ID)
+    hue, sat = state.attributes[ATTR_HS_COLOR]
+    assert hue == round(hue, 2)
+    assert sat == round(sat, 2)
+    x, y = state.attributes[ATTR_XY_COLOR]
+    assert x == round(x, 4)
+    assert y == round(y, 4)
 
 
-async def test_source_hex_null_for_xy_input(hass: HomeAssistant) -> None:
-    """An xy input has no canonical source hex."""
-    await _setup_entity(hass)
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_COLOR,
-        {ATTR_ENTITY_ID: ENTITY_ID, "xy_color": [0.3, 0.4]},
-        blocking=True,
-    )
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_SOURCE_HEX] is None
-
-
-async def test_source_hex_null_for_kelvin_input(hass: HomeAssistant) -> None:
-    """A kelvin input has no canonical source hex."""
-    await _setup_entity(hass)
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_COLOR,
-        {ATTR_ENTITY_ID: ENTITY_ID, "color_temp_kelvin": 3000},
-        blocking=True,
-    )
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_SOURCE_HEX] is None
-
-
-async def test_source_hex_for_color_name(hass: HomeAssistant) -> None:
-    """Named colors resolve to a deterministic source hex."""
+async def test_color_name_resolves_exact_table_rgb(hass: HomeAssistant) -> None:
+    """Named colors resolve to the exact CSS3 table triple."""
     await _setup_entity(hass)
     await hass.services.async_call(
         DOMAIN,
@@ -374,8 +457,10 @@ async def test_source_hex_for_color_name(hass: HomeAssistant) -> None:
         {ATTR_ENTITY_ID: ENTITY_ID, "color_name": "red"},
         blocking=True,
     )
+    state = hass.states.get(ENTITY_ID)
     # CSS3 "red" is exactly #FF0000 — no gamut math involved.
-    assert hass.states.get(ENTITY_ID).attributes[ATTR_SOURCE_HEX] == "#FF0000"
+    assert state.attributes[ATTR_HEX_COLOR] == "#FF0000"
+    assert state.attributes[ATTR_RGB_COLOR] == [255, 0, 0]
 
 
 @pytest.mark.parametrize(

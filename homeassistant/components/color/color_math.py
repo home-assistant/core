@@ -1,9 +1,10 @@
 """Color normalization for the Color helper.
 
-The helper stores a canonical `(xy, kind, kelvin?)` tuple internally and
-derives every attribute (hex/rgb/hs/kelvin) from it. This module dispatches
-any accepted input shape to that canonical form using
-`homeassistant.util.color`.
+The helper stores a canonical `(xy, kind, kelvin?)` tuple for light
+consumers plus the exact input shape the user set. The attribute matching
+the input shape echoes it exactly; every other representation is derived.
+This module dispatches any accepted input shape to that canonical form
+using `homeassistant.util.color`.
 """
 
 from dataclasses import dataclass
@@ -29,11 +30,18 @@ from .const import (
 
 @dataclass(frozen=True)
 class CanonicalColor:
-    """Canonical color: chromaticity + chromatic/white kind + optional kelvin."""
+    """Canonical color: chromaticity + chromatic/white kind + optional kelvin.
+
+    `source_field`/`source_value` keep the user's exact (validated) input so
+    the attribute matching the input shape can echo it without the lossy xy
+    round-trip. A None `source_field` means every representation is derived.
+    """
 
     xy: tuple[float, float]
     kind: str  # KIND_CHROMATIC | KIND_WHITE
     kelvin: int | None = None  # set only when kind == KIND_WHITE
+    source_field: str | None = None  # one of COLOR_SHAPE_FIELDS
+    source_value: Any = None
 
 
 class ColorInputError(ValueError):
@@ -171,23 +179,39 @@ def normalize(inputs: dict[str, Any]) -> CanonicalColor:
         # consumers still work; remember the kelvin for tunable-white targets.
         r, g, b = color_util.color_temperature_to_rgb(kelvin)
         x, y = color_util.color_RGB_to_xy(int(r), int(g), int(b))
-        return CanonicalColor(xy=(x, y), kind=KIND_WHITE, kelvin=kelvin)
+        return CanonicalColor(
+            xy=(x, y),
+            kind=KIND_WHITE,
+            kelvin=kelvin,
+            source_field=FIELD_KELVIN,
+            source_value=kelvin,
+        )
 
+    source_value: Any
     if field == FIELD_HEX:
         r, g, b = _hex_to_rgb(str(value))
+        source_value = "#" + _strip_hex(str(value)).upper()
     elif field == FIELD_RGB:
         r, g, b = _validate_rgb(value)
+        source_value = (r, g, b)
     elif field == FIELD_HS:
         hue, sat = _validate_hs(value)
         r, g, b = color_util.color_hs_to_RGB(hue, sat)
+        source_value = (hue, sat)
     elif field == FIELD_XY:
         x, y = _validate_xy(value)
-        return CanonicalColor(xy=(x, y), kind=KIND_CHROMATIC)
+        return CanonicalColor(
+            xy=(x, y),
+            kind=KIND_CHROMATIC,
+            source_field=FIELD_XY,
+            source_value=(x, y),
+        )
     else:  # FIELD_COLOR_NAME
         try:
             r, g, b = color_util.color_name_to_rgb(str(value))
         except ValueError as err:
             raise ColorInputError(f"Unknown color name: {value!r}") from err
+        source_value = str(value)
 
     if (int(r), int(g), int(b)) == (0, 0, 0):
         # Zero intensity has no chromaticity; xy (0, 0) would render as blue.
@@ -195,11 +219,27 @@ def normalize(inputs: dict[str, Any]) -> CanonicalColor:
             "Pure black has no color value; store a color and use brightness 0"
         )
     x, y = color_util.color_RGB_to_xy(int(r), int(g), int(b))
-    return CanonicalColor(xy=(x, y), kind=KIND_CHROMATIC)
+    return CanonicalColor(
+        xy=(x, y), kind=KIND_CHROMATIC, source_field=field, source_value=source_value
+    )
 
 
 def derive_rgb(canonical: CanonicalColor) -> tuple[int, int, int]:
-    """Display-grade sRGB for the swatch/state. Uses kelvin when kind=white."""
+    """Return sRGB for the swatch/state, exact when the source was sRGB.
+
+    Inputs that map to a single sRGB triple (hex/rgb/hs/color_name) are
+    re-resolved from the stored source, since the xy round-trip is lossy.
+    """
+    if canonical.source_field == FIELD_HEX:
+        return _hex_to_rgb(canonical.source_value)
+    if canonical.source_field == FIELD_RGB:
+        r, g, b = canonical.source_value
+        return r, g, b
+    if canonical.source_field == FIELD_HS:
+        return color_util.color_hs_to_RGB(*canonical.source_value)
+    if canonical.source_field == FIELD_COLOR_NAME:
+        r, g, b = color_util.color_name_to_rgb(canonical.source_value)
+        return int(r), int(g), int(b)
     if canonical.kind == KIND_WHITE and canonical.kelvin is not None:
         r, g, b = color_util.color_temperature_to_rgb(canonical.kelvin)
         return int(r), int(g), int(b)
@@ -207,7 +247,10 @@ def derive_rgb(canonical: CanonicalColor) -> tuple[int, int, int]:
 
 
 def derive_hs(canonical: CanonicalColor) -> tuple[float, float]:
-    """Derive a hue/saturation pair from the canonical color."""
+    """Return hue/saturation: the exact source pair for hs inputs, else derived."""
+    if canonical.source_field == FIELD_HS:
+        hue, sat = canonical.source_value
+        return hue, sat
     r, g, b = derive_rgb(canonical)
     return color_util.color_RGB_to_hs(r, g, b)
 
@@ -228,38 +271,3 @@ def derive_hex(canonical: CanonicalColor) -> str:
     """Derive an uppercase hex string from the canonical color."""
     r, g, b = derive_rgb(canonical)
     return "#" + color_util.color_rgb_to_hex(r, g, b).upper()
-
-
-def compute_source_hex(inputs: dict[str, Any]) -> str | None:
-    """Return the normalized sRGB hex of the user's input, if one exists.
-
-    For inputs that map cleanly to a single sRGB triple (hex/rgb/hs/
-    color_name), this preserves the pre-xy sRGB value, since the xy gamut
-    round-trip is lossy. For xy/kelvin inputs there is no canonical
-    "source hex" so we return None.
-    """
-    if inputs.get(FIELD_HEX) is not None:
-        try:
-            r, g, b = _hex_to_rgb(str(inputs[FIELD_HEX]))
-        except ColorInputError:
-            return None
-    elif inputs.get(FIELD_RGB) is not None:
-        try:
-            r, g, b = _validate_rgb(inputs[FIELD_RGB])
-        except ColorInputError:
-            return None
-    elif inputs.get(FIELD_HS) is not None:
-        try:
-            hue, sat = _validate_hs(inputs[FIELD_HS])
-        except ColorInputError:
-            return None
-        r, g, b = color_util.color_hs_to_RGB(hue, sat)
-    elif inputs.get(FIELD_COLOR_NAME) is not None:
-        try:
-            r, g, b = color_util.color_name_to_rgb(str(inputs[FIELD_COLOR_NAME]))
-        except ValueError:
-            return None
-    else:
-        return None
-
-    return "#" + color_util.color_rgb_to_hex(int(r), int(g), int(b)).upper()

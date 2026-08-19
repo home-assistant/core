@@ -8,7 +8,6 @@ from homeassistant.components.color.const import (
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_KIND,
     ATTR_RGB_COLOR,
-    ATTR_SOURCE_HEX,
     CONF_INITIAL_COLOR,
     CONF_INITIAL_MODE,
     DOMAIN,
@@ -61,9 +60,8 @@ async def test_intent_set_color(hass: HomeAssistant) -> None:
 
     state = hass.states.get(ENTITY_ID)
     assert state.attributes[ATTR_KIND] == KIND_CHROMATIC
-    # Pure blue is outside the gamut the xy round-trip preserves exactly, so
-    # rgb_color comes back approximated and source_hex carries the input.
-    assert state.attributes[ATTR_SOURCE_HEX] == "#0000FF"
+    # The intent passes the name's rgb triple, which echoes back exactly.
+    assert state.attributes[ATTR_RGB_COLOR] == [0, 0, 255]
     assert state.attributes[ATTR_BRIGHTNESS] is None
 
 

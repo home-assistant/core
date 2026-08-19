@@ -71,9 +71,6 @@
         "rgb_color": {
           "name": "RGB color"
         },
-        "source_hex": {
-          "name": "Source hex"
-        },
         "xy_color": {
           "name": "CIE xy color"
         }

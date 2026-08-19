@@ -23,10 +23,6 @@ ATTR_HEX_COLOR: Final = "hex_color"
 ATTR_HS_COLOR: Final = "hs_color"
 ATTR_KIND: Final = "kind"
 ATTR_RGB_COLOR: Final = "rgb_color"
-# Normalized sRGB hex of the user's input when it maps to a single sRGB
-# triple (hex/rgb/hs/color_name), before the lossy xy round-trip. Null for
-# xy/kelvin inputs.
-ATTR_SOURCE_HEX: Final = "source_hex"
 ATTR_XY_COLOR: Final = "xy_color"
 # Dict splattable directly into a light.turn_on call: {"xy_color": [x, y]}
 # for chromatic, {"color_temp_kelvin": k} for white, plus "brightness" when
@@ -53,4 +49,6 @@ DEFAULT_KELVIN: Final = 4000
 MIN_KELVIN: Final = 1000
 MAX_KELVIN: Final = 20000
 
-STATE_SCHEMA_VERSION: Final = 1
+# Version 2 added source_field/source_value (the exact user input); version 1
+# payloads carried source_hex instead and are migrated on restore.
+STATE_SCHEMA_VERSION: Final = 2
