@@ -417,6 +417,21 @@ def test_cancelled_replaced_websocket_handler_does_not_restart() -> None:
     coordinator.restart.assert_not_called()
 
 
+def test_cancelled_current_websocket_handler_does_not_restart() -> None:
+    """Test cancelling the current WebSocket handler does not restart it."""
+    coordinator = object.__new__(VRChatAccountDataCoordinator)
+    websocket = object()
+    coordinator.ws = websocket
+    coordinator.auto_restart = True
+    coordinator.restart = Mock()
+    task = Mock()
+    task.result.side_effect = asyncio.CancelledError
+
+    coordinator.ws_handler_done(websocket)(task)
+
+    coordinator.restart.assert_not_called()
+
+
 def test_entity_update_listener_snapshot() -> None:
     """Test removing a listener during an update does not skip later listeners."""
     coordinator = object.__new__(VRChatUserDataCoordinator)

@@ -404,17 +404,19 @@ class VRChatAccountDataCoordinator(AsyncCleanups):
 
         def callback(task: asyncio.Task):
             not_timeout = True
+            should_restart = True
             try:
                 task.result()
             except TimeoutError:
                 not_timeout = False
             except asyncio.CancelledError:
-                pass
+                should_restart = False
             finally:
-                if not_timeout and self.ws is ws:
-                    self.available = False
-                if self.auto_restart and self.ws is ws:
-                    self.restart()
+                if should_restart and self.ws is ws:
+                    if not_timeout:
+                        self.available = False
+                    if self.auto_restart:
+                        self.restart()
 
         return callback
 
