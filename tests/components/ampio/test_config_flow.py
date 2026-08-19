@@ -6,10 +6,11 @@ from ampio_mqtt import AmpioAuthError, AmpioConnectionError, AmpioTimeoutError
 import pytest
 
 from homeassistant.components.ampio.const import DOMAIN
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import ConfigEntryAuthFailed
 
 from .conftest import MSERV_MAC, USER_INPUT
 
@@ -94,14 +95,22 @@ async def test_user_flow_errors_and_recovers(
 
 @pytest.mark.usefixtures("mock_client_class")
 async def test_already_configured(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_setup_entry: MagicMock,
 ) -> None:
-    """Re-adding an M-SERV that already has an entry aborts and refreshes its data.
+    """Re-adding an M-SERV that already has an entry aborts, updates, and reloads.
 
     With no reauth flow, re-running this flow is the only credential-repair
-    path, so the freshly validated input must replace the stored data in full.
+    path: the freshly validated input must replace the stored data in full,
+    and the entry must reload even from SETUP_ERROR, where a rejected
+    credential leaves it.
     """
     mock_config_entry.add_to_hass(hass)
+    mock_setup_entry.side_effect = ConfigEntryAuthFailed("rejected")
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
+    mock_setup_entry.side_effect = None
     new_input = {
         CONF_HOST: "ampio-new.test",
         CONF_USERNAME: USER_INPUT[CONF_USERNAME],
@@ -114,7 +123,9 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], new_input
     )
+    await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert dict(mock_config_entry.data) == new_input
+    assert mock_config_entry.state is ConfigEntryState.LOADED

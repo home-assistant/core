@@ -48,9 +48,15 @@ class AmpioConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 await self.async_set_unique_id(info.key)
                 # With no reauth flow yet, re-running this flow is the only
-                # credential-repair path, so the freshly validated input must
-                # replace the stored data in full.
-                self._abort_if_unique_id_configured(updates=user_input)
+                # credential-repair path: the validated input must replace the
+                # stored data in full and the entry must reload even from
+                # SETUP_ERROR, which _abort_if_unique_id_configured skips.
+                if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                    self.handler, info.key
+                ):
+                    return self.async_update_reload_and_abort(
+                        entry, data=user_input, reason="already_configured"
+                    )
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
                 )
