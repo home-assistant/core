@@ -1,6 +1,7 @@
 """Test the Teslemetry init."""
 
 from copy import deepcopy
+import logging
 import time
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -1294,6 +1295,51 @@ async def test_no_subentry_created_at_setup(hass: HomeAssistant) -> None:
     assert energysite.can_local_control
     assert energysite.subentry_id is None
     assert not isinstance(energysite.api, EnergySiteRouter)
+
+
+@pytest.mark.parametrize(
+    "local_error",
+    [
+        pytest.param(OSError("disk gone"), id="os_error"),
+        pytest.param(ValueError("bad key"), id="value_error"),
+        pytest.param(PowerwallError("client boom"), id="powerwall_error"),
+    ],
+)
+async def test_local_control_failure_falls_back_to_cloud(
+    hass: HomeAssistant,
+    local_error: Exception,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A failure resolving a paired site's local gateway falls back to cloud.
+
+    Local control is opt-in per site, so one site's bad local config must leave
+    the entry loaded with cloud functionality intact rather than tearing the
+    whole integration down.
+    """
+    entry = _entry_with_powerwall()
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.teslemetry._async_get_rsa_key_pem",
+            side_effect=local_error,
+        ),
+        patch("homeassistant.components.teslemetry.PLATFORMS", []),
+        caplog.at_level(logging.WARNING),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    energysite = entry.runtime_data.energysites[0]
+    assert isinstance(energysite.api, EnergySite)
+    assert not isinstance(energysite.api, EnergySiteRouter)
+    assert energysite.can_local_control
+    assert "falling back to cloud control" in caplog.text
+    assert any(
+        record.levelname == "WARNING" and str(SITE_ID) in record.message
+        for record in caplog.records
+    )
 
 
 async def test_get_rsa_key_pem_generates_and_caches(hass: HomeAssistant) -> None:

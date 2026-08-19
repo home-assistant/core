@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import Any, Final, cast
 
 from aiohttp import ClientError
-from aiopowerwall import PowerwallClient, PowerwallEnergySite
+from aiopowerwall import PowerwallClient, PowerwallEnergySite, PowerwallError
 from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     Forbidden,
@@ -344,9 +344,21 @@ async def _async_resolve_local_control(
     subentry_id = _find_energy_subentry_id(entry, site_id)
     if subentry_id is None:
         return True, None, cloud_energy_site
-    api = await _async_resolve_energy_site_api(
-        hass, entry, subentry_id, cloud_energy_site
-    )
+    # Local control is opt-in per site; a failure resolving one site's local
+    # gateway (key I/O, key parsing, or client construction) must not tear down
+    # the whole integration, so fall back to cloud control for this site.
+    try:
+        api = await _async_resolve_energy_site_api(
+            hass, entry, subentry_id, cloud_energy_site
+        )
+    except OSError, ValueError, PowerwallError:
+        LOGGER.warning(
+            "Failed to set up local control for energy site %s; "
+            "falling back to cloud control",
+            site_id,
+            exc_info=True,
+        )
+        return True, subentry_id, cloud_energy_site
     return True, subentry_id, api
 
 
