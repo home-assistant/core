@@ -39,7 +39,7 @@ from homeassistant.components.zwave_js.const import (
 from homeassistant.components.zwave_js.helpers import SERVER_VERSION_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.redact import REDACTED
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -4649,6 +4649,7 @@ async def test_reconfigure_migrate_with_addon(
     hass: HomeAssistant,
     client: MagicMock,
     device_registry: dr.DeviceRegistry,
+    issue_registry: ir.IssueRegistry,
     multisensor_6: Node,
     integration: MockConfigEntry,
     restart_addon: AsyncMock,
@@ -4804,6 +4805,12 @@ async def test_reconfigure_migrate_with_addon(
     assert entry.data["use_addon"] is True
     assert ("keep_old_devices" in entry.data) is keep_old_devices
     assert entry.unique_id == final_unique_id
+    # When the version fetch after the restore fails, the unique id stays
+    # stale and the reload files an unknown adapter repair issue.
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"migrate_unique_id.{entry.entry_id}"
+    )
+    assert (issue is not None) is keep_old_devices
 
     assert len(device_registry.devices) == device_entry_count
     controller_device_id_ext = (
