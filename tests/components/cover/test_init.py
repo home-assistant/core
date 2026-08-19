@@ -249,7 +249,11 @@ async def test_services_with_speed(
     await hass.services.async_call(
         cover.DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: speed_cover.entity_id, "position": 75, ATTR_SPEED: "default"},
+        {
+            ATTR_ENTITY_ID: speed_cover.entity_id,
+            ATTR_POSITION: 75,
+            ATTR_SPEED: "default",
+        },
         blocking=True,
     )
     assert speed_cover.last_kwargs == {"position": 75, "speed": "default"}
@@ -312,7 +316,7 @@ async def test_services_with_speed(
     await hass.services.async_call(
         cover.DOMAIN,
         SERVICE_SET_COVER_POSITION,
-        {ATTR_ENTITY_ID: ent2.entity_id, "position": 49, ATTR_SPEED: "ignore"},
+        {ATTR_ENTITY_ID: ent2.entity_id, ATTR_POSITION: 49, ATTR_SPEED: "ignore"},
         blocking=True,
     )
     assert ent2.last_kwargs == {"position": 49}
