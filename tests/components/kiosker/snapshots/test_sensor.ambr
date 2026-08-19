@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -41,8 +41,8 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_ambient_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kiosker A98BE1CE Ambient light',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Ambient light',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_ambient_light',
@@ -59,7 +59,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -94,10 +94,10 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_battery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'battery',
-      'friendly_name': 'Kiosker A98BE1CE Battery',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Battery',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_battery',
@@ -105,6 +105,457 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '85',
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_background_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_background_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blackout background color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blackout background color',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blackout_background',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_blackoutBackground',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_background_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout background color',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_background_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '#B10A10',
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_button_background_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_button_background_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blackout button background color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blackout button background color',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blackout_button_background',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_blackoutButtonBackground',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_button_background_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout button background color',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_button_background_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '#c21c1c',
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_button_foreground_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_button_foreground_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blackout button foreground color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blackout button foreground color',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blackout_button_foreground',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_blackoutButtonForeground',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_button_foreground_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout button foreground color',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_button_foreground_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '#36E20B',
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_button_text-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_button_text',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blackout button text',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blackout button text',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blackout_button_text',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_blackoutButtonText',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_button_text-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout button text',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_button_text',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Dismiss me',
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_expiry-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_expiry',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blackout expiry',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
+    'original_icon': None,
+    'original_name': 'Blackout expiry',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blackout_expire',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_blackoutExpire',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_expiry-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout expiry',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_expiry',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2025-01-01T12:06:00+00:00',
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_foreground_color-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_foreground_color',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blackout foreground color',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blackout foreground color',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blackout_foreground',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_blackoutForeground',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_foreground_color-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout foreground color',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_foreground_color',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '#f0fA12',
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_icon-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_icon',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blackout icon',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blackout icon',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blackout_icon',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_blackoutIcon',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_icon-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout icon',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_icon',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'star.fill',
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_sound-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_sound',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blackout sound',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blackout sound',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blackout_sound',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_blackoutSound',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_sound-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout sound',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_sound',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1007',
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_text-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_text',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Blackout text',
+    'options': dict({
+    }),
+    'original_device_class': None,
+    'original_icon': None,
+    'original_name': 'Blackout text',
+    'platform': 'kiosker',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'blackout_text',
+    'unique_id': 'A98BE1CE-5FE7-4A8D-B2C3-123456789ABC_blackoutText',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.kiosker_a98be1ce_blackout_text-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Blackout text',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.kiosker_a98be1ce_blackout_text',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'Hello world',
   })
 # ---
 # name: test_all_entities[sensor.kiosker_a98be1ce_last_interaction-entry]
@@ -147,8 +598,8 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_last_interaction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Kiosker A98BE1CE Last interaction',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Last interaction',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_last_interaction',
@@ -198,8 +649,8 @@
 # name: test_all_entities[sensor.kiosker_a98be1ce_last_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Kiosker A98BE1CE Last motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kiosker A98BE1CE Last motion',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.kiosker_a98be1ce_last_motion',

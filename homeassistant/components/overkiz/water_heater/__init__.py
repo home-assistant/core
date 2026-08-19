@@ -8,6 +8,9 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .. import OverkizDataConfigEntry
 from ..entity import OverkizEntity
+from .atlantic_domestic_hot_water_production_io_component import (
+    AtlanticDomesticHotWaterProductionIOComponent,
+)
 from .atlantic_domestic_hot_water_production_mlb_component import (
     AtlanticDomesticHotWaterProductionMBLComponent,
 )
@@ -20,6 +23,8 @@ from .atlantic_domestic_hot_water_production_v2_io_component import (
 from .atlantic_pass_apc_dhw import AtlanticPassAPCDHW
 from .domestic_hot_water_production import DomesticHotWaterProduction
 from .hitachi_dhw import HitachiDHW
+
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -55,6 +60,9 @@ WIDGET_TO_WATER_HEATER_ENTITY = {
 }
 
 CONTROLLABLE_NAME_TO_WATER_HEATER_ENTITY = {
+    "io:AtlanticDomesticHotWaterProductionIOComponent": (
+        AtlanticDomesticHotWaterProductionIOComponent
+    ),
     "modbuslink:AtlanticDomesticHotWaterProductionMBLComponent": (
         AtlanticDomesticHotWaterProductionMBLComponent
     ),

@@ -16,6 +16,7 @@ import yarl
 from homeassistant.components import media_player, tts
 from homeassistant.components.cast import (
     CastRuntimeData,
+    _process_cast_platform,
     media_player as cast_media_player,
 )
 from homeassistant.components.cast.const import (
@@ -42,6 +43,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.integration_platform import LazyIntegrationPlatforms
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
@@ -489,7 +491,9 @@ async def test_create_cast_device_without_uuid(hass: HomeAssistant) -> None:
     """Test create a cast device with no UUId does not create an entity."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    entry.runtime_data = CastRuntimeData()
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform)
+    )
     info = get_fake_chromecast_info(uuid=None)
     cast_device = cast_media_player._async_create_cast_device(hass, entry, info)
     assert cast_device is None
@@ -499,7 +503,9 @@ async def test_create_cast_device_with_uuid(hass: HomeAssistant) -> None:
     """Test create cast devices with UUID creates entities."""
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
-    entry.runtime_data = CastRuntimeData()
+    entry.runtime_data = CastRuntimeData(
+        cast_platforms=LazyIntegrationPlatforms(hass, DOMAIN, _process_cast_platform)
+    )
     added_casts = entry.runtime_data.added_cast_devices
     info = get_fake_chromecast_info()
 
@@ -816,7 +822,6 @@ async def test_device_registry(
     chromecast, _ = await async_setup_media_player_cast(hass, info)
     chromecast.cast_type = pychromecast.const.CAST_TYPE_CHROMECAST
     _, conn_status_cb, _ = get_status_callbacks(chromecast)
-    cast_entry = hass.config_entries.async_entries("cast")[0]
 
     connection_status = MagicMock()
     connection_status.status = "CONNECTED"
@@ -839,7 +844,7 @@ async def test_device_registry(
     chromecast.disconnect.assert_not_called()
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, cast_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     await hass.async_block_till_done()
@@ -1047,6 +1052,7 @@ async def test_entity_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1060,6 +1066,7 @@ async def test_entity_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -1119,6 +1126,7 @@ async def test_entity_browse_media_audio_only(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": None,
         "children_media_class": None,
     }
@@ -2131,6 +2139,10 @@ async def test_invalid_cast_platform(
     info = get_fake_chromecast_info()
     await async_setup_media_player_cast(hass, info)
 
+    # Cast platforms are loaded lazily on first use
+    entry = hass.config_entries.async_entries("cast")[0]
+    await entry.runtime_data.cast_platforms.async_get_platforms()
+
     assert "Invalid cast platform <Mock id" in caplog.text
 
 
@@ -2277,6 +2289,7 @@ async def test_cast_platform_browse_media(
         "can_play": False,
         "can_expand": True,
         "can_search": False,
+        "search_media_classes": None,
         "thumbnail": "/api/brands/integration/spotify/logo.png",
         "children_media_class": None,
     }
@@ -2302,6 +2315,7 @@ async def test_cast_platform_browse_media(
         "can_play": True,
         "can_expand": False,
         "can_search": False,
+        "search_media_classes": None,
         "children_media_class": None,
         "thumbnail": None,
         "children": [],

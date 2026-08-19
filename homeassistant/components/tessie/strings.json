@@ -612,6 +612,11 @@
         "name": "Valet mode"
       }
     },
+    "text": {
+      "navigation_destination": {
+        "name": "Navigation destination"
+      }
+    },
     "update": {
       "update": {
         "name": "[%key:component::update::title%]"

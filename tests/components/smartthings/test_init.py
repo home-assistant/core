@@ -1,5 +1,6 @@
 """Tests for the SmartThings component init module."""
 
+from dataclasses import replace
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from pysmartthings import (
@@ -85,7 +86,9 @@ async def test_devices(
     for specs in devices.get_devices.return_value:
         device_id = specs.device_id
 
-        device = device_registry.async_get_device({(DOMAIN, device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
+        )
 
         assert device is not None
         assert device == snapshot(name=get_fixture_name(device_id))
@@ -104,21 +107,27 @@ async def test_device_not_resetting_area(
 
     device_id = devices.get_devices.return_value[0].device_id
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
 
     assert device.area_id == "theater"
 
     device_registry.async_update_device(device_id=device.id, area_id=None)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
 
     assert device.area_id is None
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
     assert device.area_id is None
 
 
@@ -342,7 +351,9 @@ async def test_removing_stale_devices(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not device_registry.async_get_device({(DOMAIN, "aaa-bbb-ccc")})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "aaa-bbb-ccc"), mock_config_entry.entry_id
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -403,16 +414,59 @@ async def test_hub_via_device(
     ]
     await setup_integration(hass, mock_config_entry)
 
-    hub_device = device_registry.async_get_device(
-        {(DOMAIN, "074fa784-8be8-4c70-8e22-6f5ed6f81b7e")}
+    hub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "074fa784-8be8-4c70-8e22-6f5ed6f81b7e"), mock_config_entry.entry_id
     )
     assert hub_device == snapshot
-    assert (
-        device_registry.async_get_device(
-            {(DOMAIN, "374ba6fa-5a08-4ea2-969c-1fa43d86e21f")}
-        ).via_device_id
-        == hub_device.id
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "374ba6fa-5a08-4ea2-969c-1fa43d86e21f"), mock_config_entry.entry_id
     )
+    assert child_device is not None
+    assert child_device.via_device_id == hub_device.id
+
+
+async def test_via_device_nested_hierarchy(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    mock_smartthings: AsyncMock,
+) -> None:
+    """Test a nested device hierarchy is linked regardless of device order."""
+    grandparent_id = "11111111-1111-1111-1111-111111111111"
+    parent_id = "00000000-0000-0000-0000-000000000000"
+    child_id = "22222222-2222-2222-2222-222222222222"
+
+    base_device = DeviceResponse.from_json(
+        await async_load_fixture(hass, "devices/virtual_valve.json", DOMAIN)
+    ).items[0]
+    # Children precede their parents to exercise ordering-independent linking.
+    mock_smartthings.get_devices.return_value = [
+        replace(base_device, device_id=child_id, parent_device_id=parent_id),
+        replace(base_device, device_id=parent_id, parent_device_id=grandparent_id),
+        replace(base_device, device_id=grandparent_id, parent_device_id=None),
+    ]
+    mock_smartthings.get_device_status.return_value = DeviceStatus.from_json(
+        await async_load_fixture(hass, "device_status/virtual_valve.json", DOMAIN)
+    ).components
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    grandparent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, grandparent_id), mock_config_entry.entry_id
+    )
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent_id), mock_config_entry.entry_id
+    )
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, child_id), mock_config_entry.entry_id
+    )
+    assert grandparent_device is not None
+    assert parent_device is not None
+    assert child_device is not None
+    assert grandparent_device.via_device_id is None
+    assert parent_device.via_device_id == grandparent_device.id
+    assert child_device.via_device_id == parent_device.id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

@@ -23,7 +23,7 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 
-from .const import _LOGGER, DATA_LIFX_MANAGER, DOMAIN, TARGET_ANY
+from .const import DATA_LIFX_MANAGER, DOMAIN, LOGGER, TARGET_ANY
 from .coordinator import LIFXConfigEntry, LIFXUpdateCoordinator
 from .discovery import async_discover_devices, async_trigger_discovery
 from .manager import LIFXManager
@@ -85,13 +85,13 @@ async def async_legacy_migration(
         hass, hosts_by_serial, existing_serials, legacy_entry
     )
     if missing_discovery_count:
-        _LOGGER.debug(
+        LOGGER.debug(
             "Migration in progress, waiting to discover %s device(s)",
             missing_discovery_count,
         )
         return False
 
-    _LOGGER.debug(
+    LOGGER.debug(
         "Migration successful, removing legacy entry %s", legacy_entry.entry_id
     )
     await hass.config_entries.async_remove(legacy_entry.entry_id)
@@ -117,7 +117,7 @@ class LIFXDiscoveryManager:
         discovery_interval = (
             MIGRATION_INTERVAL if self.migrating else DISCOVERY_INTERVAL
         )
-        _LOGGER.debug(
+        LOGGER.debug(
             "LIFX starting discovery with interval: %s and migrating: %s",
             discovery_interval,
             self.migrating,
@@ -139,7 +139,7 @@ class LIFXDiscoveryManager:
                 )
                 if migration_complete and migrating_was_in_progress:
                     self.migrating = False
-                    _LOGGER.debug(
+                    LOGGER.debug(
                         (
                             "LIFX migration complete, switching to normal discovery"
                             " interval: %s"

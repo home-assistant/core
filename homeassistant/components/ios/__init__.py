@@ -1,7 +1,6 @@
 """Native Home Assistant iOS app component."""
 # pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
-import datetime
 from http import HTTPStatus
 from typing import Any
 
@@ -17,6 +16,7 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
+from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json_object
 
 from .const import (
@@ -342,7 +342,7 @@ class iOSIdentifyDeviceView(HomeAssistantView):
 
         hass = request.app[KEY_HASS]
 
-        data[ATTR_LAST_SEEN_AT] = datetime.datetime.now().isoformat()  # pylint: disable=home-assistant-enforce-naive-now
+        data[ATTR_LAST_SEEN_AT] = dt_util.now().isoformat()
 
         device_id = data[ATTR_DEVICE_ID]
 

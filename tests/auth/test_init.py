@@ -285,9 +285,7 @@ async def test_linking_user_to_two_auth_providers(
     user = await manager.async_get_or_create_user(credential)
     assert user is not None
 
-    step = await manager.login_flow.async_init(
-        ("insecure_example", "another-provider"), context={"credential_only": True}
-    )
+    step = await manager.login_flow.async_init(("insecure_example", "another-provider"))
     step = await manager.login_flow.async_configure(
         step["flow_id"], {"username": "another-user", "password": "another-password"}
     )

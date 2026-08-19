@@ -2,9 +2,9 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
-from technove import MIN_CURRENT, TechnoVE
+from technove import MIN_CURRENT, Station as TechnoVEStation
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -22,13 +22,15 @@ from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 from .helpers import technove_exception_handler
 
+PARALLEL_UPDATES = 1
+
 
 @dataclass(frozen=True, kw_only=True)
 class TechnoVENumberDescription(NumberEntityDescription):
     """Describes TechnoVE number entity."""
 
-    native_max_value_fn: Callable[[TechnoVE], float]
-    native_value_fn: Callable[[TechnoVE], float]
+    native_max_value_fn: Callable[[TechnoVEStation], float]
+    native_value_fn: Callable[[TechnoVEStation], float]
     set_value_fn: Callable[
         [TechnoVEDataUpdateCoordinator, float], Coroutine[Any, Any, None]
     ]
@@ -41,7 +43,8 @@ async def _set_max_current(
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="max_current_in_sharing_mode"
         )
-    await coordinator.technove.set_max_current(value)
+    await coordinator.technove.set_max_current(int(value))
+    await coordinator.async_request_refresh()
 
 
 NUMBERS = [
@@ -86,16 +89,19 @@ class TechnoVENumberEntity(TechnoVEEntity, NumberEntity):
         super().__init__(coordinator, description.key)
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the max value of the TechnoVE number entity."""
         return self.entity_description.native_max_value_fn(self.coordinator.data)
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the native value of the TechnoVE number entity."""
         return self.entity_description.native_value_fn(self.coordinator.data)
 
     @technove_exception_handler
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the value for the TechnoVE number entity."""
         await self.entity_description.set_value_fn(self.coordinator, value)

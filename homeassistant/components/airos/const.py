@@ -20,3 +20,5 @@ HOSTNAME = "hostname"
 IP_ADDRESS = "ip_address"
 MAC_ADDRESS = "mac_address"
 DEVICE_NAME = "airOS device"
+
+CONF_LEGACY_SSL = "legacy_ssl"

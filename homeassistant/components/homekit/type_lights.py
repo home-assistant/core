@@ -2,7 +2,7 @@
 
 from datetime import datetime
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import CATEGORY_LIGHTBULB
 
@@ -244,6 +244,7 @@ class Light(HomeAccessory):
         self.async_call_service(LIGHT_DOMAIN, service, params, ", ".join(events))
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update light after state change."""
         # Handle State

@@ -1,5 +1,7 @@
 """Define a base ReCollect Waste entity."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -31,6 +33,7 @@ class ReCollectWasteEntity(CoordinatorEntity[ReCollectWasteDataUpdateCoordinator
         self._attr_extra_state_attributes = {}
         self._entry = entry
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         await super().async_added_to_hass()

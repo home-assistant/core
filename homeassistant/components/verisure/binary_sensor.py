@@ -1,6 +1,6 @@
 """Support for Verisure binary sensors."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -8,6 +8,7 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import ATTR_LAST_TRIP_TIME, EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -51,21 +52,22 @@ class VerisureDoorWindowSensor(
         super().__init__(coordinator)
         self._attr_unique_id = f"{serial_number}_door_window"
         self.serial_number = serial_number
-
-    @property
-    def device_info(self) -> DeviceInfo:
-        """Return device information about this entity."""
-        area = self.coordinator.data["door_window"][self.serial_number]["area"]
-        return DeviceInfo(
+        area = coordinator.data["door_window"][serial_number]["area"]
+        self._attr_device_info = DeviceInfo(
             name=area,
             manufacturer="Verisure",
             model="Shock Sensor Detector",
-            identifiers={(DOMAIN, self.serial_number)},
-            via_device=(DOMAIN, self.coordinator.config_entry.data[CONF_GIID]),
+            identifiers={(DOMAIN, serial_number)},
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.data[CONF_GIID]),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             configuration_url="https://mypages.verisure.com",
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return (
@@ -73,6 +75,7 @@ class VerisureDoorWindowSensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -81,6 +84,7 @@ class VerisureDoorWindowSensor(
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         return {
@@ -101,11 +105,13 @@ class VerisureEthernetStatus(
     _attr_translation_key = "ethernet"
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return the unique ID for this entity."""
         return f"{self.coordinator.config_entry.data[CONF_GIID]}_ethernet"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this entity."""
         return DeviceInfo(
@@ -117,11 +123,13 @@ class VerisureEthernetStatus(
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the sensor."""
         return self.coordinator.data["broadband"]["isBroadbandConnected"]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self.coordinator.data["broadband"] is not None

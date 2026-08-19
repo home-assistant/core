@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import datetime, timedelta
+from typing import override
 
 from sharkiq import (
     AylaApi,
@@ -65,6 +66,7 @@ class SharkIqUpdateCoordinator(DataUpdateCoordinator[bool]):
         async with asyncio.timeout(API_TIMEOUT):
             await sharkiq.async_update()
 
+    @override
     async def _async_update_data(self) -> bool:
         """Update data device by device."""
         try:

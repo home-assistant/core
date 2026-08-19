@@ -2,8 +2,8 @@
 # name: test_button[identify_device_with_a_blinking_led-plcnet-async_identify_device_start]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Mock Title Identify device with a blinking LED',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Identify device with a blinking LED',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_title_identify_device_with_a_blinking_led',
@@ -53,8 +53,8 @@
 # name: test_button[restart_device-device-async_restart]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Mock Title Restart device',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Restart device',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_title_restart_device',
@@ -104,7 +104,7 @@
 # name: test_button[start_plc_pairing-plcnet-async_pair_device]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Start PLC pairing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Start PLC pairing',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_title_start_plc_pairing',
@@ -154,7 +154,7 @@
 # name: test_button[start_wps-device-async_start_wps]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Start WPS',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Start WPS',
     }),
     'context': <ANY>,
     'entity_id': 'button.mock_title_start_wps',
