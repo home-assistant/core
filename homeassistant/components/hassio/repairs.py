@@ -15,10 +15,12 @@ from homeassistant.components.repairs import (
 )
 from homeassistant.const import ATTR_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.translation import async_get_translations
 
 from . import get_addons_list
 from .const import (
     ATTR_SLUG,
+    DOMAIN,
     EXTRA_PLACEHOLDERS,
     ISSUE_KEY_ADDON_APP_PORT_CONFLICT,
     ISSUE_KEY_ADDON_BOOT_FAIL,
@@ -51,6 +53,7 @@ class SupervisorIssueRepairFlow(RepairsFlow):
 
     _data: dict[str, Any] | None = None
     _issue: Issue | None = None
+    _suggestions: list[Suggestion] | None = None
 
     def __init__(self, hass: HomeAssistant, issue_id: str) -> None:
         """Initialize repair flow."""
@@ -92,6 +95,33 @@ class SupervisorIssueRepairFlow(RepairsFlow):
             last_step=True,
         )
 
+    async def _presentable_suggestions(self) -> list[Suggestion]:
+        """Return the issue's suggestions this Core version can present.
+
+        A newer Supervisor may offer suggestions this version has no fix
+        flow translation for; those would show up as empty menu entries.
+        Left out of the menu, they remain applicable via the Supervisor
+        API or CLI. If no suggestion has a translation, all of them are
+        kept — an unlabeled menu still beats a dead end.
+        """
+        assert self.issue
+        suggestions = self.issue.suggestions
+        if len(suggestions) <= 1:
+            # A single suggestion is shown as a form, which has generic
+            # fallback texts and needs no menu option translation
+            return suggestions
+
+        translations = await async_get_translations(
+            self.hass, self.hass.config.language, "issues", {DOMAIN}
+        )
+        presentable = [
+            suggestion
+            for suggestion in suggestions
+            if f"component.{DOMAIN}.issues.{self.issue.key}"
+            f".fix_flow.step.fix_menu.menu_options.{suggestion.key}" in translations
+        ]
+        return presentable or suggestions
+
     async def async_step_init(self, _: None = None) -> RepairsFlowResult:
         """Handle the first step of a fix flow."""
         # Out of sync with supervisor, issue is resolved or not fixable. Remove it
@@ -108,19 +138,20 @@ class SupervisorIssueRepairFlow(RepairsFlow):
                 MethodType(self._async_step(suggestion), self),
             )
 
-        if len(self.issue.suggestions) > 1:
+        self._suggestions = await self._presentable_suggestions()
+        if len(self._suggestions) > 1:
             return await self.async_step_fix_menu()
 
         # Always show a form for one suggestion to explain to user what's happening
-        return self._async_form_for_suggestion(self.issue.suggestions[0])
+        return self._async_form_for_suggestion(self._suggestions[0])
 
     async def async_step_fix_menu(self, _: None = None) -> RepairsFlowResult:
         """Show the fix menu."""
-        assert self.issue
+        assert self._suggestions
 
         return self.async_show_menu(
             step_id="fix_menu",
-            menu_options=[suggestion.key for suggestion in self.issue.suggestions],
+            menu_options=[suggestion.key for suggestion in self._suggestions],
             description_placeholders=self.description_placeholders,
         )
 
