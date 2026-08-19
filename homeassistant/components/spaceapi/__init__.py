@@ -36,6 +36,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
+    ATTR_API_AREAS,
     ATTR_API_CAM,
     ATTR_API_CLOSED,
     ATTR_API_CONTACT,
@@ -43,8 +44,11 @@ from .const import (
     ATTR_API_FEEDS,
     ATTR_API_LASTCHANGE,
     ATTR_API_LAT,
+    ATTR_API_LINKED_SPACES,
+    ATTR_API_LINKS,
     ATTR_API_LOGO,
     ATTR_API_LON,
+    ATTR_API_MEMBERSHIP_PLANS,
     ATTR_API_NAME,
     ATTR_API_OPEN,
     ATTR_API_PROJECTS,
@@ -57,7 +61,11 @@ from .const import (
     ATTR_API_UNIT,
     ATTR_API_URL,
     ATTR_API_VALUE,
+    ATTR_API_WIND,
     CONF_ACTIVITIES,
+    CONF_AREA_DESCRIPTION,
+    CONF_AREA_NAME,
+    CONF_AREA_SQUARE_METERS,
     CONF_CAM,
     CONF_CONTACT,
     CONF_DOOR_LOCKED,
@@ -84,10 +92,20 @@ from .const import (
     CONF_KEYMASTER_PHONE,
     CONF_KEYMASTER_TWITTER,
     CONF_KEYMASTERS,
+    CONF_LINK_DESCRIPTION,
+    CONF_LINK_NAME,
+    CONF_LINK_URL,
+    CONF_LINKED_SPACE_ENDPOINT,
+    CONF_LINKED_SPACE_WEBSITE,
     CONF_LOGO,
     CONF_MESSAGE,
     CONF_ML,
     CONF_PHONE,
+    CONF_PLAN_BILLING_INTERVAL,
+    CONF_PLAN_CURRENCY,
+    CONF_PLAN_DESCRIPTION,
+    CONF_PLAN_NAME,
+    CONF_PLAN_VALUE,
     CONF_PROJECTS,
     CONF_SIP,
     CONF_SPACE,
@@ -97,14 +115,28 @@ from .const import (
     CONF_TIMEZONE,
     CONF_TRIGGER_PERSON,
     CONF_TWITTER,
+    CONF_WIND_DIRECTION,
+    CONF_WIND_ELEVATION,
+    CONF_WIND_GUST,
+    CONF_WIND_LOCATION,
+    CONF_WIND_NAME,
+    CONF_WIND_SPEED,
     DOMAIN,
     SENSOR_DEFAULT_UNITS,
     SENSOR_TYPES,
     SPACEAPI_COMPATIBILITY,
+    SUBENTRY_KEYMASTER,
+    SUBENTRY_LINK,
+    SUBENTRY_LINKED_SPACE,
+    SUBENTRY_LOCATION_AREA,
+    SUBENTRY_MEMBERSHIP_PLAN,
+    SUBENTRY_WIND_SENSOR,
     URL_API_SPACEAPI,
 )
 
 type _SensorEntry = dict[str, str | bool | float | int]
+type _WindField = dict[str, float | str]
+type _WindEntry = dict[str, str | int | _WindField]
 type _EventEntry = dict[str, str | int]
 
 # ---------------------------------------------------------------------------
@@ -406,6 +438,7 @@ class APISpaceApiView(HomeAssistantView):
         self,
         hass: HomeAssistant,
         spaceapi: dict[str, Any],
+        entry: SpaceAPIConfigEntry,
     ) -> dict[str, Any]:
         """Build the location dict."""
         location: dict[str, Any] = {
@@ -416,6 +449,21 @@ class APISpaceApiView(HomeAssistantView):
         for key in (CONF_ADDRESS, CONF_TIMEZONE, CONF_COUNTRY_CODE, CONF_HINT):
             if key in loc_opts:
                 location[key] = loc_opts[key]
+        areas = [
+            {
+                k: v
+                for k, v in {
+                    CONF_AREA_NAME: se.data[CONF_AREA_NAME],
+                    CONF_AREA_DESCRIPTION: se.data.get(CONF_AREA_DESCRIPTION) or None,
+                    CONF_AREA_SQUARE_METERS: se.data.get(CONF_AREA_SQUARE_METERS),
+                }.items()
+                if v is not None
+            }
+            for se in entry.subentries.values()
+            if se.subentry_type == SUBENTRY_LOCATION_AREA
+        ]
+        if areas:
+            location[ATTR_API_AREAS] = areas
         return location
 
     def _build_state(
@@ -534,16 +582,17 @@ class APISpaceApiView(HomeAssistantView):
         self,
         hass: HomeAssistant,
         spaceapi: dict[str, Any],
-    ) -> dict[str, list[_SensorEntry]]:
-        """Build the sensors dict.
+        entry: SpaceAPIConfigEntry,
+    ) -> dict[str, list[_SensorEntry | _WindEntry]]:
+        """Build sensors dict including wind subentries.
 
         Sensor types that resolve to no values are omitted so the output never
         contains empty arrays.
         """
         sensors: dict[str, list[str]] = spaceapi.get(CONF_SENSORS, {})
-        sensors_data: dict[str, list[_SensorEntry]] = {}
+        sensors_data: dict[str, list[_SensorEntry | _WindEntry]] = {}
         for sensor_type, entity_ids in sensors.items():
-            entries: list[_SensorEntry] = [
+            entries: list[_SensorEntry | _WindEntry] = [
                 sd
                 for entity_id in entity_ids
                 if (sd := self.get_sensor_data(hass, sensor_type, entity_id))
@@ -552,6 +601,45 @@ class APISpaceApiView(HomeAssistantView):
             if entries:
                 sensors_data[sensor_type] = entries
 
+        wind_sensors: list[_SensorEntry | _WindEntry] = []
+        for se in entry.subentries.values():
+            if se.subentry_type != SUBENTRY_WIND_SENSOR:
+                continue
+            wind_entry: _WindEntry = {}
+            speed_state = None
+            for field in (
+                CONF_WIND_SPEED,
+                CONF_WIND_GUST,
+                CONF_WIND_DIRECTION,
+                CONF_WIND_ELEVATION,
+            ):
+                if not (entity_id := se.data.get(field)):
+                    continue
+                if not (field_state := hass.states.get(entity_id)):
+                    continue
+                with suppress(ValueError):
+                    wind_field: _WindField = {
+                        ATTR_API_VALUE: float(field_state.state),
+                    }
+                    if unit := field_state.attributes.get(
+                        EntityStateAttribute.UNIT_OF_MEASUREMENT
+                    ):
+                        wind_field[ATTR_API_UNIT] = unit
+                    wind_entry[field] = wind_field
+                    if field == CONF_WIND_SPEED:
+                        speed_state = field_state
+            if CONF_WIND_SPEED not in wind_entry or speed_state is None:
+                continue
+            if name := se.data.get(CONF_WIND_NAME):
+                wind_entry[ATTR_NAME] = name
+            if loc := se.data.get(CONF_WIND_LOCATION):
+                wind_entry[ATTR_LOCATION] = loc
+            wind_entry[ATTR_API_LASTCHANGE] = int(
+                dt_util.as_timestamp(speed_state.last_changed)
+            )
+            wind_sensors.append(wind_entry)
+        if wind_sensors:
+            sensors_data[ATTR_API_WIND] = wind_sensors
         return sensors_data
 
     async def get(self, request: web.Request) -> web.Response:
@@ -565,12 +653,19 @@ class APISpaceApiView(HomeAssistantView):
         entry = entries[0]
         spaceapi: dict[str, Any] = entry.runtime_data.config
 
-        contact = spaceapi.get(CONF_CONTACT, {})
+        contact = dict(spaceapi.get(CONF_CONTACT, {}))
+        keymasters = [
+            dict(se.data)
+            for se in entry.subentries.values()
+            if se.subentry_type == SUBENTRY_KEYMASTER
+        ]
+        if keymasters:
+            contact[CONF_KEYMASTERS] = keymasters
 
         data: dict[str, Any] = {
             "api_compatibility": SPACEAPI_COMPATIBILITY,
             ATTR_API_CONTACT: contact,
-            ATTR_LOCATION: self._build_location(hass, spaceapi),
+            ATTR_LOCATION: self._build_location(hass, spaceapi, entry),
             ATTR_API_LOGO: spaceapi[CONF_LOGO],
             ATTR_API_SPACE: spaceapi[CONF_SPACE],
             ATTR_API_URL: spaceapi[CONF_URL],
@@ -591,7 +686,57 @@ class APISpaceApiView(HomeAssistantView):
         if spaceapi.get(CONF_ACTIVITIES):
             data[ATTR_API_EVENTS] = await self._get_cached_events(hass, entry)
 
-        if sensors := self._build_sensors(hass, spaceapi):
+        links = [
+            {
+                k: v
+                for k, v in {
+                    CONF_LINK_NAME: se.data[CONF_LINK_NAME],
+                    CONF_LINK_URL: se.data[CONF_LINK_URL],
+                    CONF_LINK_DESCRIPTION: se.data.get(CONF_LINK_DESCRIPTION) or None,
+                }.items()
+                if v is not None
+            }
+            for se in entry.subentries.values()
+            if se.subentry_type == SUBENTRY_LINK
+        ]
+        if links:
+            data[ATTR_API_LINKS] = links
+
+        membership_plans = [
+            {
+                k: v
+                for k, v in {
+                    CONF_PLAN_NAME: se.data[CONF_PLAN_NAME],
+                    CONF_PLAN_VALUE: se.data[CONF_PLAN_VALUE],
+                    CONF_PLAN_CURRENCY: se.data[CONF_PLAN_CURRENCY],
+                    CONF_PLAN_BILLING_INTERVAL: se.data[CONF_PLAN_BILLING_INTERVAL],
+                    CONF_PLAN_DESCRIPTION: se.data.get(CONF_PLAN_DESCRIPTION) or None,
+                }.items()
+                if v is not None
+            }
+            for se in entry.subentries.values()
+            if se.subentry_type == SUBENTRY_MEMBERSHIP_PLAN
+        ]
+        if membership_plans:
+            data[ATTR_API_MEMBERSHIP_PLANS] = membership_plans
+
+        linked_spaces = [
+            {
+                k: v
+                for k, v in {
+                    CONF_LINKED_SPACE_ENDPOINT: se.data[CONF_LINKED_SPACE_ENDPOINT],
+                    CONF_LINKED_SPACE_WEBSITE: se.data.get(CONF_LINKED_SPACE_WEBSITE)
+                    or None,
+                }.items()
+                if v is not None
+            }
+            for se in entry.subentries.values()
+            if se.subentry_type == SUBENTRY_LINKED_SPACE
+        ]
+        if linked_spaces:
+            data[ATTR_API_LINKED_SPACES] = linked_spaces
+
+        if sensors := self._build_sensors(hass, spaceapi, entry):
             data[ATTR_API_SENSORS] = sensors
 
         return self.json(data)

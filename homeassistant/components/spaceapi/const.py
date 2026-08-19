@@ -27,6 +27,9 @@ CONF_KEYMASTER_IRC_NICK = "irc_nick"
 CONF_KEYMASTER_PHONE = "phone"
 CONF_KEYMASTER_EMAIL = "email"
 CONF_KEYMASTER_TWITTER = "twitter"
+CONF_KEYMASTER_XMPP = "xmpp"
+CONF_KEYMASTER_MASTODON = "mastodon"
+CONF_KEYMASTER_MATRIX = "matrix"
 CONF_TWITTER = "twitter"
 CONF_FACEBOOK = "facebook"
 CONF_ML = "ml"
@@ -93,12 +96,55 @@ CONF_EVENTS_WINDOW_HOURS = "events_window_hours"
 CONF_TIMEZONE = "timezone"
 CONF_HINT = "hint"
 
+# Subentry type identifiers
+SUBENTRY_LINK = "link"
+SUBENTRY_MEMBERSHIP_PLAN = "membership_plan"
+SUBENTRY_LINKED_SPACE = "linked_space"
+SUBENTRY_LOCATION_AREA = "location_area"
+SUBENTRY_WIND_SENSOR = "wind_sensor"
+SUBENTRY_KEYMASTER = "keymaster"
+
+# Subentry field names
+CONF_LINK_NAME = "name"
+CONF_LINK_URL = "url"
+CONF_LINK_DESCRIPTION = "description"
+
+CONF_PLAN_NAME = "name"
+CONF_PLAN_VALUE = "value"
+CONF_PLAN_CURRENCY = "currency"
+CONF_PLAN_BILLING_INTERVAL = "billing_interval"
+CONF_PLAN_DESCRIPTION = "description"
+
+CONF_LINKED_SPACE_ENDPOINT = "endpoint"
+CONF_LINKED_SPACE_WEBSITE = "website"
+
+CONF_AREA_NAME = "name"
+CONF_AREA_DESCRIPTION = "description"
+CONF_AREA_SQUARE_METERS = "square_meters"
+
+CONF_WIND_SPEED = "speed"
+CONF_WIND_GUST = "gust"
+CONF_WIND_DIRECTION = "direction"
+CONF_WIND_ELEVATION = "elevation"
+CONF_WIND_NAME = "name"
+CONF_WIND_LOCATION = "location"
+
+BILLING_INTERVALS = [
+    "yearly",
+    "quarterly",
+    "monthly",
+    "weekly",
+    "daily",
+    "hourly",
+    "other",
+]
 
 SPACEAPI_COMPATIBILITY = ["15"]
 
 URL_API_SPACEAPI = "/api/spaceapi"
 
 # SpaceAPI JSON response keys
+ATTR_API_AREAS = "areas"
 ATTR_API_CAM = "cam"
 ATTR_API_CLOSED = "closed"
 ATTR_API_CONTACT = "contact"
@@ -106,8 +152,11 @@ ATTR_API_EVENTS = "events"
 ATTR_API_FEEDS = "feeds"
 ATTR_API_LASTCHANGE = "lastchange"
 ATTR_API_LAT = "lat"
+ATTR_API_LINKED_SPACES = "linked_spaces"
+ATTR_API_LINKS = "links"
 ATTR_API_LON = "lon"
 ATTR_API_LOGO = "logo"
+ATTR_API_MEMBERSHIP_PLANS = "membership_plans"
 ATTR_API_NAME = "name"
 ATTR_API_OPEN = "open"
 ATTR_API_PROJECTS = "projects"
@@ -120,3 +169,4 @@ ATTR_API_TYPE = "type"
 ATTR_API_UNIT = "unit"
 ATTR_API_URL = "url"
 ATTR_API_VALUE = "value"
+ATTR_API_WIND = "wind"

@@ -1,10 +1,11 @@
 """Test the SpaceAPI config flow."""
 
+from types import MappingProxyType
 from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
 from homeassistant.components.spaceapi.const import DOMAIN
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigSubentry
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -149,6 +150,42 @@ async def test_import_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
         "location": {"address": "In your Home"},
     }
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_import_flow_keymasters(  # remove with YAML import (2026.12)
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test v13 contact.keymasters are migrated to keymaster subentries."""
+    config = {
+        "space": "Home",
+        "logo": "https://home-assistant.io/logo.png",
+        "url": "https://home-assistant.io",
+        "state": {"entity_id": "test.test_door"},
+        "contact": {
+            "email": "hello@home-assistant.io",
+            "keymasters": [
+                {"name": "Alice", "email": "alice@home-assistant.io"},
+                {"name": "Bob", "irc_nick": "bob"},
+                {"name": "NoContact"},
+            ],
+        },
+        "issue_report_channels": ["email"],
+    }
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_IMPORT}, data=config
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    # keymasters are not kept in contact options
+    assert "keymasters" not in result["options"]["contact"]
+    # Only keymasters with a contact method become subentries ("NoContact" dropped)
+    subentries = result["subentries"]
+    assert len(subentries) == 2
+    assert all(s["subentry_type"] == "keymaster" for s in subentries)
+    assert {s["title"] for s in subentries} == {"Alice", "Bob"}
+    alice = next(s for s in subentries if s["title"] == "Alice")
+    assert alice["data"] == {"name": "Alice", "email": "alice@home-assistant.io"}
 
 
 async def test_import_flow_already_configured(  # remove with YAML import (2026.12)
@@ -725,6 +762,154 @@ async def test_options_flow_projects(hass: HomeAssistant) -> None:
     ]
 
 
+async def test_subentry_link_add(hass: HomeAssistant) -> None:
+    """Test adding a link subentry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "Home",
+            "logo": "https://home-assistant.io/logo.png",
+            "url": "https://home-assistant.io",
+            "state": {"entity_id": "binary_sensor.front_door"},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "link"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Project page",
+            "url": "https://example.com/project",
+            "description": "Our main project",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Project page"
+
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data["name"] == "Project page"
+    assert subentry.data["url"] == "https://example.com/project"
+    assert subentry.data["description"] == "Our main project"
+
+
+async def test_subentry_membership_plan_add(hass: HomeAssistant) -> None:
+    """Test adding a membership plan subentry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "Home",
+            "logo": "https://home-assistant.io/logo.png",
+            "url": "https://home-assistant.io",
+            "state": {"entity_id": "binary_sensor.front_door"},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "membership_plan"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Standard",
+            "value": "20",
+            "currency": "EUR",
+            "billing_interval": "monthly",
+            "description": "",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Standard"
+
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data["name"] == "Standard"
+    assert subentry.data["currency"] == "EUR"
+    assert subentry.data["billing_interval"] == "monthly"
+
+
+async def test_subentry_linked_space_add(hass: HomeAssistant) -> None:
+    """Test adding a linked space subentry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "Home",
+            "logo": "https://home-assistant.io/logo.png",
+            "url": "https://home-assistant.io",
+            "state": {"entity_id": "binary_sensor.front_door"},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "linked_space"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "endpoint": "https://other.space/api/spaceapi",
+            "website": "https://other.space",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "https://other.space/api/spaceapi"
+
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data["endpoint"] == "https://other.space/api/spaceapi"
+    assert subentry.data["website"] == "https://other.space"
+
+
+async def test_subentry_location_area_add(hass: HomeAssistant) -> None:
+    """Test adding a location area subentry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "space": "Home",
+            "logo": "https://home-assistant.io/logo.png",
+            "url": "https://home-assistant.io",
+            "state": {"entity_id": "binary_sensor.front_door"},
+        },
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "location_area"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Main hall",
+            "description": "The big room",
+            "square_meters": 120.5,
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Main hall"
+
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data["name"] == "Main hall"
+    assert subentry.data["description"] == "The big room"
+    assert subentry.data["square_meters"] == 120.5
+
+
 # ---------------------------------------------------------------------------
 # Options-flow clearing tests
 # ---------------------------------------------------------------------------
@@ -910,6 +1095,408 @@ async def test_options_flow_events_empty_clears(hass: HomeAssistant) -> None:
 # ---------------------------------------------------------------------------
 # Subentry reconfigure tests
 # ---------------------------------------------------------------------------
+
+
+async def test_subentry_link_reconfigure(hass: HomeAssistant) -> None:
+    """Test editing an existing link subentry via reconfigure."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            subentry_type="link",
+            data=MappingProxyType(
+                {
+                    "name": "Old name",
+                    "url": "https://old.example.com",
+                    "description": "",
+                }
+            ),
+            title="Old name",
+            unique_id=None,
+        ),
+    )
+    subentry = next(iter(entry.subentries.values()))
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "link"),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry.subentry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "New name",
+            "url": "https://new.example.com",
+            "description": "Updated",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated = next(iter(entry.subentries.values()))
+    assert updated.data["name"] == "New name"
+    assert updated.data["url"] == "https://new.example.com"
+    assert updated.data["description"] == "Updated"
+
+
+async def test_subentry_membership_plan_reconfigure(hass: HomeAssistant) -> None:
+    """Test editing an existing membership plan subentry via reconfigure."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            subentry_type="membership_plan",
+            data=MappingProxyType(
+                {
+                    "name": "Standard",
+                    "value": "20",
+                    "currency": "EUR",
+                    "billing_interval": "monthly",
+                    "description": "",
+                }
+            ),
+            title="Standard",
+            unique_id=None,
+        ),
+    )
+    subentry = next(iter(entry.subentries.values()))
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "membership_plan"),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry.subentry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Premium",
+            "value": "50",
+            "currency": "EUR",
+            "billing_interval": "yearly",
+            "description": "Full access",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated = next(iter(entry.subentries.values()))
+    assert updated.data["name"] == "Premium"
+    assert updated.data["value"] == "50"
+    assert updated.data["billing_interval"] == "yearly"
+
+
+async def test_subentry_linked_space_reconfigure(hass: HomeAssistant) -> None:
+    """Test editing an existing linked space subentry via reconfigure."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            subentry_type="linked_space",
+            data=MappingProxyType(
+                {"endpoint": "https://old.space/api/spaceapi", "website": ""}
+            ),
+            title="old.space",
+            unique_id=None,
+        ),
+    )
+    subentry = next(iter(entry.subentries.values()))
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "linked_space"),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry.subentry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"endpoint": "https://new.space/api/spaceapi", "website": "https://new.space"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated = next(iter(entry.subentries.values()))
+    assert updated.data["endpoint"] == "https://new.space/api/spaceapi"
+    assert updated.data["website"] == "https://new.space"
+
+
+async def test_subentry_location_area_reconfigure(hass: HomeAssistant) -> None:
+    """Test editing an existing location area subentry via reconfigure."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            subentry_type="location_area",
+            data=MappingProxyType(
+                {"name": "Old hall", "description": "", "square_meters": 50.0}
+            ),
+            title="Old hall",
+            unique_id=None,
+        ),
+    )
+    subentry = next(iter(entry.subentries.values()))
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "location_area"),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry.subentry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"name": "New hall", "description": "Renovated", "square_meters": 75.0},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated = next(iter(entry.subentries.values()))
+    assert updated.data["name"] == "New hall"
+    assert updated.data["description"] == "Renovated"
+    assert updated.data["square_meters"] == 75.0
+
+
+async def test_subentry_wind_sensor_add(hass: HomeAssistant) -> None:
+    """Test adding a wind sensor subentry."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "wind_sensor"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "speed": "sensor.wind_speed",
+            "name": "Roof station",
+            "location": "Rooftop",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Roof station"
+
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data["speed"] == "sensor.wind_speed"
+    assert subentry.data["name"] == "Roof station"
+    assert subentry.data["location"] == "Rooftop"
+
+
+async def test_subentry_wind_sensor_reconfigure(hass: HomeAssistant) -> None:
+    """Test editing an existing wind sensor subentry via reconfigure."""
+
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            subentry_type="wind_sensor",
+            data=MappingProxyType(
+                {"speed": "sensor.old_speed", "name": "", "location": ""}
+            ),
+            title="sensor.old_speed",
+            unique_id=None,
+        ),
+    )
+    subentry = next(iter(entry.subentries.values()))
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "wind_sensor"),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry.subentry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {"speed": "sensor.new_speed", "name": "Roof", "location": "Top floor"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated = next(iter(entry.subentries.values()))
+    assert updated.data["speed"] == "sensor.new_speed"
+    assert updated.data["name"] == "Roof"
+
+
+async def test_subentry_keymaster_add(hass: HomeAssistant) -> None:
+    """Test adding a keymaster subentry; empty fields are dropped."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "keymaster"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Alice",
+            "email": "alice@hackerspace.org",
+            "phone": "",
+            "irc_nick": "",
+            "twitter": "",
+            "xmpp": "",
+            "mastodon": "",
+            "matrix": "",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Alice"
+
+    subentry = next(iter(entry.subentries.values()))
+    assert subentry.data == {"name": "Alice", "email": "alice@hackerspace.org"}
+
+
+async def test_subentry_keymaster_requires_contact_method(hass: HomeAssistant) -> None:
+    """Test a keymaster without any contact method is rejected."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "keymaster"),
+        context={"source": config_entries.SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Bob",
+            "email": "",
+            "phone": "",
+            "irc_nick": "",
+            "twitter": "",
+            "xmpp": "",
+            "mastodon": "",
+            "matrix": "",
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_contact_method"}
+
+
+async def test_subentry_keymaster_reconfigure(hass: HomeAssistant) -> None:
+    """Test editing a keymaster subentry; cleared fields are removed."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            subentry_type="keymaster",
+            data=MappingProxyType({"name": "Alice", "email": "alice@hackerspace.org"}),
+            title="Alice",
+            unique_id=None,
+        ),
+    )
+    subentry = next(iter(entry.subentries.values()))
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "keymaster"),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry.subentry_id,
+        },
+    )
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Alice",
+            "email": "",
+            "phone": "",
+            "irc_nick": "alice_irc",
+            "twitter": "",
+            "xmpp": "",
+            "mastodon": "",
+            "matrix": "",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    updated = next(iter(entry.subentries.values()))
+    # email cleared -> removed; irc_nick added
+    assert updated.data == {"name": "Alice", "irc_nick": "alice_irc"}
+
+
+async def test_subentry_keymaster_reconfigure_requires_contact_method(
+    hass: HomeAssistant,
+) -> None:
+    """Test clearing every contact method while reconfiguring is rejected."""
+    entry = MockConfigEntry(domain=DOMAIN, data=_BASE_DATA)
+    entry.add_to_hass(hass)
+    hass.config_entries.async_add_subentry(
+        entry,
+        ConfigSubentry(
+            subentry_type="keymaster",
+            data=MappingProxyType({"name": "Alice", "email": "alice@hackerspace.org"}),
+            title="Alice",
+            unique_id=None,
+        ),
+    )
+    subentry = next(iter(entry.subentries.values()))
+
+    result = await hass.config_entries.subentries.async_init(
+        (entry.entry_id, "keymaster"),
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "subentry_id": subentry.subentry_id,
+        },
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        {
+            "name": "Alice",
+            "email": "",
+            "phone": "",
+            "irc_nick": "",
+            "twitter": "",
+            "xmpp": "",
+            "mastodon": "",
+            "matrix": "",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "no_contact_method"}
+    # The subentry is left untouched.
+    assert next(iter(entry.subentries.values())).data == {
+        "name": "Alice",
+        "email": "alice@hackerspace.org",
+    }
 
 
 async def test_options_flow_events_saves(hass: HomeAssistant) -> None:

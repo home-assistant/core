@@ -4,7 +4,15 @@ from typing import Any, override
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    ConfigSubentryData,
+    ConfigSubentryFlow,
+    OptionsFlow,
+    SubentryFlowResult,
+)
 from homeassistant.const import (
     CONF_ADDRESS,
     CONF_COUNTRY_CODE,
@@ -32,8 +40,12 @@ from homeassistant.helpers.selector import (
 
 from . import SpaceAPIConfigEntry
 from .const import (
+    BILLING_INTERVALS,
     CONF_ACCOUNT_BALANCE,
     CONF_ACTIVITIES,
+    CONF_AREA_DESCRIPTION,
+    CONF_AREA_NAME,
+    CONF_AREA_SQUARE_METERS,
     CONF_BAROMETER,
     CONF_BEVERAGE_SUPPLY,
     CONF_CAM,
@@ -56,6 +68,19 @@ from .const import (
     CONF_IDENTICA,
     CONF_IRC,
     CONF_ISSUE_MAIL,
+    CONF_KEYMASTER_EMAIL,
+    CONF_KEYMASTER_IRC_NICK,
+    CONF_KEYMASTER_MASTODON,
+    CONF_KEYMASTER_MATRIX,
+    CONF_KEYMASTER_NAME,
+    CONF_KEYMASTER_PHONE,
+    CONF_KEYMASTER_TWITTER,
+    CONF_KEYMASTER_XMPP,
+    CONF_LINK_DESCRIPTION,
+    CONF_LINK_NAME,
+    CONF_LINK_URL,
+    CONF_LINKED_SPACE_ENDPOINT,
+    CONF_LINKED_SPACE_WEBSITE,
     CONF_LOGO,
     CONF_MASTODON,
     CONF_MATRIX,
@@ -66,6 +91,11 @@ from .const import (
     CONF_NETWORK_TRAFFIC,
     CONF_PEOPLE_NOW_PRESENT,
     CONF_PHONE,
+    CONF_PLAN_BILLING_INTERVAL,
+    CONF_PLAN_CURRENCY,
+    CONF_PLAN_DESCRIPTION,
+    CONF_PLAN_NAME,
+    CONF_PLAN_VALUE,
     CONF_POWER_CONSUMPTION,
     CONF_POWER_GENERATION,
     CONF_PROJECTS,
@@ -79,8 +109,20 @@ from .const import (
     CONF_TIMEZONE,
     CONF_TOTAL_MEMBER_COUNT,
     CONF_TWITTER,
+    CONF_WIND_DIRECTION,
+    CONF_WIND_ELEVATION,
+    CONF_WIND_GUST,
+    CONF_WIND_LOCATION,
+    CONF_WIND_NAME,
+    CONF_WIND_SPEED,
     CONF_XMPP,
     DOMAIN,
+    SUBENTRY_KEYMASTER,
+    SUBENTRY_LINK,
+    SUBENTRY_LINKED_SPACE,
+    SUBENTRY_LOCATION_AREA,
+    SUBENTRY_MEMBERSHIP_PLAN,
+    SUBENTRY_WIND_SENSOR,
 )
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
@@ -121,6 +163,22 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create the options flow."""
         return SpaceAPIOptionsFlowHandler()
 
+    @classmethod
+    @callback
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentry types supported by SpaceAPI."""
+        return {
+            SUBENTRY_LINK: LinkSubentryFlowHandler,
+            SUBENTRY_MEMBERSHIP_PLAN: MembershipPlanSubentryFlowHandler,
+            SUBENTRY_LINKED_SPACE: LinkedSpaceSubentryFlowHandler,
+            SUBENTRY_LOCATION_AREA: LocationAreaSubentryFlowHandler,
+            SUBENTRY_WIND_SENSOR: WindSensorSubentryFlowHandler,
+            SUBENTRY_KEYMASTER: KeymasterSubentryFlowHandler,
+        }
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -158,8 +216,8 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
         options: dict[str, Any] = {}
 
         # Contact: keep all fields still valid in v15. "google" was removed in
-        # v15 and "keymasters" is not a v15 contact field, so both are dropped
-        # here. "jabber" is renamed to "xmpp".
+        # v15, and "keymasters" is migrated to subentries (see below), so both
+        # are dropped here. "jabber" is renamed to "xmpp".
         dropped_contact_fields = {"google", "keymasters"}
         contact: dict[str, Any] = {}
         for k, v in import_data.get(CONF_CONTACT, {}).items():
@@ -208,10 +266,40 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_ADDRESS: import_data[CONF_LOCATION][CONF_ADDRESS]
             }
 
+        # Keymasters (v13 contact.keymasters) -> keymaster subentries. Skip any
+        # without a contact method, since the v15 spec requires at least one.
+        keymaster_one_of = (
+            CONF_KEYMASTER_IRC_NICK,
+            CONF_KEYMASTER_PHONE,
+            CONF_KEYMASTER_EMAIL,
+            CONF_KEYMASTER_TWITTER,
+        )
+        subentries: list[ConfigSubentryData] = []
+        for keymaster in import_data.get(CONF_CONTACT, {}).get("keymasters", []):
+            keymaster_data = {k: v for k, v in keymaster.items() if v}
+            if not any(keymaster_data.get(field) for field in keymaster_one_of):
+                continue
+            title = (
+                keymaster_data.get(CONF_KEYMASTER_NAME)
+                or keymaster_data.get(CONF_KEYMASTER_EMAIL)
+                or keymaster_data.get(CONF_KEYMASTER_IRC_NICK)
+                or keymaster_data.get(CONF_KEYMASTER_PHONE)
+                or keymaster_data[CONF_KEYMASTER_TWITTER]
+            )
+            subentries.append(
+                ConfigSubentryData(
+                    data=keymaster_data,
+                    subentry_type=SUBENTRY_KEYMASTER,
+                    title=title,
+                    unique_id=None,
+                )
+            )
+
         return self.async_create_entry(
             title=data[CONF_SPACE],
             data=data,
             options=options,
+            subentries=subentries,
         )
 
     async def async_step_reconfigure(
@@ -732,4 +820,363 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
         return self.async_show_form(
             step_id="projects",
             data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+
+class LinkSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing links."""
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new link subentry."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_LINK_NAME],
+                data=user_input,
+            )
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_LINK_NAME): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.TEXT)
+                    ),
+                    vol.Required(CONF_LINK_URL): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
+                    vol.Optional(CONF_LINK_DESCRIPTION, default=""): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.TEXT)
+                    ),
+                }
+            ),
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing link subentry."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                title=user_input[CONF_LINK_NAME],
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                vol.Schema(
+                    {
+                        vol.Required(CONF_LINK_NAME): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.TEXT)
+                        ),
+                        vol.Required(CONF_LINK_URL): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.URL)
+                        ),
+                        vol.Optional(CONF_LINK_DESCRIPTION, default=""): TextSelector(
+                            TextSelectorConfig(type=TextSelectorType.TEXT)
+                        ),
+                    }
+                ),
+                dict(subentry.data),
+            ),
+        )
+
+
+class MembershipPlanSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing membership plans."""
+
+    _SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_PLAN_NAME): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Required(CONF_PLAN_VALUE): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.NUMBER)
+            ),
+            vol.Required(CONF_PLAN_CURRENCY): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Required(CONF_PLAN_BILLING_INTERVAL): SelectSelector(
+                SelectSelectorConfig(options=BILLING_INTERVALS)
+            ),
+            vol.Optional(CONF_PLAN_DESCRIPTION, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+        }
+    )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new membership plan subentry."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_PLAN_NAME],
+                data=user_input,
+            )
+        return self.async_show_form(step_id="user", data_schema=self._SCHEMA)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing membership plan subentry."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                title=user_input[CONF_PLAN_NAME],
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._SCHEMA, dict(subentry.data)
+            ),
+        )
+
+
+class LinkedSpaceSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing linked spaces."""
+
+    _SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_LINKED_SPACE_ENDPOINT): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.URL)
+            ),
+            vol.Optional(CONF_LINKED_SPACE_WEBSITE, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.URL)
+            ),
+        }
+    )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new linked space subentry."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_LINKED_SPACE_ENDPOINT],
+                data=user_input,
+            )
+        return self.async_show_form(step_id="user", data_schema=self._SCHEMA)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing linked space subentry."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                title=user_input[CONF_LINKED_SPACE_ENDPOINT],
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._SCHEMA, dict(subentry.data)
+            ),
+        )
+
+
+class LocationAreaSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing location areas."""
+
+    _SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_AREA_NAME): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_AREA_DESCRIPTION, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_AREA_SQUARE_METERS): vol.Coerce(float),
+        }
+    )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new location area subentry."""
+        if user_input is not None:
+            return self.async_create_entry(
+                title=user_input[CONF_AREA_NAME],
+                data=user_input,
+            )
+        return self.async_show_form(step_id="user", data_schema=self._SCHEMA)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing location area subentry."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                title=user_input[CONF_AREA_NAME],
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._SCHEMA, dict(subentry.data)
+            ),
+        )
+
+
+class WindSensorSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing a wind sensor station."""
+
+    _SCHEMA = vol.Schema(
+        {
+            vol.Required(CONF_WIND_SPEED): EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            ),
+            vol.Optional(CONF_WIND_GUST): EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            ),
+            vol.Optional(CONF_WIND_DIRECTION): EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            ),
+            vol.Optional(CONF_WIND_ELEVATION): EntitySelector(
+                EntitySelectorConfig(domain="sensor")
+            ),
+            vol.Optional(CONF_WIND_NAME, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_WIND_LOCATION, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+        }
+    )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new wind sensor subentry."""
+        if user_input is not None:
+            title = user_input.get(CONF_WIND_NAME) or user_input[CONF_WIND_SPEED]
+            return self.async_create_entry(title=title, data=user_input)
+        return self.async_show_form(step_id="user", data_schema=self._SCHEMA)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing wind sensor subentry."""
+        subentry = self._get_reconfigure_subentry()
+        if user_input is not None:
+            title = user_input.get(CONF_WIND_NAME) or user_input[CONF_WIND_SPEED]
+            return self.async_update_and_abort(
+                self._get_entry(),
+                subentry,
+                title=title,
+                data_updates=user_input,
+            )
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._SCHEMA, dict(subentry.data)
+            ),
+        )
+
+
+class KeymasterSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle subentry flow for adding/editing keymasters."""
+
+    _SCHEMA = vol.Schema(
+        {
+            vol.Optional(CONF_KEYMASTER_NAME, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_KEYMASTER_EMAIL, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.EMAIL)
+            ),
+            vol.Optional(CONF_KEYMASTER_PHONE, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEL)
+            ),
+            vol.Optional(CONF_KEYMASTER_IRC_NICK, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_KEYMASTER_TWITTER, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_KEYMASTER_XMPP, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_KEYMASTER_MASTODON, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+            vol.Optional(CONF_KEYMASTER_MATRIX, default=""): TextSelector(
+                TextSelectorConfig(type=TextSelectorType.TEXT)
+            ),
+        }
+    )
+
+    # Per the v15 spec at least one of these must be provided.
+    _REQUIRED_ONE_OF = (
+        CONF_KEYMASTER_IRC_NICK,
+        CONF_KEYMASTER_PHONE,
+        CONF_KEYMASTER_EMAIL,
+        CONF_KEYMASTER_TWITTER,
+    )
+
+    @staticmethod
+    def _clean(user_input: dict[str, Any]) -> dict[str, Any]:
+        """Drop empty fields so the output never contains blank values."""
+        return {k: v for k, v in user_input.items() if v}
+
+    @staticmethod
+    def _title(data: dict[str, Any]) -> str:
+        """Derive a title from the name or the first available contact field."""
+        return (
+            data.get(CONF_KEYMASTER_NAME)
+            or data.get(CONF_KEYMASTER_EMAIL)
+            or data.get(CONF_KEYMASTER_IRC_NICK)
+            or data.get(CONF_KEYMASTER_PHONE)
+            or data.get(CONF_KEYMASTER_TWITTER)
+            or "Keymaster"
+        )
+
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Add a new keymaster subentry."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if any(user_input.get(field) for field in self._REQUIRED_ONE_OF):
+                data = self._clean(user_input)
+                return self.async_create_entry(title=self._title(data), data=data)
+            errors["base"] = "no_contact_method"
+        return self.async_show_form(
+            step_id="user", data_schema=self._SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Edit an existing keymaster subentry."""
+        subentry = self._get_reconfigure_subentry()
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if any(user_input.get(field) for field in self._REQUIRED_ONE_OF):
+                data = self._clean(user_input)
+                return self.async_update_and_abort(
+                    self._get_entry(),
+                    subentry,
+                    title=self._title(data),
+                    data=data,
+                )
+            errors["base"] = "no_contact_method"
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                self._SCHEMA, dict(subentry.data)
+            ),
+            errors=errors,
         )

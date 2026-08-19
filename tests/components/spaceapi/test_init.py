@@ -1,6 +1,7 @@
 """The tests for the Home Assistant SpaceAPI component."""
 
 from http import HTTPStatus
+from types import MappingProxyType
 from unittest.mock import patch
 
 from aiohttp.test_utils import TestClient
@@ -9,6 +10,7 @@ import pytest
 from homeassistant.components.recorder import Recorder
 from homeassistant.components.spaceapi import SPACEAPI_COMPATIBILITY, URL_API_SPACEAPI
 from homeassistant.components.spaceapi.const import ATTR_API_SENSOR_LOCATION
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import Context, HomeAssistant
 
@@ -256,6 +258,76 @@ async def test_spaceapi_sensor_default_unit(
     assert temp_sensors[0]["unit"] == "°C"
 
 
+async def test_spaceapi_subentries_in_output(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that subentries are aggregated into the SpaceAPI JSON output."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="link",
+            data=MappingProxyType(
+                {
+                    "name": "Our wiki",
+                    "url": "https://wiki.example.com",
+                    "description": "",
+                }
+            ),
+            title="Our wiki",
+            unique_id=None,
+        ),
+    )
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="membership_plan",
+            data=MappingProxyType(
+                {
+                    "name": "Standard",
+                    "value": "20",
+                    "currency": "EUR",
+                    "billing_interval": "monthly",
+                    "description": "",
+                }
+            ),
+            title="Standard",
+            unique_id=None,
+        ),
+    )
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="linked_space",
+            data=MappingProxyType(
+                {"endpoint": "https://other.space/api/spaceapi", "website": ""}
+            ),
+            title="other.space",
+            unique_id=None,
+        ),
+    )
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["links"] == [{"name": "Our wiki", "url": "https://wiki.example.com"}]
+    assert data["membership_plans"] == [
+        {
+            "name": "Standard",
+            "value": "20",
+            "currency": "EUR",
+            "billing_interval": "monthly",
+        }
+    ]
+    assert data["linked_spaces"] == [{"endpoint": "https://other.space/api/spaceapi"}]
+
+
 async def test_spaceapi_state_lock_entity(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -408,6 +480,139 @@ async def test_spaceapi_entry_not_found_returns_404(
     client = await hass_client_no_auth()
     resp = await client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_spaceapi_location_area_subentry(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that location_area subentries appear nested inside the location block."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="location_area",
+            data=MappingProxyType({"name": "Main hall", "square_meters": 80.0}),
+            title="Main hall",
+            unique_id=None,
+        ),
+    )
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="location_area",
+            data=MappingProxyType(
+                {
+                    "name": "Workshop",
+                    "description": "The making area",
+                    "square_meters": 40.0,
+                }
+            ),
+            title="Workshop",
+            unique_id=None,
+        ),
+    )
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    areas = data["location"]["areas"]
+    assert len(areas) == 2
+    assert {"name": "Main hall", "square_meters": 80.0} in areas
+    assert {
+        "name": "Workshop",
+        "description": "The making area",
+        "square_meters": 40.0,
+    } in areas
+
+
+async def test_spaceapi_wind_sensor_subentry(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that wind_sensor subentries appear in sensors.wind in the output."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set(
+        "sensor.wind_speed",
+        "12.5",
+        attributes={ATTR_UNIT_OF_MEASUREMENT: "km/h"},
+    )
+    hass.states.async_set(
+        "sensor.wind_dir",
+        "270",
+        attributes={ATTR_UNIT_OF_MEASUREMENT: "°"},
+    )
+
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="wind_sensor",
+            data=MappingProxyType(
+                {
+                    "speed": "sensor.wind_speed",
+                    "direction": "sensor.wind_dir",
+                    "name": "Roof station",
+                    "location": "Rooftop",
+                }
+            ),
+            title="Roof station",
+            unique_id=None,
+        ),
+    )
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    wind = data["sensors"]["wind"]
+    assert len(wind) == 1
+    w = wind[0]
+    assert w["speed"]["value"] == 12.5
+    assert w["speed"]["unit"] == "km/h"
+    assert w["direction"]["value"] == 270.0
+    assert w["direction"]["unit"] == "°"
+    assert w["name"] == "Roof station"
+    assert w["location"] == "Rooftop"
+    assert isinstance(w["lastchange"], int)
+
+
+async def test_spaceapi_wind_sensor_missing_speed_skipped(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a wind_sensor subentry without a readable speed is omitted."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Speed entity exists but its state is non-numeric
+    hass.states.async_set("sensor.bad_speed", "unavailable")
+
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="wind_sensor",
+            data=MappingProxyType({"speed": "sensor.bad_speed"}),
+            title="Bad station",
+            unique_id=None,
+        ),
+    )
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert "wind" not in data.get("sensors", {})
 
 
 async def test_spaceapi_events_output(
@@ -580,6 +785,82 @@ async def test_spaceapi_state_icon_partial(
     assert "closed" not in icon
 
 
+async def test_spaceapi_wind_sensor_all_fields(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that all four wind sensor fields (speed, gust, direction, elevation) appear."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.ws", "10.0", {ATTR_UNIT_OF_MEASUREMENT: "m/s"})
+    hass.states.async_set("sensor.wg", "15.0", {ATTR_UNIT_OF_MEASUREMENT: "m/s"})
+    hass.states.async_set("sensor.wd", "180", {ATTR_UNIT_OF_MEASUREMENT: "°"})
+    hass.states.async_set("sensor.we", "250", {ATTR_UNIT_OF_MEASUREMENT: "m"})
+
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="wind_sensor",
+            data=MappingProxyType(
+                {
+                    "speed": "sensor.ws",
+                    "gust": "sensor.wg",
+                    "direction": "sensor.wd",
+                    "elevation": "sensor.we",
+                    "name": "Full station",
+                    "location": "Roof",
+                }
+            ),
+            title="Full station",
+            unique_id=None,
+        ),
+    )
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    w = data["sensors"]["wind"][0]
+    assert w["speed"] == {"value": 10.0, "unit": "m/s"}
+    assert w["gust"] == {"value": 15.0, "unit": "m/s"}
+    assert w["direction"] == {"value": 180.0, "unit": "°"}
+    assert w["elevation"] == {"value": 250.0, "unit": "m"}
+    assert w["name"] == "Full station"
+    assert w["location"] == "Roof"
+
+
+async def test_spaceapi_wind_sensor_missing_speed_key_skipped(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a wind_sensor subentry with other fields but no speed key is omitted."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("sensor.wind_dir", "90", {ATTR_UNIT_OF_MEASUREMENT: "°"})
+
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="wind_sensor",
+            data=MappingProxyType({"direction": "sensor.wind_dir"}),
+            title="No speed",
+            unique_id=None,
+        ),
+    )
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert "wind" not in data.get("sensors", {})
+
+
 async def test_spaceapi_state_message_entity_missing(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -602,6 +883,35 @@ async def test_spaceapi_state_message_entity_missing(
     data = await resp.json()
 
     assert "message" not in data["state"]
+
+
+async def test_spaceapi_keymasters_output(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test keymaster subentries are emitted under contact.keymasters."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.config_entries.async_add_subentry(
+        mock_config_entry,
+        ConfigSubentry(
+            subentry_type="keymaster",
+            data=MappingProxyType({"name": "Alice", "email": "alice@example.org"}),
+            title="Alice",
+            unique_id=None,
+        ),
+    )
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["contact"]["keymasters"] == [
+        {"name": "Alice", "email": "alice@example.org"}
+    ]
 
 
 async def test_spaceapi_merge_config_semantics(
