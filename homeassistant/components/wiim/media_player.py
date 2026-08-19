@@ -301,7 +301,9 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
 
                 content = await response.read()
                 content_type = response.headers.get(CONTENT_TYPE)
-                return content, content_type.split(";")[0] if content_type else None
+                return content, content_type.split(";", 1)[
+                    0
+                ].strip() if content_type else None
         except (
             TimeoutError,
             aiohttp.ClientError,

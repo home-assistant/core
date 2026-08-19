@@ -1327,11 +1327,15 @@ async def test_join_service_invalid_member_uses_translation(
 
 
 @pytest.mark.parametrize(
-    ("image_url", "disable_ssl_verification"),
+    ("image_url", "expected_disabled_request_options", "content_type"),
     [
-        ("https://192.168.1.100/local-artwork.jpg", True),
-        ("http://192.168.1.100/local-artwork.jpg", False),
-        ("https://wiim-artwork.example/remote-artwork.jpg", False),
+        (
+            "https://192.168.1.100/local-artwork.jpg",
+            {"allow_redirects", "ssl"},
+            "image/jpeg ; charset=binary",
+        ),
+        ("http://192.168.1.100/local-artwork.jpg", set(), "image/jpeg"),
+        ("https://wiim-artwork.example/remote-artwork.jpg", set(), "image/jpeg"),
     ],
 )
 @pytest.mark.usefixtures("mock_wiim_controller")
@@ -1343,7 +1347,8 @@ async def test_media_image_ssl_verification(
     hass_client: ClientSessionGenerator,
     *,
     image_url: str,
-    disable_ssl_verification: bool,
+    expected_disabled_request_options: set[str],
+    content_type: str,
 ) -> None:
     """Test SSL verification is disabled only for local WiiM HTTPS artwork."""
     await setup_integration(hass, mock_config_entry)
@@ -1359,7 +1364,7 @@ async def test_media_image_ssl_verification(
     aioclient_mock.get(
         image_url,
         content=b"image-bytes",
-        headers={"Content-Type": "image/jpeg; charset=binary"},
+        headers={"Content-Type": content_type},
     )
     websession = async_get_clientsession(hass)
     with patch.object(websession, "get", wraps=websession.get) as mock_get:
@@ -1378,8 +1383,12 @@ async def test_media_image_ssl_verification(
     assert len(image_get_calls) == 1
     image_get_call = image_get_calls[0]
     request_options = image_get_call.kwargs
-    assert (request_options.get("allow_redirects") is False) is disable_ssl_verification
-    assert (request_options.get("ssl") is False) is disable_ssl_verification
+    disabled_request_options = {
+        option
+        for option in ("allow_redirects", "ssl")
+        if request_options.get(option) is False
+    }
+    assert disabled_request_options == expected_disabled_request_options
 
 
 @pytest.mark.parametrize(
