@@ -1182,6 +1182,35 @@ RGBICWW_STRIP_LIGHT_SERVICE_INFO = BluetoothServiceInfoBleak(
 )
 
 
+RGBICWW_LIGHT_BARS_SERVICE_INFO = BluetoothServiceInfoBleak(
+    name="RGBICWW Light Bars",
+    manufacturer_data={
+        2409: b'(7/L\x94\xb2\x0c\x9e"\x00\x11:\x00',
+    },
+    service_data={
+        "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x11\xbe\xf8"
+    },
+    service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    address="AA:BB:CC:DD:EE:FF",
+    rssi=-60,
+    source="local",
+    advertisement=generate_advertisement_data(
+        local_name="RGBICWW Light Bars",
+        manufacturer_data={
+            2409: b'(7/L\x94\xb2\x0c\x9e"\x00\x11:\x00',
+        },
+        service_data={
+            "0000fd3d-0000-1000-8000-00805f9b34fb": b"\x00\x00\x00\x00\x11\xbe\xf8"
+        },
+        service_uuids=["cba20d00-224d-11e6-9fb8-0002a5d5c51b"],
+    ),
+    device=generate_ble_device("AA:BB:CC:DD:EE:FF", "RGBICWW Light Bars"),
+    time=0,
+    connectable=True,
+    tx_power=-127,
+)
+
+
 RGBICWW_FLOOR_LAMP_SERVICE_INFO = BluetoothServiceInfoBleak(
     name="RGBICWW Floor Lamp",
     manufacturer_data={
