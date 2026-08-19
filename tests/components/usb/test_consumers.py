@@ -8,6 +8,7 @@ import pytest
 
 from homeassistant.components.usb import DOMAIN
 from homeassistant.components.usb.models import SerialDevice, USBDevice
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_USER, ConfigEntryDisabler
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -141,6 +142,38 @@ async def test_config_entry_non_serial_values(
     ports = await _async_get_serial_ports(hass_ws_client, hass)
 
     assert [port["consumers"] for port in ports] == [[], []]
+
+
+@pytest.mark.usefixtures("setup_ports")
+@pytest.mark.parametrize(
+    ("source", "disabled_by", "num_consumers"),
+    [
+        pytest.param(SOURCE_IGNORE, None, 0, id="ignored_entry_hidden"),
+        pytest.param(
+            SOURCE_USER, ConfigEntryDisabler.USER, 1, id="disabled_entry_shown"
+        ),
+    ],
+)
+async def test_config_entry_ignored_and_disabled(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    source: str,
+    disabled_by: ConfigEntryDisabler | None,
+    num_consumers: int,
+) -> None:
+    """Test ignored entries are hidden while disabled entries are shown."""
+    mock_integration(hass, MockModule("test_usb", dependencies=["usb"]))
+    MockConfigEntry(
+        domain="test_usb",
+        title="Test USB",
+        data={"device": TTY_USB0},
+        source=source,
+        disabled_by=disabled_by,
+    ).add_to_hass(hass)
+
+    ports = await _async_get_serial_ports(hass_ws_client, hass)
+
+    assert [len(port["consumers"]) for port in ports] == [num_consumers, 0]
 
 
 @pytest.mark.usefixtures("setup_ports")

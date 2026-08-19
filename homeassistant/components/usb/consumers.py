@@ -76,7 +76,7 @@ async def _async_get_config_entry_consumers(
     hass: HomeAssistant, known_devices: set[str]
 ) -> dict[str, list[SerialPortConsumer]]:
     """Return serial ports configured in config entries of `usb` integrations."""
-    entries = hass.config_entries.async_entries()
+    entries = hass.config_entries.async_entries(include_ignore=False)
     integrations = await async_get_integrations(
         hass, {entry.domain for entry in entries}
     )
