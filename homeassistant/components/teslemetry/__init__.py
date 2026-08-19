@@ -443,16 +443,27 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
                 serial_number=str(site_id),
             )
 
+            (
+                live_coordinator,
+                info_coordinator,
+                history_coordinator,
+            ) = await _async_setup_energy_site(
+                hass,
+                entry,
+                stream,
+                energy_site,
+                product,
+                site_id,
+                powerwall,
+            )
             energysites.append(
-                await _async_setup_energy_site(
-                    hass,
-                    entry,
-                    stream,
-                    energy_site,
-                    product,
-                    site_id,
-                    powerwall,
-                    device,
+                TeslemetryEnergyData(
+                    api=energy_site,
+                    live_coordinator=live_coordinator,
+                    info_coordinator=info_coordinator,
+                    history_coordinator=history_coordinator,
+                    id=site_id,
+                    device=device,
                 )
             )
 
@@ -570,8 +581,11 @@ async def _async_setup_energy_site(
     product: dict[str, Any],
     site_id: int,
     powerwall: Any,
-    device: DeviceInfo,
-) -> TeslemetryEnergyData:
+) -> tuple[
+    TeslemetryEnergySiteLiveCoordinator | None,
+    TeslemetryEnergySiteInfoCoordinator,
+    TeslemetryEnergyHistoryCoordinator | None,
+]:
     """Cold-read live status, build the energy coordinators, and register listeners."""
     # The stream has no ready boundary, so keep a deterministic REST cold read
     # for setup auth/error handling before switching to listener-driven updates.
@@ -627,18 +641,13 @@ async def _async_setup_energy_site(
         )
     )
 
-    return TeslemetryEnergyData(
-        api=energy_site,
-        live_coordinator=live_coordinator,
-        info_coordinator=info_coordinator,
-        history_coordinator=(
-            TeslemetryEnergyHistoryCoordinator(hass, entry, energy_site)
-            if powerwall
-            else None
-        ),
-        id=site_id,
-        device=device,
+    history_coordinator = (
+        TeslemetryEnergyHistoryCoordinator(hass, entry, energy_site)
+        if powerwall
+        else None
     )
+
+    return live_coordinator, info_coordinator, history_coordinator
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
