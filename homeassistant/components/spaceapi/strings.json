@@ -1,0 +1,49 @@
+{
+  "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "entity_id": "[%key:component::spaceapi::config::step::user::data::entity_id%]",
+          "logo": "[%key:component::spaceapi::config::step::user::data::logo%]",
+          "space": "[%key:component::spaceapi::config::step::user::data::space%]",
+          "url": "[%key:component::spaceapi::config::step::user::data::url%]"
+        },
+        "data_description": {
+          "email": "[%key:component::spaceapi::config::step::user::data_description::email%]",
+          "entity_id": "[%key:component::spaceapi::config::step::user::data_description::entity_id%]",
+          "logo": "[%key:component::spaceapi::config::step::user::data_description::logo%]",
+          "space": "[%key:component::spaceapi::config::step::user::data_description::space%]",
+          "url": "[%key:component::spaceapi::config::step::user::data_description::url%]"
+        },
+        "description": "The SpaceAPI endpoint is available at `/api/spaceapi`."
+      },
+      "user": {
+        "data": {
+          "email": "Contact email",
+          "entity_id": "State entity",
+          "logo": "Logo URL",
+          "space": "Space name",
+          "url": "Website URL"
+        },
+        "data_description": {
+          "email": "Contact email address for the space.",
+          "entity_id": "Entity that represents the open/closed state of the space.",
+          "logo": "URL to the logo of your hackerspace.",
+          "space": "The name of your hackerspace.",
+          "url": "URL to the website of your hackerspace."
+        },
+        "description": "The SpaceAPI endpoint will be available at `/api/spaceapi`."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml": {
+      "description": "Configuring SpaceAPI using YAML is being removed.\n\nYour existing YAML configuration has been imported into the UI automatically.\n\nRemove the `spaceapi` configuration from your configuration.yaml file and restart Home Assistant to fix this issue.",
+      "title": "YAML configuration is being removed"
+    }
+  }
+}
