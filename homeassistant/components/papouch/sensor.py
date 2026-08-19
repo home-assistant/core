@@ -50,6 +50,7 @@ class PapouchSensor(PapouchEntity, SensorEntity):
 
         self.item_id = sensor_data["item_id"]
         self.data_key = sensor_data["type"]
+        self.value_key = sensor_data["value_key"]
         self._attr_unique_id = f"{mac}_{self.data_key}_{self.item_id}"
 
         if sensor_data.get("use_custom_name", False):
@@ -70,7 +71,7 @@ class PapouchSensor(PapouchEntity, SensorEntity):
     @override
     def native_value(self) -> float | int | None:
         """Return the state of the sensor."""
-        value = self.coordinator.data.get(self.data_key, {}).get(self.item_id)
+        value = self.coordinator.data.get(self.data_key, {}).get(self.value_key)
         return cast("float | int | None", value)
 
     @override

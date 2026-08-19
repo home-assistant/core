@@ -32,6 +32,7 @@ def mock_papouch_device():
     device.get_supported_sensors.return_value = [
         {
             "item_id": "1",
+            "value_key": "1",
             "type": "temperature",
             "translation": "sensor_temperature_placeholder",
             "placeholder": {"placeholder": "Sensor 1"},
@@ -42,6 +43,7 @@ def mock_papouch_device():
         },
         {
             "item_id": "2",
+            "value_key": "1",
             "type": "temperature",
             "use_custom_name": True,
             "name": "Custom Temperature",
