@@ -263,7 +263,7 @@ aioemonitor==1.0.5
 aioengiebelgium==0.1.1
 
 # homeassistant.components.esphome
-aioesphomeapi==45.6.1
+aioesphomeapi==45.12.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -2056,7 +2056,7 @@ pyaqvify==0.0.12
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==9.7.0
+pyatmo==9.9.0
 
 # homeassistant.components.apple_tv
 pyatv==0.18.0
