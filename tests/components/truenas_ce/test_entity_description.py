@@ -166,6 +166,24 @@ def test_composite_references_ignores_non_list_container() -> None:
     assert result == set()
 
 
+def test_composite_references_invalid_length_returns_empty_set() -> None:
+    """A malformed (non-2-segment) composite reference yields no unique ids.
+
+    __post_init__ only logs a warning for this (frozen dataclasses can't
+    reject construction), so callers must not assume the tuple is unpackable.
+    """
+    description = TrueNASEntityDescription(
+        key="test_net",
+        name="Test Net",
+        data_path="app_stats",
+        data_dynamic_keys=True,
+        data_composite_references=("only_one",),
+    )
+    data = {"app1": {"networks": [{"interface_name": "eth0"}]}}
+    result = _composite_references("inst", description, data)
+    assert result == set()
+
+
 def test_composite_references_empty_data() -> None:
     """Empty source data yields no unique ids."""
     description = TrueNASEntityDescription(

@@ -187,6 +187,8 @@ def _composite_references(
     are skipped.
     """
     ids: set[str] = set()
+    if len(description.data_composite_references) != 2:
+        return ids
     container_key, leaf_key = description.data_composite_references
     for uid, vals in data.items():
         container = _get_composite_container(vals, container_key)
@@ -539,7 +541,7 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
             dev_group = ha_group[6:]
             if dev_group in self._data:
                 dev_group = self._data[dev_group]
-                dev_connection_value = dev_group
+                dev_connection_value = f"{self._inst}_{dev_group}"
 
         if self.entity_description.ha_connection:
             dev_connection = self.entity_description.ha_connection

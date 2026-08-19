@@ -1,4 +1,4 @@
-"""Repairs for the TrueNAS integration."""
+"""Repairs for the TrueNAS CE integration."""
 
 from logging import getLogger
 from typing import Any

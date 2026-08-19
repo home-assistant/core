@@ -498,6 +498,7 @@ def test_device_info_data_group_resolves_group_from_data() -> None:
     )
     info = entity.device_info
     assert info["name"] == "TrueNAS tank"
+    assert info["identifiers"] == {("truenas_ce", "TrueNAS_tank")}
 
 
 def test_device_info_explicit_connection_and_value() -> None:
