@@ -673,9 +673,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    # Reload when a local-energy-site subentry is added or reconfigured so the
+    # Reload when a local-energy-site subentry is added or removed so the
     # affected site starts (or stops) routing through its local gateway.
-    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    _setup_subentry_change_reload(hass, entry)
 
     _setup_dynamic_discovery(
         hass,
@@ -700,11 +700,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -
     return True
 
 
-async def _async_update_listener(
+def _setup_subentry_change_reload(
     hass: HomeAssistant, entry: TeslemetryConfigEntry
 ) -> None:
-    """Reload the entry when its subentries change."""
-    hass.config_entries.async_schedule_reload(entry.entry_id)
+    """Reload the entry when a local-energy-site subentry is added or removed."""
+    known = set(entry.subentries)
+
+    async def _handle_update(
+        hass: HomeAssistant, updated_entry: TeslemetryConfigEntry
+    ) -> None:
+        nonlocal known
+        current = set(updated_entry.subentries)
+        if known.symmetric_difference(current):
+            hass.config_entries.async_schedule_reload(updated_entry.entry_id)
+        # Track the latest set so further updates before the reload runs (e.g. a
+        # token refresh) do not re-schedule it off the same change.
+        known = current
+
+    entry.async_on_unload(entry.add_update_listener(_handle_update))
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:

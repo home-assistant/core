@@ -1524,3 +1524,51 @@ async def test_stale_cleanup_preserves_pairing_without_energy_scope(
     assert subentry_id in entry.subentries
     assert entry.subentries[subentry_id].data[CONF_HOST] == HOST
     assert entry.subentries[subentry_id].data[CONF_PASSWORD] == PASSWORD
+
+
+async def test_update_listener_ignores_token_refresh(hass: HomeAssistant) -> None:
+    """An entry update that only changes token data must not reload the entry.
+
+    OAuth token refreshes call async_update_entry with new token data on every
+    expiry; reloading on those would needlessly drop the stream and re-fetch.
+    """
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        new_data = dict(entry.data)
+        new_data["token"] = {**new_data["token"], "access_token": "refreshed_token"}
+        hass.config_entries.async_update_entry(entry, data=new_data)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_not_called()
+
+
+async def test_update_listener_reloads_on_subentry_change(
+    hass: HomeAssistant,
+) -> None:
+    """Adding a local-energy-site subentry reloads the entry."""
+    entry = mock_config_entry()
+    entry.add_to_hass(hass)
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(
+                    {CONF_SITE_ID: SITE_ID, CONF_HOST: HOST, CONF_PASSWORD: PASSWORD}
+                ),
+                subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
+                title="Energy Site",
+                unique_id=str(SITE_ID),
+            ),
+        )
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_once_with(entry.entry_id)
