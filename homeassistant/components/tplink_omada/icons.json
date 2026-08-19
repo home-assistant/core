@@ -35,11 +35,11 @@
     "reconnect": {
       "service": "mdi:sync"
     },
-    "unblock": {
-      "service": "mdi:link"
-    },
     "reconnect_client": {
       "service": "mdi:sync"
+    },
+    "unblock": {
+      "service": "mdi:link"
     }
   }
 }
