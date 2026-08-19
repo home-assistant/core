@@ -6,9 +6,8 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from bitvis_protobuf.listener import SharedListener
+from bitvis_protobuf.listener import FilterMac, SharedListener
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
-from bitvis_protobuf.utils import async_resolve_host
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
@@ -93,7 +92,12 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
     """Coordinator to manage data updates from UDP packets."""
 
     def __init__(
-        self, hass: HomeAssistant, config_entry: BitvisConfigEntry, host: str, port: int
+        self,
+        hass: HomeAssistant,
+        config_entry: BitvisConfigEntry,
+        host: str,
+        port: int,
+        mac_address: str,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -104,7 +108,8 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         )
         self.host = host
         self.port = port
-        self._registered_ips: set[str] = set()
+        self.mac_address = mac_address
+        self._filter = FilterMac(mac_address)
         self._stable_boot_time = ignore_variance(
             _uptime_to_boot_time, timedelta(minutes=5)
         )
@@ -114,11 +119,10 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
     async def _async_setup(self) -> None:
         """Set up the coordinator by registering with the shared UDP listener."""
         try:
-            self._registered_ips = await async_resolve_host(self.host)
             listener_registry = async_get_listener_registry(self.hass)
             listener = await listener_registry.async_get_or_create(self.port)
-            listener.register(self._registered_ips, self._handle_payload)
-        except (OSError, ValueError) as err:
+            listener.register(self._filter, self._handle_payload)
+        except OSError as err:
             await self.async_stop()
             raise UpdateFailed(
                 f"Failed to start UDP listener on port {self.port}"
@@ -133,10 +137,9 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         """Unregister from the shared listener, stopping it when no longer needed."""
         if listener_registry := self.hass.data.get(DATA_LISTENER_REGISTRY):
             if listener := listener_registry.get(self.port):
-                listener.unregister(self._registered_ips)
+                listener.unregister(self._filter)
                 await listener_registry.async_remove_if_unused(self.port)
 
-        self._registered_ips = set()
         _LOGGER.debug(
             "Unregistered coordinator from shared UDP listener for port %s", self.port
         )
@@ -165,13 +168,12 @@ class BitvisDataUpdateCoordinator(DataUpdateCoordinator[BitvisData]):
         """Update diagnostic data and notify listeners."""
         self.data.diagnostic = payload
         diagnostic = payload.diagnostic
+        self.data.mac_address = payload.mac_address
         if diagnostic.HasField("device_info"):
             device_info = diagnostic.device_info
-            self.data.mac_address = device_info.mac_address.hex(sep=":")
             self.data.model_name = device_info.model_name
             self.data.sw_version = device_info.sw_version
         else:
-            self.data.mac_address = None
             self.data.model_name = None
             self.data.sw_version = None
         self.data.boot_time = self._stable_boot_time(diagnostic.uptime_s)

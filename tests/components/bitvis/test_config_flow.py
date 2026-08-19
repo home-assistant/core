@@ -4,9 +4,13 @@ import asyncio
 from ipaddress import ip_address
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from bitvis_protobuf.parse import PayloadSample
 import pytest
 
-from homeassistant.components.bitvis.config_flow import _async_test_port
+from homeassistant.components.bitvis.config_flow import (
+    _async_discover_mac_address,
+    _async_test_port,
+)
 from homeassistant.components.bitvis.const import (
     DEFAULT_NAME,
     DEFAULT_PORT,
@@ -18,6 +22,8 @@ from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from .conftest import TEST_DEVICE_MAC
 
 from tests.common import MockConfigEntry
 
@@ -53,6 +59,11 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
             new_callable=AsyncMock,
         ),
         patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            new_callable=AsyncMock,
+            return_value=TEST_DEVICE_MAC,
+        ),
+        patch(
             "homeassistant.components.bitvis.async_setup_entry",
             return_value=True,
         ),
@@ -70,7 +81,7 @@ async def test_user_form_create_entry(hass: HomeAssistant) -> None:
         CONF_HOST: "192.168.1.100",
         CONF_PORT: DEFAULT_PORT,
     }
-    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == DOMAIN
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == TEST_DEVICE_MAC
 
 
 @pytest.mark.parametrize("recover", [False, True])
@@ -101,6 +112,11 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, recover: bool) -> N
                 new_callable=AsyncMock,
             ),
             patch(
+                "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+                new_callable=AsyncMock,
+                return_value=TEST_DEVICE_MAC,
+            ),
+            patch(
                 "homeassistant.components.bitvis.async_setup_entry",
                 return_value=True,
             ),
@@ -120,14 +136,42 @@ async def test_user_form_cannot_connect(hass: HomeAssistant, recover: bool) -> N
         }
 
 
+async def test_user_form_discovery_timeout(hass: HomeAssistant) -> None:
+    """Test user form error when no UDP message is received in time."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    with (
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_test_port",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            side_effect=TimeoutError,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_HOST: "192.168.1.100",
+            },
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["errors"] == {"base": "timeout_connect"}
+
+
 async def test_user_form_duplicate(hass: HomeAssistant) -> None:
-    """Test duplicate detection."""
+    """Test duplicate detection by MAC address."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
             CONF_HOST: "192.168.1.100",
             CONF_PORT: DEFAULT_PORT,
         },
+        unique_id=TEST_DEVICE_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -135,9 +179,16 @@ async def test_user_form_duplicate(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.bitvis.config_flow._async_test_port",
-        new_callable=AsyncMock,
+    with (
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_test_port",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            new_callable=AsyncMock,
+            return_value=TEST_DEVICE_MAC,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -166,6 +217,11 @@ async def test_zeroconf_confirm_creates_entry(hass: HomeAssistant) -> None:
             new_callable=AsyncMock,
         ),
         patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            new_callable=AsyncMock,
+            return_value=TEST_DEVICE_MAC,
+        ),
+        patch(
             "homeassistant.components.bitvis.async_setup_entry",
             return_value=True,
         ),
@@ -179,7 +235,7 @@ async def test_zeroconf_confirm_creates_entry(hass: HomeAssistant) -> None:
         CONF_HOST: "192.168.1.200",
         CONF_PORT: DEFAULT_PORT,
     }
-    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == DOMAIN
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == TEST_DEVICE_MAC
 
 
 @pytest.mark.parametrize("recover", [False, True])
@@ -217,6 +273,11 @@ async def test_zeroconf_confirm_cannot_connect(
                 new_callable=AsyncMock,
             ),
             patch(
+                "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+                new_callable=AsyncMock,
+                return_value=TEST_DEVICE_MAC,
+            ),
+            patch(
                 "homeassistant.components.bitvis.async_setup_entry",
                 return_value=True,
             ),
@@ -232,11 +293,38 @@ async def test_zeroconf_confirm_cannot_connect(
         }
 
 
+async def test_zeroconf_confirm_discovery_timeout(hass: HomeAssistant) -> None:
+    """Test zeroconf confirm abort when no UDP message is received in time."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    with (
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_test_port",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            side_effect=TimeoutError,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={}
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "timeout_connect"
+
+
 async def test_zeroconf_duplicate(hass: HomeAssistant) -> None:
     """Test that a duplicate zeroconf discovery is aborted."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_HOST: "192.168.1.200", CONF_PORT: DEFAULT_PORT},
+        unique_id=TEST_DEVICE_MAC,
     )
     entry.add_to_hass(hass)
 
@@ -274,6 +362,11 @@ async def test_zeroconf_none_port_uses_default(hass: HomeAssistant) -> None:
             new_callable=AsyncMock,
         ),
         patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            new_callable=AsyncMock,
+            return_value=TEST_DEVICE_MAC,
+        ),
+        patch(
             "homeassistant.components.bitvis.async_setup_entry",
             return_value=True,
         ),
@@ -298,6 +391,11 @@ async def test_user_form_create_entry_ipv6_host(hass: HomeAssistant) -> None:
             new_callable=AsyncMock,
         ),
         patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            new_callable=AsyncMock,
+            return_value=TEST_DEVICE_MAC,
+        ),
+        patch(
             "homeassistant.components.bitvis.async_setup_entry",
             return_value=True,
         ),
@@ -316,7 +414,7 @@ async def test_user_form_create_entry_ipv6_host(hass: HomeAssistant) -> None:
         CONF_PORT: DEFAULT_PORT,
     }
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
-    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == DOMAIN
+    assert hass.config_entries.async_entries(DOMAIN)[0].unique_id == TEST_DEVICE_MAC
 
 
 async def test_user_form_duplicate_host(hass: HomeAssistant) -> None:
@@ -327,6 +425,7 @@ async def test_user_form_duplicate_host(hass: HomeAssistant) -> None:
             CONF_HOST: "2001:db8::10",
             CONF_PORT: DEFAULT_PORT,
         },
+        unique_id="11:22:33:44:55:66",
     )
     entry.add_to_hass(hass)
 
@@ -334,9 +433,16 @@ async def test_user_form_duplicate_host(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": SOURCE_USER}
     )
 
-    with patch(
-        "homeassistant.components.bitvis.config_flow._async_test_port",
-        new_callable=AsyncMock,
+    with (
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_test_port",
+            new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            new_callable=AsyncMock,
+            return_value=TEST_DEVICE_MAC,
+        ),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -361,6 +467,11 @@ async def test_user_form_keeps_hostname(
         patch(
             "homeassistant.components.bitvis.config_flow._async_test_port",
             new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            new_callable=AsyncMock,
+            return_value=TEST_DEVICE_MAC,
         ),
         patch(
             "homeassistant.components.bitvis.async_setup_entry",
@@ -391,6 +502,11 @@ async def test_user_form_normalize_bracketed_ipv6(
         patch(
             "homeassistant.components.bitvis.config_flow._async_test_port",
             new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            new_callable=AsyncMock,
+            return_value=TEST_DEVICE_MAC,
         ),
         patch(
             "homeassistant.components.bitvis.async_setup_entry",
@@ -433,6 +549,11 @@ async def test_zeroconf_confirm_uses_friendly_name(hass: HomeAssistant) -> None:
             new_callable=AsyncMock,
         ),
         patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            new_callable=AsyncMock,
+            return_value=TEST_DEVICE_MAC,
+        ),
+        patch(
             "homeassistant.components.bitvis.async_setup_entry",
             return_value=True,
         ),
@@ -467,6 +588,11 @@ async def test_zeroconf_empty_name_uses_default(hass: HomeAssistant) -> None:
         patch(
             "homeassistant.components.bitvis.config_flow._async_test_port",
             new_callable=AsyncMock,
+        ),
+        patch(
+            "homeassistant.components.bitvis.config_flow._async_discover_mac_address",
+            new_callable=AsyncMock,
+            return_value=TEST_DEVICE_MAC,
         ),
         patch(
             "homeassistant.components.bitvis.async_setup_entry",
@@ -534,3 +660,39 @@ async def test_async_test_port_raises_when_all_binds_fail(
             pytest.raises(OSError, match="UDP port is unavailable"),
         ):
             await _async_test_port(hass, 5000)
+
+
+async def test_async_discover_mac_address(hass: HomeAssistant) -> None:
+    """Test _async_discover_mac_address registers IP filters and returns MAC."""
+    mock_listener = MagicMock()
+    mock_listener.register = MagicMock()
+    mock_listener.unregister = MagicMock()
+
+    with (
+        patch(
+            "homeassistant.components.bitvis.config_flow.async_resolve_host",
+            new_callable=AsyncMock,
+            return_value={"192.168.1.100"},
+        ),
+        patch(
+            "homeassistant.components.bitvis.config_flow.async_get_listener_registry",
+        ) as mock_registry,
+    ):
+        mock_registry.return_value.async_get_or_create = AsyncMock(
+            return_value=mock_listener
+        )
+
+        discover_task = asyncio.create_task(
+            _async_discover_mac_address(hass, "192.168.1.100", DEFAULT_PORT)
+        )
+        await hass.async_block_till_done()
+
+        callback = mock_listener.register.call_args[0][1]
+
+        payload = PayloadSample(mac_address=TEST_DEVICE_MAC, sample=MagicMock())
+        callback(payload, ("192.168.1.100", 1234))
+
+        mac_address = await discover_task
+
+    assert mac_address == TEST_DEVICE_MAC
+    mock_listener.unregister.assert_called_once()

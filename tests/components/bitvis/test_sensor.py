@@ -11,7 +11,16 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
+from .conftest import TEST_DEVICE_MAC
+
 from tests.common import MockConfigEntry, snapshot_platform
+
+DIAGNOSTIC_UNIQUE_IDS = {
+    f"{TEST_DEVICE_MAC}_uptime",
+    f"{TEST_DEVICE_MAC}_wifi_rssi",
+    f"{TEST_DEVICE_MAC}_han_msg_successfully_parsed",
+    f"{TEST_DEVICE_MAC}_han_msg_buffer_overflow",
+}
 
 
 @pytest.fixture(autouse=True)
@@ -49,7 +58,8 @@ def sample_payload() -> PayloadSample:
     payload.sample.energy_active_delivered_by_client_kwh = 789.12
     payload.sample.energy_reactive_delivered_to_client_kvarh = 45.67
     payload.sample.energy_reactive_delivered_by_client_kvarh = 23.45
-    return PayloadSample(sample=payload.sample)
+    payload.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
+    return PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample)
 
 
 @pytest.fixture
@@ -63,7 +73,8 @@ def diagnostic_payload() -> PayloadDiagnostic:
     payload.diagnostic.device_info.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
     payload.diagnostic.han_msg_successfully_parsed = 1000
     payload.diagnostic.han_msg_buffer_overflow = 5
-    return PayloadDiagnostic(diagnostic=payload.diagnostic)
+    payload.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
+    return PayloadDiagnostic(mac_address=TEST_DEVICE_MAC, diagnostic=payload.diagnostic)
 
 
 @pytest.mark.freeze_time("2026-01-01 12:00:00")
@@ -98,19 +109,63 @@ async def test_all_entities(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_sensors_unavailable_without_data(
+async def test_diagnostic_entities_created_at_setup(
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that diagnostic sensors are created at setup."""
+    unique_ids = {
+        entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    }
+    assert unique_ids == DIAGNOSTIC_UNIQUE_IDS
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_entities_added_when_fields_become_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that sensors are unavailable when coordinator has no data."""
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    """Test that HAN sensors are created when their fields first appear."""
+    coordinator = mock_config_entry.runtime_data
+    base_unique_id = mock_config_entry.unique_id
+
+    payload = powerhub_pb2.Payload()
+    payload.sample.power_active_delivered_to_client_kw = 2.0
+    coordinator._handle_sample(
+        PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample)
     )
-    sensor_entity = next(e for e in entities if e.domain == "sensor")
-    state = hass.states.get(sensor_entity.entity_id)
-    assert state is not None
-    assert state.state == "unavailable"
+    await hass.async_block_till_done()
+
+    unique_ids = {
+        entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    }
+    assert unique_ids == DIAGNOSTIC_UNIQUE_IDS | {
+        f"{base_unique_id}_power_active_delivered_to_client"
+    }
+
+    payload.sample.phase_voltage_l1_v = 230.0
+    coordinator._handle_sample(
+        PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample)
+    )
+    await hass.async_block_till_done()
+
+    unique_ids = {
+        entry.unique_id
+        for entry in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+    }
+    assert unique_ids == DIAGNOSTIC_UNIQUE_IDS | {
+        f"{base_unique_id}_power_active_delivered_to_client",
+        f"{base_unique_id}_phase_voltage_l1",
+    }
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -124,7 +179,10 @@ async def test_sensors_become_available_with_data(
 
     payload = powerhub_pb2.Payload()
     payload.sample.power_active_delivered_to_client_kw = 2.0
-    coordinator._handle_sample(PayloadSample(sample=payload.sample))
+    payload.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
+    coordinator._handle_sample(
+        PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample)
+    )
     await hass.async_block_till_done()
 
     base_unique_id = mock_config_entry.unique_id

@@ -24,7 +24,7 @@ from homeassistant.const import (
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -473,19 +473,34 @@ async def async_setup_entry(
 ) -> None:
     """Set up Bitvis sensor platform."""
     coordinator = entry.runtime_data
+    known_keys: set[str] = set()
 
-    entities: list[SensorEntity] = [
-        BitvisSensorEntity(coordinator, description, entry)
-        for description in SENSOR_DESCRIPTIONS
-    ]
-
-    entities.append(BitvisUptimeSensorEntity(coordinator, UPTIME_DESCRIPTION, entry))
-    entities.extend(
-        BitvisDiagnosticSensorEntity(coordinator, description, entry)
-        for description in DIAGNOSTIC_SENSOR_DESCRIPTIONS
+    async_add_entities(
+        [
+            BitvisUptimeSensorEntity(coordinator, UPTIME_DESCRIPTION, entry),
+            *(
+                BitvisDiagnosticSensorEntity(coordinator, description, entry)
+                for description in DIAGNOSTIC_SENSOR_DESCRIPTIONS
+            ),
+        ]
     )
 
-    async_add_entities(entities)
+    @callback
+    def _check_entities() -> None:
+        if (payload := coordinator.data.sample) is None:
+            return
+        entities = [
+            BitvisSensorEntity(coordinator, description, entry)
+            for description in SENSOR_DESCRIPTIONS
+            if description.key not in known_keys
+            and description.value_fn(payload.sample) is not None
+        ]
+        if entities:
+            known_keys.update(entity.entity_description.key for entity in entities)
+            async_add_entities(entities)
+
+    _check_entities()
+    entry.async_on_unload(coordinator.async_add_listener(_check_entities))
 
 
 class BitvisBaseSensorEntity(

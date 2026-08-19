@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from bitvis_protobuf import powerhub_pb2
+from bitvis_protobuf.listener import FilterMac
 from bitvis_protobuf.parse import PayloadDiagnostic, PayloadSample
 import pytest
 
@@ -38,7 +39,9 @@ def coordinator(
 ) -> BitvisDataUpdateCoordinator:
     """Return a coordinator instance (not started)."""
     config_entry.add_to_hass(hass)
-    return BitvisDataUpdateCoordinator(hass, config_entry, "192.168.1.100", 5000)
+    return BitvisDataUpdateCoordinator(
+        hass, config_entry, "192.168.1.100", 5000, TEST_DEVICE_MAC
+    )
 
 
 # ---------------------------------------------------------------------------
@@ -52,7 +55,7 @@ def test_handle_payload_sample(
     """Test that a PayloadSample is dispatched to _handle_sample."""
     payload = powerhub_pb2.Payload()
     payload.sample.power_active_delivered_to_client_kw = 1.5
-    parsed = PayloadSample(sample=payload.sample)
+    parsed = PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample)
 
     with patch.object(coordinator, "_handle_sample") as mock_handle:
         coordinator._handle_payload(parsed, ("192.168.1.100", 1234))
@@ -66,7 +69,9 @@ def test_handle_payload_diagnostic(
     """Test that a PayloadDiagnostic is dispatched to _handle_diagnostic."""
     payload = powerhub_pb2.Payload()
     payload.diagnostic.uptime_s = 42
-    parsed = PayloadDiagnostic(diagnostic=payload.diagnostic)
+    parsed = PayloadDiagnostic(
+        mac_address=TEST_DEVICE_MAC, diagnostic=payload.diagnostic
+    )
 
     with patch.object(coordinator, "_handle_diagnostic") as mock_handle:
         coordinator._handle_payload(parsed, ("192.168.1.100", 1234))
@@ -95,6 +100,9 @@ async def test_coordinator_async_setup_registers_callback(
         await coordinator._async_setup()
 
     mock_listener.register.assert_called_once()
+    registered_filter = mock_listener.register.call_args[0][0]
+    assert isinstance(registered_filter, FilterMac)
+    assert registered_filter.mac_address == TEST_DEVICE_MAC
     registered_callback = mock_listener.register.call_args[0][1]
     assert callable(registered_callback)
 
@@ -112,7 +120,7 @@ async def test_coordinator_async_setup_reuses_existing_listener(
     )
     config_entry2.add_to_hass(hass)
     coordinator2 = BitvisDataUpdateCoordinator(
-        hass, config_entry2, "192.168.1.101", 5000
+        hass, config_entry2, "192.168.1.101", 5000, "11:22:33:44:55:66"
     )
 
     mock_listener = MagicMock()
@@ -172,7 +180,7 @@ async def test_coordinator_async_setup_runtime_error_raises_entry_error(
     mock_listener.start = AsyncMock()
     mock_listener.stop = AsyncMock()
     mock_listener.is_empty = True
-    mock_listener.register.side_effect = RuntimeError("duplicate IP")
+    mock_listener.register.side_effect = RuntimeError("duplicate filter")
 
     with (
         patch(
@@ -208,7 +216,7 @@ async def test_coordinator_handle_sample(
     """Test that _handle_sample updates coordinator data and notifies listeners."""
     payload = powerhub_pb2.Payload()
     payload.sample.power_active_delivered_to_client_kw = 2.5
-    parsed = PayloadSample(sample=payload.sample)
+    parsed = PayloadSample(mac_address=TEST_DEVICE_MAC, sample=payload.sample)
 
     ha_listener = MagicMock()
     coordinator.async_add_listener(ha_listener)
@@ -232,7 +240,9 @@ async def test_coordinator_handle_diagnostic(
     """Test that _handle_diagnostic updates coordinator data and notifies listeners."""
     payload = powerhub_pb2.Payload()
     payload.diagnostic.uptime_s = 999
-    parsed = PayloadDiagnostic(diagnostic=payload.diagnostic)
+    parsed = PayloadDiagnostic(
+        mac_address=TEST_DEVICE_MAC, diagnostic=payload.diagnostic
+    )
 
     ha_listener = MagicMock()
     coordinator.async_add_listener(ha_listener)
@@ -255,7 +265,11 @@ async def test_coordinator_handle_diagnostic_with_device_info(
     payload.diagnostic.device_info.sw_version = "1.2.3"
     payload.diagnostic.device_info.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
 
-    coordinator._handle_diagnostic(PayloadDiagnostic(diagnostic=payload.diagnostic))
+    coordinator._handle_diagnostic(
+        PayloadDiagnostic(
+            mac_address="aa:bb:cc:dd:ee:ff", diagnostic=payload.diagnostic
+        )
+    )
     await hass.async_block_till_done()
 
     assert coordinator.data.model_name == "PowerHub Gen2"
@@ -272,14 +286,22 @@ async def test_coordinator_handle_diagnostic_clears_device_info(
     payload.diagnostic.device_info.model_name = "PowerHub"
     payload.diagnostic.device_info.sw_version = "1.0"
     payload.diagnostic.device_info.mac_address = b"\xaa\xbb\xcc\xdd\xee\xff"
-    coordinator._handle_diagnostic(PayloadDiagnostic(diagnostic=payload.diagnostic))
+    coordinator._handle_diagnostic(
+        PayloadDiagnostic(
+            mac_address="aa:bb:cc:dd:ee:ff", diagnostic=payload.diagnostic
+        )
+    )
     assert coordinator.data.model_name == "PowerHub"
 
     payload2 = powerhub_pb2.Payload()
     payload2.diagnostic.uptime_s = 20
-    coordinator._handle_diagnostic(PayloadDiagnostic(diagnostic=payload2.diagnostic))
+    coordinator._handle_diagnostic(
+        PayloadDiagnostic(
+            mac_address="aa:bb:cc:dd:ee:ff", diagnostic=payload2.diagnostic
+        )
+    )
 
-    assert coordinator.data.mac_address is None
+    assert coordinator.data.mac_address == "aa:bb:cc:dd:ee:ff"
     assert coordinator.data.model_name is None
     assert coordinator.data.sw_version is None
 
@@ -294,11 +316,13 @@ async def test_coordinator_async_stop_without_listener(
 ) -> None:
     """Test that async_stop works when no listener is registered."""
     config_entry.add_to_hass(hass)
-    coordinator = BitvisDataUpdateCoordinator(hass, config_entry, "192.168.1.100", 5000)
+    coordinator = BitvisDataUpdateCoordinator(
+        hass, config_entry, "192.168.1.100", 5000, TEST_DEVICE_MAC
+    )
 
     await coordinator.async_stop()
 
-    assert coordinator._registered_ips == set()
+    assert coordinator._filter.mac_address == TEST_DEVICE_MAC
 
 
 async def test_coordinator_async_stop_without_domain_data(
@@ -306,9 +330,11 @@ async def test_coordinator_async_stop_without_domain_data(
 ) -> None:
     """Test that async_stop works when hass.data has no domain data."""
     config_entry.add_to_hass(hass)
-    coordinator = BitvisDataUpdateCoordinator(hass, config_entry, "192.168.1.100", 5000)
+    coordinator = BitvisDataUpdateCoordinator(
+        hass, config_entry, "192.168.1.100", 5000, TEST_DEVICE_MAC
+    )
     hass.data.pop(DOMAIN, None)
 
     await coordinator.async_stop()
 
-    assert coordinator._registered_ips == set()
+    assert coordinator._filter.mac_address == TEST_DEVICE_MAC
