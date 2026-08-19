@@ -1073,7 +1073,126 @@ async def test_usb_discovery_migration(
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" not in entry.data
+    assert entry.unique_id == "3245146787"
+
+
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_running",
+    "backup_nvm",
+    "climate_radio_thermostat_ct100_plus",
+    "lock_schlage_be469",
+)
+async def test_usb_discovery_migration_new_stick(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    restart_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+    mock_usb_serial_by_id: MagicMock,
+    get_server_version: AsyncMock,
+) -> None:
+    """Test migration to a factory-new adapter keeps the old node devices."""
+    addon_options["device"] = "/dev/ttyUSB0"
+    entry = integration
+    assert entry.unique_id == "3245146787"
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "usb_path": "/dev/ttyUSB0",
+        },
+    )
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(device_entries) == 3
+    old_device_ids = {device.id for device in device_entries}
+
+    nodes_snapshot = dict(client.driver.controller.nodes)
+    own_node_id = client.driver.controller.own_node.node_id
+
+    async def mock_restart_addon(addon_slug: str) -> None:
+        # A factory-new adapter has its own home id and no nodes.
+        client.driver.controller.data["homeId"] = 1234
+        client.driver.controller.nodes.clear()
+        client.driver.controller.nodes[own_node_id] = nodes_snapshot[own_node_id]
+
+    restart_addon.side_effect = mock_restart_addon
+
+    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
+        client.driver.controller.emit(
+            "nvm convert progress",
+            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
+        )
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm restore progress",
+            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
+        )
+        client.driver.controller.data["homeId"] = 3245146787
+        client.driver.controller.nodes.update(nodes_snapshot)
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
+
+    registry_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_usb_migration"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+
+    # The server, connected to the new adapter, reports the adapter's
+    # factory home id before the restore.
+    _set_home_id(get_server_version, 1234)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+    assert entry.unique_id == "3245146787"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_successful"
+    await hass.async_block_till_done()
+
+    assert not [event for event in registry_events if event.data["action"] == "remove"]
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(device_entries) == 3
+    assert {device.id for device in device_entries} == old_device_ids
     assert entry.unique_id == "3245146787"
 
 
@@ -1198,7 +1317,6 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
     assert entry.unique_id == "3245146787"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
@@ -4568,7 +4686,6 @@ async def test_reconfigure_migrate_no_addon(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_required"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("mock_sdk_version")
@@ -4593,7 +4710,6 @@ async def test_reconfigure_migrate_low_sdk_version(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migration_low_sdk_version"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
@@ -4759,7 +4875,6 @@ async def test_reconfigure_migrate_with_addon(
     assert entry.data[CONF_USB_PATH] == new_addon_options.get(CONF_ADDON_DEVICE)
     assert entry.data[CONF_SOCKET_PATH] == new_addon_options.get(CONF_ADDON_SOCKET)
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" not in entry.data
     assert entry.unique_id == "3245146787"
 
     assert len(device_registry.devices) == 2
@@ -4907,7 +5022,6 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
     assert entry.data["usb_path"] == "/test"
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" not in entry.data
     assert entry.unique_id == "3245146787"
 
 
@@ -4937,7 +5051,6 @@ async def test_reconfigure_migrate_backup_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "backup_failed"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("backup_nvm")
@@ -4972,7 +5085,6 @@ async def test_reconfigure_migrate_backup_file_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "backup_failed"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
@@ -5038,7 +5150,6 @@ async def test_reconfigure_migrate_start_addon_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures(
@@ -5210,7 +5321,6 @@ async def test_reconfigure_migrate_restore_failure(
     hass.config_entries.flow.async_abort(result["flow_id"])
 
     assert len(hass.config_entries.flow.async_progress()) == 0
-    assert "keep_old_devices" not in entry.data
 
 
 async def test_get_driver_failure_intent_migrate(
@@ -5234,7 +5344,6 @@ async def test_get_driver_failure_intent_migrate(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "config_entry_not_loaded"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("backup_nvm")
