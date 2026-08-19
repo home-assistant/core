@@ -33,13 +33,13 @@ class PlayerData:
     avatar: str
     avatarmedium: str
     avatarfull: str
-    avatarhash: str | None = None
+    avatarhash: str
     lastlogoff: int | None = None
     personastate: int
     realname: str | None = None
     primaryclanid: str | None = None
     timecreated: int | None = None
-    personastateflags: int | None = None
+    personastateflags: int
     loccountrycode: str | None = None
     locstatecode: str | None = None
     loccityid: int | None = None
