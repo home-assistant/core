@@ -218,9 +218,11 @@ async def test_webostv_turn_on_trigger_hidden_entity(
     build_trigger: Callable[[str], dict[str, Any]],
 ) -> None:
     """Test a device target still fires when the device entities are hidden."""
-    await setup_webostv(hass)
+    entry = await setup_webostv(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
     # Hidden entities are excluded when expanding a device target
     for entry in er.async_entries_for_device(
         entity_registry, device.id, include_disabled_entities=True
@@ -265,9 +267,11 @@ async def test_webostv_turn_on_trigger_composite_device_id(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a target using a pre-migration composite device id."""
-    await setup_webostv(hass)
+    entry = await setup_webostv(hass)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
     composite_device_id = "composite00000000000000000000ab"
     device_registry.devices[device.id] = attr.evolve(
         device, composite_device_id=composite_device_id
@@ -361,10 +365,12 @@ async def test_webostv_turn_on_trigger_area_id(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for turn_on triggers targeting an area firing."""
-    await setup_webostv(hass)
+    entry = await setup_webostv(hass)
 
     area = area_registry.async_create("Living room")
-    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
     device_registry.async_update_device(device.id, area_id=area.id)
 
     assert await async_setup_component(
@@ -406,10 +412,12 @@ async def test_webostv_turn_on_trigger_follows_area_changes(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test the targeted devices are updated when the device area changes."""
-    await setup_webostv(hass)
+    entry = await setup_webostv(hass)
 
     area = area_registry.async_create("Living room")
-    device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FAKE_UUID), entry.entry_id
+    )
 
     assert await async_setup_component(
         hass,
