@@ -302,7 +302,10 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
                 content = await response.read()
                 content_type = response.headers.get(CONTENT_TYPE)
                 return content, content_type.split(";")[0] if content_type else None
-        except TimeoutError, aiohttp.ClientError:
+        except (
+            TimeoutError,
+            aiohttp.ClientError,
+        ):
             LOGGER.debug(
                 "Error retrieving local WiiM artwork for %s",
                 self.entity_id,
