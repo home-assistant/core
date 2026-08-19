@@ -70,7 +70,7 @@ rules:
   icon-translations:
     status: exempt
     comment: Entity relies on standard platform default icons.
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: Integration does not raise repair issues.

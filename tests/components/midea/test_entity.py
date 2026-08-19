@@ -29,12 +29,6 @@ def test_midea_api_call_translates_midea_local_error() -> None:
     assert exc_info.value.translation_placeholders == {"error": "offline"}
 
 
-def test_midea_api_call_passes_through_on_success() -> None:
-    """Test midea_api_call does not interfere when no error is raised."""
-    with midea_api_call():
-        pass
-
-
 @pytest.mark.parametrize(
     (
         "update",

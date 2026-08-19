@@ -168,42 +168,6 @@ class ChildDeviceInfo(TypedDict, total=False):
     translation_placeholders: Mapping[str, str] | None
 
 
-DEVICE_INFO_TYPES = {
-    # Device info is categorized by finding the first device info type which has all
-    # the keys of the device info. The link device info type must be kept first
-    # to make it preferred over primary.
-    "link": {
-        "connections",
-        "identifiers",
-    },
-    "primary": {
-        "configuration_url",
-        "connections",
-        "entry_type",
-        "hw_version",
-        "identifiers",
-        "manufacturer",
-        "model",
-        "model_id",
-        "name",
-        "serial_number",
-        "suggested_area",
-        "sw_version",
-        "via_device",
-        "via_device_id",
-    },
-    "secondary": {
-        "connections",
-        "default_manufacturer",
-        "default_model",
-        "default_name",
-        # Used by Fritz
-        "via_device",
-        "via_device_id",
-    },
-}
-
-
 class _EventDeviceRegistryUpdatedData_Create(TypedDict):
     """EventDeviceRegistryUpdated data for action type 'create'."""
 
@@ -281,40 +245,24 @@ class DeviceConnectionCollisionError(DeviceCollisionError):
         )
 
 
-def _determine_device_info_type(
+def _validate_device_info(
     config_entry: ConfigEntry,
     device_info: DeviceInfo,
-) -> str:
-    """Determine the type of a device info."""
-    keys = set(device_info)
-
-    # If no keys or not enough info to match up, abort
+) -> None:
+    """Validate that a device info has enough information to match up a device."""
     if not device_info.get("connections") and not device_info.get("identifiers"):
         raise DeviceInfoError(
             config_entry.domain,
             device_info,
             "device info must include at least one of identifiers or connections",
         )
-
-    device_info_type: str | None = None
-
-    # Find the first device info type which has all keys in the device info
-    for possible_type, allowed_keys in DEVICE_INFO_TYPES.items():
-        if keys <= allowed_keys:
-            device_info_type = possible_type
-            break
-
-    if device_info_type is None:
-        raise DeviceInfoError(
-            config_entry.domain,
-            device_info,
-            (
-                "device info needs to either describe a device, "
-                "link to existing device or provide extra information."
-            ),
-        )
-
-    return device_info_type
+    for field in ("manufacturer", "model", "name"):
+        if field in device_info and f"default_{field}" in device_info:
+            raise DeviceInfoError(
+                config_entry.domain,
+                device_info,
+                f"passing both `{field}` and `default_{field}` is not allowed",
+            )
 
 
 class _ValidatedDeviceInfoFields(TypedDict):
@@ -2188,6 +2136,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             sw_version=sw_version,
         )
 
+        if disabled_by is DeviceEntryDisabler.DEVICE:
+            raise HomeAssistantError(
+                "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
+                "device"
+            )
+
         config_entry = self.hass.config_entries.async_get_entry(config_entry_id)
         if config_entry is None:
             raise HomeAssistantError(
@@ -2246,7 +2200,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if val is not UNDEFINED
         }
 
-        device_info_type = _determine_device_info_type(config_entry, device_info)
+        _validate_device_info(config_entry, device_info)
 
         if identifiers is None or identifiers is UNDEFINED:
             identifiers = set()
@@ -2366,7 +2320,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
             self.devices[device.id] = device
             # If creating a new device, default to the config entry name
-            if device_info_type == "primary" and (not name or name is UNDEFINED):
+            if not name or name is UNDEFINED:
                 name = config_entry.title
 
         elif (
@@ -3576,6 +3530,12 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             can't be disabled by CONFIG_ENTRY when the owning config entry is enabled.
             An inconsistent disabled_by is deprecated and ignored; this will raise in
             HA Core 2027.8.
+        :param merge_connections: Deprecated. Adds connections to the device, keeping the
+            ones it already has. Pass the full set of connections as new_connections
+            instead.
+        :param merge_identifiers: Deprecated. Adds identifiers to the device, keeping the
+            ones it already has. Pass the full set of identifiers as new_identifiers
+            instead.
         :param new_config_entry_id: Move the device to this config entry. Unless a
             disabled_by consistent with the new config entry's disabled state is
             passed explicitly, the device's disabled state is updated to reflect the
@@ -3588,6 +3548,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             subentry of remove_config_entry_id. Use new_config_subentry_id to move, or
             async_remove_device to remove.
         """
+        if disabled_by is DeviceEntryDisabler.DEVICE:
+            raise HomeAssistantError(
+                "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
+                "device"
+            )
         if (
             underlying_ids := self._async_device_ids_for_composite_device_id(device_id)
         ) is not None:
@@ -3645,6 +3610,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "passes a suggested_area to device_registry.async_update device",
                 core_behavior=ReportBehavior.LOG,
                 breaks_in_ha_version="2026.9.0",
+            )
+        if merge_connections is not UNDEFINED or merge_identifiers is not UNDEFINED:
+            report_usage(
+                "calls `device_registry.async_update_device` with `merge_connections` "
+                "or `merge_identifiers`; these only add to the device's existing "
+                "connections or identifiers. Pass the full set as `new_connections` or "
+                "`new_identifiers` instead",
+                core_behavior=ReportBehavior.ERROR,
+                core_integration_behavior=ReportBehavior.ERROR,
+                breaks_in_ha_version="2027.9.0",
             )
 
         validated_fields = _validate_device_info_fields(
@@ -4410,6 +4385,33 @@ def async_get_device_id_by_identifier(
             f"{config_entry_id}"
         )
     return device.id
+
+
+@callback
+def async_get_device_and_config_entry_for_domain(
+    hass: HomeAssistant, device_id: str, *, domain: str
+) -> tuple[DeviceEntry | None, ConfigEntry | None]:
+    """Get the device and the config entry of the domain owning it.
+
+    Returns (None, None) for an unknown device id or if the device is a child
+    device, and (device, None) when no config entry of the domain owns the
+    device. A returned pair is consistent: for a pre-migration composite
+    device id, the device is the domain's split device, not the composite; if
+    several splits belong to config entries of the domain, which pair is
+    returned is undefined. When no split matches the domain, the restored
+    composite is returned as the device.
+    """
+    registry = async_get(hass)
+    if (device := registry.devices.get(device_id)) is not None:
+        config_entry = hass.config_entries.async_get_entry(device.config_entry_id)
+        if config_entry is not None and config_entry.domain == domain:
+            return device, config_entry
+        return device, None
+    for split in registry.async_get_devices_for_composite_device_id(device_id):
+        config_entry = hass.config_entries.async_get_entry(split.config_entry_id)
+        if config_entry is not None and config_entry.domain == domain:
+            return split, config_entry
+    return registry.async_get(device_id, include_child_devices=False), None
 
 
 def async_setup(hass: HomeAssistant) -> None:

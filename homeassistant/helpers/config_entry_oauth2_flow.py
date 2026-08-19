@@ -761,7 +761,13 @@ class OAuth2Session:
             if self.valid_token:
                 return
 
-            new_token = await self.implementation.async_refresh_token(self.token)
+            try:
+                new_token = await self.implementation.async_refresh_token(self.token)
+            except OAuth2TokenRequestReauthError:
+                # Start reauth here so it also happens for callers that map the
+                # error onto a recoverable one, which would retry indefinitely.
+                self.config_entry.async_start_reauth_if_available(self.hass)
+                raise
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data={**self.config_entry.data, "token": new_token}
