@@ -2,9 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-from contextlib import suppress
 from functools import partial
-import os
 from pathlib import Path
 from typing import Any, Final, cast
 
@@ -47,13 +45,11 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     async_get_config_entry_implementation,
 )
 from homeassistant.helpers.device_registry import DeviceInfo
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
     CLIENT_ID,
     DOMAIN,
-    LEGACY_POWERWALL_KEY_FILE,
     LOGGER,
     POWERWALL_KEY_FILE,
     RSA_PARENT_KEY,
@@ -320,23 +316,11 @@ def _prune_energy_subentries(
     )
 
 
-def _migrate_legacy_rsa_key(legacy_path: str, path: str) -> None:
-    """Move a pre-existing key from the config root into the storage dir.
-
-    The gateway's retained authorization is bound to this key, so an install
-    that already paired against the legacy path must keep the same key.
-    """
-    if os.path.isfile(legacy_path) and not os.path.isfile(path):
-        os.replace(legacy_path, path)
-
-
 async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
     """Return the integration's RSA private key PEM, generating it if needed."""
     pem: bytes | None = hass.data.get(RSA_PARENT_KEY)
     if pem is None:
-        path = hass.config.path(STORAGE_DIR, POWERWALL_KEY_FILE)
-        legacy_path = hass.config.path(LEGACY_POWERWALL_KEY_FILE)
-        await hass.async_add_executor_job(_migrate_legacy_rsa_key, legacy_path, path)
+        path = hass.config.path(POWERWALL_KEY_FILE)
         await Teslemetry(
             session=async_get_clientsession(hass), access_token=""
         ).get_rsa_private_key(path)
@@ -714,23 +698,6 @@ async def _async_update_listener(
 async def async_unload_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> bool:
     """Unload Teslemetry Config."""
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
-
-
-def _remove_rsa_key_file(path: str) -> None:
-    """Delete the shared RSA private key file if it exists."""
-    with suppress(FileNotFoundError):
-        os.remove(path)
-
-
-async def async_remove_entry(hass: HomeAssistant, entry: TeslemetryConfigEntry) -> None:
-    """Remove the shared RSA private key once the last entry is removed."""
-    # The entry being removed is already gone from the registry here, so any
-    # remaining entry means the key is still shared and must be kept.
-    if hass.config_entries.async_entries(DOMAIN):
-        return
-    hass.data.pop(RSA_PARENT_KEY, None)
-    path = hass.config.path(STORAGE_DIR, POWERWALL_KEY_FILE)
-    await hass.async_add_executor_job(_remove_rsa_key_file, path)
 
 
 async def async_migrate_entry(

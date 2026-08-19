@@ -1,8 +1,6 @@
 """Test the Teslemetry init."""
 
 from copy import deepcopy
-import os
-from pathlib import Path
 import time
 from types import MappingProxyType
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -35,9 +33,6 @@ from homeassistant.components.teslemetry.const import (
     CLIENT_ID,
     CONF_SITE_ID,
     DOMAIN,
-    LEGACY_POWERWALL_KEY_FILE,
-    POWERWALL_KEY_FILE,
-    RSA_PARENT_KEY,
     SUBENTRY_TYPE_ENERGY_SITE,
 )
 
@@ -75,7 +70,6 @@ from homeassistant.exceptions import (
 )
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
-from homeassistant.helpers.storage import STORAGE_DIR
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import mock_config_entry, setup_platform
@@ -1320,71 +1314,6 @@ async def test_get_rsa_key_pem_generates_and_caches(hass: HomeAssistant) -> None
     assert first == _TEST_RSA_KEY_PEM
     assert second == _TEST_RSA_KEY_PEM
     mock_get_key.assert_awaited_once()
-
-
-async def test_get_rsa_key_pem_uses_storage_dir(hass: HomeAssistant) -> None:
-    """The RSA key is stored under the storage dir, not the config root."""
-    with (
-        patch(
-            "homeassistant.components.teslemetry.Teslemetry.get_rsa_private_key",
-            new=AsyncMock(),
-        ) as mock_get_key,
-        patch(
-            "homeassistant.components.teslemetry.Path.read_bytes",
-            return_value=_TEST_RSA_KEY_PEM,
-        ),
-    ):
-        await _async_get_rsa_key_pem(hass)
-
-    mock_get_key.assert_awaited_once_with(
-        hass.config.path(STORAGE_DIR, POWERWALL_KEY_FILE)
-    )
-
-
-async def test_get_rsa_key_pem_migrates_legacy_file(hass: HomeAssistant) -> None:
-    """An existing key at the legacy config-root path is migrated, not regenerated."""
-    legacy_path = hass.config.path(LEGACY_POWERWALL_KEY_FILE)
-    new_path = hass.config.path(STORAGE_DIR, POWERWALL_KEY_FILE)
-    os.makedirs(os.path.dirname(new_path), exist_ok=True)
-    Path(legacy_path).write_bytes(_TEST_RSA_KEY_PEM)
-
-    # get_rsa_private_key is left real: with the key already at the new path after
-    # migration it reads that file instead of generating a fresh key.
-    pem = await _async_get_rsa_key_pem(hass)
-
-    assert pem == _TEST_RSA_KEY_PEM
-    assert not os.path.isfile(legacy_path)
-    assert Path(new_path).read_bytes() == _TEST_RSA_KEY_PEM
-
-
-async def test_rsa_key_removed_with_last_entry(hass: HomeAssistant) -> None:
-    """The shared RSA key is removed only when the last entry is removed."""
-    first = mock_config_entry()
-    first.add_to_hass(hass)
-    second = MockConfigEntry(
-        domain=DOMAIN,
-        version=2,
-        unique_id="def-456",
-        data=dict(first.data),
-    )
-    second.add_to_hass(hass)
-
-    key_path = hass.config.path(STORAGE_DIR, POWERWALL_KEY_FILE)
-    os.makedirs(os.path.dirname(key_path), exist_ok=True)
-    Path(key_path).write_bytes(_TEST_RSA_KEY_PEM)
-    hass.data[RSA_PARENT_KEY] = _TEST_RSA_KEY_PEM
-
-    await hass.config_entries.async_remove(first.entry_id)
-    await hass.async_block_till_done()
-
-    assert os.path.isfile(key_path)
-    assert RSA_PARENT_KEY in hass.data
-
-    await hass.config_entries.async_remove(second.entry_id)
-    await hass.async_block_till_done()
-
-    assert not os.path.isfile(key_path)
-    assert RSA_PARENT_KEY not in hass.data
 
 
 @pytest.mark.parametrize(
