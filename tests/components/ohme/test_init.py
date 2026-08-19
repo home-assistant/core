@@ -42,6 +42,8 @@ async def test_device(
     """Snapshot the device from registry."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device({(DOMAIN, mock_client.serial)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_client.serial), mock_config_entry.entry_id
+    )
     assert device
     assert device == snapshot

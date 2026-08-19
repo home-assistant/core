@@ -454,15 +454,16 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
 
     # set_music_mode failure enable
     mocked_bulb.async_start_music = MagicMock(side_effect=AssertionError)
-    assert "Unable to turn on music mode, consider disabling it" not in caplog.text
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_MUSIC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_MUSIC_MODE,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
+            blocking=True,
+        )
     assert mocked_bulb.async_start_music.mock_calls == [call()]
-    assert "Unable to turn on music mode, consider disabling it" in caplog.text
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "set_music_mode_failed"
 
     # set_music_mode disable
     await _async_test_service(

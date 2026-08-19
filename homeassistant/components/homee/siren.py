@@ -17,13 +17,14 @@ PARALLEL_UPDATES = 0
 
 
 async def add_siren_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee siren entities."""
     async_add_entities(
-        HomeeSiren(attribute, config_entry)
+        HomeeSiren(hass, attribute, config_entry)
         for node in nodes
         for attribute in node.attributes
         if attribute.type == AttributeType.SIREN
@@ -37,7 +38,9 @@ async def async_setup_entry(
 ) -> None:
     """Add siren entities for homee."""
 
-    await setup_homee_platform(add_siren_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_siren_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeSiren(HomeeEntity, SirenEntity):

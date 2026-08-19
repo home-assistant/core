@@ -87,14 +87,16 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
 
 
 @pytest.mark.parametrize(
-    ("status", "expected"),
+    ("status", "expected_data"),
     [
-        ("all", ["needs_action", "completed"]),
-        ("completed", ["completed"]),
+        # "all" is sent without a status filter, so the service returns every item.
+        ("all", {"entity_id": [ENTITY_ID]}),
+        ("needs_action", {"entity_id": [ENTITY_ID], "status": ["needs_action"]}),
+        ("completed", {"entity_id": [ENTITY_ID], "status": ["completed"]}),
     ],
 )
 async def test_todo_get_items_status_filter(
-    hass: HomeAssistant, status: str, expected: list[str]
+    hass: HomeAssistant, status: str, expected_data: dict[str, list[str]]
 ) -> None:
     """Test the status filter is translated into the service call."""
     llm_context = _llm_context()
@@ -115,7 +117,7 @@ async def test_todo_get_items_status_filter(
         ),
         llm_context,
     )
-    assert calls[0].data == {"entity_id": [ENTITY_ID], "status": expected}
+    assert calls[0].data == expected_data
 
 
 async def test_todo_list_intents_exposed(hass: HomeAssistant) -> None:

@@ -11,6 +11,7 @@ from homeassistant.components.alarm_control_panel import (
     ENTITY_ID_FORMAT,
     AlarmControlPanelEntity,
     AlarmControlPanelEntityFeature,
+    AlarmControlPanelEntityStateAttribute,
     AlarmControlPanelState,
     CodeFormat,
 )
@@ -38,7 +39,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -96,8 +97,8 @@ ALARM_CONTROL_PANEL_COMMON_SCHEMA = vol.Schema(
 ALARM_CONTROL_PANEL_YAML_SCHEMA = ALARM_CONTROL_PANEL_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
-    make_template_entity_common_modern_schema(
-        ALARM_CONTROL_PANEL_DOMAIN, DEFAULT_NAME
+    make_template_entity_common_schema(
+        ALARM_CONTROL_PANEL_DOMAIN, DEFAULT_NAME, AlarmControlPanelEntityStateAttribute
     ).schema
 )
 

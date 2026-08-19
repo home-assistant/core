@@ -108,9 +108,7 @@ class TankerkoenigDataUpdateCoordinator(DataUpdateCoordinator[dict[str, PriceInf
                 for station_id in self._selected_stations
             ):
                 _LOGGER.debug("Removing obsolete device entry %s", device.name)
-                device_reg.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_reg.async_remove_device(device.id)
 
         if len(self.stations) > 10:
             _LOGGER.warning(

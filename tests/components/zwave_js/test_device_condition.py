@@ -34,8 +34,8 @@ async def test_get_conditions(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected onditions from a zwave_js."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
     config_value = list(lock_schlage_be469.get_configuration_values().values())[0]
@@ -74,8 +74,9 @@ async def test_get_conditions(
         assert condition in conditions
 
     # Test that we don't return actions for a controller node
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, client.driver.controller.nodes[1]),
+        integration.entry_id,
     )
     assert device
     assert (
@@ -95,8 +96,8 @@ async def test_node_status_state(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for node_status conditions."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -260,8 +261,8 @@ async def test_config_parameter_state(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for config_parameter conditions."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -380,8 +381,8 @@ async def test_value_state(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for value conditions."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -431,8 +432,8 @@ async def test_get_condition_capabilities_node_status(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we don't get capabilities from a node_status condition."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -471,8 +472,8 @@ async def test_get_condition_capabilities_value(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected capabilities from a value condition."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -524,8 +525,9 @@ async def test_get_condition_capabilities_config_parameter(
 ) -> None:
     """Test we get the expected capabilities from a config_parameter condition."""
     node = climate_radio_thermostat_ct100_plus
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_radio_thermostat_ct100_plus)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_radio_thermostat_ct100_plus),
+        integration.entry_id,
     )
     assert device
 
@@ -609,8 +611,8 @@ async def test_failure_scenarios(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test failure scenarios."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, hank_binary_switch)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, hank_binary_switch), integration.entry_id
     )
     assert device
 

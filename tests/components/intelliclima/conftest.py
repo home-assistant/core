@@ -8,6 +8,8 @@ from pyintelliclima.const import FanMode, FanSpeed
 from pyintelliclima.intelliclima_types import (
     IntelliClimaDevices,
     IntelliClimaECO,
+    IntelliClimaFilterStatsEntry,
+    IntelliClimaFilterStatus,
     IntelliClimaModelType,
 )
 import pytest
@@ -39,17 +41,16 @@ def mock_config_entry() -> MockConfigEntry:
     )
 
 
-@pytest.fixture
-def single_eco_device() -> IntelliClimaDevices:
-    """Create IntelliClimaDevices with one ECOCOMFORT 2.0 and no C800."""
-    eco = IntelliClimaECO(
-        id="56789",
-        crono_sn="11223344",
+def create_eco_device(device_id: str, crono_sn: str, name: str) -> IntelliClimaECO:
+    """Create an ECOCOMFORT 2.0 device."""
+    return IntelliClimaECO(
+        id=device_id,
+        crono_sn=crono_sn,
         status="OK",
         online="OK",
         command="OK",
         model=IntelliClimaModelType(modello="ECO", tipo="wifi"),
-        name="Test VMC",
+        name=name,
         houses_id="12345",
         mode_set=FanMode.inward,
         mode_state="1",
@@ -109,11 +110,30 @@ def single_eco_device() -> IntelliClimaDevices:
         online_status_debug="mock",
     )
 
+
+@pytest.fixture
+def single_eco_device() -> IntelliClimaDevices:
+    """Create IntelliClimaDevices with one ECOCOMFORT 2.0 and no C800."""
+    eco = create_eco_device("56789", "11223344", "Test VMC")
+
     return IntelliClimaDevices(ecocomfort2_devices={eco.id: eco}, c800_devices={})
 
 
 @pytest.fixture
-def mock_cloud_interface(single_eco_device) -> Generator[AsyncMock]:
+def two_eco_devices() -> IntelliClimaDevices:
+    """Create IntelliClimaDevices with two ECOCOMFORT 2.0 devices and no C800."""
+    first = create_eco_device("56789", "11223344", "Test VMC")
+    second = create_eco_device("98765", "55667788", "Other VMC")
+
+    return IntelliClimaDevices(
+        ecocomfort2_devices={first.id: first, second.id: second}, c800_devices={}
+    )
+
+
+@pytest.fixture
+def mock_cloud_interface(
+    single_eco_device: IntelliClimaDevices,
+) -> Generator[AsyncMock]:
     """Mock IntelliClimaAPI for tests."""
 
     with (
@@ -132,6 +152,22 @@ def mock_cloud_interface(single_eco_device) -> Generator[AsyncMock]:
         # Mock other async methods if needed
         mock_client.authenticate.return_value = True
         mock_client.get_all_device_status.return_value = single_eco_device
+        mock_client.get_filter_status.return_value = IntelliClimaFilterStatus(
+            serial="11223344",
+            is_active=True,
+            from_date="2025-11-18 10:22:51",
+            stats=[
+                IntelliClimaFilterStatsEntry(
+                    night_tot_hour="10",
+                    low_tot_hour="20",
+                    medium_tot_hour="30",
+                    high_tot_hour="5",
+                    boost_tot_hour="1",
+                )
+            ],
+            totale=66.0,
+            change_filter=True,
+        )
 
         # Sub-API used by the fan entity
         mock_client.ecocomfort = SimpleNamespace(

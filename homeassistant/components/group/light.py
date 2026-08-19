@@ -147,7 +147,7 @@ class LightGroup(GroupEntity, LightEntity):
     """Representation of a light group."""
 
     _attr_available = False
-    _attr_icon = "mdi:lightbulb-group"
+    _attr_translation_key = "light"
     _attr_max_color_temp_kelvin = 6500
     _attr_min_color_temp_kelvin = 2000
     _attr_should_poll = False

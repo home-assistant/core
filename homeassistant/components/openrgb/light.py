@@ -17,6 +17,7 @@ from homeassistant.components.light import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -99,7 +100,11 @@ class OpenRGBLight(CoordinatorEntity[OpenRGBCoordinator], LightEntity):
             model=f"{self.device.metadata.description} ({self.device.type.name})",
             sw_version=self.device.metadata.version,
             serial_number=self.device.metadata.serial,
-            via_device=(DOMAIN, coordinator.entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.entry_id),
+                config_entry_id=coordinator.entry_id,
+            ),
         )
 
         modes = [mode.name for mode in self.device.modes]
