@@ -226,6 +226,19 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
         entity_description=MatterSwitchEntityDescription(
+            key="alpstuga_air_quality_config",
+            entity_category=EntityCategory.CONFIG,
+            translation_key="alpstuga_air_quality_config",
+            name=None,
+        ),
+        entity_class=MatterSwitch,
+        required_attributes=(clusters.OnOff.Attributes.OnOff,),
+        vendor_id=(4476,),
+        product_id=(12289,),
+    ),
+    MatterDiscoverySchema(
+        platform=Platform.SWITCH,
+        entity_description=MatterSwitchEntityDescription(
             key="MatterSwitch",
             device_class=SwitchDeviceClass.OUTLET,
             name=None,
