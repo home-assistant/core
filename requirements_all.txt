@@ -260,7 +260,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.6.1
+aioesphomeapi==45.12.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -420,7 +420,7 @@ aiorussound==5.0.2
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.29.0
+aioshelly==13.30.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -453,7 +453,7 @@ aiotedee==0.3.0
 aiotractive==1.0.3
 
 # homeassistant.components.unifi
-aiounifi==92
+aiounifi==93
 
 # homeassistant.components.usb
 aiousbwatcher==1.1.2
@@ -1281,7 +1281,7 @@ hole==0.9.2
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.102
+holidays==0.103
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260729.7
@@ -1534,10 +1534,10 @@ lupupy==0.3.2
 lw12==0.9.2
 
 # homeassistant.components.scrape
-lxml==6.1.1
+lxml==6.1.2
 
 # homeassistant.components.lyngdorf
-lyngdorf==1.6.0
+lyngdorf==1.9.0
 
 # homeassistant.components.matrix
 matrix-nio==0.26.0
@@ -1649,7 +1649,7 @@ mutagen==1.48.1
 mutesync==0.0.1
 
 # homeassistant.components.mvglive
-mvg==1.4.0
+mvg==1.6.0
 
 # homeassistant.components.myuplink
 myuplink==0.7.0
@@ -2053,7 +2053,7 @@ pyaqvify==0.0.12
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==9.7.0
+pyatmo==9.9.0
 
 # homeassistant.components.apple_tv
 pyatv==0.18.0
