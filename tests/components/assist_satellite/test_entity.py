@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Generator
 from dataclasses import asdict
-from typing import Any
 from unittest.mock import Mock, patch
 
 import pytest
@@ -917,6 +916,7 @@ async def test_ask_question(
     """Test asking a question on a device and matching an answer."""
     entity_id = "assist_satellite.test_entity"
     question_text = "What kind of music would you like to listen to?"
+    context = Context()
 
     await async_update_pipeline(
         hass, async_get_pipeline(hass), stt_engine="test-stt-engine", stt_language="en"
@@ -983,37 +983,11 @@ async def test_ask_question(
             {"entity_id": entity_id, "question": question_text, **service_data},
             blocking=True,
             return_response=True,
+            context=context,
         )
         assert entity.state == AssistSatelliteState.IDLE
         assert response == asdict(expected_answer)
-
-
-async def test_ask_question_sets_context(
-    hass: HomeAssistant,
-    init_components: ConfigEntry,
-    entity: MockAssistSatellite,
-) -> None:
-    """Test that ask_question forwards the service call context to the entity."""
-    context = Context()
-    captured: list[Context | None] = []
-
-    async def async_internal_ask_question(**kwargs: Any) -> AssistSatelliteAnswer:
-        captured.append(entity._context)
-        return AssistSatelliteAnswer(id=None, sentence="yes")
-
-    with patch.object(
-        entity, "async_internal_ask_question", new=async_internal_ask_question
-    ):
-        await hass.services.async_call(
-            DOMAIN,
-            "ask_question",
-            {"entity_id": ENTITY_ID, "question": "are you there?"},
-            blocking=True,
-            return_response=True,
-            context=context,
-        )
-
-    assert captured == [context]
+        assert hass.states.get(entity_id).context is context
 
 
 async def test_ask_question_requires_entity_permission(
