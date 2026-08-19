@@ -106,6 +106,15 @@
       }
     },
     "sensor": {
+      "battery_percentage": {
+        "name": "Battery percentage"
+      },
+      "battery_voltage": {
+        "name": "Battery voltage"
+      },
+      "charge_voltage": {
+        "name": "Input voltage"
+      },
       "co2_automatic_baseline_calibration_days": {
         "name": "Carbon dioxide automatic baseline calibration"
       },
@@ -145,6 +154,21 @@
       },
       "pm003_count": {
         "name": "PM0.3"
+      },
+      "pm005_count": {
+        "name": "PM0.5 particle count"
+      },
+      "pm01_count": {
+        "name": "PM1 particle count"
+      },
+      "pm02_count": {
+        "name": "PM2.5 particle count"
+      },
+      "pm10_count": {
+        "name": "PM10 particle count"
+      },
+      "pm50_count": {
+        "name": "PM5 particle count"
       },
       "raw_nitrogen": {
         "name": "Raw NOx"
