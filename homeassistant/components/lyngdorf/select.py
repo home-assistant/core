@@ -31,14 +31,14 @@ SELECT_ENTITIES: tuple[LyngdorfSelectEntityDescription, ...] = (
         key="room_perfect_position",
         translation_key="room_perfect_position",
         current_option_fn=lambda r: r.room_perfect_position,
-        options_fn=lambda r: r.available_room_perfect_positions or [],
+        options_fn=lambda r: r.available_room_perfect_positions,
         select_option_fn=lambda r, o: r.set_room_perfect_position(o),
     ),
     LyngdorfSelectEntityDescription(
         key="voicing",
         translation_key="voicing",
         current_option_fn=lambda r: r.voicing,
-        options_fn=lambda r: r.available_voicings or [],
+        options_fn=lambda r: r.available_voicings,
         select_option_fn=lambda r, o: r.set_voicing(o),
     ),
 )
