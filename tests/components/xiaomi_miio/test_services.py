@@ -17,6 +17,7 @@ from homeassistant.const import (
     CONF_MAC,
     CONF_MODEL,
     CONF_TOKEN,
+    ENTITY_MATCH_ALL,
     Platform,
 )
 from homeassistant.core import Context, HomeAssistant
@@ -29,6 +30,7 @@ CEILING_MODEL = "philips.light.ceiling"
 EYECARE_MODEL = "philips.light.sread1"
 CEILING_ENTITY_ID = "light.test_light"
 EYECARE_ENTITY_ID = "light.test_light_eyecare"
+AMBIENT_ENTITY_ID = "light.test_light_eyecare_ambient_light"
 
 
 @pytest.fixture(name="mock_light")
@@ -114,14 +116,10 @@ async def test_entity_service_forwards_context(
 
 
 @pytest.mark.usefixtures("mock_light")
-async def test_legacy_service_forwards_context(
+async def test_partially_implemented_service_forwards_context(
     hass: HomeAssistant, mock_light: MagicMock
 ) -> None:
-    """Test a service kept in-line attributes the caller.
-
-    These services cannot use the entity service helper because the entities
-    sharing the data key only partially implement the methods.
-    """
+    """Test a service only some entities implement attributes the caller."""
     await setup_light(hass, EYECARE_MODEL, "Test Light Eyecare")
 
     context = Context()
@@ -137,3 +135,29 @@ async def test_legacy_service_forwards_context(
     state = hass.states.get(EYECARE_ENTITY_ID)
     assert state.attributes["eyecare_mode"] is True
     assert state.context is context
+
+
+@pytest.mark.usefixtures("mock_light")
+async def test_service_skips_entities_without_the_method(
+    hass: HomeAssistant, mock_light: MagicMock
+) -> None:
+    """Test entities not implementing the method are skipped, not an error."""
+    await setup_light(hass, EYECARE_MODEL, "Test Light Eyecare")
+
+    # The ambient light is on the same platform but has no async_set_scene
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_SCENE,
+        {"entity_id": AMBIENT_ENTITY_ID, "scene": 2},
+        blocking=True,
+    )
+    mock_light.set_scene.assert_not_called()
+
+    # Targeting every entity reaches the eyecare lamp and skips the rest
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_SCENE,
+        {"entity_id": ENTITY_MATCH_ALL, "scene": 2},
+        blocking=True,
+    )
+    mock_light.set_scene.assert_called_once_with(2)
