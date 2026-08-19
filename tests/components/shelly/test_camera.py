@@ -190,3 +190,4 @@ async def test_camera_properties_when_device_not_initialized(
     monkeypatch.setattr(mock_camera_rpc_device, "initialized", False)
 
     assert camera.is_on is False
+    assert camera.available is False
