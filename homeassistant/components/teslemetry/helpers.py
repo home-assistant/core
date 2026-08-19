@@ -1,15 +1,51 @@
 """Teslemetry helper functions."""
 
 from collections.abc import Awaitable
+import os
+from pathlib import Path
 from typing import Any
 
 from tesla_fleet_api.exceptions import TeslaFleetError
+from tesla_fleet_api.teslemetry import Teslemetry
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.storage import STORAGE_DIR
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LEGACY_POWERWALL_KEY_FILE, LOGGER, POWERWALL_KEY_FILE
+
+
+def rsa_key_path(hass: HomeAssistant) -> str:
+    """Return the path of the shared RSA private key file in the storage dir."""
+    return hass.config.path(STORAGE_DIR, POWERWALL_KEY_FILE)
+
+
+def _migrate_legacy_rsa_key(legacy_path: str, path: str) -> None:
+    """Move a pre-existing key from the config root into the storage dir.
+
+    The gateway's retained authorization is bound to this key, so an install
+    that already paired against the legacy path must keep the same key rather
+    than have a fresh one generated over it.
+    """
+    if os.path.isfile(legacy_path) and not os.path.isfile(path):
+        os.replace(legacy_path, path)
+
+
+async def async_load_rsa_keyholder(hass: HomeAssistant) -> tuple[Teslemetry, bytes]:
+    """Return the shared RSA keyholder and its PEM, migrating/generating as needed.
+
+    Both the subentry pairing flow and runtime routing resolve the key through
+    this single helper so they always sign with the same key material.
+    """
+    path = rsa_key_path(hass)
+    legacy_path = hass.config.path(LEGACY_POWERWALL_KEY_FILE)
+    await hass.async_add_executor_job(_migrate_legacy_rsa_key, legacy_path, path)
+    keyholder = Teslemetry(session=async_get_clientsession(hass), access_token="")
+    await keyholder.get_rsa_private_key(path)
+    pem = await hass.async_add_executor_job(Path(path).read_bytes)
+    return keyholder, pem
 
 
 def flatten(
