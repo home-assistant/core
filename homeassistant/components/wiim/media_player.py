@@ -1,7 +1,6 @@
 """Support for WiiM Media Players."""
 
 from collections.abc import Awaitable, Callable, Coroutine
-from contextlib import suppress
 from functools import wraps
 from hashlib import sha256
 from http import HTTPStatus
@@ -285,22 +284,31 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             return await super()._async_fetch_image(url)
 
         websession = async_get_clientsession(self.hass)
-        with suppress(TimeoutError, aiohttp.ClientError):
+        try:
             async with websession.get(
                 url,
                 allow_redirects=False,
                 ssl=False,
                 timeout=MEDIA_IMAGE_FETCH_TIMEOUT,
             ) as response:
-                if response.status == HTTPStatus.OK:
-                    content = await response.read()
-                    content_type = response.headers.get(CONTENT_TYPE)
-                    return content, (
-                        content_type.split(";")[0] if content_type else None
+                if response.status != HTTPStatus.OK:
+                    LOGGER.debug(
+                        "Error retrieving local WiiM artwork for %s: HTTP status %s",
+                        self.entity_id,
+                        response.status,
                     )
+                    return None, None
 
-        LOGGER.debug("Error retrieving local WiiM artwork for %s", self.entity_id)
-        return None, None
+                content = await response.read()
+                content_type = response.headers.get(CONTENT_TYPE)
+                return content, content_type.split(";")[0] if content_type else None
+        except TimeoutError, aiohttp.ClientError:
+            LOGGER.debug(
+                "Error retrieving local WiiM artwork for %s",
+                self.entity_id,
+                exc_info=True,
+            )
+            return None, None
 
     @callback
     def _get_command_target_device(self, action_name: str) -> WiimDevice:

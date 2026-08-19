@@ -1,5 +1,6 @@
 """Tests for the WiiM media player via services and the state machine."""
 
+from http import HTTPStatus
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
@@ -1326,11 +1327,11 @@ async def test_join_service_invalid_member_uses_translation(
 
 
 @pytest.mark.parametrize(
-    ("image_url", "expected_ssl", "expected_allow_redirects"),
+    ("image_url", "disable_ssl_verification"),
     [
-        ("https://192.168.1.100/local-artwork.jpg", False, False),
-        ("http://192.168.1.100/local-artwork.jpg", None, None),
-        ("https://wiim-artwork.example/remote-artwork.jpg", None, None),
+        ("https://192.168.1.100/local-artwork.jpg", True),
+        ("http://192.168.1.100/local-artwork.jpg", False),
+        ("https://wiim-artwork.example/remote-artwork.jpg", False),
     ],
 )
 @pytest.mark.usefixtures("mock_wiim_controller")
@@ -1342,8 +1343,7 @@ async def test_media_image_ssl_verification(
     hass_client: ClientSessionGenerator,
     *,
     image_url: str,
-    expected_ssl: bool | None,
-    expected_allow_redirects: bool | None,
+    disable_ssl_verification: bool,
 ) -> None:
     """Test SSL verification is disabled only for local WiiM HTTPS artwork."""
     await setup_integration(hass, mock_config_entry)
@@ -1370,10 +1370,25 @@ async def test_media_image_ssl_verification(
     assert response.status == 200
     assert await response.read() == b"image-bytes"
     assert response.headers["Content-Type"] == "image/jpeg"
-    assert mock_get.call_args.kwargs.get("allow_redirects") is expected_allow_redirects
-    assert mock_get.call_args.kwargs.get("ssl") is expected_ssl
+    image_get_calls = [
+        call
+        for call in mock_get.call_args_list
+        if call.args and str(call.args[0]).partition("#")[0] == image_url
+    ]
+    assert len(image_get_calls) == 1
+    image_get_call = image_get_calls[0]
+    request_options = image_get_call.kwargs
+    assert (request_options.get("allow_redirects") is False) is disable_ssl_verification
+    assert (request_options.get("ssl") is False) is disable_ssl_verification
 
 
+@pytest.mark.parametrize(
+    ("status", "exception"),
+    [
+        (HTTPStatus.NOT_FOUND, None),
+        (HTTPStatus.OK, aiohttp.ClientError()),
+    ],
+)
 @pytest.mark.usefixtures("mock_wiim_controller")
 async def test_local_https_media_image_fetch_error(
     hass: HomeAssistant,
@@ -1381,6 +1396,9 @@ async def test_local_https_media_image_fetch_error(
     mock_wiim_device: MagicMock,
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
+    *,
+    status: HTTPStatus,
+    exception: aiohttp.ClientError | None,
 ) -> None:
     """Test a local HTTPS artwork request error returns no proxy image."""
     await setup_integration(hass, mock_config_entry)
@@ -1396,7 +1414,8 @@ async def test_local_https_media_image_fetch_error(
 
     aioclient_mock.get(
         image_url,
-        exc=aiohttp.ClientError,
+        status=status,
+        exc=exception,
     )
     response = await (await hass_client()).get(
         state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
