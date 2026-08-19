@@ -1,5 +1,7 @@
 """Support for ADS valves."""
 
+from typing import override
+
 import pyads
 import voluptuous as vol
 
@@ -67,15 +69,18 @@ class AdsValve(AdsEntity, ValveEntity):
         self._attr_reports_position = False
         self._attr_is_closed = True
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register device notification."""
         await self.async_initialize_device(self._ads_var, pyads.PLCTYPE_BOOL)
 
+    @override
     def open_valve(self, **kwargs) -> None:
         """Open the valve."""
         self._ads_hub.write_by_name(self._ads_var, True, pyads.PLCTYPE_BOOL)
         self._attr_is_closed = False
 
+    @override
     def close_valve(self, **kwargs) -> None:
         """Close the valve."""
         self._ads_hub.write_by_name(self._ads_var, False, pyads.PLCTYPE_BOOL)

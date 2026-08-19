@@ -47,14 +47,22 @@ async def test_create_entry(hass: HomeAssistant, mock_setup_entry: AsyncMock) ->
 
 async def test_auth_error(hass: HomeAssistant, sabnzbd: AsyncMock) -> None:
     """Test when the user step fails and if we can recover."""
-    sabnzbd.check_available.side_effect = SabnzbdApiException("Some error")
-
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data=VALID_CONFIG,
     )
 
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    sabnzbd.check_available.side_effect = SabnzbdApiException("Some error")
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=VALID_CONFIG,
+    )
+
+    assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
     # reset side effect and check if we can recover
@@ -62,7 +70,7 @@ async def test_auth_error(hass: HomeAssistant, sabnzbd: AsyncMock) -> None:
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        VALID_CONFIG,
+        user_input=VALID_CONFIG,
     )
     await hass.async_block_till_done()
 

@@ -2,7 +2,7 @@
 
 import logging
 from types import MappingProxyType
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 import wsdot as wsdot_api
@@ -31,6 +31,7 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -109,6 +110,7 @@ class WSDOTConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:

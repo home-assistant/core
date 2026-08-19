@@ -71,6 +71,13 @@ class RetrieveDNS:
                 answer=[
                     pycares.DNSRecord(
                         name="test",
+                        type=pycares.QUERY_TYPE_CNAME,
+                        record_class=pycares.QUERY_CLASS_IN,
+                        data=pycares.CNAMERecordData(cname="test.testing.com"),
+                        ttl=60,
+                    ),
+                    pycares.DNSRecord(
+                        name="test",
                         type=pycares.QUERY_TYPE_A,
                         record_class=pycares.QUERY_CLASS_IN,
                         data=pycares.ARecordData(addr="1.2.3.4"),

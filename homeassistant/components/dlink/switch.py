@@ -1,7 +1,7 @@
 """Support for D-Link Power Plug Switches."""
 
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
@@ -34,6 +34,7 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
     _attr_name = None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the device."""
         try:
@@ -54,14 +55,17 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         }
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.data.state == "ON"
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         self.data.smartplug.state = "ON"
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         self.data.smartplug.state = "OFF"
@@ -71,6 +75,7 @@ class SmartPlugSwitch(DLinkEntity, SwitchEntity):
         self.data.update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.data.available

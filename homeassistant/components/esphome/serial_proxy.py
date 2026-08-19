@@ -2,7 +2,7 @@
 
 import asyncio
 from collections.abc import Callable
-from typing import cast
+from typing import cast, override
 
 from aioesphomeapi import APIClient
 from serialx import register_uri_handler
@@ -58,6 +58,7 @@ class HassESPHomeSerial(ESPHomeSerial):
     _api: APIClient | None
     _path: str | None
 
+    @override
     async def _async_open(self) -> None:
         """Resolve the HA config entry's APIClient, then open the proxy."""
         if self._api is None and self._path is not None:

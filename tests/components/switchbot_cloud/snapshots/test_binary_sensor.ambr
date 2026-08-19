@@ -39,8 +39,8 @@
 # name: test_coordinator_data[Blind Tilt][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -90,8 +90,8 @@
 # name: test_coordinator_data[Contact Sensor][binary_sensor.test_device_name_1_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'light',
-      'friendly_name': 'test-device-name-1 Light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Light',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_light',
@@ -141,8 +141,8 @@
 # name: test_coordinator_data[Contact Sensor][binary_sensor.test_device_name_1_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'test-device-name-1 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_motion',
@@ -192,8 +192,8 @@
 # name: test_coordinator_data[Contact Sensor][binary_sensor.test_device_name_1_opening-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'opening',
-      'friendly_name': 'test-device-name-1 Opening',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Opening',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_opening',
@@ -243,8 +243,8 @@
 # name: test_coordinator_data[Curtain3][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -294,8 +294,8 @@
 # name: test_coordinator_data[Curtain][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -345,8 +345,8 @@
 # name: test_coordinator_data[Garage Door Opener][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -396,8 +396,8 @@
 # name: test_coordinator_data[Home Climate Panel][binary_sensor.test_device_name_1_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'light',
-      'friendly_name': 'test-device-name-1 Light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Light',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_light',
@@ -447,8 +447,8 @@
 # name: test_coordinator_data[Home Climate Panel][binary_sensor.test_device_name_1_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'test-device-name-1 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_motion',
@@ -498,8 +498,8 @@
 # name: test_coordinator_data[Hub 3][binary_sensor.test_device_name_1_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'test-device-name-1 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_motion',
@@ -549,8 +549,8 @@
 # name: test_coordinator_data[Lock Vision Pro][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -600,8 +600,8 @@
 # name: test_coordinator_data[Lock Vision Pro][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -651,8 +651,8 @@
 # name: test_coordinator_data[Lock Vision][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -702,8 +702,8 @@
 # name: test_coordinator_data[Lock Vision][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -753,8 +753,8 @@
 # name: test_coordinator_data[Motion Sensor][binary_sensor.test_device_name_1_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'test-device-name-1 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_motion',
@@ -804,8 +804,8 @@
 # name: test_coordinator_data[Presence Sensor][binary_sensor.test_device_name_1_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'test-device-name-1 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_motion',
@@ -855,8 +855,8 @@
 # name: test_coordinator_data[Roller Shade][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -906,8 +906,8 @@
 # name: test_coordinator_data[Smart Lock Lite][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -957,8 +957,8 @@
 # name: test_coordinator_data[Smart Lock Lite][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -1008,8 +1008,8 @@
 # name: test_coordinator_data[Smart Lock Pro Wifi][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -1059,8 +1059,8 @@
 # name: test_coordinator_data[Smart Lock Pro Wifi][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -1110,8 +1110,8 @@
 # name: test_coordinator_data[Smart Lock Pro][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -1161,8 +1161,8 @@
 # name: test_coordinator_data[Smart Lock Pro][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -1212,8 +1212,8 @@
 # name: test_coordinator_data[Smart Lock Ultra][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -1263,8 +1263,8 @@
 # name: test_coordinator_data[Smart Lock Ultra][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -1314,8 +1314,8 @@
 # name: test_coordinator_data[Smart Lock Vision Pro][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -1365,8 +1365,8 @@
 # name: test_coordinator_data[Smart Lock Vision Pro][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -1416,8 +1416,8 @@
 # name: test_coordinator_data[Smart Lock Vision][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -1467,8 +1467,8 @@
 # name: test_coordinator_data[Smart Lock Vision][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -1518,8 +1518,8 @@
 # name: test_coordinator_data[Smart Lock][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -1569,8 +1569,8 @@
 # name: test_coordinator_data[Smart Lock][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -1620,8 +1620,8 @@
 # name: test_coordinator_data[Water Detector][binary_sensor.test_device_name_1_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'test-device-name-1 Moisture',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Moisture',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_moisture',
@@ -1671,8 +1671,8 @@
 # name: test_no_coordinator_data[Blind Tilt][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -1722,8 +1722,8 @@
 # name: test_no_coordinator_data[Contact Sensor][binary_sensor.test_device_name_1_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'light',
-      'friendly_name': 'test-device-name-1 Light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Light',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_light',
@@ -1773,8 +1773,8 @@
 # name: test_no_coordinator_data[Contact Sensor][binary_sensor.test_device_name_1_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'test-device-name-1 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_motion',
@@ -1824,8 +1824,8 @@
 # name: test_no_coordinator_data[Contact Sensor][binary_sensor.test_device_name_1_opening-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'opening',
-      'friendly_name': 'test-device-name-1 Opening',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Opening',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_opening',
@@ -1875,8 +1875,8 @@
 # name: test_no_coordinator_data[Curtain3][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -1926,8 +1926,8 @@
 # name: test_no_coordinator_data[Curtain][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -1977,8 +1977,8 @@
 # name: test_no_coordinator_data[Garage Door Opener][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -2028,8 +2028,8 @@
 # name: test_no_coordinator_data[Home Climate Panel][binary_sensor.test_device_name_1_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'light',
-      'friendly_name': 'test-device-name-1 Light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'light',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Light',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_light',
@@ -2079,8 +2079,8 @@
 # name: test_no_coordinator_data[Home Climate Panel][binary_sensor.test_device_name_1_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'test-device-name-1 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_motion',
@@ -2130,8 +2130,8 @@
 # name: test_no_coordinator_data[Hub 3][binary_sensor.test_device_name_1_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'test-device-name-1 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_motion',
@@ -2181,8 +2181,8 @@
 # name: test_no_coordinator_data[Lock Vision Pro][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -2232,8 +2232,8 @@
 # name: test_no_coordinator_data[Lock Vision Pro][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -2283,8 +2283,8 @@
 # name: test_no_coordinator_data[Lock Vision][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -2334,8 +2334,8 @@
 # name: test_no_coordinator_data[Lock Vision][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -2385,8 +2385,8 @@
 # name: test_no_coordinator_data[Motion Sensor][binary_sensor.test_device_name_1_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'test-device-name-1 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_motion',
@@ -2436,8 +2436,8 @@
 # name: test_no_coordinator_data[Presence Sensor][binary_sensor.test_device_name_1_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'friendly_name': 'test-device-name-1 Motion',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Motion',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_motion',
@@ -2487,8 +2487,8 @@
 # name: test_no_coordinator_data[Roller Shade][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -2538,8 +2538,8 @@
 # name: test_no_coordinator_data[Smart Lock Lite][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -2589,8 +2589,8 @@
 # name: test_no_coordinator_data[Smart Lock Lite][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -2640,8 +2640,8 @@
 # name: test_no_coordinator_data[Smart Lock Pro Wifi][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -2691,8 +2691,8 @@
 # name: test_no_coordinator_data[Smart Lock Pro Wifi][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -2742,8 +2742,8 @@
 # name: test_no_coordinator_data[Smart Lock Pro][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -2793,8 +2793,8 @@
 # name: test_no_coordinator_data[Smart Lock Pro][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -2844,8 +2844,8 @@
 # name: test_no_coordinator_data[Smart Lock Ultra][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -2895,8 +2895,8 @@
 # name: test_no_coordinator_data[Smart Lock Ultra][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -2946,8 +2946,8 @@
 # name: test_no_coordinator_data[Smart Lock Vision Pro][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -2997,8 +2997,8 @@
 # name: test_no_coordinator_data[Smart Lock Vision Pro][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -3048,8 +3048,8 @@
 # name: test_no_coordinator_data[Smart Lock Vision][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -3099,8 +3099,8 @@
 # name: test_no_coordinator_data[Smart Lock Vision][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -3150,8 +3150,8 @@
 # name: test_no_coordinator_data[Smart Lock][binary_sensor.test_device_name_1_calibration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'test-device-name-1 Calibration',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Calibration',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_calibration',
@@ -3201,8 +3201,8 @@
 # name: test_no_coordinator_data[Smart Lock][binary_sensor.test_device_name_1_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'test-device-name-1 Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_door',
@@ -3252,8 +3252,8 @@
 # name: test_no_coordinator_data[Water Detector][binary_sensor.test_device_name_1_moisture-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'moisture',
-      'friendly_name': 'test-device-name-1 Moisture',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'moisture',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'test-device-name-1 Moisture',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.test_device_name_1_moisture',

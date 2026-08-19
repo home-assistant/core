@@ -39,7 +39,7 @@
 # name: test_buttons[button.kitchen_lunar_ddeeff_reset_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LUNAR-DDEEFF Reset timer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LUNAR-DDEEFF Reset timer',
     }),
     'context': <ANY>,
     'entity_id': 'button.kitchen_lunar_ddeeff_reset_timer',
@@ -89,7 +89,7 @@
 # name: test_buttons[button.kitchen_lunar_ddeeff_start_stop_timer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LUNAR-DDEEFF Start/stop timer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LUNAR-DDEEFF Start/stop timer',
     }),
     'context': <ANY>,
     'entity_id': 'button.kitchen_lunar_ddeeff_start_stop_timer',
@@ -139,7 +139,7 @@
 # name: test_buttons[button.kitchen_lunar_ddeeff_tare-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'LUNAR-DDEEFF Tare',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'LUNAR-DDEEFF Tare',
     }),
     'context': <ANY>,
     'entity_id': 'button.kitchen_lunar_ddeeff_tare',

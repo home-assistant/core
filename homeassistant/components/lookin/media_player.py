@@ -1,6 +1,7 @@
 """The lookin integration light platform."""
 
 import logging
+from typing import override
 
 from aiolookin import Remote
 
@@ -88,16 +89,19 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
         self._source_list: dict[str, str] | None = None
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """List of available input sources."""
         return list(self._source_list.keys()) if self._source_list else []
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Choose an available playlist and play it."""
         if not self._source_list:
             return
         await self._async_send_command(command="mode", signal=self._source_list[source])
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Get list of available input sources."""
         if self._source_list is None and "mode" in self._function_names:
@@ -109,40 +113,48 @@ class LookinMedia(LookinPowerPushRemoteEntity, MediaPlayerEntity):
                 }
         await super().async_added_to_hass()
 
+    @override
     async def async_volume_up(self) -> None:
         """Turn volume up for media player."""
         await self._async_send_command("volup")
 
+    @override
     async def async_volume_down(self) -> None:
         """Turn volume down for media player."""
         await self._async_send_command("voldown")
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self._async_send_command("chdown")
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self._async_send_command("chup")
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         await self._async_send_command("mute")
         self._attr_is_volume_muted = not self.is_volume_muted
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._async_send_command(self._power_off_command)
         self._attr_state = MediaPlayerState.OFF
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._async_send_command(self._power_on_command)
         self._attr_state = MediaPlayerState.ON
         self.async_write_ha_state()
 
+    @override
     def _update_from_status(self, status: str) -> None:
         """Update media property from status.
 

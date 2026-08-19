@@ -1,9 +1,24 @@
 """Constants for the update component."""
 
-from enum import IntFlag
+from enum import IntFlag, StrEnum
 from typing import Final
 
 DOMAIN: Final = "update"
+
+
+class UpdateEntityStateAttribute(StrEnum):
+    """State attributes for update entities."""
+
+    AUTO_UPDATE = "auto_update"
+    DISPLAY_PRECISION = "display_precision"
+    INSTALLED_VERSION = "installed_version"
+    IN_PROGRESS = "in_progress"
+    LATEST_VERSION = "latest_version"
+    RELEASE_SUMMARY = "release_summary"
+    RELEASE_URL = "release_url"
+    SKIPPED_VERSION = "skipped_version"
+    TITLE = "title"
+    UPDATE_PERCENTAGE = "update_percentage"
 
 
 class UpdateEntityFeature(IntFlag):

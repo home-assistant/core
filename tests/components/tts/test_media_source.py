@@ -1,6 +1,7 @@
 """Tests for TTS media source."""
 
 from http import HTTPStatus
+from pathlib import Path
 import re
 from unittest.mock import MagicMock
 
@@ -204,11 +205,61 @@ async def test_resolving(
     media = await media_source.async_resolve_media(hass, stream.media_source_id, None)
     assert media.url == stream.url
     assert media.mime_type == stream.content_type
+    assert media.path is None
 
     with pytest.raises(media_source.Unresolvable):
         await media_source.async_resolve_media(
             hass, "media-source://tts/-stream-/not-a-valid-token", None
         )
+
+
+@pytest.mark.parametrize(
+    "mock_tts_entity",
+    [MSEntity(DEFAULT_LANG)],
+)
+async def test_resolving_sets_path_when_cached_on_disk(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_cache_dir: Path,
+    mock_tts_entity: MSEntity,
+) -> None:
+    """Test resolving exposes the on-disk file path once cached."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    media_id = "media-source://tts/tts.test?message=Hello%20World&cache=true"
+
+    # Generate and persist the file to disk.
+    assert await retrieve_media(hass, hass_client, media_id) == HTTPStatus.OK
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # Resolving now exposes the cached file on disk.
+    media = await media_source.async_resolve_media(hass, media_id, None)
+    assert media.url.startswith("/api/tts_proxy/")
+    assert media.path is not None
+    assert media.path.parent == mock_tts_cache_dir
+    assert media.path.is_file()
+
+
+@pytest.mark.parametrize(
+    "mock_tts_entity",
+    [MSEntity(DEFAULT_LANG)],
+)
+async def test_resolving_no_path_without_file_cache(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_tts_cache_dir: Path,
+    mock_tts_entity: MSEntity,
+) -> None:
+    """Test resolving does not expose a path when file caching is disabled."""
+    await mock_config_entry_setup(hass, mock_tts_entity)
+
+    media_id = "media-source://tts/tts.test?message=Hello%20World&cache=false"
+
+    assert await retrieve_media(hass, hass_client, media_id) == HTTPStatus.OK
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    media = await media_source.async_resolve_media(hass, media_id, None)
+    assert media.path is None
 
 
 @pytest.mark.parametrize(

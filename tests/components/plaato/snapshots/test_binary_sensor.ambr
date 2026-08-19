@@ -40,8 +40,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'beer_name': 'Beer',
-      'device_class': 'problem',
-      'friendly_name': 'device_name Plaato Plaatodevicetype.Keg Device_Name Leaking',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'device_name Plaato Plaatodevicetype.Keg Device_Name Leaking',
       'keg_date': '05/24/24',
       'mode': 'Co2',
     }),
@@ -94,8 +94,8 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'beer_name': 'Beer',
-      'device_class': 'opening',
-      'friendly_name': 'device_name Plaato Plaatodevicetype.Keg Device_Name Pouring',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'opening',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'device_name Plaato Plaatodevicetype.Keg Device_Name Pouring',
       'keg_date': '05/24/24',
       'mode': 'Co2',
     }),

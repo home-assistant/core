@@ -1,6 +1,7 @@
 """The Twinkly select component."""
 
 import logging
+from typing import override
 
 from ttls.client import TWINKLY_MODES
 
@@ -37,10 +38,12 @@ class TwinklyModeSelect(TwinklyEntity, SelectEntity):
         self.client = coordinator.client
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return current mode."""
         return self.coordinator.data.current_mode
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.client.set_mode(option)

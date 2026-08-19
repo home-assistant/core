@@ -1,6 +1,6 @@
 """Support for Proliphix NT10e Thermostats."""
 
-from typing import Any
+from typing import Any, override
 
 import proliphix
 import voluptuous as vol
@@ -71,21 +71,25 @@ class ProliphixThermostat(ClimateEntity):
         self._attr_name = self._pdp.name
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         return {ATTR_FAN: self._pdp.fan_state}
 
     @property
+    @override
     def current_temperature(self) -> float:
         """Return the current temperature."""
         return self._pdp.cur_temp
 
     @property
+    @override
     def target_temperature(self) -> float:
         """Return the temperature we try to reach."""
         return self._pdp.setback
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current state of the thermostat."""
         state = self._pdp.hvac_state
@@ -98,6 +102,7 @@ class ProliphixThermostat(ClimateEntity):
         return HVACAction.IDLE
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current state of the thermostat."""
         if self._pdp.is_heating:
@@ -107,10 +112,12 @@ class ProliphixThermostat(ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return available HVAC modes."""
         return []
 
+    @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:

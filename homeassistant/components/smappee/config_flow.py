@@ -1,7 +1,7 @@
 """Config flow for Smappee."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pysmappee import helper, mqtt
 import voluptuous as vol
@@ -31,6 +31,7 @@ class SmappeeFlowHandler(
     ip_address: str  # Set by zeroconf step, used by zeroconf_confirm step
     serial_number: str  # Set by zeroconf step, used by zeroconf_confirm step
 
+    @override
     async def async_oauth_create_entry(self, data):
         """Create an entry for the flow."""
 
@@ -38,10 +39,12 @@ class SmappeeFlowHandler(
         return self.async_create_entry(title=f"{DOMAIN}Cloud", data=data)
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -107,6 +110,7 @@ class SmappeeFlowHandler(
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
