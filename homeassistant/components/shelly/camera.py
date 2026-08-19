@@ -101,10 +101,9 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
     @property
     def is_on(self) -> bool:
         """Return True if the camera is running."""
-        if not self.coordinator.device.initialized:
-            return False
-
-        return bool(self.status["streamer"] == "running")
+        return (
+            self.coordinator.device.initialized and self.status["streamer"] == "running"
+        )
 
     @override
     @property
