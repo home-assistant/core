@@ -75,8 +75,10 @@ class OmadaClientScannerEntity(
                 await self.coordinator.omada_client.reconnect_client(self._client_id)
             elif action == "block":
                 await self.coordinator.omada_client.block_client(self._client_id)
-            else:
+            elif action == "unblock":
                 await self.coordinator.omada_client.unblock_client(self._client_id)
+            else:
+                raise ValueError(f"Unknown client action: {action}")
         except OmadaClientException as ex:
             raise HomeAssistantError(
                 f"Failed to {action} client with MAC {self._client_id}"

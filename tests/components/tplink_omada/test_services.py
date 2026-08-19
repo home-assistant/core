@@ -247,7 +247,9 @@ async def test_service_client_access_action_failure(
     async_fire_time_changed(hass, utcnow() + timedelta(seconds=POLL_CLIENTS + 10))
     await hass.async_block_till_done()
 
-    getattr(mock_omada_clients_only_site_client, method).side_effect = OmadaClientException
+    getattr(
+        mock_omada_clients_only_site_client, method
+    ).side_effect = OmadaClientException()
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             DOMAIN,
