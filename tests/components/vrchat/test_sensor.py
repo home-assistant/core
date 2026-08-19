@@ -125,6 +125,18 @@ def test_status_sensor_handles_missing_status() -> None:
     assert VRChatUserStatusDescriptionSensor(user).icon is None
 
 
+def test_sensor_does_not_fall_back_from_empty_top_level_value() -> None:
+    """Test an explicitly cleared sensor value does not use stale presence data."""
+    user_data = {
+        "statusDescription": "",
+        "presence": {"statusDescription": "Stale description"},
+    }
+
+    assert (
+        VRChatUserStatusDescriptionSensor.get_raw_state_from_user_data(user_data) == ""
+    )
+
+
 def test_state_sensor_handles_unknown_presence() -> None:
     """Test state sensor returns no state when presence is unknown."""
     user = cast(

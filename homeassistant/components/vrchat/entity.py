@@ -86,7 +86,9 @@ class VRChatUserDataEntity(Entity):
         """Return raw state from user data."""
         if key is None:
             key = cls.entity_description.key
-        return user_data.get(key) or user_data.get("presence", {}).get(key)
+        if key in user_data:
+            return user_data.get(key)
+        return user_data.get("presence", {}).get(key)
 
     @classmethod
     def get_state_from_user_data(cls, user_data: User, key: str | None = None):
