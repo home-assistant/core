@@ -146,3 +146,11 @@ def test_api_wrapper_returns_non_callable_attributes() -> None:
     wrapped = wrap_api_object(SimpleNamespace(value="test"))
 
     assert wrapped.value == "test"
+
+
+def test_api_wrapper_returns_callable_without_raw_response_method() -> None:
+    """Test API wrapper leaves non-endpoint methods unchanged."""
+    method = Mock()
+    wrapped = wrap_api_object(SimpleNamespace(method=method))
+
+    assert wrapped.method is method

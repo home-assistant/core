@@ -195,14 +195,14 @@ class _ApiWrapper:
         # Retrieve the attribute from the original object
         attr = getattr(self._obj, name)
 
-        # If it's a function/method, wrap it to return the raw JSON response
-        if callable(attr):
+        raw_data_method = getattr(self._obj, f"{name}_with_http_info", None)
+
+        # Only generated API endpoint methods have a raw-response counterpart.
+        if callable(attr) and callable(raw_data_method):
 
             @wraps(attr)
             async def async_func(*args, **kwargs):
-                api_response = await getattr(self._obj, f"{name}_with_http_info")(
-                    *args, **kwargs
-                )
+                api_response = await raw_data_method(*args, **kwargs)
                 return json.loads(api_response.raw_data)
 
             return async_func
