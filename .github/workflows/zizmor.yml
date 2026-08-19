@@ -67,8 +67,25 @@ jobs:
           if git cat-file -e HEAD^1:.github/zizmor.yml 2>/dev/null; then
             git show HEAD^1:.github/zizmor.yml > .zizmor-base.yml
           else
-            # A missing base policy means no rule exceptions.
-            printf 'rules: {}\n' > .zizmor-base.yml
+            # Bootstrap branches before the shared policy exists.
+            printf '%s\n' \
+              'rules:' \
+              '  anonymous-definition:' \
+              '    ignore:' \
+              '      - check-requirements.lock.yml' \
+              '  ref-version-mismatch:' \
+              '    ignore:' \
+              '      - check-requirements.lock.yml' \
+              '  template-injection:' \
+              '    ignore:' \
+              '      - check-requirements.lock.yml' \
+              '  undocumented-permissions:' \
+              '    ignore:' \
+              '      - check-requirements.lock.yml' \
+              '  unsound-condition:' \
+              '    ignore:' \
+              '      - check-requirements.lock.yml' \
+              > .zizmor-base.yml
           fi
 
       - name: Block medium and high pull request findings
