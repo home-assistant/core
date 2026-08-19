@@ -260,7 +260,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.6.1
+aioesphomeapi==45.12.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1534,10 +1534,10 @@ lupupy==0.3.2
 lw12==0.9.2
 
 # homeassistant.components.scrape
-lxml==6.1.1
+lxml==6.1.2
 
 # homeassistant.components.lyngdorf
-lyngdorf==1.8.0
+lyngdorf==1.9.0
 
 # homeassistant.components.matrix
 matrix-nio==0.26.0
@@ -1649,7 +1649,7 @@ mutagen==1.48.1
 mutesync==0.0.1
 
 # homeassistant.components.mvglive
-mvg==1.4.0
+mvg==1.6.0
 
 # homeassistant.components.myuplink
 myuplink==0.7.0

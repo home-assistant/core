@@ -14,7 +14,7 @@ from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 import pytest
 from voluptuous import InInvalid
-from zwave_js_server.exceptions import FailedCommand
+from zwave_js_server.exceptions import ConnectionFailed, FailedCommand
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
@@ -1058,7 +1058,7 @@ async def test_usb_discovery_migration(
     assert client.connect.call_count == 2
 
     await hass.async_block_till_done()
-    assert client.connect.call_count == 4
+    assert client.connect.call_count == 3
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
     assert len(events) == 2
@@ -1073,7 +1073,126 @@ async def test_usb_discovery_migration(
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" not in entry.data
+    assert entry.unique_id == "3245146787"
+
+
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_running",
+    "backup_nvm",
+    "climate_radio_thermostat_ct100_plus",
+    "lock_schlage_be469",
+)
+async def test_usb_discovery_migration_new_stick(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    restart_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+    mock_usb_serial_by_id: MagicMock,
+    get_server_version: AsyncMock,
+) -> None:
+    """Test migration to a factory-new adapter keeps the old node devices."""
+    addon_options["device"] = "/dev/ttyUSB0"
+    entry = integration
+    assert entry.unique_id == "3245146787"
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "usb_path": "/dev/ttyUSB0",
+        },
+    )
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(device_entries) == 3
+    old_device_ids = {device.id for device in device_entries}
+
+    nodes_snapshot = dict(client.driver.controller.nodes)
+    own_node_id = client.driver.controller.own_node.node_id
+
+    async def mock_restart_addon(addon_slug: str) -> None:
+        # A factory-new adapter has its own home id and no nodes.
+        client.driver.controller.data["homeId"] = 1234
+        client.driver.controller.nodes.clear()
+        client.driver.controller.nodes[own_node_id] = nodes_snapshot[own_node_id]
+
+    restart_addon.side_effect = mock_restart_addon
+
+    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
+        client.driver.controller.emit(
+            "nvm convert progress",
+            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
+        )
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm restore progress",
+            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
+        )
+        client.driver.controller.data["homeId"] = 3245146787
+        client.driver.controller.nodes.update(nodes_snapshot)
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
+
+    registry_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_usb_migration"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+
+    # The server, connected to the new adapter, reports the adapter's
+    # factory home id before the restore.
+    _set_home_id(get_server_version, 1234)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+    assert entry.unique_id == "3245146787"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_successful"
+    await hass.async_block_till_done()
+
+    assert not [event for event in registry_events if event.data["action"] == "remove"]
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(device_entries) == 3
+    assert {device.id for device in device_entries} == old_device_ids
     assert entry.unique_id == "3245146787"
 
 
@@ -1197,8 +1316,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
-    assert entry.unique_id == "1234"
-    assert "keep_old_devices" in entry.data
+    assert entry.unique_id == "3245146787"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
@@ -4568,7 +4686,6 @@ async def test_reconfigure_migrate_no_addon(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_required"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("mock_sdk_version")
@@ -4593,35 +4710,16 @@ async def test_reconfigure_migrate_low_sdk_version(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migration_low_sdk_version"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
-    (
-        "form_data",
-        "new_addon_options",
-        "restore_server_version_side_effect",
-        "final_unique_id",
-        "keep_old_devices",
-        "device_entry_count",
-    ),
+    ("form_data", "new_addon_options"),
     [
-        (
-            {CONF_USB_PATH: "/test"},
-            {CONF_ADDON_DEVICE: "/test"},
-            None,
-            "3245146787",
-            False,
-            2,
-        ),
+        ({CONF_USB_PATH: "/test"}, {CONF_ADDON_DEVICE: "/test"}),
         (
             {CONF_SOCKET_PATH: "esphome://1.2.3.4:1234"},
             {CONF_ADDON_SOCKET: "esphome://1.2.3.4:1234"},
-            aiohttp.ClientError("Boom"),
-            "5678",
-            True,
-            4,
         ),
     ],
 )
@@ -4638,10 +4736,6 @@ async def test_reconfigure_migrate_with_addon(
     get_server_version: AsyncMock,
     form_data: dict[str, Any],
     new_addon_options: dict,
-    restore_server_version_side_effect: Exception | None,
-    final_unique_id: str,
-    keep_old_devices: bool,
-    device_entry_count: int,
 ) -> None:
     """Test migration flow with add-on."""
     entry = integration
@@ -4759,16 +4853,14 @@ async def test_reconfigure_migrate_with_addon(
     with patch("homeassistant.components.zwave_js.async_ensure_addon_running"):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        assert entry.unique_id == "5678"
-        get_server_version.side_effect = restore_server_version_side_effect
-        _set_home_id(get_server_version, 3245146787)
+        assert entry.unique_id == "3245146787"
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "restore_nvm"
         assert client.connect.call_count == 2
 
         await hass.async_block_till_done()
-    assert client.connect.call_count == 4
+    assert client.connect.call_count == 3
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
     assert len(events) == 2
@@ -4783,10 +4875,9 @@ async def test_reconfigure_migrate_with_addon(
     assert entry.data[CONF_USB_PATH] == new_addon_options.get(CONF_ADDON_DEVICE)
     assert entry.data[CONF_SOCKET_PATH] == new_addon_options.get(CONF_ADDON_SOCKET)
     assert entry.data["use_addon"] is True
-    assert ("keep_old_devices" in entry.data) is keep_old_devices
-    assert entry.unique_id == final_unique_id
+    assert entry.unique_id == "3245146787"
 
-    assert len(device_registry.devices) == device_entry_count
+    assert len(device_registry.devices) == 2
     controller_device_id_ext = (
         f"{controller_device_id}-{controller_node.manufacturer_id}:"
         f"{controller_node.product_type}:{controller_node.product_id}"
@@ -4931,8 +5022,7 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
     assert entry.data["usb_path"] == "/test"
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" in entry.data
-    assert entry.unique_id == "1234"
+    assert entry.unique_id == "3245146787"
 
 
 async def test_reconfigure_migrate_backup_failure(
@@ -4961,7 +5051,6 @@ async def test_reconfigure_migrate_backup_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "backup_failed"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("backup_nvm")
@@ -4996,7 +5085,6 @@ async def test_reconfigure_migrate_backup_file_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "backup_failed"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
@@ -5062,7 +5150,82 @@ async def test_reconfigure_migrate_start_addon_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
-    assert "keep_old_devices" not in entry.data
+
+
+@pytest.mark.usefixtures(
+    "supervisor", "addon_running", "restart_addon", "backup_nvm", "restore_nvm"
+)
+async def test_reconfigure_migrate_connect_failure(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test the restore step can be retried after a connect failure."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, "use_addon": True}
+    )
+
+    connect_side_effect = client.connect.side_effect
+    client.connect.side_effect = ConnectionFailed("test_error")
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "choose_serial_port"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USB_PATH: "/test",
+        },
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "restore_failed"
+    assert client.driver.controller.async_restore_nvm.call_count == 0
+
+    client.connect.side_effect = connect_side_effect
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_successful"
+    assert entry.unique_id == "3245146787"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon", "backup_nvm")
@@ -5158,7 +5321,6 @@ async def test_reconfigure_migrate_restore_failure(
     hass.config_entries.flow.async_abort(result["flow_id"])
 
     assert len(hass.config_entries.flow.async_progress()) == 0
-    assert "keep_old_devices" not in entry.data
 
 
 async def test_get_driver_failure_intent_migrate(
@@ -5182,7 +5344,6 @@ async def test_get_driver_failure_intent_migrate(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "config_entry_not_loaded"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("backup_nvm")
@@ -6182,15 +6343,14 @@ async def test_addon_rf_region_migrate_network(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert entry.unique_id == "5678"
-    _set_home_id(get_server_version, 3245146787)
+    assert entry.unique_id == "3245146787"
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "restore_nvm"
     assert client.connect.call_count == 2
 
     await hass.async_block_till_done()
-    assert client.connect.call_count == 4
+    assert client.connect.call_count == 3
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
     assert len(events) == 2
