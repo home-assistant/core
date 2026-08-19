@@ -1649,7 +1649,7 @@ mutagen==1.48.1
 mutesync==0.0.1
 
 # homeassistant.components.mvglive
-mvg==1.4.0
+mvg==1.6.0
 
 # homeassistant.components.myuplink
 myuplink==0.7.0
