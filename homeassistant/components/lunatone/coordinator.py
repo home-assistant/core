@@ -8,13 +8,14 @@ from typing import override
 import aiohttp
 from lunatone_rest_api_client import (
     DALIBroadcast,
+    DALIScan,
     Device,
     Devices,
     Info,
     Sensor,
     Sensors,
 )
-from lunatone_rest_api_client.models import InfoData
+from lunatone_rest_api_client.models import InfoData, ScanData
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -24,9 +25,10 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-DEFAULT_INFO_SCAN_INTERVAL = timedelta(seconds=60)
-DEFAULT_DEVICES_SCAN_INTERVAL = timedelta(seconds=10)
-DEFAULT_SENSORS_SCAN_INTERVAL = timedelta(seconds=30)
+DEFAULT_INFO_UPDATE_INTERVAL = timedelta(seconds=60)
+DEFAULT_DEVICES_UPDATE_INTERVAL = timedelta(seconds=10)
+DEFAULT_SENSORS_UPDATE_INTERVAL = timedelta(seconds=30)
+DEFAULT_SCAN_UPDATE_INTERVAL = timedelta(seconds=10)
 
 
 @dataclass
@@ -36,6 +38,7 @@ class LunatoneData:
     coordinator_info: LunatoneInfoDataUpdateCoordinator
     coordinator_devices: LunatoneDevicesDataUpdateCoordinator
     coordinator_sensors: LunatoneSensorsDataUpdateCoordinator
+    coordinator_scan: LunatoneScanDataUpdateCoordinator
     dali_line_broadcasts: list[DALIBroadcast]
 
 
@@ -57,7 +60,7 @@ class LunatoneInfoDataUpdateCoordinator(DataUpdateCoordinator[InfoData]):
             config_entry=config_entry,
             name=f"{DOMAIN}-info",
             always_update=False,
-            update_interval=DEFAULT_INFO_SCAN_INTERVAL,
+            update_interval=DEFAULT_INFO_UPDATE_INTERVAL,
         )
         self.info_api = info_api
 
@@ -94,7 +97,7 @@ class LunatoneDevicesDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Devic
             config_entry=config_entry,
             name=f"{DOMAIN}-devices",
             always_update=False,
-            update_interval=DEFAULT_DEVICES_SCAN_INTERVAL,
+            update_interval=DEFAULT_DEVICES_UPDATE_INTERVAL,
         )
         self.devices_api = devices_api
 
@@ -131,7 +134,7 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
             config_entry=config_entry,
             name=f"{DOMAIN}-sensors",
             always_update=False,
-            update_interval=DEFAULT_SENSORS_SCAN_INTERVAL,
+            update_interval=DEFAULT_SENSORS_UPDATE_INTERVAL,
         )
         self.sensors_api = sensors_api
 
@@ -149,3 +152,46 @@ class LunatoneSensorsDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Senso
         if self.sensors_api.data is None:
             raise UpdateFailed("Did not receive sensors data from Lunatone REST API")
         return {sensor.id: sensor for sensor in self.sensors_api.sensors}
+
+
+class LunatoneScanDataUpdateCoordinator(DataUpdateCoordinator[ScanData]):
+    """Data update coordinator for Lunatone scan."""
+
+    config_entry: LunatoneConfigEntry
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        config_entry: LunatoneConfigEntry,
+        dali_scan_api: DALIScan,
+    ) -> None:
+        """Initialize the coordinator."""
+        super().__init__(
+            hass,
+            _LOGGER,
+            config_entry=config_entry,
+            name=f"{DOMAIN}-scan",
+            always_update=False,
+            update_interval=DEFAULT_SCAN_UPDATE_INTERVAL,
+        )
+        self.dali_scan_api = dali_scan_api
+
+    @override
+    async def _async_update_data(self) -> ScanData:
+        """Update scan data."""
+        try:
+            await self.dali_scan_api.async_update()
+        except aiohttp.ClientConnectionError as ex:
+            raise UpdateFailed(
+                "Unable to retrieve scan data from Lunatone REST API"
+            ) from ex
+
+        if self.dali_scan_api.data is None:
+            raise UpdateFailed("Did not receive scan data from Lunatone REST API")
+
+        update_interval = DEFAULT_SCAN_UPDATE_INTERVAL
+        if self.dali_scan_api.is_busy:
+            update_interval = timedelta(seconds=1)
+        self.update_interval = update_interval
+
+        return self.dali_scan_api.data

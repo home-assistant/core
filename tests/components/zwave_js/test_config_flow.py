@@ -2031,6 +2031,131 @@ async def test_usb_discovery_with_existing_usb_flow(hass: HomeAssistant) -> None
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
+@pytest.mark.usefixtures("supervisor", "addon_installed")
+async def test_discovery_not_blocked_by_zeroconf_flow(hass: HomeAssistant) -> None:
+    """Test USB and add-on discovery are not blocked by a zeroconf prompt."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "5678"},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    # A USB flow does touch the add-on, so it still blocks add-on discovery.
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+            uuid="1234",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    # A zeroconf discovery of the same controller as the add-on discovery
+    # means another server is already connected to it, so it does block
+    # the add-on discovery, via the unique id in progress check.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "1234"},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+            uuid="1234",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_usb_discovery_leaves_manual_entry_alone(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test USB discovery does not rewrite a manual entry with add-on data.
+
+    A manual entry for the same controller may be created while the USB
+    flow is waiting at the installation type menu, e.g. by confirming a
+    zeroconf discovery of the server that already serves the controller.
+    """
+    addon_options["device"] = "/dev/ttyUSB0"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"url": "ws://external-server:3000"},
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data == {"url": "ws://external-server:3000"}
+    set_addon_options.assert_not_called()
+
+
 @pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
     """Test usb discovery aborted when existing entry not using add-on."""
@@ -2366,15 +2491,16 @@ async def test_addon_running_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == "/test_new"
-    assert entry.data["socket_path"] is None
-    assert entry.data["s0_legacy_key"] == "new123"
-    assert entry.data["s2_access_control_key"] == "new456"
-    assert entry.data["s2_authenticated_key"] == "new789"
-    assert entry.data["s2_unauthenticated_key"] == "new987"
-    assert entry.data["lr_s2_access_control_key"] == "new654"
-    assert entry.data["lr_s2_authenticated_key"] == "new321"
+    # The existing entry is not using the add-on,
+    # so it must not be rewritten with add-on data.
+    assert entry.data["url"] == "ws://localhost:3000"
+    assert entry.data["usb_path"] == "/test"
+    assert entry.data["s0_legacy_key"] == "old123"
+    assert entry.data["s2_access_control_key"] == "old456"
+    assert entry.data["s2_authenticated_key"] == "old789"
+    assert entry.data["s2_unauthenticated_key"] == "old987"
+    assert entry.data["lr_s2_access_control_key"] == "old654"
+    assert entry.data["lr_s2_authenticated_key"] == "old321"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
@@ -2917,15 +3043,16 @@ async def test_addon_installed_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == "/new"
-    assert entry.data["socket_path"] is None
-    assert entry.data["s0_legacy_key"] == "new123"
-    assert entry.data["s2_access_control_key"] == "new456"
-    assert entry.data["s2_authenticated_key"] == "new789"
-    assert entry.data["s2_unauthenticated_key"] == "new987"
-    assert entry.data["lr_s2_access_control_key"] == "new654"
-    assert entry.data["lr_s2_authenticated_key"] == "new321"
+    # The existing entry is not using the add-on,
+    # so it must not be rewritten with add-on data.
+    assert entry.data["url"] == "ws://localhost:3000"
+    assert entry.data["usb_path"] == "/test"
+    assert entry.data["s0_legacy_key"] == "old123"
+    assert entry.data["s2_access_control_key"] == "old456"
+    assert entry.data["s2_authenticated_key"] == "old789"
+    assert entry.data["s2_unauthenticated_key"] == "old987"
+    assert entry.data["lr_s2_access_control_key"] == "old654"
+    assert entry.data["lr_s2_authenticated_key"] == "old321"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")

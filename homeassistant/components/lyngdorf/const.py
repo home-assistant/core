@@ -10,3 +10,4 @@ PLATFORMS: list[Platform] = [
     Platform.SENSOR,
 ]
 CONF_SERIAL_NUMBER = "serial_number"
+SSDP_ST = "urn:schemas-upnp-org:device:MediaRenderer:2"

@@ -115,7 +115,7 @@ RtmAPI==0.7.2
 
 # homeassistant.components.recorder
 # homeassistant.components.sql
-SQLAlchemy==2.0.51
+SQLAlchemy==2.0.52
 
 # homeassistant.components.tami4
 Tami4EdgeAPI==3.0
@@ -260,7 +260,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.6.1
+aioesphomeapi==45.12.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -420,7 +420,7 @@ aiorussound==5.0.2
 aioruuvigateway==0.1.0
 
 # homeassistant.components.shelly
-aioshelly==13.29.0
+aioshelly==13.30.0
 
 # homeassistant.components.skybell
 aioskybell==22.7.0
@@ -483,7 +483,7 @@ aiowithings==3.1.6
 aioymaps==1.2.5
 
 # homeassistant.components.airgradient
-airgradient==0.9.2
+airgradient==0.10.0
 
 # homeassistant.components.airly
 airly==1.1.0
@@ -1281,7 +1281,7 @@ hole==0.9.2
 
 # homeassistant.components.holiday
 # homeassistant.components.workday
-holidays==0.102
+holidays==0.103
 
 # homeassistant.components.frontend
 home-assistant-frontend==20260729.7
@@ -1537,7 +1537,7 @@ lw12==0.9.2
 lxml==6.1.1
 
 # homeassistant.components.lyngdorf
-lyngdorf==1.6.0
+lyngdorf==1.8.0
 
 # homeassistant.components.matrix
 matrix-nio==0.26.0
@@ -2053,7 +2053,7 @@ pyaqvify==0.0.12
 pyatag==0.3.5.3
 
 # homeassistant.components.netatmo
-pyatmo==9.7.0
+pyatmo==9.9.0
 
 # homeassistant.components.apple_tv
 pyatv==0.18.0
