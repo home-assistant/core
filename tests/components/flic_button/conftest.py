@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pyflic_ble import DeviceType
 import pytest
 
+from homeassistant.components.flic_button import PLATFORMS
 from homeassistant.components.flic_button.const import (
     CONF_DEVICE_TYPE,
     CONF_PAIRING_ID,
@@ -16,7 +17,7 @@ from homeassistant.components.flic_button.const import (
     CONF_SIG_BITS,
     DOMAIN,
 )
-from homeassistant.const import CONF_ADDRESS
+from homeassistant.const import CONF_ADDRESS, Platform
 
 from . import (
     ADDRESS_FOR_DEVICE_TYPE,
@@ -35,6 +36,19 @@ from tests.common import MockConfigEntry
 @pytest.fixture(autouse=True)
 def mock_bluetooth(enable_bluetooth: None) -> None:
     """Auto mock bluetooth."""
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Return the platforms to set up (override via parametrization)."""
+    return list(PLATFORMS)
+
+
+@pytest.fixture(autouse=True)
+def mock_platforms(platforms: list[Platform]) -> Generator[None]:
+    """Restrict the platforms that are set up."""
+    with patch("homeassistant.components.flic_button.PLATFORMS", platforms):
+        yield
 
 
 @pytest.fixture
