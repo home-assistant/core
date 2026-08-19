@@ -112,6 +112,7 @@ class SamsungExLinkMediaPlayer(MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, config_entry.entry_id)},
             manufacturer="Samsung",
+            model=self._tv.model.name if self._tv.model else None,
         )
         self._async_update_from_state(self._tv.state)
 

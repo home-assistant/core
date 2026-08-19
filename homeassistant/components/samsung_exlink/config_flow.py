@@ -85,12 +85,13 @@ class SamsungExLinkConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             port = user_input[CONF_DEVICE]
-            model_key = user_input.get(CONF_MODEL)
+            model = MODELS.get(user_input.get(CONF_MODEL, ""))
 
             self._async_abort_entries_match({CONF_DEVICE: port})
-            error = await _async_attempt_connect(port, MODELS.get(model_key or ""))
+            error = await _async_attempt_connect(port, model)
             if error is None:
-                return self.async_create_entry(title="Samsung TV", data=user_input)
+                title = f"Samsung {model.name}" if model else "Samsung TV"
+                return self.async_create_entry(title=title, data=user_input)
             if error == RESULT_NO_TV:
                 self._user_input = user_input
                 return await self.async_step_troubleshoot()

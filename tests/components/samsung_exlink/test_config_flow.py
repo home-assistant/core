@@ -48,7 +48,7 @@ async def test_user_form_creates_entry(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Samsung TV"
+    assert result["title"] == "Samsung Frame (2022)"
     assert result["data"] == {CONF_DEVICE: MOCK_DEVICE, CONF_MODEL: MOCK_MODEL}
     mock_async_setup_entry.assert_awaited_once()
     mock_samsung_tv.connect.assert_awaited_once()
@@ -76,6 +76,7 @@ async def test_user_form_without_model(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Samsung TV"
     assert result["data"] == {CONF_DEVICE: MOCK_DEVICE}
 
 

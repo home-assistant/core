@@ -17,6 +17,7 @@ from homeassistant.components.media_player import (
     SERVICE_SELECT_SOURCE,
     MediaPlayerEntityFeature,
 )
+from homeassistant.components.samsung_exlink.const import DOMAIN
 from homeassistant.components.samsung_exlink.media_player import (
     INPUT_SOURCE_SAMSUNG_TO_HA,
     SCAN_INTERVAL,
@@ -37,7 +38,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.util.json import load_json
 
 from .conftest import MockSamsungTV, _default_state
@@ -61,6 +62,20 @@ async def test_entities_created(
 ) -> None:
     """Test the media player entity is created through config entry setup."""
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+async def test_device_model(
+    hass: HomeAssistant,
+    mock_samsung_tv: MockSamsungTV,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the configured TV model is reflected on the device."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model == "Frame (2022)"
 
 
 async def test_polling_updates_state(
