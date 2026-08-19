@@ -5,7 +5,7 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
-from midealocal.devices.x13 import DeviceAttributes as X13Attributes
+from midealocal.devices.x13 import DeviceAttributes as X13Attributes, Midea13Device
 from midealocal.exceptions import SocketException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -38,7 +38,7 @@ from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-X13_EFFECTS = ["Manual", "Living", "Reading", "Mildly", "Cinema", "Night"]
+X13_EFFECTS = list(Midea13Device._effects)
 
 
 def _x13_device() -> DummyDevice:
@@ -48,7 +48,7 @@ def _x13_device() -> DummyDevice:
             X13Attributes.power: True,
             X13Attributes.brightness: 128,
             X13Attributes.color_temperature: 4000,
-            X13Attributes.effect: "Manual",
+            X13Attributes.effect: "manual",
             X13Attributes.rgb_color: None,
         },
     )
@@ -91,7 +91,7 @@ async def test_light_state_and_services(
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
     assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
-    assert state.attributes[ATTR_EFFECT] == "Manual"
+    assert state.attributes[ATTR_EFFECT] == "manual"
     assert state.attributes[ATTR_EFFECT_LIST] == X13_EFFECTS
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
@@ -104,14 +104,14 @@ async def test_light_state_and_services(
             ATTR_ENTITY_ID: entity_entry.entity_id,
             ATTR_BRIGHTNESS: 200,
             ATTR_COLOR_TEMP_KELVIN: 5000,
-            ATTR_EFFECT: "Cinema",
+            ATTR_EFFECT: "cinema",
         },
         blocking=True,
     )
     assert device.calls == [
         ("set_attribute", "brightness", 200),
         ("set_attribute", "color_temperature", 5000),
-        ("set_attribute", "effect", "Cinema"),
+        ("set_attribute", "effect", "cinema"),
     ]
 
     device.calls.clear()
