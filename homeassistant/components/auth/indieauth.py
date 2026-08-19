@@ -64,8 +64,7 @@ async def verify_redirect_uri(
     if redirect_uri in redirect_uris:
         return True
     _LOGGER.debug(
-        "redirect_uri %s is not among the advertised redirect uris %s for"
-        " client_id %s",
+        "redirect_uri %s is not among the advertised redirect uris %s for client_id %s",
         redirect_uri,
         redirect_uris,
         client_id,
