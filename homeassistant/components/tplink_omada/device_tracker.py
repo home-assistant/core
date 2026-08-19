@@ -8,12 +8,14 @@ from tplink_omada_client.exceptions import OmadaClientException
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
 from .controller import OmadaClientsCoordinator
+from .services import SERVICE_BLOCK, SERVICE_RECONNECT, SERVICE_UNBLOCK
 
 PARALLEL_UPDATES = 0
 
@@ -40,6 +42,11 @@ async def async_setup_entry(
             if isinstance(client, OmadaWirelessClient)
         ]
     )
+
+    platform = entity_platform.async_get_current_platform()
+    platform.async_register_entity_service(SERVICE_RECONNECT, {}, "async_reconnect")
+    platform.async_register_entity_service(SERVICE_BLOCK, {}, "async_block")
+    platform.async_register_entity_service(SERVICE_UNBLOCK, {}, "async_unblock")
 
 
 class OmadaClientScannerEntity(

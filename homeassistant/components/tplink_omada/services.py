@@ -5,12 +5,11 @@ from typing import cast
 from tplink_omada_client.exceptions import OmadaClientException
 import voluptuous as vol
 
-from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, selector, service
+from homeassistant.helpers import config_validation as cv, selector
 
 from .const import DOMAIN
 from .controller import OmadaSiteController
@@ -80,17 +79,3 @@ def async_setup_services(hass: HomeAssistant) -> None:
         _handle_reconnect_client,
         schema=SCHEMA_RECONNECT_CLIENT,
     )
-    for service_name, func, admin_only in (
-        (SERVICE_RECONNECT, "async_reconnect", False),
-        (SERVICE_BLOCK, "async_block", True),
-        (SERVICE_UNBLOCK, "async_unblock", True),
-    ):
-        service.async_register_platform_entity_service(
-            hass,
-            DOMAIN,
-            service_name,
-            entity_domain=DEVICE_TRACKER_DOMAIN,
-            schema=vol.Schema({}),
-            func=func,
-            admin_only=admin_only,
-        )
