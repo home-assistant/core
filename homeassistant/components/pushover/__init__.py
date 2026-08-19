@@ -48,7 +48,7 @@ class PushoverRuntimeData:
     """Runtime data for a pushover config entry."""
 
     api: PushoverAPI
-    notify_service: "PushoverNotificationService | None" = None
+    notify_service: PushoverNotificationService | None = None
 
 
 type PushoverConfigEntry = ConfigEntry[PushoverRuntimeData]
