@@ -23,6 +23,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningAddon,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -993,6 +994,84 @@ async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -
     }
     config_entry = hass.config_entries.async_get_entry(config_entry.entry_id)
     assert config_entry.data == expected_data
+
+
+@pytest.mark.usefixtures("get_border_agent_id")
+async def test_hassio_discovery_flow_new_host(hass: HomeAssistant) -> None:
+    """Test the host can be updated."""
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={
+            "url": f"http://core-silabs-multiprotocol_old:{HASSIO_DATA.config['port']}"
+        },
+        domain=otbr.DOMAIN,
+        options={},
+        source="hassio",
+        title="Open Thread Border Router",
+        unique_id=HASSIO_DATA.uuid,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    expected_data = {
+        "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+    }
+    assert hass.config_entries.async_entries(otbr.DOMAIN) == [config_entry]
+    assert config_entry.data == expected_data
+
+
+@pytest.mark.parametrize(
+    "entry_state",
+    [
+        ConfigEntryState.NOT_LOADED,
+        ConfigEntryState.SETUP_RETRY,
+    ],
+)
+@pytest.mark.usefixtures(
+    "otbr_addon_info",
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+)
+async def test_hassio_discovery_flow_addon_restarted_entry_not_loaded(
+    hass: HomeAssistant, entry_state: ConfigEntryState
+) -> None:
+    """Test no duplicate entry is created when the add-on restarts while unloaded.
+
+    The config entry is unloaded while the ZBT-1 or ZBT-2 firmware is updated, and
+    the add-on is restarted before the entry is set up again.
+    """
+    mock_integration(hass, MockModule("hassio"))
+
+    # Setup the config entry
+    config_entry = MockConfigEntry(
+        data={
+            "url": f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}"
+        },
+        domain=otbr.DOMAIN,
+        options={},
+        source="hassio",
+        title="Open Thread Border Router",
+        unique_id=HASSIO_DATA.uuid,
+    )
+    config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, entry_state)
+
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert hass.config_entries.async_entries(otbr.DOMAIN) == [config_entry]
 
 
 @pytest.mark.parametrize(
