@@ -1066,6 +1066,9 @@ jobs:
           - 5432:5432
         env:
           POSTGRES_PASSWORD: password
+          # 18+ images default PGDATA to /var/lib/postgresql/<major>/docker,
+          # which is not covered by the tmpfs below
+          PGDATA: /var/lib/postgresql/data
         options: >-
           --health-cmd="pg_isready -hlocalhost -Upostgres"
           --health-interval=5s --health-timeout=2s --health-retries=3
