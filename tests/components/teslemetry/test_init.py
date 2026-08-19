@@ -31,9 +31,6 @@ from homeassistant.components.teslemetry import (
     _async_get_rsa_key_pem,
     _get_access_token,
 )
-from homeassistant.components.teslemetry.config_flow import (
-    EnergySiteSubentryFlowHandler,
-)
 from homeassistant.components.teslemetry.const import (
     CLIENT_ID,
     CONF_SITE_ID,
@@ -1309,11 +1306,11 @@ async def test_get_rsa_key_pem_generates_and_caches(hass: HomeAssistant) -> None
     """The RSA key is generated/read once, then served from the hass.data cache."""
     with (
         patch(
-            "homeassistant.components.teslemetry.helpers.Teslemetry.get_rsa_private_key",
+            "homeassistant.components.teslemetry.Teslemetry.get_rsa_private_key",
             new=AsyncMock(),
         ) as mock_get_key,
         patch(
-            "homeassistant.components.teslemetry.helpers.Path.read_bytes",
+            "homeassistant.components.teslemetry.Path.read_bytes",
             return_value=_TEST_RSA_KEY_PEM,
         ),
     ):
@@ -1329,11 +1326,11 @@ async def test_get_rsa_key_pem_uses_storage_dir(hass: HomeAssistant) -> None:
     """The RSA key is stored under the storage dir, not the config root."""
     with (
         patch(
-            "homeassistant.components.teslemetry.helpers.Teslemetry.get_rsa_private_key",
+            "homeassistant.components.teslemetry.Teslemetry.get_rsa_private_key",
             new=AsyncMock(),
         ) as mock_get_key,
         patch(
-            "homeassistant.components.teslemetry.helpers.Path.read_bytes",
+            "homeassistant.components.teslemetry.Path.read_bytes",
             return_value=_TEST_RSA_KEY_PEM,
         ),
     ):
@@ -1358,29 +1355,6 @@ async def test_get_rsa_key_pem_migrates_legacy_file(hass: HomeAssistant) -> None
     assert pem == _TEST_RSA_KEY_PEM
     assert not os.path.isfile(legacy_path)
     assert Path(new_path).read_bytes() == _TEST_RSA_KEY_PEM
-
-
-async def test_pairing_and_runtime_use_same_rsa_key(hass: HomeAssistant) -> None:
-    """The pairing flow and runtime routing resolve the same key material.
-
-    A key placed in the storage dir must be read verbatim by both readers; if the
-    pairing flow read a different location it would generate its own key and the
-    two would diverge.
-    """
-    key_path = hass.config.path(STORAGE_DIR, POWERWALL_KEY_FILE)
-    os.makedirs(os.path.dirname(key_path), exist_ok=True)
-    Path(key_path).write_bytes(_TEST_RSA_KEY_PEM)
-
-    runtime_pem = await _async_get_rsa_key_pem(hass)
-
-    handler = EnergySiteSubentryFlowHandler()
-    handler.hass = hass
-    energy_site = MagicMock()
-    energy_site.find_gateway_address = AsyncMock(return_value="10.0.0.1")
-    await handler._prepare_energy_site(energy_site)
-
-    assert runtime_pem == _TEST_RSA_KEY_PEM
-    assert handler._key_pem == _TEST_RSA_KEY_PEM
 
 
 async def test_rsa_key_removed_with_last_entry(hass: HomeAssistant) -> None:

@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping
 import logging
+from pathlib import Path
 from typing import Any, cast, override
 
 from aiohttp import ClientError
@@ -44,8 +45,14 @@ from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import TeslemetryConfigEntry
-from .const import CLIENT_ID, CONF_SITE_ID, DOMAIN, LOGGER, SUBENTRY_TYPE_ENERGY_SITE
-from .helpers import async_load_rsa_keyholder
+from .const import (
+    CLIENT_ID,
+    CONF_SITE_ID,
+    DOMAIN,
+    LOGGER,
+    POWERWALL_KEY_FILE,
+    SUBENTRY_TYPE_ENERGY_SITE,
+)
 
 
 class PowerwallLookupError(Exception):
@@ -258,7 +265,12 @@ class EnergySiteSubentryFlowHandler(ConfigSubentryFlow):
             LOGGER.debug("Gateway address discovery failed: %s", err)
             self._discovered_host = ""
 
-        keyholder, self._key_pem = await async_load_rsa_keyholder(self.hass)
+        path = self.hass.config.path(POWERWALL_KEY_FILE)
+        keyholder = Teslemetry(
+            session=async_get_clientsession(self.hass), access_token=""
+        )
+        await keyholder.get_rsa_private_key(path)
+        self._key_pem = await self.hass.async_add_executor_job(Path(path).read_bytes)
         self._public_key_der = keyholder.rsa_public_der_pkcs1
         self._public_key_b64 = keyholder.rsa_public_der_pkcs1_b64
 

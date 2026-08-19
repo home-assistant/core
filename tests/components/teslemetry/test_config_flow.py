@@ -689,21 +689,21 @@ def mock_rsa_key() -> Generator[None]:
     """Mock RSA key generation/loading, avoiding real crypto and disk I/O."""
     with (
         patch(
-            "homeassistant.components.teslemetry.helpers.Teslemetry.get_rsa_private_key",
+            "homeassistant.components.teslemetry.config_flow.Teslemetry.get_rsa_private_key",
             new=AsyncMock(),
         ),
         patch(
-            "homeassistant.components.teslemetry.helpers.Teslemetry.rsa_public_der_pkcs1",
+            "homeassistant.components.teslemetry.config_flow.Teslemetry.rsa_public_der_pkcs1",
             new_callable=PropertyMock,
             return_value=PUBLIC_KEY_DER,
         ),
         patch(
-            "homeassistant.components.teslemetry.helpers.Teslemetry.rsa_public_der_pkcs1_b64",
+            "homeassistant.components.teslemetry.config_flow.Teslemetry.rsa_public_der_pkcs1_b64",
             new_callable=PropertyMock,
             return_value=PUBLIC_KEY_B64,
         ),
         patch(
-            "homeassistant.components.teslemetry.helpers.Path.read_bytes",
+            "homeassistant.components.teslemetry.config_flow.Path.read_bytes",
             return_value=_TEST_RSA_KEY_PEM,
         ),
     ):
