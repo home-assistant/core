@@ -307,6 +307,62 @@ async def test_spaceapi_state_cover_entity(
     assert data["state"]["open"] is False
 
 
+async def test_spaceapi_location_extras(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that timezone, country_code and hint appear in the location block."""
+    new_options = dict(mock_config_entry.options)
+    new_options["location"] = {
+        "address": "Testgasse 1",
+        "timezone": "Europe/Vienna",
+        "country_code": "AT",
+        "hint": "Ring the bell",
+    }
+    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    loc = data["location"]
+    assert loc["address"] == "Testgasse 1"
+    assert loc["timezone"] == "Europe/Vienna"
+    assert loc["country_code"] == "AT"
+    assert loc["hint"] == "Ring the bell"
+
+
+async def test_spaceapi_state_message_entity(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the state message entity's state appears in the output."""
+    new_options = dict(mock_config_entry.options)
+    new_options["state"] = {
+        **new_options.get("state", {}),
+        "message": "input_text.status_msg",
+    }
+    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.states.async_set("input_text.status_msg", "Open for business!")
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["state"]["message"] == "Open for business!"
+
+
 async def test_spaceapi_sensor_no_unit_field_when_type_has_no_default(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -430,6 +486,30 @@ async def test_spaceapi_state_icon_partial(
     icon = data["state"]["icon"]
     assert icon == {"open": "https://example.com/open.png"}
     assert "closed" not in icon
+
+
+async def test_spaceapi_state_message_entity_missing(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that a missing message entity silently omits the message field."""
+    new_options = dict(mock_config_entry.options)
+    new_options["state"] = {
+        **new_options.get("state", {}),
+        "message": "input_text.nonexistent",
+    }
+    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert "message" not in data["state"]
 
 
 async def test_spaceapi_merge_config_semantics(

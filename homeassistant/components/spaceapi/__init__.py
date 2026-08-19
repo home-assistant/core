@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_NAME,
     ATTR_STATE,
     CONF_ADDRESS,
+    CONF_COUNTRY_CODE,
     CONF_EMAIL,
     CONF_ENTITY_ID,
     CONF_LOCATION,
@@ -61,6 +62,7 @@ from .const import (
     CONF_FEED_WIKI,
     CONF_FEEDS,
     CONF_FOURSQUARE,
+    CONF_HINT,
     CONF_ICON_CLOSED,
     CONF_ICON_OPEN,
     CONF_ICONS,
@@ -74,6 +76,7 @@ from .const import (
     CONF_KEYMASTER_TWITTER,
     CONF_KEYMASTERS,
     CONF_LOGO,
+    CONF_MESSAGE,
     CONF_ML,
     CONF_PHONE,
     CONF_PROJECTS,
@@ -82,6 +85,7 @@ from .const import (
     CONF_SPACEFED,
     CONF_SPACENET,
     CONF_SPACESAML,
+    CONF_TIMEZONE,
     CONF_TRIGGER_PERSON,
     CONF_TWITTER,
     DOMAIN,
@@ -391,8 +395,9 @@ class APISpaceApiView(HomeAssistantView):
             ATTR_API_LON: round(hass.config.longitude, 6),
         }
         loc_opts: dict[str, str] = spaceapi.get(CONF_LOCATION) or {}
-        if CONF_ADDRESS in loc_opts:
-            location[CONF_ADDRESS] = loc_opts[CONF_ADDRESS]
+        for key in (CONF_ADDRESS, CONF_TIMEZONE, CONF_COUNTRY_CODE, CONF_HINT):
+            if key in loc_opts:
+                location[key] = loc_opts[key]
         return location
 
     def _build_state(
@@ -432,6 +437,10 @@ class APISpaceApiView(HomeAssistantView):
         }
         if icons:
             state[ATTR_ICON] = icons
+
+        if message_entity_id := state_cfg.get(CONF_MESSAGE):
+            if message_state := hass.states.get(message_entity_id):
+                state[CONF_MESSAGE] = message_state.state
 
         if space_state is not None and (user_id := space_state.context.user_id):
             for person in hass.states.async_all("person"):

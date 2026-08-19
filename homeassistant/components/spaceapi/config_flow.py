@@ -4,9 +4,10 @@ from typing import Any, override
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_COUNTRY_CODE,
     CONF_EMAIL,
     CONF_ENTITY_ID,
     CONF_LOCATION,
@@ -14,25 +15,65 @@ from homeassistant.const import (
     CONF_STATE,
     CONF_URL,
 )
+from homeassistant.core import callback
 from homeassistant.helpers.selector import (
+    BooleanSelector,
     EntitySelector,
     EntitySelectorConfig,
+    SelectSelector,
+    SelectSelectorConfig,
     TextSelector,
     TextSelectorConfig,
     TextSelectorType,
 )
 
+from . import SpaceAPIConfigEntry
 from .const import (
+    CONF_ACCOUNT_BALANCE,
+    CONF_BAROMETER,
+    CONF_BEVERAGE_SUPPLY,
     CONF_CAM,
+    CONF_CARBONDIOXIDE,
     CONF_CONTACT,
+    CONF_DOOR_LOCKED,
+    CONF_FACEBOOK,
+    CONF_FEED_BLOG,
+    CONF_FEED_CALENDAR,
     CONF_FEED_FLICKR,
+    CONF_FEED_WIKI,
     CONF_FEEDS,
+    CONF_FOURSQUARE,
+    CONF_GOPHER,
+    CONF_HINT,
+    CONF_HUMIDITY,
     CONF_ICON_CLOSED,
     CONF_ICON_OPEN,
+    CONF_IDENTICA,
+    CONF_IRC,
+    CONF_ISSUE_MAIL,
     CONF_LOGO,
+    CONF_MASTODON,
+    CONF_MATRIX,
+    CONF_MESSAGE,
+    CONF_ML,
+    CONF_MUMBLE,
+    CONF_NETWORK_CONNECTIONS,
+    CONF_NETWORK_TRAFFIC,
+    CONF_PEOPLE_NOW_PRESENT,
+    CONF_PHONE,
+    CONF_POWER_CONSUMPTION,
+    CONF_POWER_GENERATION,
     CONF_PROJECTS,
+    CONF_RADIATION,
+    CONF_SIP,
     CONF_SPACE,
     CONF_SPACEFED,
+    CONF_SPACENET,
+    CONF_SPACESAML,
+    CONF_TEMPERATURE,
+    CONF_TIMEZONE,
+    CONF_TOTAL_MEMBER_COUNT,
+    CONF_TWITTER,
     CONF_XMPP,
     DOMAIN,
 )
@@ -65,6 +106,15 @@ _FEED_TYPES = ["rss", "atom", "ical"]
 
 class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for SpaceAPI."""
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: SpaceAPIConfigEntry,
+    ) -> SpaceAPIOptionsFlowHandler:
+        """Create the options flow."""
+        return SpaceAPIOptionsFlowHandler()
 
     @override
     async def async_step_user(
@@ -196,4 +246,440 @@ class SpaceAPIConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_STATE: {CONF_ENTITY_ID: user_input[CONF_ENTITY_ID]},
             },
             options={**entry.options, CONF_CONTACT: updated_contact},
+        )
+
+
+class SpaceAPIOptionsFlowHandler(OptionsFlow):
+    """Handle SpaceAPI options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Show the options menu."""
+        return self.async_show_menu(
+            step_id="init",
+            menu_options=[
+                "contact",
+                "state_extras",
+                "sensors",
+                "spacefed",
+                "location",
+                "media",
+                "feeds",
+                "projects",
+            ],
+        )
+
+    async def async_step_contact(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure contact details."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+            contact = {k: v for k, v in user_input.items() if v}
+            if contact:
+                options[CONF_CONTACT] = contact
+            else:
+                options.pop(CONF_CONTACT, None)
+            return self.async_create_entry(data=options)
+
+        current = self.config_entry.options.get(CONF_CONTACT, {})
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_EMAIL, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.EMAIL)
+                ),
+                vol.Optional(CONF_ISSUE_MAIL, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.EMAIL)
+                ),
+                vol.Optional(CONF_IRC, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_ML, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.EMAIL)
+                ),
+                vol.Optional(CONF_PHONE, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEL)
+                ),
+                vol.Optional(CONF_SIP, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional(CONF_TWITTER, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_FACEBOOK, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional(CONF_MASTODON, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_MATRIX, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_XMPP, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_MUMBLE, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional(CONF_GOPHER, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional(CONF_IDENTICA, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_FOURSQUARE, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="contact",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+    async def async_step_state_extras(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure state icons and optional state text fields."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+            state_extras = {k: v for k, v in user_input.items() if v}
+            if state_extras:
+                options[CONF_STATE] = state_extras
+            else:
+                options.pop(CONF_STATE, None)
+            return self.async_create_entry(data=options)
+
+        current = self.config_entry.options.get(CONF_STATE, {})
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_ICON_OPEN, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional(CONF_ICON_CLOSED, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional(CONF_MESSAGE): EntitySelector(
+                    EntitySelectorConfig(domain=["input_text", "text", "sensor"])
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="state_extras",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+    async def async_step_sensors(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure sensors."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+            sensors = {k: v for k, v in user_input.items() if v}
+            if sensors:
+                options[CONF_SENSORS] = sensors
+            else:
+                options.pop(CONF_SENSORS, None)
+            return self.async_create_entry(data=options)
+
+        current = self.config_entry.options.get(CONF_SENSORS, {})
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_TEMPERATURE): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="temperature",
+                    )
+                ),
+                vol.Optional(CONF_HUMIDITY): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="humidity",
+                    )
+                ),
+                vol.Optional(CONF_BAROMETER): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="atmospheric_pressure",
+                    )
+                ),
+                vol.Optional(CONF_CARBONDIOXIDE): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="carbon_dioxide",
+                    )
+                ),
+                vol.Optional(CONF_RADIATION): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
+                ),
+                vol.Optional(CONF_POWER_CONSUMPTION): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="power",
+                    )
+                ),
+                vol.Optional(CONF_POWER_GENERATION): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="power",
+                    )
+                ),
+                vol.Optional(CONF_DOOR_LOCKED): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain=["lock", "binary_sensor"],
+                    )
+                ),
+                vol.Optional(CONF_PEOPLE_NOW_PRESENT): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
+                ),
+                vol.Optional(CONF_TOTAL_MEMBER_COUNT): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
+                ),
+                vol.Optional(CONF_ACCOUNT_BALANCE): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                        device_class="monetary",
+                    )
+                ),
+                vol.Optional(CONF_BEVERAGE_SUPPLY): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
+                ),
+                vol.Optional(CONF_NETWORK_CONNECTIONS): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
+                ),
+                vol.Optional(CONF_NETWORK_TRAFFIC): EntitySelector(
+                    EntitySelectorConfig(
+                        multiple=True,
+                        domain="sensor",
+                    )
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="sensors",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+    async def async_step_spacefed(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure space federation."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+            spacefed = dict(user_input)
+            if any(spacefed.values()):
+                options[CONF_SPACEFED] = spacefed
+            else:
+                options.pop(CONF_SPACEFED, None)
+            return self.async_create_entry(data=options)
+
+        current = self.config_entry.options.get(CONF_SPACEFED, {})
+        schema = vol.Schema(
+            {
+                vol.Required(CONF_SPACENET, default=False): BooleanSelector(),
+                vol.Required(CONF_SPACESAML, default=False): BooleanSelector(),
+            }
+        )
+        return self.async_show_form(
+            step_id="spacefed",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+    async def async_step_location(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure location details."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+            location = {k: v for k, v in user_input.items() if v}
+            if location:
+                options[CONF_LOCATION] = location
+            else:
+                options.pop(CONF_LOCATION, None)
+            return self.async_create_entry(data=options)
+
+        current = self.config_entry.options.get(CONF_LOCATION, {})
+        schema = vol.Schema(
+            {
+                vol.Optional("address", default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_TIMEZONE, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_COUNTRY_CODE, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+                vol.Optional(CONF_HINT, default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.TEXT)
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="location",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+    async def async_step_media(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure media (cameras)."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+
+            cam_urls = user_input.get(CONF_CAM, [])
+            if cam_urls:
+                options[CONF_CAM] = cam_urls
+            else:
+                options.pop(CONF_CAM, None)
+
+            return self.async_create_entry(data=options)
+
+        current_cam = self.config_entry.options.get(CONF_CAM, [])
+        current = {
+            CONF_CAM: current_cam,
+        }
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_CAM): SelectSelector(
+                    SelectSelectorConfig(options=[], custom_value=True, multiple=True)
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="media",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+    async def async_step_feeds(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure feeds."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+            feeds: dict[str, dict[str, str]] = {}
+
+            for feed_name in (
+                CONF_FEED_BLOG,
+                CONF_FEED_WIKI,
+                CONF_FEED_CALENDAR,
+                CONF_FEED_FLICKR,
+            ):
+                url = user_input.get(f"{feed_name}_url", "")
+                feed_type = user_input.get(f"{feed_name}_type", "")
+                if url:
+                    feed_entry: dict[str, str] = {"url": url}
+                    if feed_type:
+                        feed_entry["type"] = feed_type
+                    feeds[feed_name] = feed_entry
+
+            if feeds:
+                options[CONF_FEEDS] = feeds
+            else:
+                options.pop(CONF_FEEDS, None)
+            return self.async_create_entry(data=options)
+
+        current_feeds = self.config_entry.options.get(CONF_FEEDS, {})
+        # Normalize legacy "flicker" key to "flickr" on first edit
+        if "flicker" in current_feeds and CONF_FEED_FLICKR not in current_feeds:
+            current_feeds = dict(current_feeds)
+            current_feeds[CONF_FEED_FLICKR] = current_feeds.pop("flicker")
+
+        current: dict[str, str] = {}
+        for feed_name in (
+            CONF_FEED_BLOG,
+            CONF_FEED_WIKI,
+            CONF_FEED_CALENDAR,
+            CONF_FEED_FLICKR,
+        ):
+            feed_data = current_feeds.get(feed_name, {})
+            current[f"{feed_name}_url"] = feed_data.get("url", "")
+            current[f"{feed_name}_type"] = feed_data.get("type", "")
+
+        schema = vol.Schema(
+            {
+                vol.Optional("blog_url", default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional("blog_type", default=""): SelectSelector(
+                    SelectSelectorConfig(options=_FEED_TYPES, custom_value=True)
+                ),
+                vol.Optional("wiki_url", default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional("wiki_type", default=""): SelectSelector(
+                    SelectSelectorConfig(options=_FEED_TYPES, custom_value=True)
+                ),
+                vol.Optional("calendar_url", default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional("calendar_type", default=""): SelectSelector(
+                    SelectSelectorConfig(options=_FEED_TYPES, custom_value=True)
+                ),
+                vol.Optional("flickr_url", default=""): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.URL)
+                ),
+                vol.Optional("flickr_type", default=""): SelectSelector(
+                    SelectSelectorConfig(options=_FEED_TYPES, custom_value=True)
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="feeds",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+    async def async_step_projects(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure projects."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+
+            projects = user_input.get(CONF_PROJECTS, [])
+            if projects:
+                options[CONF_PROJECTS] = projects
+            else:
+                options.pop(CONF_PROJECTS, None)
+
+            return self.async_create_entry(data=options)
+
+        current_projects = self.config_entry.options.get(CONF_PROJECTS, [])
+        current = {
+            CONF_PROJECTS: current_projects,
+        }
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_PROJECTS): SelectSelector(
+                    SelectSelectorConfig(options=[], custom_value=True, multiple=True)
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="projects",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
         )

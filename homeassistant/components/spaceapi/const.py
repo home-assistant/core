@@ -30,7 +30,11 @@ CONF_KEYMASTER_TWITTER = "twitter"
 CONF_TWITTER = "twitter"
 CONF_FACEBOOK = "facebook"
 CONF_ML = "ml"
+CONF_MASTODON = "mastodon"
+CONF_MATRIX = "matrix"
 CONF_XMPP = "xmpp"
+CONF_MUMBLE = "mumble"
+CONF_GOPHER = "gopher"
 CONF_IDENTICA = "identica"
 CONF_FOURSQUARE = "foursquare"
 CONF_ISSUE_MAIL = "issue_mail"
@@ -81,7 +85,12 @@ SENSOR_DEFAULT_UNITS: dict[str, str] = {
     CONF_NETWORK_TRAFFIC: "packets_per_second",
 }
 
+CONF_MESSAGE = "message"
 CONF_TRIGGER_PERSON = "trigger_person"
+
+CONF_TIMEZONE = "timezone"
+CONF_HINT = "hint"
+
 
 SPACEAPI_COMPATIBILITY = ["15"]
 
