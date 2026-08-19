@@ -200,7 +200,7 @@ async def async_handle_webhook(
                 _LOGGER.debug("Unable to parse remote ip %s", request.remote)
                 return Response(status=HTTPStatus.OK)
 
-            is_local = network_util.is_local(request_remote)
+            is_local = network_util.is_local(request_remote, hass)
 
         if not is_local:
             _LOGGER.warning("Received remote request for local webhook %s", webhook_id)

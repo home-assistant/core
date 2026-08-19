@@ -37,7 +37,7 @@ def async_user_not_allowed_do_auth(
     except ValueError:
         return "Invalid remote IP"
 
-    if is_local(remote_address):
+    if is_local(remote_address, hass):
         return None
 
     return "User cannot authenticate remotely"

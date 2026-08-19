@@ -1,6 +1,7 @@
 """Test Home Assistant volume utility functions."""
 
 from ipaddress import ip_address
+from unittest.mock import Mock, patch
 
 from homeassistant.util import network as network_util
 
@@ -52,6 +53,41 @@ def test_is_local() -> None:
     assert not network_util.is_local(ip_address("198.51.100.1"))
     assert not network_util.is_local(ip_address("2001:DB8:FA1::1"))
     assert not network_util.is_local(ip_address("::ffff:208.5.4.2"))
+
+
+def test_is_local_with_hass() -> None:
+    """Test the host's on-link IPv6 networks are treated as local."""
+    hass = Mock()
+    adapters = [
+        {
+            "enabled": True,
+            "ipv6": [
+                {"address": "2a00:1234:5678:9abc::5", "network_prefix": 64},
+                {"address": "fd00::1", "network_prefix": 64},  # ULA, excluded
+                {"address": "fe80::1", "network_prefix": 64},  # link-local, excluded
+            ],
+        },
+        {
+            "enabled": False,  # disabled adapter, excluded
+            "ipv6": [{"address": "2a00:aaaa:bbbb:cccc::1", "network_prefix": 64}],
+        },
+    ]
+    with patch(
+        "homeassistant.components.network.async_get_loaded_adapters",
+        return_value=adapters,
+    ):
+        assert network_util.is_local(ip_address("2a00:1234:5678:9abc::1"), hass)
+        assert not network_util.is_local(ip_address("2a00:1234:5678:9abd::1"), hass)
+        # A disabled adapter's prefix is not local.
+        assert not network_util.is_local(ip_address("2a00:aaaa:bbbb:cccc::1"), hass)
+    # When the network integration is not set up, only RFC ranges are local.
+    with patch(
+        "homeassistant.components.network.async_get_loaded_adapters",
+        side_effect=KeyError,
+    ):
+        assert not network_util.is_local(ip_address("2a00:1234:5678:9abc::1"), hass)
+    # Without hass, only the RFC ranges are local.
+    assert not network_util.is_local(ip_address("2a00:1234:5678:9abc::1"))
 
 
 def test_is_ip_address() -> None:

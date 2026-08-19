@@ -140,10 +140,9 @@ ENTITY_FEATURES_BY_DOMAIN = {
 }
 
 
-@lru_cache(maxsize=32)
-def _remote_is_allowed(address: str) -> bool:
+def _remote_is_allowed(hass: core.HomeAssistant, address: str) -> bool:
     """Check if remote address is allowed."""
-    return is_local(ip_address(address))
+    return is_local(ip_address(address), hass)
 
 
 class HueUnauthorizedUser(HomeAssistantView):
@@ -170,7 +169,7 @@ class HueUsernameView(HomeAssistantView):
     async def post(self, request: web.Request) -> web.Response:
         """Handle a POST request."""
         assert request.remote is not None
-        if not _remote_is_allowed(request.remote):
+        if not _remote_is_allowed(request.app[KEY_HASS], request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         try:
@@ -199,7 +198,7 @@ class HueAllGroupsStateView(HomeAssistantView):
     def get(self, request: web.Request, username: str) -> web.Response:
         """Process a request to make the Brilliant Lightpad work."""
         assert request.remote is not None
-        if not _remote_is_allowed(request.remote):
+        if not _remote_is_allowed(request.app[KEY_HASS], request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         return self.json({})
@@ -220,7 +219,7 @@ class HueGroupView(HomeAssistantView):
     def put(self, request: web.Request, username: str) -> web.Response:
         """Process a request to make the Logitech Pop working."""
         assert request.remote is not None
-        if not _remote_is_allowed(request.remote):
+        if not _remote_is_allowed(request.app[KEY_HASS], request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         return self.json(
@@ -251,7 +250,7 @@ class HueAllLightsStateView(HomeAssistantView):
     def get(self, request: web.Request, username: str) -> web.Response:
         """Process a request to get the list of available lights."""
         assert request.remote is not None
-        if not _remote_is_allowed(request.remote):
+        if not _remote_is_allowed(request.app[KEY_HASS], request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         return self.json(create_list_of_entities(self.config, request))
@@ -272,7 +271,7 @@ class HueFullStateView(HomeAssistantView):
     def get(self, request: web.Request, username: str) -> web.Response:
         """Process a request to get the list of available lights."""
         assert request.remote is not None
-        if not _remote_is_allowed(request.remote):
+        if not _remote_is_allowed(request.app[KEY_HASS], request.remote):
             return self.json_message("only local IPs allowed", HTTPStatus.UNAUTHORIZED)
         if username != HUE_API_USERNAME:
             return self.json(UNAUTHORIZED_USER)
@@ -301,7 +300,7 @@ class HueConfigView(HomeAssistantView):
     def get(self, request: web.Request, username: str = "") -> web.Response:
         """Process a request to get the configuration."""
         assert request.remote is not None
-        if not _remote_is_allowed(request.remote):
+        if not _remote_is_allowed(request.app[KEY_HASS], request.remote):
             return self.json_message("only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         json_response = create_config_model(self.config, request)
@@ -324,7 +323,7 @@ class HueOneLightStateView(HomeAssistantView):
     def get(self, request: web.Request, username: str, entity_id: str) -> web.Response:
         """Process a request to get the state of an individual light."""
         assert request.remote is not None
-        if not _remote_is_allowed(request.remote):
+        if not _remote_is_allowed(request.app[KEY_HASS], request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         hass = request.app[KEY_HASS]
@@ -368,7 +367,7 @@ class HueOneLightChangeView(HomeAssistantView):
     ) -> web.Response:
         """Process a request to set the state of an individual light."""
         assert request.remote is not None
-        if not _remote_is_allowed(request.remote):
+        if not _remote_is_allowed(request.app[KEY_HASS], request.remote):
             return self.json_message("Only local IPs allowed", HTTPStatus.UNAUTHORIZED)
 
         config = self.config
