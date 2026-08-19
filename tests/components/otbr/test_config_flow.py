@@ -968,6 +968,55 @@ async def test_hassio_discovery_flow_updates_entry(
     "get_border_agent_id",
     "get_extended_address",
 )
+async def test_hassio_discovery_flow_entry_without_unique_id_kept(
+    hass: HomeAssistant,
+) -> None:
+    """Test an entry without a unique id is left alone when the uuid is taken.
+
+    An entry created by the first version of the integration next to a newer entry
+    for the same add-on is the state older versions could leave behind.
+    """
+    mock_integration(hass, MockModule("hassio"))
+
+    url = f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}"
+    legacy_entry = MockConfigEntry(
+        data={"url": url},
+        domain=otbr.DOMAIN,
+        options={},
+        source="hassio",
+        title="Open Thread Border Router",
+        unique_id=None,
+    )
+    legacy_entry.add_to_hass(hass)
+    config_entry = MockConfigEntry(
+        data={"url": url},
+        domain=otbr.DOMAIN,
+        options={},
+        source="hassio",
+        title="Open Thread Border Router",
+        unique_id=HASSIO_DATA.uuid,
+    )
+    config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert legacy_entry.unique_id is None
+    assert hass.config_entries.async_entries(otbr.DOMAIN) == [
+        legacy_entry,
+        config_entry,
+    ]
+
+
+@pytest.mark.usefixtures(
+    "otbr_addon_info",
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+)
 async def test_hassio_discovery_flow_new_port_other_addon(hass: HomeAssistant) -> None:
     """Test the port is not updated if we get data for another addon hosting OTBR."""
     mock_integration(hass, MockModule("hassio"))

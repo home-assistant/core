@@ -195,6 +195,13 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         url = f"http://{config['host']}:{config['port']}"
         config_entry_data = {"url": url}
 
+        # Entries created by the first version of the integration have no unique id
+        # and are matched by host below, unless another entry already claims the uuid
+        # This can be removed in HA Core 2027.3
+        entry_with_uuid = self.hass.config_entries.async_entry_for_domain_unique_id(
+            DOMAIN, discovery_info.uuid
+        )
+
         if current_entries := self._async_current_entries():
             for current_entry in current_entries:
                 if current_entry.source != SOURCE_HASSIO:
@@ -206,7 +213,10 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     # we have to assume it's the first version, which can only be
                     # matched to this discovery by host
                     # This check can be removed in HA Core 2027.3
-                    if current_url.host != config["host"]:
+                    if (
+                        entry_with_uuid is not None
+                        or current_url.host != config["host"]
+                    ):
                         continue
                     unique_id = discovery_info.uuid
 
