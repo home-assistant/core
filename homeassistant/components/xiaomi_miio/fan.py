@@ -40,7 +40,6 @@ from homeassistant.util.percentage import (
 
 from .const import (
     CONF_FLOW_TYPE,
-    FAN_DATA_KEY as DATA_KEY,
     FEATURE_FLAGS_AIRFRESH,
     FEATURE_FLAGS_AIRFRESH_A1,
     FEATURE_FLAGS_AIRFRESH_T2017,
@@ -192,8 +191,6 @@ async def async_setup_entry(
     if config_entry.data[CONF_FLOW_TYPE] != CONF_DEVICE:
         return
 
-    hass.data.setdefault(DATA_KEY, {})
-
     model = config_entry.data[CONF_MODEL]
     unique_id = config_entry.unique_id
     device = config_entry.runtime_data.device
@@ -233,8 +230,6 @@ async def async_setup_entry(
         entity = XiaomiFanMiot(device, config_entry, unique_id, coordinator)
     else:
         return
-
-    hass.data[DATA_KEY][unique_id] = entity
 
     entities.append(entity)
 

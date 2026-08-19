@@ -278,15 +278,8 @@ SERVICE_SET_EXTRA_FEATURES = "fan_set_extra_features"
 SERVICE_SET_DRY = "set_dry"
 SERVICE_SET_MOTOR_SPEED = "fan_set_motor_speed"
 
-# Fan/Humidifier data
-FAN_DATA_KEY = "fan.xiaomi_miio"
-
 # Light data
-LIGHT_DATA_KEY = "light.xiaomi_miio"
 ATTR_SCENE = "scene"
-
-# Switch data
-SWITCH_DATA_KEY = "switch.xiaomi_miio"
 
 # Light Services
 SERVICE_SET_SCENE = "light_set_scene"

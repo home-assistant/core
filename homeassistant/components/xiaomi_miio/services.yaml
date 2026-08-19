@@ -1,18 +1,15 @@
 fan_reset_filter:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: fan
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: fan
 
 fan_set_extra_features:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: fan
   fields:
-    entity_id:
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: fan
     features:
       required: true
       selector:
@@ -46,52 +43,40 @@ light_set_delayed_turn_off:
         object:
 
 light_reminder_on:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: light
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: light
 
 light_reminder_off:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: light
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: light
 
 light_night_light_mode_on:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: light
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: light
 
 light_night_light_mode_off:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: light
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: light
 
 light_eyecare_mode_on:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: light
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: light
 
 light_eyecare_mode_off:
-  fields:
-    entity_id:
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: light
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: light
 
 remote_learn_command:
   target:
@@ -151,12 +136,11 @@ switch_set_power_price:
           max: 999
 
 switch_set_power_mode:
+  target:
+    entity:
+      integration: xiaomi_miio
+      domain: switch
   fields:
-    entity_id:
-      selector:
-        entity:
-          integration: xiaomi_miio
-          domain: switch
     mode:
       required: true
       selector:
