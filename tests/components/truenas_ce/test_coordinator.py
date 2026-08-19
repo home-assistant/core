@@ -1613,7 +1613,7 @@ async def test_async_update_data_runs_jobs_when_connected() -> None:
     coord._clear_stale_migration_rollback_issue = MagicMock()
     coord.last_updatecheck_update = datetime(1970, 1, 1, tzinfo=UTC)
     _stub_all_jobs(coord)
-    coord.ds = {"foo": "bar"}
+    coord.ds = {"foo": "bar", "system_info": {"hostname": "truenas"}}
 
     result = await coord._async_update_data()
 
@@ -1649,11 +1649,28 @@ async def test_async_update_data_swallows_job_exceptions() -> None:
     coord.last_updatecheck_update = dt_util.utcnow()
     _stub_all_jobs(coord)
     coord.get_service = AsyncMock(side_effect=Exception("boom"))
-    coord.ds = {}
+    coord.ds = {"system_info": {"hostname": "truenas"}}
 
     result = await coord._async_update_data()  # must not raise
 
     assert result is coord.ds
+
+
+async def test_async_update_data_raises_when_system_info_missing() -> None:
+    """A first refresh missing system.info must not be reported as successful."""
+    coord = _bare_coordinator()
+    coord.host = "truenas.local"
+    coord.api = MagicMock()
+    coord.api.connected = MagicMock(return_value=True)
+    coord._async_ensure_connected = AsyncMock()
+    _stub_all_jobs(coord)
+    coord.ds = {"system_info": {}}
+
+    with pytest.raises(coordinator_module.UpdateFailed):
+        await coord._async_update_data()
+
+    coord.get_systeminfo.assert_awaited_once()
+    coord.get_pool.assert_not_awaited()
 
 
 # ---------------------------

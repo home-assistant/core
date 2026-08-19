@@ -10,6 +10,8 @@ follows test_entity_setup.py's real-``hass`` style instead.
 
 from __future__ import annotations
 
+from unittest.mock import AsyncMock, patch
+
 from homeassistant.components.truenas_ce.const import (
     DOMAIN,
     LEGACY_DOMAIN,
@@ -323,7 +325,18 @@ async def test_rollback_removes_entry_reenables_legacy_and_restores_id(
     )
     assert recreated.entity_id != original_legacy_id
 
-    result = await async_rollback_to_legacy(hass, new_entry)
+    # The real "truenas" integration isn't part of this tree, so its actual
+    # setup can't succeed here; stand in for what a still-working legacy
+    # install would report, preserving the disabled_by side effect the
+    # rollback's success check depends on.
+    async def _fake_enable(entry_id: str, disabled_by: object) -> bool:
+        hass.config_entries.async_get_entry(entry_id).disabled_by = disabled_by
+        return True
+
+    with patch.object(
+        hass.config_entries, "async_set_disabled_by", side_effect=_fake_enable
+    ):
+        result = await async_rollback_to_legacy(hass, new_entry)
 
     assert result is True
     assert hass.config_entries.async_get_entry(new_entry.entry_id) is None
@@ -332,3 +345,29 @@ async def test_rollback_removes_entry_reenables_legacy_and_restores_id(
         entity_registry.async_get_entity_id("sensor", LEGACY_DOMAIN, "uptime-uid")
         == original_legacy_id
     )
+
+
+async def test_rollback_aborts_and_keeps_ce_entry_when_legacy_setup_fails(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A legacy entry that fails to set up must not cost the user the CE entry too."""
+    legacy = MockConfigEntry(domain=LEGACY_DOMAIN, data={CONF_HOST: "nas.local"})
+    legacy.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "sensor", LEGACY_DOMAIN, "uptime-uid", config_entry=legacy
+    )
+
+    new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
+    new_entry.add_to_hass(hass)
+    await async_adopt_legacy_entities(hass, new_entry)
+
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        AsyncMock(return_value=False),
+    ):
+        result = await async_rollback_to_legacy(hass, new_entry)
+
+    assert result is False
+    assert hass.config_entries.async_get_entry(new_entry.entry_id) is not None

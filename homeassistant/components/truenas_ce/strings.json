@@ -213,6 +213,9 @@
     "scrub_failed": {
       "message": "TrueNAS scrub failed for pool {pool} on {host}: {error}"
     },
+    "system_info_unavailable": {
+      "message": "Essential system information was not received from TrueNAS ({host})"
+    },
     "system_update_failed": {
       "message": "Failed to start TrueNAS system update on {host}: {error}"
     },

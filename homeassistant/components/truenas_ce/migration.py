@@ -585,10 +585,13 @@ async def async_rollback_to_legacy(
 ) -> bool:
     """Reverse the adoption: hand the entity_ids back to the legacy entry.
 
-    Removes this (``truenas_ce``) config entry first to free the adopted
-    entity_ids, then re-enables the disabled legacy ``truenas`` entry so it
-    reclaims them, and finally restores the user overrides. Returns ``False`` if
-    there is nothing to roll back (no legacy bridge left). Inert before rename.
+    Re-enables the disabled legacy ``truenas`` entry first, while this
+    (``truenas_ce``) entry and its live entities still exist as a fallback; only
+    once that setup is confirmed working does it remove this entry to free the
+    adopted entity_ids and restore them, and finally the user overrides. Returns
+    ``False`` if there is nothing to roll back (no legacy bridge left) or if the
+    legacy entry failed to set up (nothing is torn down in that case, so the
+    working ``truenas_ce`` entry is left in place). Inert before rename.
     """
     if DOMAIN == LEGACY_DOMAIN:
         return False
@@ -609,12 +612,26 @@ async def async_rollback_to_legacy(
         legacy_entry_id,
     )
 
-    # 1. Remove this entry first so the adopted entity_ids are freed and the
-    #    integration is unloaded.
+    # 1. Re-enable the legacy entry before touching this one. It cannot reclaim
+    #    the original entity_ids yet -- this entry's entities still hold them --
+    #    so it settles for temporary/auto-suffixed ids for now, resolved by the
+    #    remap below once step 2 frees the originals. Checking the result here,
+    #    before anything is torn down, is what lets a failed legacy setup (e.g.
+    #    the device is unreachable) abort the rollback with both entries intact
+    #    instead of leaving the user with neither.
+    if not await hass.config_entries.async_set_disabled_by(legacy_entry_id, None):
+        _LOGGER.error(
+            "Rollback aborted: legacy '%s' entry %s failed to set up; "
+            "the '%s' entry was left in place",
+            LEGACY_DOMAIN,
+            legacy_entry_id,
+            DOMAIN,
+        )
+        return False
+
+    # 2. Remove this entry now that the legacy entry is confirmed working, so
+    #    the adopted entity_ids are freed and this integration is unloaded.
     await hass.config_entries.async_remove(config_entry.entry_id)
-    # 2. Re-enable the legacy entry; it re-creates its entities at their current
-    #    names, freeing the original ids for the remap below.
-    await hass.config_entries.async_set_disabled_by(legacy_entry_id, None)
     # 3. Restore the original legacy entity_ids (permutation-safe, e.g. disk sd*
     #    re-lettering) and the user overrides, mirroring the forward adoption.
     ent_reg = er.async_get(hass)
