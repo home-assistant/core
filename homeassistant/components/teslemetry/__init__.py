@@ -329,6 +329,12 @@ async def _async_get_rsa_key_pem(hass: HomeAssistant) -> bytes:
     return pem
 
 
+# PowerwallError covers aiopowerwall failures (a bad key PEM raises its
+# PowerwallAuthenticationError subclass); key I/O and parsing raise OSError and
+# ValueError.
+_LOCAL_CONTROL_ERRORS: Final = (OSError, ValueError, PowerwallError)
+
+
 async def _async_resolve_local_control(
     hass: HomeAssistant,
     entry: TeslemetryConfigEntry,
@@ -351,7 +357,7 @@ async def _async_resolve_local_control(
         api = await _async_resolve_energy_site_api(
             hass, entry, subentry_id, cloud_energy_site
         )
-    except OSError, ValueError, PowerwallError:
+    except _LOCAL_CONTROL_ERRORS:
         LOGGER.warning(
             "Failed to set up local control for energy site %s; "
             "falling back to cloud control",
