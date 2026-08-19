@@ -94,7 +94,6 @@ from .const import (
     CONF_ADDON_SOCKET,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
-    CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
     CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_NETWORK_KEY,
@@ -391,11 +390,12 @@ class DriverEvents:
             controller.on("identify", self.controller_events.async_on_identify)
         )
 
-        if (
+        unknown_controller = (
             old_unique_id := self.config_entry.unique_id
         ) is not None and old_unique_id != (
             new_unique_id := str(driver.controller.home_id)
-        ):
+        )
+        if unknown_controller:
             device_registry = dr.async_get(self.hass)
             controller_model = "Unknown model"
             if (
@@ -411,9 +411,6 @@ class DriverEvents:
             ):
                 controller_model = model
 
-            # Do not clean up old stale devices if an unknown controller is connected.
-            data = {**self.config_entry.data, CONF_KEEP_OLD_DEVICES: True}
-            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
             async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -430,9 +427,6 @@ class DriverEvents:
                 translation_key="migrate_unique_id",
             )
         else:
-            data = self.config_entry.data.copy()
-            data.pop(CONF_KEEP_OLD_DEVICES, None)
-            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
             async_delete_issue(
                 self.hass, DOMAIN, f"migrate_unique_id.{self.config_entry.entry_id}"
             )
@@ -455,8 +449,8 @@ class DriverEvents:
         ]
 
         # Devices that are in the device registry that are not known by the controller
-        # can be removed
-        if not self.config_entry.data.get(CONF_KEEP_OLD_DEVICES):
+        # can be removed, but not while an unknown controller is connected.
+        if not unknown_controller:
             for device in stored_devices:
                 if device not in known_devices and device not in provisioned_devices:
                     self.dev_reg.async_remove_device(device.id)
