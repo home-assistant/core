@@ -120,7 +120,7 @@
         },
         "mac": {
           "description": "MAC address of the device.",
-          "name": "MAC address"
+          "name": "[%key:component::device_tracker::services::see::fields::mac::name%]"
         }
       },
       "name": "Reconnect wireless client"
