@@ -266,9 +266,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @property
     def _has_streamer(self) -> bool:
         """Return whether this model has a streaming module at all."""
-        return self._receiver.model is not None and (
-            self._receiver.model.has_streaming_feature()
-        )
+        return self._receiver.model.has_streaming_feature()
 
     @property
     def _now_playing(self) -> NowPlaying | None:
