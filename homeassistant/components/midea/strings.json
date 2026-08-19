@@ -108,43 +108,111 @@
     },
     "select": {
       "detect_mode": {
-        "name": "Detect mode"
+        "name": "Detect mode",
+        "state": {
+          "methanal": "Formaldehyde",
+          "off": "Off",
+          "pm_25": "PM2.5"
+        }
       },
       "direction": {
-        "name": "Direction"
+        "name": "Direction",
+        "state": {
+          "oscillate": "Oscillate"
+        }
       },
       "fan_speed": {
-        "name": "Fan speed"
+        "name": "Fan speed",
+        "state": {
+          "auto": "Auto",
+          "high": "High",
+          "low": "Low",
+          "lowest": "Lowest",
+          "medium": "Medium",
+          "off": "Off",
+          "standby": "Standby"
+        }
       },
       "mode": {
-        "name": "Mode"
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "fast": "Fast",
+          "manual": "Manual",
+          "sleep": "Sleep",
+          "smoke": "Smoke",
+          "standby": "Standby"
+        }
       },
       "oscillation_angle": {
-        "name": "Oscillation angle"
+        "name": "Oscillation angle",
+        "state": {
+          "off": "Off"
+        }
       },
       "oscillation_mode": {
-        "name": "Oscillation mode"
+        "name": "Oscillation mode",
+        "state": {
+          "both": "Both",
+          "curve_8": "Curve 8",
+          "curve_w": "Curve W",
+          "off": "Off",
+          "oscillation": "Oscillation",
+          "reserved": "Reserved",
+          "tilting": "Tilting"
+        }
       },
       "rate_select": {
         "name": "Power rate limit"
       },
       "screen_display": {
-        "name": "Screen display"
+        "name": "Screen display",
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "Off"
+        }
       },
       "silent_level": {
-        "name": "Silent level"
+        "name": "Silent level",
+        "state": {
+          "off": "Off",
+          "silent": "Silent",
+          "super_silent": "Super silent"
+        }
       },
       "tilting_angle": {
-        "name": "Tilting angle"
+        "name": "Tilting angle",
+        "state": {
+          "minus_60": "Minus 60",
+          "off": "Off",
+          "plus_60": "Plus 60"
+        }
       },
       "water_level_set": {
         "name": "Water level setting"
       },
       "wind_lr_angle": {
-        "name": "Airflow horizontal"
+        "name": "Airflow horizontal",
+        "state": {
+          "left": "Left",
+          "left_mid": "Left middle",
+          "middle": "Middle",
+          "off": "Off",
+          "right": "Right",
+          "right_mid": "Right middle"
+        }
       },
       "wind_ud_angle": {
-        "name": "Airflow vertical"
+        "name": "Airflow vertical",
+        "state": {
+          "down": "Down",
+          "down_mid": "Down middle",
+          "middle": "Middle",
+          "off": "Off",
+          "up": "Up",
+          "up_mid": "Up middle"
+        }
       }
     }
   },
