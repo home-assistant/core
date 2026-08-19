@@ -891,33 +891,46 @@ async def test_hassio_discovery_flow_404(
 
 
 @pytest.mark.parametrize(
-    ("entry_url", "entry_unique_id"),
+    ("entry_url", "entry_unique_id", "entry_state"),
     [
         pytest.param(
             f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}",
             HASSIO_DATA.uuid,
+            ConfigEntryState.NOT_LOADED,
             id="new_port",
         ),
         pytest.param(
             f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port'] + 1}",
             None,
+            ConfigEntryState.NOT_LOADED,
             id="new_port_missing_unique_id",
         ),
         pytest.param(
             f"http://core-silabs-multiprotocol-old:{HASSIO_DATA.config['port']}",
             HASSIO_DATA.uuid,
+            ConfigEntryState.NOT_LOADED,
             id="new_host",
         ),
         pytest.param(
             f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
             None,
+            ConfigEntryState.NOT_LOADED,
             id="same_url_missing_unique_id",
+        ),
+        pytest.param(
+            f"http://{HASSIO_DATA.config['host']}:{HASSIO_DATA.config['port']}",
+            None,
+            ConfigEntryState.LOADED,
+            id="same_url_missing_unique_id_loaded",
         ),
     ],
 )
 @pytest.mark.usefixtures("get_border_agent_id")
 async def test_hassio_discovery_flow_updates_entry(
-    hass: HomeAssistant, entry_url: str, entry_unique_id: str | None
+    hass: HomeAssistant,
+    entry_url: str,
+    entry_unique_id: str | None,
+    entry_state: ConfigEntryState,
 ) -> None:
     """Test the URL and the unique id of the existing entry are updated."""
     mock_integration(hass, MockModule("hassio"))
@@ -932,6 +945,7 @@ async def test_hassio_discovery_flow_updates_entry(
         unique_id=entry_unique_id,
     )
     config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, entry_state)
 
     result = await hass.config_entries.flow.async_init(
         otbr.DOMAIN, context={"source": "hassio"}, data=HASSIO_DATA
