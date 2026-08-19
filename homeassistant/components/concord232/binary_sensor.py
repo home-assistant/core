@@ -1,11 +1,7 @@
-"""Support for exposing Concord232 elements as sensors."""
+"""Support for exposing Concord232 zones as binary sensors."""
 
-import datetime
-import logging
 from typing import Any, override
 
-from concord232 import client as concord232_client
-import requests
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -17,20 +13,22 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.util import dt as dt_util
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-_LOGGER = logging.getLogger(__name__)
+from .alarm_control_panel import _async_import_yaml
+from .const import DOMAIN
+from .coordinator import Concord232ConfigEntry, Concord232Coordinator
+
+PARALLEL_UPDATES = 0
 
 CONF_EXCLUDE_ZONES = "exclude_zones"
 CONF_ZONE_TYPES = "zone_types"
 
 DEFAULT_HOST = "localhost"
-DEFAULT_NAME = "Alarm"
 DEFAULT_PORT = 5007
-
-SCAN_INTERVAL = datetime.timedelta(seconds=10)
 
 ZONE_TYPES_SCHEMA = vol.Schema({cv.positive_int: BINARY_SENSOR_DEVICE_CLASSES_SCHEMA})
 
@@ -46,53 +44,18 @@ PLATFORM_SCHEMA = BINARY_SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
-def setup_platform(
+async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
-    add_entities: AddEntitiesCallback,
+    async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Set up the Concord232 binary sensor platform."""
-
-    host: str = config[CONF_HOST]
-    port: int = config[CONF_PORT]
-    exclude: list[int] = config[CONF_EXCLUDE_ZONES]
-    zone_types: dict[int, BinarySensorDeviceClass] = config[CONF_ZONE_TYPES]
-    sensors = []
-
-    try:
-        _LOGGER.debug("Initializing client")
-        client = concord232_client.Client(f"http://{host}:{port}")
-        client.zones = client.list_zones()
-        client.last_zone_update = dt_util.utcnow()
-
-    except requests.exceptions.ConnectionError as ex:
-        _LOGGER.error("Unable to connect to Concord232: %s", str(ex))
-        return
-
-    # The order of zones returned by client.list_zones() can vary.
-    # When the zones are not named, this can result in the same entity
-    # name mapping to different sensors in an unpredictable way.  Sort
-    # the zones by zone number to prevent this.
-
-    client.zones.sort(key=lambda zone: zone["number"])
-
-    for zone in client.zones:
-        _LOGGER.debug("Loading Zone found: %s", zone["name"])
-        if zone["number"] not in exclude:
-            sensors.append(
-                Concord232ZoneSensor(
-                    client,
-                    zone,
-                    zone_types.get(zone["number"], get_opening_type(zone)),
-                )
-            )
-
-    add_entities(sensors, True)
+    """Import the YAML platform configuration and create a config entry."""
+    await _async_import_yaml(hass, config)
 
 
-def get_opening_type(zone):
-    """Return the result of the type guessing from name."""
+def get_opening_type(zone: dict[str, Any]) -> BinarySensorDeviceClass:
+    """Return the device class guessed from the zone name."""
     if "MOTION" in zone["name"]:
         return BinarySensorDeviceClass.MOTION
     if "KEY" in zone["name"]:
@@ -100,48 +63,61 @@ def get_opening_type(zone):
     if "SMOKE" in zone["name"]:
         return BinarySensorDeviceClass.SMOKE
     if "WATER" in zone["name"]:
-        return "water"
+        return BinarySensorDeviceClass.MOISTURE
     return BinarySensorDeviceClass.OPENING
 
 
-class Concord232ZoneSensor(BinarySensorEntity):
-    """Representation of a Concord232 zone as a sensor."""
+async def async_setup_entry(
+    hass: HomeAssistant,
+    entry: Concord232ConfigEntry,
+    async_add_entities: AddEntitiesCallback,
+) -> None:
+    """Set up Concord232 zone binary sensors from a config entry."""
+    coordinator = entry.runtime_data
+    async_add_entities(
+        Concord232ZoneSensor(entry, zone) for zone in coordinator.data.zones
+    )
 
-    def __init__(
-        self,
-        client: concord232_client.Client,
-        zone: dict[str, Any],
-        zone_type: BinarySensorDeviceClass,
-    ) -> None:
-        """Initialize the Concord232 binary sensor."""
-        self._client = client
-        self._zone = zone
-        self._number = zone["number"]
-        self._attr_device_class = zone_type
+
+class Concord232ZoneSensor(
+    CoordinatorEntity[Concord232Coordinator], BinarySensorEntity
+):
+    """Representation of a Concord232 zone as a binary sensor."""
+
+    _attr_has_entity_name = True
+
+    def __init__(self, entry: Concord232ConfigEntry, zone: dict[str, Any]) -> None:
+        """Initialize the Concord232 zone binary sensor."""
+        super().__init__(entry.runtime_data)
+        self._number: int = zone["number"]
+        self._attr_unique_id = f"{entry.entry_id}_zone_{self._number}"
+        self._attr_name = zone["name"]
+        self._attr_device_class = get_opening_type(zone)
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, entry.entry_id)},
+            name=entry.title,
+        )
+
+    def _zone(self) -> dict[str, Any] | None:
+        """Return this zone's current data."""
+        return next(
+            (
+                zone
+                for zone in self.coordinator.data.zones
+                if zone["number"] == self._number
+            ),
+            None,
+        )
 
     @property
     @override
-    def name(self) -> str:
-        """Return the name of the binary sensor."""
-        return self._zone["name"]
+    def available(self) -> bool:
+        """Return True when the coordinator and the zone are available."""
+        return super().available and self._zone() is not None
 
     @property
     @override
     def is_on(self) -> bool:
-        """Return true if the binary sensor is on."""
-        # True means "faulted" or "open" or "abnormal state"
-        return bool(self._zone["state"] != "Normal")
-
-    def update(self) -> None:
-        """Get updated stats from API."""
-        last_update = dt_util.utcnow() - self._client.last_zone_update
-        _LOGGER.debug("Zone: %s ", self._zone)
-        if last_update > datetime.timedelta(seconds=1):
-            self._client.zones = self._client.list_zones()
-            self._client.last_zone_update = dt_util.utcnow()
-            _LOGGER.debug("Updated from zone: %s", self._zone["name"])
-
-        if hasattr(self._client, "zones"):
-            self._zone = next(
-                x for x in self._client.zones if x["number"] == self._number
-            )
+        """Return true if the zone is faulted (open, tripped or abnormal)."""
+        zone = self._zone()
+        return zone is not None and zone["state"] != "Normal"
