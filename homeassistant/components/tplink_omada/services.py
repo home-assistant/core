@@ -90,7 +90,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             DOMAIN,
             service_name,
             entity_domain=DEVICE_TRACKER_DOMAIN,
-            schema=None,
+            schema=vol.Schema({}),
             func=func,
             admin_only=admin_only,
         )
