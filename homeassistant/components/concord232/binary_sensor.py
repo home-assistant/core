@@ -120,4 +120,10 @@ class Concord232ZoneSensor(
     def is_on(self) -> bool:
         """Return true if the zone is faulted (open, tripped or abnormal)."""
         zone = self._zone()
-        return zone is not None and zone["state"] != "Normal"
+        if zone is None:
+            return False
+        # The original concord232 server reports zone state as a string; the
+        # actively maintained fork reports a list of states. Accept both.
+        state = zone["state"]
+        states = state if isinstance(state, list) else [state]
+        return states != ["Normal"]
