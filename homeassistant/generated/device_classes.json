@@ -1,21 +1,4 @@
 {
-  "button": [
-    "identify",
-    "restart",
-    "update"
-  ],
-  "cover": [
-    "awning",
-    "blind",
-    "curtain",
-    "damper",
-    "door",
-    "garage",
-    "gate",
-    "shade",
-    "shutter",
-    "window"
-  ],
   "binary_sensor": [
     "battery",
     "battery_charging",
@@ -44,6 +27,23 @@
     "tamper",
     "update",
     "vibration",
+    "window"
+  ],
+  "button": [
+    "identify",
+    "restart",
+    "update"
+  ],
+  "cover": [
+    "awning",
+    "blind",
+    "curtain",
+    "damper",
+    "door",
+    "garage",
+    "gate",
+    "shade",
+    "shutter",
     "window"
   ],
   "event": [

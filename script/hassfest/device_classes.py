@@ -27,9 +27,9 @@ def _generate() -> str:
         {
             domain.value: sorted(device_class.value for device_class in device_classes)
             for domain, device_classes in {
+                Platform.BINARY_SENSOR: BinarySensorDeviceClass,
                 Platform.BUTTON: ButtonDeviceClass,
                 Platform.COVER: CoverDeviceClass,
-                Platform.BINARY_SENSOR: BinarySensorDeviceClass,
                 Platform.EVENT: EventDeviceClass,
                 Platform.HUMIDIFIER: HumidifierDeviceClass,
                 Platform.INFRARED: InfraredDeviceClass,
