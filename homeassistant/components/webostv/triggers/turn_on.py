@@ -40,7 +40,7 @@ from ..helpers import (
     async_get_device_id_from_entity_id,
 )
 
-# Stored in device automations as the trigger type, so it must stay stable
+# Stored in device automations as the trigger type; must stay stable
 PLATFORM_TYPE = f"{DOMAIN}.turn_on"
 
 _TRIGGER_SCHEMA = vol.Schema(
@@ -51,7 +51,7 @@ _TRIGGER_SCHEMA = vol.Schema(
     }
 )
 
-# The legacy trigger selected devices with top-level entity_id and device_id options
+# Legacy trigger used top-level entity_id/device_id options
 _LEGACY_OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Optional(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
     vol.Optional(ATTR_ENTITY_ID): cv.entity_ids,
@@ -96,11 +96,7 @@ def _async_attach_turn_on_actions(
         variables: dict[str, Any],
         context: Context | None = None,
     ) -> None:
-        """Run the trigger action.
-
-        This is a coroutine function rather than a callback, so that the turn on
-        service waits for the triggered action to finish.
-        """
+        """Run the action; a coroutine so turn_on can await it."""
         await run_action(variables, description, context)
 
     return [
@@ -149,14 +145,12 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
         """Re-attach the turn on actions when the tracked devices change."""
         ent_reg = er.async_get(self._hass)
         dev_reg = dr.async_get(self._hass)
-        # Directly targeted devices are used as-is, because resolving them through their
-        # entities would drop a device whose webOS TV entity is hidden. A device that no
-        # longer exists is skipped, like an entity that is not a webOS TV entity.
+        # Used as-is: resolving via entities would drop hidden-entity devices.
         device_ids: set[str] = set()
         for device_id in self._selection.device_ids:
             if device_id in dev_reg.devices:
                 device_ids.add(device_id)
-            # A pre-migration composite id is not a device; it resolves to its splits
+            # A composite id isn't a device; it resolves to its splits.
             elif splits := dev_reg.async_get_devices_for_composite_device_id(device_id):
                 device_ids.update(device.id for device in splits)
         device_ids.update(
@@ -228,13 +222,7 @@ class TurnOnTrigger(Trigger):
 
 
 class LegacyTurnOnTrigger(Trigger):
-    """Backwards compatible trigger for the legacy `webostv.turn_on` config.
-
-    This trigger is deliberately absent from `triggers.yaml`, so the automation editor
-    keeps treating it as unsupported rather than rendering a stored config that uses the
-    legacy options against a target selector. It resolves the configured devices the way
-    it always has, so existing automations behave exactly as before.
-    """
+    """Backwards compatible trigger for the legacy webostv.turn_on config."""
 
     _options: dict[str, Any]
 
@@ -243,7 +231,7 @@ class LegacyTurnOnTrigger(Trigger):
     async def async_validate_complete_config(
         cls, hass: HomeAssistant, complete_config: ConfigType
     ) -> ConfigType:
-        """Validate complete config, moving the legacy top-level fields to options."""
+        """Validate complete config, moving legacy fields to options."""
         complete_config = move_top_level_schema_fields_to_options(
             complete_config, _LEGACY_OPTIONS_SCHEMA_DICT
         )

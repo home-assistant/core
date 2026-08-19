@@ -219,7 +219,7 @@ async def test_webostv_turn_on_trigger_hidden_entity(
     await setup_webostv(hass)
 
     device = device_registry.async_get_device(identifiers={(DOMAIN, FAKE_UUID)})
-    # Hidden entities are excluded when a device target is expanded to its entities
+    # Hidden entities are excluded when expanding a device target
     for entry in er.async_entries_for_device(
         entity_registry, device.id, include_disabled_entities=True
     ):
@@ -270,7 +270,7 @@ async def test_webostv_turn_on_trigger_composite_device_id(
     device_registry.devices[device.id] = attr.evolve(
         device, composite_device_id=composite_device_id
     )
-    # Hide the entities so the composite id can only resolve through the device registry
+    # Hide entities so the composite id resolves only via device registry
     for entry in er.async_entries_for_device(
         entity_registry, device.id, include_disabled_entities=True
     ):
@@ -429,7 +429,7 @@ async def test_webostv_turn_on_trigger_follows_area_changes(
     )
     await hass.async_block_till_done()
 
-    # The TV is not in the targeted area yet, so no turn on action is attached
+    # TV isn't in the targeted area yet, so no action is attached
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
             "media_player",
