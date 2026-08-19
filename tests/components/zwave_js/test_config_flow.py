@@ -1043,7 +1043,7 @@ async def test_usb_discovery_migration(
     assert client.connect.call_count == 2
 
     await hass.async_block_till_done()
-    assert client.connect.call_count == 4
+    assert client.connect.call_count == 3
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
     assert len(events) == 2
@@ -1178,7 +1178,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
         assert client.connect.call_count == 2
 
         await hass.async_block_till_done()
-        assert client.connect.call_count == 4
+        assert client.connect.call_count == 3
         assert entry.state is config_entries.ConfigEntryState.LOADED
         assert client.driver.controller.async_restore_nvm.call_count == 1
         assert len(events) == 2
@@ -4506,7 +4506,7 @@ async def test_reconfigure_migrate_with_addon(
         assert client.connect.call_count == 2
 
         await hass.async_block_till_done()
-    assert client.connect.call_count == 4
+    assert client.connect.call_count == 3
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
     assert len(events) == 2
@@ -4665,7 +4665,7 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
         assert client.connect.call_count == 2
 
         await hass.async_block_till_done()
-        assert client.connect.call_count == 4
+        assert client.connect.call_count == 3
         assert entry.state is config_entries.ConfigEntryState.LOADED
         assert client.driver.controller.async_restore_nvm.call_count == 1
         assert len(events) == 2
@@ -5775,7 +5775,7 @@ async def test_addon_rf_region_migrate_network(
     assert client.connect.call_count == 2
 
     await hass.async_block_till_done()
-    assert client.connect.call_count == 4
+    assert client.connect.call_count == 3
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
     assert len(events) == 2
