@@ -20,10 +20,7 @@ rules:
   docs-triggers: done
   entity-event-setup: done
   entity-unique-id: done
-  has-entity-name:
-    status: exempt
-    comment: |
-      YAML entities don't support devices. UI entities do and use `has_entity_name`.
+  has-entity-name: done
   runtime-data:
     status: exempt
     comment: |
@@ -63,10 +60,7 @@ rules:
       Integration has no authentication.
   test-coverage: done
   # Gold
-  devices:
-    status: exempt
-    comment: |
-      YAML entities don't support devices. UI entities support user-defined devices.
+  devices: done
   diagnostics: done
   discovery-update-info:
     status: exempt

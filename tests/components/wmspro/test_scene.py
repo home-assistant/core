@@ -36,7 +36,9 @@ async def test_scene_room_device(
     assert len(mock_hub_configuration.mock_calls) == 1
     assert len(mock_dest_refresh.mock_calls) == 2
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "42581")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "42581"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
     assert device_entry == snapshot
 
