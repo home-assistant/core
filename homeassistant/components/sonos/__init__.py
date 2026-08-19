@@ -579,8 +579,8 @@ class SonosDiscoveryManager:
     def is_device_disabled(self, uid: str) -> bool:
         """Check if the Sonos device is disabled in the device registry."""
         if not (
-            device := dr.async_get(self.hass).async_get_device(
-                identifiers={(DOMAIN, uid)}
+            device := dr.async_get(self.hass).async_get_device_by_identifier(
+                (DOMAIN, uid), self.entry.entry_id
             )
         ):
             return False
@@ -724,7 +724,7 @@ class SonosDiscoveryManager:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: SonosConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove Sonos config entry from a device."""
     known_devices = config_entry.runtime_data.discovered.keys()

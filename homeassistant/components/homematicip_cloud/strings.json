@@ -112,6 +112,12 @@
   "exceptions": {
     "access_point_not_found": {
       "message": "No matching access point found for access point ID {id}"
+    },
+    "alarm_activation_blocked": {
+      "message": "The alarm system was not armed because the following devices report a problem: {devices}"
+    },
+    "alarm_activation_failed": {
+      "message": "The alarm system did not accept the requested state"
     }
   },
   "services": {

@@ -69,7 +69,7 @@ from homeassistant.components.homeassistant import (
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.core import HomeAssistant
+from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.hassio import is_hassio
@@ -194,6 +194,26 @@ async def test_setup_api_ping_fails(
     assert is_hassio(hass)
     entry = hass.config_entries.async_entries("hassio")[0]
     assert entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@pytest.mark.usefixtures("supervisor_client")
+async def test_setup_entry_created_before_started(hass: HomeAssistant) -> None:
+    """Test the entry is created and loaded during startup on first boot.
+
+    Consumers of system info such as onboarding need Supervisor data before
+    Home Assistant has started, so entry creation must not be deferred to the
+    started event.
+    """
+    hass.set_state(CoreState.not_running)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        result = await async_setup_component(hass, DOMAIN, {})
+        await hass.async_block_till_done()
+
+    assert result
+    entry = hass.config_entries.async_entries(DOMAIN)[0]
+    assert entry.state is ConfigEntryState.LOADED
+    assert get_core_info(hass)["version_latest"] == "1.0.0"
 
 
 async def test_setup_onboarding_supervisor_update(
@@ -375,7 +395,7 @@ async def test_setup_adds_admin_group_to_user(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
+        result = await async_setup_component(hass, DOMAIN, {"hassio": {}})
         assert result
 
     assert user.is_admin
@@ -394,7 +414,7 @@ async def test_setup_migrate_user_name(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
+        result = await async_setup_component(hass, DOMAIN, {"hassio": {}})
         assert result
 
     assert user.name == "Supervisor"
@@ -414,7 +434,7 @@ async def test_setup_api_existing_hassio_user(
     config_entry.add_to_hass(hass)
 
     with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
+        result = await async_setup_component(hass, DOMAIN, {"hassio": {}})
         await hass.async_block_till_done()
 
     assert result
@@ -451,7 +471,7 @@ async def test_setup_migrates_legacy_hassio_store_to_config_entry(
     }
 
     with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
+        result = await async_setup_component(hass, DOMAIN, {"hassio": {}})
         await hass.async_block_till_done()
 
     assert result
@@ -501,7 +521,7 @@ async def test_setup_migrates_legacy_options_over_default_entry_options(
     }
 
     with patch.dict(os.environ, MOCK_ENVIRON):
-        result = await async_setup_component(hass, DOMAIN, {"http": {}, "hassio": {}})
+        result = await async_setup_component(hass, DOMAIN, {"hassio": {}})
         await hass.async_block_till_done()
 
     assert result
@@ -1652,7 +1672,9 @@ async def mount_reload_test_setup(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "mount_NAS")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "mount_NAS"), config_entry.entry_id
+    )
     assert device is not None
     return device
 

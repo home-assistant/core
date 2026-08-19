@@ -314,7 +314,10 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if info.device_diagnostics is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
-        data = await info.device_diagnostics(hass, config_entry, device)
+        # A device's diagnostics may be requested for a child device, but the
+        # callback is currently typed for a main device. Ignoring the mismatch until
+        # DiagnosticsPlatformData.device_diagnostics is widened to accept AnyDeviceEntry.
+        data = await info.device_diagnostics(hass, config_entry, device)  # type: ignore[arg-type]
         return await _async_get_json_file_response(
             hass, data, data_issues, filename, config_entry.domain, d_id, sub_id
         )

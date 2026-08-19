@@ -2541,7 +2541,7 @@ class ConfigEntries:
         pref_disable_new_entities: bool | UndefinedType = UNDEFINED,
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         version: int | UndefinedType = UNDEFINED,
     ) -> bool:
         """Update a config entry.
@@ -2580,7 +2580,7 @@ class ConfigEntries:
         pref_disable_polling: bool | UndefinedType = UNDEFINED,
         subentries: dict[str, ConfigSubentry] | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         version: int | UndefinedType = UNDEFINED,
     ) -> bool:
         """Update a config entry.
@@ -2707,7 +2707,7 @@ class ConfigEntries:
         *,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
     ) -> bool:
         """Update a config subentry.
 
@@ -3461,7 +3461,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType,
+        unique_id: str | UndefinedType | None,
         title: str | UndefinedType,
         data: Mapping[str, Any] | UndefinedType,
         data_updates: Mapping[str, Any] | UndefinedType,
@@ -3490,7 +3490,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3532,7 +3532,7 @@ class ConfigFlow(ConfigEntryBaseFlow):
         self,
         entry: ConfigEntry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3771,7 +3771,7 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3800,7 +3800,7 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,
@@ -3829,7 +3829,7 @@ class ConfigSubentryFlow(
         entry: ConfigEntry,
         subentry: ConfigSubentry,
         *,
-        unique_id: str | None | UndefinedType = UNDEFINED,
+        unique_id: str | UndefinedType | None = UNDEFINED,
         title: str | UndefinedType = UNDEFINED,
         data: Mapping[str, Any] | UndefinedType = UNDEFINED,
         data_updates: Mapping[str, Any] | UndefinedType = UNDEFINED,

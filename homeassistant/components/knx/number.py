@@ -118,6 +118,7 @@ class KnxYamlNumber(_KnxNumber, KnxYamlEntity):
             group_address=config[KNX_ADDRESS],
             group_address_state=config.get(CONF_STATE_ADDRESS),
             respond_to_read=config[CONF_RESPOND_TO_READ],
+            sync_state=config[CONF_SYNC_STATE],
             value_type=config[CONF_TYPE],
         )
         super().__init__(

@@ -18,6 +18,7 @@ from homeassistant.const import (
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -135,7 +136,11 @@ class LunatoneSensor(
                     f"DALI Line {self.sensor.data.dali_sensor_address.line}"
                     f" - A{self.sensor.data.dali_sensor_address.address}\u00b2"
                 ),
-                via_device=(DOMAIN, str(self._config_entry_unique_id)),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, str(self._config_entry_unique_id)),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                ),
             )
         self._attr_device_info = device_info
 
