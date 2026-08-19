@@ -21,17 +21,6 @@ _LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
-_ZONE_TRANSLATION_KEYS = {
-    1: "bypass_supply_target_temperature_zone_1",
-    2: "bypass_supply_target_temperature_zone_2",
-    3: "bypass_supply_target_temperature_zone_3",
-    4: "bypass_supply_target_temperature_zone_4",
-    5: "bypass_supply_target_temperature_zone_5",
-    6: "bypass_supply_target_temperature_zone_6",
-    7: "bypass_supply_target_temperature_zone_7",
-    8: "bypass_supply_target_temperature_zone_8",
-}
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -71,7 +60,6 @@ async def async_setup_entry(
                     coordinator,
                     box_node,
                     zone_id,
-                    _ZONE_TRANSLATION_KEYS[zone_id],
                     minimum,
                     maximum,
                     increment,
@@ -97,7 +85,6 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
         coordinator: DucoCoordinator,
         node: Node,
         zone_id: int,
-        translation_key: str,
         minimum: float,
         maximum: float,
         increment: float,
@@ -105,7 +92,8 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
         """Initialize the bypass supply temperature target number."""
         super().__init__(coordinator, node)
         self._zone_id = zone_id
-        self._attr_translation_key = translation_key
+        self._attr_translation_key = "bypass_supply_target_temperature_zone"
+        self._attr_translation_placeholders = {"zone": str(zone_id)}
         self._attr_unique_id = (
             f"{coordinator.config_entry.unique_id}_{node.node_id}_"
             f"bypass_supply_target_temperature_zone_{zone_id}"

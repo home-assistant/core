@@ -36,7 +36,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'bypass_supply_target_temperature_zone_1',
+    'translation_key': 'bypass_supply_target_temperature_zone',
     'unique_id': 'aa:bb:cc:dd:ee:ff_1_bypass_supply_target_temperature_zone_1',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -97,7 +97,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'bypass_supply_target_temperature_zone_2',
+    'translation_key': 'bypass_supply_target_temperature_zone',
     'unique_id': 'aa:bb:cc:dd:ee:ff_1_bypass_supply_target_temperature_zone_2',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
