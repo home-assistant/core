@@ -1698,7 +1698,7 @@ async def test_esphome_discovery_migration(
     assert client.connect.call_count == 2
 
     await hass.async_block_till_done()
-    assert client.connect.call_count == 4
+    assert client.connect.call_count == 3
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
 
@@ -2360,7 +2360,7 @@ async def test_discovery_not_blocked_by_zeroconf_flow(hass: HomeAssistant) -> No
     assert result["reason"] == "already_in_progress"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
 async def test_usb_discovery_leaves_manual_entry_alone(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
@@ -2396,10 +2396,18 @@ async def test_usb_discovery_leaves_manual_entry_alone(
         result["flow_id"], {"next_step_id": "intent_recommended"}
     )
 
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    # The add-on config now points at the discovered adapter, but the
+    # manual entry stays untouched.
     assert entry.data == {"url": "ws://external-server:3000"}
-    set_addon_options.assert_not_called()
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
