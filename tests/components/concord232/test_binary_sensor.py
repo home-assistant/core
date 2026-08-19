@@ -97,3 +97,31 @@ async def test_unsorted_zones_map_to_stable_entities(
 
     assert hass.states.get("binary_sensor.localhost_front_door").state == STATE_ON
     assert hass.states.get("binary_sensor.localhost_hall_motion").state == STATE_OFF
+
+
+@pytest.mark.parametrize(
+    ("zone_state", "expected"),
+    [
+        # The original concord232 server reports a plain string.
+        ("Normal", STATE_OFF),
+        ("Tripped", STATE_ON),
+        # The actively maintained fork reports a list of states.
+        (["Normal"], STATE_OFF),
+        (["Tripped"], STATE_ON),
+        (["Tripped", "Trouble"], STATE_ON),
+    ],
+)
+async def test_zone_state_shapes(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    zone_state: str | list[str],
+    expected: str,
+) -> None:
+    """Test both server variants' zone state shapes are understood."""
+    mock_concord232_client.list_zones.return_value = [
+        {"number": 1, "name": "FRONT DOOR", "state": zone_state}
+    ]
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("binary_sensor.localhost_front_door").state == expected
