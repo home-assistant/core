@@ -1071,9 +1071,17 @@ class HomeKit:
         dev_reg = dr.async_get(self.hass)
         valid_device_ids = []
         for device_id in self._devices:
-            if dev_reg.async_get(device_id, include_child_devices=False):
-                valid_device_ids.append(device_id)
-            elif dev_reg.async_get(device_id, include_main_devices=False):
+            device = dev_reg.async_get(device_id)
+            if device is None:
+                _LOGGER.warning(
+                    (
+                        "HomeKit %s cannot add device %s because it is missing from the"
+                        " device registry"
+                    ),
+                    self._name,
+                    device_id,
+                )
+            elif isinstance(device, dr.ChildDeviceEntry):
                 _LOGGER.warning(
                     (
                         "HomeKit %s cannot add device %s because a child device cannot"
@@ -1083,14 +1091,8 @@ class HomeKit:
                     device_id,
                 )
             else:
-                _LOGGER.warning(
-                    (
-                        "HomeKit %s cannot add device %s because it is missing from the"
-                        " device registry"
-                    ),
-                    self._name,
-                    device_id,
-                )
+                # A main or composite device is a valid HomeKit accessory
+                valid_device_ids.append(device_id)
         for device_id, device_triggers in (
             await device_automation.async_get_device_automations(
                 self.hass,

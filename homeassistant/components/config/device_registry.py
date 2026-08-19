@@ -180,7 +180,8 @@ def websocket_update_device(
         msg["labels"] = set(msg["labels"])
 
     entry: dr.AnyDeviceEntry | None
-    if msg["device_id"] in registry.child_devices:
+    device = registry.async_get(msg["device_id"], include_composite_devices=False)
+    if isinstance(device, dr.ChildDeviceEntry):
         entry = registry.async_update_child_device(**msg)
     else:
         entry = registry.async_update_device(**msg)
@@ -207,10 +208,16 @@ async def _async_remove_device(
     device_id = msg["device_id"]
 
     # A composite device id has no single underlying device to remove; reject it.
-    if registry.async_is_composite_device_id(device_id):
+    if (
+        registry.async_get(
+            device_id, include_main_devices=False, include_child_devices=False
+        )
+        is not None
+    ):
         raise HomeAssistantError("Cannot remove a composite device")
-
-    if (device_entry := registry.async_get(device_id)) is None:
+    if (
+        device_entry := registry.async_get(device_id, include_composite_devices=False)
+    ) is None:
         raise HomeAssistantError("Unknown device")
 
     if (

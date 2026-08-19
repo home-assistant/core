@@ -737,7 +737,8 @@ async def test_remove_device_composite(
     await dr.async_load(hass)
     # pylint: disable-next=home-assistant-tests-registry-fixtures
     registry = dr.async_get(hass)
-    assert registry.async_is_composite_device_id(composite_id) is True
+    assert registry.async_get(composite_id) is not None
+    assert registry.async_get(composite_id, include_composite_devices=False) is None
 
     response = await _send_remove_device(
         client, command, composite_id, entry_1.entry_id
