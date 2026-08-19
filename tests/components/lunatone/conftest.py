@@ -139,8 +139,6 @@ def mock_lunatone_sensors() -> Generator[AsyncMock]:
         for sensor_data in sensors.data.sensors:
             sensor = AsyncMock(spec=Sensor)
             sensor.data = sensor_data
-            sensor.id = sensor.data.id
-            sensor.name = sensor.data.name
             sensor_list.append(sensor)
         return sensor_list
 
