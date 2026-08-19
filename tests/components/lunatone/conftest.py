@@ -1,6 +1,7 @@
 """Fixtures for Lunatone tests."""
 
 from collections.abc import Generator
+from copy import deepcopy
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from lunatone_rest_api_client import Device, Devices, Info, Sensor, Sensors
@@ -107,7 +108,7 @@ def mock_lunatone_info() -> Generator[AsyncMock]:
             return info
 
         info.set_data = _set_data
-        info.set_data(INFO_DATA)
+        info.set_data(deepcopy(INFO_DATA))
         yield info
 
 
