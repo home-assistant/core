@@ -4,7 +4,7 @@ import asyncio
 import io
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, create_autospec, patch
 import wave
 
 import pytest
@@ -483,7 +483,9 @@ async def test_tts_timeout(
             satellite._tone_bytes[tone] = tone_bytes
 
         satellite.connection_made(Mock())
-        satellite.send_audio = Mock()
+
+        mock_send_audio = create_autospec(satellite.send_audio)
+        satellite.send_audio = mock_send_audio
 
         original_send_tts = satellite._send_tts
 
@@ -577,7 +579,9 @@ async def test_tts_wrong_extension(
 
         satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
-        satellite.send_audio = Mock()
+        mock_send_audio = create_autospec(satellite.send_audio)
+        satellite.send_audio = mock_send_audio
+
         satellite.connection_made(Mock())
 
         # silence
@@ -589,13 +593,6 @@ async def test_tts_wrong_extension(
         # silence (assumes relaxed VAD sensitivity)
         satellite.on_chunk(bytes(_ONE_SECOND))
         await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
         async with asyncio.timeout(3):
@@ -668,7 +665,8 @@ async def test_tts_wrong_wav_format(
 
         satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
-        satellite.send_audio = Mock()
+        mock_send_audio = create_autospec(satellite.send_audio)
+        satellite.send_audio = mock_send_audio
 
         satellite.connection_made(Mock())
 
@@ -681,13 +679,6 @@ async def test_tts_wrong_wav_format(
         # silence (assumes relaxed VAD sensitivity)
         satellite.on_chunk(bytes(_ONE_SECOND))
         await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
-        satellite.on_chunk(bytes(_ONE_SECOND))
 
         # Wait for mock pipeline to exhaust the audio stream
         async with asyncio.timeout(3):
@@ -750,7 +741,9 @@ async def test_empty_tts_output(
             "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
         ) as mock_send_tts,
     ):
-        satellite.send_audio = Mock()
+        mock_send_audio = create_autospec(satellite.send_audio)
+        satellite.send_audio = mock_send_audio
+
         satellite.connection_made(Mock())
 
         # silence
