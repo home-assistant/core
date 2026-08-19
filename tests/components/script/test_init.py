@@ -173,6 +173,51 @@ async def test_turn_on_off_toggle(
     assert event_mock.call_count == 1
 
 
+async def test_turn_off_forwards_context(hass: HomeAssistant) -> None:
+    """Verify script.turn_off attributes the state change to the caller."""
+    event = "test_event"
+    event_flag = asyncio.Event()
+
+    @callback
+    def event_handler(event):
+        event_flag.set()
+
+    hass.bus.async_listen_once(event, event_handler)
+    hass.states.async_set("test.script", "off")
+
+    assert await async_setup_component(
+        hass,
+        DOMAIN,
+        {
+            "script": {
+                "test": {
+                    "sequence": [
+                        {"event": event},
+                        {"wait_template": "{{ is_state('test.script', 'on') }}"},
+                    ]
+                }
+            }
+        },
+    )
+
+    await hass.services.async_call(DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: ENTITY_ID})
+    await asyncio.wait_for(event_flag.wait(), 1)
+    assert script.is_on(hass, ENTITY_ID)
+
+    context = Context()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: ENTITY_ID},
+        blocking=True,
+        context=context,
+    )
+    await hass.async_block_till_done()
+
+    assert not script.is_on(hass, ENTITY_ID)
+    assert hass.states.get(ENTITY_ID).context is context
+
+
 invalid_configs = [
     {"test": {}},
     {"test hello world": {"sequence": [{"event": "bla"}]}},
