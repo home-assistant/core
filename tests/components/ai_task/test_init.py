@@ -87,6 +87,7 @@ async def test_generate_data_service(
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
     """Test the generate data service."""
+    context = Context()
     preferences = hass.data[DATA_PREFERENCES]
     preferences.async_set_preferences(**set_preferences)
 
@@ -108,9 +109,11 @@ async def test_generate_data_service(
             | msg_extra,
             blocking=True,
             return_response=True,
+            context=context,
         )
 
     assert result["data"] == "Mock result"
+    assert hass.states.get(TEST_ENTITY_ID).context is context
 
     assert len(mock_ai_task_entity.mock_generate_data_tasks) == 1
     task = mock_ai_task_entity.mock_generate_data_tasks[0]
@@ -125,31 +128,6 @@ async def test_generate_data_service(
         assert attachment.mime_type == "video/mp4"
         assert attachment.media_content_id == msg_attachment["media_content_id"]
         assert attachment.path == Path("media.mp4")
-
-
-@pytest.mark.parametrize("service", ["generate_data", "generate_image"])
-@pytest.mark.usefixtures("init_components", "mock_ai_task_entity")
-async def test_generate_service_forwards_context(
-    hass: HomeAssistant,
-    service: str,
-) -> None:
-    """Test the generate services attribute the task to the caller."""
-    context = Context()
-
-    await hass.services.async_call(
-        DOMAIN,
-        service,
-        {
-            "entity_id": TEST_ENTITY_ID,
-            "task_name": "Test Name",
-            "instructions": "Test prompt",
-        },
-        blocking=True,
-        return_response=True,
-        context=context,
-    )
-
-    assert hass.states.get(TEST_ENTITY_ID).context is context
 
 
 async def test_generate_data_service_structure_fields(
@@ -342,6 +320,7 @@ async def test_generate_image_service(
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
     """Test the generate image service."""
+    context = Context()
     preferences = hass.data[DATA_PREFERENCES]
     preferences.async_set_preferences(**set_preferences)
 
@@ -360,9 +339,11 @@ async def test_generate_image_service(
             | msg_extra,
             blocking=True,
             return_response=True,
+            context=context,
         )
 
     mock_upload_media.assert_called_once()
+    assert hass.states.get(TEST_ENTITY_ID).context is context
     assert "image_data" not in result
     assert (
         result["media_source_id"]

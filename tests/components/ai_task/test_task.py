@@ -29,28 +29,6 @@ from tests.common import async_fire_time_changed
 from tests.typing import WebSocketGenerator
 
 
-async def test_generate_data_llm_context_carries_context(
-    hass: HomeAssistant,
-    init_components: None,
-    mock_ai_task_entity: MockAITaskEntity,
-) -> None:
-    """Test the context reaches the LLM API, which uses it to check permissions."""
-    context = Context()
-
-    await async_generate_data(
-        hass,
-        task_name="Test Task",
-        entity_id=TEST_ENTITY_ID,
-        instructions="Test prompt",
-        llm_api=AssistAPI(hass),
-        context=context,
-    )
-
-    chat_log = mock_ai_task_entity.mock_chat_logs[0]
-    assert chat_log.llm_api is not None
-    assert chat_log.llm_api.llm_context.context is context
-
-
 async def test_generate_data_preferred_entity(
     hass: HomeAssistant,
     init_components: None,
@@ -100,14 +78,21 @@ async def test_generate_data_preferred_entity(
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
+    context = Context()
     llm_api = AssistAPI(hass)
     result = await async_generate_data(
         hass,
         task_name="Test Task",
         instructions="Test prompt",
         llm_api=llm_api,
+        context=context,
     )
     assert result.data == "Mock result"
+
+    # The LLM API uses the context to check permissions when calling tools
+    chat_log = mock_ai_task_entity.mock_chat_logs[0]
+    assert chat_log.llm_api is not None
+    assert chat_log.llm_api.llm_context.context is context
     as_dict = result.as_dict()
     assert as_dict["conversation_id"] == result.conversation_id
     assert as_dict["data"] == "Mock result"
