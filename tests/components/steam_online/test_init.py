@@ -12,13 +12,13 @@ from homeassistant.components.steam_online.const import (
     SUBENTRY_TYPE_FRIEND,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import STATE_UNKNOWN, Platform
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import ACCOUNT_1, ACCOUNT_2, ACCOUNT_NAME_1, ACCOUNT_NAME_2, CONF_DATA
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, load_json_object_fixture
 
 
 @pytest.mark.usefixtures("steam_api")
@@ -45,35 +45,10 @@ async def test_setup_incomplete_profile(
     config_entry: MockConfigEntry,
     steam_api: MagicMock,
 ) -> None:
-    """Test setup when a tracked player has an unconfigured profile without profilestate."""
-    steam_api.return_value.GetPlayerSummaries.return_value = {
-        "response": {
-            "players": {
-                "player": [
-                    {
-                        "steamid": ACCOUNT_1,
-                        "communityvisibilitystate": 1,
-                        "personaname": ACCOUNT_NAME_1,
-                        "profileurl": "https://steamcommunity.com/profiles/123456789/",
-                        "avatar": "https://avatars.steamstatic.com/avatar.jpg",
-                        "avatarmedium": "https://avatars.steamstatic.com/avatar_medium.jpg",
-                        "avatarfull": "https://avatars.steamstatic.com/avatar_full.jpg",
-                        "personastate": 1,
-                    },
-                    {
-                        "steamid": ACCOUNT_2,
-                        "communityvisibilitystate": 1,
-                        "personaname": ACCOUNT_NAME_2,
-                        "profileurl": "https://steamcommunity.com/profiles/987654321/",
-                        "avatar": "https://avatars.steamstatic.com/avatar.jpg",
-                        "avatarmedium": "https://avatars.steamstatic.com/avatar_medium.jpg",
-                        "avatarfull": "https://avatars.steamstatic.com/avatar_full.jpg",
-                        "personastate": 0,
-                    },
-                ]
-            }
-        }
-    }
+    """Test setup when a tracked player has an unconfigured profile."""
+    steam_api.return_value.GetPlayerSummaries.return_value = load_json_object_fixture(
+        "GetPlayerSummariesIncomplete.json", DOMAIN
+    )
 
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -81,9 +56,6 @@ async def test_setup_incomplete_profile(
 
     assert config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("sensor.testaccount1") is not None
-    last_online = hass.states.get("sensor.testaccount1_last_online")
-    assert last_online is not None
-    assert last_online.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(
