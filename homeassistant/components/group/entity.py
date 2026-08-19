@@ -232,7 +232,7 @@ class Group(Entity):
         mode: bool | None,
         object_id: str | None,
         order: int | None,
-        context: Context | None = None,
+        context: Context | None,
     ) -> Group:
         """Initialize a group.
 
