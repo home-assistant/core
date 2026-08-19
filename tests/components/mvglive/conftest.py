@@ -59,7 +59,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mvg_api() -> Generator[AsyncMock]:
-    """Mock the mvg.MvgApi calls used by the config flow and coordinator."""
+    """Mock the mvg.MvgApi calls used by the config flow and sensor."""
     with (
         patch(
             "homeassistant.components.mvglive.config_flow.MvgApi.stations_async",
@@ -70,17 +70,12 @@ def mvg_api() -> Generator[AsyncMock]:
             AsyncMock(return_value=TEST_STATION),
         ) as station_async,
         patch(
-            "homeassistant.components.mvglive.coordinator.MvgApi.departures_async",
+            "homeassistant.components.mvglive.sensor.MvgApi.departures_async",
             AsyncMock(return_value=TEST_DEPARTURES),
         ) as departures_async,
-        patch(
-            "homeassistant.components.mvglive.coordinator.fetch_incident_messages",
-            AsyncMock(return_value=[]),
-        ) as fetch_incident_messages,
     ):
         yield {
             "stations_async": stations_async,
             "station_async": station_async,
             "departures_async": departures_async,
-            "fetch_incident_messages": fetch_incident_messages,
         }

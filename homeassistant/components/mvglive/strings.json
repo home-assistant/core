@@ -37,7 +37,6 @@
       "init": {
         "data": {
           "destinations": "Destinations (comma-separated)",
-          "enable_messages": "Show incident messages",
           "lines": "Lines (comma-separated)",
           "number": "Number of departures",
           "products": "Modes of transport",

@@ -16,7 +16,6 @@ from homeassistant.helpers.selector import (
 
 from .const import (
     CONF_DESTINATIONS,
-    CONF_ENABLE_MESSAGES,
     CONF_LINES,
     CONF_NUMBER,
     CONF_PRODUCTS,
@@ -25,7 +24,6 @@ from .const import (
     CONF_STATION_NAME,
     CONF_TIMEOFFSET,
     DEFAULT_DESTINATIONS,
-    DEFAULT_ENABLE_MESSAGES,
     DEFAULT_LINES,
     DEFAULT_NUMBER,
     DEFAULT_PRODUCTS,
@@ -165,7 +163,7 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
 
 class MvgOptionsFlowHandler(config_entries.OptionsFlow):
-    """Handle MVG options: destinations, lines, products, timeoffset, number and messages."""
+    """Handle MVG options: destinations, lines, products, timeoffset and number."""
 
     async def async_step_init(
         self, user_input: dict[str, Any] | None = None
@@ -178,7 +176,6 @@ class MvgOptionsFlowHandler(config_entries.OptionsFlow):
                 CONF_PRODUCTS: user_input.get(CONF_PRODUCTS) or None,
                 CONF_TIMEOFFSET: user_input[CONF_TIMEOFFSET],
                 CONF_NUMBER: user_input[CONF_NUMBER],
-                CONF_ENABLE_MESSAGES: user_input[CONF_ENABLE_MESSAGES],
             }
             return self.async_create_entry(data=options)
 
@@ -209,10 +206,6 @@ class MvgOptionsFlowHandler(config_entries.OptionsFlow):
                     CONF_NUMBER,
                     default=current.get(CONF_NUMBER, DEFAULT_NUMBER),
                 ): int,
-                vol.Optional(
-                    CONF_ENABLE_MESSAGES,
-                    default=current.get(CONF_ENABLE_MESSAGES, DEFAULT_ENABLE_MESSAGES),
-                ): bool,
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)

@@ -4,6 +4,7 @@ from copy import deepcopy
 import logging
 from typing import Any, override
 
+from mvg import MvgApi, MvgApiError, TransportType
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -11,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntity,
     SensorStateClass,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -20,21 +21,22 @@ from homeassistant.helpers.entity_platform import (
     AddEntitiesCallback,
 )
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_DESTINATIONS,
-    CONF_ENABLE_MESSAGES,
     CONF_LINES,
     CONF_NUMBER,
     CONF_PRODUCTS,
     CONF_STATION,
+    CONF_STATION_ID,
     CONF_TIMEOFFSET,
-    DEFAULT_ENABLE_MESSAGES,
+    DEFAULT_DESTINATIONS,
+    DEFAULT_LINES,
+    DEFAULT_NUMBER,
+    DEFAULT_TIMEOFFSET,
     DOMAIN,
 )
-from .coordinator import MvgConfigEntry, MvgDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -56,7 +58,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
                 vol.Optional(CONF_DESTINATIONS, default=[""]): cv.ensure_list_csv,
                 vol.Optional(CONF_DIRECTIONS): cv.ensure_list_csv,
                 vol.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
-                vol.Optional(CONF_PRODUCTS, default=None): cv.ensure_list_csv,
+                vol.Optional(CONF_PRODUCTS): cv.ensure_list_csv,
                 vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
                 vol.Optional(CONF_NUMBER, default=5): cv.positive_int,
                 vol.Optional(CONF_NAME): cv.string,
@@ -93,14 +95,11 @@ async def async_setup_platform(
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: MvgConfigEntry,
+    entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the MVG sensor from a config entry."""
-    entities: list[SensorEntity] = [MVGSensor(entry)]
-    if entry.options.get(CONF_ENABLE_MESSAGES, DEFAULT_ENABLE_MESSAGES):
-        entities.append(MVGMessagesSensor(entry))
-    async_add_entities(entities)
+    async_add_entities([MVGSensor(entry)], True)
 
 
 def _get_minutes_until_departure(departure_time: int) -> int:
@@ -110,13 +109,14 @@ def _get_minutes_until_departure(departure_time: int) -> int:
         departure_time: Unix timestamp of the departure time, in seconds.
 
     Returns:
-        The time difference in minutes, as an integer.
+        The time difference in minutes, as an integer, rounded down so that
+        already-departed connections stay negative instead of clamping to 0.
 
     """
     current_time = dt_util.utcnow()
     departure_datetime = dt_util.utc_from_timestamp(departure_time)
     time_difference = (departure_datetime - current_time).total_seconds()
-    return int(time_difference / 60.0)
+    return int(time_difference // 60)
 
 
 def _filter_departures(
@@ -152,44 +152,53 @@ def _filter_departures(
     return filtered
 
 
-class MVGSensor(CoordinatorEntity[MvgDataUpdateCoordinator], SensorEntity):
+class MVGSensor(SensorEntity):
     """Implementation of an MVG sensor."""
 
     _attr_attribution = ATTRIBUTION
     _attr_state_class = SensorStateClass.MEASUREMENT
     _attr_native_unit_of_measurement = UnitOfTime.MINUTES
-    _attr_has_entity_name = True
 
-    def __init__(self, entry: MvgConfigEntry) -> None:
+    def __init__(self, entry: ConfigEntry) -> None:
         """Initialize the sensor."""
-        super().__init__(entry.runtime_data)
-        self._entry = entry
-        self._attr_unique_id = entry.entry_id
+        self._station_id: str = entry.data[CONF_STATION_ID]
+        options = entry.options
+        self._destinations: list[str] = options.get(
+            CONF_DESTINATIONS, DEFAULT_DESTINATIONS
+        )
+        self._lines: list[str] = options.get(CONF_LINES, DEFAULT_LINES)
+        products: list[str] | None = options.get(CONF_PRODUCTS)
+        self._transport_types = (
+            [product for product in TransportType if product.value[0] in products]
+            if products
+            else None
+        )
+        self._timeoffset: int = options.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET)
+        self._number: int = options.get(CONF_NUMBER, DEFAULT_NUMBER)
+        self._attr_unique_id = entry.unique_id
         self._attr_name = entry.title
         self._departures: list[dict[str, Any]] = []
 
-    def _update_from_coordinator_data(self) -> None:
-        """Recompute filtered departures from the latest coordinator data."""
-        options = self._entry.options
+    async def async_update(self) -> None:
+        """Get the latest data and update the state."""
+        try:
+            departures = await MvgApi.departures_async(
+                station_id=self._station_id,
+                limit=self._number,
+                offset=self._timeoffset,
+                transport_types=self._transport_types,
+            )
+        except MvgApiError as err:
+            _LOGGER.warning("Could not update MVG departures: %s", err)
+            return
+
         self._departures = _filter_departures(
-            self.coordinator.data.departures,
-            options.get(CONF_DESTINATIONS, [""]),
-            options.get(CONF_LINES, [""]),
-            options.get(CONF_PRODUCTS),
-            options.get(CONF_TIMEOFFSET, 0),
+            departures,
+            self._destinations,
+            self._lines,
+            None,
+            self._timeoffset,
         )
-
-    @override
-    def _handle_coordinator_update(self) -> None:
-        """Handle updated data from the coordinator."""
-        self._update_from_coordinator_data()
-        self.async_write_ha_state()
-
-    @override
-    async def async_added_to_hass(self) -> None:
-        """Compute the initial state once the entity is added."""
-        await super().async_added_to_hass()
-        self._update_from_coordinator_data()
 
     @property
     @override
@@ -216,36 +225,3 @@ class MVGSensor(CoordinatorEntity[MvgDataUpdateCoordinator], SensorEntity):
         attr = dict(self._departures[0])  # next departure attributes
         attr["departures"] = deepcopy(self._departures)  # all departures dictionary
         return attr
-
-
-class MVGMessagesSensor(CoordinatorEntity[MvgDataUpdateCoordinator], SensorEntity):
-    """Sensor exposing MVG-wide incident messages (all lines and modes of transport).
-
-    The MVG incident feed is network-wide, not specific to the station the
-    owning config entry was set up for; the content is identical across all
-    stations that have it enabled. It is still named and toggled per station
-    (options flow) rather than as a single shared entity, since entities must
-    belong to exactly one config entry in Home Assistant.
-    """
-
-    _attr_attribution = ATTRIBUTION
-    _attr_icon = "mdi:alert-circle-outline"
-    _attr_has_entity_name = True
-
-    def __init__(self, entry: MvgConfigEntry) -> None:
-        """Initialize the sensor."""
-        super().__init__(entry.runtime_data)
-        self._attr_unique_id = f"{entry.entry_id}_messages"
-        self._attr_name = f"{entry.title} Messages"
-
-    @property
-    @override
-    def native_value(self) -> int:
-        """Return the number of active incident messages."""
-        return len(self.coordinator.data.messages)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return the state attributes."""
-        return {"messages": deepcopy(self.coordinator.data.messages)}

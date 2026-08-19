@@ -7,7 +7,6 @@ import pytest
 
 from homeassistant.components.mvglive.const import (
     CONF_DESTINATIONS,
-    CONF_ENABLE_MESSAGES,
     CONF_LINES,
     CONF_NUMBER,
     CONF_PRODUCTS,
@@ -224,7 +223,6 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
             CONF_LINES: "U2, U8",
             CONF_TIMEOFFSET: 5,
             CONF_NUMBER: 3,
-            CONF_ENABLE_MESSAGES: False,
         },
     )
     await hass.async_block_till_done()
@@ -236,5 +234,4 @@ async def test_options_flow(hass: HomeAssistant, config_entry: MockConfigEntry) 
         CONF_PRODUCTS: None,
         CONF_TIMEOFFSET: 5,
         CONF_NUMBER: 3,
-        CONF_ENABLE_MESSAGES: False,
     }
