@@ -416,10 +416,6 @@
     "light_set_delayed_turn_off": {
       "description": "Sets the delayed turning off of a light.",
       "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::light_set_scene::fields::entity_id::description%]",
-          "name": "Entity ID"
-        },
         "time_period": {
           "description": "Time period for the delayed turning off.",
           "name": "Time period"
@@ -430,10 +426,6 @@
     "light_set_scene": {
       "description": "Sets a fixed scene.",
       "fields": {
-        "entity_id": {
-          "description": "Name of the light entity.",
-          "name": "Entity ID"
-        },
         "scene": {
           "description": "Number of the fixed scene.",
           "name": "Scene"
@@ -480,10 +472,6 @@
     "switch_set_power_price": {
       "description": "Sets the power price.",
       "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]",
-          "name": "Entity ID"
-        },
         "mode": {
           "description": "Power price.",
           "name": "[%key:common::config_flow::data::mode%]"
@@ -493,22 +481,10 @@
     },
     "switch_set_wifi_led_off": {
       "description": "Turns off the Wi-Fi LED of a switch.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]",
-          "name": "Entity ID"
-        }
-      },
       "name": "Switch set Wi-Fi LED off"
     },
     "switch_set_wifi_led_on": {
       "description": "Turns on the Wi-Fi LED of a switch.",
-      "fields": {
-        "entity_id": {
-          "description": "[%key:component::xiaomi_miio::services::fan_reset_filter::fields::entity_id::description%]",
-          "name": "Entity ID"
-        }
-      },
       "name": "Switch set Wi-Fi LED on"
     },
     "vacuum_clean_segment": {
