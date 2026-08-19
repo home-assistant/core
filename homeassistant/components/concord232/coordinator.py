@@ -2,7 +2,7 @@
 
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from concord232 import client as concord232_client
 import requests
@@ -47,6 +47,7 @@ class Concord232Coordinator(DataUpdateCoordinator[Concord232Data]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> Concord232Data:
         """Fetch partitions and zones."""
         return await self.hass.async_add_executor_job(self._fetch)

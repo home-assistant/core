@@ -6,12 +6,7 @@
   "documentation": "https://www.home-assistant.io/integrations/concord232",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": [
-    "concord232",
-    "stevedore"
-  ],
+  "loggers": ["concord232", "stevedore"],
   "quality_scale": "legacy",
-  "requirements": [
-    "concord232==0.15.1"
-  ]
+  "requirements": ["concord232==0.15.1"]
 }
