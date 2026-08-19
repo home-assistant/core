@@ -1,6 +1,7 @@
 """Tests for paths where regressions would silently corrupt user data."""
 
 import math
+from typing import Any
 
 import pytest
 
@@ -129,6 +130,36 @@ async def test_source_hex_persists_across_restart(hass: HomeAssistant) -> None:
 
     await _setup_entity(hass)
     assert hass.states.get(ENTITY_ID).attributes[ATTR_SOURCE_HEX] == "#0050FF"
+
+
+@pytest.mark.parametrize(
+    "stored_source_hex",
+    ["not-a-color", "#12345", "#GGGGGG", "0050FF", 123, ["#0050FF"]],
+)
+async def test_restore_drops_malformed_source_hex(
+    hass: HomeAssistant, stored_source_hex: Any
+) -> None:
+    """A malformed source_hex is dropped, but the color still restores."""
+    extra = {
+        "version": STATE_SCHEMA_VERSION,
+        "xy": [0.4, 0.4],
+        "kind": KIND_CHROMATIC,
+        "kelvin": None,
+        "brightness": None,
+        "source_hex": stored_source_hex,
+    }
+    mock_restore_cache_with_extra_data(
+        hass,
+        [(State(ENTITY_ID, "#0000FF", {}), extra)],
+    )
+
+    await _setup_entity(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_SOURCE_HEX] is None
+    # The canonical value is unaffected by the bad echo.
+    assert state.attributes[ATTR_XY_COLOR] == [0.4, 0.4]
 
 
 async def test_reproduce_state_with_unavailable_skips_color_but_sets_brightness(

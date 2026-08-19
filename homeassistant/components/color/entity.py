@@ -17,6 +17,7 @@ from .color_math import (
     derive_kelvin,
     derive_rgb,
     normalize,
+    valid_hex,
     valid_xy,
 )
 from .const import (
@@ -87,9 +88,11 @@ class _StoredColor(ExtraStoredData):
             brightness = data.get("brightness")
             if brightness is not None:
                 brightness = int(brightness)
+            # A malformed source_hex only costs the exact-input echo, so drop
+            # it rather than rejecting an otherwise-restorable color.
             source_hex = data.get("source_hex")
-            if source_hex is not None:
-                source_hex = str(source_hex)
+            if not valid_hex(source_hex):
+                source_hex = None
         except KeyError, TypeError, ValueError, OverflowError:
             return None
         if (

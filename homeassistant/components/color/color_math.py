@@ -8,6 +8,7 @@ any accepted input shape to that canonical form using
 
 from dataclasses import dataclass
 from math import isfinite
+import re
 from typing import Any
 
 from homeassistant.util import color as color_util
@@ -37,6 +38,9 @@ class CanonicalColor:
 
 class ColorInputError(ValueError):
     """Raised when a color input is missing/ambiguous/out-of-range."""
+
+
+_HEX_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
 
 def _strip_hex(hex_value: str) -> str:
@@ -85,6 +89,11 @@ def _validate_hs(hs: Any) -> tuple[float, float]:
     if not 0 <= sat <= 100:
         raise ColorInputError("hs_color saturation must be 0-100")
     return hue, sat
+
+
+def valid_hex(value: Any) -> bool:
+    """Return True if value is a `#RRGGBB` string."""
+    return isinstance(value, str) and _HEX_RE.match(value) is not None
 
 
 def valid_xy(x: float, y: float) -> bool:

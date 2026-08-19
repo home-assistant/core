@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Iterable
 import logging
-import re
 from typing import Any
 
 import voluptuous as vol
@@ -12,7 +11,7 @@ from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import Context, HomeAssistant, State
 from homeassistant.exceptions import ServiceValidationError
 
-from .color_math import ColorInputError, normalize, valid_xy
+from .color_math import ColorInputError, normalize, valid_hex, valid_xy
 from .const import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
@@ -33,7 +32,6 @@ from .const import (
 )
 
 _LOGGER = logging.getLogger(__name__)
-_HEX_RE = re.compile(r"^#[0-9A-Fa-f]{6}$")
 
 
 def _valid_kelvin(value: Any) -> bool:
@@ -66,7 +64,7 @@ def _source_hex_matches(source_hex: Any, xy: Any) -> bool:
     Snapshots store xy rounded to 4 decimals, so an honest snapshot's
     source_hex always re-normalizes onto its own xy attribute.
     """
-    if not isinstance(source_hex, str) or not _HEX_RE.match(source_hex):
+    if not valid_hex(source_hex):
         return False
     try:
         canonical = normalize({FIELD_HEX: source_hex})
@@ -127,7 +125,7 @@ async def _async_reproduce_state(
     ):
         # Canonical xy beats the derived hex state (hex -> xy is lossy).
         color_data = {FIELD_XY: [float(xy[0]), float(xy[1])]}
-    elif isinstance(state.state, str) and _HEX_RE.match(state.state):
+    elif valid_hex(state.state):
         color_data = {FIELD_HEX: state.state}
     else:
         _LOGGER.debug(
