@@ -1,20 +1,25 @@
 """Tests for TP-Link Omada integration services."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 import pytest
 from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.tplink_omada.const import DOMAIN
+from homeassistant.components.tplink_omada.coordinator import POLL_CLIENTS
 from homeassistant.components.tplink_omada.services import (
-    SERVICE_BLOCK_CLIENT,
-    SERVICE_UNBLOCK_CLIENT,
+    SERVICE_BLOCK,
+    SERVICE_RECONNECT,
+    SERVICE_UNBLOCK,
     async_setup_services,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import entity_registry as er
+from homeassistant.util.dt import utcnow
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_service_reconnect_no_config_entries(
@@ -164,76 +169,93 @@ async def test_service_reconnect_failed_raises_homeassistanterror(
     mock_omada_site_client.reconnect_client.assert_awaited_once_with(mac)
 
 
+@pytest.mark.usefixtures("mock_omada_clients_only_client")
 @pytest.mark.parametrize(
     ("service", "method"),
     [
-        pytest.param(SERVICE_BLOCK_CLIENT, "block_client", id="block"),
-        pytest.param(SERVICE_UNBLOCK_CLIENT, "unblock_client", id="unblock"),
+        pytest.param(SERVICE_RECONNECT, "reconnect_client", id="reconnect"),
+        pytest.param(SERVICE_BLOCK, "block_client", id="block"),
+        pytest.param(SERVICE_UNBLOCK, "unblock_client", id="unblock"),
     ],
 )
 async def test_service_client_access_action(
     hass: HomeAssistant,
-    mock_omada_site_client: MagicMock,
-    mock_omada_client: MagicMock,
+    mock_omada_clients_only_site_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     service: str,
     method: str,
 ) -> None:
-    """Test client access action service."""
+    """Test client action service."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    entity_registry.async_update_entity("device_tracker.banana", disabled_by=None)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=POLL_CLIENTS + 10))
+    await hass.async_block_till_done()
 
-    mac = "AA:BB:CC:DD:EE:FF"
     await hass.services.async_call(
         DOMAIN,
         service,
-        {"config_entry_id": mock_config_entry.entry_id, "mac": mac},
+        target={"entity_id": "device_tracker.banana"},
         blocking=True,
     )
 
-    getattr(mock_omada_site_client, method).assert_awaited_once_with(mac)
+    getattr(mock_omada_clients_only_site_client, method).assert_awaited_once_with(
+        "2C-71-FF-ED-34-83"
+    )
 
 
+@pytest.mark.usefixtures("mock_omada_clients_only_client")
 @pytest.mark.parametrize(
     ("service", "method", "error_message"),
     [
         pytest.param(
-            SERVICE_BLOCK_CLIENT,
+            SERVICE_RECONNECT,
+            "reconnect_client",
+            "Failed to reconnect client with MAC 2C-71-FF-ED-34-83",
+            id="reconnect",
+        ),
+        pytest.param(
+            SERVICE_BLOCK,
             "block_client",
-            "Failed to block client with MAC AA:BB:CC:DD:EE:FF",
+            "Failed to block client with MAC 2C-71-FF-ED-34-83",
             id="block",
         ),
         pytest.param(
-            SERVICE_UNBLOCK_CLIENT,
+            SERVICE_UNBLOCK,
             "unblock_client",
-            "Failed to unblock client with MAC AA:BB:CC:DD:EE:FF",
+            "Failed to unblock client with MAC 2C-71-FF-ED-34-83",
             id="unblock",
         ),
     ],
 )
 async def test_service_client_access_action_failure(
     hass: HomeAssistant,
-    mock_omada_site_client: MagicMock,
-    mock_omada_client: MagicMock,
+    mock_omada_clients_only_site_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
     service: str,
     method: str,
     error_message: str,
 ) -> None:
-    """Test client access action service translates API errors."""
+    """Test client action service translates API errors."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    entity_registry.async_update_entity("device_tracker.banana", disabled_by=None)
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=POLL_CLIENTS + 10))
+    await hass.async_block_till_done()
 
-    mac = "AA:BB:CC:DD:EE:FF"
-    getattr(mock_omada_site_client, method).side_effect = OmadaClientException
+    getattr(mock_omada_clients_only_site_client, method).side_effect = OmadaClientException
     with pytest.raises(HomeAssistantError, match=error_message):
         await hass.services.async_call(
             DOMAIN,
             service,
-            {"config_entry_id": mock_config_entry.entry_id, "mac": mac},
+            target={"entity_id": "device_tracker.banana"},
             blocking=True,
         )
 
-    getattr(mock_omada_site_client, method).assert_awaited_once_with(mac)
+    getattr(mock_omada_clients_only_site_client, method).assert_awaited_once_with(
+        "2C-71-FF-ED-34-83"
+    )

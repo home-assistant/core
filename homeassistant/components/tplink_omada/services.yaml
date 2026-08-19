@@ -1,26 +1,19 @@
+reconnect:
+  target:
+    entity:
+      domain: device_tracker
+      integration: tplink_omada
+block:
+  target:
+    entity:
+      domain: device_tracker
+      integration: tplink_omada
+unblock:
+  target:
+    entity:
+      domain: device_tracker
+      integration: tplink_omada
 reconnect_client:
-  fields:
-    config_entry_id:
-      selector:
-        config_entry:
-          integration: tplink_omada
-    mac:
-      required: true
-      example: "01-23-45-67-89-AB"
-      selector:
-        text:
-block_client:
-  fields:
-    config_entry_id:
-      selector:
-        config_entry:
-          integration: tplink_omada
-    mac:
-      required: true
-      example: "01-23-45-67-89-AB"
-      selector:
-        text:
-unblock_client:
   fields:
     config_entry_id:
       selector:

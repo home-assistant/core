@@ -5,18 +5,20 @@ from typing import cast
 from tplink_omada_client.exceptions import OmadaClientException
 import voluptuous as vol
 
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv, selector, service
 
 from .const import DOMAIN
 from .controller import OmadaSiteController
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
-SERVICE_BLOCK_CLIENT = "block_client"
-SERVICE_UNBLOCK_CLIENT = "unblock_client"
+SERVICE_RECONNECT = "reconnect"
+SERVICE_BLOCK = "block"
+SERVICE_UNBLOCK = "unblock"
 
 ATTR_MAC = "mac"
 
@@ -45,7 +47,7 @@ def _get_controller(call: ServiceCall) -> OmadaSiteController:
     return entry.runtime_data
 
 
-SCHEMA_CLIENT_ACTION = vol.Schema(
+SCHEMA_RECONNECT_CLIENT = vol.Schema(
     {
         vol.Optional(ATTR_CONFIG_ENTRY_ID): selector.ConfigEntrySelector(
             {
@@ -69,38 +71,26 @@ async def _handle_reconnect_client(call: ServiceCall) -> None:
         raise HomeAssistantError(f"Failed to reconnect client with MAC {mac}") from ex
 
 
-async def _handle_block_client(call: ServiceCall) -> None:
-    """Handle the service action to block a network client."""
-    controller = _get_controller(call)
-    mac: str = call.data[ATTR_MAC]
-
-    try:
-        await controller.omada_client.block_client(mac)
-    except OmadaClientException as ex:
-        raise HomeAssistantError(f"Failed to block client with MAC {mac}") from ex
-
-
-async def _handle_unblock_client(call: ServiceCall) -> None:
-    """Handle the service action to unblock a network client."""
-    controller = _get_controller(call)
-    mac: str = call.data[ATTR_MAC]
-
-    try:
-        await controller.omada_client.unblock_client(mac)
-    except OmadaClientException as ex:
-        raise HomeAssistantError(f"Failed to unblock client with MAC {mac}") from ex
-
-
-SERVICES = [
-    (SERVICE_RECONNECT_CLIENT, SCHEMA_CLIENT_ACTION, _handle_reconnect_client),
-    (SERVICE_BLOCK_CLIENT, SCHEMA_CLIENT_ACTION, _handle_block_client),
-    (SERVICE_UNBLOCK_CLIENT, SCHEMA_CLIENT_ACTION, _handle_unblock_client),
-]
-
-
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the TP-Link Omada integration."""
-
-    for service_name, schema, handler in SERVICES:
-        hass.services.async_register(DOMAIN, service_name, handler, schema=schema)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        _handle_reconnect_client,
+        schema=SCHEMA_RECONNECT_CLIENT,
+    )
+    for service_name, func, admin_only in (
+        (SERVICE_RECONNECT, "async_reconnect", False),
+        (SERVICE_BLOCK, "async_block", True),
+        (SERVICE_UNBLOCK, "async_unblock", True),
+    ):
+        service.async_register_platform_entity_service(
+            hass,
+            DOMAIN,
+            service_name,
+            entity_domain=DEVICE_TRACKER_DOMAIN,
+            schema=None,
+            func=func,
+            admin_only=admin_only,
+        )
