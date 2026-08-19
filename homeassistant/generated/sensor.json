@@ -1,4 +1,386 @@
 {
+  "device_class_units": {
+    "absolute_humidity": [
+      "g/m\u00b3",
+      "mg/m\u00b3"
+    ],
+    "apparent_power": [
+      "VA",
+      "kVA",
+      "mVA"
+    ],
+    "aqi": [
+      "{no_unit}"
+    ],
+    "area": [
+      "ac",
+      "cm\u00b2",
+      "ft\u00b2",
+      "ha",
+      "in\u00b2",
+      "km\u00b2",
+      "mi\u00b2",
+      "mm\u00b2",
+      "m\u00b2",
+      "yd\u00b2"
+    ],
+    "atmospheric_pressure": [
+      "Pa",
+      "bar",
+      "cbar",
+      "hPa",
+      "inHg",
+      "inH\u2082O",
+      "kPa",
+      "mPa",
+      "mbar",
+      "mmHg",
+      "psi"
+    ],
+    "battery": [
+      "%"
+    ],
+    "blood_glucose_concentration": [
+      "mg/dL",
+      "mmol/L"
+    ],
+    "carbon_monoxide": [
+      "mg/m\u00b3",
+      "ppb",
+      "ppm",
+      "\u03bcg/m\u00b3"
+    ],
+    "carbon_dioxide": [
+      "ppm"
+    ],
+    "conductivity": [
+      "S/cm",
+      "mS/cm",
+      "\u03bcS/cm"
+    ],
+    "current": [
+      "A",
+      "mA",
+      "\u03bcA"
+    ],
+    "data_rate": [
+      "B/s",
+      "GB/s",
+      "Gbit/s",
+      "GiB/s",
+      "KiB/s",
+      "MB/s",
+      "Mbit/s",
+      "MiB/s",
+      "bit/s",
+      "kB/s",
+      "kbit/s"
+    ],
+    "data_size": [
+      "B",
+      "EB",
+      "EiB",
+      "GB",
+      "Gbit",
+      "GiB",
+      "KiB",
+      "MB",
+      "Mbit",
+      "MiB",
+      "PB",
+      "PiB",
+      "TB",
+      "TiB",
+      "YB",
+      "YiB",
+      "ZB",
+      "ZiB",
+      "bit",
+      "kB",
+      "kbit"
+    ],
+    "distance": [
+      "cm",
+      "ft",
+      "in",
+      "km",
+      "m",
+      "mi",
+      "mm",
+      "nmi",
+      "yd"
+    ],
+    "duration": [
+      "d",
+      "h",
+      "min",
+      "ms",
+      "s",
+      "\u03bcs"
+    ],
+    "energy": [
+      "GJ",
+      "GWh",
+      "Gcal",
+      "J",
+      "MJ",
+      "MWh",
+      "Mcal",
+      "TWh",
+      "Wh",
+      "cal",
+      "kJ",
+      "kWh",
+      "kcal",
+      "mWh"
+    ],
+    "energy_distance": [
+      "Wh/km",
+      "kWh/100km",
+      "km/kWh",
+      "mi/kWh"
+    ],
+    "energy_storage": [
+      "GJ",
+      "GWh",
+      "Gcal",
+      "J",
+      "MJ",
+      "MWh",
+      "Mcal",
+      "TWh",
+      "Wh",
+      "cal",
+      "kJ",
+      "kWh",
+      "kcal",
+      "mWh"
+    ],
+    "frequency": [
+      "GHz",
+      "Hz",
+      "MHz",
+      "kHz",
+      "mHz"
+    ],
+    "gas": [
+      "CCF",
+      "L",
+      "MCF",
+      "ft\u00b3",
+      "m\u00b3"
+    ],
+    "humidity": [
+      "%"
+    ],
+    "illuminance": [
+      "lx"
+    ],
+    "irradiance": [
+      "BTU/(h\u22c5ft\u00b2)",
+      "W/m\u00b2"
+    ],
+    "moisture": [
+      "%"
+    ],
+    "nitrogen_dioxide": [
+      "ppb",
+      "ppm",
+      "\u03bcg/m\u00b3"
+    ],
+    "nitrogen_monoxide": [
+      "ppb",
+      "\u03bcg/m\u00b3"
+    ],
+    "nitrous_oxide": [
+      "\u03bcg/m\u00b3"
+    ],
+    "ozone": [
+      "ppb",
+      "ppm",
+      "\u03bcg/m\u00b3"
+    ],
+    "ph": [
+      "{no_unit}"
+    ],
+    "pm1": [
+      "\u03bcg/m\u00b3"
+    ],
+    "pm10": [
+      "\u03bcg/m\u00b3"
+    ],
+    "pm25": [
+      "\u03bcg/m\u00b3"
+    ],
+    "pm4": [
+      "\u03bcg/m\u00b3"
+    ],
+    "power_factor": [
+      "%",
+      "{no_unit}"
+    ],
+    "power": [
+      "GW",
+      "MW",
+      "TW",
+      "W",
+      "kW",
+      "mW"
+    ],
+    "precipitation": [
+      "cm",
+      "in",
+      "mm"
+    ],
+    "precipitation_intensity": [
+      "in/d",
+      "in/h",
+      "mm/d",
+      "mm/h"
+    ],
+    "pressure": [
+      "Pa",
+      "bar",
+      "cbar",
+      "hPa",
+      "inHg",
+      "inH\u2082O",
+      "kPa",
+      "mPa",
+      "mbar",
+      "mmHg",
+      "psi"
+    ],
+    "radon": [
+      "Bq/m\u00b3",
+      "pCi/L"
+    ],
+    "reactive_energy": [
+      "kvarh",
+      "varh"
+    ],
+    "reactive_power": [
+      "kvar",
+      "mvar",
+      "var"
+    ],
+    "signal_strength": [
+      "dB",
+      "dBm"
+    ],
+    "sound_pressure": [
+      "dB",
+      "dBA"
+    ],
+    "speed": [
+      "Beaufort",
+      "ft/s",
+      "in/d",
+      "in/h",
+      "in/s",
+      "km/h",
+      "kn",
+      "m/min",
+      "m/s",
+      "mm/d",
+      "mm/h",
+      "mm/s",
+      "mph"
+    ],
+    "sulphur_dioxide": [
+      "ppb",
+      "\u03bcg/m\u00b3"
+    ],
+    "temperature": [
+      "K",
+      "\u00b0C",
+      "\u00b0F"
+    ],
+    "temperature_delta": [
+      "K",
+      "\u00b0C",
+      "\u00b0F"
+    ],
+    "volatile_organic_compounds": [
+      "mg/m\u00b3",
+      "\u03bcg/m\u00b3"
+    ],
+    "volatile_organic_compounds_parts": [
+      "ppb",
+      "ppm"
+    ],
+    "voltage": [
+      "MV",
+      "V",
+      "kV",
+      "mV",
+      "\u03bcV"
+    ],
+    "volume": [
+      "CCF",
+      "L",
+      "MCF",
+      "fl. oz.",
+      "ft\u00b3",
+      "gal",
+      "mL",
+      "m\u00b3"
+    ],
+    "volume_flow_rate": [
+      "L/h",
+      "L/min",
+      "L/s",
+      "ft\u00b3/min",
+      "gal/d",
+      "gal/h",
+      "gal/min",
+      "mL/s",
+      "m\u00b3/h",
+      "m\u00b3/min",
+      "m\u00b3/s"
+    ],
+    "volume_storage": [
+      "CCF",
+      "L",
+      "MCF",
+      "fl. oz.",
+      "ft\u00b3",
+      "gal",
+      "mL",
+      "m\u00b3"
+    ],
+    "water": [
+      "CCF",
+      "L",
+      "MCF",
+      "ft\u00b3",
+      "gal",
+      "m\u00b3"
+    ],
+    "weight": [
+      "g",
+      "kg",
+      "lb",
+      "mg",
+      "oz",
+      "st",
+      "\u03bcg"
+    ],
+    "wind_direction": [
+      "\u00b0"
+    ],
+    "wind_speed": [
+      "Beaufort",
+      "ft/s",
+      "in/s",
+      "km/h",
+      "kn",
+      "m/min",
+      "m/s",
+      "mm/s",
+      "mph"
+    ]
+  },
   "numeric_device_classes": [
     "absolute_humidity",
     "apparent_power",
@@ -58,5 +440,16 @@
     "weight",
     "wind_direction",
     "wind_speed"
+  ],
+  "state_class_units": {
+    "measurement_angle": [
+      "\u00b0"
+    ]
+  },
+  "state_classes": [
+    "measurement",
+    "measurement_angle",
+    "total",
+    "total_increasing"
   ]
 }

@@ -2,9 +2,12 @@
 
 import json
 
-from homeassistant.components.sensor.const import (
+from homeassistant.components.sensor import (
+    DEVICE_CLASS_UNITS,
     NON_NUMERIC_DEVICE_CLASSES,
+    STATE_CLASS_UNITS,
     SensorDeviceClass,
+    SensorStateClass,
 )
 
 from .model import Config, Integration
@@ -18,7 +21,24 @@ def _generate() -> str:
         device_class.value
         for device_class in set(SensorDeviceClass) - NON_NUMERIC_DEVICE_CLASSES
     )
-    return json.dumps({"numeric_device_classes": numeric_device_classes}, indent=2)
+    device_class_units = {
+        device_class: sorted(unit or "{no_unit}" for unit in units)
+        for device_class, units in DEVICE_CLASS_UNITS.items()
+    }
+    state_classes = sorted(state_class.value for state_class in SensorStateClass)
+    state_class_units = {
+        state_class: sorted(unit or "{no_unit}" for unit in units)
+        for state_class, units in STATE_CLASS_UNITS.items()
+    }
+    return json.dumps(
+        {
+            "device_class_units": device_class_units,
+            "numeric_device_classes": numeric_device_classes,
+            "state_class_units": state_class_units,
+            "state_classes": state_classes,
+        },
+        indent=2,
+    )
 
 
 def validate(integrations: dict[str, Integration], config: Config) -> None:
