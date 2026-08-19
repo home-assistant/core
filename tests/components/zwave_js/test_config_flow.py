@@ -1592,7 +1592,7 @@ async def test_esphome_discovery_already_configured(
     assert stop_addon.call_args == call("core_zwave_js")
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm", "restore_nvm")
 @pytest.mark.parametrize(
     "esphome_discovery_info",
     [
@@ -1623,23 +1623,6 @@ async def test_esphome_discovery_migration(
             "usb_path": "/dev/ttyUSB0",
         },
     )
-
-    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
-        client.driver.controller.emit(
-            "nvm convert progress",
-            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
-        )
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm restore progress",
-            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
-        )
-        client.driver.controller.data["homeId"] = 3245146787
-        client.driver.emit(
-            "driver ready", {"event": "driver ready", "source": "driver"}
-        )
-
-    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
