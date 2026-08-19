@@ -1,0 +1,32 @@
+{
+  "response": {
+    "players": {
+      "player": [
+        {
+          "steamid": "76561198000000001",
+          "communityvisibilitystate": 1,
+          "personaname": "testaccount1",
+          "profileurl": "https://steamcommunity.com/profiles/76561198000000001/",
+          "avatar": "https://avatars.steamstatic.com/avatar.jpg",
+          "avatarmedium": "https://avatars.steamstatic.com/avatar_medium.jpg",
+          "avatarfull": "https://avatars.steamstatic.com/avatar_full.jpg",
+          "avatarhash": "0000000000000000000000000000000000000000",
+          "personastate": 1,
+          "personastateflags": 0
+        },
+        {
+          "steamid": "76561198000000002",
+          "communityvisibilitystate": 1,
+          "personaname": "testaccount2",
+          "profileurl": "https://steamcommunity.com/profiles/76561198000000002/",
+          "avatar": "https://avatars.steamstatic.com/avatar.jpg",
+          "avatarmedium": "https://avatars.steamstatic.com/avatar_medium.jpg",
+          "avatarfull": "https://avatars.steamstatic.com/avatar_full.jpg",
+          "avatarhash": "0000000000000000000000000000000000000000",
+          "personastate": 0,
+          "personastateflags": 0
+        }
+      ]
+    }
+  }
+}
