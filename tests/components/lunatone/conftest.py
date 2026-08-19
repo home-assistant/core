@@ -4,7 +4,7 @@ from collections.abc import Generator
 from unittest.mock import AsyncMock, PropertyMock, patch
 
 from lunatone_rest_api_client import Device, Devices, Info, Sensor, Sensors
-from lunatone_rest_api_client.models import InfoData, SensorsData
+from lunatone_rest_api_client.models import InfoData, ScanData, ScanState, SensorsData
 import pytest
 
 from homeassistant.components.lunatone.config_flow import LunatoneConfigFlow
@@ -159,6 +159,29 @@ def mock_lunatone_sensors() -> Generator[AsyncMock]:
         sensors.set_data = _set_data
         sensors.set_data(SENSORS_DATA)
         yield sensors
+
+
+@pytest.fixture
+def mock_lunatone_scan() -> Generator[AsyncMock]:
+    """Mock a Lunatone DALI scan object."""
+    with (
+        patch(
+            "homeassistant.components.lunatone.DALIScan",
+            autospec=True,
+        ) as mock_dali_scan,
+        patch(
+            "homeassistant.components.lunatone.coordinator.DALIScan",
+            new=mock_dali_scan,
+        ),
+    ):
+        scan = mock_dali_scan.return_value
+        scan.data = ScanData()
+        type(scan).is_busy = PropertyMock(
+            side_effect=lambda: (
+                scan.data.status in {ScanState.ADDRESSING, ScanState.IN_PROGRESS}
+            )
+        )
+        yield scan
 
 
 @pytest.fixture
