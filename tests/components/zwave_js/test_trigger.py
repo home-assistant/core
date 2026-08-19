@@ -35,8 +35,8 @@ async def test_zwave_js_value_updated(
     """Test for zwave_js.value_updated automation trigger."""
     trigger_type = f"{DOMAIN}.value_updated"
     node: Node = lock_schlage_be469
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -478,8 +478,8 @@ async def test_zwave_js_event(
     """Test for zwave_js.event automation trigger."""
     trigger_type = f"{DOMAIN}.event"
     node: Node = lock_schlage_be469
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -1049,8 +1049,8 @@ async def test_zwave_js_trigger_config_entry_unloaded(
     integration,
 ) -> None:
     """Test zwave_js triggers bypass dynamic validation when needed."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
