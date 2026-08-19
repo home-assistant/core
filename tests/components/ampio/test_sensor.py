@@ -222,7 +222,7 @@ async def test_unexposable_objects_are_skipped(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entities) == 3
+    assert len(entities) == 8
 
 
 @pytest.mark.parametrize(

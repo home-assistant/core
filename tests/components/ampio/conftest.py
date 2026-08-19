@@ -66,10 +66,11 @@ def make_object(
     )
 
 
-# The default object catalogue: three visible sensors on module 17. The
-# hidden phantom mirrors a real M-SENS where adding a CO2 object in Designer
-# leaves an unnamed stub sharing the leafId behind; the ghost is a
-# removed-but-still-returned row with no leafId.
+# The default object catalogue: one visible sensor per supported kind on
+# module 17, so the entity snapshot pins every description's device class,
+# unit, precision, and display name. The hidden phantom mirrors a real M-SENS
+# where adding a CO2 object in Designer leaves an unnamed stub sharing the
+# leafId behind; the ghost is a removed-but-still-returned row with no leafId.
 DEFAULT_OBJECTS = (
     make_object(
         36,
@@ -89,6 +90,11 @@ DEFAULT_OBJECTS = (
         value="42.000000",
     ),
     make_object(43, "lin_wej", 7, leaf_id="0_cb8f_lin_0_3", funkcja=3, value="900.5"),
+    make_object(44, "lin_wej", 2, leaf_id="0_cb8f_lin_0_4", funkcja=5, value="1013.2"),
+    make_object(45, "lin_wej", 6, leaf_id="0_cb8f_lin_0_5", funkcja=6, value="1019.7"),
+    make_object(46, "lin_wej", 3, leaf_id="0_cb8f_lin_0_6", funkcja=7, value="38.5"),
+    make_object(47, "lin_wej", 4, leaf_id="0_cb8f_lin_0_7", funkcja=8, value="742"),
+    make_object(48, "lin_wej", 5, leaf_id="0_cb8f_lin_0_8", funkcja=9, value="23"),
     make_object(132, "lin_wej", 7, leaf_id="0_cb8f_lin_0_3", funkcja=3, params=16),
     make_object(99, "lin_wej", 2, leaf_id="", funkcja=4),
 )

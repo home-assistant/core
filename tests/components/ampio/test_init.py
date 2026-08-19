@@ -140,7 +140,7 @@ async def test_restricted_account_groups_by_module_mac(
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
-    assert len(entities) == 3
+    assert len(entities) == 8
     assert all(entity.device_id == module.id for entity in entities)
 
 
