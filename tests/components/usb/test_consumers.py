@@ -269,6 +269,7 @@ async def test_absent_configured_port(
     ]
     assert result[2] == {
         "device": TTY_USB1,
+        "resolved_device": None,
         "serial_number": None,
         "manufacturer": None,
         "description": None,

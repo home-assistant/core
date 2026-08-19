@@ -1327,12 +1327,14 @@ async def test_async_scan_serial_ports(hass: HomeAssistant) -> None:
     assert devices == [
         SerialDevice(
             device="/dev/ttyAMA1",
+            resolved_device="/dev/ttyAMA1",
             serial_number=None,
             manufacturer=None,
             description="ttyAMA1",
         ),
         USBDevice(
             device="/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_10B41DE589FC-if00",
+            resolved_device="/dev/ttyACM0",
             vid="303A",
             pid="4001",
             serial_number="10B41DE589FC",
@@ -1693,6 +1695,7 @@ async def test_list_serial_ports(
     mock_ports = [
         USBDevice(
             device="/dev/ttyUSB0",
+            resolved_device="/dev/ttyUSB0",
             vid="10C4",
             pid="EA60",
             serial_number="001234",
@@ -1704,6 +1707,7 @@ async def test_list_serial_ports(
         ),
         USBDevice(
             device="/dev/ttyUSB1",
+            resolved_device="/dev/ttyUSB1",
             vid="DEAD",
             pid="BEEF",
             serial_number=None,
@@ -1712,6 +1716,7 @@ async def test_list_serial_ports(
         ),
         USBDevice(
             device="/dev/ttyUSB2",
+            resolved_device="/dev/ttyUSB2",
             vid="0000",
             pid="0000",
             serial_number=None,
@@ -1720,6 +1725,7 @@ async def test_list_serial_ports(
         ),
         SerialDevice(
             device="/dev/ttyS0",
+            resolved_device="/dev/ttyS0",
             serial_number=None,
             manufacturer=None,
             description="ttyS0",
@@ -1741,6 +1747,7 @@ async def test_list_serial_ports(
     assert response["result"] == [
         {
             "device": "/dev/ttyUSB0",
+            "resolved_device": "/dev/ttyUSB0",
             "vid": "10C4",
             "pid": "EA60",
             "serial_number": "001234",
@@ -1754,6 +1761,7 @@ async def test_list_serial_ports(
         },
         {
             "device": "/dev/ttyUSB1",
+            "resolved_device": "/dev/ttyUSB1",
             "vid": "DEAD",
             "pid": "BEEF",
             "serial_number": None,
@@ -1767,6 +1775,7 @@ async def test_list_serial_ports(
         },
         {
             "device": "/dev/ttyUSB2",
+            "resolved_device": "/dev/ttyUSB2",
             "vid": "0000",
             "pid": "0000",
             "serial_number": None,
@@ -1780,6 +1789,7 @@ async def test_list_serial_ports(
         },
         {
             "device": "/dev/ttyS0",
+            "resolved_device": "/dev/ttyS0",
             "serial_number": None,
             "manufacturer": None,
             "description": "ttyS0",

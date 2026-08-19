@@ -548,6 +548,7 @@ def _async_serialize_port(
     """Serialize a serial port for the websocket API."""
     entry: dict[str, Any] = {
         "device": port.device,
+        "resolved_device": port.resolved_device,
         "serial_number": port.serial_number,
         "manufacturer": port.manufacturer,
         "description": port.description,
@@ -600,6 +601,7 @@ def _serialize_absent_port(
     """Serialize a port that is configured but was not found in the scan."""
     return {
         "device": device,
+        "resolved_device": None,
         "serial_number": None,
         "manufacturer": None,
         "description": None,

@@ -9,6 +9,8 @@ class SerialDevice:
     """A serial device."""
 
     device: str
+    resolved_device: str | None = None
+
     serial_number: str | None
     manufacturer: str | None
     description: str | None
