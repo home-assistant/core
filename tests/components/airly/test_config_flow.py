@@ -44,7 +44,14 @@ async def test_invalid_api_key(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
     )
 
     assert result["errors"] == {"base": "invalid_api_key"}
@@ -64,7 +71,14 @@ async def test_invalid_location(
     )
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
     )
 
     assert result["errors"] == {"base": "wrong_location"}
@@ -85,7 +99,14 @@ async def test_invalid_location_for_point_and_nearest(
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONFIG
         )
 
     assert result["type"] is FlowResultType.ABORT
@@ -102,7 +123,14 @@ async def test_duplicate_error(
     MockConfigEntry(domain=DOMAIN, unique_id="123-456", data=CONFIG).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input=CONFIG
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -119,7 +147,14 @@ async def test_create_entry(
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONFIG
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -146,7 +181,14 @@ async def test_create_entry_with_nearest_method(
 
     with patch("homeassistant.components.airly.async_setup_entry", return_value=True):
         result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONFIG
+            DOMAIN, context={"source": SOURCE_USER}
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONFIG
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
