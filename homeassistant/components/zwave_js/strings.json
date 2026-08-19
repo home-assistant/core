@@ -29,7 +29,9 @@
       "addon_start_failed": "Failed to start the Z-Wave JS app. Check the configuration.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_ws_url": "Invalid websocket URL",
-      "unknown": "[%key:common::config_flow::error::unknown%]"
+      "missing_usb_or_socket_path": "Select a USB device or provide a socket path.",
+      "unknown": "[%key:common::config_flow::error::unknown%]",
+      "usb_and_socket_path": "Select either a USB device or a socket path, not both."
     },
     "flow_title": "{name}",
     "progress": {

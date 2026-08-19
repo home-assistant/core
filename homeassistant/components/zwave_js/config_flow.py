@@ -24,6 +24,7 @@ from homeassistant.components.hassio import (
 from homeassistant.config_entries import (
     SOURCE_ESPHOME,
     SOURCE_USB,
+    SOURCE_ZEROCONF,
     ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
@@ -98,6 +99,15 @@ CONF_ADDON_RF_REGION = "rf_region"
 EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
+
+# Steps at which another flow is only showing a discovery prompt and can be
+# aborted safely when a config entry is created by a different flow.
+DISCOVERY_PROMPT_STEPS = {
+    "confirm_usb_migration",
+    "hassio_confirm",
+    "installation_type",
+    "zeroconf_confirm",
+}
 
 NETWORK_TYPE_NEW = "new"
 NETWORK_TYPE_EXISTING = "existing"
@@ -220,6 +230,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._adapter_discovered = False
         self._recommended_install = False
         self._rf_region: str | None = None
+        self._entry_unloaded_by_flow = False
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -503,12 +514,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if any(
             flow
             for flow in self._async_in_progress()
-            if flow["context"].get("source") != SOURCE_USB
+            if flow["context"].get("source") not in (SOURCE_USB, SOURCE_ZEROCONF)
         ):
             # Allow multiple USB discovery flows to be in progress.
             # Migration requires more than one USB stick to be connected,
             # which can cause more than one discovery flow to be in progress,
             # at least for a short time.
+            # Zeroconf flows never touch the add-on,
+            # so an idle discovery prompt should not block USB discovery.
             return self.async_abort(reason="already_in_progress")
         if current_config_entries := self._async_current_entries(include_ignore=False):
             self._reconfigure_config_entry = next(
@@ -650,7 +663,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         This flow is triggered by the Z-Wave JS add-on.
         """
-        if self._async_in_progress():
+        if any(
+            flow
+            for flow in self._async_in_progress()
+            # Zeroconf flows never touch the add-on, so an idle discovery
+            # prompt should not block the add-on discovery.
+            if flow["context"].get("source") != SOURCE_ZEROCONF
+        ):
             return self.async_abort(reason="already_in_progress")
 
         if discovery_info.slug != ADDON_SLUG:
@@ -780,10 +799,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Ask for config for Z-Wave JS add-on."""
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            self.usb_path = user_input.get(CONF_USB_PATH)
-            self.socket_path = user_input.get(CONF_SOCKET_PATH)
-            return await self.async_step_network_type()
+            self.usb_path = user_input.get(CONF_USB_PATH) or None
+            self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
+            if error := self._validate_usb_or_socket_path():
+                errors["base"] = error
+            else:
+                return await self.async_step_network_type()
 
         if self._adapter_discovered:
             return await self.async_step_network_type()
@@ -807,8 +831,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="configure_addon_user", data_schema=data_schema
+            step_id="configure_addon_user", data_schema=data_schema, errors=errors
         )
+
+    @callback
+    def _validate_usb_or_socket_path(self) -> str | None:
+        """Validate that exactly one of USB path and socket path is set."""
+        if self.usb_path and self.socket_path:
+            return "usb_and_socket_path"
+        if not self.usb_path and not self.socket_path:
+            return "missing_usb_or_socket_path"
+        return None
 
     async def async_step_network_type(
         self, user_input: dict[str, Any] | None = None
@@ -978,6 +1011,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 str(self.version_info.home_id), raise_on_progress=False
             )
 
+        if (
+            existing_entry := next(
+                (
+                    entry
+                    for entry in self._async_current_entries(include_ignore=False)
+                    if entry.unique_id == self.unique_id
+                ),
+                None,
+            )
+        ) and not existing_entry.data.get(CONF_USE_ADDON):
+            # The controller is already configured against another server,
+            # e.g. via zeroconf discovery, so don't rewrite that entry
+            # with add-on data.
+            return self.async_abort(reason="already_configured")
+
         # When we came from discovery, make sure we update the add-on
         if self._adapter_discovered and self.use_addon:
             await self._async_set_addon_config(
@@ -1019,9 +1067,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_vars(self) -> ConfigFlowResult:
         """Return a config entry for the flow."""
-        # Abort any other flows that may be in progress
+        # Abort other flows that are still at a discovery prompt, since the
+        # new entry may make them redundant. Flows that have progressed
+        # further, e.g. a migration that has backed up the network,
+        # must not be interrupted.
         for progress in self._async_in_progress():
-            self.hass.config_entries.flow.async_abort(progress["flow_id"])
+            if progress.get("step_id") in DISCOVERY_PROMPT_STEPS:
+                self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
         return self.async_create_entry(
             title=TITLE,
@@ -1048,7 +1100,42 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.hass.config_entries.async_update_entry(
             config_entry, data=config_entry.data | updates
         )
+        self._async_schedule_entry_reload()
+
+    async def _async_unload_entry_for_flow(self) -> None:
+        """Unload the config entry being reconfigured for this flow.
+
+        The entry is reloaded when the flow is removed,
+        unless a flow step schedules a reload itself.
+        """
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        self._entry_unloaded_by_flow = True
+        await self.hass.config_entries.async_unload(config_entry.entry_id)
+
+    @callback
+    def _async_schedule_entry_reload(self) -> None:
+        """Schedule a reload of the config entry being reconfigured."""
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        self._entry_unloaded_by_flow = False
         self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+
+    @override
+    @callback
+    def async_remove(self) -> None:
+        """Reload the config entry if the flow unloaded it and left it down.
+
+        This recovers the entry when a flow that has unloaded it,
+        e.g. a migration waiting for the adapter to be unplugged,
+        is aborted or abandoned.
+        """
+        if not self._entry_unloaded_by_flow:
+            return
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        if config_entry.state is ConfigEntryState.NOT_LOADED:
+            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -1165,7 +1252,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         assert config_entry is not None
 
         # Unload the config entry before asking the user to unplug the controller.
-        await self.hass.config_entries.async_unload(config_entry.entry_id)
+        await self._async_unload_entry_for_flow()
 
         return self.async_show_form(
             step_id="instruct_unplug",
@@ -1242,16 +1329,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not user_input[CONF_USE_ADDON]:
             if config_entry.data.get(CONF_USE_ADDON):
                 # Unload the config entry before stopping the add-on.
-                await self.hass.config_entries.async_unload(config_entry.entry_id)
+                await self._async_unload_entry_for_flow()
                 addon_manager = get_addon_manager(self.hass)
                 _LOGGER.debug("Stopping Z-Wave JS app")
                 try:
                     await addon_manager.async_stop_addon()
                 except AddonError as err:
                     _LOGGER.error(err)
-                    self.hass.config_entries.async_schedule_reload(
-                        config_entry.entry_id
-                    )
+                    self._async_schedule_entry_reload()
                     raise AbortFlow("addon_stop_failed") from err
             return await self.async_step_manual_reconfigure()
 
@@ -1269,6 +1354,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         addon_info = await self._async_get_addon_info()
         addon_config = addon_info.options
 
+        errors: dict[str, str] = {}
+
         if user_input is not None:
             # The revert helper only passes keys present in the original
             # add-on config, which may lack some of the security keys,
@@ -1285,35 +1372,38 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.lr_s2_authenticated_key = user_input.get(
                 CONF_LR_S2_AUTHENTICATED_KEY, ""
             )
-            self.usb_path = user_input.get(CONF_USB_PATH)
-            self.socket_path = user_input.get(CONF_SOCKET_PATH)
+            self.usb_path = user_input.get(CONF_USB_PATH) or None
+            self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
 
-            addon_config_updates = {
-                CONF_ADDON_DEVICE: self.usb_path,
-                CONF_ADDON_SOCKET: self.socket_path,
-                CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
-            }
+            if error := self._validate_usb_or_socket_path():
+                errors["base"] = error
+            else:
+                addon_config_updates = {
+                    CONF_ADDON_DEVICE: self.usb_path,
+                    CONF_ADDON_SOCKET: self.socket_path,
+                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
+                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
+                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
+                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
+                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
+                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
+                }
 
-            addon_config_updates = self._addon_config_updates | addon_config_updates
-            self._addon_config_updates = {}
+                addon_config_updates = self._addon_config_updates | addon_config_updates
+                self._addon_config_updates = {}
 
-            await self._async_set_addon_config(addon_config_updates)
+                await self._async_set_addon_config(addon_config_updates)
 
-            if addon_info.state is AddonState.RUNNING and not self.restart_addon:
-                return await self.async_step_finish_addon_setup_reconfigure()
+                if addon_info.state is AddonState.RUNNING and not self.restart_addon:
+                    return await self.async_step_finish_addon_setup_reconfigure()
 
-            if (
-                config_entry := self._reconfigure_config_entry
-            ) and config_entry.data.get(CONF_USE_ADDON):
-                # Disconnect integration before restarting add-on.
-                await self.hass.config_entries.async_unload(config_entry.entry_id)
+                if (
+                    config_entry := self._reconfigure_config_entry
+                ) and config_entry.data.get(CONF_USE_ADDON):
+                    # Disconnect integration before restarting add-on.
+                    await self._async_unload_entry_for_flow()
 
-            return await self.async_step_start_addon()
+                return await self.async_step_start_addon()
 
         usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
         socket_path = addon_config.get(CONF_ADDON_SOCKET, self.socket_path or "")
@@ -1383,19 +1473,26 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
         return self.async_show_form(
-            step_id="configure_addon_reconfigure", data_schema=data_schema
+            step_id="configure_addon_reconfigure",
+            data_schema=data_schema,
+            errors=errors,
         )
 
     async def async_step_choose_serial_port(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Choose a serial port."""
+        errors: dict[str, str] = {}
+
         if user_input is not None:
-            self.usb_path = user_input.get(CONF_USB_PATH)
-            self.socket_path = user_input.get(CONF_SOCKET_PATH)
-            self._addon_config_updates[CONF_ADDON_DEVICE] = self.usb_path
-            self._addon_config_updates[CONF_ADDON_SOCKET] = self.socket_path
-            return await self.async_step_start_addon()
+            self.usb_path = user_input.get(CONF_USB_PATH) or None
+            self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
+            if error := self._validate_usb_or_socket_path():
+                errors["base"] = error
+            else:
+                self._addon_config_updates[CONF_ADDON_DEVICE] = self.usb_path
+                self._addon_config_updates[CONF_ADDON_SOCKET] = self.socket_path
+                return await self.async_step_start_addon()
 
         try:
             ports = await async_get_usb_ports(self.hass)
@@ -1424,7 +1521,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             }
         )
         return self.async_show_form(
-            step_id="choose_serial_port", data_schema=data_schema
+            step_id="choose_serial_port", data_schema=data_schema, errors=errors
         )
 
     async def async_step_backup_failed(
@@ -1577,7 +1674,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     return self.async_abort(reason="already_configured")
 
                 # Only update config automatically if using socket
-                if existing_entry.data.get(CONF_SOCKET_PATH):
+                if existing_socket_path := existing_entry.data.get(CONF_SOCKET_PATH):
+                    if existing_socket_path == discovery_info.socket_path:
+                        # Config entry already has correct config
+                        return self.async_abort(reason="already_configured")
                     manager = get_addon_manager(self.hass)
                     await self._async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
@@ -1629,7 +1729,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.revert_reason or not self.original_addon_config:
             config_entry = self._reconfigure_config_entry
             assert config_entry is not None
-            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+            self._async_schedule_entry_reload()
             return self.async_abort(reason=reason)
 
         self.revert_reason = reason
