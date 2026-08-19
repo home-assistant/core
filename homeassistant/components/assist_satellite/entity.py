@@ -443,12 +443,7 @@ class AssistSatelliteEntity(entity.Entity):
         wake_word_phrase: str | None = None,
         context: Context | None = None,
     ) -> None:
-        """Triggers an Assist pipeline in Home Assistant from a satellite.
-
-        Pass a context only when the satellite can attribute the audio to a
-        known user. Speech picked up from the room is anonymous, so a new
-        context is created instead of reusing whatever last targeted the entity.
-        """
+        """Triggers an Assist pipeline in Home Assistant from a satellite."""
         await self._cancel_running_pipeline()
 
         # Consume system prompt in first pipeline
