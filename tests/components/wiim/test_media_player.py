@@ -1,7 +1,7 @@
 """Tests for the WiiM media player via services and the state machine."""
 
 from http import HTTPStatus
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, call, patch
 
 import aiohttp
 import pytest
