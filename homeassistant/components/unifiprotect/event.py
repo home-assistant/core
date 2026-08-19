@@ -21,6 +21,7 @@ from homeassistant.helpers.event import async_call_at
 from . import Bootstrap
 from .const import (
     ATTR_EVENT_ID,
+    ATTR_EVENT_SOURCE,
     ATTR_SMART_DETECT_TYPES,
     EVENT_TYPE_FINGERPRINT_IDENTIFIED,
     EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED,
@@ -107,7 +108,7 @@ class ProtectDevicePublicEventEntity(
 
     A detection type can surface at the event start, on a later update, or only
     as the event ends, and every non-eviction change is dispatched — so firing is
-    deduped per ``(event id, event type)``.
+    deduped per ``(event id, object type, event source)``.
 
     Availability follows the public API (device present and connected) plus the
     events websocket, which is the only channel these entities fire from.
@@ -118,25 +119,26 @@ class ProtectDevicePublicEventEntity(
 
     entity_description: ProtectEventEntityDescription
     # A camera can run two overlapping events of the same category whose
-    # dispatches interleave, so dedup tracks fired types per recent event id
-    # (bounded), not just the current one.
-    _fired: dict[str, frozenset[str]] | None = None
+    # dispatches interleave, so dedup tracks fired object/source pairs per
+    # recent event id (bounded), not just the current one.
+    _fired: dict[str, frozenset[tuple[str, EventType]]] | None = None
 
     @callback
     def _fire_once(
         self, event: ProtectEvent, event_type: str, event_data: dict[str, Any]
     ) -> None:
-        """Fire ``event_type`` once per event, ignoring repeat dispatches."""
+        """Fire once per event id, surfaced type, and Protect event type."""
         fired = self._fired
         if fired is None:
             fired = self._fired = {}
         # Pop-and-reinsert so any dispatch refreshes this event id's recency; a
         # long-running event that keeps updating is then not evicted below.
         types = fired.pop(event.id, frozenset())
-        if event_type in types:
+        fired_type = (event_type, event.type)
+        if fired_type in types:
             fired[event.id] = types
             return
-        fired[event.id] = types | {event_type}
+        fired[event.id] = types | {fired_type}
         if len(fired) > _MAX_TRACKED_EVENTS:
             del fired[next(iter(fired))]  # evict the least-recently-seen event id
         self._trigger_event(event_type, event_data)
@@ -433,8 +435,8 @@ class ProtectDeviceSmartDetectEventEntity(ProtectDevicePublicEventEntity):
     Used for object types that Protect models as discrete, point-in-time
     detections (e.g. package): the camera fires once with a cooldown and the
     smart-detect event is recorded already-ended, so a sustained binary sensor
-    can never reflect it. The public events websocket delivers these as proper
-    ``smartDetectZone`` events (the private API only exposes the unhandled
+    can never reflect it. The public events websocket delivers these as smart
+    detection events (the private API only exposes the unhandled
     ``smartDetectObject`` model), so we subscribe there and fire a momentary
     event when the description's object type matches.
     """
@@ -457,7 +459,14 @@ class ProtectDeviceSmartDetectEventEntity(ProtectDevicePublicEventEntity):
         description = self.entity_description
         event_types = description.event_types
         if event_types and description.ufp_obj_type in event.smart_detect_types:
-            self._fire_once(event, event_types[0], {ATTR_EVENT_ID: event.id})
+            self._fire_once(
+                event,
+                event_types[0],
+                {
+                    ATTR_EVENT_ID: event.id,
+                    ATTR_EVENT_SOURCE: event.type.value,
+                },
+            )
 
 
 _CAMEL_BOUNDARY = re.compile(r"(?<!^)(?=[A-Z])")
@@ -527,10 +536,16 @@ class ProtectDeviceDetectionEventEntity(ProtectDevicePublicEventEntity):
         detected = [_event_type(t) for t in event.smart_detect_types]
         for event_type in detected:
             if event_type in allowed:
+                event_data: dict[str, Any] = {
+                    ATTR_EVENT_ID: event.id,
+                    ATTR_SMART_DETECT_TYPES: detected,
+                }
+                if event.type in _SMART_DETECT_EVENT_TYPES:
+                    event_data[ATTR_EVENT_SOURCE] = event.type.value
                 self._fire_once(
                     event,
                     event_type,
-                    {ATTR_EVENT_ID: event.id, ATTR_SMART_DETECT_TYPES: detected},
+                    event_data,
                 )
 
 
@@ -594,14 +609,6 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         event_types=[EventType.MOTION.value],
         ufp_public_event_types=(EventType.MOTION,),
         entity_class=ProtectDeviceMotionEventEntity,
-    ),
-    ProtectDetectionEventEntityDescription(
-        key="line_crossing",
-        translation_key="line_crossing",
-        ufp_required_field="feature_flags.has_line_crossing",
-        event_types=_SMART_OBJECT_EVENT_TYPES,
-        ufp_public_event_types=(EventType.SMART_DETECT_LINE,),
-        entity_class=ProtectDeviceDetectionEventEntity,
     ),
     ProtectDetectionEventEntityDescription(
         key="smart_detection",
