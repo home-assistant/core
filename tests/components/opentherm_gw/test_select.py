@@ -153,12 +153,12 @@ async def test_select_change_value(
 
 
 @pytest.mark.parametrize(
-    ("target_param", "pyotgw_return", "resulting_state"),
+    ("target_param", "pyotgw_return", "selected_option", "resulting_state"),
     [
-        (0, 0, "force_off"),
-        (1, 1, "force_on"),
-        ("A", "A", "override_disabled"),
-        (1, None, "force_on"),
+        (0, 0, "force_off", "force_off"),
+        (1, 1, "force_on", "force_on"),
+        ("A", "A", "override_disabled", "override_disabled"),
+        (1, None, "force_on", STATE_UNKNOWN),
     ],
 )
 async def test_select_dhw_ovrd_change_value(
@@ -168,6 +168,7 @@ async def test_select_dhw_ovrd_change_value(
     mock_pyotgw: MagicMock,
     target_param: str | int,
     pyotgw_return: str | int | None,
+    selected_option: str,
     resulting_state: str,
 ) -> None:
     """Test DHW override mode selector."""
@@ -190,19 +191,11 @@ async def test_select_dhw_ovrd_change_value(
     await hass.services.async_call(
         SELECT_DOMAIN,
         SERVICE_SELECT_OPTION,
-        {ATTR_ENTITY_ID: select_entity_id, ATTR_OPTION: resulting_state},
+        {ATTR_ENTITY_ID: select_entity_id, ATTR_OPTION: selected_option},
         blocking=True,
     )
-    if pyotgw_return is None:
-        assert hass.states.get(select_entity_id).state == STATE_UNKNOWN
-        mock_pyotgw.return_value.set_hot_water_ovrd.assert_awaited_once_with(
-            target_param
-        )
-    else:
-        assert hass.states.get(select_entity_id).state == resulting_state
-        mock_pyotgw.return_value.set_hot_water_ovrd.assert_awaited_once_with(
-            target_param
-        )
+    assert hass.states.get(select_entity_id).state == resulting_state
+    mock_pyotgw.return_value.set_hot_water_ovrd.assert_awaited_once_with(target_param)
 
 
 @pytest.mark.parametrize(
