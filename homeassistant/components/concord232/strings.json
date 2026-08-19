@@ -1,5 +1,11 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+    },
     "step": {
       "user": {
         "data": {
@@ -13,12 +19,12 @@
           "ssl": "Connect to the concord232 server over HTTPS, for example through a TLS proxy in front of it."
         }
       }
-    },
-    "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
-    },
-    "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring Concord232 using YAML is being removed but the concord232 server could not be reached while importing your existing configuration.\n\nMake sure the server is running, restart Home Assistant to try again, or remove the Concord232 YAML configuration from your configuration.yaml file and add the integration manually.",
+      "title": "YAML import failed"
     }
   },
   "options": {
@@ -41,12 +47,6 @@
         "audible": "Audible",
         "silent": "Silent"
       }
-    }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "title": "YAML import failed",
-      "description": "Configuring Concord232 using YAML is being removed but the concord232 server could not be reached while importing your existing configuration.\n\nMake sure the server is running, restart Home Assistant to try again, or remove the Concord232 YAML configuration from your configuration.yaml file and add the integration manually."
     }
   }
 }

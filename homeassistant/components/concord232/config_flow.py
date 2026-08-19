@@ -1,7 +1,7 @@
 """Config flow for the Concord232 integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from concord232 import client as concord232_client
 import requests
@@ -67,12 +67,14 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: Concord232ConfigEntry,
     ) -> Concord232OptionsFlow:
         """Create the options flow."""
         return Concord232OptionsFlow()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
