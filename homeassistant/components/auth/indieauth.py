@@ -32,8 +32,6 @@ async def verify_redirect_uri(
     try:
         redirect_parts = _parse_url(redirect_uri)
     except ValueError:
-        # A malformed redirect_uri (e.g. an unbalanced IPv6 bracket) must fail
-        # validation, not raise into the login flow.
         return False
 
     # Verify redirect url and client url have same scheme and domain.
@@ -42,17 +40,6 @@ async def verify_redirect_uri(
         and client_id_parts.netloc == redirect_parts.netloc
     )
 
-    # Deliberate deviations from a strict OAuth/CIMD reading, kept for
-    # compatibility with IndieAuth clients and Home Assistant's own frontend
-    # login (which uses the instance URL as client_id with a same-origin
-    # redirect_uri):
-    # - A same-origin redirect_uri is accepted without registration or a
-    #   document fetch.
-    # - The client_id page may be fetched from private/local addresses;
-    #   local clients are first-class in Home Assistant (see
-    #   _parse_client_id).
-    # - Redirects are followed when fetching the client_id page for link
-    #   tags; a metadata document reached via a redirect is rejected.
     if is_valid:
         return True
 
@@ -76,17 +63,13 @@ async def verify_redirect_uri(
     redirect_uris = await fetch_redirect_uris(hass, client_id)
     if redirect_uri in redirect_uris:
         return True
-    if redirect_uris:
-        # The client's document/page was fine; the requested redirect_uri just
-        # is not registered. Without this the most common misconfiguration
-        # (typo, trailing slash, scheme mismatch) is undiagnosable server-side.
-        _LOGGER.debug(
-            "redirect_uri %s is not among the advertised redirect uris %s for"
-            " client_id %s",
-            redirect_uri,
-            redirect_uris,
-            client_id,
-        )
+    _LOGGER.debug(
+        "redirect_uri %s is not among the advertised redirect uris %s for"
+        " client_id %s",
+        redirect_uri,
+        redirect_uris,
+        client_id,
+    )
     return False
 
 
@@ -139,9 +122,7 @@ def _is_valid_metadata_redirect_uri(redirect_uri: str) -> bool:
 
     Entries must be absolute, fragment-free URIs: a non-empty scheme (so
     private-use schemes like app:/callback stay valid) and no fragment per
-    RFC 6749 3.1.2 (a bare trailing # counts as a fragment component). An
-    unparsable entry (e.g. an unbalanced IPv6 bracket) invalidates the entry
-    rather than raising into the login flow.
+    RFC 6749 3.1.2 (a bare trailing # counts as a fragment component).
     """
     try:
         parts = urlparse(redirect_uri)
