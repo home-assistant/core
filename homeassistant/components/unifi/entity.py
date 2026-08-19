@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, override
+from typing import TYPE_CHECKING, cast, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -26,6 +26,7 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import ATTR_MANUFACTURER, DOMAIN
+from .coordinator import UnifiDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -149,6 +150,13 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
         self.hub = hub
         self.api = hub.api
         self.entity_description = description
+        self.coordinator = cast(
+            UnifiDataUpdateCoordinator[HandlerT] | None,
+            hub.entity_loader.get_data_update_coordinator(
+                description.api_handler_fn(self.api)
+            ),
+        )
+        assert self.coordinator is not None
 
         hub.entity_loader.known_objects.add((description.key, obj_id))
 
@@ -172,7 +180,6 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         description = self.entity_description
-        handler = description.api_handler_fn(self.api)
 
         @callback
         def unregister_object() -> None:
@@ -183,12 +190,11 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
         self.async_on_remove(unregister_object)
 
-        # New data from handler
+        # New data from coordinator
+        coordinator = self.coordinator
+        assert coordinator is not None
         self.async_on_remove(
-            handler.subscribe(
-                self.async_signalling_callback,
-                id_filter=self._obj_id,
-            )
+            coordinator.async_add_listener(self._async_coordinator_updated)
         )
 
         # State change from hub or websocket
@@ -219,10 +225,13 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             )
 
     @callback
-    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
-        """Update the entity state."""
-        if event is ItemEvent.DELETED and obj_id == self._obj_id:
-            self.hass.async_create_task(self.remove_item({obj_id}))
+    def _async_coordinator_updated(self) -> None:
+        """Update the entity state from coordinator data."""
+        coordinator = self.coordinator
+        assert coordinator is not None
+        handler = self.entity_description.api_handler_fn(self.api)
+        if self._obj_id not in handler:
+            self.hass.async_create_task(self.remove_item({self._obj_id}))
             return
 
         description = self.entity_description
@@ -231,8 +240,17 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             return
 
         self._attr_available = description.available_fn(self.hub, self._obj_id)
-        self.async_update_state(event, obj_id)
+        self.async_update_state(ItemEvent.CHANGED, self._obj_id)
         self.async_write_ha_state()
+
+    @callback
+    def async_signalling_callback(self, event: ItemEvent, obj_id: str) -> None:
+        """Update the entity state from a handler event."""
+        if event is ItemEvent.DELETED and obj_id == self._obj_id:
+            self.hass.async_create_task(self.remove_item({obj_id}))
+            return
+
+        self._async_coordinator_updated()
 
     @callback
     def async_signal_reachable_callback(self) -> None:
@@ -257,6 +275,13 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
     async def async_update(self) -> None:
         """Update state if polling is configured."""
         self.async_update_state(ItemEvent.CHANGED, self._obj_id)
+
+    async def async_refresh_after_control(self) -> None:
+        """Refresh handler data after a control call when polling."""
+        coordinator = self.coordinator
+        assert coordinator is not None
+        if coordinator.update_interval is not None:
+            await coordinator.async_request_refresh()
 
     @callback
     def async_initiate_state(self) -> None:

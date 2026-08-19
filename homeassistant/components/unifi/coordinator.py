@@ -3,8 +3,9 @@
 from datetime import timedelta
 from typing import TYPE_CHECKING, override
 
-from aiounifi.interfaces.api_handlers import APIHandler
+from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 
+from homeassistant.core import callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import LOGGER
@@ -24,14 +25,17 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](DataUpdateCoordinator[Non
         handler: HandlerT,
     ) -> None:
         """Initialize coordinator."""
+        supports_websocket = bool(handler.process_messages or handler.remove_messages)
         super().__init__(
             hub.hass,
             LOGGER,
             name=f"UniFi {type(handler).__name__}",
             config_entry=hub.config.entry,
-            update_interval=POLL_INTERVAL,
+            update_interval=None if supports_websocket else POLL_INTERVAL,
         )
         self._handler = handler
+
+        hub.config.entry.async_on_unload(handler.subscribe(self._async_handle_update))
 
     @property
     def handler(self) -> HandlerT:
@@ -42,3 +46,8 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](DataUpdateCoordinator[Non
     async def _async_update_data(self) -> None:
         """Update data from the API handler."""
         await self._handler.update()
+
+    @callback
+    def _async_handle_update(self, event: ItemEvent, obj_id: str) -> None:
+        """Notify listeners when the handler receives a websocket update."""
+        self.async_set_updated_data(None)
