@@ -453,11 +453,13 @@ class WebRTCProvider(CameraWebRTCProvider):
             await self._rest_client.preload.disable(identifier)
 
     async def _close_camera_sessions(self, camera: Camera) -> None:
-        for session_id, session_info in list(self._sessions.items()):
-            if session_info.camera == camera:
-                # Unregister before closing, as closing yields to the event loop
-                del self._sessions[session_id]
-                await session_info.ws_client.close()
+        for session_id in list(self._sessions):
+            session_info = self._sessions.get(session_id)
+            if session_info is None or session_info.camera != camera:
+                continue
+            # Unregister before closing, as closing yields to the event loop
+            del self._sessions[session_id]
+            await session_info.ws_client.close()
 
     async def teardown(self) -> None:
         """Tear down the provider."""
