@@ -6,8 +6,8 @@ from pushover_complete import BadAPIRequestError
 import pytest
 
 from homeassistant.components.pushover import DOMAIN
-from homeassistant.components.pushover.notify import async_get_service
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 
 from . import MOCK_CONFIG
 
@@ -119,12 +119,12 @@ async def test_cancel_by_tag(
     await hass.services.async_call(
         DOMAIN,
         "cancel",
-        {"tag": TAG_ALARM},
+        {"entry_id": entry.entry_id, "tag": TAG_ALARM},
         blocking=True,
     )
 
     mock_cancel_receipt.assert_called_once_with(RECEIPT_A)
-    assert hass.data[DOMAIN]["services"][entry.entry_id]._receipt_tags == {}
+    assert entry.runtime_data.notify_service._receipt_tags == {}
 
 
 async def test_cancel_all(
@@ -149,29 +149,12 @@ async def test_cancel_all(
         blocking=True,
     )
 
-    await hass.services.async_call(DOMAIN, "cancel", {}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN, "cancel", {"entry_id": entry.entry_id}, blocking=True
+    )
 
     mock_cancel_receipt.assert_called_once_with(RECEIPT_A)
-    assert hass.data[DOMAIN]["services"][entry.entry_id]._receipt_tags == {}
-
-
-async def test_cancel_unloads_service_with_last_entry(
-    hass: HomeAssistant,
-    mock_pushover: MagicMock,
-    mock_send_message: MagicMock,
-) -> None:
-    """Test that the cancel service is removed when the last entry is unloaded."""
-    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
-    entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert hass.services.has_service(DOMAIN, "cancel")
-
-    await hass.config_entries.async_unload(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert not hass.services.has_service(DOMAIN, "cancel")
+    assert entry.runtime_data.notify_service._receipt_tags == {}
 
 
 async def test_cancel_multiple_receipts_same_tag(
@@ -208,35 +191,32 @@ async def test_cancel_multiple_receipts_same_tag(
             blocking=True,
         )
 
-    await hass.services.async_call(DOMAIN, "cancel", {"tag": TAG_ALARM}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN,
+        "cancel",
+        {"entry_id": entry.entry_id, "tag": TAG_ALARM},
+        blocking=True,
+    )
 
     assert mock_cancel_receipt.call_count == 2
     called_receipts = {c.args[0] for c in mock_cancel_receipt.call_args_list}
     assert called_receipts == {RECEIPT_A, RECEIPT_B}
 
 
-async def test_async_get_service_no_discovery_info(
+async def test_cancel_unknown_entry_id(
     hass: HomeAssistant,
     mock_pushover: MagicMock,
 ) -> None:
-    """Test that async_get_service returns None when discovery_info is None."""
-    result = await async_get_service(hass, {}, discovery_info=None)
-    assert result is None
-
-
-async def test_cancel_no_instances(
-    hass: HomeAssistant,
-    mock_pushover: MagicMock,
-) -> None:
-    """Test cancel service when no instances are registered."""
+    """Test cancel with an entry_id that does not exist."""
     entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    hass.data[DOMAIN]["services"].clear()
-
-    await hass.services.async_call(DOMAIN, "cancel", {}, blocking=True)
+    with pytest.raises(ServiceValidationError):
+        await hass.services.async_call(
+            DOMAIN, "cancel", {"entry_id": "nonexistent"}, blocking=True
+        )
 
 
 async def test_cancel_empty_receipt_tags(
@@ -251,7 +231,12 @@ async def test_cancel_empty_receipt_tags(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    await hass.services.async_call(DOMAIN, "cancel", {"tag": TAG_ALARM}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN,
+        "cancel",
+        {"entry_id": entry.entry_id, "tag": TAG_ALARM},
+        blocking=True,
+    )
 
     mock_cancel_receipt.assert_not_called()
 
@@ -279,7 +264,10 @@ async def test_cancel_tag_not_found(
     )
 
     await hass.services.async_call(
-        DOMAIN, "cancel", {"tag": "nonexistent"}, blocking=True
+        DOMAIN,
+        "cancel",
+        {"entry_id": entry.entry_id, "tag": "nonexistent"},
+        blocking=True,
     )
 
     mock_cancel_receipt.assert_not_called()
@@ -309,7 +297,12 @@ async def test_cancel_receipt_api_error(
 
     mock_cancel_receipt.side_effect = BadAPIRequestError("cancel failed")
 
-    await hass.services.async_call(DOMAIN, "cancel", {"tag": TAG_ALARM}, blocking=True)
+    await hass.services.async_call(
+        DOMAIN,
+        "cancel",
+        {"entry_id": entry.entry_id, "tag": TAG_ALARM},
+        blocking=True,
+    )
 
     mock_cancel_receipt.assert_called_once_with(RECEIPT_A)
-    assert hass.data[DOMAIN]["services"][entry.entry_id]._receipt_tags == {}
+    assert entry.runtime_data.notify_service._receipt_tags == {}
