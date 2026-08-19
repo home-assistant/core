@@ -2,6 +2,7 @@
 
 import asyncio
 import base64
+from collections.abc import Callable
 from contextlib import suppress
 import logging
 from pathlib import Path
@@ -1452,8 +1453,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
 
-        # The restore will bring back the old network,
-        # so the unique id of the entry stays the same.
         self.hass.config_entries.async_update_entry(
             config_entry,
             data={
@@ -1669,11 +1668,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        # Use a flow specific client while the config entry stays unloaded,
-        # so no reload can run against the adapter before the restore is done.
         client = Client(self.ws_address, async_get_clientsession(self.hass))
         driver_ready = asyncio.Event()
         listen_task: asyncio.Task[None] | None = None
+        unsubs: list[Callable[[], None]] = []
         try:
             try:
                 async with asyncio.timeout(SERVER_CONNECT_TIMEOUT):
@@ -1702,19 +1700,17 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 driver.once("driver ready", set_controller_reset),
             ]
             try:
-                try:
-                    await controller.async_restore_nvm(
-                        self.backup_data, {"preserveRoutes": False}
-                    )
-                except FailedCommand as err:
-                    raise AbortFlow(f"Failed to restore network: {err}") from err
-                with suppress(TimeoutError):
-                    async with asyncio.timeout(helpers.DRIVER_READY_EVENT_TIMEOUT):
-                        await controller_reset.wait()
-            finally:
-                for unsub in unsubs:
-                    unsub()
+                await controller.async_restore_nvm(
+                    self.backup_data, {"preserveRoutes": False}
+                )
+            except FailedCommand as err:
+                raise AbortFlow(f"Failed to restore network: {err}") from err
+            with suppress(TimeoutError):
+                async with asyncio.timeout(helpers.DRIVER_READY_EVENT_TIMEOUT):
+                    await controller_reset.wait()
         finally:
+            for unsub in unsubs:
+                unsub()
             if listen_task is not None:
                 listen_task.cancel()
             await client.disconnect()
