@@ -6,7 +6,7 @@ from typing import Any, override
 from ampio_mqtt import AmpioAuthError, AmpioClient, AmpioConnectionError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 
 from .const import DEFAULT_HOST, DOMAIN
@@ -50,13 +50,15 @@ class AmpioConfigFlow(ConfigFlow, domain=DOMAIN):
                 # With no reauth flow yet, re-running this flow is the only
                 # credential-repair path: the validated input must replace the
                 # stored data in full and the entry must reload even from
-                # SETUP_ERROR, which _abort_if_unique_id_configured skips.
-                if entry := self.hass.config_entries.async_entry_for_domain_unique_id(
-                    self.handler, info.key
-                ):
-                    return self.async_update_reload_and_abort(
-                        entry, data=user_input, reason="already_configured"
+                # SETUP_ERROR, where rejected credentials leave it and which
+                # _abort_if_unique_id_configured does not reload from.
+                if (
+                    entry := self.hass.config_entries.async_entry_for_domain_unique_id(
+                        self.handler, info.key
                     )
+                ) is not None and entry.state is ConfigEntryState.SETUP_ERROR:
+                    self.hass.config_entries.async_schedule_reload(entry.entry_id)
+                self._abort_if_unique_id_configured(updates=user_input)
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
                 )
