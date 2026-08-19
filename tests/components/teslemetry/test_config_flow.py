@@ -703,7 +703,9 @@ def _credentials_host_default(result: SubentryFlowResult) -> str:
 
 
 @pytest.mark.usefixtures("mock_rsa_key")
-async def test_subentry_pairing_requires_key_approval(hass: HomeAssistant) -> None:
+async def test_energy_subentry_pairing_requires_key_approval(
+    hass: HomeAssistant,
+) -> None:
     """Pairing registers the key, then advances to credentials once approved."""
     entry = await _setup_account_no_subentry(hass)
 
