@@ -166,14 +166,14 @@ async def test_config_entry_not_ready_scan_api_fail(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_config_entry_not_ready_no_info_data_retry(
+async def test_config_entry_not_ready_no_info_data(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the Lunatone configuration entry not ready due to missing info data."""
-    type(mock_lunatone_info).data = PropertyMock(return_value=None)
+    mock_lunatone_info.data = None
 
     await setup_integration(hass, mock_config_entry)
 
@@ -181,13 +181,13 @@ async def test_config_entry_not_ready_no_info_data_retry(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
-async def test_config_entry_not_ready_no_info_data_error(
+async def test_config_entry_setup_error_no_info_data(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
     mock_lunatone_devices: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test config entry not ready due to missing serial number."""
+    """Test the Lunatone config entry setup error due to missing info data."""
     type(mock_lunatone_info).data = PropertyMock(
         side_effect=[INFO_DATA, INFO_DATA, None]
     )
