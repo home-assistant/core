@@ -8,7 +8,14 @@ import requests
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
-from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_MODE,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SSL,
+)
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     SelectSelector,
@@ -26,6 +33,7 @@ USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
         vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_SSL, default=False): bool,
     }
 )
 
@@ -74,7 +82,9 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(
                 {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
-            url = build_url(user_input[CONF_HOST], user_input[CONF_PORT])
+            url = build_url(
+                user_input[CONF_HOST], user_input[CONF_PORT], user_input[CONF_SSL]
+            )
             if await self.hass.async_add_executor_job(_try_connect, url):
                 return self.async_create_entry(
                     title=user_input[CONF_HOST], data=user_input
@@ -92,11 +102,12 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
         data = {
             CONF_HOST: import_data[CONF_HOST],
             CONF_PORT: import_data[CONF_PORT],
+            CONF_SSL: import_data.get(CONF_SSL, False),
         }
         self._async_abort_entries_match(
             {CONF_HOST: data[CONF_HOST], CONF_PORT: data[CONF_PORT]}
         )
-        url = build_url(data[CONF_HOST], data[CONF_PORT])
+        url = build_url(data[CONF_HOST], data[CONF_PORT], data[CONF_SSL])
         if not await self.hass.async_add_executor_job(_try_connect, url):
             return self.async_abort(reason="cannot_connect")
 

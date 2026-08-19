@@ -8,7 +8,14 @@ from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.concord232.const import DOMAIN
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
-from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
+from homeassistant.const import (
+    CONF_CODE,
+    CONF_HOST,
+    CONF_MODE,
+    CONF_NAME,
+    CONF_PORT,
+    CONF_SSL,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import issue_registry as ir
@@ -18,7 +25,7 @@ from .conftest import setup_integration
 
 from tests.common import MockConfigEntry
 
-USER_INPUT = {CONF_HOST: "localhost", CONF_PORT: 5007}
+USER_INPUT = {CONF_HOST: "localhost", CONF_PORT: 5007, CONF_SSL: False}
 
 
 async def test_user_flow(
@@ -37,6 +44,23 @@ async def test_user_flow(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "localhost"
     assert result["data"] == USER_INPUT
+
+
+async def test_user_flow_ssl(
+    hass: HomeAssistant,
+    mock_concord232_client_class: MagicMock,
+    mock_concord232_client: MagicMock,
+) -> None:
+    """Test the ssl option produces an https url."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_HOST: "alarm.example.com", CONF_PORT: 443, CONF_SSL: True},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    mock_concord232_client_class.assert_called_with("https://alarm.example.com:443")
 
 
 async def test_user_flow_cannot_connect_recovers(
@@ -203,3 +227,20 @@ async def test_options_flow(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert mock_config_entry.options == {CONF_CODE: "1234", CONF_MODE: "silent"}
+
+
+async def test_entry_without_ssl_key_sets_up(
+    hass: HomeAssistant,
+    mock_concord232_client_class: MagicMock,
+    mock_concord232_client: MagicMock,
+) -> None:
+    """Test an entry created before the ssl option defaults to http."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="localhost",
+        data={CONF_HOST: "localhost", CONF_PORT: 5007},
+    )
+    await setup_integration(hass, entry)
+
+    assert entry.state.value == "loaded"
+    mock_concord232_client_class.assert_called_with("http://localhost:5007")

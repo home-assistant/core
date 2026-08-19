@@ -4,11 +4,13 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "ssl": "[%key:common::config_flow::data::ssl%]"
         },
         "data_description": {
           "host": "The hostname or IP address of the concord232 server.",
-          "port": "The port the concord232 server listens on."
+          "port": "The port the concord232 server listens on.",
+          "ssl": "Connect to the concord232 server over HTTPS, for example through a TLS proxy in front of it."
         }
       }
     },
