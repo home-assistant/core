@@ -438,7 +438,9 @@ async def test_change_device(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity_id = f"{config_entry_options['template_type']}.my_template"
+    template_entity_id = (
+        f"{config_entry_options['template_type']}.mock_title_my_template"
+    )
 
     # Confirm that the template config entry has not been added to either device
     # and that the entities are linked to device 1
@@ -676,7 +678,7 @@ async def test_migration_1_1(
     # entity is linked to the source device
     device_entry = device_registry.async_get(device_entry.id)
     assert template_config_entry.entry_id not in device_entry.config_entries
-    template_entity_entry = entity_registry.async_get("sensor.my_template")
+    template_entity_entry = entity_registry.async_get("sensor.mock_title_my_template")
     assert template_entity_entry.device_id == device_entry.id
 
     assert template_config_entry.version == 2
