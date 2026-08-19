@@ -41,7 +41,7 @@ ENTITY_COVER = "cover.living_room_window"
 
 @pytest.fixture
 def cover_only() -> Generator[None]:
-    """Enable only the climate platform."""
+    """Enable only the cover platform."""
     with patch(
         "homeassistant.components.demo.COMPONENTS_WITH_CONFIG_ENTRY_DEMO_PLATFORM",
         [Platform.COVER],

@@ -916,6 +916,7 @@ async def test_ask_question(
     """Test asking a question on a device and matching an answer."""
     entity_id = "assist_satellite.test_entity"
     question_text = "What kind of music would you like to listen to?"
+    context = Context()
 
     await async_update_pipeline(
         hass, async_get_pipeline(hass), stt_engine="test-stt-engine", stt_language="en"
@@ -982,9 +983,11 @@ async def test_ask_question(
             {"entity_id": entity_id, "question": question_text, **service_data},
             blocking=True,
             return_response=True,
+            context=context,
         )
         assert entity.state == AssistSatelliteState.IDLE
         assert response == asdict(expected_answer)
+        assert hass.states.get(entity_id).context is context
 
 
 async def test_ask_question_requires_entity_permission(

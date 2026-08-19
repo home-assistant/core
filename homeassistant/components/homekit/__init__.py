@@ -1008,7 +1008,7 @@ class HomeKit:
         """Purge bridges that exist from failed pairing or manual resets."""
         devices_to_purge = [
             entry.id
-            for entry in dev_reg.devices.get_devices_for_config_entry_id(self._entry_id)
+            for entry in dr.async_entries_for_config_entry(dev_reg, self._entry_id)
             if (
                 identifier not in entry.identifiers  # type: ignore[comparison-overlap]
                 or connection not in entry.connections  # type: ignore[unreachable]
