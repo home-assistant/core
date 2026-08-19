@@ -31,7 +31,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from . import AirGradientConfigEntry
-from .const import PM_STANDARD, PM_STANDARD_REVERSE
+from .const import PM_STANDARD, PM_STANDARD_REVERSE, supports_config
 from .coordinator import AirGradientCoordinator
 from .entity import AirGradientEntity
 
@@ -49,6 +49,7 @@ class AirGradientMeasurementSensorEntityDescription(SensorEntityDescription):
 class AirGradientConfigSensorEntityDescription(SensorEntityDescription):
     """Describes AirGradient config sensor entity."""
 
+    config_key: str
     value_fn: Callable[[Config], StateType]
 
 
@@ -157,6 +158,7 @@ CONFIG_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         entity_category=EntityCategory.DIAGNOSTIC,
+        config_key="co2_automatic_baseline_calibration_days",
         value_fn=lambda config: config.co2_automatic_baseline_calibration_days,
     ),
     AirGradientConfigSensorEntityDescription(
@@ -165,6 +167,7 @@ CONFIG_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         entity_category=EntityCategory.DIAGNOSTIC,
+        config_key="nox_learning_offset",
         value_fn=lambda config: config.nox_learning_offset,
     ),
     AirGradientConfigSensorEntityDescription(
@@ -173,6 +176,7 @@ CONFIG_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...] = (
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.DAYS,
         entity_category=EntityCategory.DIAGNOSTIC,
+        config_key="tvoc_learning_offset",
         value_fn=lambda config: config.tvoc_learning_offset,
     ),
 )
@@ -184,6 +188,7 @@ CONFIG_LED_BAR_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         device_class=SensorDeviceClass.ENUM,
         options=[x.value for x in LedBarMode],
         entity_category=EntityCategory.DIAGNOSTIC,
+        config_key="led_bar_mode",
         value_fn=lambda config: config.led_bar_mode,
     ),
     AirGradientConfigSensorEntityDescription(
@@ -191,6 +196,7 @@ CONFIG_LED_BAR_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         translation_key="led_bar_brightness",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        config_key="led_bar_brightness",
         value_fn=lambda config: config.led_bar_brightness,
     ),
 )
@@ -202,6 +208,7 @@ CONFIG_DISPLAY_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         device_class=SensorDeviceClass.ENUM,
         options=[x.value for x in TemperatureUnit],
         entity_category=EntityCategory.DIAGNOSTIC,
+        config_key="temperature_unit",
         value_fn=lambda config: config.temperature_unit,
     ),
     AirGradientConfigSensorEntityDescription(
@@ -210,6 +217,7 @@ CONFIG_DISPLAY_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         device_class=SensorDeviceClass.ENUM,
         options=list(PM_STANDARD_REVERSE),
         entity_category=EntityCategory.DIAGNOSTIC,
+        config_key="pm_standard",
         value_fn=lambda config: (
             PM_STANDARD.get(config.pm_standard) if config.pm_standard else None
         ),
@@ -219,6 +227,7 @@ CONFIG_DISPLAY_SENSOR_TYPES: tuple[AirGradientConfigSensorEntityDescription, ...
         translation_key="display_brightness",
         native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
+        config_key="display_brightness",
         value_fn=lambda config: config.display_brightness,
     ),
 )
@@ -260,20 +269,19 @@ async def async_setup_entry(
 
     add_entities()
 
+    config = coordinator.data.config
+    model = coordinator.data.measures.model
     entities = [
         AirGradientConfigSensor(coordinator, description)
-        for description in CONFIG_SENSOR_TYPES
+        for description in (
+            CONFIG_SENSOR_TYPES
+            + CONFIG_LED_BAR_SENSOR_TYPES
+            + CONFIG_DISPLAY_SENSOR_TYPES
+        )
+        if supports_config(
+            model, coordinator.client.api_version, config, description.config_key
+        )
     ]
-    if "L" in coordinator.data.measures.model:
-        entities.extend(
-            AirGradientConfigSensor(coordinator, description)
-            for description in CONFIG_LED_BAR_SENSOR_TYPES
-        )
-    if "I" in coordinator.data.measures.model:
-        entities.extend(
-            AirGradientConfigSensor(coordinator, description)
-            for description in CONFIG_DISPLAY_SENSOR_TYPES
-        )
     async_add_entities(entities)
 
 
