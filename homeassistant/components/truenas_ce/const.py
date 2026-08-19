@@ -16,7 +16,9 @@ DEFAULT_NAME = "root"
 ATTRIBUTION = "Data provided by TrueNAS CE integration"
 
 # Dispatcher signal used to (re)discover entities on each coordinator refresh.
-SIGNAL_UPDATE_SENSORS = "update_sensors"
+# Namespaced to avoid colliding with another integration's dispatcher signal
+# (dispatcher signals share a single hass-wide namespace).
+SIGNAL_UPDATE_SENSORS = f"{DOMAIN}_update_sensors"
 
 # TrueNAS interface link states (from interface.query -> state/link_state).
 LINK_STATE_UP = "LINK_STATE_UP"
