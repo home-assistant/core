@@ -7,12 +7,12 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Lowest',
-        'Low',
-        'Medium',
-        'High',
-        'Auto',
-        'Off',
+        'lowest',
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -50,12 +50,12 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Fan speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Lowest',
-        'Low',
-        'Medium',
-        'High',
-        'Auto',
-        'Off',
+        'lowest',
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'off',
       ]),
     }),
     'context': <ANY>,
@@ -63,7 +63,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Medium',
+    'state': 'medium',
   })
 # ---
 # name: test_select_state_snapshot[a1][select.bedroom_ac_water_level_setting-entry]
@@ -139,9 +139,9 @@
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'left',
-        'left-mid',
+        'left_mid',
         'middle',
-        'right-mid',
+        'right_mid',
         'right',
       ]),
     }),
@@ -182,9 +182,9 @@
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'left',
-        'left-mid',
+        'left_mid',
         'middle',
-        'right-mid',
+        'right_mid',
         'right',
       ]),
     }),
@@ -206,9 +206,9 @@
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'up',
-        'up-mid',
+        'up_mid',
         'middle',
-        'down-mid',
+        'down_mid',
         'down',
       ]),
     }),
@@ -249,9 +249,9 @@
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'up',
-        'up-mid',
+        'up_mid',
         'middle',
-        'down-mid',
+        'down_mid',
         'down',
       ]),
     }),
@@ -338,9 +338,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'OFF',
-        'SILENT',
-        'SUPER_SILENT',
+        'off',
+        'silent',
+        'super_silent',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -378,9 +378,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Silent level',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'OFF',
-        'SILENT',
-        'SUPER_SILENT',
+        'off',
+        'silent',
+        'super_silent',
       ]),
     }),
     'context': <ANY>,
@@ -388,7 +388,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'OFF',
+    'state': 'off',
   })
 # ---
 # name: test_select_state_snapshot[fa][select.bedroom_ac_oscillation_angle-entry]
@@ -399,7 +399,7 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Off',
+        'off',
         '30',
         '60',
         '90',
@@ -443,7 +443,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Oscillation angle',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Off',
+        'off',
         '30',
         '60',
         '90',
@@ -468,13 +468,13 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Off',
-        'Oscillation',
-        'Tilting',
-        'Curve-W',
-        'Curve-8',
-        'Reserved',
-        'Both',
+        'off',
+        'oscillation',
+        'tilting',
+        'curve_w',
+        'curve_8',
+        'reserved',
+        'both',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -512,13 +512,13 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Oscillation mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Off',
-        'Oscillation',
-        'Tilting',
-        'Curve-W',
-        'Curve-8',
-        'Reserved',
-        'Both',
+        'off',
+        'oscillation',
+        'tilting',
+        'curve_w',
+        'curve_8',
+        'reserved',
+        'both',
       ]),
     }),
     'context': <ANY>,
@@ -526,7 +526,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Off',
+    'state': 'off',
   })
 # ---
 # name: test_select_state_snapshot[fa][select.bedroom_ac_tilting_angle-entry]
@@ -537,15 +537,15 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Off',
+        'off',
         '30',
         '60',
         '90',
         '120',
         '180',
         '360',
-        '+60',
-        '-60',
+        'plus_60',
+        'minus_60',
         '40',
       ]),
     }),
@@ -584,15 +584,15 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Tilting angle',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Off',
+        'off',
         '30',
         '60',
         '90',
         '120',
         '180',
         '360',
-        '+60',
-        '-60',
+        'plus_60',
+        'minus_60',
         '40',
       ]),
     }),
@@ -601,7 +601,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Off',
+    'state': 'off',
   })
 # ---
 # name: test_select_state_snapshot[fc][select.bedroom_ac_detect_mode-entry]
@@ -612,9 +612,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Off',
-        'PM 2.5',
-        'Methanal',
+        'off',
+        'pm_25',
+        'methanal',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -652,9 +652,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Detect mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Off',
-        'PM 2.5',
-        'Methanal',
+        'off',
+        'pm_25',
+        'methanal',
       ]),
     }),
     'context': <ANY>,
@@ -662,7 +662,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Off',
+    'state': 'off',
   })
 # ---
 # name: test_select_state_snapshot[fc][select.bedroom_ac_fan_speed-entry]
@@ -673,12 +673,11 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Silent',
-        'Low',
-        'Medium',
-        'High',
-        'Auto',
-        'Sleep',
+        'auto',
+        'standby',
+        'low',
+        'medium',
+        'high',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -716,12 +715,11 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Fan speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Silent',
-        'Low',
-        'Medium',
-        'High',
-        'Auto',
-        'Sleep',
+        'auto',
+        'standby',
+        'low',
+        'medium',
+        'high',
       ]),
     }),
     'context': <ANY>,
@@ -729,7 +727,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Auto',
+    'state': 'auto',
   })
 # ---
 # name: test_select_state_snapshot[fc][select.bedroom_ac_mode-entry]
@@ -740,12 +738,12 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Standby',
-        'Auto',
-        'Manual',
-        'Sleep',
-        'Fast',
-        'Smoke',
+        'standby',
+        'auto',
+        'manual',
+        'sleep',
+        'fast',
+        'smoke',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -783,12 +781,12 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Mode',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Standby',
-        'Auto',
-        'Manual',
-        'Sleep',
-        'Fast',
-        'Smoke',
+        'standby',
+        'auto',
+        'manual',
+        'sleep',
+        'fast',
+        'smoke',
       ]),
     }),
     'context': <ANY>,
@@ -796,7 +794,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Auto',
+    'state': 'auto',
   })
 # ---
 # name: test_select_state_snapshot[fc][select.bedroom_ac_screen_display-entry]
@@ -807,9 +805,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Bright',
-        'Dim',
-        'Off',
+        'bright',
+        'dim',
+        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -847,9 +845,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Screen display',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Bright',
-        'Dim',
-        'Off',
+        'bright',
+        'dim',
+        'off',
       ]),
     }),
     'context': <ANY>,
@@ -857,7 +855,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Bright',
+    'state': 'bright',
   })
 # ---
 # name: test_select_state_snapshot[fd][select.bedroom_ac_fan_speed-entry]
@@ -868,12 +866,12 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Lowest',
-        'Low',
-        'Medium',
-        'High',
-        'Auto',
-        'Off',
+        'lowest',
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -911,12 +909,12 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Fan speed',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Lowest',
-        'Low',
-        'Medium',
-        'High',
-        'Auto',
-        'Off',
+        'lowest',
+        'low',
+        'medium',
+        'high',
+        'auto',
+        'off',
       ]),
     }),
     'context': <ANY>,
@@ -924,7 +922,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Auto',
+    'state': 'auto',
   })
 # ---
 # name: test_select_state_snapshot[fd][select.bedroom_ac_screen_display-entry]
@@ -935,9 +933,9 @@
     'area_id': None,
     'capabilities': dict({
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Bright',
-        'Dim',
-        'Off',
+        'bright',
+        'dim',
+        'off',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -975,9 +973,9 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Screen display',
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
-        'Bright',
-        'Dim',
-        'Off',
+        'bright',
+        'dim',
+        'off',
       ]),
     }),
     'context': <ANY>,
@@ -985,7 +983,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Bright',
+    'state': 'bright',
   })
 # ---
 # name: test_select_state_snapshot[x40][select.bedroom_ac_direction-entry]
@@ -1001,7 +999,7 @@
         '80',
         '90',
         '100',
-        'Oscillate',
+        'oscillate',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1044,7 +1042,7 @@
         '80',
         '90',
         '100',
-        'Oscillate',
+        'oscillate',
       ]),
     }),
     'context': <ANY>,

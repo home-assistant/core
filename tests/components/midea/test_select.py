@@ -4,14 +4,14 @@ from collections.abc import Callable
 from unittest.mock import patch
 
 from midealocal.const import DeviceType
-from midealocal.devices.a1 import DeviceAttributes as A1Attributes
-from midealocal.devices.ac import DeviceAttributes as ACAttributes
-from midealocal.devices.c3 import DeviceAttributes as C3Attributes
+from midealocal.devices.a1 import DeviceAttributes as A1Attributes, MideaA1Device
+from midealocal.devices.ac import DeviceAttributes as ACAttributes, MideaACDevice
+from midealocal.devices.c3 import DeviceAttributes as C3Attributes, MideaC3Device
 from midealocal.devices.cc import DeviceAttributes as CCAttributes
-from midealocal.devices.fa import DeviceAttributes as FAAttributes
-from midealocal.devices.fc import DeviceAttributes as FCAttributes
-from midealocal.devices.fd import DeviceAttributes as FDAttributes
-from midealocal.devices.x40 import DeviceAttributes as X40Attributes
+from midealocal.devices.fa import DeviceAttributes as FAAttributes, MideaFADevice
+from midealocal.devices.fc import DeviceAttributes as FCAttributes, MideaFCDevice
+from midealocal.devices.fd import DeviceAttributes as FDAttributes, MideaFDDevice
+from midealocal.devices.x40 import DeviceAttributes as X40Attributes, MideaX40Device
 from midealocal.exceptions import SocketException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -57,7 +57,7 @@ def _x40_device() -> DummyDevice:
         DeviceType.X40,
         attributes={X40Attributes.direction: "90"},
     )
-    device.directions = ["60", "70", "80", "90", "100", "Oscillate"]
+    device.directions = list(MideaX40Device._directions)
     return device
 
 
@@ -65,12 +65,12 @@ def _a1_device() -> DummyDevice:
     device = DummyDevice(
         DeviceType.A1,
         attributes={
-            A1Attributes.fan_speed: "Medium",
+            A1Attributes.fan_speed: "medium",
             A1Attributes.water_level_set: "50",
         },
     )
-    device.fan_speeds = ["Lowest", "Low", "Medium", "High", "Auto", "Off"]
-    device.water_level_sets = ["25", "50", "75", "100"]
+    device.fan_speeds = list(MideaA1Device._default_speeds.values())
+    device.water_level_sets = list(MideaA1Device._water_level_sets)
     return device
 
 
@@ -87,18 +87,18 @@ def _ac_device() -> DummyDevice:
             ACAttributes.rate_select: "100",
         },
     )
-    device.wind_lr_angles = ["off", "left", "left-mid", "middle", "right-mid", "right"]
-    device.wind_ud_angles = ["off", "up", "up-mid", "middle", "down-mid", "down"]
-    device.rate_selects = ["1", "20", "40", "60", "80", "100"]
+    device.wind_lr_angles = list(MideaACDevice._wind_lr_angles.values())
+    device.wind_ud_angles = list(MideaACDevice._wind_ud_angles.values())
+    device.rate_selects = list(MideaACDevice._rate_selects.values())
     return device
 
 
 def _c3_device() -> DummyDevice:
     device = DummyDevice(
         DeviceType.C3,
-        attributes={C3Attributes.silent_level: "OFF"},
+        attributes={C3Attributes.silent_level: "off"},
     )
-    device.silent_modes = ["OFF", "SILENT", "SUPER_SILENT"]
+    device.silent_modes = list(MideaC3Device._silent_modes)
     return device
 
 
@@ -106,33 +106,14 @@ def _fa_device() -> DummyDevice:
     device = DummyDevice(
         DeviceType.FA,
         attributes={
-            FAAttributes.oscillation_mode: "Off",
+            FAAttributes.oscillation_mode: "off",
             FAAttributes.oscillation_angle: "90",
-            FAAttributes.tilting_angle: "Off",
+            FAAttributes.tilting_angle: "off",
         },
     )
-    device.oscillation_modes = [
-        "Off",
-        "Oscillation",
-        "Tilting",
-        "Curve-W",
-        "Curve-8",
-        "Reserved",
-        "Both",
-    ]
-    device.oscillation_angles = ["Off", "30", "60", "90", "120", "180", "360"]
-    device.tilting_angles = [
-        "Off",
-        "30",
-        "60",
-        "90",
-        "120",
-        "180",
-        "360",
-        "+60",
-        "-60",
-        "40",
-    ]
+    device.oscillation_modes = list(MideaFADevice._oscillation_modes)
+    device.oscillation_angles = list(MideaFADevice._oscillation_angles)
+    device.tilting_angles = list(MideaFADevice._tilting_angles)
     return device
 
 
@@ -140,16 +121,16 @@ def _fc_device() -> DummyDevice:
     device = DummyDevice(
         DeviceType.FC,
         attributes={
-            FCAttributes.detect_mode: "Off",
-            FCAttributes.mode: "Auto",
-            FCAttributes.fan_speed: "Auto",
-            FCAttributes.screen_display: "Bright",
+            FCAttributes.detect_mode: "off",
+            FCAttributes.mode: "auto",
+            FCAttributes.fan_speed: "auto",
+            FCAttributes.screen_display: "bright",
         },
     )
-    device.detect_modes = ["Off", "PM 2.5", "Methanal"]
-    device.modes = ["Standby", "Auto", "Manual", "Sleep", "Fast", "Smoke"]
-    device.fan_speeds = ["Silent", "Low", "Medium", "High", "Auto", "Sleep"]
-    device.screen_displays = ["Bright", "Dim", "Off"]
+    device.detect_modes = list(MideaFCDevice._detect_modes)
+    device.modes = list(MideaFCDevice._modes.values())
+    device.fan_speeds = list(MideaFCDevice._speeds.values())
+    device.screen_displays = list(MideaFCDevice._screen_displays.values())
     return device
 
 
@@ -157,12 +138,12 @@ def _fd_device() -> DummyDevice:
     device = DummyDevice(
         DeviceType.FD,
         attributes={
-            FDAttributes.fan_speed: "Auto",
-            FDAttributes.screen_display: "Bright",
+            FDAttributes.fan_speed: "auto",
+            FDAttributes.screen_display: "bright",
         },
     )
-    device.fan_speeds = ["Lowest", "Low", "Medium", "High", "Auto", "Off"]
-    device.screen_displays = ["Bright", "Dim", "Off"]
+    device.fan_speeds = list(MideaFDDevice._speeds_old.values())
+    device.screen_displays = list(MideaFDDevice._screen_displays.values())
     return device
 
 
@@ -212,8 +193,8 @@ async def test_x40_direction_select(
     await _assert_service_call(
         hass,
         entity_entry.entity_id,
-        "Oscillate",
-        [("set_attribute", "direction", "Oscillate")],
+        "oscillate",
+        [("set_attribute", "direction", "oscillate")],
         device,
     )
 
@@ -267,8 +248,8 @@ async def test_fa_selects_do_not_overlap_fan_platform(
     await _assert_service_call(
         hass,
         entities[f"{TEST_DEVICE_ID}_oscillation_mode"].entity_id,
-        "Oscillation",
-        [("set_attribute", "oscillation_mode", "Oscillation")],
+        "oscillation",
+        [("set_attribute", "oscillation_mode", "oscillation")],
         device,
     )
 
@@ -292,8 +273,8 @@ async def test_fc_selects(
     await _assert_service_call(
         hass,
         entities[f"{TEST_DEVICE_ID}_screen_display"].entity_id,
-        "Dim",
-        [("set_attribute", "screen_display", "Dim")],
+        "dim",
+        [("set_attribute", "screen_display", "dim")],
         device,
     )
 
@@ -326,7 +307,7 @@ async def test_select_not_created_when_attribute_missing(
 ) -> None:
     """Test no select entity is created when the device does not report the attribute."""
     device = DummyDevice(DeviceType.X40, attributes={})
-    device.directions = ["60", "70", "80", "90", "100", "Oscillate"]
+    device.directions = ["60", "70", "80", "90", "100", "oscillate"]
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.SELECT]):
         await setup_integration(hass, config_entry, device)
@@ -344,7 +325,7 @@ async def test_select_not_created_for_other_device_type(
         attributes={
             CCAttributes.power: True,
             CCAttributes.mode: 1,
-            CCAttributes.fan_speed: "High",
+            CCAttributes.fan_speed: "high",
         },
     )
     config_entry = mock_config_entry(device)
