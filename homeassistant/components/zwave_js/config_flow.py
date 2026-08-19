@@ -772,6 +772,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         ):
             # The add-on can only connect to a single adapter, so abort before
             # the flow changes the add-on config of the existing entry.
+            # A discovery of the existing entry's own adapter passes, so the
+            # entry can be updated, e.g. from a USB path to a socket.
             return self.async_abort(reason="addon_already_configured")
 
         addon_info = await self._async_get_addon_info()
