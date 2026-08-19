@@ -14,6 +14,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
+    Context,
     Event,
     EventStateChangedData,
     HomeAssistant,
@@ -231,6 +232,7 @@ class Group(Entity):
         mode: bool | None,
         object_id: str | None,
         order: int | None,
+        context: Context | None = None,
     ) -> Group:
         """Initialize a group.
 
@@ -246,6 +248,9 @@ class Group(Entity):
             object_id=object_id,
             order=order,
         )
+
+        if context is not None:
+            group.async_set_context(context)
 
         # If called before the platform async_setup is called (test cases)
         await async_get_component(hass).async_add_entities([group])

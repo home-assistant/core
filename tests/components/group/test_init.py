@@ -16,6 +16,7 @@ from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     ATTR_ICON,
     EVENT_HOMEASSISTANT_START,
+    EVENT_STATE_CHANGED,
     SERVICE_RELOAD,
     STATE_CLOSED,
     STATE_HOME,
@@ -35,6 +36,7 @@ from tests.common import (
     MockModule,
     MockPlatform,
     assert_setup_component,
+    async_capture_events,
     mock_integration,
     mock_platform,
 )
@@ -1013,6 +1015,8 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
 
     assert hass.services.has_service("group", group.SERVICE_SET)
 
+    create_context = Context()
+    created_events = async_capture_events(hass, EVENT_STATE_CHANGED)
     await hass.services.async_call(
         group.DOMAIN,
         group.SERVICE_SET,
@@ -1021,6 +1025,7 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
             "name": "New Group",
             "entities": ["person.one", "person.two"],
         },
+        context=create_context,
     )
     await hass.async_block_till_done()
 
@@ -1028,6 +1033,16 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     assert group_state.state == "not_home"
     assert group_state.attributes["friendly_name"] == "New Group"
     assert list(group_state.attributes["entity_id"]) == ["person.one", "person.two"]
+
+    # The group recomputes from its members right after, so assert on the state
+    # written when the entity was added rather than on the current state
+    created_event = next(
+        event
+        for event in created_events
+        if event.data["entity_id"] == "group.new_group"
+        and event.data["old_state"] is None
+    )
+    assert created_event.context is create_context
 
     context = Context()
     await hass.services.async_call(
@@ -1099,11 +1114,22 @@ async def test_service_group_set_group_remove_group(hass: HomeAssistant) -> None
         ["test.entity_bla1", "test.entity_id2"]
     )
 
-    common.async_remove(hass, "user_test_group")
+    removed_events = async_capture_events(hass, EVENT_STATE_CHANGED)
+    context = Context()
+    await hass.services.async_call(
+        group.DOMAIN,
+        group.SERVICE_REMOVE,
+        {"object_id": "user_test_group"},
+        blocking=True,
+        context=context,
+    )
     await hass.async_block_till_done()
 
     group_state = hass.states.get("group.user_test_group")
     assert group_state is None
+    assert removed_events[-1].data["entity_id"] == "group.user_test_group"
+    assert removed_events[-1].data["new_state"] is None
+    assert removed_events[-1].context is context
 
 
 async def test_group_order(hass: HomeAssistant) -> None:

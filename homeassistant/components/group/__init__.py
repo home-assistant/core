@@ -265,6 +265,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 mode=service.data.get(ATTR_ALL),
                 object_id=object_id,
                 order=None,
+                context=service.context,
             )
             return
 
