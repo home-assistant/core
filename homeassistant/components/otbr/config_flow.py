@@ -205,7 +205,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     # so if the entry does not have a unique_id
                     # we have to assume it's the first version, which can only be
                     # matched to this discovery by host
-                    # This check can be removed in HA Core 2025.9
+                    # This check can be removed in HA Core 2027.3
                     if current_url.host != config["host"]:
                         continue
                     unique_id = discovery_info.uuid
@@ -215,7 +215,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # The entry is updated in place when the add-on has moved, the
                 # unique_id is only missing for entries created by the first version
-                # Remove the unique_id update in HA Core 2025.9
+                # Remove the unique_id update in HA Core 2027.3
                 updated = self.hass.config_entries.async_update_entry(
                     current_entry,
                     data=config_entry_data,
