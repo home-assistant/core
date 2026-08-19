@@ -14,7 +14,7 @@ from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 import pytest
 from voluptuous import InInvalid
-from zwave_js_server.exceptions import FailedCommand
+from zwave_js_server.exceptions import ConnectionFailed, FailedCommand
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
@@ -5039,6 +5039,82 @@ async def test_reconfigure_migrate_start_addon_failure(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
     assert "keep_old_devices" not in entry.data
+
+
+@pytest.mark.usefixtures(
+    "supervisor", "addon_running", "restart_addon", "backup_nvm", "restore_nvm"
+)
+async def test_reconfigure_migrate_connect_failure(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test the restore step can be retried after a connect failure."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, "use_addon": True}
+    )
+
+    connect_side_effect = client.connect.side_effect
+    client.connect.side_effect = ConnectionFailed("test_error")
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "choose_serial_port"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USB_PATH: "/test",
+        },
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "restore_failed"
+    assert client.driver.controller.async_restore_nvm.call_count == 0
+
+    client.connect.side_effect = connect_side_effect
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_successful"
+    assert entry.unique_id == "3245146787"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon", "backup_nvm")

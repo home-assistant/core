@@ -1846,9 +1846,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         finally:
             for unsub in unsubs:
                 unsub()
+            # Disconnect before awaiting the listen task,
+            # since disconnect waits for the listen loop to finish.
+            await client.disconnect()
             if listen_task is not None:
                 listen_task.cancel()
-            await client.disconnect()
+                with suppress(asyncio.CancelledError, BaseZwaveJSServerError):
+                    await listen_task
 
         await self.hass.config_entries.async_reload(config_entry.entry_id)
 
