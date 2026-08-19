@@ -2853,7 +2853,9 @@ def _get_node_statistics_dict(
                     data[key] = [_convert_node_to_device_id(node) for node in data[key]]
         except KeyError, StopIteration, ValueError:
             # The route may reference nodes that have been removed from the
-            # network or that don't have a device entry
+            # network (KeyError) or that don't have a device entry (ValueError),
+            # and async_get_config_entry_from_node raises StopIteration when
+            # the config entry is no longer loaded
             return None
         return data
 
