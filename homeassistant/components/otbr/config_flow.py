@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant_yellow import hardware as yellow_har
 from homeassistant.components.thread import async_get_preferred_dataset
 from homeassistant.config_entries import (
     SOURCE_HASSIO,
+    ConfigEntry,
     ConfigEntryState,
     ConfigFlow,
     ConfigFlowResult,
@@ -186,6 +187,22 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
+    @callback
+    def _async_find_legacy_entry_by_host(self, host: str) -> ConfigEntry | None:
+        """Return an entry created by the first version of the integration.
+
+        Those entries have no unique id, they can only be matched by host.
+        This can be removed in HA Core 2027.3.
+        """
+        for entry in self._async_current_entries():
+            if (
+                entry.source == SOURCE_HASSIO
+                and entry.unique_id is None
+                and yarl.URL(entry.data["url"]).host == host
+            ):
+                return entry
+        return None
+
     @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
@@ -195,48 +212,30 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
         url = f"http://{config['host']}:{config['port']}"
         config_entry_data = {"url": url}
 
-        # Entries created by the first version of the integration have no unique id
-        # and are matched by host below, unless another entry already claims the uuid
-        # This can be removed in HA Core 2027.3
-        entry_with_uuid = self.hass.config_entries.async_entry_for_domain_unique_id(
+        matching_entry = self.hass.config_entries.async_entry_for_domain_unique_id(
             DOMAIN, discovery_info.uuid
         )
+        if matching_entry is None:
+            # Entries created by the first version of the integration have no unique
+            # id and can only be matched to this discovery by host
+            # This fallback can be removed in HA Core 2027.3
+            matching_entry = self._async_find_legacy_entry_by_host(config["host"])
 
-        if current_entries := self._async_current_entries():
-            for current_entry in current_entries:
-                if current_entry.source != SOURCE_HASSIO:
-                    continue
-                current_url = yarl.URL(current_entry.data["url"])
-                if not (unique_id := current_entry.unique_id):
-                    # The first version did not set a unique_id
-                    # so if the entry does not have a unique_id
-                    # we have to assume it's the first version, which can only be
-                    # matched to this discovery by host
-                    # This check can be removed in HA Core 2027.3
-                    if (
-                        entry_with_uuid is not None
-                        or current_url.host != config["host"]
-                    ):
-                        continue
-                    unique_id = discovery_info.uuid
+        if matching_entry is not None:
+            # Update the URL in case the add-on moved, and set the unique id of
+            # entries created by the first version
+            # Remove the unique_id update in HA Core 2027.3
+            updated = self.hass.config_entries.async_update_entry(
+                matching_entry,
+                data=config_entry_data,
+                unique_id=discovery_info.uuid,
+            )
+            if not updated and matching_entry.state is ConfigEntryState.LOADED:
+                # Reload the entry since OTBR has restarted, an entry which was
+                # updated is reloaded by its update listener
+                await self.hass.config_entries.async_reload(matching_entry.entry_id)
 
-                if unique_id != discovery_info.uuid:
-                    continue
-
-                # The entry is updated in place when the add-on has moved, the
-                # unique_id is only missing for entries created by the first version
-                # Remove the unique_id update in HA Core 2027.3
-                updated = self.hass.config_entries.async_update_entry(
-                    current_entry,
-                    data=config_entry_data,
-                    unique_id=unique_id,
-                )
-                if not updated and current_entry.state is ConfigEntryState.LOADED:
-                    # Reload the entry since OTBR has restarted, an entry which was
-                    # updated is reloaded by its update listener
-                    await self.hass.config_entries.async_reload(current_entry.entry_id)
-
-                return self.async_abort(reason="already_configured")
+            return self.async_abort(reason="already_configured")
 
         try:
             await self._connect_and_configure_router(url)
