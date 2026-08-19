@@ -3,7 +3,14 @@
 import logging
 from typing import Final
 
-from lunatone_rest_api_client import Auth, DALIBroadcast, Devices, Info, Sensors
+from lunatone_rest_api_client import (
+    Auth,
+    DALIBroadcast,
+    DALIScan,
+    Devices,
+    Info,
+    Sensors,
+)
 
 from homeassistant.const import CONF_URL, Platform
 from homeassistant.core import HomeAssistant
@@ -18,11 +25,16 @@ from .coordinator import (
     LunatoneData,
     LunatoneDevicesDataUpdateCoordinator,
     LunatoneInfoDataUpdateCoordinator,
+    LunatoneScanDataUpdateCoordinator,
     LunatoneSensorsDataUpdateCoordinator,
 )
 
 _LOGGER = logging.getLogger(__name__)
-PLATFORMS: Final[list[Platform]] = [Platform.LIGHT, Platform.SENSOR]
+PLATFORMS: Final[list[Platform]] = [
+    Platform.BINARY_SENSOR,
+    Platform.LIGHT,
+    Platform.SENSOR,
+]
 
 
 async def _update_unique_id(
@@ -70,6 +82,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     """Set up Lunatone from a config entry."""
     auth_api = Auth(async_get_clientsession(hass), entry.data[CONF_URL])
     info_api = Info(auth_api)
+    dali_scan_api = DALIScan(auth_api)
     devices_api = Devices(info_api)
     sensors_api = Sensors(auth_api)
 
@@ -110,6 +123,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
     coordinator_sensors = LunatoneSensorsDataUpdateCoordinator(hass, entry, sensors_api)
     await coordinator_sensors.async_config_entry_first_refresh()
 
+    coordinator_scan = LunatoneScanDataUpdateCoordinator(hass, entry, dali_scan_api)
+    await coordinator_scan.async_config_entry_first_refresh()
+
     dali_line_broadcasts = [
         DALIBroadcast(auth_api, int(line)) for line in coordinator_info.data.lines
     ]
@@ -118,6 +134,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LunatoneConfigEntry) -> 
         coordinator_info,
         coordinator_devices,
         coordinator_sensors,
+        coordinator_scan,
         dali_line_broadcasts,
     )
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

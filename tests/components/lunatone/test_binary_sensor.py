@@ -1,10 +1,9 @@
-"""Tests for the lights provided by the Lunatone integration."""
+"""Tests for the binary sensors provided by the Lunatone integration."""
 
 from datetime import timedelta
 from unittest.mock import AsyncMock
 
-from freezegun.api import FrozenDateTimeFactory
-from lunatone_rest_api_client.models import SensorData
+from lunatone_rest_api_client.models import ScanData, ScanState
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.const import Platform
@@ -13,7 +12,7 @@ from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry
 
 
 async def test_setup(
@@ -26,10 +25,10 @@ async def test_setup(
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test the Lunatone sensor setup."""
+    """Test the Lunatone binary sensor setup."""
     await setup_integration(hass, mock_config_entry)
 
-    entities = hass.states.async_all(Platform.SENSOR)
+    entities = hass.states.async_all(Platform.BINARY_SENSOR)
     for entity_state in entities:
         entity_entry = entity_registry.async_get(entity_state.entity_id)
         assert entity_entry
@@ -44,30 +43,34 @@ async def test_sensor_value_update(
     mock_lunatone_sensors: AsyncMock,
     mock_lunatone_scan: AsyncMock,
     mock_config_entry: MockConfigEntry,
-    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the Lunatone sensor value update."""
-    sensor_values = (22, 55, 20)
+    """Test the Lunatone DALI scan status value update."""
+    scan_states = iter((ScanState.ADDRESSING, ScanState.DONE))
 
     await setup_integration(hass, mock_config_entry)
 
+    coordinator = mock_config_entry.runtime_data.coordinator_scan
+
     async def fake_update():
-        for i, sensor_value in enumerate(sensor_values):
-            sensor: SensorData = mock_lunatone_sensors.data.sensors[i]
-            sensor.value = sensor_value
+        scan_state = next(scan_states)
+        mock_lunatone_scan.data = ScanData(status=scan_state)
 
-    mock_lunatone_sensors.async_update.side_effect = fake_update
+    mock_lunatone_scan.async_update.side_effect = fake_update
 
-    entities = hass.states.async_all(Platform.SENSOR)
-    assert entities[0].state == "unknown"
-    assert entities[1].state == "unknown"
-    assert entities[2].state == "unknown"
+    entities = hass.states.async_all(Platform.BINARY_SENSOR)
+    assert entities[0].state == "off"
+    assert coordinator.update_interval == timedelta(seconds=10)
 
-    freezer.tick(timedelta(seconds=40))
-    async_fire_time_changed(hass)
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    entities = hass.states.async_all(Platform.SENSOR)
-    assert entities[0].state == "22"
-    assert entities[1].state == "55"
-    assert entities[2].state == "20"
+    entities = hass.states.async_all(Platform.BINARY_SENSOR)
+    assert entities[0].state == "on"
+    assert coordinator.update_interval == timedelta(seconds=1)
+
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    entities = hass.states.async_all(Platform.BINARY_SENSOR)
+    assert entities[0].state == "off"
+    assert coordinator.update_interval == timedelta(seconds=10)
