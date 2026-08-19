@@ -272,6 +272,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             _LOGGER.warning("%s:Group '%s' doesn't exist!", service.service, object_id)
             return
 
+        group.async_set_context(service.context)
+
         # update group
         if service.service == SERVICE_SET:
             need_update = False
