@@ -5,6 +5,8 @@ import logging
 
 import probatio
 
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN
 from homeassistant.const import ATTR_ENTITY_ID, ATTR_MODE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
@@ -52,28 +54,8 @@ SERVICE_GOTO = "vacuum_goto"
 
 # Light Services
 ATTR_TIME_PERIOD = "time_period"
-XIAOMI_MIIO_SERVICE_SCHEMA = probatio.Schema(
-    {probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids}
-)
-SERVICE_SCHEMA_SET_SCENE = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
-    {
-        probatio.Required(ATTR_SCENE): probatio.All(
-            probatio.Coerce(int), probatio.Clamp(min=1, max=6)
-        )
-    }
-)
-SERVICE_SCHEMA_SET_DELAYED_TURN_OFF = XIAOMI_MIIO_SERVICE_SCHEMA.extend(
-    {probatio.Required(ATTR_TIME_PERIOD): cv.positive_time_period}
-)
+XIAOMI_MIIO_SERVICE_SCHEMA = probatio.Schema({probatio.Optional(ATTR_ENTITY_ID): cv.entity_ids})
 LIGHT_SERVICE_TO_METHOD = {
-    SERVICE_SET_DELAYED_TURN_OFF: ServiceMethodDetails(
-        method="async_set_delayed_turn_off",
-        schema=SERVICE_SCHEMA_SET_DELAYED_TURN_OFF,
-    ),
-    SERVICE_SET_SCENE: ServiceMethodDetails(
-        method="async_set_scene",
-        schema=SERVICE_SCHEMA_SET_SCENE,
-    ),
     SERVICE_REMINDER_ON: ServiceMethodDetails(method="async_reminder_on"),
     SERVICE_REMINDER_OFF: ServiceMethodDetails(method="async_reminder_off"),
     SERVICE_NIGHT_LIGHT_MODE_ON: ServiceMethodDetails(
@@ -94,19 +76,10 @@ SWITCH_SERVICE_SCHEMA = probatio.Schema(
 SWITCH_SERVICE_SCHEMA_POWER_MODE = SWITCH_SERVICE_SCHEMA.extend(
     {probatio.Required(ATTR_MODE): probatio.All(probatio.In(["green", "normal"]))}
 )
-SWITCH_SERVICE_SCHEMA_POWER_PRICE = SWITCH_SERVICE_SCHEMA.extend(
-    {probatio.Required(ATTR_PRICE): cv.positive_float}
-)
 SWITCH_SERVICE_TO_METHOD = {
-    SERVICE_SET_WIFI_LED_ON: ServiceMethodDetails(method="async_set_wifi_led_on"),
-    SERVICE_SET_WIFI_LED_OFF: ServiceMethodDetails(method="async_set_wifi_led_off"),
     SERVICE_SET_POWER_MODE: ServiceMethodDetails(
         method="async_set_power_mode",
         schema=SWITCH_SERVICE_SCHEMA_POWER_MODE,
-    ),
-    SERVICE_SET_POWER_PRICE: ServiceMethodDetails(
-        method="async_set_power_price",
-        schema=SWITCH_SERVICE_SCHEMA_POWER_PRICE,
     ),
 }
 
@@ -132,6 +105,55 @@ def async_setup_services(hass: HomeAssistant) -> None:
     _async_setup_fan_services(hass)
     _async_setup_light_services(hass)
     _async_setup_switch_services(hass)
+
+    # Light Services
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_SCENE,
+        entity_domain=LIGHT_DOMAIN,
+        schema={
+            probatio.Required(ATTR_SCENE): probatio.All(probatio.Coerce(int), probatio.Clamp(min=1, max=6))
+        },
+        func="async_set_scene",
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_DELAYED_TURN_OFF,
+        entity_domain=LIGHT_DOMAIN,
+        schema={probatio.Required(ATTR_TIME_PERIOD): cv.positive_time_period},
+        func="async_set_delayed_turn_off",
+    )
+
+    # Switch Services
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_WIFI_LED_ON,
+        entity_domain=SWITCH_DOMAIN,
+        schema=None,
+        func="async_set_wifi_led_on",
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_WIFI_LED_OFF,
+        entity_domain=SWITCH_DOMAIN,
+        schema=None,
+        func="async_set_wifi_led_off",
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        SERVICE_SET_POWER_PRICE,
+        entity_domain=SWITCH_DOMAIN,
+        schema={probatio.Required(ATTR_PRICE): cv.positive_float},
+        func="async_set_power_price",
+    )
 
     # Vacuum Services
     service.async_register_platform_entity_service(
@@ -260,6 +282,7 @@ def _async_setup_light_services(hass: HomeAssistant) -> None:
         for target_device in target_devices:
             if not hasattr(target_device, method.method):
                 continue
+            target_device.async_set_context(call.context)
             await getattr(target_device, method.method)(**params)
             update_tasks.append(
                 asyncio.create_task(target_device.async_update_ha_state(True))
@@ -298,6 +321,7 @@ def _async_setup_switch_services(hass: HomeAssistant) -> None:
         for device in devices:
             if not hasattr(device, method.method):
                 continue
+            device.async_set_context(call.context)
             await getattr(device, method.method)(**params)
             update_tasks.append(asyncio.create_task(device.async_update_ha_state(True)))
 
@@ -336,6 +360,7 @@ def _async_setup_fan_services(hass: HomeAssistant) -> None:
             entity_method = getattr(entity, method.method, None)
             if not entity_method:
                 continue
+            entity.async_set_context(call.context)
             await entity_method(**params)
             update_tasks.append(asyncio.create_task(entity.async_update_ha_state(True)))
 
