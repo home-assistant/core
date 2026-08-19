@@ -1,5 +1,6 @@
 """The tests for Z-Wave JS logbook."""
 
+import pytest
 from zwave_js_server.const import CommandClass
 
 from homeassistant.components.zwave_js.const import (
@@ -152,5 +153,55 @@ async def test_humanifying_zwave_js_value_notification_event(
     assert events[0]["domain"] == "zwave_js"
     assert (
         events[0]["message"]
+        == "fired Scene Activation CC 'value notification' event for 'Scene ID': '001'"
+    )
+
+
+@pytest.mark.usefixtures("integration")
+async def test_humanifying_zwave_js_events_removed_device(
+    hass: HomeAssistant,
+) -> None:
+    """Test humanifying Z-Wave JS events for a removed device does not raise."""
+    hass.config.components.add("recorder")
+    assert await async_setup_component(hass, "logbook", {})
+    await hass.async_block_till_done()
+
+    events = mock_humanify(
+        hass,
+        [
+            MockRow(
+                ZWAVE_JS_NOTIFICATION_EVENT,
+                {
+                    "device_id": "removed_device_id",
+                    "command_class": CommandClass.NOTIFICATION.value,
+                    "command_class_name": "Notification",
+                    "label": "label",
+                    "event_label": "event_label",
+                },
+            ),
+            MockRow(
+                ZWAVE_JS_VALUE_NOTIFICATION_EVENT,
+                {
+                    "device_id": "removed_device_id",
+                    "command_class": CommandClass.SCENE_ACTIVATION.value,
+                    "command_class_name": "Scene Activation",
+                    "label": "Scene ID",
+                    "value": "001",
+                },
+            ),
+        ],
+    )
+
+    assert events[0]["name"] == ""
+    assert events[0]["domain"] == "zwave_js"
+    assert (
+        events[0]["message"]
+        == "fired Notification CC 'notification' event 'label': 'event_label'"
+    )
+
+    assert events[1]["name"] == ""
+    assert events[1]["domain"] == "zwave_js"
+    assert (
+        events[1]["message"]
         == "fired Scene Activation CC 'value notification' event for 'Scene ID': '001'"
     )
