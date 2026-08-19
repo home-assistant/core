@@ -1,7 +1,8 @@
 """Tests for the WiiM media player via services and the state machine."""
 
+from collections.abc import Callable
 from http import HTTPStatus
-from unittest.mock import AsyncMock, MagicMock, call, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
 import pytest
@@ -1327,15 +1328,33 @@ async def test_join_service_invalid_member_uses_translation(
 
 
 @pytest.mark.parametrize(
-    ("image_url", "expected_disabled_request_options", "content_type"),
+    ("device_ip", "image_url", "expected_disabled_request_options", "content_type"),
     [
         (
+            "192.168.1.100",
             "https://192.168.1.100/local-artwork.jpg",
             {"allow_redirects", "ssl"},
             "image/jpeg ; charset=binary",
         ),
-        ("http://192.168.1.100/local-artwork.jpg", set(), "image/jpeg"),
-        ("https://wiim-artwork.example/remote-artwork.jpg", set(), "image/jpeg"),
+        (
+            "192.168.1.100",
+            "http://192.168.1.100/local-artwork.jpg",
+            set(),
+            "image/jpeg",
+        ),
+        (
+            "192.168.1.100",
+            "https://wiim-artwork.example/remote-artwork.jpg",
+            set(),
+            "image/jpeg",
+        ),
+        ("8.8.8.8", "https://8.8.8.8/public-artwork.jpg", set(), "image/jpeg"),
+        (
+            "169.254.10.20",
+            "https://169.254.10.20/link-local-artwork.jpg",
+            {"allow_redirects", "ssl"},
+            "image/jpeg",
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_wiim_controller")
@@ -1346,11 +1365,13 @@ async def test_media_image_ssl_verification(
     aioclient_mock: AiohttpClientMocker,
     hass_client: ClientSessionGenerator,
     *,
+    device_ip: str,
     image_url: str,
     expected_disabled_request_options: set[str],
     content_type: str,
 ) -> None:
     """Test SSL verification is disabled only for local WiiM HTTPS artwork."""
+    mock_wiim_device.ip_address = device_ip
     await setup_integration(hass, mock_config_entry)
     mock_wiim_device.current_media = WiimMediaMetadata(
         title="Test artwork",
@@ -1392,10 +1413,10 @@ async def test_media_image_ssl_verification(
 
 
 @pytest.mark.parametrize(
-    ("status", "exception"),
+    ("status", "exception_factory"),
     [
-        (HTTPStatus.NOT_FOUND, None),
-        (HTTPStatus.OK, aiohttp.ClientError()),
+        (HTTPStatus.NOT_FOUND, lambda: None),
+        (HTTPStatus.OK, aiohttp.ClientError),
     ],
 )
 @pytest.mark.usefixtures("mock_wiim_controller")
@@ -1407,7 +1428,7 @@ async def test_local_https_media_image_fetch_error(
     hass_client: ClientSessionGenerator,
     *,
     status: HTTPStatus,
-    exception: aiohttp.ClientError | None,
+    exception_factory: Callable[[], aiohttp.ClientError | None],
 ) -> None:
     """Test a local HTTPS artwork request error returns no proxy image."""
     await setup_integration(hass, mock_config_entry)
@@ -1424,7 +1445,7 @@ async def test_local_https_media_image_fetch_error(
     aioclient_mock.get(
         image_url,
         status=status,
-        exc=exception,
+        exc=exception_factory(),
     )
     response = await (await hass_client()).get(
         state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
