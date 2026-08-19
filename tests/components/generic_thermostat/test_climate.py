@@ -1848,14 +1848,14 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("switch.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     helper_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "Test",
-            "heater": "switch.test_source",
+            "heater": source_entity.entity_id,
             "target_sensor": ENT_SENSOR,
             "ac_mode": False,
             "cold_tolerance": 0.3,
@@ -1868,7 +1868,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    helper_entity = entity_registry.async_get("climate.test")
+    helper_entity = entity_registry.async_get("climate.mock_title_test")
     assert helper_entity is not None
     assert helper_entity.device_id == source_entity.device_id
 

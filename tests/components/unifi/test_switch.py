@@ -750,10 +750,6 @@ UPS_DEVICE_1.update(
                 "cycle_enabled": False,
                 "name": "Outlet 1",
                 "outlet_caps": 65539,
-                "outlet_voltage": 121.7,
-                "outlet_current": 0.35,
-                "outlet_power": 42.5,
-                "outlet_power_factor": 0.98,
             }
         ],
         "outlet_overrides": [
@@ -902,6 +898,33 @@ FIREWALL_POLICY = {
         "port_matching_type": "ANY",
         "zone_id": "678c63bc2d97692f08adcdfa",
     },
+}
+
+OBJECT_ORIENTED_NETWORK_CONFIG = {
+    "id": "69f6b0a5e0e3ee2d4614cb5c",
+    "enabled": True,
+    "name": "Nintendo Switch - Block Internet",
+    "target_type": "CLIENTS",
+    "targets": [CLIENT_1["mac"]],
+    "qos": {"enabled": False},
+    "route": {"enabled": False},
+    "secure": {
+        "enabled": True,
+        "internet": {
+            "mode": "TURN_OFF_INTERNET",
+            "schedule": {"mode": "ALWAYS"},
+        },
+    },
+}
+
+OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG = {
+    "id": "69f6b0eae0e3ee2d4614cb91",
+    "enabled": True,
+    "name": "VPN traffic route",
+    "target_type": "NETWORKS",
+    "targets": ["6060b00f45de3905133cea14"],
+    "route": {"enabled": True},
+    "secure": None,
 }
 
 
@@ -1383,6 +1406,75 @@ async def test_firewall_policies(
 
     assert aioclient_mock.call_count == call_count + 2
     assert aioclient_mock.mock_calls[call_count][2] == expected_enable_call
+
+
+@pytest.mark.parametrize(
+    ("object_oriented_network_config_payload"),
+    [([OBJECT_ORIENTED_NETWORK_CONFIG, OBJECT_ORIENTED_NETWORK_ROUTE_CONFIG])],
+)
+async def test_object_oriented_network_configs(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    config_entry_setup: MockConfigEntry,
+    object_oriented_network_config_payload: list[dict[str, Any]],
+) -> None:
+    """Test control of UniFi Policy Engine rules."""
+    entity_id = "switch.unifi_network_nintendo_switch_block_internet"
+    assert hass.states.get("switch.unifi_network_vpn_traffic_route") is None
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == STATE_ON
+
+    config = deepcopy(object_oriented_network_config_payload[0])
+    config_url = (
+        f"https://{config_entry_setup.data[CONF_HOST]}:1234"
+        f"/v2/api/site/{config_entry_setup.data[CONF_SITE_ID]}"
+        f"/object-oriented-network-config/{config['id']}"
+    )
+
+    aioclient_mock.put(config_url)
+
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_off",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    expected_disable_call = deepcopy(config)
+    expected_disable_call["enabled"] = False
+
+    assert (
+        "put",
+        config_url,
+        expected_disable_call,
+    ) in (
+        (method, str(url), data)
+        for method, url, data, _headers in aioclient_mock.mock_calls[call_count:]
+    )
+
+    call_count = aioclient_mock.call_count
+
+    await hass.services.async_call(
+        SWITCH_DOMAIN,
+        "turn_on",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+
+    expected_enable_call = deepcopy(config)
+    expected_enable_call["enabled"] = True
+
+    assert (
+        "put",
+        config_url,
+        expected_enable_call,
+    ) in (
+        (method, str(url), data)
+        for method, url, data, _headers in aioclient_mock.mock_calls[call_count:]
+    )
 
 
 @pytest.mark.parametrize(

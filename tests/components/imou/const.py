@@ -2,6 +2,12 @@
 
 from pyimouapi.const import (
     PARAM_BATTERY,
+    PARAM_CURRENT_OPTION,
+    PARAM_DEVICE_VOLUME,
+    PARAM_MOTION_DETECT,
+    PARAM_NIGHT_VISION_MODE,
+    PARAM_OPTIONS,
+    PARAM_RESTART_DEVICE,
     PARAM_STATE,
     PARAM_STATE_VARIANT,
     PARAM_STATUS,
@@ -11,18 +17,13 @@ from pyimouapi.const import (
 )
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 
-from homeassistant.components.imou.button import (
-    PARAM_MUTE,
-    PARAM_PTZ_UP,
-    PARAM_RESTART_DEVICE,
-)
+from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
 from homeassistant.components.imou.const import (
     CONF_API_URL,
     CONF_APP_ID,
     CONF_APP_SECRET,
     PARAM_HEADER_DETECT,
     PARAM_LIGHT,
-    PARAM_MOTION_DETECT,
     PARAM_PLUG_SWITCH,
 )
 
@@ -45,6 +46,18 @@ CONFIG_ENTRY_DATA = {
 UNKNOWN_BUTTON_KEY = "legacy_unknown_button"
 UNKNOWN_SWITCH_KEY = "legacy_unknown_switch"
 UNKNOWN_SENSOR_KEY = "legacy_unknown_sensor"
+UNKNOWN_SELECT_KEY = "legacy_unknown_select"
+
+DEFAULT_SELECTS = {
+    PARAM_NIGHT_VISION_MODE: {
+        PARAM_CURRENT_OPTION: "intelligent",
+        PARAM_OPTIONS: ["intelligent", "fullcolor", "infrared", "off"],
+    },
+    PARAM_DEVICE_VOLUME: {
+        PARAM_CURRENT_OPTION: "medium",
+        PARAM_OPTIONS: ["mute", "low", "medium", "high"],
+    },
+}
 
 DEFAULT_SWITCHES = {
     PARAM_MOTION_DETECT: {PARAM_STATE: False},
@@ -79,6 +92,7 @@ def create_online_device(
     button_keys: tuple[str, ...] = (),
     switches: dict[str, dict] | None = None,
     sensors: dict[str, dict] | None = None,
+    selects: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an online ImouHaDevice for tests."""
     return create_device(
@@ -89,6 +103,7 @@ def create_online_device(
         status=DeviceStatus.ONLINE,
         switches=switches,
         sensors=sensors,
+        selects=selects,
     )
 
 
@@ -98,6 +113,7 @@ def create_offline_device(
     *,
     channel_id: str | None = None,
     button_keys: tuple[str, ...] = (),
+    selects: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an offline ImouHaDevice for tests."""
     return create_device(
@@ -106,6 +122,7 @@ def create_offline_device(
         channel_id=channel_id,
         button_keys=button_keys,
         status=DeviceStatus.OFFLINE,
+        selects=selects,
     )
 
 
@@ -118,6 +135,7 @@ def create_device(
     status: DeviceStatus = DeviceStatus.ONLINE,
     switches: dict[str, dict] | None = None,
     sensors: dict[str, dict] | None = None,
+    selects: dict[str, dict] | None = None,
 ) -> ImouHaDevice:
     """Build an ImouHaDevice for tests."""
     device = ImouHaDevice(device_id, name, "Imou", "m1", "1.0")
@@ -133,6 +151,8 @@ def create_device(
         device._switches.update({key: dict(value) for key, value in switches.items()})
     if sensors:
         device._sensors.update({key: dict(value) for key, value in sensors.items()})
+    if selects:
+        device._selects.update({key: dict(value) for key, value in selects.items()})
     return device
 
 
@@ -155,5 +175,17 @@ def sensor_mock_devices() -> list[ImouHaDevice]:
             "Device 1",
             button_keys=(),
             sensors=DEFAULT_SENSORS,
+        ),
+    ]
+
+
+def select_mock_devices() -> list[ImouHaDevice]:
+    """Return a fresh select-focused device list for tests."""
+    return [
+        create_online_device(
+            "d1",
+            "Device 1",
+            button_keys=(),
+            selects=DEFAULT_SELECTS,
         ),
     ]
