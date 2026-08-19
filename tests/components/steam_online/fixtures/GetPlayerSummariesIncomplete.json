@@ -3,10 +3,10 @@
     "players": {
       "player": [
         {
-          "steamid": "76561198000000001",
+          "steamid": "12345678901234567",
           "communityvisibilitystate": 1,
           "personaname": "testaccount1",
-          "profileurl": "https://steamcommunity.com/profiles/76561198000000001/",
+          "profileurl": "https://steamcommunity.com/profiles/12345678901234567/",
           "avatar": "https://avatars.steamstatic.com/avatar.jpg",
           "avatarmedium": "https://avatars.steamstatic.com/avatar_medium.jpg",
           "avatarfull": "https://avatars.steamstatic.com/avatar_full.jpg",
@@ -15,10 +15,10 @@
           "personastateflags": 0
         },
         {
-          "steamid": "76561198000000002",
+          "steamid": "12345678912345678",
           "communityvisibilitystate": 1,
           "personaname": "testaccount2",
-          "profileurl": "https://steamcommunity.com/profiles/76561198000000002/",
+          "profileurl": "https://steamcommunity.com/profiles/12345678912345678/",
           "avatar": "https://avatars.steamstatic.com/avatar.jpg",
           "avatarmedium": "https://avatars.steamstatic.com/avatar_medium.jpg",
           "avatarfull": "https://avatars.steamstatic.com/avatar_full.jpg",
