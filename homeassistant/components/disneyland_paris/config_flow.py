@@ -1,6 +1,6 @@
 """Config flow for Disneyland Paris Integration."""
 
-from typing import Any
+from typing import Any, override
 
 from dlpwait import DLPWaitAPI, DLPWaitError
 
@@ -13,6 +13,7 @@ from .const import DOMAIN
 class DisneylandParisConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle Config Flow for Disneyland Paris."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 from dlpwait import DLPWaitAPI, DLPWaitError
 
@@ -35,6 +35,7 @@ class DisneylandParisCoordinator(DataUpdateCoordinator[None]):
         )
         self.client = DLPWaitAPI(async_get_clientsession(hass))
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch the latest parks data."""
 

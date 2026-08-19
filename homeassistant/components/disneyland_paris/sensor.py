@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from dlpwait import Park, Parks
 
@@ -519,6 +520,7 @@ class DisneylandSensor(DisneylandEntity, SensorEntity):
     entity_description: DisneylandParisSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | datetime | None:
         """Return the native value of the sensor."""
 
@@ -536,6 +538,7 @@ class DisneyAdventureWorldSensor(DisneyAdventureWorldEntity, SensorEntity):
     entity_description: DisneylandParisSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> int | datetime | None:
         """Return the native value of the sensor."""
 
