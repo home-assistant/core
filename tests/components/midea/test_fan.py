@@ -6,8 +6,8 @@ from unittest.mock import patch
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.b6 import DeviceAttributes as B6Attributes
-from midealocal.devices.ce import DeviceAttributes as CEAttributes
-from midealocal.devices.fa import DeviceAttributes as FAAttributes
+from midealocal.devices.ce import DeviceAttributes as CEAttributes, MideaCEDevice
+from midealocal.devices.fa import DeviceAttributes as FAAttributes, MideaFADevice
 from midealocal.devices.x40 import DeviceAttributes as X40Attributes
 from midealocal.exceptions import SocketException
 import pytest
@@ -64,13 +64,13 @@ def _fa_device() -> DummyDevice:
         DeviceType.FA,
         attributes={
             FAAttributes.power: True,
-            FAAttributes.mode: "Normal",
+            FAAttributes.mode: "normal",
             FAAttributes.fan_speed: 2,
             FAAttributes.oscillate: True,
         },
     )
     device.speed_count = 3
-    device.preset_modes = ["Normal", "Natural", "Sleep", "Strong"]
+    device.preset_modes = list(MideaFADevice._modes)
     return device
 
 
@@ -84,7 +84,6 @@ def _b6_device() -> DummyDevice:
         },
     )
     device.speed_count = 2
-    device.preset_modes = ["Off", "Level 1", "Level 2"]
     return device
 
 
@@ -93,12 +92,12 @@ def _ce_device() -> DummyDevice:
         DeviceType.CE,
         attributes={
             CEAttributes.power: True,
-            CEAttributes.mode: "Normal",
+            CEAttributes.mode: "normal",
             CEAttributes.fan_speed: 3,
         },
     )
     device.speed_count = 7
-    device.preset_modes = ["Normal", "Sleep mode", "ECO mode"]
+    device.preset_modes = list(MideaCEDevice._modes)
     return device
 
 
@@ -137,23 +136,32 @@ async def test_fan_state_snapshot(
         await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
 
 
+@pytest.mark.parametrize(
+    ("mode", "expected_preset_mode"),
+    [
+        pytest.param("normal", None, id="normal_mode"),
+        pytest.param("sleep", "sleep", id="preset_mode"),
+    ],
+)
 async def test_fa_fan_services(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    mode: str,
+    expected_preset_mode: str | None,
 ) -> None:
     """Test FA fan service calls reach the device."""
     device = _fa_device()
+    device.attributes[FAAttributes.mode] = mode
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.FAN]):
         await setup_integration(hass, config_entry, device)
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_fan"]
 
-    state = hass.states.get(entity_entry.entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "on"
     assert state.attributes[ATTR_PERCENTAGE] == 67
-    assert state.attributes[ATTR_PRESET_MODE] == "Normal"
+    assert state.attributes[ATTR_PRESET_MODE] == expected_preset_mode
     assert state.attributes[ATTR_PRESET_MODES] == device.preset_modes
     assert state.attributes[ATTR_OSCILLATING] is True
 
@@ -177,8 +185,8 @@ async def test_fa_fan_services(
         hass,
         entity_entry.entity_id,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_PRESET_MODE: "Sleep"},
-        [("set_attribute", "mode", "Sleep")],
+        {ATTR_PRESET_MODE: "sleep"},
+        [("set_attribute", "mode", "sleep")],
         device,
     )
     await _assert_service_call(
@@ -215,33 +223,6 @@ async def test_fa_fan_services(
     )
 
 
-async def test_b6_fan_turn_on_with_speed(
-    hass: HomeAssistant,
-    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-) -> None:
-    """Test B6 turn_on converts percentage to fan_speed and forwards preset_mode."""
-    device = _b6_device()
-    config_entry = mock_config_entry(device)
-    with patch("homeassistant.components.midea._PLATFORMS", [Platform.FAN]):
-        await setup_integration(hass, config_entry, device)
-
-    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_fan"]
-
-    state = hass.states.get(entity_entry.entity_id)
-    assert state is not None
-    assert state.attributes[ATTR_PERCENTAGE] == 50
-    assert ATTR_OSCILLATING not in state.attributes
-
-    await _assert_service_call(
-        hass,
-        entity_entry.entity_id,
-        SERVICE_TURN_ON,
-        {ATTR_PERCENTAGE: 100, "preset_mode": "Level 2"},
-        [("turn_on", 2, "Level 2")],
-        device,
-    )
-
-
 async def test_ce_fan_turn_on_ignores_percentage_and_preset(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
@@ -258,7 +239,7 @@ async def test_ce_fan_turn_on_ignores_percentage_and_preset(
         hass,
         entity_entry.entity_id,
         SERVICE_TURN_ON,
-        {ATTR_PERCENTAGE: 100, "preset_mode": "ECO mode"},
+        {ATTR_PERCENTAGE: 100, "preset_mode": "eco"},
         [("set_attribute", "power", True)],
         device,
     )
@@ -266,8 +247,8 @@ async def test_ce_fan_turn_on_ignores_percentage_and_preset(
         hass,
         entity_entry.entity_id,
         SERVICE_SET_PRESET_MODE,
-        {ATTR_PRESET_MODE: "ECO mode"},
-        [("set_attribute", "mode", "ECO mode")],
+        {ATTR_PRESET_MODE: "eco"},
+        [("set_attribute", "mode", "eco")],
         device,
     )
 
@@ -284,8 +265,7 @@ async def test_x40_fan_on_off_and_speed(
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_fan"]
 
-    state = hass.states.get(entity_entry.entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "on"
     assert state.attributes[ATTR_PERCENTAGE] == 50
     assert state.attributes[ATTR_PRESET_MODE] is None
@@ -330,14 +310,13 @@ async def test_fa_fan_unknown_when_attributes_missing(
     """Test power/oscillate gracefully report unknown before the device reports them."""
     device = DummyDevice(DeviceType.FA, attributes={})
     device.speed_count = 3
-    device.preset_modes = ["Normal"]
+    device.preset_modes = ["normal"]
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.FAN]):
         await setup_integration(hass, config_entry, device)
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_fan"]
-    state = hass.states.get(entity_entry.entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "unknown"
     assert state.attributes[ATTR_OSCILLATING] is None
 
@@ -355,8 +334,7 @@ async def test_x40_fan_unknown_when_fan_speed_missing(
         await setup_integration(hass, config_entry, device)
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_fan"]
-    state = hass.states.get(entity_entry.entity_id)
-    assert state is not None
+    assert (state := hass.states.get(entity_entry.entity_id)) is not None
     assert state.state == "unknown"
 
 

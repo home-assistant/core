@@ -56,7 +56,6 @@ FANS: list[MideaFanEntityDescription] = [
         models=[DeviceType.B6],
         supported_features=(
             FanEntityFeature.SET_SPEED
-            | FanEntityFeature.PRESET_MODE
             | FanEntityFeature.TURN_ON
             | FanEntityFeature.TURN_OFF
         ),
@@ -115,7 +114,8 @@ class MideaFan(MideaEntity, FanEntity):
         super().__init__(device, description)
         self._attr_supported_features = description.supported_features
         self._attr_speed_count = device.speed_count
-        self._attr_preset_modes = device.preset_modes
+        if FanEntityFeature.PRESET_MODE in description.supported_features:
+            self._attr_preset_modes = device.preset_modes
 
     @property
     @override
@@ -132,8 +132,10 @@ class MideaFan(MideaEntity, FanEntity):
     @override
     def preset_mode(self) -> str | None:
         """Midea Fan preset mode."""
+        if FanEntityFeature.PRESET_MODE not in self.supported_features:
+            return None
         mode = self._device.get_attribute("mode")
-        if not isinstance(mode, str):
+        if not isinstance(mode, str) or mode == "normal":
             return None
         return mode
 

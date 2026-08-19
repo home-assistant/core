@@ -22,7 +22,7 @@ from .entity import MideaConfigEntry
 
 _PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
-    Platform.FAN
+    Platform.FAN,
     Platform.HUMIDIFIER,
 ]
 
