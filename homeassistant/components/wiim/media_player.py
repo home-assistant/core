@@ -1,11 +1,16 @@
 """Support for WiiM Media Players."""
 
 from collections.abc import Awaitable, Callable, Coroutine
+from contextlib import suppress
 from functools import wraps
 from hashlib import sha256
+from http import HTTPStatus
 import json
 from typing import Any, Concatenate, override
+from urllib.parse import urlparse
 
+import aiohttp
+from aiohttp.hdrs import CONTENT_TYPE
 from async_upnp_client.client import UpnpService, UpnpStateVariable
 from wiim.consts import PlayingStatus as SDKPlayingStatus
 from wiim.exceptions import WiimDeviceException, WiimException, WiimRequestException
@@ -33,6 +38,7 @@ from homeassistant.components.media_player import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -54,6 +60,7 @@ MEDIA_CONTENT_ID_PLAYLISTS = (
 )
 PARALLEL_UPDATES = 1
 
+MEDIA_IMAGE_FETCH_TIMEOUT = aiohttp.ClientTimeout(total=10)
 
 SDK_TO_HA_STATE: dict[SDKPlayingStatus, MediaPlayerState] = {
     SDKPlayingStatus.PLAYING: MediaPlayerState.PLAYING,
@@ -266,6 +273,34 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             url = f"{url.partition('#')[0]}#{image_hash}"
 
         return await self._async_fetch_image_from_cache(url)
+
+    @override
+    async def _async_fetch_image(self, url: str) -> tuple[bytes | None, str | None]:
+        """Fetch local WiiM HTTPS artwork without certificate verification."""
+        parsed_url = urlparse(url)
+        if (
+            parsed_url.scheme != "https"
+            or parsed_url.hostname != self._metadata_device.ip_address
+        ):
+            return await super()._async_fetch_image(url)
+
+        websession = async_get_clientsession(self.hass)
+        with suppress(TimeoutError, aiohttp.ClientError):
+            async with websession.get(
+                url,
+                allow_redirects=False,
+                ssl=False,
+                timeout=MEDIA_IMAGE_FETCH_TIMEOUT,
+            ) as response:
+                if response.status == HTTPStatus.OK:
+                    content = await response.read()
+                    content_type = response.headers.get(CONTENT_TYPE)
+                    return content, (
+                        content_type.split(";")[0] if content_type else None
+                    )
+
+        LOGGER.debug("Error retrieving local WiiM artwork for %s", self.entity_id)
+        return None, None
 
     @callback
     def _get_command_target_device(self, action_name: str) -> WiimDevice:

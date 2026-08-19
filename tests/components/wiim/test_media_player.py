@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import aiohttp
 import pytest
 from wiim.consts import PlayingStatus
 from wiim.exceptions import WiimRequestException
@@ -66,6 +67,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import fire_general_update, fire_transport_update, setup_integration
 
@@ -1321,6 +1323,85 @@ async def test_join_service_invalid_member_uses_translation(
     assert exc_info.value.translation_key == "invalid_grouping_entity"
     assert exc_info.value.translation_placeholders == {"entity_id": invalid_entity_id}
     mock_wiim_controller.async_join_group.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    ("image_url", "expected_ssl", "expected_allow_redirects"),
+    [
+        ("https://192.168.1.100/local-artwork.jpg", False, False),
+        ("http://192.168.1.100/local-artwork.jpg", None, None),
+        ("https://wiim-artwork.example/remote-artwork.jpg", None, None),
+    ],
+)
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_media_image_ssl_verification(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+    *,
+    image_url: str,
+    expected_ssl: bool | None,
+    expected_allow_redirects: bool | None,
+) -> None:
+    """Test SSL verification is disabled only for local WiiM HTTPS artwork."""
+    await setup_integration(hass, mock_config_entry)
+    mock_wiim_device.current_media = WiimMediaMetadata(
+        title="Test artwork",
+        uri="http://example.com/test-artwork.flac",
+        image_url=image_url,
+    )
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+
+    aioclient_mock.get(
+        image_url,
+        content=b"image-bytes",
+        headers={"Content-Type": "image/jpeg; charset=binary"},
+    )
+    websession = async_get_clientsession(hass)
+    with patch.object(websession, "get", wraps=websession.get) as mock_get:
+        response = await (await hass_client()).get(
+            state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
+        )
+
+    assert response.status == 200
+    assert await response.read() == b"image-bytes"
+    assert response.headers["Content-Type"] == "image/jpeg"
+    assert mock_get.call_args.kwargs.get("allow_redirects") is expected_allow_redirects
+    assert mock_get.call_args.kwargs.get("ssl") is expected_ssl
+
+
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_local_https_media_image_fetch_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test a local HTTPS artwork request error returns no proxy image."""
+    await setup_integration(hass, mock_config_entry)
+    image_url = "https://192.168.1.100/unavailable-artwork.jpg"
+    mock_wiim_device.current_media = WiimMediaMetadata(
+        title="Unavailable artwork",
+        uri="http://example.com/unavailable-artwork.flac",
+        image_url=image_url,
+    )
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+
+    aioclient_mock.get(
+        image_url,
+        exc=aiohttp.ClientError,
+    )
+    response = await (await hass_client()).get(
+        state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
+    )
+    assert response.status == 404
 
 
 @pytest.mark.usefixtures("mock_wiim_controller")
