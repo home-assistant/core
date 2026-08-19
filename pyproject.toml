@@ -61,20 +61,20 @@ dependencies = [
   "Pillow==12.3.0",
   "propcache==0.5.2",
   "pyOpenSSL==26.2.0",
-  "orjson==3.11.9",
+  "orjson==3.12.0",
   "packaging>=23.1",
   "psutil-home-assistant==0.0.1",
   "python-slugify==8.0.4",
   "PyYAML==6.0.3",
   "requests==2.34.2",
   "securetar==2026.4.1",
-  "SQLAlchemy==2.0.51",
+  "SQLAlchemy==2.0.52",
   "standard-aifc==3.13.0",
   "standard-telnetlib==3.13.0",
   "typing-extensions>=4.16.0,<5.0",
   "ulid-transform==2.2.9",
   "urllib3>=2.0",
-  "uv==0.12.2",
+  "uv==0.12.5",
   "voluptuous==0.15.2",
   "voluptuous-serialize==2.7.0",
   "voluptuous-openapi==0.4.1",
@@ -491,8 +491,6 @@ filterwarnings = [
   # https://pypi.org/project/pyqwikswitch/ - >=1.0
   "ignore:client.loop property is deprecated:DeprecationWarning:pyqwikswitch.async_",
   "ignore:with timeout\\(\\) is deprecated:DeprecationWarning:pyqwikswitch.async_",
-  # https://github.com/allenporter/python-google-nest-sdm/pull/1229 - >9.1.2
-  "ignore:datetime.*utcnow\\(\\) is deprecated:DeprecationWarning:google_nest_sdm.device",
   # https://github.com/rytilahti/python-miio/pull/1809 - >=0.6.0.dev0
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.protocol",
   "ignore:datetime.*utcnow\\(\\) is deprecated and scheduled for removal:DeprecationWarning:miio.miioprotocol",
@@ -643,7 +641,7 @@ exclude_lines = [
 ]
 
 [tool.ruff]
-required-version = ">=0.16.1"
+required-version = ">=0.16.3"
 
 [tool.ruff.lint]
 select = [
