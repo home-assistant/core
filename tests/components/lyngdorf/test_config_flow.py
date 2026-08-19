@@ -481,6 +481,14 @@ async def test_user_flow_serial_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
 
+    mock_get_device_serial.side_effect = None
+    mock_get_device_serial.return_value = "0050c27c76b2"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.50"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
 
 @pytest.mark.parametrize(
     ("model", "serial", "error"),
@@ -510,3 +518,12 @@ async def test_reconfigure_device_errors(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+
+    mock_find_receiver_model.return_value = LyngdorfModel.MP_60
+    mock_get_device_serial.return_value = "0050c27c76b2"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: "192.168.1.50"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
