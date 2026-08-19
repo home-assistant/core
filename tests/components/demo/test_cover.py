@@ -67,7 +67,7 @@ async def test_supported_features(hass: HomeAssistant) -> None:
     state = hass.states.get("cover.hall_window")
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == 15
     state = hass.states.get("cover.living_room_window")
-    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 255
+    assert state.attributes[ATTR_SUPPORTED_FEATURES] == 511
 
 
 async def test_close_cover(hass: HomeAssistant) -> None:
