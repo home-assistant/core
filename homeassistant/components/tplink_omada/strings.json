@@ -130,7 +130,7 @@
         }
       },
       "name": "Reconnect wireless client"
-    }
+    },
     "reconnect_client": {
       "description": "Tries to get a wireless client to reconnect to the Omada network.",
       "fields": {
