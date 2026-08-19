@@ -26,6 +26,10 @@ from tesla_fleet_api.exceptions import (
 )
 from tesla_fleet_api.teslemetry.energysite import AuthorizedClient, AuthorizedClients
 
+from homeassistant.components.application_credentials import (
+    ClientCredential,
+    async_import_client_credential,
+)
 from homeassistant.components.teslemetry.const import (
     AUTHORIZE_URL,
     CLIENT_ID,
@@ -44,6 +48,7 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_entry_oauth2_flow, device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from . import mock_config_entry, setup_platform
 from .const import CONFIG_V1, METADATA, PRODUCTS, UNIQUE_ID
@@ -165,6 +170,86 @@ async def test_reauth(
     assert result
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+async def _complete_reauth(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    entry: MockConfigEntry,
+) -> MagicMock:
+    """Drive a reauth flow to completion and return the schedule_reload mock."""
+    result = await entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    aioclient_mock.post(
+        TOKEN_URL,
+        json={
+            "refresh_token": "test_refresh_token",
+            "access_token": "test_access_token",
+            "type": "Bearer",
+            "expires_in": 60,
+        },
+    )
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    return mock_schedule_reload
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reauth_loaded_does_not_schedule_reload(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """A loaded entry is reloaded by its update listener, not by the flow."""
+    mock_entry = await setup_platform(hass, [])
+    assert mock_entry.state is ConfigEntryState.LOADED
+
+    mock_schedule_reload = await _complete_reauth(
+        hass, hass_client_no_auth, aioclient_mock, mock_entry
+    )
+    mock_schedule_reload.assert_not_called()
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+async def test_reauth_not_loaded_schedules_reload(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """An unloaded entry has no update listener, so the flow schedules the reload."""
+    mock_entry = mock_config_entry()
+    mock_entry.add_to_hass(hass)
+    # A failed setup imports the client credential before it aborts, so mirror that
+    # while leaving the entry unloaded (and therefore without an update listener).
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, "", name="Teslemetry")
+    )
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED
+
+    mock_schedule_reload = await _complete_reauth(
+        hass, hass_client_no_auth, aioclient_mock, mock_entry
+    )
+    mock_schedule_reload.assert_called_once_with(mock_entry.entry_id)
 
 
 @pytest.mark.usefixtures("current_request_with_host")

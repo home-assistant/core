@@ -121,15 +121,23 @@ class OAuth2FlowHandler(
             return self.async_abort(reason="oauth_error")
 
         await self.async_set_unique_id(self.uid)
-        # The entry carries a subentry-change update listener, so the new token
-        # data is applied by the listener's reload; use the non-reloading variant
-        # to avoid reloading twice (and the paired-reload deprecation warning).
+        # When the entry is loaded its subentry-change update listener applies the
+        # new token via a reload, so use the non-reloading variant to avoid a double
+        # reload and the paired-reload deprecation warning. When it is not loaded
+        # (e.g. reauth after a setup failure) no listener exists, so the reloading
+        # variant is needed to apply the data and emits no deprecation.
         if self.source == SOURCE_REAUTH:
             self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
-            return self.async_update_and_abort(self._get_reauth_entry(), data=data)
+            entry = self._get_reauth_entry()
+            if entry.state is ConfigEntryState.LOADED:
+                return self.async_update_and_abort(entry, data=data)
+            return self.async_update_reload_and_abort(entry, data=data)
         if self.source == SOURCE_RECONFIGURE:
             self._abort_if_unique_id_mismatch(reason="reconfigure_account_mismatch")
-            return self.async_update_and_abort(self._get_reconfigure_entry(), data=data)
+            entry = self._get_reconfigure_entry()
+            if entry.state is ConfigEntryState.LOADED:
+                return self.async_update_and_abort(entry, data=data)
+            return self.async_update_reload_and_abort(entry, data=data)
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(
