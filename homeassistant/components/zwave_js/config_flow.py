@@ -10,7 +10,7 @@ from typing import Any, override
 from awesomeversion import AwesomeVersion
 import voluptuous as vol
 from zwave_js_server.client import Client
-from zwave_js_server.exceptions import FailedCommand
+from zwave_js_server.exceptions import BaseZwaveJSServerError, FailedCommand
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.version import VersionInfo
 
@@ -34,6 +34,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
@@ -41,6 +42,7 @@ from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
 
+from . import helpers
 from .addon import get_addon_manager
 from .const import (
     ADDON_SLUG,
@@ -54,7 +56,6 @@ from .const import (
     CONF_ADDON_S2_UNAUTHENTICATED_KEY,
     CONF_ADDON_SOCKET,
     CONF_INTEGRATION_CREATED_ADDON,
-    CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
     CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_S0_LEGACY_KEY,
@@ -66,12 +67,7 @@ from .const import (
     CONF_USE_ADDON,
     DOMAIN,
 )
-from .helpers import (
-    CannotConnect,
-    async_get_version_info,
-    async_wait_for_driver_ready_event,
-    format_home_id_for_display,
-)
+from .helpers import CannotConnect, async_get_version_info, format_home_id_for_display
 from .models import ZwaveJSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -81,6 +77,7 @@ TITLE = "Z-Wave JS"
 
 ADDON_SETUP_TIMEOUT = 5
 ADDON_SETUP_TIMEOUT_ROUNDS = 40
+SERVER_CONNECT_TIMEOUT = 60
 
 ADDON_USER_INPUT_MAP = {
     CONF_ADDON_DEVICE: CONF_USB_PATH,
@@ -1452,15 +1449,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """Prepare info needed to complete the config entry update."""
         ws_address = self.ws_address
         assert ws_address is not None
-        version_info = self.version_info
-        assert version_info is not None
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
 
-        # We need to wait for the config entry to be reloaded,
-        # before restoring the backup.
-        # We will do this in the restore nvm progress task,
-        # to get a nicer user experience.
+        # The restore will bring back the old network,
+        # so the unique id of the entry stays the same.
         self.hass.config_entries.async_update_entry(
             config_entry,
             data={
@@ -1477,7 +1470,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_USE_ADDON: True,
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
-            unique_id=str(version_info.home_id),
         )
 
         return await self.async_step_restore_nvm()
@@ -1661,22 +1653,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_restore_network_backup(self) -> None:
         """Restore the backup."""
         assert self.backup_data is not None
+        assert self.ws_address is not None
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-
-        # Make sure we keep the old devices
-        # so that user customizations are not lost,
-        # when loading the config entry.
-        self.hass.config_entries.async_update_entry(
-            config_entry, data=config_entry.data | {CONF_KEEP_OLD_DEVICES: True}
-        )
-
-        # Reload the config entry to reconnect the client after the addon restart
-        await self.hass.config_entries.async_reload(config_entry.entry_id)
-
-        data = config_entry.data.copy()
-        data.pop(CONF_KEEP_OLD_DEVICES, None)
-        self.hass.config_entries.async_update_entry(config_entry, data=data)
 
         @callback
         def forward_progress(event: dict) -> None:
@@ -1690,53 +1669,61 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     event["bytesWritten"] / event["total"] * 0.5 + 0.5
                 )
 
-        driver = self._get_driver()
-        controller = driver.controller
-        unsubs = [
-            controller.on("nvm convert progress", forward_progress),
-            controller.on("nvm restore progress", forward_progress),
-        ]
-
-        wait_for_driver_ready = async_wait_for_driver_ready_event(config_entry, driver)
-
+        # Use a flow specific client while the config entry stays unloaded,
+        # so no reload can run against the adapter before the restore is done.
+        client = Client(self.ws_address, async_get_clientsession(self.hass))
+        driver_ready = asyncio.Event()
+        listen_task: asyncio.Task[None] | None = None
         try:
-            await controller.async_restore_nvm(
-                self.backup_data, {"preserveRoutes": False}
-            )
-        except FailedCommand as err:
-            raise AbortFlow(f"Failed to restore network: {err}") from err
-        else:
-            with suppress(TimeoutError):
-                await wait_for_driver_ready()
             try:
-                version_info = await async_get_version_info(
-                    self.hass, config_entry.data[CONF_URL]
-                )
-            except CannotConnect:
-                # Just log this error, as there's nothing to do about it here.
-                # The stale unique id needs to be handled by a repair flow,
-                # after the config entry has been reloaded.
-                _LOGGER.error(
-                    "Failed to get server version, cannot update config entry "
-                    "unique id with new home id, after controller reset"
-                )
-            else:
-                self.hass.config_entries.async_update_entry(
-                    config_entry, unique_id=str(version_info.home_id)
-                )
+                async with asyncio.timeout(SERVER_CONNECT_TIMEOUT):
+                    await client.connect()
+                    listen_task = self.hass.async_create_task(
+                        client.listen(driver_ready),
+                        f"{DOMAIN}_migration_listen",
+                    )
+                    await driver_ready.wait()
+            except (TimeoutError, BaseZwaveJSServerError) as err:
+                raise AbortFlow(f"Failed to restore network: {err}") from err
 
-            # The config entry will be also be reloaded when the driver is ready,
-            # by the listener in the package module,
-            # and two reloads are needed to clean up the stale controller device entry.
-            # Since both the old and the new controller have the same node id,
-            # but different hardware identifiers, the integration
-            # will create a new device for the new controller, on the first reload,
-            # but not immediately remove the old device.
-            await self.hass.config_entries.async_reload(config_entry.entry_id)
+            driver = client.driver
+            assert driver is not None
+            controller = driver.controller
 
+            controller_reset = asyncio.Event()
+
+            @callback
+            def set_controller_reset(event: dict) -> None:
+                controller_reset.set()
+
+            unsubs = [
+                controller.on("nvm convert progress", forward_progress),
+                controller.on("nvm restore progress", forward_progress),
+                driver.once("driver ready", set_controller_reset),
+            ]
+            try:
+                try:
+                    await controller.async_restore_nvm(
+                        self.backup_data, {"preserveRoutes": False}
+                    )
+                except FailedCommand as err:
+                    raise AbortFlow(f"Failed to restore network: {err}") from err
+                with suppress(TimeoutError):
+                    async with asyncio.timeout(helpers.DRIVER_READY_EVENT_TIMEOUT):
+                        await controller_reset.wait()
+            finally:
+                for unsub in unsubs:
+                    unsub()
         finally:
-            for unsub in unsubs:
-                unsub()
+            if listen_task is not None:
+                listen_task.cancel()
+            await client.disconnect()
+
+        await self.hass.config_entries.async_reload(config_entry.entry_id)
+        # The controller hardware identifiers changed, so the first reload
+        # creates a new controller device and the second reload removes the
+        # stale one.
+        await self.hass.config_entries.async_reload(config_entry.entry_id)
 
     def _get_driver(self) -> Driver:
         """Get the driver from the config entry."""

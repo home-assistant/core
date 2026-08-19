@@ -1178,7 +1178,7 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
         assert client.connect.call_count == 2
 
         await hass.async_block_till_done()
-        assert client.connect.call_count == 3
+        assert client.connect.call_count == 4
         assert entry.state is config_entries.ConfigEntryState.LOADED
         assert client.driver.controller.async_restore_nvm.call_count == 1
         assert len(events) == 2
@@ -1193,8 +1193,8 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
-    assert entry.unique_id == "1234"
-    assert "keep_old_devices" in entry.data
+    assert entry.unique_id == "3245146787"
+    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
@@ -4333,30 +4333,12 @@ async def test_reconfigure_migrate_low_sdk_version(
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
-    (
-        "form_data",
-        "new_addon_options",
-        "restore_server_version_side_effect",
-        "final_unique_id",
-        "keep_old_devices",
-        "device_entry_count",
-    ),
+    ("form_data", "new_addon_options"),
     [
-        (
-            {CONF_USB_PATH: "/test"},
-            {CONF_ADDON_DEVICE: "/test"},
-            None,
-            "3245146787",
-            False,
-            2,
-        ),
+        ({CONF_USB_PATH: "/test"}, {CONF_ADDON_DEVICE: "/test"}),
         (
             {CONF_SOCKET_PATH: "esphome://1.2.3.4:1234"},
             {CONF_ADDON_SOCKET: "esphome://1.2.3.4:1234"},
-            aiohttp.ClientError("Boom"),
-            "5678",
-            True,
-            4,
         ),
     ],
 )
@@ -4372,10 +4354,6 @@ async def test_reconfigure_migrate_with_addon(
     get_server_version: AsyncMock,
     form_data: dict[str, Any],
     new_addon_options: dict,
-    restore_server_version_side_effect: Exception | None,
-    final_unique_id: str,
-    keep_old_devices: bool,
-    device_entry_count: int,
 ) -> None:
     """Test migration flow with add-on."""
     entry = integration
@@ -4521,9 +4499,7 @@ async def test_reconfigure_migrate_with_addon(
     with patch("homeassistant.components.zwave_js.async_ensure_addon_running"):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        assert entry.unique_id == "5678"
-        get_server_version.side_effect = restore_server_version_side_effect
-        _set_home_id(get_server_version, 3245146787)
+        assert entry.unique_id == "3245146787"
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "restore_nvm"
@@ -4545,10 +4521,10 @@ async def test_reconfigure_migrate_with_addon(
     assert entry.data[CONF_USB_PATH] == new_addon_options.get(CONF_ADDON_DEVICE)
     assert entry.data[CONF_SOCKET_PATH] == new_addon_options.get(CONF_ADDON_SOCKET)
     assert entry.data["use_addon"] is True
-    assert ("keep_old_devices" in entry.data) is keep_old_devices
-    assert entry.unique_id == final_unique_id
+    assert "keep_old_devices" not in entry.data
+    assert entry.unique_id == "3245146787"
 
-    assert len(device_registry.devices) == device_entry_count
+    assert len(device_registry.devices) == 2
     controller_device_id_ext = (
         f"{controller_device_id}-{controller_node.manufacturer_id}:"
         f"{controller_node.product_type}:{controller_node.product_id}"
@@ -4689,7 +4665,7 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
         assert client.connect.call_count == 2
 
         await hass.async_block_till_done()
-        assert client.connect.call_count == 3
+        assert client.connect.call_count == 4
         assert entry.state is config_entries.ConfigEntryState.LOADED
         assert client.driver.controller.async_restore_nvm.call_count == 1
         assert len(events) == 2
@@ -4704,8 +4680,8 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
     assert entry.data["usb_path"] == "/test"
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" in entry.data
-    assert entry.unique_id == "1234"
+    assert "keep_old_devices" not in entry.data
+    assert entry.unique_id == "3245146787"
 
 
 async def test_reconfigure_migrate_backup_failure(
@@ -5792,8 +5768,7 @@ async def test_addon_rf_region_migrate_network(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert entry.unique_id == "5678"
-    _set_home_id(get_server_version, 3245146787)
+    assert entry.unique_id == "3245146787"
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "restore_nvm"
