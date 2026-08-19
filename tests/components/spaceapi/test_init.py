@@ -1,16 +1,19 @@
 """The tests for the Home Assistant SpaceAPI component."""
 
 from http import HTTPStatus
+from unittest.mock import patch
 
 from aiohttp.test_utils import TestClient
 import pytest
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.spaceapi import SPACEAPI_COMPATIBILITY, URL_API_SPACEAPI
 from homeassistant.components.spaceapi.const import ATTR_API_SENSOR_LOCATION
 from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, PERCENTAGE, UnitOfTemperature
 from homeassistant.core import Context, HomeAssistant
 
 from tests.common import MockConfigEntry
+from tests.components.recorder.common import async_wait_recording_done
 from tests.typing import ClientSessionGenerator
 
 SENSOR_OUTPUT = {
@@ -405,6 +408,95 @@ async def test_spaceapi_entry_not_found_returns_404(
     client = await hass_client_no_auth()
     resp = await client.get(URL_API_SPACEAPI)
     assert resp.status == HTTPStatus.NOT_FOUND
+
+
+async def test_spaceapi_events_output(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test activity entities emit events; unavailable/unknown states are skipped."""
+    new_options = dict(mock_config_entry.options)
+    new_options["activities"] = ["sensor.workshop"]
+    new_options["events_window_hours"] = 12
+    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
+
+    # Write states into the recorder before setup so they appear in the history window.
+    hass.states.async_set("sensor.workshop", "active")
+    await async_wait_recording_done(hass)
+    hass.states.async_set("sensor.workshop", "unavailable")
+    await async_wait_recording_done(hass)
+    hass.states.async_set("sensor.workshop", "idle")
+    await async_wait_recording_done(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    events = data["events"]
+    # "active" and "idle" are valid; "unavailable" must be skipped.
+    assert len(events) == 2
+    assert all(e["type"] == "workshop" for e in events)
+    assert all(e["name"] == "workshop" for e in events)
+    assert all(isinstance(e["timestamp"], int) for e in events)
+    assert {e["name"] for e in events} == {"workshop"}
+
+
+async def test_spaceapi_events_no_activities_key_absent(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that the events key is absent when no activities are configured."""
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+    resp = await client.get(URL_API_SPACEAPI)
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert "events" not in data
+
+
+async def test_spaceapi_events_cached(
+    recorder_mock: Recorder,
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """The recorder is queried at most once per TTL; expiry triggers a refresh."""
+    new_options = dict(mock_config_entry.options)
+    new_options["activities"] = ["sensor.workshop"]
+    hass.config_entries.async_update_entry(mock_config_entry, options=new_options)
+
+    hass.states.async_set("sensor.workshop", "active")
+    await async_wait_recording_done(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_client()
+
+    with patch(
+        "homeassistant.components.spaceapi.get_significant_states",
+        return_value={},
+    ) as mock_states:
+        await client.get(URL_API_SPACEAPI)
+        # Second request within the TTL window is served from the cache.
+        await client.get(URL_API_SPACEAPI)
+        assert mock_states.call_count == 1
+
+        # Forcing expiry makes the next request hit the recorder again.
+        mock_config_entry.runtime_data.events_cache_expires = 0
+        await client.get(URL_API_SPACEAPI)
+        assert mock_states.call_count == 2
 
 
 async def test_spaceapi_state_trigger_person(

@@ -330,6 +330,7 @@ async def test_options_flow_menu(hass: HomeAssistant) -> None:
         "location",
         "media",
         "feeds",
+        "events",
         "projects",
     ]
 
@@ -885,6 +886,51 @@ async def test_options_flow_projects_empty_clears(hass: HomeAssistant) -> None:
     assert "projects" not in result["data"]
 
 
+async def test_options_flow_events_empty_clears(hass: HomeAssistant) -> None:
+    """Test events clears activities when the list is empty."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_BASE_DATA,
+        options={"activities": ["sensor.workshop"], "events_window_hours": 48},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "events"}
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"activities": []}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert "activities" not in result["data"]
+    assert "events_window_hours" not in result["data"]
+
+
 # ---------------------------------------------------------------------------
 # Subentry reconfigure tests
 # ---------------------------------------------------------------------------
+
+
+async def test_options_flow_events_saves(hass: HomeAssistant) -> None:
+    """Test options flow events sub-menu saves activities and window hours."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=_BASE_DATA,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {"next_step_id": "events"}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "events"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        {"activities": ["sensor.workshop", "sensor.lab"], "events_window_hours": 48},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"]["activities"] == ["sensor.workshop", "sensor.lab"]
+    assert result["data"]["events_window_hours"] == 48

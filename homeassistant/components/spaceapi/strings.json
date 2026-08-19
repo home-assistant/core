@@ -84,6 +84,16 @@
           "xmpp": "XMPP address of the space."
         }
       },
+      "events": {
+        "data": {
+          "activities": "Activity entities",
+          "events_window_hours": "Time window (hours)"
+        },
+        "data_description": {
+          "activities": "Entities that represent activities. Event type is derived from the entity object ID (e.g. `sensor.workshop` → `workshop`). The timestamp is the entity's last changed time.",
+          "events_window_hours": "How many hours back to include past events. Defaults to 24 hours when not set."
+        }
+      },
       "feeds": {
         "data": {
           "blog_type": "Blog type",

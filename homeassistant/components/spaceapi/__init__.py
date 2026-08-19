@@ -2,12 +2,14 @@
 
 from contextlib import suppress
 from dataclasses import dataclass
+from datetime import timedelta
 from typing import Any
 
 from aiohttp import web
 import voluptuous as vol
 
 from homeassistant.components.http import KEY_HASS, HomeAssistantView
+from homeassistant.components.recorder.history import get_significant_states
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -29,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.recorder import get_instance as get_recorder_instance
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -36,23 +39,29 @@ from .const import (
     ATTR_API_CAM,
     ATTR_API_CLOSED,
     ATTR_API_CONTACT,
+    ATTR_API_EVENTS,
     ATTR_API_FEEDS,
     ATTR_API_LASTCHANGE,
     ATTR_API_LAT,
     ATTR_API_LOGO,
     ATTR_API_LON,
+    ATTR_API_NAME,
     ATTR_API_OPEN,
     ATTR_API_PROJECTS,
     ATTR_API_SENSOR_LOCATION,
     ATTR_API_SENSORS,
     ATTR_API_SPACE,
     ATTR_API_SPACEFED,
+    ATTR_API_TIMESTAMP,
+    ATTR_API_TYPE,
     ATTR_API_UNIT,
     ATTR_API_URL,
     ATTR_API_VALUE,
+    CONF_ACTIVITIES,
     CONF_CAM,
     CONF_CONTACT,
     CONF_DOOR_LOCKED,
+    CONF_EVENTS_WINDOW_HOURS,
     CONF_FACEBOOK,
     CONF_FEED_BLOG,
     CONF_FEED_CALENDAR,
@@ -96,6 +105,7 @@ from .const import (
 )
 
 type _SensorEntry = dict[str, str | bool | float | int]
+type _EventEntry = dict[str, str | int]
 
 # ---------------------------------------------------------------------------
 # Legacy YAML import validation (v13 → v15 migration, removed in 2026.12)
@@ -245,11 +255,19 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+# The /api/spaceapi endpoint is unauthenticated. Cache the recorder-backed
+# events for this many seconds so frequent polling cannot hammer the database;
+# events feed a multi-hour window, so a minute of staleness is irrelevant.
+EVENTS_CACHE_TTL = 60
+
+
 @dataclass
 class SpaceAPIData:
     """Runtime data for the SpaceAPI integration."""
 
     config: dict[str, Any]
+    events_cache: list[_EventEntry] | None = None
+    events_cache_expires: float = 0.0
 
 
 type SpaceAPIConfigEntry = ConfigEntry[SpaceAPIData]
@@ -449,6 +467,69 @@ class APISpaceApiView(HomeAssistantView):
                     break
         return state
 
+    async def _get_cached_events(
+        self,
+        hass: HomeAssistant,
+        entry: SpaceAPIConfigEntry,
+    ) -> list[_EventEntry]:
+        """Return events, caching the recorder query for EVENTS_CACHE_TTL seconds.
+
+        The cache lives on runtime_data, so it is reset automatically whenever
+        the config entry is updated.
+        """
+        runtime = entry.runtime_data
+        now = hass.loop.time()
+        if runtime.events_cache is not None and now < runtime.events_cache_expires:
+            return runtime.events_cache
+        events = await self._build_events(hass, runtime.config)
+        runtime.events_cache = events
+        runtime.events_cache_expires = now + EVENTS_CACHE_TTL
+        return events
+
+    async def _build_events(
+        self,
+        hass: HomeAssistant,
+        spaceapi: dict[str, Any],
+    ) -> list[_EventEntry]:
+        """Build events from activity entity history."""
+        activity_ids: list[str] = spaceapi[CONF_ACTIVITIES]
+        window_hours = spaceapi.get(CONF_EVENTS_WINDOW_HOURS)
+        now = dt_util.now()
+        start_time = now - timedelta(
+            hours=int(window_hours) if window_hours is not None else 24
+        )
+        # recorder is only an after_dependency, so it may not be loaded.
+        history: dict[str, Any] = {}
+        with suppress(KeyError):
+            history = await get_recorder_instance(hass).async_add_executor_job(
+                get_significant_states,
+                hass,
+                start_time,
+                None,
+                list(activity_ids),
+                None,
+                False,
+                True,
+            )
+        events: list[_EventEntry] = []
+        for entity_id, states in history.items():
+            event_type = entity_id.split(".", 1)[1]
+            live = hass.states.get(entity_id)
+            entity_name = live.name if live else event_type.replace("_", " ")
+            for state in states:
+                if isinstance(state, dict) or state.state in ("unavailable", "unknown"):
+                    continue
+                events.append(
+                    {
+                        ATTR_API_NAME: entity_name,
+                        ATTR_API_TYPE: event_type,
+                        ATTR_API_TIMESTAMP: int(
+                            dt_util.as_timestamp(state.last_changed)
+                        ),
+                    }
+                )
+        return events
+
     def _build_sensors(
         self,
         hass: HomeAssistant,
@@ -506,6 +587,9 @@ class APISpaceApiView(HomeAssistantView):
         ):
             with suppress(KeyError):
                 data[attr] = spaceapi[conf]
+
+        if spaceapi.get(CONF_ACTIVITIES):
+            data[ATTR_API_EVENTS] = await self._get_cached_events(hass, entry)
 
         if sensors := self._build_sensors(hass, spaceapi):
             data[ATTR_API_SENSORS] = sensors

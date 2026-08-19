@@ -20,6 +20,9 @@ from homeassistant.helpers.selector import (
     BooleanSelector,
     EntitySelector,
     EntitySelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectSelector,
     SelectSelectorConfig,
     TextSelector,
@@ -30,12 +33,14 @@ from homeassistant.helpers.selector import (
 from . import SpaceAPIConfigEntry
 from .const import (
     CONF_ACCOUNT_BALANCE,
+    CONF_ACTIVITIES,
     CONF_BAROMETER,
     CONF_BEVERAGE_SUPPLY,
     CONF_CAM,
     CONF_CARBONDIOXIDE,
     CONF_CONTACT,
     CONF_DOOR_LOCKED,
+    CONF_EVENTS_WINDOW_HOURS,
     CONF_FACEBOOK,
     CONF_FEED_BLOG,
     CONF_FEED_CALENDAR,
@@ -266,6 +271,7 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
                 "location",
                 "media",
                 "feeds",
+                "events",
                 "projects",
             ],
         )
@@ -650,6 +656,50 @@ class SpaceAPIOptionsFlowHandler(OptionsFlow):
         )
         return self.async_show_form(
             step_id="feeds",
+            data_schema=self.add_suggested_values_to_schema(schema, current),
+        )
+
+    async def async_step_events(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Configure activity entities published as SpaceAPI events."""
+        if user_input is not None:
+            options = dict(self.config_entry.options)
+            activities = user_input.get(CONF_ACTIVITIES, [])
+            if activities:
+                options[CONF_ACTIVITIES] = activities
+            else:
+                options.pop(CONF_ACTIVITIES, None)
+            if (hours := user_input.get(CONF_EVENTS_WINDOW_HOURS)) is not None:
+                options[CONF_EVENTS_WINDOW_HOURS] = int(hours)
+            else:
+                options.pop(CONF_EVENTS_WINDOW_HOURS, None)
+            return self.async_create_entry(data=options)
+
+        current = {
+            CONF_ACTIVITIES: self.config_entry.options.get(CONF_ACTIVITIES, []),
+            CONF_EVENTS_WINDOW_HOURS: self.config_entry.options.get(
+                CONF_EVENTS_WINDOW_HOURS
+            ),
+        }
+        schema = vol.Schema(
+            {
+                vol.Optional(CONF_ACTIVITIES): EntitySelector(
+                    EntitySelectorConfig(multiple=True)
+                ),
+                vol.Optional(CONF_EVENTS_WINDOW_HOURS): NumberSelector(
+                    NumberSelectorConfig(
+                        min=1,
+                        max=8760,
+                        step=1,
+                        unit_of_measurement="h",
+                        mode=NumberSelectorMode.BOX,
+                    )
+                ),
+            }
+        )
+        return self.async_show_form(
+            step_id="events",
             data_schema=self.add_suggested_values_to_schema(schema, current),
         )
 
