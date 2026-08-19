@@ -3,7 +3,6 @@
 import asyncio
 from collections.abc import Callable, Coroutine, Sequence
 from contextlib import suppress
-import dataclasses
 from datetime import datetime, timedelta
 import logging
 import os
@@ -188,7 +187,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[_USB_DATA] = usb_discovery
     websocket_api.async_register_command(hass, websocket_usb_scan)
     websocket_api.async_register_command(hass, websocket_usb_list_serial_ports)
-    websocket_api.async_register_command(hass, websocket_usb_serial_ports)
 
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, register_serialx_transport())
 
@@ -556,6 +554,7 @@ def _async_serialize_port(
         "interface_description": port.interface_description,
         "interface_num": port.interface_num,
         "matching_integrations": [],
+        "present": True,
     }
 
     if isinstance(port, USBDevice):
@@ -570,61 +569,86 @@ def _async_serialize_port(
     return entry
 
 
+@hass_callback
+def _async_get_discovery_flows(
+    hass: HomeAssistant, device: str
+) -> list[dict[str, str]]:
+    """Return the in-progress USB discovery flows for a device path."""
+    return [
+        {"flow_id": flow["flow_id"], "domain": flow["handler"]}
+        for flow in hass.config_entries.flow.async_progress_by_init_data_type(
+            UsbServiceInfo, lambda service_info: service_info.device == device
+        )
+    ]
+
+
+def _serialize_consumer(consumer: SerialPortConsumer) -> dict[str, Any]:
+    """Serialize a serial port consumer for the websocket API."""
+    return {
+        "kind": consumer.kind,
+        "title": consumer.title,
+        "active": consumer.active,
+        "domain": consumer.domain,
+        "config_entry_id": consumer.config_entry_id,
+        "slug": consumer.slug,
+    }
+
+
+def _serialize_absent_port(
+    device: str, consumers: list[SerialPortConsumer]
+) -> dict[str, Any]:
+    """Serialize a port that is configured but was not found in the scan."""
+    return {
+        "device": device,
+        "serial_number": None,
+        "manufacturer": None,
+        "description": None,
+        "interface_description": None,
+        "interface_num": None,
+        "matching_integrations": [],
+        "present": False,
+        "consumers": [_serialize_consumer(consumer) for consumer in consumers],
+        "discovery_flows": [],
+    }
+
+
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "usb/list_serial_ports"})
+@websocket_api.websocket_command(
+    {
+        vol.Required("type"): "usb/list_serial_ports",
+        vol.Optional("include_usage", default=False): bool,
+    }
+)
 @websocket_api.async_response
 async def websocket_usb_list_serial_ports(
     hass: HomeAssistant,
     connection: ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """List available serial ports."""
+    """List serial ports, optionally with the integrations and apps using them."""
     try:
         ports = await async_scan_serial_ports(hass)
     except OSError as err:
         connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
         return
 
-    connection.send_result(
-        msg["id"], [_async_serialize_port(hass, port) for port in ports]
-    )
+    result = [_async_serialize_port(hass, port) for port in ports]
 
+    if msg["include_usage"]:
+        consumers = await async_get_serial_port_consumers(hass, ports)
 
-@websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "usb/serial_ports"})
-@websocket_api.async_response
-async def websocket_usb_serial_ports(
-    hass: HomeAssistant,
-    connection: ActiveConnection,
-    msg: dict[str, Any],
-) -> None:
-    """List serial ports along with the integrations and apps using them."""
-    try:
-        ports = await async_scan_serial_ports(hass)
-    except OSError as err:
-        connection.send_error(msg["id"], websocket_api.ERR_UNKNOWN_ERROR, str(err))
-        return
+        for entry in result:
+            device = entry["device"]
+            entry["consumers"] = [
+                _serialize_consumer(consumer) for consumer in consumers.get(device, [])
+            ]
+            entry["discovery_flows"] = _async_get_discovery_flows(hass, device)
 
-    consumers = await async_get_serial_port_consumers(hass, ports)
-    scanned_devices = {port.device for port in ports}
+        scanned_devices = {port.device for port in ports}
+        result.extend(
+            _serialize_absent_port(device, device_consumers)
+            for device, device_consumers in consumers.items()
+            if device not in scanned_devices
+        )
 
-    result_ports = []
-    for port in ports:
-        entry = _async_serialize_port(hass, port)
-        entry["consumers"] = [
-            dataclasses.asdict(consumer) for consumer in consumers.get(port.device, [])
-        ]
-        result_ports.append(entry)
-
-    missing = [
-        {
-            "device": device,
-            "consumers": [
-                dataclasses.asdict(consumer) for consumer in device_consumers
-            ],
-        }
-        for device, device_consumers in consumers.items()
-        if device not in scanned_devices
-    ]
-
-    connection.send_result(msg["id"], {"ports": result_ports, "missing": missing})
+    connection.send_result(msg["id"], result)

@@ -1750,6 +1750,7 @@ async def test_list_serial_ports(
             "interface_description": "CP2102 USB to UART Bridge",
             "interface_num": 0,
             "matching_integrations": ["homeassistant_sky_connect"],
+            "present": True,
         },
         {
             "device": "/dev/ttyUSB1",
@@ -1762,6 +1763,7 @@ async def test_list_serial_ports(
             "interface_description": None,
             "interface_num": None,
             "matching_integrations": ["custom_component"],
+            "present": True,
         },
         {
             "device": "/dev/ttyUSB2",
@@ -1774,6 +1776,7 @@ async def test_list_serial_ports(
             "interface_description": None,
             "interface_num": None,
             "matching_integrations": [],
+            "present": True,
         },
         {
             "device": "/dev/ttyS0",
@@ -1783,6 +1786,7 @@ async def test_list_serial_ports(
             "interface_description": None,
             "interface_num": None,
             "matching_integrations": [],
+            "present": True,
         },
     ]
 
