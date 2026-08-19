@@ -49,6 +49,11 @@
         "name": "Scan status"
       }
     },
+    "button": {
+      "scan_start": {
+        "name": "Start scan"
+      }
+    },
     "select": {
       "dali_scan": {
         "name": "Scan method",
