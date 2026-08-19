@@ -49,8 +49,7 @@ class SonicAutoShutOffSwitch(WatergateEntity, SwitchEntity):
             await self._api_client.async_update_auto_shut_off(enabled=True)
         except WatergateApiException as exc:
             raise HomeAssistantError("Failed to update auto shut-off") from exc
-        self.coordinator.data.auto_shut_off.enabled = True
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -59,5 +58,4 @@ class SonicAutoShutOffSwitch(WatergateEntity, SwitchEntity):
             await self._api_client.async_update_auto_shut_off(enabled=False)
         except WatergateApiException as exc:
             raise HomeAssistantError("Failed to update auto shut-off") from exc
-        self.coordinator.data.auto_shut_off.enabled = False
-        self.async_write_ha_state()
+        await self.coordinator.async_request_refresh()

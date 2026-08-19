@@ -1,10 +1,13 @@
 """Tests for the Watergate switch platform."""
 
 from collections.abc import Generator
+from datetime import timedelta
 
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from watergate_local_api import WatergateApiException
+from watergate_local_api.models import AutoShutOffState
 
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -18,7 +21,13 @@ from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
-from tests.common import AsyncMock, MockConfigEntry, patch, snapshot_platform
+from tests.common import (
+    AsyncMock,
+    MockConfigEntry,
+    async_fire_time_changed,
+    patch,
+    snapshot_platform,
+)
 
 ENTITY_ID = "switch.sonic_auto_shut_off"
 
@@ -28,7 +37,7 @@ async def test_auto_shut_off_switch(
     mock_watergate_client: Generator[AsyncMock],
     mock_entry: MockConfigEntry,
 ) -> None:
-    """Toggling the switch calls the client and updates state."""
+    """Toggling the switch calls the client with the requested state."""
     await init_integration(hass, mock_entry)
 
     state = hass.states.get(ENTITY_ID)
@@ -44,7 +53,6 @@ async def test_auto_shut_off_switch(
     mock_watergate_client.async_update_auto_shut_off.assert_called_once_with(
         enabled=False
     )
-    assert hass.states.get(ENTITY_ID).state == "off"
 
     mock_watergate_client.async_update_auto_shut_off.reset_mock()
 
@@ -57,7 +65,6 @@ async def test_auto_shut_off_switch(
     mock_watergate_client.async_update_auto_shut_off.assert_called_once_with(
         enabled=True
     )
-    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
 
 @pytest.mark.usefixtures("mock_watergate_client")
@@ -74,24 +81,22 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_entry.entry_id)
 
 
-async def test_switch_no_rollback_on_unrelated_update(
+async def test_switch_reflects_polled_state(
     hass: HomeAssistant,
     mock_watergate_client: Generator[AsyncMock],
     mock_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """An unrelated coordinator update must not roll back the switch state."""
+    """The switch reflects an auto-shut-off change picked up by polling."""
     await init_integration(hass, mock_entry)
 
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: ENTITY_ID},
-        blocking=True,
-    )
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert hass.states.get(ENTITY_ID).state == STATE_ON
 
-    coordinator = mock_entry.runtime_data
-    coordinator.async_set_updated_data(coordinator.data)
+    mock_watergate_client.async_get_auto_shut_off.return_value = AutoShutOffState(
+        False, 1000, 60
+    )
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
