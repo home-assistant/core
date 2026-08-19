@@ -1,11 +1,13 @@
 """Connected Wi-Fi device scanners for TP-Link Omada access points."""
 
-from typing import override
+from typing import Literal, override
 
 from tplink_omada_client.clients import OmadaWirelessClient
+from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.device_tracker import ScannerEntity
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -63,6 +65,34 @@ class OmadaClientScannerEntity(
 
     def _do_update(self) -> None:
         self._client_details = self.coordinator.data.get(self._client_id)
+
+    async def _async_client_action(
+        self, action: Literal["reconnect", "block", "unblock"]
+    ) -> None:
+        """Run an action for this client."""
+        try:
+            if action == "reconnect":
+                await self.coordinator.omada_client.reconnect_client(self._client_id)
+            elif action == "block":
+                await self.coordinator.omada_client.block_client(self._client_id)
+            else:
+                await self.coordinator.omada_client.unblock_client(self._client_id)
+        except OmadaClientException as ex:
+            raise HomeAssistantError(
+                f"Failed to {action} client with MAC {self._client_id}"
+            ) from ex
+
+    async def async_reconnect(self) -> None:
+        """Reconnect this wireless client."""
+        await self._async_client_action("reconnect")
+
+    async def async_block(self) -> None:
+        """Block this client from the network."""
+        await self._async_client_action("block")
+
+    async def async_unblock(self) -> None:
+        """Allow this client to access the network."""
+        await self._async_client_action("unblock")
 
     @override
     async def async_added_to_hass(self) -> None:

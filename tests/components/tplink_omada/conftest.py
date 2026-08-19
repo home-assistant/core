@@ -123,6 +123,9 @@ def mock_omada_clients_only_site_client(hass: HomeAssistant) -> Generator[AsyncM
     site_client.get_devices = AsyncMock(return_value=[])
     site_client.get_switch_ports = AsyncMock(return_value=[])
     site_client.get_client = AsyncMock(side_effect=partial(_get_mock_client, hass))
+    site_client.block_client = AsyncMock()
+    site_client.reconnect_client = AsyncMock()
+    site_client.unblock_client = AsyncMock()
 
     site_client.get_known_clients.side_effect = partial(_get_mock_known_clients, hass)
     site_client.get_connected_clients.side_effect = partial(
