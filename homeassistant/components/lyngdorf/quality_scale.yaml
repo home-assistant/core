@@ -51,7 +51,7 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery: done
   discovery-update-info: todo
   docs-data-update: todo
@@ -64,18 +64,16 @@ rules:
   dynamic-devices:
     status: exempt
     comment: Single device per config entry.
-  entity-category:
-    status: exempt
-    comment: Media player entities do not need entity categories.
+  entity-category: done
   entity-device-class: done
   entity-disabled-by-default:
-    status: exempt
-    comment: All entities are useful by default.
+    status: done
+    comment: >-
+      All entities are useful by default; the diagnostic sensors change only on
+      source or content changes.
   entity-translations: done
   exception-translations: done
-  icon-translations:
-    status: exempt
-    comment: Media player uses default platform icons.
+  icon-translations: done
   reconfiguration-flow: todo
   repair-issues:
     status: exempt

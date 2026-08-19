@@ -378,6 +378,7 @@ async def test_reset_issues_supervisor_restart(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(uuid := uuid4()),
+                reference_extra=None,
             )
         ],
         suggestions_by_issue={
@@ -388,6 +389,7 @@ async def test_reset_issues_supervisor_restart(
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -626,18 +628,21 @@ async def test_supervisor_issues(
                 context=ContextType.ADDON,
                 reference="test",
                 uuid=(uuid_issue1 := uuid4()),
+                reference_extra=None,
             ),
             Issue(
                 type=IssueType.MULTIPLE_DATA_DISKS,
                 context=ContextType.SYSTEM,
                 reference="/dev/sda1",
                 uuid=(uuid_issue2 := uuid4()),
+                reference_extra=None,
             ),
             Issue(
                 type="should_not_be_repair",
                 context=ContextType.OS,
                 reference=None,
                 uuid=uuid4(),
+                reference_extra=None,
             ),
         ],
         suggestions_by_issue={
@@ -648,6 +653,7 @@ async def test_supervisor_issues(
                     reference="/dev/sda1",
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -699,6 +705,7 @@ async def test_supervisor_issues_initial_failure(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=(uuid := uuid4()),
+                reference_extra=None,
             )
         ],
         suggestions_by_issue={
@@ -709,6 +716,7 @@ async def test_supervisor_issues_initial_failure(
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },
@@ -753,12 +761,14 @@ async def test_supervisor_issues_add_remove(
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                     "suggestions": [
                         {
                             "uuid": uuid4().hex,
                             "type": "execute_reboot",
                             "context": "system",
                             "reference": None,
+                            "reference_extra": None,
                         }
                     ],
                 },
@@ -793,6 +803,7 @@ async def test_supervisor_issues_add_remove(
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -823,6 +834,7 @@ async def test_supervisor_issues_suggestions_fail(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=uuid4(),
+                reference_extra=None,
             )
         ],
     )
@@ -864,6 +876,7 @@ async def test_supervisor_remove_missing_issue_without_error(
                     "type": "reboot_required",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -887,6 +900,143 @@ async def test_system_is_not_ready(
     issues_coordinator = get_issues_info(hass)
     assert issues_coordinator is not None
     assert not issues_coordinator.issues
+
+
+@pytest.mark.parametrize(
+    "all_setup_requests", [{"include_addons": True}], indirect=True
+)
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_app_port_conflict_single(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for app port conflict with single execute_start suggestion."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "app_port_conflict",
+                    "context": "addon",
+                    "reference": "test",
+                    "reference_extra": {"port": 11443},
+                    "suggestions": [
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "execute_start",
+                            "context": "addon",
+                            "reference": "test",
+                            "reference_extra": {"port": 11443},
+                        }
+                    ],
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="addon",
+        type_="app_port_conflict",
+        fixable=True,
+        placeholders={
+            "reference": "test",
+            "addon": "test",
+            "addon_url": "/hassio/addon/test",
+            "port": "11443",
+        },
+    )
+
+
+@pytest.mark.parametrize(
+    "all_setup_requests", [{"include_addons": True}], indirect=True
+)
+@pytest.mark.usefixtures("all_setup_requests")
+async def test_supervisor_issues_app_port_conflict_menu(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test supervisor issue for app port conflict with two suggestions."""
+    mock_resolution_info(supervisor_client)
+
+    result = await async_setup_component(hass, DOMAIN, {})
+    assert result
+
+    client = await hass_supervisor_ws_client()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {
+                "event": "issue_changed",
+                "data": {
+                    "uuid": (issue_uuid := uuid4().hex),
+                    "type": "app_port_conflict",
+                    "context": "addon",
+                    "reference": "test",
+                    "reference_extra": {"port": 11443},
+                    "suggestions": [
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "execute_start",
+                            "context": "addon",
+                            "reference": "test",
+                            "reference_extra": {"port": 11443},
+                        },
+                        {
+                            "uuid": uuid4().hex,
+                            "type": "clear_port_config",
+                            "context": "addon",
+                            "reference": "test",
+                            "reference_extra": {"port": 11443},
+                        },
+                    ],
+                },
+            },
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    await client.send_json({"id": 2, "type": "repairs/list_issues"})
+    msg = await client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    assert_issue_repair_in_list(
+        msg["result"]["issues"],
+        uuid=issue_uuid,
+        context="addon",
+        type_="app_port_conflict",
+        fixable=True,
+        placeholders={
+            "reference": "test",
+            "addon": "test",
+            "addon_url": "/hassio/addon/test",
+            "port": "11443",
+        },
+    )
 
 
 @pytest.mark.parametrize(
@@ -917,6 +1067,7 @@ async def test_supervisor_issues_detached_addon_missing(
                     "type": "detached_addon_missing",
                     "context": "addon",
                     "reference": "test",
+                    "reference_extra": None,
                 },
             },
         }
@@ -968,12 +1119,14 @@ async def test_supervisor_issues_ntp_sync_failed(
                     "type": "ntp_sync_failed",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                     "suggestions": [
                         {
                             "uuid": uuid4().hex,
                             "type": "enable_ntp",
                             "context": "system",
                             "reference": None,
+                            "reference_extra": None,
                         }
                     ],
                 },
@@ -1023,6 +1176,7 @@ async def test_supervisor_issues_disk_lifetime(
                     "type": "disk_lifetime",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1070,6 +1224,7 @@ async def test_supervisor_issues_free_space(
                     "type": "free_space",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1124,6 +1279,7 @@ async def test_supervisor_issues_addon_pwned(
                     "type": "pwned",
                     "context": "addon",
                     "reference": "test",
+                    "reference_extra": None,
                 },
             },
         }
@@ -1192,6 +1348,7 @@ async def test_supervisor_issues_subscription_events(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1212,6 +1369,7 @@ async def test_supervisor_issues_subscription_events(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": "updated",
+                    "reference_extra": None,
                 },
             },
         }
@@ -1232,6 +1390,7 @@ async def test_supervisor_issues_subscription_events(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": "updated",
+                    "reference_extra": None,
                 },
             },
         }
@@ -1258,6 +1417,7 @@ async def test_supervisor_issues_periodic_refresh_backstop(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=uuid4(),
+                reference_extra=None,
             )
         ],
     )
@@ -1300,6 +1460,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=issue_uuid,
+                reference_extra=None,
             )
         ],
         suggestions=[
@@ -1309,6 +1470,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
                 reference=None,
                 uuid=uuid4(),
                 auto=False,
+                reference_extra=None,
             )
         ],
         checks=[
@@ -1323,6 +1485,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
             reference=None,
             uuid=uuid4(),
             auto=False,
+            reference_extra=None,
         )
     ]
 
@@ -1353,6 +1516,7 @@ async def test_supervisor_issues_suggestions_change_updates_fixable_state(
                     "type": "should_not_be_repair",
                     "context": "system",
                     "reference": None,
+                    "reference_extra": None,
                 },
             },
         }
@@ -1385,6 +1549,7 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
                 context=ContextType.SYSTEM,
                 reference=None,
                 uuid=issue_uuid,
+                reference_extra=None,
             )
         ],
         suggestions_by_issue={
@@ -1395,6 +1560,7 @@ async def test_supervisor_issues_periodic_refresh_recovers_after_initial_failure
                     reference=None,
                     uuid=uuid4(),
                     auto=False,
+                    reference_extra=None,
                 )
             ]
         },

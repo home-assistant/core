@@ -5,9 +5,16 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.nzbget.const import DOMAIN
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_UNIT_OF_MEASUREMENT,
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_PORT,
+    CONF_SSL,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
     UnitOfDataRate,
     UnitOfInformation,
 )
@@ -15,7 +22,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from . import init_integration
+from . import ENTRY_OPTIONS, init_integration
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("nzbget_api")
@@ -86,3 +95,29 @@ async def test_sensors(hass: HomeAssistant, entity_registry: er.EntityRegistry) 
         assert state
         assert state.attributes.get(ATTR_UNIT_OF_MEASUREMENT) == data[2]
         assert state.state == data[1]
+
+
+@pytest.mark.usefixtures("nzbget_api")
+async def test_sensor_name_from_entry_title(hass: HomeAssistant) -> None:
+    """Test sensors are named from the entry title when no legacy name is stored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="10.10.10.30",
+        data={
+            CONF_HOST: "10.10.10.30",
+            CONF_PASSWORD: "",
+            CONF_PORT: 6789,
+            CONF_SSL: False,
+            CONF_USERNAME: "",
+            CONF_VERIFY_SSL: False,
+        },
+        options=ENTRY_OPTIONS,
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.10_10_10_30_speed")
+    assert state
+    assert state.name == "10.10.10.30 Speed"

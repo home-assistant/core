@@ -10,10 +10,9 @@ from pyrail.models import ConnectionDetails, LiveboardDeparture, StationDetails
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_NAME,
     CONF_SHOW_ON_MAP,
+    EntityStateAttribute,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -275,8 +274,8 @@ class NMBSSensor(SensorEntity):
             attrs["departure_minutes"] = departure
 
         if self._show_on_map and self.station_coordinates:
-            attrs[ATTR_LATITUDE] = self.station_coordinates[0]
-            attrs[ATTR_LONGITUDE] = self.station_coordinates[1]
+            attrs[EntityStateAttribute.LATITUDE] = self.station_coordinates[0]
+            attrs[EntityStateAttribute.LONGITUDE] = self.station_coordinates[1]
 
         if self.is_via_connection and not self._excl_vias:
             via = self._attrs.vias[0]

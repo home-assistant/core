@@ -1,7 +1,8 @@
 """Tests for the Lyngdorf media player platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
+from lyngdorf.const import LyngdorfModel
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -26,6 +27,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -36,6 +38,12 @@ MAIN_ZONE = "media_player.mock_lyngdorf_main_zone"
 ZONE_B = "media_player.mock_lyngdorf_zone_b"
 
 
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Only load the media player platform."""
+    return [Platform.MEDIA_PLAYER]
+
+
 async def test_entities(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
@@ -44,6 +52,27 @@ async def test_entities(
 ) -> None:
     """Test the media player entities."""
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
+
+
+@pytest.mark.usefixtures("mock_receiver")
+async def test_no_zone_b_entity_for_model_without_zone_b(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test no Zone B media player entity is created for a model without Zone B."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.lyngdorf.lookup_receiver_model",
+        return_value=LyngdorfModel.TDAI_3400,
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get(ZONE_B) is None
+    assert entity_registry.async_get(ZONE_B) is None
+    assert hass.states.get(MAIN_ZONE) is not None
 
 
 @pytest.mark.parametrize(

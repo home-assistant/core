@@ -48,7 +48,7 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.config_entry_oauth2_flow import OAuth2Session
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -305,8 +305,8 @@ async def test_stale_device_removal(
 
         # Verify the device itself has been completely removed from the registry
         # since it had no other config entries
-        updated_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, "stale-vin")}
+        updated_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, "stale-vin"), entry.entry_id
         )
         assert updated_device is None
 
@@ -338,7 +338,9 @@ async def test_skipped_energy_site_is_removed_as_stale_device(
         await hass.config_entries.async_reload(entry.entry_id)
         await hass.async_block_till_done()
 
-    updated_device = device_registry.async_get_device(identifiers={(DOMAIN, "98765")})
+    updated_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "98765"), entry.entry_id
+    )
     assert updated_device is None
 
 
@@ -762,7 +764,9 @@ async def test_vehicle_streaming_version_update(
 
     # Check initial device sw_version
     vin = "LRW3F7EK4NC700000"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.0.0"
 
@@ -772,7 +776,9 @@ async def test_vehicle_streaming_version_update(
     await hass.async_block_till_done()
 
     # Check device sw_version was updated (build hash removed)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.1.0"
 
@@ -796,7 +802,9 @@ async def test_vehicle_streaming_version_update_ignores_none(
         assert entry.state is ConfigEntryState.LOADED
 
     vin = "LRW3F7EK4NC700000"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     original_version = device.sw_version
 
@@ -806,7 +814,9 @@ async def test_vehicle_streaming_version_update_ignores_none(
     await hass.async_block_till_done()
 
     # Check device sw_version was not changed
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == original_version
 
@@ -823,7 +833,9 @@ async def test_vehicle_polling_version_update(
     assert entry.state is ConfigEntryState.LOADED
 
     vin = "LRW3F7EK4NC700000"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.0.0"
 
@@ -838,9 +850,62 @@ async def test_vehicle_polling_version_update(
     await hass.async_block_till_done()
 
     # Check device sw_version was updated (build hash removed)
-    device = device_registry.async_get_device(identifiers={(DOMAIN, vin)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, vin), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "2026.2.0"
+
+
+@pytest.mark.parametrize(
+    ("keep_one_enabled", "expected_polled"),
+    [
+        (False, False),
+        (True, True),
+    ],
+    ids=["all_disabled", "one_enabled"],
+)
+async def test_vehicle_polling_stops_when_all_entities_disabled(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_vehicle_data: AsyncMock,
+    mock_legacy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+    keep_one_enabled: bool,
+    expected_polled: bool,
+) -> None:
+    """Test the vehicle coordinator stops polling once every entity is disabled.
+
+    With no listeners left, core unschedules the coordinator so the charged
+    vehicle_data poll stops entirely; a single enabled entity keeps it running.
+    """
+    vin = "LRW3F7EK4NC700000"
+    entry = await setup_platform(hass, [Platform.SENSOR])
+
+    vehicle_entities = [
+        entity
+        for entity in er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+        if entity.unique_id.startswith(vin)
+    ]
+    keep = {vehicle_entities[0].unique_id} if keep_one_enabled else set()
+    for entity in vehicle_entities:
+        if entity.unique_id not in keep:
+            entity_registry.async_update_entity(
+                entity.entity_id, disabled_by=er.RegistryEntryDisabler.USER
+            )
+
+    # Flush the debounced reload that disabling entities schedules.
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # A scheduled poll only fires while the coordinator still has a listener.
+    mock_vehicle_data.reset_mock()
+    freezer.tick(VEHICLE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (mock_vehicle_data.call_count > 0) is expected_polled
 
 
 async def test_energy_site_version_update(
@@ -854,7 +919,9 @@ async def test_energy_site_version_update(
     assert entry.state is ConfigEntryState.LOADED
 
     site_id = "123456"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, site_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, site_id), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "23.44.0 eb113390"
 
@@ -869,7 +936,9 @@ async def test_energy_site_version_update(
     await hass.async_block_till_done()
 
     # Check device sw_version was updated
-    device = device_registry.async_get_device(identifiers={(DOMAIN, site_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, site_id), entry.entry_id
+    )
     assert device is not None
     assert device.sw_version == "24.1.0 abc123"
 

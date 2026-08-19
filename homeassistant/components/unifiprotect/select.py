@@ -51,7 +51,7 @@ from .entity import (
     async_all_device_entities,
     async_remove_unsupported_sense_entities,
 )
-from .utils import async_get_light_motion_current, async_ufp_instance_command
+from .utils import async_get_light_motion_current_public, async_ufp_instance_command
 
 _LOGGER = logging.getLogger(__name__)
 _KEY_LIGHT_MOTION = "light_motion"
@@ -173,7 +173,7 @@ def _get_doorbell_current(obj: Camera) -> str | None:
 
 async def _set_light_mode(obj: Light, mode: str) -> None:
     lightmode, timing = LIGHT_MODE_TO_SETTINGS[mode]
-    await obj.set_light_settings(
+    await obj.set_light_mode_public(
         LightModeType(lightmode),
         enable_at=None if timing is None else LightModeEnableType(timing),
     )
@@ -308,7 +308,7 @@ LIGHT_SELECTS: tuple[ProtectSelectEntityDescription, ...] = (
         translation_key="light_mode",
         entity_category=EntityCategory.CONFIG,
         ufp_options=MOTION_MODE_TO_LIGHT_MODE,
-        ufp_value_fn=async_get_light_motion_current,
+        ufp_public_value_fn=async_get_light_motion_current_public,
         ufp_set_method_fn=_set_light_mode,
         ufp_perm=PermRequired.WRITE,
     ),

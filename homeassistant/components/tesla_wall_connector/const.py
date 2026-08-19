@@ -2,6 +2,9 @@
 
 DOMAIN = "tesla_wall_connector"
 DEFAULT_SCAN_INTERVAL = 30
+DEFAULT_SPLIT_PHASE = False
+
+CONF_SPLIT_PHASE = "split_phase"
 
 WALLCONNECTOR_SERIAL_NUMBER = "serial_number"
 

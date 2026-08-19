@@ -31,7 +31,7 @@ from .sensor import (
 )
 
 if TYPE_CHECKING:
-    from . import FroniusSolarNet
+    from . import FroniusConfigEntry, FroniusSolarNet
 
 
 class FroniusCoordinatorBase(
@@ -39,6 +39,7 @@ class FroniusCoordinatorBase(
 ):
     """Query Fronius endpoint and keep track of seen conditions."""
 
+    config_entry: FroniusConfigEntry
     default_interval: timedelta
     error_interval: timedelta
     valid_descriptions: Mapping[Platform, Sequence[FroniusEntityDescription]]
