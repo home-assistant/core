@@ -1029,6 +1029,7 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     assert group_state.attributes["friendly_name"] == "New Group"
     assert list(group_state.attributes["entity_id"]) == ["person.one", "person.two"]
 
+    context = Context()
     await hass.services.async_call(
         group.DOMAIN,
         group.SERVICE_SET,
@@ -1036,11 +1037,13 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
             "object_id": "new_group",
             "add_entities": "person.three",
         },
+        context=context,
     )
     await hass.async_block_till_done()
     group_state = hass.states.get("group.new_group")
     assert group_state.state == "home"
     assert "person.three" in list(group_state.attributes["entity_id"])
+    assert group_state.context is context
 
     await hass.services.async_call(
         group.DOMAIN,
@@ -1054,37 +1057,6 @@ async def test_service_group_services_add_remove_entities(hass: HomeAssistant) -
     group_state = hass.states.get("group.new_group")
     assert group_state.state == "home"
     assert "person.one" not in list(group_state.attributes["entity_id"])
-
-
-async def test_service_group_set_forwards_context(hass: HomeAssistant) -> None:
-    """Check that group.set attributes the state change to the caller."""
-    hass.states.async_set("person.one", "home")
-
-    assert await async_setup_component(hass, "person", {})
-    with assert_setup_component(0, "group"):
-        await async_setup_component(hass, DOMAIN, {"group": {}})
-    await hass.async_block_till_done()
-
-    await hass.services.async_call(
-        group.DOMAIN,
-        group.SERVICE_SET,
-        {"object_id": "new_group", "entities": ["person.one"]},
-        blocking=True,
-    )
-
-    context = Context()
-    await hass.services.async_call(
-        group.DOMAIN,
-        group.SERVICE_SET,
-        {"object_id": "new_group", "name": "Renamed Group"},
-        blocking=True,
-        context=context,
-    )
-    await hass.async_block_till_done()
-
-    group_state = hass.states.get("group.new_group")
-    assert group_state.attributes["friendly_name"] == "Renamed Group"
-    assert group_state.context is context
 
 
 async def test_service_group_set_group_remove_group(hass: HomeAssistant) -> None:
