@@ -244,7 +244,7 @@ async def async_setup_entry(
     )
 
     # Create sensor entities - battery SoC, grid power, device mode, battery status
-    sensors = (
+    sensors: tuple[MarstekSensor, ...] = (
         MarstekBatterySensor(coordinator, device_info),
         MarstekPowerSensor(coordinator, device_info),
         MarstekDeviceModeSensor(coordinator, device_info),
@@ -252,10 +252,10 @@ async def async_setup_entry(
     )
 
     # Add PV sensors for all 4 PV channels
-    pv_sensors = (
+    pv_sensors: tuple[MarstekSensor, ...] = tuple(
         MarstekPVSensor(coordinator, device_info, pv_channel, metric_type)
         for pv_channel in range(1, 5)
-        for metric_type in ["power", "voltage", "current", "state"]
+        for metric_type in ("power", "voltage", "current", "state")
     )
     sensors = (*sensors, *pv_sensors)
 
