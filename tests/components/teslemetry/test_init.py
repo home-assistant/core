@@ -1337,6 +1337,44 @@ async def test_energy_site_cloud_without_powerwall(hass: HomeAssistant) -> None:
     assert not isinstance(energysite.api, EnergySiteRouter)
 
 
+async def test_energy_site_subentry_without_credentials_uses_cloud(
+    hass: HomeAssistant,
+) -> None:
+    """A subentry that exists but is not yet paired resolves to the cloud API.
+
+    A site whose subentry was created but has no gateway host/password stored
+    keeps that subentry_id (so it stays opted in) while falling back to the
+    plain cloud API rather than building an EnergySiteRouter.
+    """
+    entry = mock_config_entry()
+    paired = MockConfigEntry(
+        domain=entry.domain,
+        version=entry.version,
+        minor_version=entry.minor_version,
+        unique_id=entry.unique_id,
+        data=dict(entry.data),
+        subentries_data=[
+            ConfigSubentryData(
+                subentry_type=SUBENTRY_TYPE_ENERGY_SITE,
+                unique_id=str(SITE_ID),
+                title="Energy Site",
+                data={CONF_SITE_ID: SITE_ID},
+            )
+        ],
+    )
+    paired.add_to_hass(hass)
+
+    with patch("homeassistant.components.teslemetry.PLATFORMS", []):
+        await hass.config_entries.async_setup(paired.entry_id)
+        await hass.async_block_till_done()
+
+    energysite = paired.runtime_data.energysites[0]
+    assert isinstance(energysite.api, EnergySite)
+    assert not isinstance(energysite.api, EnergySiteRouter)
+    assert energysite.subentry_id is not None
+    assert energysite.can_local_control
+
+
 async def test_no_subentry_created_at_setup(hass: HomeAssistant) -> None:
     """Setup never auto-creates a local-control subentry; it is opt-in."""
     entry = await _setup_account_no_subentry(hass)

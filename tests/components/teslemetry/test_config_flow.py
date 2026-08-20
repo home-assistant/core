@@ -450,6 +450,54 @@ async def test_reconfigure(
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+async def test_reconfigure_not_loaded_schedules_reload(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_token_response: dict[str, Any],
+) -> None:
+    """Reconfiguring an unloaded entry has no update listener, so the flow reloads."""
+    mock_entry = mock_config_entry()
+    mock_entry.add_to_hass(hass)
+    # A failed setup imports the client credential before it aborts, so mirror that
+    # while leaving the entry unloaded (and therefore without an update listener).
+    assert await async_setup_component(hass, "application_credentials", {})
+    await async_import_client_credential(
+        hass, DOMAIN, ClientCredential(CLIENT_ID, "", name="Teslemetry")
+    )
+    assert mock_entry.state is ConfigEntryState.NOT_LOADED
+
+    result = await mock_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": REDIRECT,
+        },
+    )
+    client = await hass_client_no_auth()
+    await client.get(f"/auth/external/callback?code=abcd&state={state}")
+
+    new_token_response = mock_token_response | {
+        "refresh_token": "new_refresh_token",
+        "access_token": "new_access_token",
+    }
+    aioclient_mock.post(TOKEN_URL, json=new_token_response)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_schedule_reload"
+    ) as mock_schedule_reload:
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_entry.data["token"]["refresh_token"] == "new_refresh_token"
+    mock_schedule_reload.assert_called_once_with(mock_entry.entry_id)
+
+
+@pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_account_mismatch(
     hass: HomeAssistant,
