@@ -581,9 +581,6 @@
       }
     },
     "switch": {
-      "camera_arm": {
-        "name": "Armed"
-      },
       "camera_privacy": {
         "name": "Privacy"
       },
