@@ -108,9 +108,10 @@ async def test_config_entry_consumers(
 ) -> None:
     """Test detecting serial ports configured in config entries."""
     mock_integration(hass, MockModule("test_usb", dependencies=["usb"]))
-    MockConfigEntry(
+    entry = MockConfigEntry(
         domain="test_usb", title="Test USB", data=data, options=options
-    ).add_to_hass(hass)
+    )
+    entry.add_to_hass(hass)
 
     with patch(
         "homeassistant.components.usb.consumers.os.path.realpath",
@@ -118,8 +119,7 @@ async def test_config_entry_consumers(
     ):
         result = await _async_get_serial_ports(hass_ws_client, hass)
 
-    ports = result
-    assert [(port["device"], port["consumers"]) for port in ports] == [
+    assert [(port["device"], port["consumers"]) for port in result] == [
         (
             TTY_USB0,
             [
@@ -128,7 +128,7 @@ async def test_config_entry_consumers(
                     "title": "Test USB",
                     "active": False,
                     "domain": "test_usb",
-                    "config_entry_id": ports[0]["consumers"][0]["config_entry_id"],
+                    "config_entry_id": entry.entry_id,
                     "slug": None,
                 }
             ],
