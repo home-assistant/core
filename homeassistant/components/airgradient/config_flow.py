@@ -1,7 +1,7 @@
 """Config flow for Airgradient."""
 
 from collections.abc import Mapping
-from typing import Any, override
+from typing import TYPE_CHECKING, Any, override
 
 from airgradient import (
     AirGradientClient,
@@ -38,14 +38,16 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def set_configuration_source(self) -> None:
         """Set configuration source to local if it hasn't been set yet."""
-        assert self.client
+        if TYPE_CHECKING:
+            assert self.client is not None
         config = await self.client.get_config()
         if config.configuration_control is ConfigurationControl.NOT_INITIALIZED:
             await self.client.set_configuration_control(ConfigurationControl.LOCAL)
 
     def _has_supported_firmware(self, firmware_version: str) -> bool:
         """Return whether the detected device has supported firmware."""
-        assert self.client
+        if TYPE_CHECKING:
+            assert self.client is not None
         if self.client.api_version is not ApiVersion.LEGACY:
             return True
         try:
