@@ -1036,7 +1036,7 @@ async def _test_friendly_name(
         (False, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
-        (True, "Entity Blu", UNDEFINED, "Entity Blu"),
+        (True, "Entity Blu", UNDEFINED, "Mock Title Entity Blu"),
         (True, "Entity Blu", None, "Mock Title Entity Blu"),
     ],
 )
