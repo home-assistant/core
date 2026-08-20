@@ -6,6 +6,7 @@ from unittest.mock import patch
 
 import pytest
 
+from homeassistant.components.hassio import HassioNotReadyError
 from homeassistant.components.usb import DOMAIN
 from homeassistant.components.usb.models import SerialDevice, USBDevice
 from homeassistant.components.usb.utils import usb_service_info_from_device
@@ -421,6 +422,24 @@ async def test_app_consumers_without_supervisor(
         result = await _async_get_serial_ports(hass_ws_client, hass)
 
     assert len(mock_apps_info.mock_calls) == 0
+    assert [port["consumers"] for port in result] == [[], []]
+
+
+@pytest.mark.usefixtures("setup_ports")
+async def test_app_consumers_supervisor_not_ready(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test apps are not considered when the supervisor is not ready yet."""
+    with (
+        patch("homeassistant.components.usb.consumers.is_hassio", return_value=True),
+        patch(
+            "homeassistant.components.usb.consumers.get_addons_info",
+            side_effect=HassioNotReadyError("Not ready"),
+        ),
+    ):
+        result = await _async_get_serial_ports(hass_ws_client, hass)
+
     assert [port["consumers"] for port in result] == [[], []]
 
 
