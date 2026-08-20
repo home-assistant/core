@@ -35,7 +35,6 @@ from homeassistant.components.zha.const import (
 )
 from homeassistant.components.zha.radio_manager import ProbeResult, ZhaRadioManager
 from homeassistant.config_entries import (
-    SOURCE_ESPHOME,
     SOURCE_SSDP,
     SOURCE_USB,
     SOURCE_USER,
@@ -44,11 +43,10 @@ from homeassistant.config_entries import (
     ConfigEntryState,
     ConfigFlowResult,
 )
-from homeassistant.const import CONF_NAME, CONF_SOURCE
+from homeassistant.const import CONF_SOURCE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_MANUFACTURER_URL,
     ATTR_UPNP_SERIAL,
@@ -499,96 +497,6 @@ async def test_legacy_zeroconf_discovery_confirm_final_abort_if_entries(
     # Now prompts to migrate instead of aborting
     assert result["type"] is FlowResultType.MENU
     assert result["step_id"] == "choose_setup_strategy"
-
-
-ESPHOME_DISCOVERY_INFO = ESPHomeServiceInfo(
-    name="connect-aux-2",
-    zwave_home_id=None,
-    ip_address="192.168.1.200",
-    port=6053,
-    noise_psk="mock-noise-psk",
-    zigbee_ieee_address=0xF074BFFFFEAACA22,
-    serial_port_name="Zigbee",
-    serial_port_baudrate=460800,
-)
-ESPHOME_DEVICE_PATH = (
-    "esphome://192.168.1.200:6053/?port_name=Zigbee&mode=ezsp_ash&key=mock-noise-psk"
-)
-
-
-@patch("homeassistant.components.zha.async_setup_entry", AsyncMock(return_value=True))
-@patch(f"bellows.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))
-async def test_esphome_discovery(hass: HomeAssistant) -> None:
-    """Test ESPHome serial proxy flow."""
-    result_init = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ESPHOME}, data=ESPHOME_DISCOVERY_INFO
-    )
-    assert result_init["step_id"] == "confirm"
-    assert result_init["description_placeholders"] == {CONF_NAME: "connect-aux-2"}
-
-    result_confirm = await hass.config_entries.flow.async_configure(
-        result_init["flow_id"], user_input={}
-    )
-
-    assert result_confirm["type"] is FlowResultType.MENU
-    assert result_confirm["step_id"] == "choose_setup_strategy"
-
-    result_setup = await hass.config_entries.flow.async_configure(
-        result_confirm["flow_id"],
-        user_input={"next_step_id": config_flow.SETUP_STRATEGY_RECOMMENDED},
-    )
-
-    result_form = await consume_progress_flow(
-        hass,
-        flow_id=result_setup["flow_id"],
-        valid_step_ids=("form_new_network",),
-    )
-    await hass.async_block_till_done()
-
-    assert result_form["type"] is FlowResultType.CREATE_ENTRY
-    assert result_form["data"] == {
-        CONF_DEVICE: {
-            CONF_DEVICE_PATH: ESPHOME_DEVICE_PATH,
-            CONF_BAUDRATE: 460800,
-            CONF_FLOW_CONTROL: None,
-        },
-        CONF_RADIO_TYPE: RadioType.ezsp.name,
-    }
-
-
-async def test_esphome_discovery_ignored_updates(hass: HomeAssistant) -> None:
-    """Test an ignored ESPHome discovery has its device path updated."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=config_entries.SOURCE_IGNORE,
-        data={},
-        unique_id="ieee=f0:74:bf:ff:fe:aa:ca:22",
-    )
-    entry.add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ESPHOME}, data=ESPHOME_DISCOVERY_INFO
-    )
-    await hass.async_block_till_done()
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert entry.data[CONF_DEVICE] == {CONF_DEVICE_PATH: ESPHOME_DEVICE_PATH}
-
-
-async def test_esphome_discovery_already_setup(hass: HomeAssistant) -> None:
-    """Test an ESPHome discovery of an already configured radio."""
-    MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_DEVICE: {CONF_DEVICE_PATH: ESPHOME_DEVICE_PATH}},
-    ).add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_ESPHOME}, data=ESPHOME_DISCOVERY_INFO
-    )
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "single_instance_allowed"
 
 
 @patch(f"zigpy_znp.{PROBE_FUNCTION_PATH}", AsyncMock(return_value=True))

@@ -3,6 +3,7 @@
 import logging
 
 from aioesphomeapi import APIConnectionError
+from serialx import SerialPortInfo
 
 from homeassistant.components import zeroconf
 from homeassistant.components.bluetooth import async_remove_scanner
@@ -10,6 +11,7 @@ from homeassistant.components.usb import (
     SerialDevice,
     USBDevice,
     async_register_serial_port_scanner,
+    usb_serial_device_from_port,
 )
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
@@ -53,19 +55,56 @@ def _async_scan_serial_ports(
         if device_info is None:
             continue
 
-        manufacturer, model = async_get_manufacturer_model(device_info)
+        for proxy in device_info.serial_proxies:
+            url = str(serial_proxy.build_url(entry.entry_id, proxy.name))
 
-        ports.extend(
-            SerialDevice(
-                device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
-                serial_number=(
-                    device_info.mac_address.replace(":", "") + "-" + slugify(proxy.name)
-                ),
-                manufacturer=manufacturer,
-                description=f"{model} ({proxy.name})",
+            if not proxy.usb_vendor_id:
+                manufacturer, model = async_get_manufacturer_model(device_info)
+
+                # Nothing enumerable behind the port: a pin-header UART, where the port
+                # really is the device, or a socket with nothing in it.
+                ports.append(
+                    SerialDevice(
+                        device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
+                        serial_number=(
+                            device_info.mac_address.replace(":", "") + "-" + slugify(proxy.name)
+                        ),
+                        manufacturer=manufacturer,
+                        description=f"{model} ({proxy.name})",
+                    )
+                )
+                continue
+
+            # A USB port is a socket, so the device in it is what callers care about.
+            # Reported through the same converter a local port goes through, so an adapter
+            # reached this way is described exactly as it would be when plugged into the
+            # host: the existing USB matchers recognize it, and its identity does not
+            # change when it moves between the two.
+            ports.append(
+                usb_serial_device_from_port(
+                    SerialPortInfo(
+                        device=url,
+                        resolved_device=url,
+                        vid=proxy.usb_vendor_id,
+                        pid=proxy.usb_product_id,
+                        serial_number=proxy.usb_serial_number or None,
+                        manufacturer=proxy.usb_manufacturer or None,
+                        product=proxy.usb_product or None,
+                        bcd_device=proxy.usb_bcd_device or None,
+                        # Both describe the device, not the port it sits in: a local
+                        # enumeration reports the bound interface's string and number, and
+                        # an adapter has to look the same here as it does there or it
+                        # changes identity when it moves between the two.
+                        interface_description=proxy.usb_interface_string or None,
+                        # 0xFF is the sentinel for an interface that is not claimed yet
+                        interface_num=(
+                            None
+                            if proxy.usb_interface_number == 0xFF
+                            else proxy.usb_interface_number
+                        ),
+                    )
+                )
             )
-            for proxy in device_info.serial_proxies
-        )
 
     return ports
 

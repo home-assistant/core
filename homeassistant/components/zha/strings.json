@@ -1,7 +1,6 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "cannot_form_network": "Could not form a new Zigbee network.\n\nError: {error}",
       "cannot_resolve_path": "Could not resolve device path: {path}",
       "cannot_restore_backup": "The adapter you are restoring to does not properly support backup restoration. Please upgrade the firmware.\n\nError: {error}",

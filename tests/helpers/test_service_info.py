@@ -36,25 +36,3 @@ def test_esphome_socket_path() -> None:
     info.noise_psk = "my-noise-psk"
     assert info.socket_path == "esphome://192.168.1.100:6053/?key=my-noise-psk"
 
-
-def test_esphome_serial_port_path() -> None:
-    """Test ESPHomeServiceInfo serial_port_path."""
-    info = ESPHomeServiceInfo(
-        name="Hello World",
-        zwave_home_id=None,
-        ip_address="192.168.1.100",
-        port=6053,
-        zigbee_extended_pan_id=0xD3B461708C2CF940,
-        serial_port_name="RS-232 Port 1",
-    )
-    assert (
-        info.serial_port_path()
-        == "esphome://192.168.1.100:6053/?port_name=RS-232+Port+1"
-    )
-
-    # A base64 noise PSK is escaped, as is the port name
-    info.noise_psk = "xdhMxWWCp6QtzCEeY8iKB/bTsPqrkCb8oZWbbWqA76c="
-    assert info.serial_port_path(mode="ezsp_ash") == (
-        "esphome://192.168.1.100:6053/?port_name=RS-232+Port+1&mode=ezsp_ash"
-        "&key=xdhMxWWCp6QtzCEeY8iKB/bTsPqrkCb8oZWbbWqA76c%3D"
-    )

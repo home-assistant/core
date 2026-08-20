@@ -91,9 +91,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     issue_registry as ir,
 )
-from homeassistant.helpers.discovery_flow import DiscoveryKey
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
-from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.setup import async_setup_component
 
 from .conftest import MockESPHomeDeviceType, MockGenericDeviceEntryType
@@ -4107,118 +4105,6 @@ async def test_no_zwave_proxy_subscribe_without_feature_flags(
 
     # Verify subscribe_zwave_proxy_request was NOT called
     mock_client.subscribe_zwave_proxy_request.assert_not_called()
-
-
-ZIGBEE_IEEE_ADDRESS = 0xF074BFFFFEAACA22
-
-
-async def test_zigbee_proxy_request_network_info(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-) -> None:
-    """Test the Zigbee proxy request handler with a NETWORK_INFO request."""
-    noise_psk = "cD3vRGhSJTMgc2VjdXJlIG5vaXNlIHBzayBoZXJlIQ=="
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_HOST: "192.168.1.100",
-            CONF_PORT: 6053,
-            CONF_PASSWORD: "",
-            CONF_DEVICE_NAME: "test-zigbee-proxy",
-            CONF_NOISE_PSK: noise_psk,
-        },
-        unique_id="11:22:33:44:55:aa",
-    )
-    entry.add_to_hass(hass)
-    mock_client.connected_address = "192.168.1.100"
-
-    await mock_esphome_device(
-        mock_client=mock_client,
-        entry=entry,
-        device_info={
-            "name": "test-zigbee-proxy",
-            "mac_address": "11:22:33:44:55:AA",
-            "zigbee_proxy_feature_flags": 1,
-            "serial_proxies": [
-                SerialProxyInfo(
-                    name="Zigbee", boot_mode=SerialProxyMode.EZSP_ASH, baud_rate=460800
-                )
-            ],
-        },
-    )
-    await hass.async_block_till_done()
-
-    zigbee_proxy_callback = mock_client.subscribe_zigbee_proxy_request.call_args[0][0]
-
-    with patch(
-        "homeassistant.helpers.discovery_flow.async_create_flow"
-    ) as mock_create_flow:
-        zigbee_proxy_callback(ZigbeeProxyRequest(type=1, data=b""))
-        await hass.async_block_till_done()
-
-    # Only NETWORK_INFO requests start a flow
-    assert len(mock_create_flow.mock_calls) == 0
-
-    with patch(
-        "homeassistant.helpers.discovery_flow.async_create_flow"
-    ) as mock_create_flow:
-        zigbee_proxy_callback(
-            ZigbeeProxyRequest(
-                type=ZigbeeProxyRequestType.NETWORK_INFO,
-                data=(
-                    ZIGBEE_IEEE_ADDRESS.to_bytes(8, byteorder="little")
-                    + bytes(8)  # extended PAN ID
-                    + bytes(2)  # PAN ID
-                    + bytes([15])  # channel
-                ),
-            )
-        )
-        await hass.async_block_till_done()
-
-    assert mock_create_flow.mock_calls == [
-        call(
-            hass,
-            "zha",
-            {"source": "esphome"},
-            ESPHomeServiceInfo(
-                name="test-zigbee-proxy",
-                zwave_home_id=None,
-                ip_address="192.168.1.100",
-                port=6053,
-                noise_psk=noise_psk,
-                zigbee_ieee_address=ZIGBEE_IEEE_ADDRESS,
-                serial_port_name="Zigbee",
-                serial_port_baudrate=460800,
-            ),
-            discovery_key=DiscoveryKey(
-                domain=DOMAIN,
-                key="11:22:33:44:55:AA",
-                version=1,
-            ),
-        )
-    ]
-
-
-async def test_no_zigbee_proxy_subscribe_without_feature_flags(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    mock_esphome_device: MockESPHomeDeviceType,
-) -> None:
-    """Test Zigbee proxy subscription skipped without feature flags."""
-    mock_client.subscribe_zigbee_proxy_request = Mock(return_value=lambda: None)
-
-    await mock_esphome_device(
-        mock_client=mock_client,
-        device_info={
-            "name": "test-device",
-            "mac_address": "11:22:33:44:55:AA",
-            "zigbee_proxy_feature_flags": 0,
-        },
-    )
-    await hass.async_block_till_done()
-
-    assert len(mock_client.subscribe_zigbee_proxy_request.mock_calls) == 0
 
 
 async def test_execute_service_response_type_none(

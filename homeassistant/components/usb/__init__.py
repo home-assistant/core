@@ -36,6 +36,7 @@ from .models import SerialDevice, SerialPortConsumer, USBDevice
 from .serial_proxy_stub import register_serialx_transport
 from .utils import (
     scan_serial_ports,
+    usb_serial_device_from_port,
     usb_device_from_path,
     usb_device_matches_matcher,
     usb_service_info_from_device,
@@ -65,6 +66,7 @@ __all__ = [
     "scan_serial_ports",
     "usb_device_from_path",
     "usb_device_matches_matcher",
+    "usb_serial_device_from_port",
     "usb_service_info_from_device",
     "usb_unique_id_from_service_info",
 ]

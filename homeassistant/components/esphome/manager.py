@@ -26,9 +26,6 @@ from aioesphomeapi import (
     SupportsResponseType,
     UserService,
     UserServiceArgType,
-    ZigbeeNetworkInfo,
-    ZigbeeProxyRequest,
-    ZigbeeProxyRequestType,
     ZWaveProxyRequest,
     ZWaveProxyRequestType,
     parse_log_message,
@@ -780,11 +777,6 @@ class ESPHomeManager:
                 cli.subscribe_zwave_proxy_request(self._async_zwave_proxy_request)
             )
 
-        if device_info.zigbee_proxy_feature_flags:
-            entry_data.disconnect_callbacks.add(
-                cli.subscribe_zigbee_proxy_request(self._async_zigbee_proxy_request)
-            )
-
         cli.subscribe_home_assistant_states_and_services(
             on_state=entry_data.async_update_state,
             on_service_call=self.async_on_service_call,
@@ -813,22 +805,6 @@ class ESPHomeManager:
         assert self.entry_data.device_info is not None
         self.entry_data.async_create_zwave_js_flow(
             self.hass, self.entry_data.device_info, zwave_home_id
-        )
-
-    def _async_zigbee_proxy_request(self, request: ZigbeeProxyRequest) -> None:
-        """Handle a request to create a ZHA config flow."""
-        if request.type != ZigbeeProxyRequestType.NETWORK_INFO:
-            return
-        # Sent both when a radio is read and when one goes away, the latter with an all-zero
-        # payload, so arrival alone says nothing. Either identifier on its own is enough to
-        # say a radio is there: the harvest reports the network before the address, and an
-        # unformed radio has an address but no network.
-        network_info = ZigbeeNetworkInfo.from_payload(request.data)
-        if not network_info.ieee_address and not network_info.extended_pan_id:
-            return
-        assert self.entry_data.device_info is not None
-        self.entry_data.async_create_zha_flow(
-            self.hass, self.entry_data.device_info, network_info.extended_pan_id
         )
 
     async def on_disconnect(self, expected_disconnect: bool) -> None:
