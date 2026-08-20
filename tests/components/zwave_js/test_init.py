@@ -1557,7 +1557,7 @@ async def test_endpoint_child_device(
     assert endpoint_1_device
     assert isinstance(endpoint_1_device, dr.ChildDeviceEntry)
     assert endpoint_1_device.parent_device_id == node_device.id
-    assert endpoint_1_device.name == "In Wall Dual Relay Switch Binary Power Switch (1)"
+    assert endpoint_1_device.name == "Endpoint 1"
 
     endpoint_2_device = device_registry.async_get_child_device_by_identifier(
         get_device_id(driver, node, 2), integration.entry_id
@@ -1565,7 +1565,7 @@ async def test_endpoint_child_device(
     assert endpoint_2_device
     assert isinstance(endpoint_2_device, dr.ChildDeviceEntry)
     assert endpoint_2_device.parent_device_id == node_device.id
-    assert endpoint_2_device.name == "In Wall Dual Relay Switch Binary Power Switch (2)"
+    assert endpoint_2_device.name == "Endpoint 2"
 
     # Both child devices appear in the parent's children list.
     children = dr.async_entries_for_parent_device(device_registry, node_device.id)
@@ -1575,14 +1575,10 @@ async def test_endpoint_child_device(
     }
 
     # Each relay lives on its endpoint child device, not on the node device.
-    entity_1 = entity_registry.async_get(
-        "switch.in_wall_dual_relay_switch_binary_power_switch_1"
-    )
+    entity_1 = entity_registry.async_get("switch.endpoint_1")
     assert entity_1
     assert entity_1.device_id == endpoint_1_device.id
-    entity_2 = entity_registry.async_get(
-        "switch.in_wall_dual_relay_switch_binary_power_switch_2"
-    )
+    entity_2 = entity_registry.async_get("switch.endpoint_2")
     assert entity_2
     assert entity_2.device_id == endpoint_2_device.id
 

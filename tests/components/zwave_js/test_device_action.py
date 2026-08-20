@@ -716,9 +716,7 @@ async def test_refresh_value_action_endpoint_child_device(
     device = get_device(device_registry, driver, node, integration.entry_id)
     assert device
 
-    switch_entity = entity_registry.async_get(
-        "switch.in_wall_dual_relay_switch_binary_power_switch_1"
-    )
+    switch_entity = entity_registry.async_get("switch.endpoint_1")
     assert switch_entity
 
     assert await async_setup_component(

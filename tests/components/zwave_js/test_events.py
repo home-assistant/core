@@ -326,10 +326,7 @@ async def test_value_updated(
     )
     assert child_device
     assert events[0].data["device_id"] == child_device.id
-    assert (
-        events[0].data["entity_id"]
-        == "switch.in_wall_dual_relay_switch_binary_power_switch_1"
-    )
+    assert events[0].data["entity_id"] == "switch.endpoint_1"
     assert events[0].data["command_class"] == CommandClass.SWITCH_BINARY
     assert events[0].data["command_class_name"] == "Switch Binary"
     assert events[0].data["endpoint"] == 1

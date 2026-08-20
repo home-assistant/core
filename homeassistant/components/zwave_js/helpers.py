@@ -655,18 +655,10 @@ def get_device_info(
             suggested_area=node.location or None,
         )
 
-    if endpoint.endpoint_label:
-        endpoint_name = endpoint.endpoint_label
-    elif endpoint.device_class:
-        endpoint_name = f"{endpoint.device_class.specific.label} ({endpoint.index})"
-    else:
-        endpoint_name = f"Endpoint {endpoint.index}"
-    # Prefix the child device name with the node name so it's clear which node the
-    # endpoint child device belongs to.
     assert parent_device_id is not None
     return ChildDeviceInfo(
         identifiers={get_device_id(driver, node, endpoint.index)},
-        name=f"{node_name} {endpoint_name}",
+        name=endpoint.endpoint_label or f"Endpoint {endpoint.index}",
         parent_device_id=parent_device_id,
     )
 
