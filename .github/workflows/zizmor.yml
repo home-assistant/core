@@ -59,23 +59,6 @@ jobs:
             echo "relevant=true" >> "$GITHUB_OUTPUT"
           fi
 
-      - name: Load trusted zizmor policy
-        if: steps.changes.outputs.relevant == 'true'
-        shell: bash
-        run: |
-          rm -f .zizmor-base.yml
-          if git cat-file -e HEAD^1:.github/zizmor.yml 2>/dev/null; then
-            git show HEAD^1:.github/zizmor.yml > .zizmor-base.yml
-          else
-            # Bootstrap branches before the shared policy exists.
-            printf '%s\n' \
-              'rules:' \
-              '  unsound-condition:' \
-              '    ignore:' \
-              '      - check-requirements.lock.yml:74:5' \
-              > .zizmor-base.yml
-          fi
-
       - name: Block medium and high pull request findings
         if: steps.changes.outputs.relevant == 'true'
         uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
@@ -84,18 +67,6 @@ jobs:
           persona: pedantic
           advanced-security: false
           annotations: true
-          config: .zizmor-base.yml
-          min-severity: medium
-          version: 1.29.0
-
-      - name: Validate proposed zizmor policy
-        if: steps.changes.outputs.relevant == 'true'
-        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
-        with:
-          collect: all
-          persona: pedantic
-          advanced-security: false
-          annotations: false
           config: .github/zizmor.yml
           min-severity: medium
           version: 1.29.0

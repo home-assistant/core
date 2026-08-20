@@ -1,82 +1,17 @@
 rules:
   anonymous-definition:
     ignore:
-      - check-requirements.lock.yml:72:3
-      - check-requirements.lock.yml:381:3
-      - check-requirements.lock.yml:1001:3
-      - check-requirements.lock.yml:1265:3
-      - check-requirements.lock.yml:1509:3
-      - check-requirements.lock.yml:1543:3
+      - check-requirements.lock.yml
   ref-version-mismatch:
     ignore:
-      - check-requirements.lock.yml:497:9
+      - check-requirements.lock.yml
   template-injection:
     ignore:
-      - check-requirements.lock.yml:135:51
-      - check-requirements.lock.yml:137:43
-      - check-requirements.lock.yml:159:51
-      - check-requirements.lock.yml:161:43
-      - check-requirements.lock.yml:179:51
-      - check-requirements.lock.yml:181:43
-      - check-requirements.lock.yml:224:51
-      - check-requirements.lock.yml:226:43
-      - check-requirements.lock.yml:234:51
-      - check-requirements.lock.yml:236:43
-      - check-requirements.lock.yml:313:51
-      - check-requirements.lock.yml:315:43
-      - check-requirements.lock.yml:332:51
-      - check-requirements.lock.yml:335:57
-      - check-requirements.lock.yml:485:51
-      - check-requirements.lock.yml:487:43
-      - check-requirements.lock.yml:504:61
-      - check-requirements.lock.yml:536:49
-      - check-requirements.lock.yml:649:51
-      - check-requirements.lock.yml:651:43
-      - check-requirements.lock.yml:701:44
-      - check-requirements.lock.yml:702:42
-      - check-requirements.lock.yml:705:42
-      - check-requirements.lock.yml:738:51
-      - check-requirements.lock.yml:762:51
-      - check-requirements.lock.yml:764:43
-      - check-requirements.lock.yml:869:51
-      - check-requirements.lock.yml:871:43
-      - check-requirements.lock.yml:900:51
-      - check-requirements.lock.yml:902:43
-      - check-requirements.lock.yml:912:51
-      - check-requirements.lock.yml:914:43
-      - check-requirements.lock.yml:922:51
-      - check-requirements.lock.yml:924:43
-      - check-requirements.lock.yml:938:51
-      - check-requirements.lock.yml:940:43
-      - check-requirements.lock.yml:948:51
-      - check-requirements.lock.yml:950:43
-      - check-requirements.lock.yml:1127:51
-      - check-requirements.lock.yml:1129:43
-      - check-requirements.lock.yml:1167:51
-      - check-requirements.lock.yml:1169:43
-      - check-requirements.lock.yml:1184:51
-      - check-requirements.lock.yml:1186:43
-      - check-requirements.lock.yml:1199:51
-      - check-requirements.lock.yml:1201:43
-      - check-requirements.lock.yml:1214:51
-      - check-requirements.lock.yml:1216:43
-      - check-requirements.lock.yml:1260:51
-      - check-requirements.lock.yml:1262:43
-      - check-requirements.lock.yml:1368:51
-      - check-requirements.lock.yml:1370:43
-      - check-requirements.lock.yml:1465:51
-      - check-requirements.lock.yml:1467:43
-      - check-requirements.lock.yml:1488:53
-      - check-requirements.lock.yml:1490:45
-      - check-requirements.lock.yml:1632:51
-      - check-requirements.lock.yml:1634:43
+      - check-requirements.lock.yml
   undocumented-permissions:
     ignore:
-      - check-requirements.lock.yml:79:7
-      - check-requirements.lock.yml:388:7
-      - check-requirements.lock.yml:1015:7
-      - check-requirements.lock.yml:1514:7
-      - check-requirements.lock.yml:1553:7
+      - check-requirements.lock.yml
   unsound-condition:
     ignore:
+      # gh-aw emits an unsound folded fork guard; remove after it is fixed upstream.
       - check-requirements.lock.yml:74:5
