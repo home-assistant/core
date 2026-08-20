@@ -1,16 +1,129 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "This endpoint is already configured",
+      "reconfigure_successful": "Endpoint reconfigured successfully"
+    },
+    "error": {
+      "invalid_url": "Enter a valid HTTP or HTTPS URL",
+      "required": "This field is required",
+      "userinfo_not_allowed": "Remove the username and password from the URL and use the authentication fields"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "authentication": "Authentication",
+          "content_type": "Content type",
+          "endpoint_name": "Endpoint name",
+          "insecure_cipher": "Use legacy TLS ciphers",
+          "method": "HTTP method",
+          "password": "[%key:common::config_flow::data::password%]",
+          "payload": "Default payload",
+          "skip_url_encoding": "Skip URL encoding",
+          "timeout": "Timeout",
+          "token": "Bearer token",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "authentication": "Authentication method for requests to this endpoint.",
+          "content_type": "Content-Type header sent with each request. New endpoints default to application/json.",
+          "endpoint_name": "Name used to identify this endpoint in actions.",
+          "insecure_cipher": "Allow legacy TLS ciphers. Enable only when the endpoint cannot use modern ciphers.",
+          "method": "HTTP method used for each request.",
+          "password": "Password for Basic or Digest authentication. Leave blank to keep the current password.",
+          "payload": "Request body used when the action does not supply one. Enter valid JSON when Content type is application/json.",
+          "skip_url_encoding": "Send the URL without applying URL encoding.",
+          "timeout": "Maximum number of seconds to wait for the endpoint.",
+          "token": "Token used for Bearer authentication. Leave blank to keep the current token.",
+          "url": "HTTP or HTTPS endpoint URL.",
+          "username": "Username for Basic or Digest authentication.",
+          "verify_ssl": "Verify the endpoint's TLS certificate."
+        },
+        "title": "Reconfigure RESTful Command endpoint"
+      },
+      "user": {
+        "data": {
+          "authentication": "Authentication",
+          "content_type": "Content type",
+          "endpoint_name": "Endpoint name",
+          "insecure_cipher": "Use legacy TLS ciphers",
+          "method": "HTTP method",
+          "password": "[%key:common::config_flow::data::password%]",
+          "payload": "Default payload",
+          "skip_url_encoding": "Skip URL encoding",
+          "timeout": "Timeout",
+          "token": "Bearer token",
+          "url": "[%key:common::config_flow::data::url%]",
+          "username": "[%key:common::config_flow::data::username%]",
+          "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
+        },
+        "data_description": {
+          "authentication": "Authentication method for requests to this endpoint.",
+          "content_type": "Content-Type header sent with each request. Defaults to application/json.",
+          "endpoint_name": "Name used to identify this endpoint in actions.",
+          "insecure_cipher": "Allow legacy TLS ciphers. Enable only when the endpoint cannot use modern ciphers.",
+          "method": "HTTP method used for each request.",
+          "password": "Password for Basic or Digest authentication.",
+          "payload": "Request body used when the action does not supply one. The prefilled value is valid JSON; action payloads are strings and override it.",
+          "skip_url_encoding": "Send the URL without applying URL encoding.",
+          "timeout": "Maximum number of seconds to wait for the endpoint.",
+          "token": "Token used for Bearer authentication.",
+          "url": "HTTP or HTTPS endpoint URL.",
+          "username": "Username for Basic or Digest authentication.",
+          "verify_ssl": "Verify the endpoint's TLS certificate."
+        },
+        "description": "Set up an outbound HTTP endpoint. Credentials are stored by Home Assistant and are never included in action data.",
+        "title": "Add RESTful Command endpoint"
+      }
+    }
+  },
   "exceptions": {
     "client_error": {
-      "message": "Client error occurred when calling resource \"{request_url}\""
+      "message": "Client error occurred when calling the RESTful Command endpoint"
     },
     "decoding_error": {
-      "message": "The response of \"{request_url}\" could not be decoded as {decoding_type}"
+      "message": "The RESTful Command response could not be decoded as {decoding_type}"
     },
     "timeout": {
-      "message": "Timeout when calling resource \"{request_url}\""
+      "message": "Timeout when calling the RESTful Command endpoint"
+    }
+  },
+  "selector": {
+    "authentication": {
+      "options": {
+        "basic": "Basic",
+        "bearer": "Bearer token",
+        "digest": "Digest",
+        "none": "None"
+      }
+    },
+    "method": {
+      "options": {
+        "delete": "DELETE",
+        "get": "GET",
+        "patch": "PATCH",
+        "post": "POST",
+        "put": "PUT"
+      }
     }
   },
   "services": {
+    "call_endpoint": {
+      "description": "Sends a request to a UI-managed RESTful Command endpoint.",
+      "fields": {
+        "config_entry_id": {
+          "description": "Endpoint to call.",
+          "name": "Endpoint"
+        },
+        "payload": {
+          "description": "Payload for this request. When omitted, the endpoint's default payload is used.",
+          "name": "Payload"
+        }
+      },
+      "name": "Send request"
+    },
     "reload": {
       "description": "Reloads RESTful commands from the YAML-configuration.",
       "name": "[%key:common::action::reload%]"
