@@ -1593,19 +1593,38 @@ async def test_endpoint_child_device(
 async def test_endpoint_child_device_pruned_on_reinterview(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
     client: MagicMock,
     vision_security_zl7432: Node,
     vision_security_zl7432_state: NodeDataType,
     integration: MockConfigEntry,
 ) -> None:
-    """Test that a stale endpoint child device is removed when an endpoint stops colliding."""
+    """Test stale endpoint child devices are pruned and surviving entities move to parent.
+
+    When endpoint 2's values disappear on re-interview, endpoint 1 no longer collides so
+    both child devices are pruned. The endpoint 1 switch entity must end up on the parent
+    node device while preserving its entity registry entry (entity_id, any customizations).
+    """
     node = vision_security_zl7432
     driver = client.driver
 
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(driver, node), integration.entry_id
+    )
+    assert node_device
+    endpoint_1_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(driver, node, 1), integration.entry_id
+    )
+    assert endpoint_1_device
     endpoint_2_device = device_registry.async_get_child_device_by_identifier(
         get_device_id(driver, node, 2), integration.entry_id
     )
     assert endpoint_2_device
+
+    # The endpoint 1 switch entity lives on the endpoint 1 child device before re-interview.
+    endpoint_1_switch = entity_registry.async_get("switch.endpoint_1")
+    assert endpoint_1_switch
+    assert endpoint_1_switch.device_id == endpoint_1_device.id
 
     # Re-interview the node without any values on endpoint 2.
     new_state = deepcopy(vision_security_zl7432_state)
@@ -1625,7 +1644,14 @@ async def test_endpoint_child_device_pruned_on_reinterview(
     )
     await hass.async_block_till_done()
 
+    # Both child devices are removed since endpoint 1 no longer collides.
+    assert device_registry.async_get(endpoint_1_device.id) is None
     assert device_registry.async_get(endpoint_2_device.id) is None
+    # Endpoint 1's switch entity was moved to the parent node device before the child
+    # device was removed, preserving the registry entry (same entity_id).
+    endpoint_1_switch = entity_registry.async_get("switch.endpoint_1")
+    assert endpoint_1_switch is not None
+    assert endpoint_1_switch.device_id == node_device.id
 
 
 async def test_replace_same_node(

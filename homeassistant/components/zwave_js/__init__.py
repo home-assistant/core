@@ -792,6 +792,7 @@ class NodeEvents:
         # run discovery on all node values and create/update entities
         driver = self.controller_events.driver_events.driver
         endpoint_device_ids: set[tuple[str, str]] = set()
+        rediscovered_on_parent: set[str] = set()
         for disc_info in async_discover_node_values(
             node, device, self.controller_events.discovered_value_ids
         ):
@@ -800,12 +801,26 @@ class NodeEvents:
                 endpoint_device_ids.add(
                     get_device_id(driver, node, primary_value.endpoint)
                 )
+            else:
+                rediscovered_on_parent.add(
+                    get_unique_id(driver, primary_value.value_id)
+                )
             self.async_handle_discovery_info(device, disc_info, value_updates_disc_info)
 
         # Prune endpoint child devices that no longer have any entities, e.g. after a
         # re-interview removed an endpoint or its colliding values.
         for child_device in dr.async_entries_for_parent_device(self.dev_reg, device.id):
             if not child_device.identifiers & endpoint_device_ids:
+                # Before removing the child device, reassociate entity entries that will
+                # be rediscovered on the parent node device. This preserves user
+                # customizations when an endpoint stops colliding after re-interview.
+                for entity_entry in er.async_entries_for_device(
+                    self.ent_reg, child_device.id
+                ):
+                    if entity_entry.unique_id in rediscovered_on_parent:
+                        self.ent_reg.async_update_entity(
+                            entity_entry.entity_id, device_id=device.id
+                        )
                 self.controller_events.remove_device(child_device)
 
         # add listeners to handle new values that get added later

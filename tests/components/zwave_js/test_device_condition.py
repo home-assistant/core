@@ -88,6 +88,29 @@ async def test_get_conditions(
     )
 
 
+async def test_get_conditions_endpoint_child_device(
+    hass: HomeAssistant,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that endpoint child devices expose no Z-Wave JS conditions.
+
+    Conditions are node-scoped (node status, config parameters, value) and would
+    duplicate the parent node device's list if exposed on child devices.
+    """
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(client.driver, vision_security_zl7432, 1), integration.entry_id
+    )
+    assert child_device
+    conditions = await async_get_device_automations(
+        hass, DeviceAutomationType.CONDITION, child_device.id
+    )
+    zwave_conditions = [c for c in conditions if c.get("domain") == DOMAIN]
+    assert zwave_conditions == []
+
+
 async def test_node_status_state(
     hass: HomeAssistant,
     client,

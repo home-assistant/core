@@ -880,6 +880,8 @@ async def test_get_actions_endpoint_child_device(
     sub_actions = await async_get_device_automations(
         hass, DeviceAutomationType.ACTION, child_device.id
     )
+    sub_action_types = {action["type"] for action in sub_actions}
+    # Entity-specific actions are available on the child device.
     assert any(
         action["type"] == "reset_meter" and action.get("entity_id") == meter_entity.id
         for action in sub_actions
@@ -888,6 +890,9 @@ async def test_get_actions_endpoint_child_device(
         action["type"] == "refresh_value" and action.get("entity_id") == meter_entity.id
         for action in sub_actions
     )
+    # Node-scoped actions are not duplicated on child devices.
+    assert "set_value" not in sub_action_types
+    assert "ping" not in sub_action_types
 
 
 async def test_get_action_capabilities(

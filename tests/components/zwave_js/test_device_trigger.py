@@ -1226,52 +1226,38 @@ async def test_get_value_updated_value_triggers(
     assert expected_trigger in triggers
 
 
-@pytest.mark.parametrize(
-    "get_device",
-    [
-        pytest.param(
-            lambda reg, driver, node, entry: reg.async_get_device_by_identifier(
-                get_device_id(driver, node), entry
-            ),
-            id="node_device",
-        ),
-        pytest.param(
-            lambda reg, driver, node, entry: reg.async_get_child_device_by_identifier(
-                get_device_id(driver, node, 1), entry
-            ),
-            id="child_device",
-        ),
-    ],
-)
 async def test_get_triggers_endpoint_child_device(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     client: MagicMock,
     vision_security_zl7432: Node,
     integration: MockConfigEntry,
-    get_device: object,
 ) -> None:
-    """Test node-level triggers are listed for both the node and its child devices.
+    """Test that only the value_updated trigger is exposed for endpoint child devices.
 
-    Device triggers resolve to the node regardless of which device they are requested
-    for, so the generic value_updated trigger is available from both the node device
-    and from each endpoint child device.
+    Node-based event triggers (notifications, value notifications, node status) always
+    fire with the parent node's device_id, so they would never match a child device and
+    are therefore not listed. The generic value_updated trigger works because it resolves
+    the child device_id back to the node when attaching.
     """
-    device = get_device(
-        device_registry, client.driver, vision_security_zl7432, integration.entry_id
+    child_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(client.driver, vision_security_zl7432, 1), integration.entry_id
     )
-    assert device
-    expected_trigger = {
+    assert child_device
+    expected_zwave_trigger = {
         "platform": "device",
         "domain": DOMAIN,
         "type": "zwave_js.value_updated.value",
-        "device_id": device.id,
+        "device_id": child_device.id,
         "metadata": {},
     }
     triggers = await async_get_device_automations(
-        hass, DeviceAutomationType.TRIGGER, device.id
+        hass, DeviceAutomationType.TRIGGER, child_device.id
     )
-    assert expected_trigger in triggers
+    zwave_triggers = [t for t in triggers if t.get("domain") == DOMAIN]
+    # Only the generic value_updated trigger is exposed for child devices; node-level
+    # event triggers (notifications, value notifications, node status) are not.
+    assert zwave_triggers == [expected_zwave_trigger]
 
 
 @pytest.mark.parametrize(

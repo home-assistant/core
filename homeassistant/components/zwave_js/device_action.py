@@ -25,7 +25,11 @@ from homeassistant.const import (
 )
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv, entity_registry as er
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    entity_registry as er,
+)
 from homeassistant.helpers.typing import ConfigType, TemplateVarsType
 
 from .config_validation import COMMAND_CLASS_SCHEMA, VALUE_SCHEMA
@@ -164,25 +168,32 @@ async def async_get_actions(
         CONF_DOMAIN: DOMAIN,
     }
 
-    actions.extend(
-        [
-            {**base_action, CONF_TYPE: SERVICE_SET_VALUE},
-            {**base_action, CONF_TYPE: SERVICE_PING},
-        ]
+    is_child_device = isinstance(
+        dr.async_get(hass).async_get(device_id), dr.ChildDeviceEntry
     )
-    actions.extend(
-        [
-            {
-                **base_action,
-                CONF_TYPE: SERVICE_SET_CONFIG_PARAMETER,
-                ATTR_ENDPOINT: config_value.endpoint,
-                ATTR_CONFIG_PARAMETER: config_value.property_,
-                ATTR_CONFIG_PARAMETER_BITMASK: config_value.property_key,
-                CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
-            }
-            for config_value in node.get_configuration_values().values()
-        ]
-    )
+
+    if not is_child_device:
+        # Node-scoped actions are only available on the main node device, not on
+        # endpoint child devices which would otherwise duplicate the parent's list.
+        actions.extend(
+            [
+                {**base_action, CONF_TYPE: SERVICE_SET_VALUE},
+                {**base_action, CONF_TYPE: SERVICE_PING},
+            ]
+        )
+        actions.extend(
+            [
+                {
+                    **base_action,
+                    CONF_TYPE: SERVICE_SET_CONFIG_PARAMETER,
+                    ATTR_ENDPOINT: config_value.endpoint,
+                    ATTR_CONFIG_PARAMETER: config_value.property_,
+                    ATTR_CONFIG_PARAMETER_BITMASK: config_value.property_key,
+                    CONF_SUBTYPE: generate_config_parameter_subtype(config_value),
+                }
+                for config_value in node.get_configuration_values().values()
+            ]
+        )
 
     meter_endpoints: dict[int, dict[str, Any]] = defaultdict(dict)
 

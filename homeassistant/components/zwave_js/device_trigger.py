@@ -263,6 +263,13 @@ async def async_get_triggers(
     if node.client.driver and node.client.driver.controller.own_node == node:
         return triggers
 
+    # Endpoint child devices only support the generic value-updated trigger. Node-based
+    # event triggers (notifications, value notifications, node status) always fire with
+    # the parent node's device_id, so they would never match a child device.
+    if isinstance(dev_reg.async_get(device_id), dr.ChildDeviceEntry):
+        triggers.append({**base_trigger, CONF_TYPE: VALUE_VALUE_UPDATED})
+        return triggers
+
     # We can add a node status trigger if the node status sensor is enabled
     ent_reg = er.async_get(hass)
     entity_id = async_get_node_status_sensor_entity_id(
