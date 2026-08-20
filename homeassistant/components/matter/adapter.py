@@ -210,22 +210,6 @@ class MatterAdapter:
             endpoint,
         )
         node_device_identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
-        # a bridged device that was merged into the bridge's device by a shared serial
-        # number keeps resolving to it through the identifier it left behind there
-        if (
-            via_device_id is not UNDEFINED
-            and (
-                merged_device := device_registry.async_get_device_by_identifier(
-                    node_device_identifier, self.config_entry.entry_id
-                )
-            )
-            and merged_device.id == via_device_id
-        ):
-            device_registry.async_update_device(
-                merged_device.id,
-                new_identifiers=merged_device.identifiers - {node_device_identifier},
-            )
-
         identifiers = {node_device_identifier}
         serial_number: str | None = None
         # if available, we also add the serialnumber as identifier
@@ -242,6 +226,18 @@ class MatterAdapter:
             # prefix identifier with 'serial_' to be able to filter it
             identifiers.add((DOMAIN, f"{ID_TYPE_SERIAL}_{basic_info_serial_number}"))
             serial_number = basic_info_serial_number
+
+        # the bridge's device entry keeps every identifier that was ever merged onto
+        # it, so a bridged device can still resolve to it through one left behind
+        if (
+            via_device_id is not UNDEFINED
+            and (via_device := device_registry.async_get(via_device_id))
+            and (stale_identifiers := via_device.identifiers & identifiers)
+        ):
+            device_registry.async_update_device(
+                via_device.id,
+                new_identifiers=via_device.identifiers - stale_identifiers,
+            )
 
         # Model name is the human readable name of the model/product name
         model_name = (
