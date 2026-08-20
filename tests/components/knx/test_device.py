@@ -76,7 +76,7 @@ async def test_remove_device(
     device_entities = entity_registry.entities.get_entries_for_device_id(device_id)
     assert len(device_entities) == 1
 
-    response = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
+    response = await client.remove_device(device_id)
     assert response["success"]
     assert not device_registry.async_get_device_by_identifier(
         (DOMAIN, "knx_vdev_4c80a564f5fe5da701ed293966d6384d"),
@@ -110,7 +110,7 @@ async def test_remove_yaml_device_blocked(
     )
     assert device is not None
 
-    response = await client.remove_device(device.id, knx.mock_config_entry.entry_id)
+    response = await client.remove_device(device.id)
     assert not response["success"]
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, "living_room"), knx.mock_config_entry.entry_id
@@ -141,7 +141,7 @@ async def test_remove_device_ignores_foreign_platform_entities(
         device_id=device_id,
     )
 
-    response = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
+    response = await client.remove_device(device_id)
     assert response["success"]
     assert not device_registry.async_get(device_id)
 
@@ -173,7 +173,7 @@ async def test_remove_device_ignores_other_config_entry_knx_entities(
         device_id=device_id,
     )
 
-    response = await client.remove_device(device_id, knx.mock_config_entry.entry_id)
+    response = await client.remove_device(device_id)
     assert response["success"]
     assert not device_registry.async_get(device_id)
 

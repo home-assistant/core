@@ -64,7 +64,9 @@ DISPLAY_SELECT_TYPES: tuple[AirGradientSelectEntityDescription, ...] = (
         translation_key="display_pm_standard",
         options=list(PM_STANDARD_REVERSE),
         entity_category=EntityCategory.CONFIG,
-        value_fn=lambda config: PM_STANDARD.get(config.pm_standard),
+        value_fn=lambda config: (
+            PM_STANDARD.get(config.pm_standard) if config.pm_standard else None
+        ),
         set_value_fn=lambda client, value: client.set_pm_standard(
             PM_STANDARD_REVERSE[value]
         ),
@@ -100,7 +102,7 @@ ABC_DAYS = [
 ]
 
 
-def _get_value(value: int, values: list[str]) -> str | None:
+def _get_value(value: int | None, values: list[str]) -> str | None:
     str_value = str(value)
     return str_value if str_value in values else None
 
