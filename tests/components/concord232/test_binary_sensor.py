@@ -1,5 +1,6 @@
 """Tests for the Concord232 binary sensor platform."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -81,7 +82,7 @@ async def test_zone_state_updates(
         {"number": 1, "name": "FRONT DOOR", "state": "Tripped"},
         {"number": 2, "name": "HALL MOTION", "state": "Normal"},
     ]
-    freezer.tick(UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -145,7 +146,7 @@ async def test_zone_missing_from_update_goes_unavailable(
     mock_concord232_client.list_zones.return_value = [
         {"number": 2, "name": "HALL MOTION", "state": "Normal"}
     ]
-    freezer.tick(UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -157,7 +158,7 @@ async def test_zone_missing_from_update_goes_unavailable(
         {"number": 1, "name": "FRONT DOOR", "state": "Tripped"},
         {"number": 2, "name": "HALL MOTION", "state": "Normal"},
     ]
-    freezer.tick(UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 

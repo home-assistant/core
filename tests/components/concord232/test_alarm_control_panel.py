@@ -1,5 +1,6 @@
 """Tests for the Concord232 alarm control panel platform."""
 
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
@@ -69,7 +70,7 @@ async def test_state_updates_on_poll(
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
 
     mock_concord232_client.list_partitions.return_value = [{"arming_level": "Away"}]
-    freezer.tick(UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
@@ -88,7 +89,7 @@ async def test_unavailable_on_error(
     mock_concord232_client.list_partitions.side_effect = (
         requests.exceptions.ConnectionError("boom")
     )
-    freezer.tick(UPDATE_INTERVAL)
+    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
