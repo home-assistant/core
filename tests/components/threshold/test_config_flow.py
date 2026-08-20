@@ -164,6 +164,7 @@ async def test_options(hass: HomeAssistant) -> None:
                 "name": "Test Sensor",
                 "entity_id": "sensor.test_monitored",
                 "hysteresis": 0.0,
+                "invert": False,
                 "lower": 20.0,
             }
         ),
@@ -172,6 +173,7 @@ async def test_options(hass: HomeAssistant) -> None:
                 "name": "Test Sensor",
                 "entity_id": "sensor.test_monitored",
                 "hysteresis": 0.0,
+                "invert": False,
             }
         ),
         (
@@ -179,6 +181,7 @@ async def test_options(hass: HomeAssistant) -> None:
                 "name": "",
                 "entity_id": "",
                 "hysteresis": 0.0,
+                "invert": False,
                 "lower": 20.0,
             }
         ),
@@ -186,6 +189,7 @@ async def test_options(hass: HomeAssistant) -> None:
             {
                 "name": "Test Sensor",
                 "entity_id": "sensor.test_monitored",
+                "invert": False,
                 "lower": 20.0,
             }
         ),
