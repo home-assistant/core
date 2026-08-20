@@ -34,7 +34,7 @@
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         },
-        "description": "Pairing is required for the `{protocol}` protocol. Please enter the PIN code displayed on screen. Leading zeros shall be omitted, i.e. enter 123 if the displayed code is 0123.",
+        "description": "Pairing is required for the `{protocol}` protocol. Please enter the PIN code displayed on screen, including any leading zeros.",
         "title": "Pairing"
       },
       "password": {
