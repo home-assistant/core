@@ -452,6 +452,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             if rf_region is None or rf_region == "Automatic":
                 # If the RF region is not set, we need to ask the user to select it.
                 return await self.async_step_rf_region()
+        if (
+            self._reconfigure_config_entry is None
+            and self._addon_owned_by_other_entry()
+        ):
+            # An add-on based entry was created while this flow was open,
+            # e.g. by a concurrent discovery flow. Abort before this flow
+            # overwrites the add-on config of that entry.
+            return self.async_abort(reason="addon_already_configured")
+
         if config_updates := self._addon_config_updates:
             # If we have updates to the add-on config,
             # set them before starting the add-on.
@@ -861,10 +870,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.use_addon = True
 
-        if any(
-            entry.data.get(CONF_USE_ADDON) and entry.unique_id != self.unique_id
-            for entry in self._async_current_entries(include_ignore=False)
-        ):
+        if self._addon_owned_by_other_entry():
             # The add-on can only connect to a single adapter, so abort before
             # the flow changes the add-on config of the existing entry.
             # A discovery of the existing entry's own adapter passes, so the
@@ -939,6 +945,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="configure_addon_user", data_schema=data_schema, errors=errors
+        )
+
+    @callback
+    def _addon_owned_by_other_entry(self) -> bool:
+        """Return if another config entry uses the add-on."""
+        return any(
+            entry.data.get(CONF_USE_ADDON) and entry.unique_id != self.unique_id
+            for entry in self._async_current_entries(include_ignore=False)
         )
 
     @callback

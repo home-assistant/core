@@ -2825,6 +2825,47 @@ async def test_reconfigure_addon_already_configured(
     set_addon_options.assert_not_called()
 
 
+@pytest.mark.usefixtures("supervisor", "addon_installed")
+async def test_addon_already_configured_at_addon_start(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test the add-on start aborts when an add-on entry appeared late."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_user"
+
+    # An add-on based entry is configured while the flow shows the form,
+    # e.g. by a concurrent discovery flow.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "usb_path": "/other",
+            "use_addon": True,
+        },
+        title=TITLE,
+        unique_id="4321",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"usb_path": "/test"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_already_configured"
+    # The other entry's add-on config is untouched.
+    set_addon_options.assert_not_called()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+
+
 @pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_addon_running(
     hass: HomeAssistant,
