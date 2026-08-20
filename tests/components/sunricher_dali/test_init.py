@@ -160,8 +160,8 @@ async def test_remove_stale_devices(
     )
     assert len(devices_after) < initial_count
 
-    gateway_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_gateway.gw_sn)}
+    gateway_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_gateway.gw_sn), mock_config_entry.entry_id
     )
     assert gateway_device is not None
     assert mock_config_entry.entry_id in gateway_device.config_entries

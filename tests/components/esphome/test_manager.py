@@ -1613,8 +1613,8 @@ async def test_esphome_device_with_suggested_area(
     )
     await hass.async_block_till_done()
     entry = device.entry
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
     assert dev.area_id == area_registry.async_get_area_by_name("kitchen").id
 
@@ -1636,8 +1636,8 @@ async def test_esphome_device_area_priority(
     )
     await hass.async_block_till_done()
     entry = device.entry
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
     # Should use device_info.area.name instead of suggested_area
     assert dev.area_id == area_registry.async_get_area_by_name("Living Room").id
@@ -1656,8 +1656,8 @@ async def test_esphome_device_with_project(
     )
     await hass.async_block_till_done()
     entry = device.entry
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
     assert dev.manufacturer == "mfr"
     assert dev.model == "model"
@@ -1677,8 +1677,8 @@ async def test_esphome_device_with_manufacturer(
     )
     await hass.async_block_till_done()
     entry = device.entry
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
     assert dev.manufacturer == "acme"
 
@@ -1696,8 +1696,8 @@ async def test_esphome_device_with_web_server(
     )
     await hass.async_block_till_done()
     entry = device.entry
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
     assert dev.configuration_url == "http://test.local:80"
 
@@ -1726,8 +1726,8 @@ async def test_esphome_device_with_ipv6_web_server(
     )
     await hass.async_block_till_done()
     entry = device.entry
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
     assert dev.configuration_url == "http://[fe80::1]:80"
 
@@ -1745,8 +1745,8 @@ async def test_esphome_device_with_compilation_time(
     )
     await hass.async_block_till_done()
     entry = device.entry
-    dev = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, entry.unique_id)}
+    dev = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, entry.unique_id), entry.entry_id
     )
     assert "comp_time" in dev.sw_version
 
@@ -1923,8 +1923,8 @@ async def test_device_adds_friendly_name(
     )
     await hass.async_block_till_done()
     dev_reg = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    dev = dev_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.entry.unique_id)}
+    dev = dev_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.entry.unique_id), device.entry.entry_id
     )
     assert dev.name == "Nofriendlyname"
     assert (
@@ -1945,8 +1945,8 @@ async def test_device_adds_friendly_name(
     )
     await device.mock_connect()
     await hass.async_block_till_done()
-    dev = dev_reg.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.entry.unique_id)}
+    dev = dev_reg.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.entry.unique_id), device.entry.entry_id
     )
     assert dev.name == "I have a friendly name"
     assert (
@@ -2036,15 +2036,16 @@ async def test_sub_device_creation(
     )
 
     # Check main device is created
-    main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
+        device.entry.entry_id,
     )
     assert main_device is not None
     assert main_device.area_id == area_registry.async_get_area_by_name("Main Hub").id
 
     # Check sub devices are created
-    sub_device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    sub_device_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
     assert sub_device_1.name == "Motion Sensor"
@@ -2053,8 +2054,8 @@ async def test_sub_device_creation(
     )
     assert sub_device_1.via_device_id == main_device.id
 
-    sub_device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    sub_device_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
     assert sub_device_2.name == "Light Switch"
@@ -2063,8 +2064,8 @@ async def test_sub_device_creation(
     )
     assert sub_device_2.via_device_id == main_device.id
 
-    sub_device_3 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+    sub_device_3 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_33333333"), device.entry.entry_id
     )
     assert sub_device_3 is not None
     assert sub_device_3.name == "Temperature Sensor"
@@ -2098,20 +2099,23 @@ async def test_sub_device_cleanup(
 
     # Verify all sub devices exist
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{device.device_info.mac_address}_11111111"),
+            device.entry.entry_id,
         )
         is not None
     )
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{device.device_info.mac_address}_22222222"),
+            device.entry.entry_id,
         )
         is not None
     )
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{device.device_info.mac_address}_33333333"),
+            device.entry.entry_id,
         )
         is not None
     )
@@ -2144,20 +2148,23 @@ async def test_sub_device_cleanup(
 
     # Verify device 2 was removed
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{device.device_info.mac_address}_11111111"),
+            device.entry.entry_id,
         )
         is not None
     )
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{device.device_info.mac_address}_22222222"),
+            device.entry.entry_id,
         )
         is None
     )  # Should be removed
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{device.device_info.mac_address}_33333333"),
+            device.entry.entry_id,
         )
         is not None
     )
@@ -2188,19 +2195,20 @@ async def test_sub_device_with_empty_name(
     await hass.async_block_till_done()
 
     # Check sub device with empty name
-    sub_device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    sub_device_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
     # Empty sub-device names should fall back to main device name
-    main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
+        device.entry.entry_id,
     )
     assert sub_device_1.name == main_device.name
 
     # Check sub device with valid name
-    sub_device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    sub_device_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
     assert sub_device_2.name == "Valid Name"
@@ -2246,8 +2254,9 @@ async def test_sub_device_references_main_device_area(
     )
 
     # Check main device has correct area
-    main_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address)}
+    main_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, device.device_info.mac_address),
+        device.entry.entry_id,
     )
     assert main_device is not None
     assert (
@@ -2255,8 +2264,8 @@ async def test_sub_device_references_main_device_area(
     )
 
     # Check sub device 1 uses main device's area
-    sub_device_1 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_11111111")}
+    sub_device_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
     )
     assert sub_device_1 is not None
     assert (
@@ -2264,8 +2273,8 @@ async def test_sub_device_references_main_device_area(
     )
 
     # Check sub device 2 uses Living Room
-    sub_device_2 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_22222222")}
+    sub_device_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_22222222"), device.entry.entry_id
     )
     assert sub_device_2 is not None
     assert (
@@ -2273,8 +2282,8 @@ async def test_sub_device_references_main_device_area(
     )
 
     # Check sub device 3 uses Bedroom
-    sub_device_3 = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{device.device_info.mac_address}_33333333")}
+    sub_device_3 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_33333333"), device.entry.entry_id
     )
     assert sub_device_3 is not None
     assert sub_device_3.area_id == area_registry.async_get_area_by_name("Bedroom").id
@@ -3046,8 +3055,8 @@ async def test_dynamic_encryption_key_dashboard_sync_failure_is_not_fatal(
     # The flow must have run to completion — a sync exception escaping
     # _on_connect would skip the device-registry setup after the handoff.
     assert (
-        device_registry.async_get_device(
-            connections={(dr.CONNECTION_NETWORK_MAC, mac_address)}
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, mac_address), entry.entry_id
         )
         is not None
     )
