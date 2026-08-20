@@ -27,6 +27,7 @@ from homeassistant.components.truenas_ce.const import (
     ERR_CONNECTION_REFUSED,
     ERR_INVALID_KEY,
     LEGACY_DOMAIN,
+    MIGRATION_DONE,
 )
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -552,3 +553,35 @@ async def test_migrate_manual_skips_takeover(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+
+
+@pytest.mark.usefixtures("_mock_connection_ok")
+async def test_migrate_manual_marks_migration_done(hass: HomeAssistant) -> None:
+    """Migrate-manual's entry must never be auto-adopted by the legacy entry later.
+
+    Regression test: entering the *same* host the legacy entry uses (the
+    normal case, since it's the same physical box) used to let
+    ``async_adopt_legacy_entities`` silently override the user's explicit
+    "from scratch" choice on the first coordinator setup, because nothing
+    recorded that this entry had already gone through the migration decision.
+    """
+    _legacy_entry().add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "migrate_manual"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "legacy.example.com",
+            CONF_API_KEY: "new-key",
+            CONF_VERIFY_SSL: True,
+            CONF_CRONJOB_SKIP_DISABLED: False,
+            CONF_DATA_UNIT: "GB",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][MIGRATION_DONE] is True

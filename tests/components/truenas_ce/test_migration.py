@@ -40,6 +40,25 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry
 
 
+def _fake_set_disabled_by(hass: HomeAssistant):
+    """Stand in for a real (dis/re)enable that always succeeds.
+
+    The real "truenas" legacy integration isn't part of this tree, so a
+    genuine ``async_set_disabled_by`` call (which reloads/unloads it) always
+    fails here regardless of input; this fakes the ``disabled_by`` side
+    effect the tested migration code depends on, without requiring a working
+    reload.
+    """
+
+    async def _fake(entry_id: str, disabled_by: object) -> bool:
+        entry = hass.config_entries.async_get_entry(entry_id)
+        if entry is not None:
+            entry.disabled_by = disabled_by
+        return True
+
+    return _fake
+
+
 # ---------------------------
 #   _find_legacy_entry
 # ---------------------------
@@ -86,7 +105,12 @@ async def test_forward_adoption_frees_and_reattaches_entity_id(
     new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
     new_entry.add_to_hass(hass)
 
-    records = await async_adopt_legacy_entities(hass, new_entry)
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        side_effect=_fake_set_disabled_by(hass),
+    ):
+        records = await async_adopt_legacy_entities(hass, new_entry)
 
     assert len(records) == 1
     assert entity_registry.async_get(legacy_entity.entity_id) is None
@@ -121,9 +145,55 @@ async def test_second_setup_is_idempotent_noop(
 
     new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
     new_entry.add_to_hass(hass)
-    await async_adopt_legacy_entities(hass, new_entry)
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        side_effect=_fake_set_disabled_by(hass),
+    ):
+        await async_adopt_legacy_entities(hass, new_entry)
 
     assert await async_adopt_legacy_entities(hass, new_entry) == []
+
+
+async def test_adoption_aborts_and_keeps_legacy_entities_when_disable_fails(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """A legacy entry that fails to disable must not lose its entities either.
+
+    Mirrors test_rollback_aborts_and_keeps_ce_entry_when_legacy_setup_fails: the
+    same "stop before release" ordering applies on the forward adoption path.
+    """
+    legacy = MockConfigEntry(domain=LEGACY_DOMAIN, data={CONF_HOST: "nas.local"})
+    legacy.add_to_hass(hass)
+    legacy_entity = entity_registry.async_get_or_create(
+        "sensor", LEGACY_DOMAIN, "uptime-uid", config_entry=legacy
+    )
+
+    new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
+    new_entry.add_to_hass(hass)
+
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        AsyncMock(return_value=False),
+    ):
+        records = await async_adopt_legacy_entities(hass, new_entry)
+
+    assert records == []
+    assert new_entry.data.get(MIGRATION_DONE) is not True
+    assert entity_registry.async_get(legacy_entity.entity_id) is not None
+
+    # Not persisted as done, so a later setup (once the legacy entry can be
+    # disabled) retries the adoption instead of skipping it forever.
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        AsyncMock(return_value=True),
+    ):
+        retried = await async_adopt_legacy_entities(hass, new_entry)
+
+    assert len(retried) == 1
 
 
 # ---------------------------
@@ -146,7 +216,12 @@ async def test_pending_record_reclaims_id_once_entity_later_appears(
 
     new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
     new_entry.add_to_hass(hass)
-    records = await async_adopt_legacy_entities(hass, new_entry)
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        side_effect=_fake_set_disabled_by(hass),
+    ):
+        records = await async_adopt_legacy_entities(hass, new_entry)
     finalize_legacy_adoption(
         hass, new_entry, records
     )  # no matching new entity yet -> no-op
@@ -185,7 +260,12 @@ async def test_pending_legacy_records_excludes_resolved_and_diverged(
 
     new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
     new_entry.add_to_hass(hass)
-    records = await async_adopt_legacy_entities(hass, new_entry)
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        side_effect=_fake_set_disabled_by(hass),
+    ):
+        records = await async_adopt_legacy_entities(hass, new_entry)
     entity_registry.async_get_or_create(
         "sensor", DOMAIN, "uptime-uid", config_entry=new_entry
     )
@@ -286,7 +366,12 @@ async def test_rollback_returns_false_when_legacy_entry_already_gone(
 
     new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
     new_entry.add_to_hass(hass)
-    await async_adopt_legacy_entities(hass, new_entry)
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        side_effect=_fake_set_disabled_by(hass),
+    ):
+        await async_adopt_legacy_entities(hass, new_entry)
 
     await hass.config_entries.async_remove(legacy.entry_id)
 
@@ -307,7 +392,12 @@ async def test_rollback_removes_entry_reenables_legacy_and_restores_id(
 
     new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
     new_entry.add_to_hass(hass)
-    records = await async_adopt_legacy_entities(hass, new_entry)
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        side_effect=_fake_set_disabled_by(hass),
+    ):
+        records = await async_adopt_legacy_entities(hass, new_entry)
     entity_registry.async_get_or_create(
         "sensor", DOMAIN, "uptime-uid", config_entry=new_entry
     )
@@ -329,12 +419,10 @@ async def test_rollback_removes_entry_reenables_legacy_and_restores_id(
     # setup can't succeed here; stand in for what a still-working legacy
     # install would report, preserving the disabled_by side effect the
     # rollback's success check depends on.
-    async def _fake_enable(entry_id: str, disabled_by: object) -> bool:
-        hass.config_entries.async_get_entry(entry_id).disabled_by = disabled_by
-        return True
-
     with patch.object(
-        hass.config_entries, "async_set_disabled_by", side_effect=_fake_enable
+        hass.config_entries,
+        "async_set_disabled_by",
+        side_effect=_fake_set_disabled_by(hass),
     ):
         result = await async_rollback_to_legacy(hass, new_entry)
 
@@ -360,7 +448,12 @@ async def test_rollback_aborts_and_keeps_ce_entry_when_legacy_setup_fails(
 
     new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
     new_entry.add_to_hass(hass)
-    await async_adopt_legacy_entities(hass, new_entry)
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        side_effect=_fake_set_disabled_by(hass),
+    ):
+        await async_adopt_legacy_entities(hass, new_entry)
 
     with patch.object(
         hass.config_entries,

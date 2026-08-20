@@ -96,11 +96,23 @@ async def async_adopt_legacy_entities(
 
     if legacy_entry is not None:
         # Disable the legacy entry first so its coordinator stops and cannot
-        # re-discover (re-add) the entities we are about to release.
-        if legacy_entry.disabled_by is None:
+        # re-discover (re-add) the entities we are about to release. Abort
+        # (without persisting MIGRATION_DONE) if that fails, so a later setup
+        # retries instead of stripping entities out from under a still-active
+        # legacy coordinator.
+        disabled = legacy_entry.disabled_by is not None or (
             await hass.config_entries.async_set_disabled_by(
                 legacy_entry.entry_id, ConfigEntryDisabler.USER
             )
+        )
+        if not disabled:
+            _LOGGER.error(
+                "Adoption aborted: legacy '%s' entry %s could not be disabled;"
+                " entities were left in place and will be retried on next setup",
+                LEGACY_DOMAIN,
+                legacy_entry.entry_id,
+            )
+            return []
         ent_reg = er.async_get(hass)
         # Capture the records read-only, write the safety snapshot, and only then
         # mutate the registry — so a failed backup never leaves a half-freed state.

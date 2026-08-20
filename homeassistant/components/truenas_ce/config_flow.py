@@ -46,6 +46,7 @@ from .const import (
     ERR_WS_NOT_SUPPORTED,
     KNOWN_DOMAINS,
     LEGACY_DOMAIN,
+    MIGRATION_DONE,
 )
 
 _LOGGER = getLogger(__name__)
@@ -629,5 +630,12 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_migrate_manual(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Skip the takeover and configure TrueNAS CE from scratch."""
+        """Skip the takeover and configure TrueNAS CE from scratch.
+
+        Marks the entry as already migrated so ``async_adopt_legacy_entities``
+        never auto-adopts the legacy entry later -- without this, entering the
+        same host the legacy entry uses would silently override the user's
+        explicit "from scratch" choice on the first coordinator setup.
+        """
+        self.truenas_config[MIGRATION_DONE] = True
         return await self.async_step_user()
