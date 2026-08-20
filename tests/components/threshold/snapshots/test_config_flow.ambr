@@ -30,7 +30,7 @@
     'state': 'unavailable',
   })
 # ---
-# name: test_config_flow_preview_success[success0]
+# name: test_config_flow_preview_success[success_missing_invert]
   dict({
     'attributes': dict({
       'entity_id': 'sensor.test_monitored',
@@ -46,7 +46,7 @@
     'state': 'on',
   })
 # ---
-# name: test_config_flow_preview_success[success1]
+# name: test_config_flow_preview_success[success_invert_false]
   dict({
     'attributes': dict({
       'entity_id': 'sensor.test_monitored',
@@ -62,7 +62,7 @@
     'state': 'on',
   })
 # ---
-# name: test_config_flow_preview_success[success2]
+# name: test_config_flow_preview_success[success_invert_true]
   dict({
     'attributes': dict({
       'entity_id': 'sensor.test_monitored',

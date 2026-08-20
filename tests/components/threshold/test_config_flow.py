@@ -209,9 +209,9 @@ async def test_options(hass: HomeAssistant) -> None:
         ),
     ],
     ids=(
-        "success0",
-        "success1",
-        "success2",
+        "success_missing_invert",
+        "success_invert_false",
+        "success_invert_true",
         "missing_upper_lower",
         "missing_entity_id",
         "missing_hysteresis",
