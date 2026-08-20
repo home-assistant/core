@@ -14,6 +14,7 @@ from homeassistant.config_entries import (
     SOURCE_USB,
     SOURCE_USER,
     ConfigEntryDisabler,
+    ConfigEntryState,
     ConfigFlow,
 )
 from homeassistant.core import HomeAssistant
@@ -96,7 +97,6 @@ async def _async_get_serial_ports(
         pytest.param({"usb_path": TTY_USB0}, {}, id="usb_path"),
         pytest.param({}, {"usb_path": TTY_USB0}, id="usb_path_in_options"),
         pytest.param({"serial_port": TTY_USB0}, {}, id="serial_port"),
-        pytest.param({"device": f"serial://{TTY_USB0}"}, {}, id="serial_url"),
         pytest.param({"device": TTY_USB0_BY_ID}, {}, id="by_id_symlink"),
         pytest.param({"device": TTY_USB0}, {"device": TTY_USB0}, id="data_and_options"),
     ],
@@ -140,13 +140,69 @@ async def test_config_entry_consumers(
 
 @pytest.mark.usefixtures("setup_ports")
 @pytest.mark.parametrize(
+    "device",
+    [
+        pytest.param(f"serial://{TTY_USB0}", id="serial_url"),
+        pytest.param(f"serial://{TTY_USB0}:4800", id="serial_url_with_baud"),
+        pytest.param(f"device://{TTY_USB0}:4800", id="device_url_with_baud"),
+        pytest.param(f"{TTY_USB0}:4800", id="bare_path_with_baud"),
+    ],
+)
+async def test_config_entry_upb_url(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device: str,
+) -> None:
+    """Test upb's URL forms with an optional baud rate suffix."""
+    mock_integration(hass, MockModule("upb", dependencies=["usb"]))
+    MockConfigEntry(domain="upb", title="UPB", data={"device": device}).add_to_hass(
+        hass
+    )
+
+    result = await _async_get_serial_ports(hass_ws_client, hass)
+
+    assert [(port["device"], len(port["consumers"])) for port in result] == [
+        (TTY_USB0, 1),
+        (ESPHOME_PORT, 0),
+    ]
+
+
+@pytest.mark.usefixtures("setup_ports")
+@pytest.mark.parametrize(
+    ("state", "active"),
+    [
+        pytest.param(ConfigEntryState.LOADED, True, id="loaded"),
+        pytest.param(ConfigEntryState.SETUP_RETRY, True, id="setup_retry"),
+        pytest.param(ConfigEntryState.FAILED_UNLOAD, True, id="failed_unload"),
+        pytest.param(ConfigEntryState.NOT_LOADED, False, id="not_loaded"),
+        pytest.param(ConfigEntryState.SETUP_ERROR, False, id="setup_error"),
+    ],
+)
+async def test_config_entry_active_states(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    state: ConfigEntryState,
+    active: bool,
+) -> None:
+    """Test which config entry states mark the consumer as active."""
+    mock_integration(hass, MockModule("test_usb", dependencies=["usb"]))
+    MockConfigEntry(
+        domain="test_usb", title="Test USB", data={"device": TTY_USB0}, state=state
+    ).add_to_hass(hass)
+
+    result = await _async_get_serial_ports(hass_ws_client, hass)
+
+    assert [consumer["active"] for consumer in result[0]["consumers"]] == [active]
+
+
+@pytest.mark.usefixtures("setup_ports")
+@pytest.mark.parametrize(
     "data",
     [
         pytest.param({"port": 8080}, id="tcp_port"),
         pytest.param({"port": "192.0.2.1:1234"}, id="host_and_port"),
         pytest.param({"device": {"other": TTY_USB0}}, id="unknown_nested_key"),
         pytest.param({"other": TTY_USB0}, id="unknown_key"),
-        pytest.param({"device": "socket://192.0.2.1:1234"}, id="socket_url"),
     ],
 )
 async def test_config_entry_non_serial_values(
@@ -250,25 +306,37 @@ async def test_remote_port_consumer(
 
 
 @pytest.mark.usefixtures("setup_ports")
+@pytest.mark.parametrize(
+    "device",
+    [
+        pytest.param(TTY_USB1, id="local"),
+        pytest.param("esphome-hass://02AB/uart0", id="esphome_proxy"),
+        pytest.param("esphome://ttl-to-serial.local/uart1", id="esphome"),
+        pytest.param("socket://192.0.2.1:1234", id="socket"),
+        pytest.param("rfc2217://192.0.2.1:1234", id="rfc2217"),
+    ],
+)
 async def test_absent_configured_port(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
+    device: str,
 ) -> None:
     """Test a configured port that is not currently present."""
     mock_integration(hass, MockModule("test_usb", dependencies=["usb"]))
-    MockConfigEntry(
-        domain="test_usb", title="Test USB", data={"device": TTY_USB1}
-    ).add_to_hass(hass)
+    entry = MockConfigEntry(
+        domain="test_usb", title="Test USB", data={"device": device}
+    )
+    entry.add_to_hass(hass)
 
     result = await _async_get_serial_ports(hass_ws_client, hass)
 
     assert [(port["device"], port["present"]) for port in result] == [
         (TTY_USB0, True),
         (ESPHOME_PORT, True),
-        (TTY_USB1, False),
+        (device, False),
     ]
     assert result[2] == {
-        "device": TTY_USB1,
+        "device": device,
         "resolved_device": None,
         "serial_number": None,
         "manufacturer": None,
@@ -284,7 +352,7 @@ async def test_absent_configured_port(
                 "title": "Test USB",
                 "active": False,
                 "domain": "test_usb",
-                "config_entry_id": result[2]["consumers"][0]["config_entry_id"],
+                "config_entry_id": entry.entry_id,
                 "slug": None,
             }
         ],

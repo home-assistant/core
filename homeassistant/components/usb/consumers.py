@@ -2,6 +2,7 @@
 
 from collections.abc import Mapping, Sequence
 import os
+import re
 from typing import Any
 
 from homeassistant.components.hassio import HassioNotReadyError, get_addons_info
@@ -29,8 +30,19 @@ ACTIVE_CONFIG_ENTRY_STATES = (
     ConfigEntryState.SETUP_IN_PROGRESS,
 )
 
-# Local ports can be wrapped in a URL by integrations such as upb
-SERIAL_URL_PREFIX = "serial://"
+# Schemes of remote serial port URLs, listed even when they cannot be tied to
+# a scanned port, e.g. when the providing integration is offline
+REMOTE_PORT_SCHEMES = (
+    "esphome-hass://",
+    "esphome://",
+    "rfc2217://",
+    "socket://",
+    "tcp://",
+)
+
+# upb wraps the port in a URL with an optional baud rate, e.g.
+# `serial:///dev/ttyS0:4800`, which upb_lib strips itself when connecting
+BAUD_SUFFIX_RE = re.compile(r":\d+$")
 
 # Supervisor app state, mirrors `aiohasupervisor.models.AddonState.STARTED`
 APP_STATE_STARTED = "started"
@@ -48,16 +60,24 @@ def _resolve_key_path(data: Mapping[str, Any], key_path: tuple[str, ...]) -> Any
     return value
 
 
-def _serial_port_from_value(value: Any, known_devices: set[str]) -> str | None:
+def _serial_port_from_value(
+    value: Any, known_devices: set[str], domain: str
+) -> str | None:
     """Return the serial port a config entry value refers to."""
     if not isinstance(value, str):
         return None
 
-    # Remote ports are only identifiable by matching a scanned port exactly
     if value in known_devices:
         return value
 
-    path = value.removeprefix(SERIAL_URL_PREFIX)
+    if value.startswith(REMOTE_PORT_SCHEMES):
+        return value
+
+    path = value
+
+    if domain == "upb":
+        path = path.removeprefix("serial://").removeprefix("device://")
+        path = BAUD_SUFFIX_RE.sub("", path)
 
     if path.startswith("/dev/"):
         return path
@@ -97,7 +117,7 @@ async def _async_get_config_entry_consumers(
         for key_path in SERIAL_PORT_KEY_PATHS:
             for data in (entry.data, entry.options):
                 port = _serial_port_from_value(
-                    _resolve_key_path(data, key_path), known_devices
+                    _resolve_key_path(data, key_path), known_devices, entry.domain
                 )
 
                 if port is None:
