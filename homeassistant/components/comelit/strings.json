@@ -149,7 +149,8 @@
         },
         "data_description": {
           "entity_id": "The cover to configure the travel time for."
-        }
+        },
+        "title": "Select cover"
       }
     }
   }

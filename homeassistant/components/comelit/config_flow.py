@@ -252,7 +252,8 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_HOST, default=reconfigure_entry.data[CONF_HOST]
                 ): cv.string,
                 vol.Required(
-                    CONF_PORT, default=reconfigure_entry.data[CONF_PORT]
+                    CONF_PORT,
+                    default=reconfigure_entry.data.get(CONF_PORT, DEFAULT_PORT),
                 ): cv.port,
                 vol.Optional(CONF_PIN): cv.string,
                 vol.Optional(CONF_VEDO_PIN): cv.string,

@@ -14,6 +14,7 @@ from homeassistant.components.comelit.config_flow import (
 from homeassistant.components.comelit.const import (
     CONF_TRAVEL_TIME,
     CONF_VEDO_PIN,
+    DEFAULT_PORT,
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_USER
@@ -275,6 +276,31 @@ async def test_reconfigure_successful(
 
     # changed entry
     assert mock_serial_bridge_config_entry.data[CONF_HOST] == new_host
+
+
+async def test_reconfigure_legacy_entry_without_port(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+) -> None:
+    """Test reconfiguring an entry created before the port field existed."""
+    legacy_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_HOST: BRIDGE_HOST,
+            CONF_PIN: BRIDGE_PIN,
+            CONF_TYPE: BRIDGE,
+        },
+        entry_id="legacy_serial_bridge_config_entry_id",
+    )
+    legacy_entry.add_to_hass(hass)
+
+    result = await legacy_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    port_marker = next(key for key in result["data_schema"].schema if key == CONF_PORT)
+    assert port_marker.default() == DEFAULT_PORT
 
 
 @pytest.mark.parametrize(
