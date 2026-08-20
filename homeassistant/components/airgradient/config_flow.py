@@ -62,12 +62,9 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         properties = discovery_info.properties
         self.data[CONF_HOST] = host = discovery_info.host
-        model = properties.get("model")
-        serial_number = properties.get("serialno")
-        firmware_version = properties.get("fw_ver")
-
-        if not isinstance(model, str) or not isinstance(serial_number, str):
-            return self.async_abort(reason="cannot_connect")
+        model = properties["model"]
+        serial_number = properties["serialno"]
+        firmware_version = properties["fw_ver"]
 
         self.data[CONF_MODEL] = model
         await self.async_set_unique_id(serial_number)
@@ -81,17 +78,13 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         else:
             self.client = AirGradientClient(host, session=session)
         try:
-            measures = await self.client.get_current_measures()
+            await self.client.get_current_measures()
         except AirGradientParseError:
             return self.async_abort(reason="invalid_version")
         except AirGradientError:
             return self.async_abort(reason="cannot_connect")
 
-        if not self._has_supported_firmware(
-            firmware_version
-            if isinstance(firmware_version, str)
-            else measures.firmware_version
-        ):
+        if not self._has_supported_firmware(firmware_version):
             return self.async_abort(reason="invalid_version")
 
         self.context["title_placeholders"] = {
