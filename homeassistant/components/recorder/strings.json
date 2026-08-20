@@ -4,6 +4,10 @@
       "description": "The database backup stated at {start_time} failed due to lack of resources. The backup cannot be trusted and must be restarted. This can happen if the database is too large or if the system is under heavy load. Consider upgrading the system hardware or reducing the size of the database by decreasing the number of history days to keep or creating a filter.",
       "title": "Database backup failed due to lack of resources"
     },
+    "database_engine_not_supported_lts": {
+      "description": "Version {server_version} of {database_engine} is not a supported long-term support (LTS) release. Short-term releases and end-of-life LTS releases are no longer supported; please upgrade to one of the supported LTS versions ({lts_versions}) to continue using the recorder.",
+      "title": "Update {database_engine} to a supported LTS version to continue using the recorder"
+    },
     "database_engine_too_old": {
       "description": "Support for version {server_version} of {database_engine} is ending; the minimum supported version is {min_version}. Please upgrade your database software.",
       "title": "Update {database_engine} to {min_version} or later to continue using the recorder"

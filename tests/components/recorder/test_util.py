@@ -749,58 +749,102 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     assert database_engine.optimizer.slow_dependent_subquery is False
 
 
+async def test_issue_for_deprecated_pgsql_version(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create and delete an issue for a PostgreSQL version below the minimum."""
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+    reported_version = "13.2"
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SHOW server_version":
+            return [[reported_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "postgresql",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "database_engine_too_old")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.3.0"
+    assert issue.translation_placeholders == {
+        "database_engine": "PostgreSQL",
+        "server_version": "13.2",
+        "min_version": "15.0",
+    }
+    assert database_engine is not None
+
+    reported_version = "15.2"
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "postgresql",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "database_engine_too_old") is None
+    assert database_engine is not None
+
+
 @pytest.mark.parametrize(
     (
-        "dialect",
-        "version_query",
         "server_version",
         "extracted_version",
         "engine_name",
-        "min_version",
+        "lts_versions",
         "supported_version",
     ),
     [
         (
-            "mysql",
-            "SELECT VERSION()",
             "10.6.0-MariaDB",
             "10.6.0",
             "MariaDB",
-            "10.11.0",
-            "10.11.0-MariaDB",
+            "10.11, 11.4, 11.8, 12.3",
+            "11.8.1-MariaDB",
         ),
         (
-            "mysql",
-            "SELECT VERSION()",
-            "8.0.0",
-            "8.0.0",
-            "MySQL",
-            "8.4.0",
-            "8.4.0",
+            "11.5.0-MariaDB",
+            "11.5.0",
+            "MariaDB",
+            "10.11, 11.4, 11.8, 12.3",
+            "11.8.1-MariaDB",
         ),
-        (
-            "postgresql",
-            "SHOW server_version",
-            "13.2",
-            "13.2",
-            "PostgreSQL",
-            "15.0",
-            "15.2",
-        ),
+        ("8.0.0", "8.0.0", "MySQL", "8.4, 9.7", "8.4.0"),
+        ("8.2.0", "8.2.0", "MySQL", "8.4, 9.7", "9.7.0"),
     ],
 )
-async def test_issue_for_deprecated_database_version(
+async def test_issue_for_not_supported_lts_version(
     hass: HomeAssistant,
-    dialect: str,
-    version_query: str,
     server_version: str,
     extracted_version: str,
     engine_name: str,
-    min_version: str,
+    lts_versions: str,
     supported_version: str,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test we create and delete an issue for end-of-life database versions."""
+    """Test we warn about MariaDB/MySQL versions that are not a supported LTS release."""
     instance_mock = MagicMock()
     instance_mock.hass = hass
     execute_args = []
@@ -813,7 +857,7 @@ async def test_issue_for_deprecated_database_version(
 
     def fetchall_mock():
         nonlocal execute_args
-        if execute_args[-1] == version_query:
+        if execute_args[-1] == "SELECT VERSION()":
             return [[reported_version]]
         return None
 
@@ -825,19 +869,19 @@ async def test_issue_for_deprecated_database_version(
     database_engine = await hass.async_add_executor_job(
         util.setup_connection_for_dialect,
         instance_mock,
-        dialect,
+        "mysql",
         dbapi_connection,
         True,
     )
     await hass.async_block_till_done()
 
-    issue = issue_registry.async_get_issue(DOMAIN, "database_engine_too_old")
+    issue = issue_registry.async_get_issue(DOMAIN, "database_engine_not_supported_lts")
     assert issue is not None
     assert issue.breaks_in_ha_version == "2027.3.0"
     assert issue.translation_placeholders == {
         "database_engine": engine_name,
         "server_version": extracted_version,
-        "min_version": min_version,
+        "lts_versions": lts_versions,
     }
     assert database_engine is not None
 
@@ -845,13 +889,67 @@ async def test_issue_for_deprecated_database_version(
     database_engine = await hass.async_add_executor_job(
         util.setup_connection_for_dialect,
         instance_mock,
-        dialect,
+        "mysql",
         dbapi_connection,
         True,
     )
     await hass.async_block_till_done()
 
-    assert issue_registry.async_get_issue(DOMAIN, "database_engine_too_old") is None
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "database_engine_not_supported_lts")
+        is None
+    )
+    assert database_engine is not None
+
+
+@pytest.mark.parametrize(
+    "server_version",
+    [
+        "12.4.0-MariaDB",  # non-LTS MariaDB release newer than we know about
+        "13.4.0-MariaDB",  # LTS MariaDB release newer than we know about
+        "9.8.0",  # non-LTS MySQL release newer than we know about
+        "10.4.0",  # LTS MySQL release newer than we know about
+    ],
+)
+async def test_no_issue_for_future_database_version(
+    hass: HomeAssistant,
+    server_version: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we assume versions newer than the latest known non-LTS release are supported."""
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == "SELECT VERSION()":
+            return [[server_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        "mysql",
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(DOMAIN, "database_engine_not_supported_lts")
+        is None
+    )
     assert database_engine is not None
 
 

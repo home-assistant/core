@@ -146,9 +146,14 @@ def disable_mariadb_issue() -> None:
 
 @pytest.fixture(autouse=True)
 def disable_deprecated_database_version_issue() -> None:
-    """Disable creating issue about deprecated database versions."""
-    with patch(
-        "homeassistant.components.recorder.util._async_create_issue_deprecated_version"
+    """Disable creating issues about deprecated database versions."""
+    with (
+        patch(
+            "homeassistant.components.recorder.util._async_create_issue_deprecated_version"
+        ),
+        patch(
+            "homeassistant.components.recorder.util._async_create_issue_not_supported_lts"
+        ),
     ):
         yield
 
