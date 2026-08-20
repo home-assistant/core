@@ -22,6 +22,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import setup_integration
 
@@ -187,3 +188,31 @@ async def test_code_validation(
         blocking=True,
     )
     assert mock_concord232_client.arm.called is arm_called
+
+
+@pytest.mark.parametrize(
+    ("service", "client_method"),
+    [
+        (SERVICE_ALARM_ARM_HOME, "arm"),
+        (SERVICE_ALARM_ARM_AWAY, "arm"),
+        (SERVICE_ALARM_DISARM, "disarm"),
+    ],
+)
+async def test_rejected_command_raises(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    service: str,
+    client_method: str,
+) -> None:
+    """Test a rejected panel command surfaces as an error."""
+    await setup_integration(hass, mock_config_entry)
+    getattr(mock_concord232_client, client_method).return_value = False
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            ALARM_DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: ENTITY_ID},
+            blocking=True,
+        )

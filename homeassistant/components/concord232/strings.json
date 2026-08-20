@@ -19,6 +19,11 @@
       }
     }
   },
+  "exceptions": {
+    "command_failed": {
+      "message": "The concord232 server rejected the command"
+    }
+  },
   "issues": {
     "deprecated_yaml_import_issue_cannot_connect": {
       "description": "Configuring Concord232 using YAML is being removed but the concord232 server could not be reached while importing your existing configuration.\n\nMake sure the server is running, restart Home Assistant to try again, or remove the Concord232 YAML configuration from your configuration.yaml file and add the integration manually.",
