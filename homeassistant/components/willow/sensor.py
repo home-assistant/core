@@ -141,8 +141,4 @@ class WillowSensor(CoordinatorEntity[WillowDataUpdateCoordinator], SensorEntity)
     @override
     def available(self) -> bool:
         """Return if entity is available."""
-        return (
-            super().available
-            and (device := self.coordinator.data.get(self._sensor_id)) is not None
-            and self.entity_description.value_fn(device) is not None
-        )
+        return super().available and self._sensor_id in self.coordinator.data

@@ -5,7 +5,7 @@ from unittest.mock import MagicMock, patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -32,12 +32,12 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
-async def test_sensor_unavailable_without_reading(
+async def test_sensor_unknown_without_reading(
     hass: HomeAssistant,
     mock_willow_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """A reading sensor is unavailable when the device has no latest reading."""
+    """A reading sensor reports unknown when the device has no latest reading."""
     devices = mock_willow_client.get_devices.return_value
     devices[0]["latest_reading"] = None
 
@@ -46,4 +46,4 @@ async def test_sensor_unavailable_without_reading(
 
     state = hass.states.get(ENTITY_ID)
     assert state is not None
-    assert state.state == STATE_UNAVAILABLE
+    assert state.state == STATE_UNKNOWN
