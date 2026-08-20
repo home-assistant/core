@@ -60,7 +60,25 @@ async def test_user_flow_ssl(
         {CONF_HOST: "alarm.example.com", CONF_PORT: 443, CONF_SSL: True},
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    mock_concord232_client_class.assert_called_with("https://alarm.example.com:443")
+    # yarl drops the default https port from the built url
+    mock_concord232_client_class.assert_called_with("https://alarm.example.com")
+
+
+async def test_entry_without_ssl_key_sets_up(
+    hass: HomeAssistant,
+    mock_concord232_client_class: MagicMock,
+    mock_concord232_client: MagicMock,
+) -> None:
+    """Test an entry created before the ssl option defaults to http."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="localhost",
+        data={CONF_HOST: "localhost", CONF_PORT: 5007},
+    )
+    await setup_integration(hass, entry)
+
+    assert entry.state.value == "loaded"
+    mock_concord232_client_class.assert_called_with("http://localhost:5007")
 
 
 async def test_user_flow_cannot_connect_recovers(
@@ -229,18 +247,73 @@ async def test_options_flow(
     assert mock_config_entry.options == {CONF_CODE: "1234", CONF_MODE: "silent"}
 
 
-async def test_entry_without_ssl_key_sets_up(
+async def test_options_change_takes_effect_without_manual_reload(
     hass: HomeAssistant,
-    mock_concord232_client_class: MagicMock,
     mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test an entry created before the ssl option defaults to http."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="localhost",
+    """Test saving options reloads the entry so the panel picks them up."""
+    await setup_integration(hass, mock_config_entry)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_MODE: "silent"}
+    )
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "alarm_control_panel",
+        "alarm_arm_home",
+        {"entity_id": "alarm_control_panel.localhost"},
+        blocking=True,
+    )
+    mock_concord232_client.arm.assert_called_once_with("stay", "silent")
+
+
+async def test_empty_code_option_means_no_code(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an empty code option allows codeless arming."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, options={CONF_CODE: ""})
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        "alarm_control_panel",
+        "alarm_arm_away",
+        {"entity_id": "alarm_control_panel.localhost"},
+        blocking=True,
+    )
+    mock_concord232_client.arm.assert_called_once_with("away")
+
+
+async def test_second_import_merges_alarm_options(
+    hass: HomeAssistant, mock_concord232_client: MagicMock
+) -> None:
+    """Test the alarm platform's import enriches the entry the other created."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
         data={CONF_HOST: "localhost", CONF_PORT: 5007},
     )
-    await setup_integration(hass, entry)
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
-    assert entry.state.value == "loaded"
-    mock_concord232_client_class.assert_called_with("http://localhost:5007")
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: "localhost",
+            CONF_PORT: 5007,
+            CONF_CODE: "1234",
+            CONF_MODE: "silent",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].options == {CONF_CODE: "1234", CONF_MODE: "silent"}

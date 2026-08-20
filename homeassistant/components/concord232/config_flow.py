@@ -106,18 +106,31 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_PORT: import_data[CONF_PORT],
             CONF_SSL: import_data.get(CONF_SSL, False),
         }
-        self._async_abort_entries_match(
-            {CONF_HOST: data[CONF_HOST], CONF_PORT: data[CONF_PORT]}
-        )
-        url = build_url(data[CONF_HOST], data[CONF_PORT], data[CONF_SSL])
-        if not await self.hass.async_add_executor_job(_try_connect, url):
-            return self.async_abort(reason="cannot_connect")
-
         options: dict[str, Any] = {}
         if CONF_CODE in import_data:
             options[CONF_CODE] = import_data[CONF_CODE]
         if CONF_MODE in import_data:
             options[CONF_MODE] = import_data[CONF_MODE]
+
+        # Both platforms import the same YAML server (their setups hold a shared
+        # lock, so the imports run one at a time). When the other platform's
+        # import created the entry first, merge the alarm-only fields (code,
+        # mode) into it instead of dropping them.
+        for entry in self._async_current_entries(include_ignore=False):
+            if (
+                entry.data.get(CONF_HOST) != data[CONF_HOST]
+                or entry.data.get(CONF_PORT) != data[CONF_PORT]
+            ):
+                continue
+            if options:
+                self.hass.config_entries.async_update_entry(
+                    entry, options={**entry.options, **options}
+                )
+            return self.async_abort(reason="already_configured")
+
+        url = build_url(data[CONF_HOST], data[CONF_PORT], data[CONF_SSL])
+        if not await self.hass.async_add_executor_job(_try_connect, url):
+            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=import_data.get(CONF_NAME, data[CONF_HOST]),
