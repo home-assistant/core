@@ -6,7 +6,7 @@ import pytest
 from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.tplink_omada.const import DOMAIN
-from homeassistant.components.tplink_omada.device_tracker import (
+from homeassistant.components.tplink_omada.services import (
     SERVICE_BLOCK,
     SERVICE_RECONNECT,
     SERVICE_RECONNECT_CLIENT,

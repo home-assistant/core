@@ -21,7 +21,7 @@ from homeassistant.helpers.typing import ConfigType
 from .config_flow import CONF_SITE, create_omada_client
 from .const import DOMAIN
 from .controller import OmadaSiteController
-from .device_tracker import async_setup_services
+from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
