@@ -72,7 +72,7 @@ async def test_entry_diagnostics(
     expected_debug_info = {
         "entities": [
             {
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.mqtt_mqtt_sensor",
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
@@ -101,13 +101,13 @@ async def test_entry_diagnostics(
                 "disabled": False,
                 "disabled_by": None,
                 "entity_category": None,
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.mqtt_mqtt_sensor",
                 "icon": None,
                 "original_device_class": None,
                 "original_icon": None,
                 "state": {
-                    "attributes": {"friendly_name": "MQTT Sensor"},
-                    "entity_id": "sensor.mqtt_sensor",
+                    "attributes": {"friendly_name": "MQTT MQTT Sensor"},
+                    "entity_id": "sensor.mqtt_mqtt_sensor",
                     "last_changed": ANY,
                     "last_reported": ANY,
                     "last_updated": ANY,
@@ -117,7 +117,7 @@ async def test_entry_diagnostics(
             }
         ],
         "id": device_entry.id,
-        "name": None,
+        "name": "MQTT",
         "name_by_user": None,
     }
 
@@ -199,7 +199,7 @@ async def test_redact_diagnostics(
     expected_debug_info = {
         "entities": [
             {
-                "entity_id": "device_tracker.mqtt_unique",
+                "entity_id": "device_tracker.mqtt",
                 "subscriptions": [
                     {
                         "topic": "attributes-topic",
@@ -234,12 +234,13 @@ async def test_redact_diagnostics(
                 "disabled": False,
                 "disabled_by": None,
                 "entity_category": None,
-                "entity_id": "device_tracker.mqtt_unique",
+                "entity_id": "device_tracker.mqtt",
                 "icon": None,
                 "original_device_class": None,
                 "original_icon": None,
                 "state": {
                     "attributes": {
+                        "friendly_name": "MQTT",
                         "gps_accuracy": 1.5,
                         "in_zones": ["zone.home"],
                         "latitude": "**REDACTED**",
@@ -247,7 +248,7 @@ async def test_redact_diagnostics(
                         "source_type": "gps",
                         "tracking_type": "position",
                     },
-                    "entity_id": "device_tracker.mqtt_unique",
+                    "entity_id": "device_tracker.mqtt",
                     "last_changed": ANY,
                     "last_reported": ANY,
                     "last_updated": ANY,
@@ -257,7 +258,7 @@ async def test_redact_diagnostics(
             }
         ],
         "id": device_entry.id,
-        "name": None,
+        "name": "MQTT",
         "name_by_user": None,
     }
 
@@ -294,7 +295,7 @@ async def test_redact_diagnostics(
         "connected": True,
         "device": {
             "id": device_entry.id,
-            "name": None,
+            "name": "MQTT",
             "name_by_user": None,
             "disabled": False,
             "disabled_by": None,
