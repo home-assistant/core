@@ -19,7 +19,15 @@ from homeassistant.helpers.schema_config_entry_flow import (
 )
 
 from .binary_sensor import ThresholdSensor
-from .const import CONF_HYSTERESIS, CONF_LOWER, CONF_UPPER, DEFAULT_HYSTERESIS, DOMAIN
+from .const import (
+    CONF_HYSTERESIS,
+    CONF_INVERT,
+    CONF_LOWER,
+    CONF_UPPER,
+    DEFAULT_HYSTERESIS,
+    DEFAULT_INVERT,
+    DOMAIN,
+)
 
 
 async def _validate_mode(
@@ -138,6 +146,7 @@ def ws_start_preview(
         name=name,
         lower=msg["user_input"].get(CONF_LOWER),
         upper=msg["user_input"].get(CONF_UPPER),
+        invert=msg["user_input"].get(CONF_INVERT, DEFAULT_INVERT),
         hysteresis=msg["user_input"].get(CONF_HYSTERESIS, DEFAULT_HYSTERESIS),
         device_class=None,
         unique_id=None,
