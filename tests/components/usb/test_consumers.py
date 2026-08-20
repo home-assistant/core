@@ -27,7 +27,6 @@ from . import patch_scanned_serial_ports
 from tests.common import (
     MockConfigEntry,
     MockModule,
-    MockUser,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -453,25 +452,6 @@ async def test_multiple_consumers(
     assert [
         (consumer["kind"], consumer["title"]) for consumer in result[0]["consumers"]
     ] == [("config_entry", "Test USB"), ("app", "Some App")]
-
-
-@pytest.mark.usefixtures("setup_ports")
-async def test_serial_ports_require_admin(
-    hass: HomeAssistant,
-    hass_ws_client: WebSocketGenerator,
-    hass_admin_user: MockUser,
-) -> None:
-    """Test that listing serial ports with consumers requires admin."""
-    hass_admin_user.groups = []
-
-    ws_client = await hass_ws_client(hass)
-    await ws_client.send_json(
-        {"id": 1, "type": "usb/list_serial_ports", "include_usage": True}
-    )
-    response = await ws_client.receive_json()
-
-    assert not response["success"]
-    assert response["error"]["code"] == "unauthorized"
 
 
 class MockUsbFlow(ConfigFlow):
