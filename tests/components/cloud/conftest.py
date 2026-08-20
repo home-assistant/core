@@ -5,7 +5,7 @@ from pathlib import Path
 from typing import Any
 from unittest.mock import DEFAULT, AsyncMock, MagicMock, PropertyMock, patch
 
-from hass_nabucasa import Cloud, payments_api
+from hass_nabucasa import Cloud, CloudEvent, CloudEventBus, CloudEventType, payments_api
 from hass_nabucasa.auth import CognitoAuth
 from hass_nabucasa.cloudhooks import Cloudhooks
 from hass_nabucasa.const import DEFAULT_SERVERS, DEFAULT_VALUES, STATE_CONNECTED
@@ -69,6 +69,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             latency_by_location={},
         )
         mock_cloud.auth = MagicMock(spec=CognitoAuth)
+        mock_cloud.events = CloudEventBus()
         mock_cloud.iot = MagicMock(
             spec=CloudIoT, last_disconnect_reason=None, state=STATE_CONNECTED, tries=0
         )
@@ -177,11 +178,14 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
             mock_cloud.refresh_token = "test_refresh_token"
             on_start_callback = mock_cloud.register_on_start.call_args[0][0]
             await on_start_callback()
+            await mock_cloud.events.publish(CloudEvent(type=CloudEventType.LOGIN))
 
         mock_cloud.login.side_effect = mock_login
 
         async def mock_logout() -> None:
             """Mock logout."""
+            # The real Cloud publishes LOGOUT before clearing state.
+            await mock_cloud.events.publish(CloudEvent(type=CloudEventType.LOGOUT))
             mock_cloud.id_token = None
             mock_cloud.access_token = None
             mock_cloud.refresh_token = None
