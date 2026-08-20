@@ -269,6 +269,8 @@ class AddonFlowManager:
         # Set to True if the add-on was running when its config was changed,
         # meaning a restart instead of a start is needed.
         self.restart_addon = False
+        # Set to True once this flow has started a stopped add-on.
+        self.addon_started = False
         # The add-on config before this flow changed it, for reverts.
         self.original_config: dict[str, Any] | None = None
 
@@ -299,7 +301,12 @@ class AddonFlowManager:
 
         if addon_info.state is AddonState.RUNNING:
             self.restart_addon = True
-        self.original_config = dict(addon_config)
+        if self.original_config is None:
+            # Only capture the config before the first change, so a revert
+            # restores the config from before the flow, also if the flow
+            # changes the config multiple times, e.g. when the RF region
+            # step sets the region.
+            self.original_config = dict(addon_config)
         new_addon_config = migrate_network_key(new_addon_config)
         try:
             await self.addon_manager.async_set_addon_options(new_addon_config)
@@ -325,6 +332,7 @@ class AddonFlowManager:
         if self.restart_addon:
             await self.addon_manager.async_schedule_restart_addon()
         else:
+            self.addon_started = True
             await self.addon_manager.async_schedule_start_addon()
         version_info: VersionInfo | None = None
         # Sleep some seconds to let the add-on start properly before connecting.
@@ -1149,8 +1157,41 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-        if config_entry.state is ConfigEntryState.NOT_LOADED:
-            self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+        if config_entry.state is not ConfigEntryState.NOT_LOADED:
+            return
+        if (original_config := self._addon_setup.original_config) is not None:
+            # The flow changed the add-on config without completing.
+            # Restore the config before reloading the entry, so the entry
+            # doesn't adopt the unconfirmed adapter and keys on setup.
+            self.hass.async_create_task(
+                self._async_restore_addon_config_and_reload(original_config)
+            )
+            return
+        self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
+
+    async def _async_restore_addon_config_and_reload(
+        self, original_config: dict[str, Any]
+    ) -> None:
+        """Restore the add-on config and reload the config entry."""
+        config_entry = self._reconfigure_config_entry
+        assert config_entry is not None
+        addon_manager = self._addon_setup.addon_manager
+        # Migrate the legacy network key, like async_set_addon_config does,
+        # so restoring doesn't drop the S0 key on older add-on configurations.
+        restored_config = migrate_network_key(original_config)
+        try:
+            await addon_manager.async_set_addon_options(restored_config)
+        except AddonError as err:
+            # Don't reload the entry if the options were not restored, so the
+            # reload doesn't adopt the unconfirmed options still on the add-on.
+            _LOGGER.error("Failed to restore add-on options: %s", err)
+            return
+        if self._addon_setup.restart_addon or self._addon_setup.addon_started:
+            # The add-on is running with the unconfirmed options this flow set.
+            # Schedule a restart to apply the restored options. Don't await it,
+            # to avoid re-raising the cancellation of the flow's own start task.
+            addon_manager.async_schedule_restart_addon(catch_error=True)
+        self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -1550,6 +1591,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 CONF_INTEGRATION_CREATED_ADDON: self.integration_created_addon,
             },
         )
+        # The migration is committed to the new adapter now, so drop the
+        # revert snapshot: if the flow is abandoned during the restore, the
+        # entry must be reloaded on the new adapter, not reverted to the old
+        # add-on config.
+        self._addon_setup.original_config = None
 
         return await self.async_step_restore_nvm()
 

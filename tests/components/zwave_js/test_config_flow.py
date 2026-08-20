@@ -6045,6 +6045,177 @@ async def test_create_entry_spares_migration_flow(
     assert not hass.config_entries.flow.async_progress()
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_reconfigure_abandoned_restores_addon_config(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test an abandoned flow restores the add-on config it changed."""
+    addon_options.update(
+        {"device": "/test", "network_key": "legacy", "s0_legacy_key": "old123"}
+    )
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/new",
+            "s0_legacy_key": "old123",
+        },
+    )
+
+    assert set_addon_options.call_count == 1
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    # The user closes the dialog instead of waiting for the restart.
+    with patch(
+        "homeassistant.components.zwave_js.async_setup_entry", return_value=True
+    ):
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    # The add-on config the flow changed is restored, without the legacy
+    # network key, before the reload recovers the entry.
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(config={"device": "/test", "s0_legacy_key": "old123"}),
+    )
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_reconfigure_abandoned_restore_failure_keeps_unloaded(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test the entry stays unloaded if restoring the add-on config fails."""
+    addon_options.update({"device": "/test", "s0_legacy_key": "old123"})
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/new",
+            "s0_legacy_key": "old123",
+        },
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    # Restoring the original add-on options fails on the cleanup path.
+    set_addon_options.side_effect = SupervisorError("Boom")
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+    # The entry is left unloaded instead of adopting the unconfirmed options.
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon", "backup_nvm")
+async def test_migrate_flow_abandoned_after_commit_keeps_new_config(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    set_addon_options: AsyncMock,
+    get_server_version: AsyncMock,
+) -> None:
+    """Test abandoning after the migration commit doesn't revert the add-on."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "usb_path": "/old",
+        },
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "choose_serial_port"
+
+    _set_home_id(get_server_version, 5678)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USB_PATH: "/new"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+
+    set_addon_options.reset_mock()
+
+    # The migration commits the entry to the new adapter and starts the
+    # restore, then the user closes the dialog.
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+    assert entry.data[CONF_USB_PATH] == "/new"
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+    # The entry stays on the new adapter and the add-on config is not
+    # reverted to the old one.
+    assert entry.data[CONF_USB_PATH] == "/new"
+    for mock_call in set_addon_options.call_args_list:
+        assert mock_call.args[1].config.get(CONF_ADDON_DEVICE) != "/old"
+
+
 @pytest.mark.usefixtures("supervisor", "addon_installed")
 async def test_configure_addon_usb_ports_failure(
     hass: HomeAssistant,
