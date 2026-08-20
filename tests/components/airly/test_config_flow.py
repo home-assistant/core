@@ -17,8 +17,8 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 
 CONFIG = {
     CONF_API_KEY: "foo",
-    CONF_LATITUDE: 123,
-    CONF_LONGITUDE: 456,
+    CONF_LATITUDE: 12.3,
+    CONF_LONGITUDE: 45.6,
 }
 
 
@@ -120,7 +120,7 @@ async def test_duplicate_error(
     aioclient_mock.get(
         API_POINT_URL, text=await async_load_fixture(hass, "valid_station.json", DOMAIN)
     )
-    MockConfigEntry(domain=DOMAIN, unique_id="123-456", data=CONFIG).add_to_hass(hass)
+    MockConfigEntry(domain=DOMAIN, unique_id="12.3-45.6", data=CONFIG).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
