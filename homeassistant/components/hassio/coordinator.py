@@ -1347,9 +1347,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         # Remove add-ons that are no longer installed from device registry
         supervisor_addon_devices = {
             list(device.identifiers)[0][1]
-            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
-                self.entry_id
-            )
+            for device in dr.async_entries_for_config_entry(self.dev_reg, self.entry_id)
             if device.model == SupervisorEntityModel.ADDON
         }
         if stale_addons := supervisor_addon_devices - set(new_data.addons):
@@ -1569,9 +1567,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         # Remove mounts that no longer exists from device registry
         supervisor_mount_devices = {
             device.name
-            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
-                self.entry_id
-            )
+            for device in dr.async_entries_for_config_entry(self.dev_reg, self.entry_id)
             if device.model == SupervisorEntityModel.MOUNT
         }
         if stale_mounts := supervisor_mount_devices - set(new_data.mounts):

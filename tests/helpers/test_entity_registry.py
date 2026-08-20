@@ -210,7 +210,7 @@ def test_get_or_create_updates_data(
     assert set(entity_registry.async_device_ids()) == {orig_device_entry.id}
 
     assert orig_entry == er.RegistryEntry(
-        entity_id="light.hue_5678",
+        entity_id=orig_entry.entity_id,
         unique_id="5678",
         platform="hue",
         aliases=[er.COMPUTED_NAME],
@@ -271,7 +271,7 @@ def test_get_or_create_updates_data(
     )
 
     assert new_entry == er.RegistryEntry(
-        entity_id="light.hue_5678",
+        entity_id=new_entry.entity_id,
         unique_id="5678",
         platform="hue",
         aliases=[er.COMPUTED_NAME],
@@ -327,7 +327,7 @@ def test_get_or_create_updates_data(
     )
 
     assert new_entry == er.RegistryEntry(
-        entity_id="light.hue_5678",
+        entity_id=new_entry.entity_id,
         unique_id="5678",
         platform="hue",
         aliases=[er.COMPUTED_NAME],
