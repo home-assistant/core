@@ -17,7 +17,7 @@ from homeassistant.components.switch import (
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_ON, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
@@ -118,47 +118,54 @@ async def test_switch_turn_on_off(
 @pytest.mark.parametrize(
     ("raised", "expected", "translation_key", "translation_placeholders"),
     [
-        (
+        pytest.param(
             ValueError("invalid mode"),
             ServiceValidationError,
             "invalid_value",
             {"value": "None"},
+            id="value_error",
         ),
-        (
+        pytest.param(
             AuthenticationError("bad creds"),
             ConfigEntryAuthFailed,
             "authentication_error",
             None,
+            id="auth_error",
         ),
-        (
+        pytest.param(
             TimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="timeout_error",
         ),
-        (
+        pytest.param(
             ServerTimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="server_timeout_error",
         ),
-        (
+        pytest.param(
             ParseJSONError("bad json"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="parse_json_error",
         ),
-        (
+        pytest.param(
             UnsupportedFeature("old firmware"),
             HomeAssistantError,
             "unsupported_feature",
             None,
+            id="unsupported_feature",
         ),
-        (
+        pytest.param(
             ContentTypeError(MagicMock(), (), message="bad content"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="content_type_error",
         ),
     ],
 )
@@ -208,8 +215,8 @@ async def test_switch_availability(
 
     state = hass.states.get("switch.openevse_mock_config_solar_pv_divert")
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == STATE_UNAVAILABLE
 
     state = hass.states.get("switch.openevse_mock_config_current_shaper")
     assert state is not None
-    assert state.state == "on"
+    assert state.state == STATE_ON
