@@ -1,15 +1,21 @@
 """Test helpers for VoIP integration."""
 
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
 from voip_utils import CallInfo
 from voip_utils.sip import get_sip_endpoint
 
+from homeassistant.components import assist_satellite, voip
+from homeassistant.components.assist_satellite import AssistSatelliteEntity
 from homeassistant.components.voip import DOMAIN
+from homeassistant.components.voip.assist_satellite import VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -89,3 +95,39 @@ async def voip_device(
     # to make sure all platforms are set up
     await hass.async_block_till_done()
     return device
+
+
+@pytest.fixture
+def satellite(
+    hass: HomeAssistant,
+    voip_device: VoIPDevice,
+):
+    """Create VoipAssistSatellite for use in tests."""
+    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
+    assert isinstance(satellite, VoipAssistSatellite)
+
+    mock_send_audio = create_autospec(satellite.send_audio)
+    satellite.send_audio = mock_send_audio
+
+    yield satellite
+
+    if satellite.voip_device.is_active:
+        satellite.disconnect()
+
+
+def async_get_satellite_entity(
+    hass: HomeAssistant, domain: str, unique_id_prefix: str
+) -> AssistSatelliteEntity | None:
+    """Get Assist satellite entity."""
+    ent_reg = er.async_get(hass)
+    satellite_entity_id = ent_reg.async_get_entity_id(
+        Platform.ASSIST_SATELLITE, domain, f"{unique_id_prefix}-assist_satellite"
+    )
+    if satellite_entity_id is None:
+        return None
+    assert not satellite_entity_id.endswith("none")
+
+    component: EntityComponent[AssistSatelliteEntity] = hass.data[
+        assist_satellite.DOMAIN
+    ]
+    return component.get_entity(satellite_entity_id)

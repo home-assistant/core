@@ -4,7 +4,7 @@ import asyncio
 import io
 from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, Mock, create_autospec, patch
+from unittest.mock import AsyncMock, Mock, patch
 import wave
 
 import pytest
@@ -12,7 +12,6 @@ from syrupy.assertion import SnapshotAssertion
 from voip_utils import CallInfo
 
 from homeassistant.components import assist_pipeline, assist_satellite, tts, voip
-from homeassistant.components.assist_satellite import AssistSatelliteEntity
 
 # pylint: disable-next=home-assistant-component-root-import
 from homeassistant.components.assist_satellite.entity import AssistSatelliteState
@@ -20,11 +19,10 @@ from homeassistant.components.voip import DOMAIN, HassVoipDatagramProtocol
 from homeassistant.components.voip.assist_satellite import Tones, VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.components.voip.voip import PreRecordMessageProtocol, make_protocol
-from homeassistant.const import STATE_OFF, STATE_ON, Platform
+from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -39,21 +37,6 @@ def mock_tts_cache_dir_autouse(mock_tts_cache_dir: Path) -> None:
     """Mock the TTS cache dir with empty dir."""
 
 
-@pytest.fixture
-def satellite(
-    hass: HomeAssistant,
-    voip_device: VoIPDevice,
-):
-    """Create VoipAssistSatellite for use in tests."""
-    satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
-    assert isinstance(satellite, VoipAssistSatellite)
-
-    yield satellite
-
-    if satellite.voip_device.is_active:
-        satellite.disconnect()
-
-
 def _empty_wav(framerate=16000) -> bytes:
     """Return bytes of an empty WAV file."""
     with io.BytesIO() as wav_io:
@@ -64,24 +47,6 @@ def _empty_wav(framerate=16000) -> bytes:
             wav_file.setnchannels(1)
 
         return wav_io.getvalue()
-
-
-def async_get_satellite_entity(
-    hass: HomeAssistant, domain: str, unique_id_prefix: str
-) -> AssistSatelliteEntity | None:
-    """Get Assist satellite entity."""
-    ent_reg = er.async_get(hass)
-    satellite_entity_id = ent_reg.async_get_entity_id(
-        Platform.ASSIST_SATELLITE, domain, f"{unique_id_prefix}-assist_satellite"
-    )
-    if satellite_entity_id is None:
-        return None
-    assert not satellite_entity_id.endswith("none")
-
-    component: EntityComponent[AssistSatelliteEntity] = hass.data[
-        assist_satellite.DOMAIN
-    ]
-    return component.get_entity(satellite_entity_id)
 
 
 async def test_is_valid_call(
@@ -484,9 +449,6 @@ async def test_tts_timeout(
 
         satellite.connection_made(Mock())
 
-        mock_send_audio = create_autospec(satellite.send_audio)
-        satellite.send_audio = mock_send_audio
-
         original_send_tts = satellite._send_tts
 
         async def send_tts(*args, **kwargs):
@@ -579,9 +541,6 @@ async def test_tts_wrong_extension(
 
         satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
-        mock_send_audio = create_autospec(satellite.send_audio)
-        satellite.send_audio = mock_send_audio
-
         satellite.connection_made(Mock())
 
         # silence
@@ -665,9 +624,6 @@ async def test_tts_wrong_wav_format(
 
         satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
-        mock_send_audio = create_autospec(satellite.send_audio)
-        satellite.send_audio = mock_send_audio
-
         satellite.connection_made(Mock())
 
         # silence
@@ -741,9 +697,6 @@ async def test_empty_tts_output(
             "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
         ) as mock_send_tts,
     ):
-        mock_send_audio = create_autospec(satellite.send_audio)
-        satellite.send_audio = mock_send_audio
-
         satellite.connection_made(Mock())
 
         # silence
