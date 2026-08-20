@@ -81,6 +81,9 @@ def mock_receiver() -> Generator[MagicMock]:
             setattr(receiver, f"trim_{_t}", None)
             setattr(receiver, f"trim_{_t}_range", NumericRange(-10.0, 10.0, 0.1))
 
+        receiver.volume_range = NumericRange(-99.9, 24.0, 0.1)
+        receiver.zone_b_volume_range = NumericRange(-99.9, 24.0, 0.1)
+
         receiver.power_on = False
         receiver.volume = -40.0
         receiver.mute_enabled = False

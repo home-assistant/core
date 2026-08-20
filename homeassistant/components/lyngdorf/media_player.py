@@ -1,8 +1,9 @@
 """Media player platform for Lyngdorf integration."""
 
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from lyngdorf.device import Receiver
+from lyngdorf.models.base import NumericRange
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -18,10 +19,6 @@ from .entity import LyngdorfEntity
 from .models import LyngdorfConfigEntry
 
 PARALLEL_UPDATES = 1
-
-MAX_VOLUME_DB = 18.0
-MIN_VOLUME_DB = -80.0
-VOLUME_RANGE = MAX_VOLUME_DB - MIN_VOLUME_DB
 
 FEATURES_ZONE_B = (
     MediaPlayerEntityFeature.VOLUME_STEP
@@ -66,16 +63,17 @@ async def async_setup_entry(
     async_add_entities(entities)
 
 
-def _to_ha_volume(volume_db: float) -> float:
+def _to_ha_volume(volume_db: float, volume_range: NumericRange) -> float:
     """Convert Lyngdorf dB volume to HA 0..1 scale, clamped to 0..1."""
-    volume = (volume_db - MIN_VOLUME_DB) / VOLUME_RANGE
-    return max(0.0, min(volume, 1.0))
+    span = volume_range.max - volume_range.min
+    return max(0.0, min((volume_db - volume_range.min) / span, 1.0))
 
 
-def _to_lyngdorf_volume(volume: float) -> float:
+def _to_lyngdorf_volume(volume: float, volume_range: NumericRange) -> float:
     """Convert HA 0..1 volume to Lyngdorf dB scale, clamped to min and max."""
-    volume_db = volume * VOLUME_RANGE + MIN_VOLUME_DB
-    return max(MIN_VOLUME_DB, min(volume_db, MAX_VOLUME_DB))
+    span = volume_range.max - volume_range.min
+    volume_db = volume * span + volume_range.min
+    return max(volume_range.min, min(volume_db, volume_range.max))
 
 
 class LyngdorfDevice(LyngdorfEntity, MediaPlayerEntity):
@@ -133,13 +131,22 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
         """Return boolean if volume is currently muted."""
         return self._receiver.zone_b_mute_enabled
 
+    @property
+    def _volume_range(self) -> NumericRange:
+        """Return the model's documented Zone B volume range."""
+        volume_range = self._receiver.zone_b_volume_range
+        # This entity is only created for models that have a Zone B.
+        if TYPE_CHECKING:
+            assert volume_range is not None
+        return volume_range
+
     @override
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if not isinstance(self._receiver.zone_b_volume, float):
+        if (volume := self._receiver.zone_b_volume) is None:
             return None
-        return _to_ha_volume(self._receiver.zone_b_volume)
+        return _to_ha_volume(volume, self._volume_range)
 
     @override
     async def async_turn_on(self) -> None:
@@ -164,7 +171,9 @@ class LyngdorfZoneBDevice(LyngdorfDevice):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._receiver.zone_b_volume = _to_lyngdorf_volume(volume)
+        self._receiver.set_zone_b_volume(
+            _to_lyngdorf_volume(volume, self._volume_range)
+        )
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
@@ -234,13 +243,22 @@ class LyngdorfMainDevice(LyngdorfDevice):
         """Return boolean if volume is currently muted."""
         return self._receiver.mute_enabled
 
+    @property
+    def _volume_range(self) -> NumericRange:
+        """Return the model's documented main-zone volume range."""
+        volume_range = self._receiver.volume_range
+        # Every supported model documents a main-zone volume range.
+        if TYPE_CHECKING:
+            assert volume_range is not None
+        return volume_range
+
     @override
     @property
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
-        if not isinstance(self._receiver.volume, float):
+        if (volume := self._receiver.volume) is None:
             return None
-        return _to_ha_volume(self._receiver.volume)
+        return _to_ha_volume(volume, self._volume_range)
 
     @override
     @property
@@ -277,7 +295,7 @@ class LyngdorfMainDevice(LyngdorfDevice):
     @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
-        self._receiver.volume = _to_lyngdorf_volume(volume)
+        self._receiver.set_volume(_to_lyngdorf_volume(volume, self._volume_range))
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
