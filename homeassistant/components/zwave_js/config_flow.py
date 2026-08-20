@@ -160,12 +160,19 @@ EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
-# Steps at which another flow is only showing a discovery prompt and can be
-# aborted safely when a config entry is created by a different flow.
-DISCOVERY_PROMPT_STEPS = {
+# Steps at which another flow has not yet changed any shared state,
+# e.g. the add-on config, and can be aborted safely when a config entry
+# is created or a migration starts in a different flow. Steps that can
+# be part of a migration, e.g. choose_serial_port, must not be in this
+# set.
+ABORT_SAFE_STEPS = {
+    "configure_addon_user",
+    "configure_security_keys",
     "confirm_usb_migration",
     "hassio_confirm",
     "installation_type",
+    "network_type",
+    "on_supervisor",
     "zeroconf_confirm",
 }
 
@@ -956,6 +963,18 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     @callback
+    def _async_abort_other_prompt_flows(self) -> None:
+        """Abort other flows that are only showing a prompt.
+
+        A created entry or a started migration may make them redundant.
+        Flows that have progressed further, e.g. a migration that has
+        backed up the network, must not be interrupted.
+        """
+        for progress in self._async_in_progress():
+            if progress.get("step_id") in ABORT_SAFE_STEPS:
+                self.hass.config_entries.flow.async_abort(progress["flow_id"])
+
+    @callback
     def _addon_owned_by_other_entry(self) -> bool:
         """Return if another config entry uses the add-on."""
         return any(
@@ -1095,13 +1114,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     def _async_create_entry_from_vars(self) -> ConfigFlowResult:
         """Return a config entry for the flow."""
-        # Abort other flows that are still at a discovery prompt, since the
-        # new entry may make them redundant. Flows that have progressed
-        # further, e.g. a migration that has backed up the network,
-        # must not be interrupted.
-        for progress in self._async_in_progress():
-            if progress.get("step_id") in DISCOVERY_PROMPT_STEPS:
-                self.hass.config_entries.flow.async_abort(progress["flow_id"])
+        self._async_abort_other_prompt_flows()
 
         return self.async_create_entry(
             title=TITLE,
@@ -1236,6 +1249,19 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     "ok_sdk_version": str(MIN_MIGRATION_SDK_VERSION)
                 },
             )
+
+        if any(
+            flow
+            for flow in self._async_in_progress()
+            if flow.get("step_id") not in ABORT_SAFE_STEPS
+        ):
+            # Another flow, e.g. a competing migration confirmed earlier,
+            # has progressed beyond a prompt. Don't start a second migration.
+            return self.async_abort(reason="already_in_progress")
+
+        # Remaining prompts, e.g. for other discovered adapters,
+        # are superseded by this migration.
+        self._async_abort_other_prompt_flows()
 
         self._migrating = True
         return await self.async_step_backup_nvm()

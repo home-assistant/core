@@ -1930,6 +1930,56 @@ async def test_esphome_discovery_without_home_id_can_be_ignored(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
+async def test_esphome_discovery_competing_migration_prompts(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test starting a migration supersedes competing prompts."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="4321", data={**entry.data, "use_addon": True}
+    )
+
+    result_a = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+    result_b = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result_a["step_id"] == "confirm_usb_migration"
+    assert result_b["step_id"] == "confirm_usb_migration"
+
+    # Confirming the first migration removes the competing prompt.
+    with patch("pathlib.Path.write_bytes"):
+        result_a = await hass.config_entries.flow.async_configure(
+            result_a["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result_a["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_a["step_id"] == "backup_nvm"
+    assert not any(
+        flow["flow_id"] == result_b["flow_id"]
+        for flow in hass.config_entries.flow.async_progress()
+    )
+
+    # A migration confirmed while another is in flight is rejected.
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
 async def test_esphome_discovery_already_configured_unmanaged_addon(
     hass: HomeAssistant,
