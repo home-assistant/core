@@ -479,10 +479,12 @@ jobs:
       contents: read
     needs:
       - info
-    # Only run on push to the dev branch; this job reaches out to endoflife.date, and
-    # we do not want a new MariaDB/MySQL release to fail CI on PR runs or the rc/master
-    # branches.
-    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    # Run on push to the dev branch and on pull requests targeting dev; this job
+    # reaches out to endoflife.date, and we do not want a new MariaDB/MySQL release
+    # to fail CI on the rc/master branches.
+    if: |
+      (github.event_name == 'push' && github.ref == 'refs/heads/dev')
+      || (github.event_name == 'pull_request' && github.base_ref == 'dev')
     steps:
       - name: Check out code from GitHub
         uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
