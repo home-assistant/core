@@ -51,6 +51,26 @@ async def test_entry_diagnostics_redacts_serial_in_data(
     assert result["coordinator"]["data"]["MBF_PAR_SERNUM"] == "**REDACTED**"
 
 
+@pytest.mark.usefixtures("mock_neopool_client")
+async def test_entry_diagnostics_exposes_only_exception_type(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """last_exception exposes the type only, never the raw message.
+
+    The client embeds host:port in connection error messages, so the raw
+    text must never be serialized into diagnostics.
+    """
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    coordinator.last_exception = ConnectionError(
+        "Modbus client connection failed to 192.0.2.15:502"
+    )
+    result = await async_get_config_entry_diagnostics(hass, mock_config_entry)
+    assert result["coordinator"]["last_exception"] == "ConnectionError"
+    assert "192.0.2.15" not in str(result)
+
+
 async def test_entry_diagnostics_without_runtime_data(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

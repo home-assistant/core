@@ -80,7 +80,7 @@
         'pH pump active': False,
       }),
       'firmware': '18.52',
-      'last_exception': 'None',
+      'last_exception': None,
       'last_update_success': True,
     }),
   })

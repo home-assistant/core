@@ -36,11 +36,14 @@ async def async_get_config_entry_diagnostics(
         diagnostics["coordinator"] = {"status": "not loaded"}
         return diagnostics
 
+    # Expose the exception type only; str(exc) would leak host:port.
+    last_exception = getattr(coordinator, "last_exception", None)
+
     diagnostics["coordinator"] = {
         "last_update_success": getattr(coordinator, "last_update_success", None),
         "data": async_redact_data(getattr(coordinator, "data", {}), TO_REDACT),
         "update_interval": str(getattr(coordinator, "update_interval", None)),
-        "last_exception": str(getattr(coordinator, "last_exception", "")),
+        "last_exception": type(last_exception).__name__ if last_exception else None,
         "firmware": parse_version(
             (getattr(coordinator, "data", None) or {}).get("MBF_POWER_MODULE_VERSION")
         ),
