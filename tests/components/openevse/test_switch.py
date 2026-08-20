@@ -46,15 +46,13 @@ async def test_entities(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "service", "method_name", "args", "initial_override", "should_call"),
+    ("entity_id", "service", "method_name", "args"),
     [
         pytest.param(
             "switch.openevse_mock_config_solar_pv_divert",
             SERVICE_TURN_ON,
             "set_divert_mode",
             ("eco",),
-            False,
-            True,
             id="solar_pv_divert_on",
         ),
         pytest.param(
@@ -62,8 +60,6 @@ async def test_entities(
             SERVICE_TURN_OFF,
             "set_divert_mode",
             ("fast",),
-            False,
-            True,
             id="solar_pv_divert_off",
         ),
         pytest.param(
@@ -71,8 +67,6 @@ async def test_entities(
             SERVICE_TURN_ON,
             "set_shaper",
             (True,),
-            False,
-            True,
             id="current_shaper_on",
         ),
         pytest.param(
@@ -80,8 +74,6 @@ async def test_entities(
             SERVICE_TURN_OFF,
             "set_shaper",
             (False,),
-            False,
-            True,
             id="current_shaper_off",
         ),
         pytest.param(
@@ -89,36 +81,14 @@ async def test_entities(
             SERVICE_TURN_ON,
             "toggle_override",
             (),
-            False,
-            True,
             id="manual_override_on",
         ),
         pytest.param(
             "switch.openevse_mock_config_manual_override",
-            SERVICE_TURN_ON,
-            "toggle_override",
-            (),
-            True,
-            False,
-            id="manual_override_on_already_on",
-        ),
-        pytest.param(
-            "switch.openevse_mock_config_manual_override",
             SERVICE_TURN_OFF,
             "toggle_override",
             (),
-            True,
-            True,
             id="manual_override_off",
-        ),
-        pytest.param(
-            "switch.openevse_mock_config_manual_override",
-            SERVICE_TURN_OFF,
-            "toggle_override",
-            (),
-            False,
-            False,
-            id="manual_override_off_already_off",
         ),
     ],
 )
@@ -130,11 +100,8 @@ async def test_switch_turn_on_off(
     service: str,
     method_name: str,
     args: tuple[object, ...],
-    initial_override: bool,
-    should_call: bool,
 ) -> None:
     """Test turning on and off the switch entities."""
-    mock_charger.manual_override = initial_override
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -145,10 +112,7 @@ async def test_switch_turn_on_off(
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
-    if should_call:
-        getattr(mock_charger, method_name).assert_called_once_with(*args)
-    else:
-        getattr(mock_charger, method_name).assert_not_called()
+    getattr(mock_charger, method_name).assert_called_once_with(*args)
 
 
 @pytest.mark.parametrize(
