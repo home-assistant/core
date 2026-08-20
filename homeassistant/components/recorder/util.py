@@ -89,6 +89,12 @@ MIN_VERSION_MYSQL = _simple_version("8.0.0")
 MIN_VERSION_PGSQL = _simple_version("12.0")
 MIN_VERSION_SQLITE = _simple_version("3.40.1")
 
+# Upcoming minimum versions we warn about ahead of raising the hard minimum,
+# as (version, breaks_in_ha_version).
+UPCOMING_MIN_VERSION_MARIA_DB = (_simple_version("10.11.0"), "2027.3.0")
+UPCOMING_MIN_VERSION_MYSQL = (_simple_version("8.4.0"), "2027.3.0")
+UPCOMING_MIN_VERSION_PGSQL = (_simple_version("15.0"), "2027.3.0")
+
 
 # This is the maximum time after the recorder ends the session
 # before we no longer consider startup to be a "restart" and we
@@ -346,6 +352,58 @@ def _raise_if_version_unsupported(
     raise UnsupportedDialect
 
 
+@callback
+def _async_delete_issue_deprecated_version(hass: HomeAssistant) -> None:
+    """Delete the issue about upcoming unsupported database version."""
+    ir.async_delete_issue(hass, DOMAIN, "database_engine_too_old")
+
+
+@callback
+def _async_create_issue_deprecated_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    database_engine: str,
+    min_version: AwesomeVersion,
+    breaks_in_ha_version: str,
+) -> None:
+    """Warn about upcoming unsupported database version."""
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        "database_engine_too_old",
+        is_fixable=False,
+        severity=ir.IssueSeverity.CRITICAL,
+        translation_key="database_engine_too_old",
+        translation_placeholders={
+            "database_engine": database_engine,
+            "server_version": str(server_version),
+            "min_version": str(min_version),
+        },
+        breaks_in_ha_version=breaks_in_ha_version,
+    )
+
+
+def _check_deprecated_version(
+    hass: HomeAssistant,
+    server_version: AwesomeVersion,
+    database_engine: str,
+    upcoming_min_version: tuple[AwesomeVersion, str],
+) -> None:
+    """Create or remove the issue about an upcoming unsupported database version."""
+    min_version, breaks_in_ha_version = upcoming_min_version
+    if server_version < min_version:
+        hass.add_job(
+            _async_create_issue_deprecated_version,
+            hass,
+            server_version,
+            database_engine,
+            min_version,
+            breaks_in_ha_version,
+        )
+    else:
+        hass.add_job(_async_delete_issue_deprecated_version, hass)
+
+
 def _extract_version_from_server_response_or_raise(
     server_response: str,
 ) -> AwesomeVersion:
@@ -490,6 +548,9 @@ def setup_connection_for_dialect(
                     _raise_if_version_unsupported(
                         version or version_string, "MariaDB", MIN_VERSION_MARIA_DB
                     )
+                _check_deprecated_version(
+                    instance.hass, version, "MariaDB", UPCOMING_MIN_VERSION_MARIA_DB
+                )
                 if version and (
                     (version < RECOMMENDED_MIN_VERSION_MARIA_DB)
                     or (MARIA_DB_106 <= version < RECOMMENDED_MIN_VERSION_MARIA_DB_106)
@@ -516,6 +577,9 @@ def setup_connection_for_dialect(
                 # MySQL
                 # https://github.com/home-assistant/core/issues/137178
                 slow_dependent_subquery = True
+                _check_deprecated_version(
+                    instance.hass, version, "MySQL", UPCOMING_MIN_VERSION_MYSQL
+                )
 
         # Ensure all times are using UTC to avoid issues with daylight savings
         execute_on_connection(dbapi_connection, "SET time_zone = '+00:00'")
@@ -535,6 +599,9 @@ def setup_connection_for_dialect(
                 _raise_if_version_unsupported(
                     version or version_string, "PostgreSQL", MIN_VERSION_PGSQL
                 )
+            _check_deprecated_version(
+                instance.hass, version, "PostgreSQL", UPCOMING_MIN_VERSION_PGSQL
+            )
 
     else:
         _fail_unsupported_dialect(dialect_name)

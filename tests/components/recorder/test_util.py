@@ -749,6 +749,112 @@ async def test_no_issue_for_mariadb_with_MDEV_25020(
     assert database_engine.optimizer.slow_dependent_subquery is False
 
 
+@pytest.mark.parametrize(
+    (
+        "dialect",
+        "version_query",
+        "server_version",
+        "extracted_version",
+        "engine_name",
+        "min_version",
+        "supported_version",
+    ),
+    [
+        (
+            "mysql",
+            "SELECT VERSION()",
+            "10.6.0-MariaDB",
+            "10.6.0",
+            "MariaDB",
+            "10.11.0",
+            "10.11.0-MariaDB",
+        ),
+        (
+            "mysql",
+            "SELECT VERSION()",
+            "8.0.0",
+            "8.0.0",
+            "MySQL",
+            "8.4.0",
+            "8.4.0",
+        ),
+        (
+            "postgresql",
+            "SHOW server_version",
+            "13.2",
+            "13.2",
+            "PostgreSQL",
+            "15.0",
+            "15.2",
+        ),
+    ],
+)
+async def test_issue_for_deprecated_database_version(
+    hass: HomeAssistant,
+    dialect: str,
+    version_query: str,
+    server_version: str,
+    extracted_version: str,
+    engine_name: str,
+    min_version: str,
+    supported_version: str,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test we create and delete an issue for end-of-life database versions."""
+    instance_mock = MagicMock()
+    instance_mock.hass = hass
+    execute_args = []
+    close_mock = MagicMock()
+    reported_version = server_version
+
+    def execute_mock(statement):
+        nonlocal execute_args
+        execute_args.append(statement)
+
+    def fetchall_mock():
+        nonlocal execute_args
+        if execute_args[-1] == version_query:
+            return [[reported_version]]
+        return None
+
+    def _make_cursor_mock(*_):
+        return MagicMock(execute=execute_mock, close=close_mock, fetchall=fetchall_mock)
+
+    dbapi_connection = MagicMock(cursor=_make_cursor_mock)
+
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        dialect,
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(DOMAIN, "database_engine_too_old")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.3.0"
+    assert issue.translation_placeholders == {
+        "database_engine": engine_name,
+        "server_version": extracted_version,
+        "min_version": min_version,
+    }
+    assert database_engine is not None
+
+    reported_version = supported_version
+    database_engine = await hass.async_add_executor_job(
+        util.setup_connection_for_dialect,
+        instance_mock,
+        dialect,
+        dbapi_connection,
+        True,
+    )
+    await hass.async_block_till_done()
+
+    assert issue_registry.async_get_issue(DOMAIN, "database_engine_too_old") is None
+    assert database_engine is not None
+
+
 @pytest.mark.skip_on_db_engine(["mysql", "postgresql"])
 @pytest.mark.usefixtures("skip_by_db_engine")
 async def test_basic_sanity_check(
