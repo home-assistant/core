@@ -649,7 +649,10 @@ async def test_async_poll_manual_hosts_skips_ping_for_disabled_device(
     assert state.state == "unavailable"
 
     # Now disable the device.
-    device = device_registry.async_get_device(identifiers={(sonos.DOMAIN, soco.uid)})
+    entry = hass.config_entries.async_entries(sonos.DOMAIN)[0]
+    device = device_registry.async_get_device_by_identifier(
+        (sonos.DOMAIN, soco.uid), entry.entry_id
+    )
     assert device is not None
     device_registry.async_update_device(
         device.id,
