@@ -374,7 +374,12 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         if issue.key not in ISSUE_KEYS_FOR_REPAIRS:
             return
 
-        if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
+        presentable = presentable_issue_suggestions(self.hass, issue)
+
+        # A non-fixable repair renders the issue description, which may
+        # use the extra placeholders; a fixable one uses the fix flow,
+        # which computes its own placeholders
+        if not presentable and issue.key in EXTRA_PLACEHOLDERS:
             placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
         else:
             placeholders = {}
@@ -416,7 +421,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.hass,
             DOMAIN,
             issue.uuid.hex,
-            is_fixable=bool(presentable_issue_suggestions(self.hass, issue)),
+            is_fixable=bool(presentable),
             severity=IssueSeverity.WARNING,
             translation_key=issue.key,
             translation_placeholders=placeholders or None,
