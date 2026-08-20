@@ -11,12 +11,23 @@ from homeassistant.components.comelit.config_flow import (
     InvalidVedoAuth,
     InvalidVedoPin,
 )
-from homeassistant.components.comelit.const import CONF_VEDO_PIN, DOMAIN
+from homeassistant.components.comelit.const import (
+    CONF_TRAVEL_TIME,
+    CONF_VEDO_PIN,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_USER
-from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
+from homeassistant.const import (
+    CONF_ENTITY_ID,
+    CONF_HOST,
+    CONF_PIN,
+    CONF_PORT,
+    CONF_TYPE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import setup_integration
 from .const import (
     BAD_PIN,
     BRIDGE_HOST,
@@ -478,3 +489,64 @@ async def test_flow_serial_bridge_with_vedo_auth_failure(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": "invalid_vedo_auth"}
+
+
+async def test_options_flow_cover_travel_time(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting a cover travel time via the options flow."""
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+
+    result = await hass.config_entries.options.async_init(
+        mock_serial_bridge_config_entry.entry_id
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ENTITY_ID: "cover.cover0"},
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "cover_settings"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRAVEL_TIME: 40},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {CONF_TRAVEL_TIME: {"cover.cover0": 40}}
+    assert mock_serial_bridge_config_entry.options == {
+        CONF_TRAVEL_TIME: {"cover.cover0": 40}
+    }
+
+
+async def test_options_flow_cover_travel_time_update_preserves_others(
+    hass: HomeAssistant,
+    mock_serial_bridge: AsyncMock,
+    mock_serial_bridge_config_entry: MockConfigEntry,
+) -> None:
+    """Test updating one cover's travel time preserves other covers' values."""
+    await setup_integration(hass, mock_serial_bridge_config_entry)
+    hass.config_entries.async_update_entry(
+        mock_serial_bridge_config_entry,
+        options={CONF_TRAVEL_TIME: {"cover.cover1": 50}},
+    )
+
+    result = await hass.config_entries.options.async_init(
+        mock_serial_bridge_config_entry.entry_id
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_ENTITY_ID: "cover.cover0"},
+    )
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={CONF_TRAVEL_TIME: 40},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        CONF_TRAVEL_TIME: {"cover.cover1": 50, "cover.cover0": 40}
+    }
