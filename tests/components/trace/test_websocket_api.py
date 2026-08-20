@@ -667,12 +667,19 @@ async def test_restore_traces_overflow(
     # Traces should be restored
     assert "trace_traces_restored" in hass.data
 
-    # Trigger "moon" enough times to overflow the max number of stored traces
+    restored_finished_moon_traces_count = sum(
+        trace.get("script_execution") == "finished" for trace in restored_moon_traces
+    )
+
+    restored_non_finished_moon_traces_count = sum(
+        trace.get("script_execution") != "finished" for trace in restored_moon_traces
+    )
+
     with patch(
         "homeassistant.components.trace.models.uuid_util.random_uuid_hex",
         wraps=mock_random_uuid_hex,
     ):
-        for _ in range(DEFAULT_STORED_TRACES - num_restored_moon_traces + 1):
+        for _ in range(DEFAULT_STORED_TRACES - restored_finished_moon_traces_count + 1):
             await _run_automation_or_script(hass, domain, moon_config, "test_event2")
             await hass.async_block_till_done()
 
@@ -680,7 +687,10 @@ async def test_restore_traces_overflow(
     response = await client.receive_json()
     assert response["success"]
     moon_traces = _find_traces(response["result"], domain, "moon")
-    assert len(moon_traces) == DEFAULT_STORED_TRACES
+    assert (
+        len(moon_traces)
+        == DEFAULT_STORED_TRACES + restored_non_finished_moon_traces_count
+    )
     if num_restored_moon_traces > 1:
         assert moon_traces[0]["run_id"] == restored_moon_traces[1]["run_id"]
     assert moon_traces[num_restored_moon_traces - 1]["run_id"] == trace_uuids[0]
@@ -736,6 +746,16 @@ async def test_restore_traces_late_overflow(
 
     client = await hass_ws_client()
 
+    restored_finished_moon_traces_count = sum(
+        trace["short_dict"].get("script_execution") == "finished"
+        for trace in saved_traces["data"][f"{domain}.moon"]
+    )
+
+    restored_non_finished_moon_traces_count = sum(
+        trace["short_dict"].get("script_execution") != "finished"
+        for trace in saved_traces["data"][f"{domain}.moon"]
+    )
+
     # Traces should not yet be restored
     assert "trace_traces_restored" not in hass.data
 
@@ -744,7 +764,7 @@ async def test_restore_traces_late_overflow(
         "homeassistant.components.trace.models.uuid_util.random_uuid_hex",
         wraps=mock_random_uuid_hex,
     ):
-        for _ in range(DEFAULT_STORED_TRACES - num_restored_moon_traces + 1):
+        for _ in range(DEFAULT_STORED_TRACES - restored_finished_moon_traces_count + 1):
             await _run_automation_or_script(hass, domain, moon_config, "test_event2")
             await hass.async_block_till_done()
 
@@ -752,7 +772,10 @@ async def test_restore_traces_late_overflow(
     response = await client.receive_json()
     assert response["success"]
     moon_traces = _find_traces(response["result"], domain, "moon")
-    assert len(moon_traces) == DEFAULT_STORED_TRACES
+    assert (
+        len(moon_traces)
+        == DEFAULT_STORED_TRACES + restored_non_finished_moon_traces_count
+    )
     if num_restored_moon_traces > 1:
         assert moon_traces[0]["run_id"] == restored_run_id
     assert moon_traces[num_restored_moon_traces - 1]["run_id"] == trace_uuids[0]
@@ -1724,8 +1747,10 @@ async def test_not_triggered_trace_serialization(
 
     # Restored traces are routed back into their separate buckets.
     trace_bucket = hass.data[DATA_TRACE]["automation.diag"]
-    assert list(trace_bucket.runs) == [run["short_dict"]["run_id"]]
-    assert list(trace_bucket.not_triggered) == [not_triggered["short_dict"]["run_id"]]
+    assert list(trace_bucket.buckets["unknown"]) == [run["short_dict"]["run_id"]]
+    assert list(trace_bucket.buckets["not_triggered"]) == [
+        not_triggered["short_dict"]["run_id"]
+    ]
 
     # The restored not-triggered trace keeps its diagnostics.
     await client.send_json(

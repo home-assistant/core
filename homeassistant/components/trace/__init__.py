@@ -20,7 +20,7 @@ from .const import (
     DEFAULT_STORED_TRACES,
 )
 from .models import ActionTrace
-from .util import async_store_trace
+from .util import async_move_trace_to_final_bucket, async_store_trace
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -39,6 +39,7 @@ __all__ = [
     "CONF_STORED_TRACES",
     "TRACE_CONFIG_SCHEMA",
     "ActionTrace",
+    "async_move_trace_to_final_bucket",
     "async_store_trace",
 ]
 
