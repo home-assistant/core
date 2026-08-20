@@ -59,7 +59,7 @@ async def async_get_config_entry_diagnostics(
 
     state: dict[str, Any] = {
         "connected": receiver.connected,
-        "model": receiver.model.name if receiver.model else None,
+        "model": receiver.model.name,
         "power_on": receiver.power_on,
         "volume": receiver.volume,
         "max_volume": receiver.max_volume,

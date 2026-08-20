@@ -770,6 +770,16 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.use_addon = True
 
+        if any(
+            entry.data.get(CONF_USE_ADDON) and entry.unique_id != self.unique_id
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            # The add-on can only connect to a single adapter, so abort before
+            # the flow changes the add-on config of the existing entry.
+            # A discovery of the existing entry's own adapter passes, so the
+            # entry can be updated, e.g. from a USB path to a socket.
+            return self.async_abort(reason="addon_already_configured")
+
         addon_info = await self._async_get_addon_info()
 
         if addon_info.state is AddonState.RUNNING:
@@ -1348,6 +1358,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     raise AbortFlow("addon_stop_failed") from err
             return await self.async_step_manual_reconfigure()
 
+        if any(
+            entry.data.get(CONF_USE_ADDON) and entry.entry_id != config_entry.entry_id
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            # The add-on can only connect to a single adapter, so abort before
+            # the flow changes the add-on config of the other entry.
+            return self.async_abort(reason="addon_already_configured")
+
         addon_info = await self._async_get_addon_info()
 
         if addon_info.state is AddonState.NOT_INSTALLED:
@@ -1742,13 +1760,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         discovered_home_id = (
             str(discovery_info.zwave_home_id) if discovery_info.zwave_home_id else None
         )
+        addon_entries = [
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if entry.data.get(CONF_USE_ADDON)
+        ]
+        if discovered_home_id is None and any(
+            entry.data.get(CONF_SOCKET_PATH) == discovery_info.socket_path
+            for entry in addon_entries
+        ):
+            # A reconnect of the configured adapter without a home ID is the
+            # same adapter, not a new one to migrate to.
+            return self.async_abort(reason="already_configured")
+
         if addon_entry := next(
-            (
-                entry
-                for entry in self._async_current_entries(include_ignore=False)
-                if entry.data.get(CONF_USE_ADDON)
-                and entry.unique_id != discovered_home_id
-            ),
+            (entry for entry in addon_entries if entry.unique_id != discovered_home_id),
             None,
         ):
             self._reconfigure_config_entry = addon_entry

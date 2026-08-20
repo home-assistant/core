@@ -1696,6 +1696,33 @@ async def test_esphome_discovery_migration(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_no_home_id_configured_socket_no_migration(
+    hass: HomeAssistant,
+) -> None:
+    """Test a no-home-ID reconnect of the configured socket isn't a migration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOCKET_PATH: "esphome://192.168.1.100:6053",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
 async def test_esphome_discovery_placeholder_then_home_id(
     hass: HomeAssistant,
 ) -> None:
@@ -2652,6 +2679,94 @@ async def test_not_addon(hass: HomeAssistant) -> None:
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_addon_already_configured(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test flow aborts when another entry already uses the add-on."""
+    addon_options["device"] = "/test"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "usb_path": "/other",
+            "use_addon": True,
+        },
+        title=TITLE,
+        unique_id="4321",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    # The flow must not have touched the add-on config of the existing entry.
+    set_addon_options.assert_not_called()
+    assert addon_options["device"] == "/test"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_reconfigure_addon_already_configured(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test reconfigure to add-on aborts when another entry uses the add-on."""
+    addon_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "usb_path": "/other",
+            "use_addon": True,
+        },
+        title=TITLE,
+        unique_id="4321",
+    )
+    addon_entry.add_to_hass(hass)
+
+    result = await integration.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "on_supervisor_reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_already_configured"
+    # The other entry's add-on config is untouched.
+    set_addon_options.assert_not_called()
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
