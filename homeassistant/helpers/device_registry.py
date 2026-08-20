@@ -1572,7 +1572,7 @@ class _DeprecatedDeviceRegistryItemsView:
             "methods, which is deprecated; iterate it to get the device entries, "
             "or use `async_get`, `async_entries_for_config_entry` and similar "
             "helpers for lookups",
-            breaks_in_ha_version="2027.8.0",
+            breaks_in_ha_version="2027.9.0",
             core_behavior=ReportBehavior.ERROR,
             core_integration_behavior=ReportBehavior.ERROR,
             custom_integration_behavior=ReportBehavior.LOG,

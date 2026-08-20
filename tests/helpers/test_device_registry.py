@@ -4402,7 +4402,7 @@ async def test_devices_mapping_access_deprecated(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("bridgeid", "0123")},
     )
-    what = "accesses `device_registry.devices` as a mapping"
+    what = "uses `device_registry.devices` as a mapping"
 
     # Iterating the view is the supported API and is never reported.
     assert list(device_registry.devices) == [entry]
@@ -4428,7 +4428,7 @@ async def test_devices_membership_by_entry_supported_by_id_deprecated(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("bridgeid", "0123")},
     )
-    what = "accesses `device_registry.devices` as a mapping"
+    what = "uses `device_registry.devices` as a mapping"
 
     # DeviceEntry (value) membership is supported and never reported.
     assert entry in device_registry.devices
