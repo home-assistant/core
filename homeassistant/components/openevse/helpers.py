@@ -7,6 +7,7 @@ from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.exceptions import (
     AuthenticationError,
     ParseJSONError,
+    UnknownError,
     UnsupportedFeature,
 )
 
@@ -20,7 +21,7 @@ from .const import DOMAIN
 
 
 @contextmanager
-def openevse_exception_handler(value: float) -> Iterator[None]:
+def openevse_exception_handler(value: float = 0.0) -> Iterator[None]:
     """Context manager to handle and translate OpenEVSE exceptions."""
     try:
         yield
@@ -45,6 +46,8 @@ def openevse_exception_handler(value: float) -> Iterator[None]:
         ServerTimeoutError,
         ContentTypeError,
         ParseJSONError,
+        UnknownError,
+        RuntimeError,
     ) as err:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
