@@ -25,7 +25,9 @@ async def test_device_registry(
     """Test the device registry entry, including the Bluetooth connection."""
     await setup_with_selected_platforms(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, FIXTURE_MAC)})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, FIXTURE_MAC), mock_config_entry.entry_id
+    )
     assert device_entry == snapshot
 
 

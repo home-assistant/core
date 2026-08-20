@@ -244,6 +244,9 @@
       },
       "ptz_zoom_out": {
         "name": "PTZ zoom out"
+      },
+      "sync_time": {
+        "name": "Synchronize time"
       }
     },
     "camera": {
@@ -481,6 +484,15 @@
       }
     },
     "select": {
+      "anti_flicker": {
+        "name": "Anti-flicker",
+        "state": {
+          "f50": "50 Hz",
+          "f60": "60 Hz",
+          "off": "[%key:common::state::off%]",
+          "other": "Other"
+        }
+      },
       "auto_quick_reply_message": {
         "name": "Auto quick reply message",
         "state": {

@@ -68,7 +68,9 @@ async def test_get_actions(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+            entity_entry.entity_id,
+            "attributes",
+            {"supported_features": features_state},
         )
 
     expected_actions = []
@@ -380,7 +382,7 @@ async def test_capabilities(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678",
+            entity_entry.entity_id,
             HVACMode.COOL,
             capabilities_state,
         )
@@ -498,7 +500,7 @@ async def test_capabilities_legacy(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678",
+            entity_entry.entity_id,
             HVACMode.COOL,
             capabilities_state,
         )

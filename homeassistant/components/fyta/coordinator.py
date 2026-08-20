@@ -101,10 +101,7 @@ class FytaCoordinator(DataUpdateCoordinator[dict[int, Plant]]):
                     (DOMAIN, f"{self.config_entry.entry_id}-{plant_id}"),
                     self.config_entry.entry_id,
                 ):
-                    device_registry.async_update_device(
-                        device_id=device.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(device.id)
                     _LOGGER.debug("Device removed from device registry: %s", device.id)
 
         # add new devices
