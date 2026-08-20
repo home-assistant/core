@@ -61,7 +61,12 @@ async def test_user_success(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "admin"},
+        {
+            "ip_address": "192.168.1.50",
+            "refresh_rate": 60,
+            "password": "admin",
+            "web_port": 80,
+        },
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
@@ -69,6 +74,7 @@ async def test_user_success(
     assert result2["data"]["ip_address"] == "192.168.1.50"
     assert result2["data"]["password"] == "admin"
     assert result2["data"]["device_name"] == "Quido (Lab)"
+    assert result2["data"]["web_port"] == 80
     assert len(mock_setup_entry.mock_calls) == 1
 
 

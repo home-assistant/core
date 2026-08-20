@@ -20,12 +20,14 @@
         "data": {
           "ip_address": "IPv4 address",
           "password": "Password (optional)",
-          "refresh_rate": "Scan interval (seconds)"
+          "refresh_rate": "Scan interval (seconds)",
+          "web_port": "HTTP Port"
         },
         "data_description": {
           "ip_address": "Enter the IPv4 address of your device.",
           "password": "Leave blank if your device does not require authentication.",
-          "refresh_rate": "How often Home Assistant should poll the device for new data."
+          "refresh_rate": "How often Home Assistant should poll the device for new data.",
+          "web_port": "The HTTP port of the device. Default is 80."
         },
         "title": "Add a new device"
       }

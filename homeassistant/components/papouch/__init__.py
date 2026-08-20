@@ -12,7 +12,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 import homeassistant.helpers.config_validation as cv
 
-from .const import AUTH_FAILED_ERROR, DOMAIN, UNKNOWN_LOCATION, UNKNOWN_NAME
+from .const import (
+    AUTH_FAILED_ERROR,
+    DEFAULT_WEB_PORT,
+    DOMAIN,
+    UNKNOWN_LOCATION,
+    UNKNOWN_NAME,
+)
 from .coordinator import PapouchDataUpdateCoordinator
 
 if TYPE_CHECKING:
@@ -34,7 +40,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
     """Set up Papouch device from a config entry."""
     session = async_get_clientsession(hass)
     password = entry.data.get("password", "")
-    api_client = PapouchHTTPClient(entry.data["ip_address"], session, password=password)
+    web_port = entry.data.get("web_port", DEFAULT_WEB_PORT)
+    api_client = PapouchHTTPClient(
+        entry.data["ip_address"], session, password=password, web_port=web_port
+    )
 
     name, location = await api_client.get_device_info()
     safe_name = name or UNKNOWN_NAME
