@@ -1008,7 +1008,7 @@ class HomeKit:
         """Purge bridges that exist from failed pairing or manual resets."""
         devices_to_purge = [
             entry.id
-            for entry in dev_reg.devices.get_devices_for_config_entry_id(self._entry_id)
+            for entry in dr.async_entries_for_config_entry(dev_reg, self._entry_id)
             if (
                 identifier not in entry.identifiers  # type: ignore[comparison-overlap]
                 or connection not in entry.connections  # type: ignore[unreachable]
@@ -1231,7 +1231,9 @@ class HomeKit:
             dev_reg_ent = dev_reg.async_get(ent_reg_ent.device_id)
             if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
                 # A child device has no hardware info of its own; use the parent's
-                dev_reg_ent = dev_reg.devices.get(dev_reg_ent.parent_device_id)
+                dev_reg_ent = dev_reg.async_get(
+                    dev_reg_ent.parent_device_id, include_child_devices=False
+                )
             if dev_reg_ent is not None:
                 self._fill_config_from_device_registry_entry(dev_reg_ent, ent_cfg)
         if ATTR_MANUFACTURER not in ent_cfg:
