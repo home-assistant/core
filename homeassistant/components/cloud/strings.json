@@ -86,8 +86,10 @@
   },
   "preview_features": {
     "stt_v2": {
-      "description": "Home Assistant Cloud is experimenting with a new Speech-to-Text service that should deliver better performance for households in any language, with extra performance gains when combined with the Home Assistant Voice Preview Edition.",
-      "name": "Try the new Speech-to-Text from Home Assistant Cloud"
+      "description": "We're testing a new speech-to-text engine for Home Assistant Cloud, the part of voice control that turns what you say into words. In our testing it copes better with accents, background noise, and languages other than English.\n\nWhile this is enabled, any audio from your voice commands is processed by [Soniox](https://soniox.com/) rather than our current provider. This is relevant only to Assistants configured to use Home Assistant Cloud as a STT engine. It travels through a Nabu Casa proxy, which handles authentication and forwards it to the processing region closest to you. Nabu Casa doesn't process, store or log your audio at any point. Everything else about your voice pipeline stays the same, and you can turn this off again at any time.",
+      "disable_confirmation": "Any Assistant configured to use Home Assistant Cloud for STT will go back to being transcribed by our current speech-to-text provider.",
+      "enable_confirmation": "This feature is still in development and may change. While it's enabled, audio from your voice commands is transcribed by Soniox instead of our current provider.",
+      "name": "Home Assistant Cloud: Speech-to-text"
     }
   },
   "services": {
