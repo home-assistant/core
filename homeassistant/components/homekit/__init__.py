@@ -1231,7 +1231,9 @@ class HomeKit:
             dev_reg_ent = dev_reg.async_get(ent_reg_ent.device_id)
             if isinstance(dev_reg_ent, dr.ChildDeviceEntry):
                 # A child device has no hardware info of its own; use the parent's
-                dev_reg_ent = dev_reg.devices.get(dev_reg_ent.parent_device_id)
+                dev_reg_ent = dev_reg.async_get(
+                    dev_reg_ent.parent_device_id, include_child_devices=False
+                )
             if dev_reg_ent is not None:
                 self._fill_config_from_device_registry_entry(dev_reg_ent, ent_cfg)
         if ATTR_MANUFACTURER not in ent_cfg:
