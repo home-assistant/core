@@ -143,7 +143,9 @@ async def test_migrate_entry_v1_to_v2(
     assert subentry.unique_id == "xyz12"
 
     # Verify device was migrated and linked to subentry
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "xyz12")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "xyz12"), mock_config_entry_v1.entry_id
+    )
     assert device is not None
     assert device.config_entries_subentries == {
         mock_config_entry_v1.entry_id: {subentry.subentry_id}
@@ -234,11 +236,15 @@ async def test_migrate_entry_v1_to_v2_merge_same_api_key(
     assert titles == {"Profile One", "Profile Two"}
 
     # Verify devices were migrated to entry1 with existing identifiers
-    device_abc = device_registry.async_get_device(identifiers={(DOMAIN, "abc11")})
+    device_abc = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "abc11"), entry1.entry_id
+    )
     assert device_abc is not None
     assert entry1.entry_id in device_abc.config_entries
 
-    device_def = device_registry.async_get_device(identifiers={(DOMAIN, "def22")})
+    device_def = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "def22"), entry1.entry_id
+    )
     assert device_def is not None
     assert entry1.entry_id in device_def.config_entries
 
@@ -323,7 +329,9 @@ async def test_migrate_entry_v1_to_v2_disabled_entry(
     )
 
     # Verify device disabled_by was changed from CONFIG_ENTRY to USER
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "def22")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "def22"), entry1.entry_id
+    )
     assert device is not None
     assert device.disabled_by is dr.DeviceEntryDisabler.USER
 

@@ -246,8 +246,8 @@ async def test_vehicle_device_model_from_library(
     ):
         await setup_platform(hass, normal_config_entry)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, "LRWXF7EK4KC700000")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "LRWXF7EK4KC700000"), normal_config_entry.entry_id
     )
     assert device is not None
     assert device.model == "Cybercab"

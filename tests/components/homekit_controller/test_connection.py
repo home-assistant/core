@@ -1,6 +1,6 @@
 """Tests for HKDevice."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Generator
 import dataclasses
 from typing import Any
 from unittest import mock
@@ -184,6 +184,27 @@ async def test_migrate_device_id_no_serial(
     assert device.manufacturer == variant.manufacturer
 
 
+@pytest.fixture
+def allow_deprecated_device_registry_apis() -> Generator[None]:
+    """Allow tests to call the deprecated device registry APIs without raising.
+
+    A restored composite device can only be retrieved with async_get_device, so tests
+    exercising composite devices keep calling it; downgrade the deprecation report to a
+    log instead of raising.
+    """
+    real_report_usage = dr.report_usage
+
+    def _log_only(what: str, **kwargs: Any) -> None:
+        kwargs["core_behavior"] = dr.ReportBehavior.LOG
+        kwargs["core_integration_behavior"] = dr.ReportBehavior.LOG
+        kwargs["custom_integration_behavior"] = dr.ReportBehavior.LOG
+        real_report_usage(what, **kwargs)
+
+    with mock.patch.object(dr, "report_usage", _log_only):
+        yield
+
+
+@pytest.mark.usefixtures("allow_deprecated_device_registry_apis")
 async def test_migrate_device_id_shared_identifier_only_migrates_own(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
