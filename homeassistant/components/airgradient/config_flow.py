@@ -71,12 +71,11 @@ class AirGradientConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured(updates={CONF_HOST: host})
 
         session = async_get_clientsession(self.hass)
-        if properties.get("api") == "1":
-            self.client = AirGradientClient(
-                host, session=session, api_version=ApiVersion.V1
-            )
-        else:
-            self.client = AirGradientClient(host, session=session)
+        self.client = AirGradientClient(
+            host,
+            session=session,
+            api_version=ApiVersion.V1 if properties.get("api") == "1" else None,
+        )
         try:
             await self.client.get_current_measures()
         except AirGradientParseError:

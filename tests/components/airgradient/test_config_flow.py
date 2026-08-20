@@ -410,7 +410,7 @@ async def test_zeroconf_flow_probes_for_missing_or_unknown_api_hint(
         )
 
     assert result["type"] is FlowResultType.FORM
-    mock_client.assert_called_once_with("10.0.0.131", session=ANY)
+    mock_client.assert_called_once_with("10.0.0.131", session=ANY, api_version=None)
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
