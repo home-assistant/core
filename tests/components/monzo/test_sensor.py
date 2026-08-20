@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from monzopy import InvalidMonzoAPIResponseError
@@ -16,7 +16,7 @@ from homeassistant.components.monzo.sensor import (
     MonzoSensorEntityDescription,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, State
 from homeassistant.helpers import entity_registry as er
 
@@ -29,6 +29,7 @@ from tests.typing import ClientSessionGenerator
 EXPECTED_VALUE_GETTERS = {
     "balance": lambda x: x["balance"]["balance"] / 100,
     "total_balance": lambda x: x["balance"]["total_balance"] / 100,
+    "spend_today": lambda x: abs(x["balance"]["spend_today"]) / 100,
     "pot_balance": lambda x: x["balance"] / 100,
 }
 
@@ -146,11 +147,12 @@ async def test_all_entities(
     polling_config_entry: MockConfigEntry,
 ) -> None:
     """Test all entities."""
-    await setup_integration(hass, polling_config_entry)
+    with patch("homeassistant.components.monzo.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, polling_config_entry)
 
-    await snapshot_platform(
-        hass, entity_registry, snapshot, polling_config_entry.entry_id
-    )
+        await snapshot_platform(
+            hass, entity_registry, snapshot, polling_config_entry.entry_id
+        )
 
 
 async def test_update_failed(

@@ -221,7 +221,9 @@ async def test_setup_registers_hub_device(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.config_entries == {mock_config_entry.entry_id}
     assert device.name == "My Eco Hub"
@@ -255,7 +257,9 @@ async def test_setup_registers_hub_device_with_mac(
     assert await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SERIAL), entry.entry_id
+    )
     assert device is not None
     assert device.connections == {
         (dr.CONNECTION_NETWORK_MAC, "7c:83:06:01:11:92"),

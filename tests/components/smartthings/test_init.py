@@ -86,7 +86,9 @@ async def test_devices(
     for specs in devices.get_devices.return_value:
         device_id = specs.device_id
 
-        device = device_registry.async_get_device({(DOMAIN, device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), mock_config_entry.entry_id
+        )
 
         assert device is not None
         assert device == snapshot(name=get_fixture_name(device_id))
@@ -105,21 +107,27 @@ async def test_device_not_resetting_area(
 
     device_id = devices.get_devices.return_value[0].device_id
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
 
     assert device.area_id == "theater"
 
     device_registry.async_update_device(device_id=device.id, area_id=None)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
 
     assert device.area_id is None
 
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device({(DOMAIN, device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, device_id), mock_config_entry.entry_id
+    )
     assert device.area_id is None
 
 
@@ -343,7 +351,9 @@ async def test_removing_stale_devices(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert not device_registry.async_get_device({(DOMAIN, "aaa-bbb-ccc")})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, "aaa-bbb-ccc"), mock_config_entry.entry_id
+    )
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -404,8 +414,8 @@ async def test_hub_via_device(
     ]
     await setup_integration(hass, mock_config_entry)
 
-    hub_device = device_registry.async_get_device(
-        {(DOMAIN, "074fa784-8be8-4c70-8e22-6f5ed6f81b7e")}
+    hub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "074fa784-8be8-4c70-8e22-6f5ed6f81b7e"), mock_config_entry.entry_id
     )
     assert hub_device == snapshot
     child_device = device_registry.async_get_device_by_identifier(

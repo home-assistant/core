@@ -41,7 +41,6 @@ VENTILATION_TEMPERATURE_ENTITY_IDS = (
 @pytest.mark.parametrize(
     "ventilation_node_type",
     [
-        pytest.param(NodeType.BOX, id="box"),
         pytest.param(NodeType.VLV, id="vlv"),
         pytest.param(NodeType.VLVRH, id="vlvrh"),
         pytest.param(NodeType.VLVVOC, id="vlvvoc"),
@@ -60,10 +59,57 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
     mock_sensor_nodes: list[Node],
     ventilation_node_type: NodeType,
 ) -> None:
-    """Test ventilation-related sensors are created for supported node families."""
+    """Test ventilation-related sensors are created for supported non-box node families."""
+    # Mutate a non-box node (node 50 "Kitchen RH", index 3); mutating the box
+    # node would make its via_device link resolve to itself.
     supported_node = replace(
+        mock_sensor_nodes[3],
+        general=replace(mock_sensor_nodes[3].general, node_type=ventilation_node_type),
+        ventilation=replace(
+            mock_sensor_nodes[3].ventilation,
+            flow_lvl_tgt=42,
+            time_state_end=1700000459,
+        ),
+    )
+    mock_duco_client.async_get_nodes.return_value = [
+        *mock_sensor_nodes[:3],
+        supported_node,
+        *mock_sensor_nodes[4:],
+    ]
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    state = hass.states.get("sensor.kitchen_rh_ventilation_state")
+    assert state is not None
+    assert state.state == "auto"
+
+    state = hass.states.get("sensor.kitchen_rh_target_flow_level")
+    assert state is not None
+    assert state.state == "42"
+
+    state = hass.states.get("sensor.kitchen_rh_state_end_time")
+    assert state is not None
+    assert state.state == "2023-11-14T22:20:59+00:00"
+
+    assert hass.states.get("sensor.office_co2_ventilation_state") is None
+    assert hass.states.get("sensor.office_co2_target_flow_level") is None
+    assert hass.states.get("sensor.office_co2_state_end_time") is None
+
+
+async def test_ventilation_related_sensors_created_for_box_node(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+) -> None:
+    """Test ventilation-related sensors are created for the box node.
+
+    The box (node 1) keeps its own device; unlike the satellite nodes it sets no
+    via_device, so it is exercised here on the real box node rather than by mutating
+    a satellite into a second box that would merge with the controller device.
+    """
+    box_node = replace(
         mock_sensor_nodes[0],
-        general=replace(mock_sensor_nodes[0].general, node_type=ventilation_node_type),
         ventilation=replace(
             mock_sensor_nodes[0].ventilation,
             flow_lvl_tgt=42,
@@ -71,7 +117,7 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
         ),
     )
     mock_duco_client.async_get_nodes.return_value = [
-        supported_node,
+        box_node,
         *mock_sensor_nodes[1:],
     ]
 
@@ -377,8 +423,8 @@ async def test_deregistered_node_removes_device(
 ) -> None:
     """Test a node disappearing from the API removes its device from the registry."""
     # Verify node 2 (UCCO2 RF sensor) device exists before deregistration.
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_2")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}_2"), mock_config_entry.entry_id
     )
     assert device is not None
 
@@ -392,8 +438,8 @@ async def test_deregistered_node_removes_device(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # The device should be removed from the device registry.
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_2")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}_2"), mock_config_entry.entry_id
     )
     assert device is None
 
@@ -413,8 +459,9 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
         hass, mock_config_entry, [Platform.FAN, Platform.SENSOR]
     )
 
-    box_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_{BOX_NODE_ID}")}
+    box_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}_{BOX_NODE_ID}"),
+        mock_config_entry.entry_id,
     )
     assert box_device is not None
     assert hass.states.get("fan.living") is not None
@@ -428,8 +475,9 @@ async def test_box_node_not_removed_on_transient_incomplete_node_list(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
-        device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_{BOX_NODE_ID}")}
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{mock_config_entry.unique_id}_{BOX_NODE_ID}"),
+            mock_config_entry.entry_id,
         )
         is not None
     )
@@ -483,8 +531,8 @@ async def test_unknown_node_type_logs_warning_and_creates_no_entities(
     assert "unsupported" in caplog.text.lower()
     assert hass.states.get("sensor.unsupported_device_humidity") is None
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_99")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}_99"), mock_config_entry.entry_id
     )
     assert device is None
 

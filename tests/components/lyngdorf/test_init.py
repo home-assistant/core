@@ -121,7 +121,9 @@ async def test_mac_connection_registered_when_serial_is_mac(
         await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, serial.lower())})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, serial.lower()), entry.entry_id
+    )
     assert device is not None
     mac_connections = {
         value for kind, value in device.connections if kind == dr.CONNECTION_NETWORK_MAC
@@ -146,7 +148,7 @@ async def test_no_zone_b_device_for_model_without_zone_b(
         await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.unique_id}_zone_b")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.unique_id}_zone_b"), mock_config_entry.entry_id
     )
     assert device is None

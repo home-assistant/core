@@ -104,8 +104,9 @@ async def test_get_triggers(
     )
 
     # Get triggers for `Wall switch with 2 controls`
-    hue_wall_switch_device = device_registry.async_get_device(
-        identifiers={(hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da")}
+    hue_wall_switch_device = device_registry.async_get_device_by_identifier(
+        (hue.DOMAIN, "3ff06175-29e8-44a8-8fe7-af591b0025da"),
+        mock_bridge_v2.config_entry.entry_id,
     )
     # The device is linked to the bridge device as its via_device.
     bridge_device = device_registry.async_get_device_by_identifier(

@@ -22,6 +22,9 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
     PRESET_NONE,
@@ -614,6 +617,35 @@ async def test_ac_state_attributes_update(
         hass.states.get("climate.theater_ac_office_granit").attributes[state_attribute]
         == expected_value
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_setpoint_range_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the setpoint range is used when the device reports one."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.theater_ac_office_granit")
+    assert state.attributes[ATTR_MIN_TEMP] == DEFAULT_MIN_TEMP
+    assert state.attributes[ATTR_MAX_TEMP] == DEFAULT_MAX_TEMP
+    assert ATTR_TARGET_TEMP_STEP not in state.attributes
+
+    await trigger_update(
+        hass,
+        devices,
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.THERMOSTAT_COOLING_SETPOINT,
+        Attribute.COOLING_SETPOINT_RANGE,
+        {"minimum": 16, "maximum": 30, "step": 1},
+    )
+
+    state = hass.states.get("climate.theater_ac_office_granit")
+    assert state.attributes[ATTR_MIN_TEMP] == 16
+    assert state.attributes[ATTR_MAX_TEMP] == 30
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 1
 
 
 @pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
