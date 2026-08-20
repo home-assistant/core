@@ -111,7 +111,10 @@ async def test_discovery_flow_shows_device_labels(
     hass: HomeAssistant, mock_udp_client: MagicMock
 ) -> None:
     """Test discovered device selector options have visible labels."""
-    mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE, DISCOVERED_DEVICE_2]
+    mock_udp_client.discover_devices.return_value = [
+        DISCOVERED_DEVICE,
+        DISCOVERED_DEVICE_2,
+    ]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -209,9 +212,7 @@ async def test_discover_no_devices(
     assert result["errors"] == {"base": "no_devices_found"}
 
 
-async def test_discover_failed(
-    hass: HomeAssistant, mock_udp_client: MagicMock
-) -> None:
+async def test_discover_failed(hass: HomeAssistant, mock_udp_client: MagicMock) -> None:
     """Test discovery shows an error when the broadcast fails."""
     mock_udp_client.discover_devices.side_effect = OSError("network down")
 
@@ -286,7 +287,10 @@ async def test_discovery_duplicate_device_names(
     hass: HomeAssistant, mock_udp_client: MagicMock
 ) -> None:
     """Test duplicate device names are deduplicated in the selector."""
-    mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE, DISCOVERED_DEVICE]
+    mock_udp_client.discover_devices.return_value = [
+        DISCOVERED_DEVICE,
+        DISCOVERED_DEVICE,
+    ]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
