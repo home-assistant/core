@@ -84,6 +84,12 @@
       "title": "Detected wrong custom domain configuration"
     }
   },
+  "preview_features": {
+    "stt_v2": {
+      "description": "Home Assistant Cloud is experimenting with a new Speech-to-Text service that should deliver better performance for households in any language, with extra performance gains when combined with the Home Assistant Voice Preview Edition.",
+      "name": "Try the new Speech-to-Text from Home Assistant Cloud"
+    }
+  },
   "services": {
     "remote_connect": {
       "description": "Makes the instance UI accessible from outside of the local network by enabling your Home Assistant Cloud connection.",
