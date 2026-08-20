@@ -252,6 +252,21 @@ async def test_config_entry_ignored_and_disabled(
 
 
 @pytest.mark.usefixtures("setup_ports")
+async def test_config_entry_unknown_integration(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test config entries of integrations that fail to resolve are ignored."""
+    MockConfigEntry(
+        domain="removed_custom_component", title="Test", data={"device": TTY_USB0}
+    ).add_to_hass(hass)
+
+    result = await _async_get_serial_ports(hass_ws_client, hass)
+
+    assert [port["consumers"] for port in result] == [[], []]
+
+
+@pytest.mark.usefixtures("setup_ports")
 async def test_config_entry_without_usb_dependency(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
