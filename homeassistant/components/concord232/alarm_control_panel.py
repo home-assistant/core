@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import override
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -17,6 +17,7 @@ from homeassistant.config_entries import SOURCE_IMPORT
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -155,8 +156,7 @@ class Concord232Alarm(
         """Send disarm command."""
         if not self._validate_code(code, AlarmControlPanelState.DISARMED):
             return
-        await self.hass.async_add_executor_job(self.coordinator.client.disarm, code)
-        await self.coordinator.async_request_refresh()
+        await self._async_command(self.coordinator.client.disarm, code)
 
     @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
@@ -164,19 +164,24 @@ class Concord232Alarm(
         if not self._validate_code(code, AlarmControlPanelState.ARMED_HOME):
             return
         if self._mode == MODE_SILENT:
-            await self.hass.async_add_executor_job(
-                self.coordinator.client.arm, "stay", "silent"
-            )
+            await self._async_command(self.coordinator.client.arm, "stay", "silent")
         else:
-            await self.hass.async_add_executor_job(self.coordinator.client.arm, "stay")
-        await self.coordinator.async_request_refresh()
+            await self._async_command(self.coordinator.client.arm, "stay")
 
     @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         if not self._validate_code(code, AlarmControlPanelState.ARMED_AWAY):
             return
-        await self.hass.async_add_executor_job(self.coordinator.client.arm, "away")
+        await self._async_command(self.coordinator.client.arm, "away")
+
+    async def _async_command(self, command: Any, *args: Any) -> None:
+        """Run a panel command and raise when the server rejects it."""
+        if not await self.hass.async_add_executor_job(command, *args):
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="command_failed",
+            )
         await self.coordinator.async_request_refresh()
 
     def _validate_code(self, code: str | None, state: AlarmControlPanelState) -> bool:
