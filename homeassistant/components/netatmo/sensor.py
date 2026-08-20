@@ -66,6 +66,7 @@ from .entity import (
     NetatmoModuleEntity,
     NetatmoRoomEntity,
     NetatmoWeatherModuleEntity,
+    room_device_info,
 )
 from .helper import NetatmoArea
 
@@ -794,12 +795,11 @@ class NetatmoClimateBatterySensor(NetatmoLegacySensor):
             f"-{self.device.entity_id}"
             f"-{self.entity_description.key}"
         )
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, netatmo_device.parent_id)},
-            name=netatmo_device.device.name,
-            manufacturer=self.device_description[0],
-            model=self.device_description[1],
-            configuration_url=self._attr_configuration_url,
+        # This sensor lives on the room's device, so it must describe the room
+        # rather than the valve it reads, or it renames the room after the valve
+        self._attr_device_info = room_device_info(
+            self.device.home.rooms[netatmo_device.parent_id],
+            netatmo_device.data_handler.parent_device_ids[self.device.home.entity_id],
         )
 
     @callback
