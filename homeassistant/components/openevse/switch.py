@@ -35,7 +35,9 @@ SWITCH_TYPES: tuple[OpenEVSESwitchDescription, ...] = (
         translation_key="solar_pv_divert",
         is_on_fn=lambda ev: ev.divert_active,
         turn_on_fn=lambda ev: ev.set_divert_mode("eco"),
-        turn_off_fn=lambda ev: ev.set_divert_mode("fast"),
+        turn_off_fn=lambda ev: ev.set_divert_mode(
+            "fast"
+        ),  # "fast" disables solar divert
     ),
     OpenEVSESwitchDescription(
         key="current_shaper",
