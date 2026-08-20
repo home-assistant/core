@@ -1127,6 +1127,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "comfee": {
+      "name": "Comfee",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "comfoconnect": {
       "name": "Zehnder ComfoAir Q",
       "integration_type": "hub",
