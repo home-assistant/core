@@ -70,21 +70,9 @@ jobs:
             # Bootstrap branches before the shared policy exists.
             printf '%s\n' \
               'rules:' \
-              '  anonymous-definition:' \
-              '    ignore:' \
-              '      - check-requirements.lock.yml' \
-              '  ref-version-mismatch:' \
-              '    ignore:' \
-              '      - check-requirements.lock.yml' \
-              '  template-injection:' \
-              '    ignore:' \
-              '      - check-requirements.lock.yml' \
-              '  undocumented-permissions:' \
-              '    ignore:' \
-              '      - check-requirements.lock.yml' \
               '  unsound-condition:' \
               '    ignore:' \
-              '      - check-requirements.lock.yml' \
+              '      - check-requirements.lock.yml:74:5' \
               > .zizmor-base.yml
           fi
 
@@ -97,6 +85,18 @@ jobs:
           advanced-security: false
           annotations: true
           config: .zizmor-base.yml
+          min-severity: medium
+          version: 1.29.0
+
+      - name: Validate proposed zizmor policy
+        if: steps.changes.outputs.relevant == 'true'
+        uses: zizmorcore/zizmor-action@3dc1ecc9bcb9e94e9b2c709687979e1298497054 # v0.6.2
+        with:
+          collect: all
+          persona: pedantic
+          advanced-security: false
+          annotations: false
+          config: .github/zizmor.yml
           min-severity: medium
           version: 1.29.0
 
