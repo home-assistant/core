@@ -431,6 +431,7 @@ RPC_SWITCHES = {
         method_on="set_camera_privacy",
         method_off="set_camera_privacy",
         method_params_fn=lambda id, value: (id, value),
+        entity_category=EntityCategory.CONFIG,
     ),
 }
 
