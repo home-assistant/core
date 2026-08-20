@@ -270,6 +270,14 @@ async def test_vehicle_asleep_polling(
             False,
             id="still_insufficient",
         ),
+        pytest.param(
+            # The listen_Credits filter fires for any event with a top-level
+            # credits object, so one lacking a quota/balance snapshot must not
+            # clear the repair or raise while parsing the missing shape.
+            {"type": "command", "cost": 1},
+            False,
+            id="malformed_missing_quota_and_balance",
+        ),
     ],
 )
 async def test_insufficient_credits_resolved_by_stream(
