@@ -75,9 +75,6 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
 
         self.device: Final[MyPVDevice] = device
 
-        identifiers = {
-            (DOMAIN, device.serial_number),
-        }
         connections = set()
 
         if device.mac_address:
@@ -88,7 +85,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         self.device_info: Final[DeviceInfo] = DeviceInfo(
             configuration_url=device.setup_uri,
             connections=connections,
-            identifiers=identifiers,
+            identifiers={(DOMAIN, device.serial_number)},
             manufacturer="my-PV",
             model=device.model,
             name=name,
