@@ -317,12 +317,14 @@ class AddonFlowManager:
             await asyncio.sleep(ADDON_SETUP_TIMEOUT)
             try:
                 if not ws_address:
-                    discovery_info = await self.async_get_addon_discovery_info()
+                    discovery_info = (
+                        await self.addon_manager.async_get_addon_discovery_info()
+                    )
                     ws_address = (
                         f"ws://{discovery_info['host']}:{discovery_info['port']}"
                     )
                 version_info = await async_get_version_info(self.hass, ws_address)
-            except (AbortFlow, CannotConnect) as err:
+            except (AddonError, CannotConnect) as err:
                 _LOGGER.debug(
                     "Add-on not ready yet, waiting %s seconds: %s",
                     ADDON_SETUP_TIMEOUT,
