@@ -547,6 +547,10 @@ async def test_zeroconf_flow_creates_new_entry_when_system_id_does_not_match(
     assert entry.data[CONF_HOST] == "old-host.example.com"
     assert entry.unique_id == "old-id"
     assert entry.data[CONF_SYSTEM_ID] == "old-id"
+    new_entry = hass.config_entries.async_get_entry(result["result"].entry_id)
+    assert new_entry is not None
+    assert new_entry.unique_id == "different-id"
+    assert new_entry.unique_id != entry.unique_id
 
 
 # ---------------------------
