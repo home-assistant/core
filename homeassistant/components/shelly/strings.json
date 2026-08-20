@@ -581,6 +581,9 @@
       }
     },
     "switch": {
+      "camera_privacy": {
+        "name": "Privacy"
+      },
       "charging": {
         "name": "Charging"
       },
