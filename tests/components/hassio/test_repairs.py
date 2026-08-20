@@ -140,7 +140,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                     type=SuggestionType.EXECUTE_REBOOT,
                     context=ContextType.SYSTEM,
                     reference="test",
-                    uuid=uuid4(),
+                    uuid=(sugg_uuid := uuid4()),
                     auto=False,
                     reference_extra=None,
                 ),
@@ -148,7 +148,7 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
                     type="test_type",
                     context=ContextType.SYSTEM,
                     reference="test",
-                    uuid=(sugg_uuid := uuid4()),
+                    uuid=uuid4(),
                     auto=False,
                     reference_extra=None,
                 ),
@@ -174,29 +174,12 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions(
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data == {
-        "type": "menu",
-        "flow_id": flow_id,
-        "handler": "hassio",
-        "step_id": "fix_menu",
-        "data_schema": [
-            {
-                "type": "select",
-                "options": [
-                    ["system_execute_reboot", "system_execute_reboot"],
-                    ["system_test_type", "system_test_type"],
-                ],
-                "required": False,
-                "name": "next_step_id",
-            }
-        ],
-        "menu_options": ["system_execute_reboot", "system_test_type"],
-        "description_placeholders": {"reference": "test"},
-    }
+    # The unknown test_type suggestion has no translation and is filtered;
+    # the remaining reboot suggestion is shown as a form directly
+    assert data["type"] == "form"
+    assert data["step_id"] == "system_execute_reboot"
 
-    resp = await client.post(
-        f"/api/repairs/issues/fix/{flow_id}", json={"next_step_id": "system_test_type"}
-    )
+    resp = await client.post(f"/api/repairs/issues/fix/{flow_id}", json={})
 
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
@@ -276,35 +259,8 @@ async def test_supervisor_issue_repair_flow_with_multiple_suggestions_and_confir
     data = await resp.json()
 
     flow_id = data["flow_id"]
-    assert data == {
-        "type": "menu",
-        "flow_id": flow_id,
-        "handler": "hassio",
-        "step_id": "fix_menu",
-        "data_schema": [
-            {
-                "type": "select",
-                "options": [
-                    ["system_execute_reboot", "system_execute_reboot"],
-                    ["system_test_type", "system_test_type"],
-                ],
-                "required": False,
-                "name": "next_step_id",
-            }
-        ],
-        "menu_options": ["system_execute_reboot", "system_test_type"],
-        "description_placeholders": None,
-    }
-
-    resp = await client.post(
-        f"/api/repairs/issues/fix/{flow_id}",
-        json={"next_step_id": "system_execute_reboot"},
-    )
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    flow_id = data["flow_id"]
+    # The unknown test_type suggestion has no translation and is filtered;
+    # the remaining reboot suggestion is shown as its confirmation form
     assert data == {
         "type": "form",
         "flow_id": flow_id,
@@ -816,18 +772,18 @@ async def test_mount_failed_repair_flow_hides_untranslated_suggestion(
     assert resp.status == HTTPStatus.OK
     data = await resp.json()
 
+    assert repair_issue.is_fixable is True
     assert data["type"] == "menu"
     assert data["menu_options"] == ["mount_execute_reload", "mount_execute_remove"]
 
 
 @pytest.mark.usefixtures("all_setup_requests")
-async def test_mount_failed_repair_flow_all_untranslated_suggestions_kept(
+async def test_mount_failed_repair_not_fixable_all_untranslated_suggestions(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
-    hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the menu keeps all suggestions if none has a translation."""
+    """Test the repair is not fixable if no suggestion has a translation."""
     mock_resolution_info(
         supervisor_client,
         issues=[
@@ -867,22 +823,7 @@ async def test_mount_failed_repair_flow_all_untranslated_suggestions_kept(
         domain="hassio", issue_id=issue_uuid.hex
     )
     assert repair_issue
-
-    client = await hass_client()
-
-    resp = await client.post(
-        "/api/repairs/issues/fix",
-        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
-    )
-
-    assert resp.status == HTTPStatus.OK
-    data = await resp.json()
-
-    assert data["type"] == "menu"
-    assert data["menu_options"] == [
-        "mount_suggestion_from_the_future",
-        "mount_other_future_suggestion",
-    ]
+    assert repair_issue.is_fixable is False
 
 
 @pytest.mark.parametrize(

@@ -49,6 +49,10 @@ from homeassistant.helpers.issue_registry import (
     async_create_issue,
     async_delete_issue,
 )
+from homeassistant.helpers.translation import (
+    async_get_cached_translations,
+    async_load_integrations,
+)
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
@@ -183,6 +187,36 @@ class SupervisorIssuesData:
     unhealthy_reasons: set[str]
     unsupported_reasons: set[str]
     issues: dict[UUID, Issue]
+
+
+@callback
+def presentable_issue_suggestions(
+    hass: HomeAssistant, issue: Issue
+) -> list[Suggestion]:
+    """Return the issue's suggestions the repair fix flow can present.
+
+    A newer Supervisor may offer suggestions this Core version has no fix
+    flow translation for; those would show up as empty menu entries. They
+    stay applicable via the Supervisor API and CLI. A single suggestion
+    needs no menu translation — it is shown as a form with generic
+    fallback texts.
+    """
+    if len(issue.suggestions) <= 1:
+        return issue.suggestions
+
+    translations = async_get_cached_translations(
+        hass, hass.config.language, "issues", DOMAIN
+    )
+    prefix = f"component.{DOMAIN}.issues.{issue.key}.fix_flow.step"
+    return [
+        suggestion
+        for suggestion in issue.suggestions
+        # Either a menu option label or a dedicated step (e.g. the
+        # confirmation of a formerly sole suggestion) proves this Core
+        # knows the suggestion for this issue
+        if f"{prefix}.fix_menu.menu_options.{suggestion.key}" in translations
+        or f"{prefix}.{suggestion.key}.description" in translations
+    ]
 
 
 class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
@@ -382,7 +416,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.hass,
             DOMAIN,
             issue.uuid.hex,
-            is_fixable=bool(issue.suggestions),
+            is_fixable=bool(presentable_issue_suggestions(self.hass, issue)),
             severity=IssueSeverity.WARNING,
             translation_key=issue.key,
             translation_placeholders=placeholders or None,
@@ -419,6 +453,11 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
     @override
     async def _async_update_data(self) -> SupervisorIssuesData:
         """Update issues data from Supervisor resolution center."""
+        # Translations decide which suggestions a repair can present and
+        # with that its fixable state — make sure they are loaded before
+        # the repairs are created (no-op once cached).
+        await async_load_integrations(self.hass, {DOMAIN})
+
         try:
             data = await self._supervisor_client.resolution.info()
         except SupervisorError as err:
