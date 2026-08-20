@@ -16,9 +16,9 @@ from homeassistant.config_entries import (
     ConfigEntryDisabler,
     ConfigEntryState,
     ConfigFlow,
+    ConfigFlowResult,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResult
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.setup import async_setup_component
 
@@ -457,13 +457,13 @@ async def test_multiple_consumers(
 class MockUsbFlow(ConfigFlow):
     """Config flow that keeps USB discoveries in progress."""
 
-    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> FlowResult:
+    async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Show a form so the discovery flow stays in progress."""
         return await self.async_step_confirm()
 
     async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Show a form so the discovery flow stays in progress."""
         return self.async_show_form(step_id="confirm")
 
