@@ -18,6 +18,7 @@ from homeassistant.components.mvglive.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
+from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
@@ -239,6 +240,30 @@ async def test_import_flow_legacy_directions(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["options"][CONF_DESTINATIONS] == ["Feldmoching"]
+
+
+@pytest.mark.usefixtures("mock_setup_entry", "mvg_api")
+async def test_import_flow_multiple_entries_same_station(hass: HomeAssistant) -> None:
+    """Test importing two `nextdeparture` entries for the same station by name."""
+    first = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION: "Hauptbahnhof", CONF_NAME: "To Feldmoching"},
+    )
+    await hass.async_block_till_done()
+    assert first["type"] is FlowResultType.CREATE_ENTRY
+    assert first["title"] == "To Feldmoching"
+
+    second = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_STATION: "Hauptbahnhof", CONF_NAME: "To Ostbahnhof"},
+    )
+    await hass.async_block_till_done()
+
+    assert second["type"] is FlowResultType.CREATE_ENTRY
+    assert second["title"] == "To Ostbahnhof"
+    assert second["result"].unique_id != first["result"].unique_id
 
 
 async def test_import_flow_invalid_station(

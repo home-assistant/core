@@ -6,7 +6,9 @@ from mvg import MvgApi, MvgApiError, TransportType
 import voluptuous as vol
 
 from homeassistant import config_entries
+from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
@@ -144,7 +146,10 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if station is None:
             return self.async_abort(reason="invalid_station")
 
-        await self.async_set_unique_id(station["id"])
+        # `name` disambiguates multiple legacy entries for the same station.
+        name = import_data.get(CONF_NAME)
+        unique_id = f"{station['id']}_{name}" if name else station["id"]
+        await self.async_set_unique_id(unique_id)
         self._abort_if_unique_id_configured()
 
         # `directions` is a fallback: only used if `destinations` wasn't set.
@@ -160,7 +165,7 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             CONF_NUMBER: import_data.get(CONF_NUMBER, DEFAULT_NUMBER),
         }
         return self.async_create_entry(
-            title=station["name"],
+            title=name or station["name"],
             data={
                 CONF_STATION_ID: station["id"],
                 CONF_STATION_NAME: station["name"],
@@ -217,11 +222,11 @@ class MvgOptionsFlowHandler(config_entries.OptionsFlow):
                 vol.Optional(
                     CONF_TIMEOFFSET,
                     default=current.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET),
-                ): int,
+                ): cv.positive_int,
                 vol.Optional(
                     CONF_NUMBER,
                     default=current.get(CONF_NUMBER, DEFAULT_NUMBER),
-                ): int,
+                ): cv.positive_int,
             }
         )
         return self.async_show_form(step_id="init", data_schema=schema)

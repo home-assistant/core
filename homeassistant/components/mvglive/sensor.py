@@ -16,6 +16,7 @@ from homeassistant.components.sensor import (
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import CONF_NAME, UnitOfTime
 from homeassistant.core import HomeAssistant
+from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -60,7 +61,7 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
                 vol.Optional(CONF_LINES, default=[""]): cv.ensure_list_csv,
                 vol.Optional(CONF_PRODUCTS): cv.ensure_list_csv,
                 vol.Optional(CONF_TIMEOFFSET, default=0): cv.positive_int,
-                vol.Optional(CONF_NUMBER, default=5): cv.positive_int,
+                vol.Optional(CONF_NUMBER, default=1): cv.positive_int,
                 vol.Optional(CONF_NAME): cv.string,
             }
         ]
@@ -75,22 +76,27 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the legacy YAML configuration as config entries."""
-    for nextdeparture in config[CONF_NEXT_DEPARTURE]:
-        hass.async_create_task(
-            hass.config_entries.flow.async_init(
-                DOMAIN, context={"source": SOURCE_IMPORT}, data=nextdeparture
-            )
+    results = [
+        await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=nextdeparture
         )
+        for nextdeparture in config[CONF_NEXT_DEPARTURE]
+    ]
 
-    ir.async_create_issue(
-        hass,
-        DOMAIN,
-        "deprecated_yaml",
-        breaks_in_ha_version="2027.3.0",
-        is_fixable=False,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-    )
+    if all(
+        result["type"] is not FlowResultType.ABORT
+        or result["reason"] == "already_configured"
+        for result in results
+    ):
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            "deprecated_yaml",
+            breaks_in_ha_version="2027.3.0",
+            is_fixable=False,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+        )
 
 
 async def async_setup_entry(
