@@ -212,11 +212,11 @@ class MatterAdapter:
         node_device_identifier = (DOMAIN, f"{ID_TYPE_DEVICE_ID}_{node_device_id}")
         identifiers = {node_device_identifier}
         serial_number: str | None = None
-        # if available, we also add the serialnumber as identifier
+        # if available, we also add the serial number as identifier
         if (
             (basic_info_serial_number := basic_info.serialNumber)
             and "test" not in basic_info_serial_number.lower()
-            # some bridges report their own serialnumber for the devices they bridge,
+            # some bridges report their own serial number for the devices they bridge,
             # which would make the identifier resolve to the bridge's device
             and not (
                 isinstance(basic_info, clusters.BridgedDeviceBasicInformation)
