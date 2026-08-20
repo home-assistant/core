@@ -105,6 +105,21 @@
       "climate_zone2": {
         "name": "Zone 2 thermostat"
       }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "cinema": "Cinema",
+              "living": "Living",
+              "mildly": "Mildly",
+              "night": "Night",
+              "reading": "Reading"
+            }
+          }
+        }
+      }
     }
   },
   "exceptions": {

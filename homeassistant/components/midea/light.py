@@ -10,6 +10,7 @@ from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
+    EFFECT_OFF,
     ColorMode,
     LightEntity,
     LightEntityDescription,
@@ -31,7 +32,11 @@ class MideaLightEntityDescription(LightEntityDescription):
 
 
 LIGHTS: list[MideaLightEntityDescription] = [
-    MideaLightEntityDescription(key="light", models=[DeviceType.X13]),
+    MideaLightEntityDescription(
+        key="light",
+        models=[DeviceType.X13],
+        translation_key="light",
+    ),
 ]
 
 
@@ -121,13 +126,14 @@ class MideaLight(MideaEntity, LightEntity):
     @override
     def effect_list(self) -> list[str]:
         """Midea light effect list."""
-        return self._device.effects
+        return [effect for effect in self._device.effects if effect != "none"]
 
     @property
     @override
     def effect(self) -> str | None:
         """Midea light current effect."""
-        return cast("str", self._device.get_attribute("effect"))
+        effect = cast("str", self._device.get_attribute("effect"))
+        return EFFECT_OFF if effect == "none" else effect
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
@@ -144,7 +150,11 @@ class MideaLight(MideaEntity, LightEntity):
                     attr="color_temperature", value=kwargs[ATTR_COLOR_TEMP_KELVIN]
                 )
             if ATTR_EFFECT in kwargs:
-                self._device.set_attribute(attr="effect", value=kwargs[ATTR_EFFECT])
+                effect = kwargs[ATTR_EFFECT]
+                self._device.set_attribute(
+                    attr="effect",
+                    value="none" if effect == EFFECT_OFF else effect,
+                )
 
     @override
     def turn_off(self, **kwargs: Any) -> None:

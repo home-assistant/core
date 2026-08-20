@@ -20,6 +20,7 @@ from homeassistant.components.light import (
     ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_SUPPORTED_COLOR_MODES,
     DOMAIN as LIGHT_DOMAIN,
+    EFFECT_OFF,
     ColorMode,
 )
 from homeassistant.const import (
@@ -48,7 +49,7 @@ def _x13_device() -> DummyDevice:
             X13Attributes.power: True,
             X13Attributes.brightness: 128,
             X13Attributes.color_temperature: 4000,
-            X13Attributes.effect: "manual",
+            X13Attributes.effect: "none",
             X13Attributes.rgb_color: None,
         },
     )
@@ -91,8 +92,10 @@ async def test_light_state_and_services(
     assert state.attributes[ATTR_COLOR_TEMP_KELVIN] == 4000
     assert state.attributes[ATTR_MIN_COLOR_TEMP_KELVIN] == 2700
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
-    assert state.attributes[ATTR_EFFECT] == "manual"
-    assert state.attributes[ATTR_EFFECT_LIST] == X13_EFFECTS
+    assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
+    assert state.attributes[ATTR_EFFECT_LIST] == [
+        effect for effect in X13_EFFECTS if effect != "none"
+    ]
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
 
@@ -113,6 +116,15 @@ async def test_light_state_and_services(
         ("set_attribute", "color_temperature", 5000),
         ("set_attribute", "effect", "cinema"),
     ]
+
+    device.calls.clear()
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_entry.entity_id, ATTR_EFFECT: EFFECT_OFF},
+        blocking=True,
+    )
+    assert device.calls == [("set_attribute", "effect", "none")]
 
     device.calls.clear()
     await hass.services.async_call(

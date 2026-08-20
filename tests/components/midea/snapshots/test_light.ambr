@@ -7,7 +7,6 @@
     'area_id': None,
     'capabilities': dict({
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
-        'manual',
         'living',
         'reading',
         'mildly',
@@ -45,7 +44,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': <LightEntityFeature: 4>,
-    'translation_key': None,
+    'translation_key': 'light',
     'unique_id': '12345678_light',
     'unit_of_measurement': None,
   })
@@ -56,9 +55,8 @@
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 128,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.COLOR_TEMP: 'color_temp'>,
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 4000,
-      <LightEntityStateAttribute.EFFECT: 'effect'>: 'manual',
+      <LightEntityStateAttribute.EFFECT: 'effect'>: 'off',
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
-        'manual',
         'living',
         'reading',
         'mildly',
