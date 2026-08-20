@@ -25,13 +25,21 @@ from .entry_data import ESPHomeConfigEntry
 _HASS_LOOP: asyncio.AbstractEventLoop | None = None
 
 
-def build_url(entry_id: str, port_name: str) -> URL:
-    """Build a canonical `esphome-hass://` URL."""
+def build_url(entry_id: str, port_name: str, usb_serial_number: str | None = None) -> URL:
+    """Build a canonical `esphome-hass://` URL.
+
+    A serial number pins the URL to one USB device: the port is a socket, so without it the
+    connection succeeds against whatever is plugged in, which is how an adapter swap ends up
+    talking to the wrong radio instead of failing.
+    """
+    query = {"port_name": port_name}
+    if usb_serial_number:
+        query["usb_serial"] = usb_serial_number
     return URL.build(
         scheme="esphome-hass",
         host="esphome",
         path=f"/{entry_id}",
-        query={"port_name": port_name},
+        query=query,
     )
 
 

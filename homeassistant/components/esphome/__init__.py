@@ -56,13 +56,23 @@ def _async_scan_serial_ports(
             continue
 
         for proxy in device_info.serial_proxies:
-            url = str(serial_proxy.build_url(entry.entry_id, proxy.name))
+            url = str(
+                serial_proxy.build_url(
+                    entry.entry_id, proxy.name, proxy.usb_serial_number or None
+                )
+            )
+
+            if proxy.usb_capable and not proxy.usb_vendor_id:
+                # An empty socket. Offering it would be like listing a /dev node for an
+                # adapter that has been unplugged: nothing can be done with it, and a
+                # client that stored a path to the device that used to be here should be
+                # told it is gone rather than handed a port that answers nothing.
+                continue
 
             if not proxy.usb_vendor_id:
                 manufacturer, model = async_get_manufacturer_model(device_info)
 
-                # Nothing enumerable behind the port: a pin-header UART, where the port
-                # really is the device, or a socket with nothing in it.
+                # A pin-header UART, where the port itself is the device
                 ports.append(
                     SerialDevice(
                         device=str(serial_proxy.build_url(entry.entry_id, proxy.name)),
