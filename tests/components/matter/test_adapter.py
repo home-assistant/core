@@ -470,9 +470,10 @@ async def test_bad_node_not_crash_integration(
     assert "Error setting up node" in caplog.text
 
 
-@pytest.mark.usefixtures("matter_node")
 @pytest.mark.parametrize("node_fixture", ["mock_composed_bridge"])
-@pytest.mark.parametrize("attributes", [{"2/57/15": "MB-1234"}], ids=["bridge_serial"])
+@pytest.mark.parametrize(
+    "attributes", [{"2/57/15": "MB-1234"}], ids=["bridge_serial_number"]
+)
 async def test_composed_bridged_device_with_bridge_serial_number(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
