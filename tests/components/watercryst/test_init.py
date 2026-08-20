@@ -16,10 +16,7 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.usefixtures("mock_api_client")
-async def test_setup_and_unload(
-    hass: HomeAssistant,
-    # config_entry: MockConfigEntry,
-) -> None:
+async def test_setup_and_unload(hass: HomeAssistant) -> None:
     """Test standard setup and unloading of the config entry."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
