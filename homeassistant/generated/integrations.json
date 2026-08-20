@@ -729,6 +729,11 @@
         "zigbee"
       ]
     },
+    "beverly": {
+      "name": "Beverly",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "bge": {
       "name": "Baltimore Gas and Electric (BGE)",
       "integration_type": "virtual",
