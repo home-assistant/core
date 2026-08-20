@@ -410,7 +410,7 @@ def _async_create_issue_deprecated_version(
         DOMAIN,
         "database_engine_too_old",
         is_fixable=False,
-        severity=ir.IssueSeverity.CRITICAL,
+        severity=ir.IssueSeverity.WARNING,
         translation_key="database_engine_too_old",
         translation_placeholders={
             "database_engine": database_engine,
@@ -435,7 +435,7 @@ def _async_create_issue_not_supported_lts(
         DOMAIN,
         "database_engine_not_supported_lts",
         is_fixable=False,
-        severity=ir.IssueSeverity.CRITICAL,
+        severity=ir.IssueSeverity.WARNING,
         translation_key="database_engine_not_supported_lts",
         translation_placeholders={
             "database_engine": database_engine,
