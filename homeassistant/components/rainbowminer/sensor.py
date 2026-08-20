@@ -162,7 +162,6 @@ ALWAYS_SENSORS: tuple[RainbowMinerSensorEntityDescription, ...] = (
     RainbowMinerSensorEntityDescription(
         key="total_earnings_mbtc",
         translation_key="total_earnings_mbtc",
-        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="mBTC",
         value_fn=lambda coord, _cur: _to_mbtc(
             _sum_btc(coord.data.balances, "Earnings_BTC")
@@ -171,7 +170,6 @@ ALWAYS_SENSORS: tuple[RainbowMinerSensorEntityDescription, ...] = (
     RainbowMinerSensorEntityDescription(
         key="unpaid_balance_mbtc",
         translation_key="unpaid_balance_mbtc",
-        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="mBTC",
         value_fn=lambda coord, _cur: _to_mbtc(
             _sum_btc(coord.data.balances, "Total_BTC")
@@ -180,14 +178,12 @@ ALWAYS_SENSORS: tuple[RainbowMinerSensorEntityDescription, ...] = (
     RainbowMinerSensorEntityDescription(
         key="estimated_daily_profit_mbtc",
         translation_key="estimated_daily_profit_mbtc",
-        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="mBTC",
         value_fn=lambda coord, _cur: _to_mbtc(coord.data.current_profit.AllProfitBTC),
     ),
     RainbowMinerSensorEntityDescription(
         key="weekly_earnings_mbtc",
         translation_key="weekly_earnings_mbtc",
-        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="mBTC",
         value_fn=lambda coord, _cur: _to_mbtc(
             _sum_btc(coord.data.balances, "Earnings_1w_BTC")
@@ -196,7 +192,6 @@ ALWAYS_SENSORS: tuple[RainbowMinerSensorEntityDescription, ...] = (
     RainbowMinerSensorEntityDescription(
         key="daily_earnings_mbtc",
         translation_key="daily_earnings_mbtc",
-        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="mBTC",
         value_fn=lambda coord, _cur: _to_mbtc(
             _sum_btc(coord.data.balances, "Earnings_1d_BTC")
@@ -205,7 +200,6 @@ ALWAYS_SENSORS: tuple[RainbowMinerSensorEntityDescription, ...] = (
     RainbowMinerSensorEntityDescription(
         key="hourly_earnings_mbtc",
         translation_key="hourly_earnings_mbtc",
-        device_class=SensorDeviceClass.MONETARY,
         native_unit_of_measurement="mBTC",
         value_fn=lambda coord, _cur: _to_mbtc(
             _sum_btc(coord.data.balances, "Earnings_1h_BTC")
