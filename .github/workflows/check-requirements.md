@@ -30,9 +30,8 @@ safe-outputs:
 jobs:
   prepare:
     # The deterministic stage always uploads an artifact; its `skip_aw` flag is
-    # true when no tracked requirement file changed since the last comment,
-    # which is our cue to skip the (token-spending) agent. Recover the PR number
-    # to comment on either way.
+    # true when the PR proposes the same pin changes the last comment already
+    # reported. Recover the PR number to comment on either way.
     if: github.event.workflow_run.conclusion == 'success'
     runs-on: ubuntu-latest
     permissions:
@@ -144,8 +143,10 @@ Then stop. Do not improvise a verdict.
 
 Replace every placeholder with the resolved value and emit
 `rendered_comment` via `add_comment`. Preserve the leading
-`<!-- requirements-check -->` marker. The PR target is already wired;
-do not pass `item_number`.
+`<!-- requirements-check -->` marker, and leave the table's `Package`,
+`Old` and `New` columns exactly as rendered — the next run reads them
+back to decide whether the PR's pins changed. The PR target is already
+wired; do not pass `item_number`.
 
 If a `{{SUMMARY}}` placeholder is present, replace it last, once every
 `{{CHECK_CELL:…}}` is resolved:

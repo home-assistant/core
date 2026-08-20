@@ -55,7 +55,9 @@ def test_main_writes_artifact(
     _write_bump_diff(diff_file)
     output_file = tmp_path / "results.json"
     monkeypatch.setattr(
-        main_mod, "_resolve_skip", lambda pr, sha: GateDecision(False, "running checks")
+        main_mod,
+        "_resolve_skip",
+        lambda pr, sha, pins: GateDecision(False, "running checks"),
     )
     _mock_pypi(monkeypatch)
 
@@ -94,7 +96,9 @@ def test_main_skips_but_still_writes_artifact(
     _write_bump_diff(diff_file)
     output_file = tmp_path / "results.json"
     monkeypatch.setattr(
-        main_mod, "_resolve_skip", lambda pr, sha: GateDecision(True, "nothing changed")
+        main_mod,
+        "_resolve_skip",
+        lambda pr, sha, pins: GateDecision(True, "nothing changed"),
     )
 
     # The checks must not run when skipping; make them explode if they do.
@@ -137,7 +141,7 @@ def test_resolve_skip_without_credentials_runs(monkeypatch: pytest.MonkeyPatch) 
         raise AssertionError("decide_skip must not be called without credentials")
 
     monkeypatch.setattr(main_mod, "decide_skip", _boom)
-    assert main_mod._resolve_skip(42, _SHA).skip is False
+    assert main_mod._resolve_skip(42, _SHA, set()).skip is False
 
 
 def test_main_missing_diff_file_exits(

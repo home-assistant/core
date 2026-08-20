@@ -35,7 +35,7 @@ _PIN_RE = re.compile(
 )
 
 
-def _normalize(name: str) -> str:
+def canonical_name(name: str) -> str:
     """PEP 503 canonical name."""
     return re.sub(r"[-_.]+", "-", name).lower()
 
@@ -52,7 +52,9 @@ def _parse_pin(line: str) -> _Pin | None:
     m = _PIN_RE.match(body)
     if not m:
         return None
-    return _Pin(name=_normalize(m.group(1)), raw_name=m.group(1), version=m.group(2))
+    return _Pin(
+        name=canonical_name(m.group(1)), raw_name=m.group(1), version=m.group(2)
+    )
 
 
 def parse_diff(diff_text: str) -> list[PackageChange]:

@@ -6,12 +6,15 @@ import os
 from pathlib import Path
 import sys
 
-from .gate import GateDecision, decide_skip
+from .diff import parse_diff
+from .gate import GateDecision, Pin, decide_skip, pin_set
 from .models import CheckRunResult
 from .runner import run_checks
 
 
-def _resolve_skip(pr_number: int, head_sha: str | None) -> GateDecision:
+def _resolve_skip(
+    pr_number: int, head_sha: str | None, current: set[Pin]
+) -> GateDecision:
     """Decide whether this run can skip re-checking the PR.
 
     Needs the repo and a token (from the Actions environment) to read prior
@@ -21,7 +24,7 @@ def _resolve_skip(pr_number: int, head_sha: str | None) -> GateDecision:
     token = os.environ.get("GITHUB_TOKEN")
     if not head_sha or not repo or not token:
         return GateDecision(False, "Gate inputs unavailable; running checks.")
-    return decide_skip(pr_number, head_sha, repo, token)
+    return decide_skip(pr_number, head_sha, repo, token, current)
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -31,7 +34,7 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument(
         "--head-sha",
         help="PR head commit the checks ran against; embedded in the comment "
-        "so a later run can skip when no tracked requirement file changed.",
+        "for the next run to find.",
     )
     parser.add_argument(
         "--diff",
@@ -47,17 +50,20 @@ def main(argv: list[str] | None = None) -> int:
     )
     args = parser.parse_args(argv)
 
-    decision = _resolve_skip(args.pr_number, args.head_sha)
+    try:
+        diff_text = args.diff.read_text(encoding="utf-8")
+    except FileNotFoundError:
+        parser.error(f"input file {args.diff} not found")
+
+    decision = _resolve_skip(
+        args.pr_number, args.head_sha, pin_set(parse_diff(diff_text))
+    )
     print(decision.reason, file=sys.stderr)
     if decision.skip:
         result = CheckRunResult(
             pr_number=args.pr_number, head_sha=args.head_sha, skip_aw=True
         )
     else:
-        try:
-            diff_text = args.diff.read_text(encoding="utf-8")
-        except FileNotFoundError:
-            parser.error(f"input file {args.diff} not found")
         result = run_checks(
             pr_number=args.pr_number,
             diff_text=diff_text,
