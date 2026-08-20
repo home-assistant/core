@@ -29,11 +29,25 @@ class OpenEVSESwitchDescription(SwitchEntityDescription):
     turn_off_fn: Callable[[OpenEVSE], Awaitable[Any]]
 
 
+async def _async_turn_on_override(ev: OpenEVSE) -> None:
+    """Turn on manual override."""
+    if not ev.manual_override:
+        await ev.toggle_override()
+
+
+async def _async_turn_off_override(ev: OpenEVSE) -> None:
+    """Turn off manual override."""
+    if ev.manual_override:
+        await ev.toggle_override()
+
+
 SWITCH_TYPES: tuple[OpenEVSESwitchDescription, ...] = (
     OpenEVSESwitchDescription(
         key="solar_pv_divert",
         translation_key="solar_pv_divert",
-        is_on_fn=lambda ev: ev.divert_active,
+        is_on_fn=lambda ev: (
+            ev.divertmode == "eco" if ev.divertmode is not None else None
+        ),
         turn_on_fn=lambda ev: ev.set_divert_mode("eco"),
         turn_off_fn=lambda ev: ev.set_divert_mode(
             "fast"
@@ -50,8 +64,8 @@ SWITCH_TYPES: tuple[OpenEVSESwitchDescription, ...] = (
         key="manual_override",
         translation_key="manual_override",
         is_on_fn=lambda ev: ev.manual_override,
-        turn_on_fn=lambda ev: ev.toggle_override(),
-        turn_off_fn=lambda ev: ev.toggle_override(),
+        turn_on_fn=_async_turn_on_override,
+        turn_off_fn=_async_turn_off_override,
     ),
 )
 
