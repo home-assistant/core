@@ -71,6 +71,20 @@
         "rgb_color": {
           "name": "RGB color"
         },
+        "source": {
+          "name": "Source"
+        },
+        "source_type": {
+          "name": "Source type",
+          "state": {
+            "color_name": "Color name",
+            "color_temp_kelvin": "Color temperature",
+            "hex_value": "Hex",
+            "hs_color": "HS",
+            "rgb_color": "RGB",
+            "xy_color": "CIE xy"
+          }
+        },
         "xy_color": {
           "name": "CIE xy color"
         }

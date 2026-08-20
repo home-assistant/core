@@ -9,6 +9,7 @@ from homeassistant.components.color.const import (
     ATTR_HS_COLOR,
     ATTR_KIND,
     ATTR_RGB_COLOR,
+    ATTR_SOURCE,
     ATTR_XY_COLOR,
     CONF_INITIAL_COLOR,
     CONF_INITIAL_MODE,
@@ -124,6 +125,36 @@ async def test_reproduce_round_trips_exact_source(
     state = hass.states.get(ENTITY_ID)
     assert state.state == snapshot.state
     assert state.attributes[attr] == snapshot.attributes[attr]
+    # The snapshot records the exact input shape, so restoring recreates the
+    # same source, not an equivalent derived view.
+    assert state.attributes[ATTR_SOURCE] == snapshot.attributes[ATTR_SOURCE]
+
+
+@pytest.mark.parametrize(
+    "source",
+    [
+        pytest.param({"rgb_color": [0, 0, 255]}, id="mismatches-hex-state"),
+        pytest.param({"rgb_color": [999, 0, 0]}, id="invalid-value"),
+        pytest.param({"brightness": 40}, id="not-a-color-shape"),
+        pytest.param("rgb_color", id="not-a-dict"),
+        pytest.param({"rgb_color": [0, 255, 0], "hs_color": [1, 1]}, id="two-shapes"),
+    ],
+)
+async def test_reproduce_untrustworthy_source_falls_back(
+    hass: HomeAssistant, source: object
+) -> None:
+    """A source that is malformed or contradicts the hex state is ignored."""
+    await _setup_entity(hass)
+    snapshot = State(
+        ENTITY_ID,
+        "#00FF00",
+        {ATTR_KIND: KIND_CHROMATIC, ATTR_SOURCE: source},
+    )
+    await async_reproduce_states(hass, [snapshot])
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == "#00FF00"
+    assert state.attributes[ATTR_SOURCE] == {"hex_value": "#00FF00"}
 
 
 async def test_reproduce_corrupt_xy_falls_back_to_hex(hass: HomeAssistant) -> None:

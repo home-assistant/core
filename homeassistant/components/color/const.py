@@ -28,6 +28,13 @@ ATTR_XY_COLOR: Final = "xy_color"
 # for chromatic, {"color_temp_kelvin": k} for white, plus "brightness" when
 # one is stored.
 ATTR_COLOR_PARAMS: Final = "color_params"
+# The exact input the user set, as a single-entry dict splattable directly
+# back into color.set_color: e.g. {"rgb_color": [255, 158, 77]}.
+ATTR_SOURCE: Final = "source"
+# The source dict's key alone, so templates and cards can branch on the
+# authored shape without unpacking the dict. One of the COLOR_SHAPE_FIELDS:
+# hex_value | rgb_color | hs_color | xy_color | color_temp_kelvin | color_name.
+ATTR_SOURCE_TYPE: Final = "source_type"
 
 SERVICE_CLEAR_BRIGHTNESS: Final = "clear_brightness"
 SERVICE_SET_BRIGHTNESS: Final = "set_brightness"

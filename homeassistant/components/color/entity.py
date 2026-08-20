@@ -26,6 +26,8 @@ from .const import (
     ATTR_HS_COLOR,
     ATTR_KIND,
     ATTR_RGB_COLOR,
+    ATTR_SOURCE,
+    ATTR_SOURCE_TYPE,
     ATTR_XY_COLOR,
     CONF_INITIAL_BRIGHTNESS,
     CONF_INITIAL_COLOR,
@@ -147,6 +149,7 @@ class ColorEntity(RestoreEntity):
             ATTR_HEX_COLOR,
             ATTR_HS_COLOR,
             ATTR_RGB_COLOR,
+            ATTR_SOURCE_TYPE,
             ATTR_XY_COLOR,
         }
     )
@@ -208,6 +211,7 @@ class ColorEntity(RestoreEntity):
         x, y = canonical.xy
         r, g, b = derive_rgb(canonical)
         hue, sat = derive_hs(canonical)
+        source = self._source()
         # Rounding applies only to derived views; the shape the user set is
         # echoed exactly as given.
         return {
@@ -220,9 +224,26 @@ class ColorEntity(RestoreEntity):
             else [round(hue, 2), round(sat, 2)],
             ATTR_KIND: canonical.kind,
             ATTR_RGB_COLOR: [r, g, b],
+            ATTR_SOURCE: source,
+            ATTR_SOURCE_TYPE: next(iter(source)),
             ATTR_XY_COLOR: [x, y]
             if canonical.source_field == FIELD_XY
             else [round(x, 4), round(y, 4)],
+        }
+
+    def _source(self) -> dict[str, Any]:
+        """Return the exact user input, splattable back into color.set_color.
+
+        `normalize()` always records the source, but a directly constructed
+        CanonicalColor may not carry one; fall back to the canonical xy so
+        the attribute is always a valid set_color payload.
+        """
+        canonical = self._canonical
+        if canonical.source_field is None:
+            return {FIELD_XY: list(canonical.xy)}
+        value = canonical.source_value
+        return {
+            canonical.source_field: list(value) if isinstance(value, tuple) else value
         }
 
     def _color_params(self) -> dict[str, Any]:

@@ -13,6 +13,8 @@ from homeassistant.components.color.const import (
     ATTR_HS_COLOR,
     ATTR_KIND,
     ATTR_RGB_COLOR,
+    ATTR_SOURCE,
+    ATTR_SOURCE_TYPE,
     ATTR_XY_COLOR,
     CONF_INITIAL_COLOR,
     CONF_INITIAL_MODE,
@@ -148,6 +150,59 @@ async def test_set_color_round_trips_exactly(
         blocking=True,
     )
     assert hass.states.get(ENTITY_ID).attributes[attr] == expected
+
+
+@pytest.mark.parametrize(
+    ("payload", "expected_source"),
+    [
+        pytest.param(
+            {"hex_value": "ff9e4d"}, {"hex_value": "#FF9E4D"}, id="hex-normalized"
+        ),
+        pytest.param(
+            {"rgb_color": [255, 158, 77]},
+            {"rgb_color": [255, 158, 77]},
+            id="rgb",
+        ),
+        pytest.param({"hs_color": [200.5, 37.2]}, {"hs_color": [200.5, 37.2]}, id="hs"),
+        pytest.param(
+            {"xy_color": [0.44481, 0.40663]},
+            {"xy_color": [0.44481, 0.40663]},
+            id="xy",
+        ),
+        pytest.param(
+            {"color_temp_kelvin": 2700}, {"color_temp_kelvin": 2700}, id="kelvin"
+        ),
+        pytest.param(
+            {"color_name": "goldenrod"}, {"color_name": "goldenrod"}, id="name"
+        ),
+    ],
+)
+async def test_source_attribute_echoes_exact_input(
+    hass: HomeAssistant, payload: dict, expected_source: dict
+) -> None:
+    """The source attribute names the shape the user set with its exact value.
+
+    Its payload splats directly back into color.set_color, so setting it
+    again must be accepted and leave the attribute unchanged.
+    """
+    await _create_entry(hass)
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COLOR,
+        {ATTR_ENTITY_ID: ENTITY_ID, **payload},
+        blocking=True,
+    )
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[ATTR_SOURCE] == expected_source
+    # source_type is the source dict's key, exposed for easy branching.
+    assert state.attributes[ATTR_SOURCE_TYPE] == next(iter(expected_source))
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_SET_COLOR,
+        {ATTR_ENTITY_ID: ENTITY_ID, **expected_source},
+        blocking=True,
+    )
+    assert hass.states.get(ENTITY_ID).attributes[ATTR_SOURCE] == expected_source
 
 
 async def test_hex_input_is_the_state(hass: HomeAssistant) -> None:

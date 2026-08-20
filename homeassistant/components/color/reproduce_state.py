@@ -18,6 +18,7 @@ from .const import (
     ATTR_HEX_COLOR,
     ATTR_HS_COLOR,
     ATTR_KIND,
+    ATTR_SOURCE,
     ATTR_XY_COLOR,
     DOMAIN,
     FIELD_BRIGHTNESS,
@@ -58,6 +59,30 @@ def _is_valid_xy_pair(x: Any, y: Any) -> bool:
         return valid_xy(float(x), float(y))
     except TypeError, ValueError, OverflowError:
         return False
+
+
+def _snapshot_source_shape(
+    attrs: dict[str, Any], snapshot_hex: Any
+) -> dict[str, Any] | None:
+    """Return the snapshot's explicit `source` shape if it is trustworthy.
+
+    Snapshot data is untrusted: the shape must normalize cleanly, and when
+    the snapshot carries a hex state it must re-derive that hex — a mismatch
+    means an edited or partially captured snapshot, so fall back to inference.
+    """
+    source = attrs.get(ATTR_SOURCE)
+    if not isinstance(source, dict) or len(source) != 1:
+        return None
+    ((field, value),) = source.items()
+    if not isinstance(field, str):
+        return None
+    try:
+        canonical = normalize({field: value})
+    except ColorInputError:
+        return None
+    if valid_hex(snapshot_hex) and derive_hex(canonical) != str(snapshot_hex).upper():
+        return None
+    return {field: value}
 
 
 def _snapshot_source_pair(
@@ -111,7 +136,11 @@ async def _async_reproduce_state(
             "Snapshot for %s is kind=white without kelvin; restoring as chromatic",
             state.entity_id,
         )
-    if (
+    if (source_shape := _snapshot_source_shape(attrs, snapshot_hex)) is not None:
+        # Newer snapshots record the user's exact input shape; restore it
+        # directly instead of inferring the shape from the derived views.
+        color_data = source_shape
+    elif (
         attrs.get(ATTR_KIND) == KIND_WHITE
         and attrs.get(ATTR_COLOR_TEMP_KELVIN)
         and _valid_kelvin(attrs[ATTR_COLOR_TEMP_KELVIN])
