@@ -48,6 +48,9 @@ OPTIONS_SCHEMA = vol.Schema(
                 mode=selector.NumberSelectorMode.BOX, step="any"
             ),
         ),
+        vol.Optional(CONF_INVERT): selector.BooleanSelector(
+            selector.BooleanSelectorConfig(),
+        ),
         vol.Optional(CONF_LOWER): selector.NumberSelector(
             selector.NumberSelectorConfig(
                 mode=selector.NumberSelectorMode.BOX, step="any"

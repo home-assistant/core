@@ -82,7 +82,7 @@ PLATFORM_SCHEMA = vol.All(
             vol.Optional(CONF_HYSTERESIS, default=DEFAULT_HYSTERESIS): vol.Coerce(
                 float
             ),
-            vol.Optional(CONF_INVERT, default=DEFAULT_INVERT): vol.Coerce(bool),
+            vol.Optional(CONF_INVERT, default=DEFAULT_INVERT): cv.boolean,
             vol.Optional(CONF_LOWER): vol.Coerce(float),
             vol.Optional(CONF_NAME, default=DEFAULT_NAME): cv.string,
             vol.Optional(CONF_UPPER): vol.Coerce(float),
@@ -270,6 +270,7 @@ class ThresholdSensor(BinarySensorEntity):
         return {
             ATTR_ENTITY_ID: self._entity_id,
             ATTR_HYSTERESIS: self._hysteresis,
+            ATTR_INVERT: self._invert,
             ATTR_LOWER: getattr(self, "_threshold_lower", None),
             ATTR_POSITION: self._state_position,
             ATTR_SENSOR_VALUE: self.sensor_value,
