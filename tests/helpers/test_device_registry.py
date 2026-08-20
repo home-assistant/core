@@ -3372,10 +3372,10 @@ async def test_async_get_include_composite_devices(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=old_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=old_id
     )
 
@@ -3386,8 +3386,8 @@ async def test_async_get_include_composite_devices(
     assert device_registry.async_get(old_id, include_child_devices=False) == composite
 
     # include_composite_devices=False resolves a composite id to None, matching
-    # `old_id in device_registry.devices`, which is composite-blind
-    assert old_id not in device_registry.devices
+    # `old_id in device_registry._devices`, which is composite-blind
+    assert old_id not in device_registry._devices
     assert device_registry.async_get(old_id, include_composite_devices=False) is None
     assert (
         device_registry.async_get(
