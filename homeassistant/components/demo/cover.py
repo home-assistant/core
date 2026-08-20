@@ -1,12 +1,10 @@
 """Demo platform for the cover component."""
 
 from datetime import datetime
-from enum import Enum
 from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    ATTR_SPEED,
     ATTR_TILT_POSITION,
     CoverDeviceClass,
     CoverEntity,
@@ -19,13 +17,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_utc_time_change
 
 from . import DOMAIN
-
-
-class Speed(Enum):
-    """Supported speeds for the demo cover."""
-
-    SLOW = 5
-    DEFAULT = 10
 
 
 async def async_setup_entry(
@@ -44,7 +35,7 @@ async def async_setup_entry(
                 "Living Room Window",
                 70,
                 50,
-                supported_speeds=[s.name.lower() for s in Speed],
+                supported_speeds=["slow", "default"],
                 translation_key="living_room_window",
             ),
             DemoCover(
@@ -110,7 +101,6 @@ class DemoCover(CoverEntity):
             self._closed = True
         else:
             self._closed = position <= 0
-        self._current_speed = Speed.DEFAULT
 
         self._attr_device_info = DeviceInfo(
             identifiers={
@@ -166,7 +156,6 @@ class DemoCover(CoverEntity):
             self.async_write_ha_state()
             return
 
-        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT").upper()]
         self._is_opening = False
         self._is_closing = True
         self._listen_cover()
@@ -192,7 +181,6 @@ class DemoCover(CoverEntity):
             self.async_write_ha_state()
             return
 
-        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT").upper()]
         self._is_opening = True
         self._is_closing = False
         self._listen_cover()
@@ -212,19 +200,16 @@ class DemoCover(CoverEntity):
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position: int = kwargs[ATTR_POSITION]
-        self._current_speed = Speed[kwargs.get(ATTR_SPEED, "DEFAULT").upper()]
-        step = self._current_speed.value
-        target_position = min(100, max(0, round(position / step) * step))
-        self._set_position = target_position
-        if self._position == target_position:
+        self._set_position = round(position, -1)
+        if self._position == position:
             return
 
-        self._is_closing = target_position < (self._position or 0)
+        self._is_closing = position < (self._position or 0)
         self._is_opening = not self._is_closing
 
         self._listen_cover()
         self._requested_closing = (
-            self._position is not None and target_position < self._position
+            self._position is not None and position < self._position
         )
         self.async_write_ha_state()
 
@@ -278,10 +263,9 @@ class DemoCover(CoverEntity):
         if self._position is None:
             return
         if self._requested_closing:
-            self._position -= self._current_speed.value
+            self._position -= 10
         else:
-            self._position += self._current_speed.value
-        self._position = max(0, min(100, self._position))
+            self._position += 10
 
         if self._position in (100, 0, self._set_position):
             await self.async_stop_cover()
