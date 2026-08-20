@@ -6,9 +6,11 @@ from typing import Any
 from unittest.mock import patch
 
 import aiounifi
+from aiounifi.models.message import MessageKey
 import pytest
 
 from homeassistant.components.unifi.const import DOMAIN
+from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
@@ -17,7 +19,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
-from .conftest import ConfigEntryFactoryType, WebsocketStateManager
+from .conftest import (
+    ConfigEntryFactoryType,
+    WebsocketMessageMock,
+    WebsocketStateManager,
+)
 
 from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
@@ -54,6 +60,63 @@ async def test_hub_setup(
     )
 
     assert device_entry.sw_version == "7.4.162"
+
+
+async def test_coordinators_preserve_handler_update_sources(
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Ensure coordinator polling matches the handler's existing update source."""
+    loader = config_entry_setup.runtime_data.entity_loader
+    api = config_entry_setup.runtime_data.api
+
+    clients_coordinator = loader.get_data_update_coordinator(api.clients)
+    devices_coordinator = loader.get_data_update_coordinator(api.devices)
+    assert clients_coordinator is not None
+    assert devices_coordinator is not None
+    assert clients_coordinator.update_interval is None
+    assert devices_coordinator.update_interval is None
+
+    assert loader.get_data_update_coordinator(api.ports) is devices_coordinator
+    assert loader.get_data_update_coordinator(api.outlets) is devices_coordinator
+
+    for handler in (
+        api.object_oriented_network_configs,
+        api.traffic_rules,
+        api.traffic_routes,
+    ):
+        coordinator = loader.get_data_update_coordinator(handler)
+        assert coordinator is not None
+        assert coordinator.update_interval == POLL_INTERVAL
+
+
+async def test_websocket_updates_notify_coordinator(
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Ensure websocket handler updates are forwarded through the coordinator."""
+    coordinator = (
+        config_entry_setup.runtime_data.entity_loader.get_data_update_coordinator(
+            config_entry_setup.runtime_data.api.clients
+        )
+    )
+    assert coordinator is not None
+
+    with patch.object(
+        coordinator, "async_set_updated_data", wraps=coordinator.async_set_updated_data
+    ) as set_updated_data:
+        mock_websocket_message(
+            message=MessageKey.CLIENT,
+            data={
+                "hostname": "client",
+                "ip": "10.0.0.1",
+                "is_wired": True,
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:00:01",
+                "name": "Client",
+            },
+        )
+
+    set_updated_data.assert_called_once_with(None)
 
 
 async def test_reset_after_successful_setup(
