@@ -417,6 +417,32 @@ async def test_store_reloaded_event_refreshes_update_entities(
     supervisor_client.store.reload.assert_not_called()
 
 
+async def test_store_reloaded_event_ignored_without_listeners(
+    hass: HomeAssistant,
+    addons_list: AsyncMock,
+) -> None:
+    """Test a store_reloaded event does not refresh without add-on entities."""
+    addons_list.return_value = []
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Without add-on entities the coordinator has no listeners,
+    # so the event must not trigger an add-on data fetch.
+    addons_list.reset_mock()
+    async_dispatcher_send(
+        hass,
+        EVENT_SUPERVISOR_EVENT,
+        {"event": "store_reloaded", "data": {"repositories": ["core"]}},
+    )
+    await hass.async_block_till_done()
+
+    addons_list.assert_not_called()
+
+
 async def test_update_addon(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,

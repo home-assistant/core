@@ -1292,10 +1292,16 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
     @callback
     def _supervisor_event(self, event: dict[str, Any]) -> None:
         """Refresh add-on data when Supervisor reloads the store."""
-        if event.get(ATTR_WS_EVENT) == EVENT_STORE_RELOADED:
-            self.config_entry.async_create_task(
-                self.hass, self.async_refresh_after_store_reload()
-            )
+        if event.get(ATTR_WS_EVENT) != EVENT_STORE_RELOADED:
+            return
+        # Without listeners there are no add-on entities to keep in sync.
+        # Scheduled polling is paused in that case as well, so don't let
+        # store reload events trigger refreshes either.
+        if not self._listeners:
+            return
+        self.config_entry.async_create_task(
+            self.hass, self.async_refresh_after_store_reload()
+        )
 
     @override
     async def _async_update_data(self) -> HassioAddonData:
