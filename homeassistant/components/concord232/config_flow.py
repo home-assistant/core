@@ -73,9 +73,11 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self._async_abort_entries_match(
-                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
+            await self.async_set_unique_id(
+                f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
+                raise_on_progress=False,
             )
+            self._abort_if_unique_id_configured()
             url = build_url(user_input[CONF_HOST], user_input[CONF_PORT])
             if await self.hass.async_add_executor_job(_try_connect, url):
                 return self.async_create_entry(
@@ -95,18 +97,28 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_HOST: import_data[CONF_HOST],
             CONF_PORT: import_data[CONF_PORT],
         }
-        self._async_abort_entries_match(
-            {CONF_HOST: data[CONF_HOST], CONF_PORT: data[CONF_PORT]}
-        )
-        url = build_url(data[CONF_HOST], data[CONF_PORT])
-        if not await self.hass.async_add_executor_job(_try_connect, url):
-            return self.async_abort(reason="cannot_connect")
-
         options: dict[str, Any] = {}
         if CONF_CODE in import_data:
             options[CONF_CODE] = import_data[CONF_CODE]
         if CONF_MODE in import_data:
             options[CONF_MODE] = import_data[CONF_MODE]
+
+        # Both platforms import the same YAML server; the unique_id serializes
+        # them. When the other platform's import created the entry first, merge
+        # the alarm-only fields (code, mode) into it instead of dropping them.
+        await self.async_set_unique_id(f"{data[CONF_HOST]}:{data[CONF_PORT]}")
+        for entry in self._async_current_entries(include_ignore=False):
+            if entry.unique_id != self.unique_id:
+                continue
+            if options:
+                self.hass.config_entries.async_update_entry(
+                    entry, options={**entry.options, **options}
+                )
+            return self.async_abort(reason="already_configured")
+
+        url = build_url(data[CONF_HOST], data[CONF_PORT])
+        if not await self.hass.async_add_executor_job(_try_connect, url):
+            return self.async_abort(reason="cannot_connect")
 
         return self.async_create_entry(
             title=import_data.get(CONF_NAME, data[CONF_HOST]),

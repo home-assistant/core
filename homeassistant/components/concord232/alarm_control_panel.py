@@ -121,7 +121,8 @@ class Concord232Alarm(
             manufacturer="GE Interlogix",
             model="Concord",
         )
-        code: str | None = entry.options.get(CONF_CODE)
+        # An empty options field means no code is configured
+        code: str | None = entry.options.get(CONF_CODE) or None
         self._code = code
         self._alarm_control_panel_option_default_code = code
         # The panel protocol arms without a code; only require one when the

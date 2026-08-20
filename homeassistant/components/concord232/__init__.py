@@ -1,6 +1,7 @@
 """The Concord232 integration."""
 
 from concord232 import client as concord232_client
+from yarl import URL
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
@@ -12,7 +13,8 @@ PLATFORMS = [Platform.ALARM_CONTROL_PANEL, Platform.BINARY_SENSOR]
 
 def build_url(host: str, port: int) -> str:
     """Return the server url for the stored connection settings."""
-    return f"http://{host}:{port}"
+    # URL.build brackets IPv6 hosts correctly
+    return str(URL.build(scheme="http", host=host, port=port))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: Concord232ConfigEntry) -> bool:
@@ -22,8 +24,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: Concord232ConfigEntry) -
     coordinator = Concord232Coordinator(hass, entry, client)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: Concord232ConfigEntry
+) -> None:
+    """Reload the entry when its options change."""
+    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: Concord232ConfigEntry) -> bool:
