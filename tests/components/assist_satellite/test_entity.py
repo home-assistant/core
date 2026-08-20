@@ -484,8 +484,8 @@ async def test_context_not_inherited(
     assert context is not previous_context
     assert context.user_id is None
 
-    # The entity context still attributes the operation that is in progress
-    assert entity._context is previous_context
+    # The pipeline drives the entity state from here, so it owns the context
+    assert entity._context is context
 
 
 async def test_pipeline_entity(
@@ -940,6 +940,8 @@ async def test_ask_question(
     async def async_start_conversation(start_announcement):
         # Verify state change
         assert entity.state == AssistSatelliteState.RESPONDING
+        # The question is asked on behalf of the caller
+        assert hass.states.get(entity_id).context is context
         assert (
             start_announcement.preannounce_media_id is not None
         ) is should_preannounce
@@ -991,7 +993,6 @@ async def test_ask_question(
         )
         assert entity.state == AssistSatelliteState.IDLE
         assert response == asdict(expected_answer)
-        assert hass.states.get(entity_id).context is context
 
 
 async def test_ask_question_requires_entity_permission(

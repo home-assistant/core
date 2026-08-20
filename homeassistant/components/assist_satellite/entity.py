@@ -486,14 +486,8 @@ class AssistSatelliteEntity(entity.Entity):
 
         device_id = self.registry_entry.device_id if self.registry_entry else None
 
-        if context is None:
-            # Speech picked up by the satellite is anonymous, so the pipeline
-            # must not run as whoever last targeted the entity. The entity
-            # context is left alone: it attributes the entity's own state
-            # changes, which may belong to an operation already in progress.
-            context = Context()
-        else:
-            self.async_set_context(context)
+        context = context or Context()
+        self.async_set_context(context)
 
         # Set entity state based on pipeline events
         self._run_has_tts = False
