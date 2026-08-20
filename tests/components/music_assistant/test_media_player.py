@@ -969,11 +969,14 @@ async def test_media_player_play_announcement_action(
     assert music_assistant_client.send_command.call_count == 1
     assert music_assistant_client.send_command.call_args == call(
         "players/cmd/play_announcement",
+        require_schema=None,
         player_id=mass_player_id,
         url="http://blah.com/announcement.mp3",
         pre_announce=True,
         volume_level=50,
         pre_announce_url="http://blah.com/chime.mp3",
+        message=None,
+        tts_engine=None,
     )
 
 

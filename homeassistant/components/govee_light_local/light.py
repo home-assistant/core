@@ -1,6 +1,5 @@
 """Govee light local."""
 
-from datetime import datetime
 import logging
 from typing import Any, override
 
@@ -20,6 +19,7 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DEVICE_TIMEOUT, DOMAIN, MANUFACTURER
 from .coordinator import GoveeLocalApiCoordinator, GoveeLocalConfigEntry
@@ -129,7 +129,7 @@ class GoveeLight(CoordinatorEntity[GoveeLocalApiCoordinator], LightEntity):
         """
         if not super().available:
             return False
-        return datetime.now() - self._device.lastseen < DEVICE_TIMEOUT  # pylint: disable=home-assistant-enforce-naive-now
+        return dt_util.naive_now() - self._device.lastseen < DEVICE_TIMEOUT
 
     @property
     @override

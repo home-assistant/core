@@ -314,7 +314,9 @@ async def test_device_info_is_set_from_status_correctly(
     mock_state = hass.states.get(mock_entity_id).state
 
     mock_d_entries = device_registry.devices
-    mock_entry = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_HOST_ID)})
+    mock_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_HOST_ID), MOCK_ENTRY_ID
+    )
     assert mock_state == STATE_OFF
 
     assert len(mock_d_entries) == 1
@@ -336,8 +338,8 @@ async def test_device_registry(
 
     await hass.async_block_till_done()
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_HOST_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_HOST_ID), MOCK_ENTRY_ID
     )
     assert device_entry == snapshot
 
