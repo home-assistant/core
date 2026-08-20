@@ -146,7 +146,6 @@
       "title": "Insecure secrets detected in app configuration"
     },
     "issue_mount_mount_failed": {
-      "description": "Could not set up `{reference}`. Check host logs for errors from the mount service for more details.\n\nThe fixes suggested by the Supervisor are not supported by this version of Home Assistant — updating Home Assistant may make them available. You can also update or remove `{reference}` under [storage]({storage_url}).",
       "fix_flow": {
         "abort": {
           "apply_suggestion_fail": "Could not apply the fix. Check the Supervisor logs for more details."

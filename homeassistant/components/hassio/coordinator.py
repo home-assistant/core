@@ -208,7 +208,7 @@ def presentable_issue_suggestions(
         hass, hass.config.language, "issues", DOMAIN
     )
     prefix = f"component.{DOMAIN}.issues.{issue.key}.fix_flow.step"
-    return [
+    presentable = [
         suggestion
         for suggestion in issue.suggestions
         # Either a menu option label or a dedicated step (e.g. the
@@ -217,6 +217,11 @@ def presentable_issue_suggestions(
         if f"{prefix}.fix_menu.menu_options.{suggestion.key}" in translations
         or f"{prefix}.{suggestion.key}.description" in translations
     ]
+    # If nothing is presentable, keep everything: a repair is either always
+    # fixable or never fixable (per-issue-key, enforced by hassfest), so an
+    # unfixable state cannot be expressed here — and an unlabeled menu still
+    # beats a dead end. The frontend falls back to the raw option keys.
+    return presentable or issue.suggestions
 
 
 class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
@@ -374,12 +379,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         if issue.key not in ISSUE_KEYS_FOR_REPAIRS:
             return
 
-        presentable = presentable_issue_suggestions(self.hass, issue)
-
-        # A non-fixable repair renders the issue description, which may
-        # use the extra placeholders; a fixable one uses the fix flow,
-        # which computes its own placeholders
-        if not presentable and issue.key in EXTRA_PLACEHOLDERS:
+        if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
             placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
         else:
             placeholders = {}
@@ -421,7 +421,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.hass,
             DOMAIN,
             issue.uuid.hex,
-            is_fixable=bool(presentable),
+            is_fixable=bool(issue.suggestions),
             severity=IssueSeverity.WARNING,
             translation_key=issue.key,
             translation_placeholders=placeholders or None,

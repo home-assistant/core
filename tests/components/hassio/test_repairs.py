@@ -878,12 +878,18 @@ async def test_mount_failed_repair_flow_hides_untranslated_suggestion(
 
 
 @pytest.mark.usefixtures("all_setup_requests")
-async def test_mount_failed_repair_not_fixable_all_untranslated_suggestions(
+async def test_mount_failed_repair_all_untranslated_suggestions_kept(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,
+    hass_client: ClientSessionGenerator,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test the repair is not fixable if no suggestion has a translation."""
+    """Test the menu keeps all suggestions if none has a translation.
+
+    A repair is either always fixable or never fixable per issue key, so
+    an unfixable state cannot be expressed for a key with a fix flow —
+    the raw option keys are shown instead of a dead end.
+    """
     mock_resolution_info(
         supervisor_client,
         issues=[
@@ -923,7 +929,23 @@ async def test_mount_failed_repair_not_fixable_all_untranslated_suggestions(
         domain="hassio", issue_id=issue_uuid.hex
     )
     assert repair_issue
-    assert repair_issue.is_fixable is False
+    assert repair_issue.is_fixable is True
+
+    client = await hass_client()
+
+    resp = await client.post(
+        "/api/repairs/issues/fix",
+        json={"handler": "hassio", "issue_id": repair_issue.issue_id},
+    )
+
+    assert resp.status == HTTPStatus.OK
+    data = await resp.json()
+
+    assert data["type"] == "menu"
+    assert data["menu_options"] == [
+        "mount_suggestion_from_the_future",
+        "mount_other_future_suggestion",
+    ]
 
 
 @pytest.mark.parametrize(
