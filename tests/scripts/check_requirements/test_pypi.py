@@ -158,6 +158,11 @@ def test_fetch_package_info_no_files_yields_no_provenance_url(
             id="repository-key-gitlab",
         ),
         pytest.param(
+            {"Codeberg": "https://codeberg.org/foo/bar"},
+            "https://codeberg.org/foo/bar",
+            id="codeberg-key-codeberg",
+        ),
+        pytest.param(
             {
                 "Funding": "https://opencollective.com/foo",
                 "Documentation": "https://github.com/foo/bar",
@@ -175,6 +180,11 @@ def test_fetch_package_info_no_files_yields_no_provenance_url(
             {"Source": "https://github.com.evil.com/foo/bar"},
             None,
             id="rejects-host-suffix-lookalike",
+        ),
+        pytest.param(
+            {"Source": "https://codeberg.org.evil.com/foo/bar"},
+            None,
+            id="rejects-codeberg-host-suffix-lookalike",
         ),
         pytest.param(
             {"Source": "https://evil.com/?x=github.com"},
