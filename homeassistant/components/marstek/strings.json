@@ -49,14 +49,8 @@
       "battery_status": {
         "name": "Battery status"
       },
-      "device_ip": {
-        "name": "Device IP"
-      },
       "device_mode": {
         "name": "Device mode"
-      },
-      "device_version": {
-        "name": "Device version"
       },
       "pv1_current": {
         "name": "PV1 current"

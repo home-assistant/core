@@ -1,7 +1,5 @@
 """Tests for the Marstek config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, patch
 
 from homeassistant import config_entries
@@ -34,8 +32,6 @@ DISCOVERED_DEVICE = {
     "wifi_mac": TEST_WIFI_MAC,
     "ble_mac": TEST_BLE_MAC,
     "mac": TEST_MAC,
-    "model": TEST_DEVICE_TYPE,
-    "firmware": str(TEST_VERSION),
 }
 
 DISCOVERED_DEVICE_2 = {
@@ -54,8 +50,6 @@ EXPECTED_ENTRY_DATA = {
     "wifi_name": TEST_WIFI_NAME,
     "wifi_mac": TEST_WIFI_MAC,
     "ble_mac": TEST_BLE_MAC,
-    "model": TEST_DEVICE_TYPE,
-    "firmware": str(TEST_VERSION),
 }
 
 EXPECTED_TITLE = f"Marstek {TEST_DEVICE_TYPE} v{TEST_VERSION} ({TEST_HOST})"

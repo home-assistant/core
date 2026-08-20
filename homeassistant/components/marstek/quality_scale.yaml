@@ -4,7 +4,11 @@ rules:
     status: exempt
     comment: This integration does not provide additional actions.
   appropriate-polling: done
-  brands: done
+  brands:
+    status: exempt
+    comment: |
+      Marstek is a single-integration brand, its logo is provided in the
+      home-assistant/brands repository and no brand metadata file is required.
   common-modules: done
   config-flow-test-coverage: done
   config-flow: done
@@ -14,13 +18,13 @@ rules:
     comment: This integration does not provide additional actions.
   docs-conditions:
     status: exempt
-    comment: This integration does not provide any conditions.
+    comment: This integration does not provide conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
   docs-triggers:
     status: exempt
-    comment: This integration does not provide any triggers.
+    comment: This integration does not provide triggers.
   entity-event-setup:
     status: exempt
     comment: This integration does not register any events.

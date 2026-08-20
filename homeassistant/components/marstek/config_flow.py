@@ -1,11 +1,10 @@
 """Config flow for Marstek integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 from typing import Any
 
+from aiomarstek import MarstekUDPClient
 import voluptuous as vol
 
 from homeassistant import config_entries
@@ -45,15 +44,13 @@ def _device_from_discovery_result(
         "wifi_mac": wifi_mac,
         "ble_mac": ble_mac,
         "mac": wifi_mac or ble_mac,
-        "model": device_type,
-        "firmware": str(version),
     }
 
 
 def _device_display_name(device: dict[str, Any]) -> str:
     """Return a stable display name for a discovered Marstek device."""
-    device_type = device.get("device_type") or device.get("model") or "Marstek"
-    version = device.get("version") or device.get("firmware") or "Unknown"
+    device_type = device.get("device_type") or "Marstek"
+    version = device.get("version") or "Unknown"
     host = device.get("ip") or "Unknown IP"
     wifi_name = device.get("wifi_name") or "No WiFi"
 
@@ -204,14 +201,15 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "wifi_name": device["wifi_name"],
                 "wifi_mac": device["wifi_mac"],
                 "ble_mac": device["ble_mac"],
-                "model": device["model"],  # Compatibility field
-                "firmware": device["firmware"],  # Compatibility field
             },
         )
 
     async def _discover_devices_with_retry(
-        self, udp_client, max_retries=2, retry_delay=3000
-    ):
+        self,
+        udp_client: MarstekUDPClient,
+        max_retries: int = 2,
+        retry_delay: int = 3000,
+    ) -> list[dict[str, Any]]:
         """Device discovery retry mechanism."""
         for attempt in range(1, max_retries + 1):
             try:

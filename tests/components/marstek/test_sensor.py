@@ -1,7 +1,5 @@
 """Tests for the Marstek sensor platform."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 
 from homeassistant.components.marstek.const import DOMAIN
@@ -96,5 +94,5 @@ async def test_polling_paused(
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
     await hass.async_block_till_done()
 
-    # Should not crash even when polling is paused
-    # This tests the polling pause mechanism works correctly
+    # Polling is paused, so no device status request should be made
+    mock_client.get_device_status.assert_not_awaited()

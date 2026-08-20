@@ -1,7 +1,5 @@
 """Tests for the Marstek integration."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, MagicMock
 
 # Test constants
@@ -27,37 +25,6 @@ MOCK_DEVICE_INFO = {
 MOCK_DISCOVERY_RESPONSE = {
     "id": 1,
     "result": MOCK_DEVICE_INFO,
-}
-
-MOCK_ES_MODE_RESPONSE = {
-    "id": 2,
-    "result": {
-        "mode": "Manual",
-        "bat_soc": 85,
-        "ongrid_power": -1300,
-    },
-}
-
-MOCK_PV_STATUS_RESPONSE = {
-    "id": 3,
-    "result": {
-        "pv1_power": 500,
-        "pv1_voltage": 48,
-        "pv1_current": 10,
-        "pv1_state": 1,
-        "pv2_power": 0,
-        "pv2_voltage": 0,
-        "pv2_current": 0,
-        "pv2_state": 0,
-        "pv3_power": 0,
-        "pv3_voltage": 0,
-        "pv3_current": 0,
-        "pv3_state": 0,
-        "pv4_power": 0,
-        "pv4_voltage": 0,
-        "pv4_current": 0,
-        "pv4_state": 0,
-    },
 }
 
 

@@ -1,7 +1,5 @@
 """The Marstek integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -46,8 +44,10 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
-    # Cleanup global UDP client if no entries remain
-    if unload_ok and not hass.config_entries.async_entries(DOMAIN):
+    # Cleanup global UDP client if this is the last entry. The entry being
+    # unloaded is still present in async_entries() at this point, so check
+    # for a single remaining entry rather than an empty list.
+    if unload_ok and len(hass.config_entries.async_entries(DOMAIN)) == 1:
         client = hass.data.get(DOMAIN, {}).pop("udp_client", None)
         if client:
             await client.async_cleanup()
