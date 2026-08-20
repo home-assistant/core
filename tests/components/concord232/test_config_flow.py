@@ -317,3 +317,19 @@ async def test_second_import_merges_alarm_options(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].options == {CONF_CODE: "1234", CONF_MODE: "silent"}
+
+
+async def test_import_alongside_other_server_creates_second_entry(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test importing a second server coexists with an unrelated entry."""
+    mock_config_entry.add_to_hass(hass)
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: "otherhost", CONF_PORT: 5007},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 2

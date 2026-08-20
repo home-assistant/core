@@ -20,6 +20,7 @@ from homeassistant.const import (
     CONF_CODE,
     CONF_MODE,
     STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -160,7 +161,15 @@ async def test_disarm(
 
 
 @pytest.mark.parametrize(
-    ("code", "arm_called"),
+    ("service", "client_method"),
+    [
+        (SERVICE_ALARM_ARM_HOME, "arm"),
+        (SERVICE_ALARM_ARM_AWAY, "arm"),
+        (SERVICE_ALARM_DISARM, "disarm"),
+    ],
+)
+@pytest.mark.parametrize(
+    ("code", "command_sent"),
     [
         ("1234", True),
         ("9999", False),
@@ -170,10 +179,12 @@ async def test_code_validation(
     hass: HomeAssistant,
     mock_concord232_client: MagicMock,
     mock_config_entry: MockConfigEntry,
+    service: str,
+    client_method: str,
     code: str,
-    arm_called: bool,
+    command_sent: bool,
 ) -> None:
-    """Test a configured code gates arming."""
+    """Test a configured code gates every command."""
     mock_config_entry.add_to_hass(hass)
     hass.config_entries.async_update_entry(
         mock_config_entry, options={CONF_CODE: "1234"}
@@ -183,11 +194,25 @@ async def test_code_validation(
 
     await hass.services.async_call(
         ALARM_DOMAIN,
-        SERVICE_ALARM_ARM_AWAY,
+        service,
         {ATTR_ENTITY_ID: ENTITY_ID, ATTR_CODE: code},
         blocking=True,
     )
-    assert mock_concord232_client.arm.called is arm_called
+    assert getattr(mock_concord232_client, client_method).called is command_sent
+
+
+async def test_no_partitions_reports_unknown(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the panel state is unknown when the server reports no partitions."""
+    mock_concord232_client.list_partitions.return_value = []
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
 
 
 @pytest.mark.parametrize(

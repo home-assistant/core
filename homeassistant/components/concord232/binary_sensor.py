@@ -11,7 +11,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
 )
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import (
@@ -93,6 +93,7 @@ class Concord232ZoneSensor(
         """Initialize the Concord232 zone binary sensor."""
         super().__init__(entry.runtime_data)
         self._number: int = zone["number"]
+        self._zone_data = zone
         self._attr_unique_id = f"{entry.entry_id}_zone_{self._number}"
         self._attr_name = zone["name"]
         self._attr_device_class = get_opening_type(zone)
@@ -112,6 +113,14 @@ class Concord232ZoneSensor(
             None,
         )
 
+    @callback
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Cache the zone's data so a missing zone keeps its last state."""
+        if (zone := self._zone()) is not None:
+            self._zone_data = zone
+        super()._handle_coordinator_update()
+
     @property
     @override
     def available(self) -> bool:
@@ -122,11 +131,8 @@ class Concord232ZoneSensor(
     @override
     def is_on(self) -> bool:
         """Return true if the zone is faulted (open, tripped or abnormal)."""
-        zone = self._zone()
-        if zone is None:
-            return False
         # The original concord232 server reports zone state as a string; the
         # actively maintained fork reports a list of states. Accept both.
-        state = zone["state"]
+        state = self._zone_data["state"]
         states = state if isinstance(state, list) else [state]
         return states != ["Normal"]

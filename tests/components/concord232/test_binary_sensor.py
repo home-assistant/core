@@ -7,7 +7,12 @@ import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.concord232.const import UPDATE_INTERVAL
-from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 
 from .conftest import setup_integration
@@ -125,3 +130,35 @@ async def test_zone_state_shapes(
     await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("binary_sensor.localhost_front_door").state == expected
+
+
+async def test_zone_missing_from_update_goes_unavailable(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a zone that disappears from a poll goes unavailable and returns."""
+    await setup_integration(hass, mock_config_entry)
+    assert hass.states.get("binary_sensor.localhost_front_door").state == STATE_OFF
+
+    mock_concord232_client.list_zones.return_value = [
+        {"number": 2, "name": "HALL MOTION", "state": "Normal"}
+    ]
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("binary_sensor.localhost_front_door").state == STATE_UNAVAILABLE
+    )
+
+    mock_concord232_client.list_zones.return_value = [
+        {"number": 1, "name": "FRONT DOOR", "state": "Tripped"},
+        {"number": 2, "name": "HALL MOTION", "state": "Normal"},
+    ]
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.localhost_front_door").state == STATE_ON
