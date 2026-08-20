@@ -143,7 +143,10 @@ async def test_user_flow_aborts_on_duplicate_system_id(hass: HomeAssistant) -> N
 
     The user-flow host-uniqueness guard alone would miss this, since the new
     entry uses a different host; the system_id-based unique_id check must
-    catch it instead.
+    catch it instead. The existing entry's host is folded onto the new one
+    (see ``test_zeroconf_flow_updates_matched_entry_host_after_user_authenticates``
+    for the equivalent zeroconf-triggered case), since re-adding it here only
+    succeeded because the user supplied a real, working API key for it.
     """
     existing = MockConfigEntry(
         domain=DOMAIN,
@@ -177,6 +180,7 @@ async def test_user_flow_aborts_on_duplicate_system_id(hass: HomeAssistant) -> N
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    assert existing.data[CONF_HOST] == "new-host.example.com"
 
 
 async def test_user_flow_name_already_exists(hass: HomeAssistant) -> None:
@@ -381,45 +385,28 @@ async def test_zeroconf_flow_aborts_on_already_configured_host(
     assert result["reason"] == "already_configured"
 
 
-async def test_zeroconf_flow_updates_rediscovered_entry_host(
+async def test_zeroconf_flow_never_probes_stored_credentials(
     hass: HomeAssistant,
 ) -> None:
-    """Rediscovering a known box by system_id updates its entry's host and id."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data=_user_input(**{CONF_HOST: "old-host.example.com"})
-    )
-    entry.add_to_hass(hass)
+    """Discovery must never replay an existing entry's stored API key.
 
-    with (
-        patch.object(
-            config_flow.TrueNASConfigFlow,
-            "_probe_is_truenas",
-            AsyncMock(return_value="192.168.1.50"),
-        ),
-        patch(f"{_API_PATH}.connect", AsyncMock(return_value=True)),
-        patch(f"{_API_PATH}.query", AsyncMock(return_value="new-global-id")),
-        patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": config_entries.SOURCE_ZEROCONF},
-            data=_zeroconf_discovery_info(),
-        )
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
-    assert entry.data[CONF_HOST] == "192.168.1.50"
-    assert entry.data[CONF_SYSTEM_ID] == "new-global-id"
-    assert entry.unique_id == "new-global-id"
-
-
-async def test_zeroconf_flow_ignores_entry_with_mismatched_system_id(
-    hass: HomeAssistant,
-) -> None:
-    """A rediscovered host is not merged into an entry with a different system_id."""
+    Regression test for a credential-leak: the flow used to try every
+    configured entry's real API key against a host that only had to mimic a
+    tiny probe handshake to be treated as "confirmed TrueNAS" -- a spoofed
+    LAN device could harvest every stored key that way. Now a probed host
+    always falls through to the user-facing confirm step instead, so the
+    entry's real (unrelated) key must never even be constructed against the
+    newly discovered host.
+    """
     entry = MockConfigEntry(
         domain=DOMAIN,
+        unique_id="shared-id",
         data=_user_input(
-            **{CONF_HOST: "old-host.example.com", CONF_SYSTEM_ID: "old-id"}
+            **{
+                CONF_HOST: "old-host.example.com",
+                CONF_API_KEY: "existing-real-key",
+                CONF_SYSTEM_ID: "shared-id",
+            }
         ),
     )
     entry.add_to_hass(hass)
@@ -430,9 +417,7 @@ async def test_zeroconf_flow_ignores_entry_with_mismatched_system_id(
             "_probe_is_truenas",
             AsyncMock(return_value="192.168.1.50"),
         ),
-        patch(f"{_API_PATH}.connect", AsyncMock(return_value=True)),
-        patch(f"{_API_PATH}.query", AsyncMock(return_value="different-id")),
-        patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
+        patch(f"{_API_PATH}.__init__", return_value=None) as mock_init,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -441,6 +426,124 @@ async def test_zeroconf_flow_ignores_entry_with_mismatched_system_id(
         )
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "zeroconf_confirm"
+    mock_init.assert_not_called()
+    assert entry.data[CONF_HOST] == "old-host.example.com"
+
+
+async def test_zeroconf_flow_updates_matched_entry_host_after_user_authenticates(
+    hass: HomeAssistant,
+) -> None:
+    """A rediscovered box's host is folded into its matching entry.
+
+    But only once *this* flow has itself authenticated the box and confirmed
+    its real system_id, not by trusting the discovery broadcast or replaying
+    a stored credential (see
+    ``test_zeroconf_flow_never_probes_stored_credentials``).
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="shared-id",
+        data=_user_input(
+            **{CONF_HOST: "old-host.example.com", CONF_SYSTEM_ID: "shared-id"}
+        ),
+    )
+    entry.add_to_hass(hass)
+
+    _query_responses = {
+        "system.global.id": "shared-id",
+        "system.info": {"hostname": "renamed-box"},
+    }
+
+    async def _query(method: str, *args: object, **kwargs: object) -> object:
+        return _query_responses.get(method)
+
+    with patch.object(
+        config_flow.TrueNASConfigFlow,
+        "_probe_is_truenas",
+        AsyncMock(return_value="192.168.1.50"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=_zeroconf_discovery_info(),
+        )
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "user"
+
+    with (
+        patch(f"{_API_PATH}.connection_test", AsyncMock(return_value=(True, None))),
+        patch(f"{_API_PATH}.query", AsyncMock(side_effect=_query)),
+        patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            _user_input(
+                **{CONF_HOST: "192.168.1.50", CONF_API_KEY: "freshly-typed-key"}
+            ),
+        )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.data[CONF_HOST] == "192.168.1.50"
+    assert entry.unique_id == "shared-id"
+
+
+async def test_zeroconf_flow_creates_new_entry_when_system_id_does_not_match(
+    hass: HomeAssistant,
+) -> None:
+    """A rediscovered host with a different real system_id gets its own entry.
+
+    Guards against merging into the wrong entry: an unrelated existing entry
+    must be left untouched when the newly (user-authenticated) confirmed box
+    turns out to be a different physical device.
+    """
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id="old-id",
+        data=_user_input(
+            **{
+                CONF_HOST: "old-host.example.com",
+                CONF_SYSTEM_ID: "old-id",
+                CONF_NAME: "existing-box",
+            }
+        ),
+    )
+    entry.add_to_hass(hass)
+
+    _query_responses = {
+        "system.global.id": "different-id",
+        "system.info": {"hostname": "new-box"},
+    }
+
+    async def _query(method: str, *args: object, **kwargs: object) -> object:
+        return _query_responses.get(method)
+
+    with patch.object(
+        config_flow.TrueNASConfigFlow,
+        "_probe_is_truenas",
+        AsyncMock(return_value="192.168.1.50"),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ZEROCONF},
+            data=_zeroconf_discovery_info(),
+        )
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    with (
+        patch(f"{_API_PATH}.connection_test", AsyncMock(return_value=(True, None))),
+        patch(f"{_API_PATH}.query", AsyncMock(side_effect=_query)),
+        patch(f"{_API_PATH}.disconnect", AsyncMock(return_value=None)),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            _user_input(
+                **{CONF_HOST: "192.168.1.50", CONF_API_KEY: "freshly-typed-key"}
+            ),
+        )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == "192.168.1.50"
     assert entry.data[CONF_HOST] == "old-host.example.com"
 
 

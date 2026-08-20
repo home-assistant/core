@@ -169,12 +169,11 @@ def _guess_ip() -> str:
 async def _async_try_connect(api: TrueNASAPI, host: str, context: str) -> bool:
     """Attempt ``api.connect()``, returning False (and logging) on any failure.
 
-    Shared by the zeroconf probe and the rediscovery match: both need to try
-    one candidate connection and move on to the next on any problem rather
-    than raising, so an unexpected exception here must not abort the whole
-    discovery/rediscovery flow. ``quiet=True`` keeps ``connect()``'s own
-    failure logging at debug too, since most probed candidates are expected
-    to not be TrueNAS at all.
+    Used by the zeroconf probe, which needs to try one candidate connection
+    and move on to the next on any problem rather than raising, so an
+    unexpected exception here must not abort the whole discovery flow.
+    ``quiet=True`` keeps ``connect()``'s own failure logging at debug too,
+    since most probed candidates are expected to not be TrueNAS at all.
     """
     try:
         return await api.connect(quiet=True)
@@ -435,11 +434,19 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Once the box's stable identity is known, key the entry's unique_id
         # on it rather than on the (zeroconf-set) host, so rediscovery and
-        # de-duplication survive the host/IP changing later.
+        # de-duplication survive the host/IP changing later. A match here is
+        # only ever reached after *this* flow has itself authenticated to the
+        # host with a real (user-typed or taken-over) API key -- never with
+        # another entry's stored credential -- so it is safe to fold the new
+        # host into the matched entry via ``updates`` instead of just
+        # aborting: the box's identity was confirmed through this flow's own
+        # authenticated connection, not by trusting the discovery source.
         system_id = truenas_config.get(CONF_SYSTEM_ID)
         if not errors and isinstance(system_id, str) and system_id:
             await self.async_set_unique_id(system_id)
-            self._abort_if_unique_id_configured()
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: truenas_config[CONF_HOST]}
+            )
 
         # Save instance
         if not errors:
@@ -466,6 +473,16 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         handshake timeout, ...) means some other device is behind that
         _http._tcp announcement, so the flow aborts silently without ever
         showing the user anything.
+
+        A confirmed-TrueNAS-like host is deliberately never used to silently
+        replay a stored API key from an existing entry: that endpoint is only
+        known to answer the tiny probe handshake, which a spoofed device on
+        the same network can mimic, so treating it as proof of identity would
+        leak real credentials to whatever actually answered the discovery
+        broadcast. The flow always falls through to the user-facing confirm
+        step instead; only a connection this flow itself authenticates (see
+        ``_async_apply_user_input``) can establish the box's real identity
+        and fold a rediscovered host into an existing entry.
         """
         host = discovery_info.host
         self._async_abort_entries_match({CONF_HOST: host})
@@ -484,9 +501,6 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         probed_host = await self._probe_is_truenas(host, discovery_info.port)
         if probed_host is None:
             return self.async_abort(reason="not_truenas")
-
-        if await self._async_update_rediscovered_entry(probed_host):
-            return self.async_abort(reason="already_configured")
 
         self.truenas_config[CONF_HOST] = probed_host
         self.context["title_placeholders"] = {CONF_NAME: probed_host}
@@ -507,67 +521,6 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
             if await _async_probe_candidate(candidate):
                 return candidate
         return None
-
-    async def _async_update_rediscovered_entry(self, host: str) -> bool:
-        """Update an existing entry's host if ``host`` is the same box, moved.
-
-        Tries each configured entry's own stored API key against the newly
-        discovered (and already-confirmed-TrueNAS) host. A successful login
-        whose ``system.global.id`` matches the entry's stored id is proof
-        it's the same physical box under a new IP. A successful login with
-        no stored id yet (entries predating this check) is only accepted as
-        best-effort confirmation when this is the sole configured entry, so
-        there's no other entry it could be confused with; with more than one
-        entry configured, an id-less match is skipped rather than risk
-        migrating the wrong entry. Returns True (and updates+reloads the
-        entry) on a match, False otherwise.
-        """
-        entries = self.hass.config_entries.async_entries(DOMAIN)
-        for entry in entries:
-            if entry.data.get(CONF_HOST) == host:
-                continue
-
-            api = TrueNASAPI(
-                host,
-                entry.data.get(CONF_API_KEY, ""),
-                entry.data.get(CONF_VERIFY_SSL, DEFAULT_SSL_VERIFY),
-            )
-            try:
-                # A connection-level failure (DNS, refused, SSL, ...) must not
-                # abort rediscovery for the other entries; treat it the same
-                # as "not a match" and move on, like _probe_is_truenas does.
-                if not await _async_try_connect(
-                    api,
-                    host,
-                    "failed to connect while checking for a rediscovery match",
-                ):
-                    continue
-                # A failed identity lookup must not abort rediscovery for the
-                # other entries; system_id stays None, which the stored_id
-                # check below treats as a mismatch (not a best-effort match)
-                # for any entry that has a stored id (see docstring).
-                system_id = await _async_get_system_id(api, host)
-            finally:
-                await _async_safe_disconnect(api)
-
-            stored_id = entry.data.get(CONF_SYSTEM_ID)
-            if stored_id and system_id != stored_id:
-                continue  # same key, different box -- not a match
-            if not stored_id and len(entries) > 1:
-                continue  # no id to confirm identity, and ambiguous
-
-            new_data = dict(entry.data)
-            new_data[CONF_HOST] = host
-            update_kwargs: dict[str, Any] = {"data": new_data}
-            if isinstance(system_id, str) and system_id:
-                new_data[CONF_SYSTEM_ID] = system_id
-                # Migrate the entry's unique_id onto the stable box identity
-                # too, so future rediscovery keys on it rather than the host.
-                update_kwargs["unique_id"] = system_id
-            self.hass.config_entries.async_update_entry(entry, **update_kwargs)
-            await self.hass.config_entries.async_reload(entry.entry_id)
-            return True
-        return False
 
     async def async_step_zeroconf_confirm(
         self, user_input: dict[str, Any] | None = None
