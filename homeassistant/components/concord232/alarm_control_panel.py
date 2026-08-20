@@ -1,5 +1,6 @@
 """Support for Concord232 alarm control panels."""
 
+import asyncio
 import logging
 from typing import override
 
@@ -58,9 +59,14 @@ async def async_setup_platform(
 
 async def _async_import_yaml(hass: HomeAssistant, config: ConfigType) -> None:
     """Start an import flow and create the deprecation repair issue."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
-    )
+    # The alarm and binary sensor platforms set up concurrently and import the
+    # same server; the lock lets the first import create the entry and the
+    # second merge into it.
+    lock = hass.data.setdefault(f"{DOMAIN}_import_lock", asyncio.Lock())
+    async with lock:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_IMPORT}, data=dict(config)
+        )
     if result["type"] is FlowResultType.ABORT and result["reason"] == "cannot_connect":
         ir.async_create_issue(
             hass,

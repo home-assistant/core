@@ -53,7 +53,6 @@ def mock_config_entry() -> MockConfigEntry:
     return MockConfigEntry(
         domain=DOMAIN,
         title="localhost",
-        unique_id="localhost:5007",
         data={CONF_HOST: "localhost", CONF_PORT: 5007},
     )
 

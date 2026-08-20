@@ -73,11 +73,9 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            await self.async_set_unique_id(
-                f"{user_input[CONF_HOST]}:{user_input[CONF_PORT]}",
-                raise_on_progress=False,
+            self._async_abort_entries_match(
+                {CONF_HOST: user_input[CONF_HOST], CONF_PORT: user_input[CONF_PORT]}
             )
-            self._abort_if_unique_id_configured()
             url = build_url(user_input[CONF_HOST], user_input[CONF_PORT])
             if await self.hass.async_add_executor_job(_try_connect, url):
                 return self.async_create_entry(
@@ -103,12 +101,15 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
         if CONF_MODE in import_data:
             options[CONF_MODE] = import_data[CONF_MODE]
 
-        # Both platforms import the same YAML server; the unique_id serializes
-        # them. When the other platform's import created the entry first, merge
-        # the alarm-only fields (code, mode) into it instead of dropping them.
-        await self.async_set_unique_id(f"{data[CONF_HOST]}:{data[CONF_PORT]}")
+        # Both platforms import the same YAML server (their setups hold a shared
+        # lock, so the imports run one at a time). When the other platform's
+        # import created the entry first, merge the alarm-only fields (code,
+        # mode) into it instead of dropping them.
         for entry in self._async_current_entries(include_ignore=False):
-            if entry.unique_id != self.unique_id:
+            if (
+                entry.data.get(CONF_HOST) != data[CONF_HOST]
+                or entry.data.get(CONF_PORT) != data[CONF_PORT]
+            ):
                 continue
             if options:
                 self.hass.config_entries.async_update_entry(
