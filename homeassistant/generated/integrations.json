@@ -6118,6 +6118,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "rotenso": {
+      "name": "Rotenso",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "roth": {
       "name": "Roth",
       "integrations": {
