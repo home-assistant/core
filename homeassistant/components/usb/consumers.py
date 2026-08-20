@@ -24,10 +24,14 @@ SERIAL_PORT_KEY_PATHS: tuple[tuple[str, ...], ...] = (
     ("serial_port",),  # edl21, teleinfo
 )
 
+# States in which the entry claims its configured port, even if the port is not
+# open right now: a retrying setup typically failed to open the port and a
+# failed unload may still hold it
 ACTIVE_CONFIG_ENTRY_STATES = (
     ConfigEntryState.LOADED,
     ConfigEntryState.SETUP_RETRY,
     ConfigEntryState.SETUP_IN_PROGRESS,
+    ConfigEntryState.FAILED_UNLOAD,
 )
 
 # Schemes of remote serial port URLs, listed even when they cannot be tied to
