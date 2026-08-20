@@ -26,7 +26,7 @@ from tests.common import MockConfigEntry
 BASE_IP: Final = "10.0.0.131"
 BASE_URL: Final = URL.build(scheme="http", host=BASE_IP).human_repr()[:-1]
 MANUFACTURER: Final = "Lunatone Industrielle Elektronik GmbH"
-PRODUCT_NAME: Final = "Test Product"
+PRODUCT_NAME: Final = "DALI-2 Display 7''"
 SERIAL_NUMBER: Final = 12345
 UUID: Final = "be37ca9c-47c2-4498-a38b-c62c7c711840"
 VERSION: Final = "v1.14.1/1.4.3"
@@ -36,7 +36,7 @@ DEVICE_INFO_DATA: Final[DeviceInfoData] = DeviceInfoData(
     serial=12345,
     gtin=192837465,
     pcb="2a",
-    articleNumber=87654321,
+    articleNumber=86456840,
     productionYear=20,
     productionWeek=1,
 )
