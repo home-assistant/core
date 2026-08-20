@@ -432,15 +432,6 @@ RPC_SWITCHES = {
         method_off="set_camera_privacy",
         method_params_fn=lambda id, value: (id, value),
     ),
-    "camera_arm": RpcSwitchDescription(
-        key="camera",
-        sub_key="arm",
-        translation_key="camera_arm",
-        is_on=lambda status: status["arm"],
-        method_on="arm_camera",
-        method_off="disarm_camera",
-        method_params_fn=lambda id, value: (id,),
-    ),
 }
 
 
