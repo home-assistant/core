@@ -2,10 +2,6 @@
 
 from pywillow import WillowClient
 
-from homeassistant.components.application_credentials import (
-    ClientCredential,
-    async_import_client_credential,
-)
 from homeassistant.const import CONF_ACCESS_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
@@ -15,24 +11,12 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.typing import ConfigType
 
-from .const import DOMAIN, OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET
+from .const import DOMAIN
 from .coordinator import WillowConfigEntry, WillowDataUpdateCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Willow integration."""
-    await async_import_client_credential(
-        hass,
-        DOMAIN,
-        ClientCredential(OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, name="Willow"),
-    )
-
-    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: WillowConfigEntry) -> bool:

@@ -9,8 +9,14 @@ import pytest
 
 from homeassistant.components.application_credentials import (
     DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
+    ClientCredential,
+    async_import_client_credential,
 )
-from homeassistant.components.willow.const import DOMAIN
+from homeassistant.components.willow.const import (
+    DOMAIN,
+    OAUTH2_CLIENT_ID,
+    OAUTH2_CLIENT_SECRET,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -20,10 +26,10 @@ USER_ID = 42
 ACCESS_TOKEN = "mock-access-token"
 REFRESH_TOKEN = "mock-refresh-token"
 
-# Willow imports its own client credential (in async_setup and async_step_user)
-# without an explicit auth_domain, so application_credentials defaults the
-# auth_domain to the integration domain. That value is the auth_implementation
-# stored on entries created by the flow.
+# Willow imports its own client credential (in async_step_user) without an
+# explicit auth_domain, so application_credentials defaults the auth_domain
+# to the integration domain. That value is the auth_implementation stored on
+# entries created by the flow.
 IMPL_DOMAIN = DOMAIN
 
 PROFILE = {
@@ -110,10 +116,10 @@ def mock_config_entry(expires_at: float) -> MockConfigEntry:
 
 @pytest.fixture
 async def setup_credentials(hass: HomeAssistant) -> None:
-    """Set up application_credentials so Willow can import its own credential.
-
-    Willow registers its bundled OAuth2 client credential itself during
-    ``async_setup`` and ``async_step_user``; this fixture only needs to ensure the
-    application_credentials component is loaded so that import succeeds.
-    """
+    """Fixture to setup credentials."""
     assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
+    await async_import_client_credential(
+        hass,
+        DOMAIN,
+        ClientCredential(OAUTH2_CLIENT_ID, OAUTH2_CLIENT_SECRET, name="Willow"),
+    )
