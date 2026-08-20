@@ -483,7 +483,9 @@ async def test_context_not_inherited(
     context = mock_start_pipeline.call_args[1]["context"]
     assert context is not previous_context
     assert context.user_id is None
-    assert entity._context is context
+
+    # The entity context still attributes the operation that is in progress
+    assert entity._context is previous_context
 
 
 async def test_pipeline_entity(
