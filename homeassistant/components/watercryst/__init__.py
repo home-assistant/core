@@ -20,7 +20,6 @@ from homeassistant.exceptions import (
     ConfigEntryNotReady,
 )
 from homeassistant.helpers.device_registry import (
-    CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
     DeviceInfo,
     format_mac,
@@ -80,10 +79,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
     connections: set[tuple[str, str]] = set()
 
     if info.system_mac_address:
-        connections.add((CONNECTION_NETWORK_MAC, info.system_mac_address))
-
-    if info.ble_mac_address:
-        connections.add((CONNECTION_BLUETOOTH, format_mac(info.ble_mac_address)))
+        connections.add((CONNECTION_NETWORK_MAC, format_mac(info.system_mac_address)))
 
     device_info = DeviceInfo(
         identifiers={(DOMAIN, info.biocat_serial)},
