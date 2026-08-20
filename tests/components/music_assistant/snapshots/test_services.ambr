@@ -80,6 +80,26 @@
         'version': '',
       }),
       dict({
+        'chapters': list([
+          dict({
+            'end': 20.0,
+            'name': 'Chapter 1',
+            'position': 1,
+            'start': 10.0,
+          }),
+          dict({
+            'end': 40.0,
+            'name': 'Chapter 2',
+            'position': 2,
+            'start': 20.0,
+          }),
+          dict({
+            'end': None,
+            'name': 'Chapter 3',
+            'position': 3,
+            'start': 40.0,
+          }),
+        ]),
         'explicit': None,
         'favorite': False,
         'image': None,
@@ -89,6 +109,26 @@
         'version': '',
       }),
       dict({
+        'chapters': list([
+          dict({
+            'end': 20.0,
+            'name': 'Chapter 1',
+            'position': 1,
+            'start': 10.0,
+          }),
+          dict({
+            'end': 40.0,
+            'name': 'Chapter 2',
+            'position': 2,
+            'start': 20.0,
+          }),
+          dict({
+            'end': None,
+            'name': 'Chapter 3',
+            'position': 3,
+            'start': 40.0,
+          }),
+        ]),
         'explicit': None,
         'favorite': False,
         'image': None,
@@ -98,6 +138,26 @@
         'version': '',
       }),
       dict({
+        'chapters': list([
+          dict({
+            'end': 20.0,
+            'name': 'Chapter 1',
+            'position': 1,
+            'start': 10.0,
+          }),
+          dict({
+            'end': 40.0,
+            'name': 'Chapter 2',
+            'position': 2,
+            'start': 20.0,
+          }),
+          dict({
+            'end': None,
+            'name': 'Chapter 3',
+            'position': 3,
+            'start': 40.0,
+          }),
+        ]),
         'explicit': None,
         'favorite': False,
         'image': None,
@@ -107,6 +167,26 @@
         'version': '',
       }),
       dict({
+        'chapters': list([
+          dict({
+            'end': 20.0,
+            'name': 'Chapter 1',
+            'position': 1,
+            'start': 10.0,
+          }),
+          dict({
+            'end': 40.0,
+            'name': 'Chapter 2',
+            'position': 2,
+            'start': 20.0,
+          }),
+          dict({
+            'end': None,
+            'name': 'Chapter 3',
+            'position': 3,
+            'start': 40.0,
+          }),
+        ]),
         'explicit': None,
         'favorite': False,
         'image': None,
@@ -116,6 +196,26 @@
         'version': '',
       }),
       dict({
+        'chapters': list([
+          dict({
+            'end': 20.0,
+            'name': 'Chapter 1',
+            'position': 1,
+            'start': 10.0,
+          }),
+          dict({
+            'end': 40.0,
+            'name': 'Chapter 2',
+            'position': 2,
+            'start': 20.0,
+          }),
+          dict({
+            'end': None,
+            'name': 'Chapter 3',
+            'position': 3,
+            'start': 40.0,
+          }),
+        ]),
         'explicit': None,
         'favorite': False,
         'image': None,

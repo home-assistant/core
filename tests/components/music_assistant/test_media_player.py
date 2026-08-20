@@ -14,6 +14,7 @@ from music_assistant_models.player import PlayerMedia
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import paths
+import voluptuous as vol
 
 from homeassistant.auth.models import Credentials
 from homeassistant.components.media_player import (
@@ -42,6 +43,7 @@ from homeassistant.components.music_assistant.const import (
     ATTR_ANNOUNCE_VOLUME,
     ATTR_ARTIST,
     ATTR_AUTO_PLAY,
+    ATTR_CHAPTER,
     ATTR_MEDIA_ID,
     ATTR_MEDIA_TYPE,
     ATTR_PRE_ANNOUNCE_URL,
@@ -826,6 +828,84 @@ async def test_media_player_play_media_action(
             },
             blocking=True,
         )
+
+
+async def test_media_player_play_media_action_chapter(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that the chapter field is translated into a start_item command."""
+    music_assistant_client.server_info.schema_version = 33
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+    mass_player_id = "00:00:00:00:00:01"
+    music_assistant_client.music.verify_item_uri = AsyncMock(return_value=True)
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "audiobookshelf://audiobook/1234",
+            ATTR_CHAPTER: 3,
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_count == 1
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["audiobookshelf://audiobook/1234"],
+        option=None,
+        radio_mode=False,
+        start_item="3",
+        username=None,
+        sort_by=None,
+    )
+
+    music_assistant_client.send_command.reset_mock()
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PLAY_MEDIA_ADVANCED,
+        {
+            ATTR_ENTITY_ID: entity_id,
+            ATTR_MEDIA_ID: "audiobookshelf://audiobook/1234",
+        },
+        blocking=True,
+    )
+    assert music_assistant_client.send_command.call_args == call(
+        "player_queues/play_media",
+        queue_id=mass_player_id,
+        media=["audiobookshelf://audiobook/1234"],
+        option=None,
+        radio_mode=False,
+        start_item=None,
+        username=None,
+        sort_by=None,
+    )
+
+
+async def test_media_player_play_media_action_chapter_rejects_zero(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that chapter 0 is rejected -- chapter positions are 1-based."""
+    music_assistant_client.server_info.schema_version = 33
+    await setup_integration_from_fixtures(hass, music_assistant_client)
+    entity_id = "media_player.test_player_1"
+
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_PLAY_MEDIA_ADVANCED,
+            {
+                ATTR_ENTITY_ID: entity_id,
+                ATTR_MEDIA_ID: "audiobookshelf://audiobook/1234",
+                ATTR_CHAPTER: 0,
+            },
+            blocking=True,
+        )
+    assert music_assistant_client.send_command.call_count == 0
 
 
 async def _add_ha_user(hass: HomeAssistant, login_username: str | None) -> MockUser:

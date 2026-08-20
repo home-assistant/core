@@ -17,6 +17,11 @@ from .const import (
     ATTR_AUDIOBOOKS,
     ATTR_BIT_DEPTH,
     ATTR_BITRATE,
+    ATTR_CHAPTER_END,
+    ATTR_CHAPTER_NAME,
+    ATTR_CHAPTER_POSITION,
+    ATTR_CHAPTER_START,
+    ATTR_CHAPTERS,
     ATTR_CONTENT_TYPE,
     ATTR_CURRENT_INDEX,
     ATTR_CURRENT_ITEM,
@@ -56,6 +61,15 @@ if TYPE_CHECKING:
     from music_assistant_models.media_items import MediaItemType
     from music_assistant_models.queue_item import QueueItem
 
+CHAPTER_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CHAPTER_POSITION): int,
+        vol.Required(ATTR_CHAPTER_NAME): cv.string,
+        vol.Required(ATTR_CHAPTER_START): vol.Coerce(float),
+        vol.Optional(ATTR_CHAPTER_END): vol.Any(None, vol.Coerce(float)),
+    }
+)
+
 MEDIA_ITEM_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_MEDIA_TYPE): vol.Coerce(MediaType),
@@ -69,6 +83,7 @@ MEDIA_ITEM_SCHEMA = vol.Schema(
         vol.Optional(ATTR_FANART_IMAGE): vol.Any(None, cv.string),
         vol.Optional(ATTR_ARTISTS): [vol.Self],
         vol.Optional(ATTR_ALBUM): vol.Self,
+        vol.Optional(ATTR_CHAPTERS): [vol.Schema(CHAPTER_SCHEMA)],
     }
 )
 
@@ -91,6 +106,17 @@ def media_item_dict_from_mass_item(
 
     result[ATTR_FAVORITE] = item.favorite
     result[ATTR_EXPLICIT] = item.metadata.explicit
+
+    if item.media_type is MediaType.AUDIOBOOK and (chapters := item.metadata.chapters):
+        result[ATTR_CHAPTERS] = [
+            {
+                ATTR_CHAPTER_POSITION: chapter.position,
+                ATTR_CHAPTER_NAME: chapter.name,
+                ATTR_CHAPTER_START: chapter.start,
+                ATTR_CHAPTER_END: chapter.end,
+            }
+            for chapter in chapters
+        ]
 
     if item.media_type is MediaType.ALBUM:
         result[ATTR_DISCART_IMAGE] = mass.get_media_item_image_url(

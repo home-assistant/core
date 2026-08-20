@@ -48,6 +48,12 @@ play_media:
     radio_mode:
       selector:
         boolean:
+    chapter:
+      example: 3
+      selector:
+        number:
+          min: 1
+          mode: box
     username:
       example: "john"
       selector:
