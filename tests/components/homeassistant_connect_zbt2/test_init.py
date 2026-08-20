@@ -45,7 +45,7 @@ async def test_config_entry_migration_v2(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_connect_zbt2.os.path.exists",
+        "homeassistant.components.homeassistant_connect_zbt2.async_is_serial_port_present",
         return_value=True,
     ):
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -159,7 +159,7 @@ async def test_config_entry_migration_v2_collapses_duplicates(
     newer_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_connect_zbt2.os.path.exists",
+        "homeassistant.components.homeassistant_connect_zbt2.async_is_serial_port_present",
         return_value=True,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -222,7 +222,7 @@ async def test_config_entry_migration_v2_prefers_active_entry(
     sibling_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_connect_zbt2.os.path.exists",
+        "homeassistant.components.homeassistant_connect_zbt2.async_is_serial_port_present",
         return_value=True,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -288,7 +288,7 @@ async def test_config_entry_migration_v2_removes_duplicates_of_migrated_entry(
     migrated_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_connect_zbt2.os.path.exists",
+        "homeassistant.components.homeassistant_connect_zbt2.async_is_serial_port_present",
         return_value=True,
     ):
         await async_setup_component(hass, DOMAIN, {})
@@ -327,7 +327,7 @@ async def test_setup_fails_on_missing_usb_port(hass: HomeAssistant) -> None:
 
     # Set up the config entry
     with patch(
-        "homeassistant.components.homeassistant_connect_zbt2.os.path.exists"
+        "homeassistant.components.homeassistant_connect_zbt2.async_is_serial_port_present"
     ) as mock_exists:
         mock_exists.return_value = False
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -373,7 +373,7 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.homeassistant_connect_zbt2.os.path.exists"
+        "homeassistant.components.homeassistant_connect_zbt2.async_is_serial_port_present"
     ) as mock_exists:
         mock_exists.return_value = False
         await hass.config_entries.async_setup(config_entry.entry_id)
@@ -398,9 +398,11 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
             ],
         ):
             await async_request_scan(hass)
+            # Settled while the scan is still patched: letting it run afterwards would
+            # process the real system's ports instead
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         # It loads immediately
-        await hass.async_block_till_done(wait_background_tasks=True)
         assert config_entry.state is ConfigEntryState.LOADED
 
         # Wait for a bit for the USB scan debouncer to cool off
@@ -411,7 +413,7 @@ async def test_usb_device_reactivity(hass: HomeAssistant) -> None:
 
         with patch_scanned_serial_ports(return_value=[]):
             await async_request_scan(hass)
+            await hass.async_block_till_done(wait_background_tasks=True)
 
         # The integration has reloaded and is now in a failed state
-        await hass.async_block_till_done(wait_background_tasks=True)
         assert config_entry.state is ConfigEntryState.SETUP_RETRY

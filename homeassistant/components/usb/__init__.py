@@ -36,9 +36,9 @@ from .models import SerialDevice, SerialPortConsumer, USBDevice
 from .serial_proxy_stub import register_serialx_transport
 from .utils import (
     scan_serial_ports,
-    usb_serial_device_from_port,
     usb_device_from_path,
     usb_device_matches_matcher,
+    usb_serial_device_from_port,
     usb_service_info_from_device,
     usb_unique_id_from_service_info,
 )
@@ -59,6 +59,7 @@ __all__ = [
     "USBCallbackMatcher",
     "USBDevice",
     "async_get_serial_port_consumers",
+    "async_is_serial_port_present",
     "async_register_port_event_callback",
     "async_register_scan_request_callback",
     "async_register_serial_port_scanner",
@@ -110,6 +111,26 @@ async def async_scan_serial_ports(
 ) -> Sequence[USBDevice | SerialDevice]:
     """Scan serial ports and return USB and other serial devices."""
     return await hass.data[_USB_DATA].async_scan_serial_ports()
+
+
+async def async_is_serial_port_present(hass: HomeAssistant, device_path: str) -> bool:
+    """Return whether a port with this device path is currently present.
+
+    A device path is not always a filesystem path: a port contributed by a scanner, such as
+    one proxied by an ESPHome device, is named by a URL. A caller that only stats the path
+    concludes such a device is unplugged when it is sitting right there.
+    """
+    for port in await async_scan_serial_ports(hass):
+        if port.device == device_path:
+            return True
+
+    if "://" in device_path:
+        # A URL says nothing about the filesystem, so the scan was the whole answer
+        return False
+
+    # A local path may be stored in an equivalent but different form to the one the scan
+    # reports, /dev/ttyUSB0 against a /dev/serial/by-id symlink for instance
+    return await hass.async_add_executor_job(os.path.exists, device_path)
 
 
 @hass_callback
