@@ -636,9 +636,12 @@ def mock_client_fixture(
     listen_block: asyncio.Event,
 ):
     """Mock a client."""
-    with patch(
-        "homeassistant.components.zwave_js.ZwaveClient", autospec=True
-    ) as client_class:
+    with (
+        patch(
+            "homeassistant.components.zwave_js.ZwaveClient", autospec=True
+        ) as client_class,
+        patch("homeassistant.components.zwave_js.config_flow.Client", client_class),
+    ):
         client = client_class.return_value
 
         async def connect():

@@ -37,11 +37,17 @@ rules:
   docs-actions:
     status: exempt
     comment: The integration does not provide any custom actions.
+  docs-conditions:
+    status: exempt
+    comment: The integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions:
     status: todo
     comment: The integration documentation does not include a removal instructions section.
+  docs-triggers:
+    status: exempt
+    comment: The integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: The integration entities do not subscribe to any events.
