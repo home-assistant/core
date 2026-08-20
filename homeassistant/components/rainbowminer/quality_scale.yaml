@@ -3,12 +3,12 @@ rules:
   action-setup:
     status: exempt
     comment: Integration registers no custom services; pause/resume exposed via the mining switch entity actions.
-  appropriate-polling: done # 30s polling interval for local API
+  appropriate-polling: done
   brands: done
-  common-modules: done # coordinator, entity modules; API client provided by rainbowminer-api-client
-  config-flow-test-coverage: done # full config flow test coverage
-  config-flow: done # user-driven config flow
-  dependency-transparency: done # depends on rainbowminer-api-client (pinned PyPI package, MIT)
+  common-modules: done
+  config-flow-test-coverage: done
+  config-flow: done
+  dependency-transparency: done
   docs-actions:
     status: exempt
     comment: Integration has no custom services/actions.
@@ -24,12 +24,12 @@ rules:
   entity-event-setup:
     status: exempt
     comment: Polling integration with no event subscriptions.
-  entity-unique-id: done # unique id based on host:port and entity key
-  has-entity-name: done # has_entity_name = True on all entities
-  runtime-data: done # coordinator stored in ConfigEntry.runtime_data
-  test-before-configure: done # config flow validates connection to /status
-  test-before-setup: done # coordinator fetches version during _async_setup
-  unique-config-entry: done # _async_abort_entries_match on host and port
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
 
   # Silver
   action-exceptions: todo
