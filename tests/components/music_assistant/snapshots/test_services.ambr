@@ -391,6 +391,45 @@
     'order_by': 'name',
   })
 # ---
+# name: test_get_providers_action
+  dict({
+    'providers': list([
+      dict({
+        'name': 'Spotify',
+        'provider_domain': 'spotify',
+        'provider_enabled': True,
+        'provider_instance_id': 'spotify-1234',
+        'provider_last_error': None,
+        'provider_status': <ProviderStatus.LOADED: 'loaded'>,
+        'provider_type': <ProviderType.MUSIC: 'music'>,
+      }),
+      dict({
+        'name': 'Living room',
+        'provider_domain': 'squeezelite',
+        'provider_enabled': True,
+        'provider_instance_id': 'squeezelite-5678',
+        'provider_last_error': None,
+        'provider_status': <ProviderStatus.LOADED: 'loaded'>,
+        'provider_type': <ProviderType.PLAYER: 'player'>,
+      }),
+    ]),
+  })
+# ---
+# name: test_get_providers_action_with_error
+  dict({
+    'providers': list([
+      dict({
+        'name': 'YouTube Music',
+        'provider_domain': 'ytmusic',
+        'provider_enabled': True,
+        'provider_instance_id': 'ytmusic-9012',
+        'provider_last_error': 'Authentication required',
+        'provider_status': <ProviderStatus.AUTH_REQUIRED: 'auth_required'>,
+        'provider_type': <ProviderType.MUSIC: 'music'>,
+      }),
+    ]),
+  })
+# ---
 # name: test_search_action
   dict({
     'albums': list([
