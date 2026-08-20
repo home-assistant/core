@@ -7,9 +7,6 @@ import pytest
 
 from homeassistant.components.marstek.const import DOMAIN
 
-from tests.common import MockConfigEntry
-
-from . import create_mock_udp_client
 from . import (
     TEST_BLE_MAC,
     TEST_DEVICE_TYPE,
@@ -18,7 +15,10 @@ from . import (
     TEST_VERSION,
     TEST_WIFI_MAC,
     TEST_WIFI_NAME,
+    create_mock_udp_client,
 )
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
