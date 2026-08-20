@@ -6,8 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from pywillow import WillowAuthError
 
-from homeassistant.components import frontend
-from homeassistant.components.willow.const import PANEL_URL_PATH, SCAN_INTERVAL
+from homeassistant.components.willow.const import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -29,12 +28,10 @@ async def test_setup_unload(
     """The integration loads and unloads cleanly."""
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert frontend.async_panel_exists(hass, PANEL_URL_PATH)
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert not frontend.async_panel_exists(hass, PANEL_URL_PATH)
 
 
 async def test_setup_retries_on_api_failure(

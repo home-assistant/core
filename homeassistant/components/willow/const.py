@@ -14,10 +14,3 @@ OAUTH2_CLIENT_ID = "ea4a4aed-9de2-4dd3-bbe4-7ef657cffdda"
 OAUTH2_CLIENT_SECRET = (
     "df58fd78e62310b77be94290788d1439766982b0056928d5d26b3a3c526dded2"
 )
-
-PANEL_URL_PATH = "willow"
-PANEL_TITLE = "Willow"
-PANEL_ICON = "mdi:sprout"
-PANEL_NAME = "willow-panel"
-PANEL_STATIC_PATH = "/willow_panel"
-PANEL_FILE = "willow-panel.js"
