@@ -27,6 +27,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
     STATE_UNAVAILABLE,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -35,6 +36,12 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 MAIN_ZONE = "media_player.mock_lyngdorf_main_zone"
 ZONE_B = "media_player.mock_lyngdorf_zone_b"
+
+
+@pytest.fixture
+def platforms() -> list[Platform]:
+    """Only load the media player platform."""
+    return [Platform.MEDIA_PLAYER]
 
 
 async def test_entities(
@@ -124,11 +131,11 @@ async def test_volume_step(
 
 
 @pytest.mark.parametrize(
-    ("entity_id", "level", "attr", "expected_db"),
+    ("entity_id", "level", "method", "expected_db"),
     [
-        (MAIN_ZONE, 0.5, "volume", -31.0),
-        (MAIN_ZONE, 1.0, "volume", 18.0),
-        (ZONE_B, 0.3, "zone_b_volume", -50.6),
+        (MAIN_ZONE, 0.5, "set_volume", -37.95),
+        (MAIN_ZONE, 1.0, "set_volume", 24.0),
+        (ZONE_B, 0.3, "set_zone_b_volume", -62.73),
     ],
 )
 async def test_volume_set(
@@ -137,7 +144,7 @@ async def test_volume_set(
     mock_receiver: MagicMock,
     entity_id: str,
     level: float,
-    attr: str,
+    method: str,
     expected_db: float,
 ) -> None:
     """Test setting and clamping volume on both zones."""
@@ -147,7 +154,7 @@ async def test_volume_set(
         {ATTR_ENTITY_ID: entity_id, ATTR_MEDIA_VOLUME_LEVEL: level},
         blocking=True,
     )
-    assert getattr(mock_receiver, attr) == pytest.approx(expected_db)
+    getattr(mock_receiver, method).assert_called_once_with(pytest.approx(expected_db))
 
 
 @pytest.mark.parametrize(
@@ -266,7 +273,7 @@ async def test_main_zone_state_properties(
 
     state = hass.states.get(MAIN_ZONE)
     assert state.state == MediaPlayerState.ON
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(0.408, abs=0.01)
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(0.484, abs=0.01)
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is False
     assert state.attributes[ATTR_INPUT_SOURCE] == "HDMI"
     assert state.attributes[ATTR_SOUND_MODE] == "Movie"
@@ -310,14 +317,7 @@ async def test_zone_b_state_properties(
 
     state = hass.states.get(ZONE_B)
     assert state.state == MediaPlayerState.ON
-    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(0.510, abs=0.01)
+    assert state.attributes[ATTR_MEDIA_VOLUME_LEVEL] == pytest.approx(0.564, abs=0.01)
     assert state.attributes[ATTR_MEDIA_VOLUME_MUTED] is True
     assert state.attributes[ATTR_INPUT_SOURCE] == "Optical"
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == ["HDMI", "Optical"]
-
-    mock_receiver.zone_b_volume = "invalid"
-    for cb in callbacks:
-        cb()
-    await hass.async_block_till_done()
-    state = hass.states.get(ZONE_B)
-    assert state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is None

@@ -719,6 +719,7 @@ async def test_extract_entity_ids(hass: HomeAssistant) -> None:
         mode=None,
         object_id=None,
         order=None,
+        context=None,
     )
 
     call = ServiceCall(hass, "light", "turn_on", {ATTR_ENTITY_ID: "light.Bowl"})
