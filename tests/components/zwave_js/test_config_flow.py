@@ -1695,6 +1695,33 @@ async def test_esphome_discovery_migration(
     assert entry.data["use_addon"] is True
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_no_home_id_configured_socket_no_migration(
+    hass: HomeAssistant,
+) -> None:
+    """Test a no-home-ID reconnect of the configured socket isn't a migration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOCKET_PATH: "esphome://192.168.1.100:6053",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
 async def test_esphome_discovery_same_socket_no_reload(
     hass: HomeAssistant,

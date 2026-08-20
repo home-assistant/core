@@ -1728,13 +1728,21 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         discovered_home_id = (
             str(discovery_info.zwave_home_id) if discovery_info.zwave_home_id else None
         )
+        addon_entries = [
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if entry.data.get(CONF_USE_ADDON)
+        ]
+        if discovered_home_id is None and any(
+            entry.data.get(CONF_SOCKET_PATH) == discovery_info.socket_path
+            for entry in addon_entries
+        ):
+            # A reconnect of the configured adapter without a home ID is the
+            # same adapter, not a new one to migrate to.
+            return self.async_abort(reason="already_configured")
+
         if addon_entry := next(
-            (
-                entry
-                for entry in self._async_current_entries(include_ignore=False)
-                if entry.data.get(CONF_USE_ADDON)
-                and entry.unique_id != discovered_home_id
-            ),
+            (entry for entry in addon_entries if entry.unique_id != discovered_home_id),
             None,
         ):
             self._reconfigure_config_entry = addon_entry
