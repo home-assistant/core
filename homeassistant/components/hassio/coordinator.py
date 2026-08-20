@@ -40,7 +40,7 @@ from homeassistant.core import (
     callback,
     is_callback_check_partial,
 )
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.debounce import Debouncer
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
@@ -433,15 +433,27 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         current_data: SupervisorIssuesData,
     ) -> None:
         """Create/delete issue repairs and notify subscribers based on issue deltas."""
+        issue_registry = ir.async_get(self.hass)
         for issue in current_data.issues.values():
             previous_issue = previous_data.issues.get(issue.uuid)
-            if previous_issue is not None and self._issue_equal(previous_issue, issue):
-                continue
-
-            self._create_or_update_issue_repair(issue)
-            self._process_issue_change(
-                IssueSubscriptionEvent(event="changed", issue=issue)
+            changed = previous_issue is None or not self._issue_equal(
+                previous_issue, issue
             )
+
+            # Update the repair on changes, and re-create it if the registry
+            # entry went missing: a finished repair flow deletes the entry
+            # even when applying the suggestion failed in Supervisor and the
+            # issue is unchanged.
+            if changed or (
+                issue.key in ISSUE_KEYS_FOR_REPAIRS
+                and not issue_registry.async_get_issue(DOMAIN, issue.uuid.hex)
+            ):
+                self._create_or_update_issue_repair(issue)
+
+            if changed:
+                self._process_issue_change(
+                    IssueSubscriptionEvent(event="changed", issue=issue)
+                )
 
         for issue_uuid, issue in previous_data.issues.items():
             if issue_uuid not in current_data.issues:
@@ -1386,9 +1398,7 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         # Remove add-ons that are no longer installed from device registry
         supervisor_addon_devices = {
             list(device.identifiers)[0][1]
-            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
-                self.entry_id
-            )
+            for device in dr.async_entries_for_config_entry(self.dev_reg, self.entry_id)
             if device.model == SupervisorEntityModel.ADDON
         }
         if stale_addons := supervisor_addon_devices - set(new_data.addons):
@@ -1608,9 +1618,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         # Remove mounts that no longer exists from device registry
         supervisor_mount_devices = {
             device.name
-            for device in self.dev_reg.devices.get_devices_for_config_entry_id(
-                self.entry_id
-            )
+            for device in dr.async_entries_for_config_entry(self.dev_reg, self.entry_id)
             if device.model == SupervisorEntityModel.MOUNT
         }
         if stale_mounts := supervisor_mount_devices - set(new_data.mounts):
