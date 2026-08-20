@@ -1,41 +1,41 @@
 {
   "config": {
+    "abort": {
+      "already_configured": "Device is already configured"
+    },
+    "error": {
+      "cannot_connect": "Unable to connect to the device",
+      "device_not_found": "Device not found at the specified IP address",
+      "discovery_failed": "Failed to discover devices. Please check your network connection and try again.",
+      "no_devices_found": "No Marstek devices found on the network. Please ensure your device is powered on and connected to the same network."
+    },
     "step": {
-      "user": {
-        "title": "Marstek Energy Storage",
-        "menu_options": {
-          "discover": "Search for devices on the local network",
-          "manual": "Enter device IP address"
-        }
-      },
       "discover": {
-        "title": "Marstek Energy Storage",
         "data": {
           "device": "Select Device"
         },
         "data_description": {
           "device": "The Marstek device discovered on your local network."
-        }
+        },
+        "title": "Marstek Energy Storage"
       },
       "manual": {
-        "title": "Add Marstek device",
-        "description": "Enter the IP address of your Marstek device. The device must be on the same local network and have Open API enabled.",
         "data": {
           "host": "[%key:common::config_flow::data::host%]"
         },
         "data_description": {
           "host": "The IP address of your Marstek device on your local network."
-        }
+        },
+        "description": "Enter the IP address of your Marstek device. The device must be on the same local network and have Open API enabled.",
+        "title": "Add Marstek device"
+      },
+      "user": {
+        "menu_options": {
+          "discover": "Search for devices on the local network",
+          "manual": "Enter device IP address"
+        },
+        "title": "Marstek Energy Storage"
       }
-    },
-    "error": {
-      "cannot_connect": "Unable to connect to the device",
-      "no_devices_found": "No Marstek devices found on the network. Please ensure your device is powered on and connected to the same network.",
-      "device_not_found": "Device not found at the specified IP address",
-      "discovery_failed": "Failed to discover devices. Please check your network connection and try again."
-    },
-    "abort": {
-      "already_configured": "Device is already configured"
     }
   },
   "entity": {

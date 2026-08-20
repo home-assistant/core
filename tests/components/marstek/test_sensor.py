@@ -1,32 +1,25 @@
 """Tests for the Marstek sensor platform."""
 
 from datetime import timedelta
+from unittest.mock import MagicMock
 
-from homeassistant.components.marstek.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
-
-from . import create_mock_udp_client
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_sensor_setup(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test sensor platform setup."""
     mock_config_entry.add_to_hass(hass)
-    mock_client = create_mock_udp_client()
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN]["udp_client"] = mock_client
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    # Verify sensors are created
-    entity_registry = er.async_get(hass)
 
     # Battery SoC sensor
     battery_sensor = entity_registry.async_get("sensor.marstek_es5_v1_battery_level")
@@ -51,20 +44,16 @@ async def test_sensor_setup(
 
 async def test_coordinator_creates_sensors(
     hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test that coordinator is created and sensors are set up."""
     mock_config_entry.add_to_hass(hass)
-    mock_client = create_mock_udp_client()
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN]["udp_client"] = mock_client
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
     # Check that sensor platform was set up
-    entity_registry = er.async_get(hass)
     entities = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )
@@ -76,16 +65,13 @@ async def test_coordinator_creates_sensors(
 async def test_polling_paused(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    mock_udp_client: MagicMock,
 ) -> None:
     """Test coordinator respects polling pause."""
     mock_config_entry.add_to_hass(hass)
-    mock_client = create_mock_udp_client()
 
     # Setup mock to return paused status
-    mock_client.is_polling_paused.return_value = True
-
-    hass.data.setdefault(DOMAIN, {})
-    hass.data[DOMAIN]["udp_client"] = mock_client
+    mock_udp_client.is_polling_paused.return_value = True
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -95,4 +81,4 @@ async def test_polling_paused(
     await hass.async_block_till_done()
 
     # Polling is paused, so no device status request should be made
-    mock_client.get_device_status.assert_not_awaited()
+    mock_udp_client.get_device_status.assert_not_awaited()

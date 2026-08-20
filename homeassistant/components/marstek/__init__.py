@@ -7,7 +7,7 @@ from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .client import async_get_udp_client
+from .client import async_create_udp_client
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -19,16 +19,18 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Set up Marstek from a config entry."""
     _LOGGER.info("Setting up Marstek config entry: %s", entry.title)
 
-    udp_client = await async_get_udp_client(hass)
+    udp_client = await async_create_udp_client(hass)
     host = entry.data[CONF_HOST]
     try:
         device_info = await udp_client.get_device_info(host)
     except (TimeoutError, OSError, TypeError, ValueError) as err:
+        await udp_client.async_cleanup()
         raise ConfigEntryNotReady(
             f"Unable to connect to Marstek device at {host}"
         ) from err
 
     if not isinstance(device_info, dict):
+        await udp_client.async_cleanup()
         raise ConfigEntryNotReady(f"Marstek device at {host} returned invalid data")
 
     entry.runtime_data = udp_client
@@ -48,8 +50,6 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # unloaded is still present in async_entries() at this point, so check
     # for a single remaining entry rather than an empty list.
     if unload_ok and len(hass.config_entries.async_entries(DOMAIN)) == 1:
-        client = hass.data.get(DOMAIN, {}).pop("udp_client", None)
-        if client:
-            await client.async_cleanup()
+        await entry.runtime_data.async_cleanup()
 
     return unload_ok

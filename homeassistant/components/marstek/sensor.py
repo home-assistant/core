@@ -1,8 +1,7 @@
 """Sensor platform for Marstek devices."""
 
-from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiomarstek import MarstekUDPClient
 
@@ -19,61 +18,14 @@ from homeassistant.const import (
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.update_coordinator import (
-    CoordinatorEntity,
-    DataUpdateCoordinator,
-)
+from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
+from .coordinator import MarstekDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
-
-# Update interval for polling device data
-SCAN_INTERVAL = timedelta(seconds=10)
-
-
-class MarstekDataUpdateCoordinator(DataUpdateCoordinator):
-    """Per-device data update coordinator."""
-
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        config_entry: ConfigEntry,
-        udp_client: MarstekUDPClient,
-        device_ip: str,
-    ) -> None:
-        """Initialize the coordinator."""
-        self.udp_client = udp_client
-        self.device_ip = device_ip
-        super().__init__(
-            hass,
-            _LOGGER,
-            config_entry=config_entry,
-            name=f"Marstek {device_ip}",
-            update_interval=SCAN_INTERVAL,
-        )
-        _LOGGER.debug(
-            "Device %s polling coordinator started, interval: %ss",
-            device_ip,
-            SCAN_INTERVAL.total_seconds(),
-        )
-
-    async def _async_update_data(self) -> dict[str, Any]:
-        """Fetch device data from the Marstek client library."""
-        _LOGGER.debug("Start polling device: %s", self.device_ip)
-        current_data = self.data or {}
-
-        if self.udp_client.is_polling_paused(self.device_ip):
-            _LOGGER.debug(
-                "Polling paused for device: %s, skipping update", self.device_ip
-            )
-            return current_data
-
-        return await self.udp_client.get_device_status(
-            self.device_ip,
-            previous_data=current_data,
-        )
 
 
 class MarstekSensor(CoordinatorEntity, SensorEntity):
@@ -83,7 +35,7 @@ class MarstekSensor(CoordinatorEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: MarstekDataUpdateCoordinator,
         device_info: dict[str, Any],
         sensor_type: str,
     ) -> None:
@@ -102,6 +54,7 @@ class MarstekSensor(CoordinatorEntity, SensorEntity):
         }
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         device_id = self._device_info.get("mac") or self._device_info.get(
@@ -118,7 +71,8 @@ class MarstekSensor(CoordinatorEntity, SensorEntity):
         return unique_id
 
     @property
-    def native_value(self) -> Any:
+    @override
+    def native_value(self) -> StateType:
         """Return the state of the sensor."""
         if not self.coordinator.data:
             return None
@@ -130,7 +84,7 @@ class MarstekBatterySensor(MarstekSensor):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: MarstekDataUpdateCoordinator,
         device_info: dict[str, Any],
     ) -> None:
         """Initialize the battery sensor."""
@@ -140,6 +94,7 @@ class MarstekBatterySensor(MarstekSensor):
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the battery level."""
         if not self.coordinator.data:
@@ -152,7 +107,7 @@ class MarstekPowerSensor(MarstekSensor):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: MarstekDataUpdateCoordinator,
         device_info: dict[str, Any],
     ) -> None:
         """Initialize the power sensor."""
@@ -162,6 +117,7 @@ class MarstekPowerSensor(MarstekSensor):
         self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the battery power."""
         if not self.coordinator.data:
@@ -174,7 +130,7 @@ class MarstekDeviceModeSensor(MarstekSensor):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: MarstekDataUpdateCoordinator,
         device_info: dict[str, Any],
     ) -> None:
         """Initialize the device mode sensor."""
@@ -182,6 +138,7 @@ class MarstekDeviceModeSensor(MarstekSensor):
         self._attr_icon = "mdi:cog"
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the device mode."""
         if not self.coordinator.data:
@@ -194,7 +151,7 @@ class MarstekBatteryStatusSensor(MarstekSensor):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: MarstekDataUpdateCoordinator,
         device_info: dict[str, Any],
     ) -> None:
         """Initialize the battery status sensor."""
@@ -202,6 +159,7 @@ class MarstekBatteryStatusSensor(MarstekSensor):
         self._attr_icon = "mdi:battery"
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Return the battery status."""
         if not self.coordinator.data:
@@ -214,7 +172,7 @@ class MarstekPVSensor(MarstekSensor):
 
     def __init__(
         self,
-        coordinator: DataUpdateCoordinator,
+        coordinator: MarstekDataUpdateCoordinator,
         device_info: dict[str, Any],
         pv_channel: int,
         metric_type: str,
@@ -247,6 +205,7 @@ class MarstekPVSensor(MarstekSensor):
             self._attr_state_class = SensorStateClass.MEASUREMENT
 
     @property
+    @override
     def native_value(self) -> int | float | None:
         """Return the PV metric value."""
         if not self.coordinator.data:
@@ -257,7 +216,7 @@ class MarstekPVSensor(MarstekSensor):
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    async_add_entities: AddEntitiesCallback,
+    async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Marstek sensors based on a config entry."""
     device_ip = config_entry.data["host"]
@@ -285,22 +244,20 @@ async def async_setup_entry(
     )
 
     # Create sensor entities - battery SoC, grid power, device mode, battery status
-    sensors = [
-        MarstekBatterySensor(coordinator, device_info),  # Battery SoC
-        MarstekPowerSensor(coordinator, device_info),  # Grid power
-        MarstekDeviceModeSensor(coordinator, device_info),  # Device operating mode
-        MarstekBatteryStatusSensor(
-            coordinator, device_info
-        ),  # Battery charge/discharge status
-    ]
+    sensors = (
+        MarstekBatterySensor(coordinator, device_info),
+        MarstekPowerSensor(coordinator, device_info),
+        MarstekDeviceModeSensor(coordinator, device_info),
+        MarstekBatteryStatusSensor(coordinator, device_info),
+    )
 
     # Add PV sensors for all 4 PV channels
-    pv_sensors = [
+    pv_sensors = (
         MarstekPVSensor(coordinator, device_info, pv_channel, metric_type)
         for pv_channel in range(1, 5)
         for metric_type in ["power", "voltage", "current", "state"]
-    ]
-    sensors.extend(pv_sensors)
+    )
+    sensors = (*sensors, *pv_sensors)
 
     _LOGGER.info("Device %s sensors set up, total %d", device_ip, len(sensors))
     async_add_entities(sensors)

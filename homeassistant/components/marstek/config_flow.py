@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiomarstek import MarstekUDPClient
 import voluptuous as vol
@@ -17,7 +17,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
-from .client import async_get_udp_client
+from .client import async_create_udp_client
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -65,6 +65,7 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     discovered_devices: list[dict[str, Any]]
     discovered_device_options: dict[str, int]
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -90,7 +91,7 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return await self._async_create_entry_from_device(device)
 
         # Start broadcast device discovery
-        udp_client = await async_get_udp_client(self.hass)
+        udp_client = await async_create_udp_client(self.hass)
         try:
             _LOGGER.info("Starting device discovery")
 
@@ -141,6 +142,8 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 data_schema=vol.Schema({}),
                 errors={"base": "discovery_failed"},
             )
+        finally:
+            await udp_client.async_cleanup()
 
     async def async_step_manual(
         self, user_input: dict[str, Any] | None = None
@@ -170,17 +173,25 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
 
     async def _async_get_device_from_host(self, host: str) -> dict[str, Any]:
         """Fetch device information from a specific host."""
-        udp_client = await async_get_udp_client(self.hass)
-        device_info = await udp_client.get_device_info(host)
-        if not isinstance(device_info, dict):
-            raise TypeError("No device information returned")
-        return _device_from_discovery_result(device_info, host)
+        udp_client = await async_create_udp_client(self.hass)
+        try:
+            device_info = await udp_client.get_device_info(host)
+            if not isinstance(device_info, dict):
+                raise TypeError("No device information returned")
+            return _device_from_discovery_result(device_info, host)
+        finally:
+            await udp_client.async_cleanup()
 
     async def _async_create_entry_from_device(
         self, device: dict[str, Any]
     ) -> ConfigFlowResult:
         """Create a config entry from normalized Marstek device data."""
-        unique_id = device["mac"] or device["ip"]
+        unique_id = (
+            device["mac"]
+            or device["wifi_mac"]
+            or device["ble_mac"]
+            or str(device["id"])
+        )
         _LOGGER.info(
             "Check device uniqueness: IP=%s, MAC=%s, unique_id=%s",
             device["ip"],
