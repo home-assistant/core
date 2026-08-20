@@ -545,6 +545,8 @@ async def test_zeroconf_flow_creates_new_entry_when_system_id_does_not_match(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"][CONF_HOST] == "192.168.1.50"
     assert entry.data[CONF_HOST] == "old-host.example.com"
+    assert entry.unique_id == "old-id"
+    assert entry.data[CONF_SYSTEM_ID] == "old-id"
 
 
 # ---------------------------
