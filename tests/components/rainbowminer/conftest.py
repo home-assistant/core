@@ -86,11 +86,9 @@ def mock_rainbowminer_endpoints(
     active_miners: list[dict[str, Any]] | Exception | None = None,
     version: dict[str, Any] | Exception | None = None,
     balances: list[dict[str, Any]] | Exception | None = None,
-    pause: bool | Exception | None = None,
-    resume: bool | Exception | None = None,
 ) -> None:
     """Register canned RainbowMiner API responses."""
-    responses: dict[str, dict[str, Any] | list[dict[str, Any]] | bool | Exception] = {}
+    responses: dict[str, dict[str, Any] | list[dict[str, Any]] | Exception] = {}
     if status is not None:
         responses["status"] = status
     if current_profit is not None:
@@ -103,10 +101,6 @@ def mock_rainbowminer_endpoints(
         responses["version"] = version
     if balances is not None:
         responses["balances?add_btc=true"] = balances
-    if pause is not None:
-        responses["pause?action=set"] = pause
-    if resume is not None:
-        responses["pause?action=reset"] = resume
     for path, payload in responses.items():
         if isinstance(payload, Exception):
             aioclient_mock.get(f"{TEST_BASE_URL}/{path}", exc=payload)

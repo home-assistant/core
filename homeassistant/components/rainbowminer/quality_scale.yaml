@@ -2,7 +2,7 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: Integration registers no custom services; pause/resume exposed via the mining switch entity actions.
+    comment: Integration registers no custom services.
   appropriate-polling: done
   brands: done
   common-modules: done

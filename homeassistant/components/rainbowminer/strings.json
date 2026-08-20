@@ -78,11 +78,6 @@
       "weekly_earnings_mbtc": {
         "name": "Weekly earnings (mBTC)"
       }
-    },
-    "switch": {
-      "mining": {
-        "name": "Mining"
-      }
     }
   }
 }

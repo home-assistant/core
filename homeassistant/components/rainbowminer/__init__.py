@@ -16,7 +16,7 @@ from homeassistant.helpers import aiohttp_client
 from .const import DEFAULT_PORT
 from .coordinator import RainbowMinerConfigEntry, RainbowMinerCoordinator
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.SENSOR]
 
 
 async def async_setup_entry(
