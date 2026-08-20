@@ -2870,7 +2870,7 @@ radios==0.3.2
 radiotherm==2.1.0
 
 # homeassistant.components.rainbowminer
-rainbowminer-api-client==0.2.1
+rainbowminer-api-client==0.2.2
 
 # homeassistant.components.raincloud
 raincloudy==0.0.7
