@@ -4,7 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from openevsehttp.__main__ import OpenEVSE
+from openevsehttp import OpenEVSE
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
 from homeassistant.const import ATTR_CONNECTIONS, ATTR_SERIAL_NUMBER
@@ -61,9 +61,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up OpenEVSE switches based on config entry."""
     coordinator = entry.runtime_data
-    identifier = entry.unique_id or entry.entry_id
     async_add_entities(
-        OpenEVSESwitch(coordinator, description, identifier, entry.unique_id)
+        OpenEVSESwitch(
+            coordinator,
+            description,
+            entry.unique_id or entry.entry_id,
+            entry.unique_id,
+        )
         for description in SWITCH_TYPES
     )
 
@@ -95,6 +99,15 @@ class OpenEVSESwitch(CoordinatorEntity[OpenEVSEDataUpdateCoordinator], SwitchEnt
                 (CONNECTION_NETWORK_MAC, unique_id)
             }
             self._attr_device_info[ATTR_SERIAL_NUMBER] = unique_id
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return True if entity is available."""
+        return (
+            super().available
+            and self.entity_description.is_on_fn(self.coordinator.charger) is not None
+        )
 
     @property
     @override

@@ -19,7 +19,11 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    HomeAssistantError,
+    ServiceValidationError,
+)
 from homeassistant.helpers import entity_registry as er
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -115,6 +119,12 @@ async def test_switch_turn_on_off(
     ("raised", "expected", "translation_key", "translation_placeholders"),
     [
         (
+            ValueError("invalid mode"),
+            ServiceValidationError,
+            "invalid_value",
+            {"value": "None"},
+        ),
+        (
             AuthenticationError("bad creds"),
             ConfigEntryAuthFailed,
             "authentication_error",
@@ -181,3 +191,25 @@ async def test_switch_raises(
     assert exc_info.value.translation_key == translation_key
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_placeholders == translation_placeholders
+
+
+async def test_switch_availability(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_charger: MagicMock,
+) -> None:
+    """Test switch entity availability when is_on_fn returns None."""
+    mock_charger.divert_active = None
+    mock_charger.shaper_active = True
+
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("switch.openevse_mock_config_solar_pv_divert")
+    assert state is not None
+    assert state.state == "unavailable"
+
+    state = hass.states.get("switch.openevse_mock_config_current_shaper")
+    assert state is not None
+    assert state.state == "on"
