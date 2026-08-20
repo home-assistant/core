@@ -603,6 +603,7 @@ async def test_network_neighbors_rf_toggle_error(
     integration: MockConfigEntry,
     client: MagicMock,
     hass_ws_client: WebSocketGenerator,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a single response is sent when the radio can't be toggled at all."""
     ws_client = await hass_ws_client(hass)
@@ -623,7 +624,8 @@ async def test_network_neighbors_rf_toggle_error(
     msg = await ws_client.receive_json()
 
     assert not msg["success"]
-    assert msg["error"]["code"] == "zwave_error"
+    assert msg["error"]["code"] == "rf_toggle_failed"
+    assert "Failed to re-enable RF" in caplog.text
 
     # The next frame is the pong, proving no second response was sent
     await ws_client.send_json_auto_id({TYPE: "ping"})

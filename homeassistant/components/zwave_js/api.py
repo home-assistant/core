@@ -648,6 +648,14 @@ async def websocket_network_neighbors(
     https://zwave-js.github.io/zwave-js/#/api/controller?id=getnodeneighbors
     """
     controller = driver.controller
+
+    async def restore_rf() -> bool:
+        """Turn the radio back on, returning False instead of raising."""
+        try:
+            return await controller.async_toggle_rf(True)
+        except BaseZwaveJSServerError:
+            return False
+
     neighbors: dict[int, list[int]] = {}
     rf_disabled = False
     rf_restored = False
@@ -669,14 +677,14 @@ async def websocket_network_neighbors(
                         continue
         finally:
             # Shielded so the radio comes back on even when the connection is
-            # closed while the routing table is being read. The lock is held
-            # until it has, so a queued refresh can't race the restore.
-            restore = hass.async_create_task(controller.async_toggle_rf(True))
+            # closed while the routing table is being read
+            restore = hass.async_create_task(restore_rf())
             try:
                 rf_restored = await asyncio.shield(restore)
             except asyncio.CancelledError:
-                with suppress(BaseZwaveJSServerError):
-                    rf_restored = await asyncio.shield(restore)
+                # Hold the lock until the radio is back on, so a queued
+                # refresh can't race the restore
+                rf_restored = await asyncio.shield(restore)
                 raise
             finally:
                 if not rf_restored:
