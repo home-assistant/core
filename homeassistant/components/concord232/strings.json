@@ -38,7 +38,7 @@
           "mode": "Arm home mode"
         },
         "data_description": {
-          "code": "Code required to arm and disarm the panel from Home Assistant. Leave empty to allow arming and disarming without a code.",
+          "code": "Code stored for the panel: it is sent when disarming, filled in automatically when a command does not provide one, and commands that do provide a code must match it. Leave empty to arm without a code and send no code on disarm.",
           "mode": "Whether arming in home mode sounds the exit chime."
         }
       }
