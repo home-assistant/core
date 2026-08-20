@@ -1364,11 +1364,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
 
+        default_keys = SecurityKeys.from_config(addon_config, self.security_keys)
+
         if user_input is not None:
-            # The revert helper only passes keys present in the original
-            # add-on config, which may lack some of the security keys,
-            # so treat missing keys as empty.
-            self.security_keys = SecurityKeys().updated_from_user_input(user_input)
+            # Missing keys default to the current add-on config, so
+            # existing keys are preserved. While reverting, the helper only
+            # passes the keys present in the original config, so missing keys
+            # must be treated as empty to actually revert them.
+            key_defaults = SecurityKeys() if self.revert_reason else default_keys
+            self.security_keys = key_defaults.updated_from_user_input(user_input)
             self.usb_path = user_input.get(CONF_USB_PATH) or None
             self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
 
@@ -1402,8 +1406,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
         socket_path = addon_config.get(CONF_ADDON_SOCKET, self.socket_path or "")
-        default_keys = SecurityKeys.from_config(addon_config, self.security_keys)
-
         try:
             ports = await async_get_usb_ports(self.hass)
         except OSError as err:

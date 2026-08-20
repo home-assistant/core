@@ -4790,6 +4790,64 @@ async def test_reconfigure_addon_running_server_info_failure(
     assert client.disconnect.call_count == 1
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_reconfigure_preserves_omitted_security_keys(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+) -> None:
+    """Test a partial reconfigure keeps security keys not in the submission."""
+    addon_options.update({"device": "/test", "s0_legacy_key": "keep-me"})
+    entry = integration
+    hass.config_entries.async_update_entry(entry, unique_id="1234")
+    client.driver.controller.data["homeId"] = 1234
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    # The submission omits the security key fields and only changes the device.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"usb_path": "/new"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    # The existing S0 key is preserved, not wiped to an empty string.
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "device": "/new",
+                "s0_legacy_key": "keep-me",
+                "s2_access_control_key": "",
+                "s2_authenticated_key": "",
+                "s2_unauthenticated_key": "",
+                "lr_s2_access_control_key": "",
+                "lr_s2_authenticated_key": "",
+            }
+        ),
+    )
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data["s0_legacy_key"] == "keep-me"
+
+
 @pytest.mark.usefixtures("supervisor")
 @pytest.mark.parametrize(
     (
