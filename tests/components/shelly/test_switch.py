@@ -1118,6 +1118,7 @@ async def test_rpc_camera_privacy_switch(
     hass: HomeAssistant,
     mock_camera_rpc_device: Mock,
     entity_registry: EntityRegistry,
+    monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test the camera privacy switch."""
     entity_id = "switch.test_name_privacy"
@@ -1130,10 +1131,13 @@ async def test_rpc_camera_privacy_switch(
     assert (entry := entity_registry.async_get(entity_id))
     assert entry.unique_id == "123456789ABC-camera:0-camera_privacy"
 
+    mutate_rpc_device_status(
+        monkeypatch, mock_camera_rpc_device, "camera:0", "privacy", True
+    )
     await hass.services.async_call(
         SWITCH_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.test_name_privacy"},
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
     mock_camera_rpc_device.mock_update()
