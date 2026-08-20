@@ -2553,6 +2553,29 @@ async def test_usb_discovery_leaves_manual_entry_alone(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
+async def test_usb_discovery_ignored(
+    hass: HomeAssistant,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test USB discovery aborts when the discovery was ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id="AAAA:AAAA_1234_test_zwave radio",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
     """Test usb discovery aborted when existing entry not using add-on."""
     entry = MockConfigEntry(

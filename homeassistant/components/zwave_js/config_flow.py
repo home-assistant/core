@@ -575,10 +575,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         )
-        # We don't need to check if the unique_id is already configured
-        # since we will update the unique_id before finishing the flow.
-        # The unique_id set above is just a temporary value to avoid
-        # duplicate discovery flows.
+        # The unique id set above is a placeholder that is replaced with the
+        # home ID before an entry is created, so only check ignored entries.
+        if any(
+            entry.source == SOURCE_IGNORE and entry.unique_id == self.unique_id
+            for entry in self._async_current_entries(include_ignore=True)
+        ):
+            return self.async_abort(reason="already_configured")
         dev_path = discovery_info.device
         self.usb_path = dev_path
         if manufacturer == "Nabu Casa" and description == "ZWA-2 - Nabu Casa ZWA-2":
