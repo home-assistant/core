@@ -48,6 +48,7 @@ from .const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
     CONF_ADDON_NETWORK_KEY,
+    CONF_ADDON_S0_LEGACY_KEY,
     CONF_ADDON_SOCKET,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_SOCKET_PATH,
@@ -74,6 +75,20 @@ ADDON_SETUP_TIMEOUT_ROUNDS = 40
 SERVER_CONNECT_TIMEOUT = 60
 
 
+def migrate_network_key(addon_config: Mapping[str, Any]) -> dict[str, Any]:
+    """Migrate the legacy network key to the S0 legacy key.
+
+    The network key was renamed to the S0 legacy key when S2 was added.
+    Old add-on configs may still only carry the legacy network key.
+    """
+    migrated = dict(addon_config)
+    if (network_key := migrated.pop(CONF_ADDON_NETWORK_KEY, None)) and not migrated.get(
+        CONF_ADDON_S0_LEGACY_KEY
+    ):
+        migrated[CONF_ADDON_S0_LEGACY_KEY] = network_key
+    return migrated
+
+
 @dataclass
 class SecurityKeys:
     """Security keys of a Z-Wave network.
@@ -94,6 +109,7 @@ class SecurityKeys:
         cls, config: Mapping[str, Any], defaults: SecurityKeys | None = None
     ) -> Self:
         """Return keys from an add-on config or entry data, with defaults."""
+        config = migrate_network_key(config)
         return cls(
             **{
                 field.name: config.get(
@@ -284,8 +300,7 @@ class AddonFlowManager:
         if addon_info.state is AddonState.RUNNING:
             self.restart_addon = True
         self.original_config = dict(addon_config)
-        # Remove legacy network_key
-        new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
+        new_addon_config = migrate_network_key(new_addon_config)
         try:
             await self.addon_manager.async_set_addon_options(new_addon_config)
         except AddonError as err:
@@ -1705,9 +1720,12 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=reason)
 
         self.revert_reason = reason
+        # Migrate a legacy network key so it is reverted as the S0 legacy key,
+        # which is what ADDON_USER_INPUT_MAP knows about.
+        original_config = migrate_network_key(self._addon_setup.original_config)
         addon_config_input = {
             ADDON_USER_INPUT_MAP[addon_key]: addon_val
-            for addon_key, addon_val in self._addon_setup.original_config.items()
+            for addon_key, addon_val in original_config.items()
             if addon_key in ADDON_USER_INPUT_MAP
         }
         _LOGGER.debug("Reverting app options, reason: %s", reason)

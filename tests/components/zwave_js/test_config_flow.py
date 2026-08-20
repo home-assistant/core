@@ -20,7 +20,12 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.usb import SerialDevice, USBDevice
-from homeassistant.components.zwave_js.config_flow import TITLE, async_get_usb_ports
+from homeassistant.components.zwave_js.config_flow import (
+    TITLE,
+    SecurityKeys,
+    async_get_usb_ports,
+    migrate_network_key,
+)
 from homeassistant.components.zwave_js.const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
@@ -1317,6 +1322,34 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
     assert entry.unique_id == "3245146787"
+
+
+@pytest.mark.parametrize(
+    ("addon_config", "expected_s0"),
+    [
+        pytest.param({"network_key": "legacy"}, "legacy", id="legacy_only"),
+        pytest.param(
+            {"network_key": "legacy", "s0_legacy_key": "s0"}, "s0", id="s0_wins"
+        ),
+        pytest.param({"s0_legacy_key": "s0"}, "s0", id="s0_only"),
+        pytest.param({}, "", id="neither"),
+    ],
+)
+def test_migrate_legacy_network_key(
+    addon_config: dict[str, str], expected_s0: str
+) -> None:
+    """Test the legacy network key is migrated to the S0 legacy key."""
+    original = dict(addon_config)
+
+    migrated = migrate_network_key(addon_config)
+    assert "network_key" not in migrated
+    assert migrated.get("s0_legacy_key", "") == expected_s0
+
+    keys = SecurityKeys.from_config(addon_config)
+    assert keys.s0_legacy_key == expected_s0
+
+    # Neither call mutates the caller's dict.
+    assert addon_config == original
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
