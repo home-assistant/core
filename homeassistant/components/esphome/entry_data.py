@@ -47,7 +47,7 @@ from aioesphomeapi import (
     WaterHeaterInfo,
     build_device_unique_id,
 )
-from aioesphomeapi.model import ButtonInfo
+from aioesphomeapi.model import ButtonInfo, SerialProxyInfo, SerialProxyMode
 from aioesphomeapi.model_conversions import STATE_TYPE_TO_INFO_TYPE
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
 
@@ -151,6 +151,19 @@ class StoreData(TypedDict, total=False):
 
 class ESPHomeStorage(Store[StoreData]):
     """ESPHome Storage."""
+
+
+@callback
+def _async_zigbee_serial_proxy(device_info: DeviceInfo) -> SerialProxyInfo | None:
+    """Return the serial proxy port a Zigbee radio was detected on, if any."""
+    return next(
+        (
+            proxy
+            for proxy in device_info.serial_proxies
+            if proxy.detected_mode is SerialProxyMode.EZSP_ASH
+        ),
+        None,
+    )
 
 
 @dataclass(slots=True)
@@ -629,11 +642,6 @@ class RuntimeEntryData:
         # be marked as unavailable or not.
         self.expected_disconnect = True
 
-        if not device_info.zwave_proxy_feature_flags:
-            return
-
-        assert self.client.connected_address
-
         # If the device does not have a zwave_home_id, it means
         # either the Z-Wave controller has never been connected
         # to the ESPHome device, or the Z-Wave controller has
@@ -641,10 +649,18 @@ class RuntimeEntryData:
         # Since we cannot tell the difference, and it could
         # just be the cable is unplugged we only
         # automatically start the flow if we have a home ID.
-        if not device_info.zwave_home_id:
-            return
+        if device_info.zwave_proxy_feature_flags and device_info.zwave_home_id:
+            self.async_create_zwave_js_flow(
+                hass, device_info, device_info.zwave_home_id
+            )
 
-        self.async_create_zwave_js_flow(hass, device_info, device_info.zwave_home_id)
+        # A port only reports a detected mode once its tap got an answer out of the device,
+        # so this says a Zigbee radio is really there. The extended PAN ID may still be
+        # zero: the radio has no network formed yet, which ZHA is there to fix.
+        if _async_zigbee_serial_proxy(device_info) is not None:
+            self.async_create_zha_flow(
+                hass, device_info, device_info.zigbee_extended_pan_id
+            )
 
     def async_create_zwave_js_flow(
         self, hass: HomeAssistant, device_info: DeviceInfo, zwave_home_id: int
@@ -663,6 +679,35 @@ class RuntimeEntryData:
                 ip_address=self.client.connected_address,
                 port=self.client.port,
                 noise_psk=noise_psk or None,
+            ),
+            discovery_key=discovery_flow.DiscoveryKey(
+                domain=DOMAIN,
+                key=device_info.mac_address,
+                version=1,
+            ),
+        )
+
+    def async_create_zha_flow(
+        self, hass: HomeAssistant, device_info: DeviceInfo, zigbee_extended_pan_id: int
+    ) -> None:
+        """Create a ZHA config flow for a Zigbee proxy device."""
+        assert self.client.connected_address is not None
+        serial_proxy = _async_zigbee_serial_proxy(device_info)
+        assert serial_proxy is not None
+        entry = hass.config_entries.async_get_entry(self.entry_id)
+        noise_psk = entry.data.get(CONF_NOISE_PSK) if entry else None
+        discovery_flow.async_create_flow(
+            hass,
+            "zha",
+            {"source": config_entries.SOURCE_ESPHOME},
+            ESPHomeServiceInfo(
+                name=device_info.name,
+                zwave_home_id=None,
+                ip_address=self.client.connected_address,
+                port=self.client.port,
+                noise_psk=noise_psk or None,
+                zigbee_extended_pan_id=zigbee_extended_pan_id,
+                serial_port_name=serial_proxy.name,
             ),
             discovery_key=discovery_flow.DiscoveryKey(
                 domain=DOMAIN,

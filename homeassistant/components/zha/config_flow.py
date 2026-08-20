@@ -13,6 +13,8 @@ from zha.application.const import RadioType
 import zigpy.backups
 from zigpy.config import CONF_DEVICE, CONF_DEVICE_PATH
 from zigpy.exceptions import CannotWriteNetworkSettings, DestructiveWriteNetworkSettings
+from zigpy.state import NetworkInfo
+from zigpy.types import ExtendedPanId, uint64_t
 
 from homeassistant.components import onboarding, usb
 from homeassistant.components.file_upload import process_uploaded_file
@@ -40,6 +42,7 @@ from homeassistant.helpers.selector import (
     SerialPortSelector,
     SerialPortSelectorConfig,
 )
+from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
@@ -94,6 +97,14 @@ UPLOADED_BACKUP_FILE = "uploaded_backup_file"
 REPAIR_MY_URL = "https://my.home-assistant.io/redirect/repairs/"
 
 LEGACY_ZEROCONF_ESPHOME_API_PORT = 6053
+
+# Framing mode of an ESPHome serial proxy port carrying an EZSP radio. Requesting it lets
+# the ESPHome device acknowledge ASH frames itself, which bellows detects from the path.
+ESPHOME_EZSP_ASH_MODE = "ezsp_ash"
+
+# An ESPHome device cannot know the line rate of whatever radio is plugged into it, so the
+# client picks one: a proxied EZSP radio is a ZBT-2.
+ESPHOME_EZSP_BAUDRATE = 460800
 
 ZEROCONF_SERVICE_TYPE = "_zigbee-coordinator._tcp.local."
 ZEROCONF_PROPERTIES_SCHEMA = probatio.Schema(
@@ -976,6 +987,40 @@ class ZhaConfigFlowHandler(BaseZhaFlow, ConfigFlow, domain=DOMAIN):
             {
                 CONF_DEVICE_PATH: device_path,
                 CONF_BAUDRATE: 115200,
+                CONF_FLOW_CONTROL: None,
+            }
+        )
+
+        return await self.async_step_confirm()
+
+    async def async_step_esphome(
+        self, discovery_info: ESPHomeServiceInfo
+    ) -> ConfigFlowResult:
+        """Handle an ESPHome serial proxy discovery."""
+        device_path = discovery_info.serial_port_path(mode=ESPHOME_EZSP_ASH_MODE)
+
+        # Zero means the radio has no network formed, so it has no identity to match an
+        # entry against yet. The flow still runs: forming that network is what ZHA is for.
+        if discovery_info.zigbee_extended_pan_id:
+            await self._set_unique_id_and_update_ignored_flow(
+                unique_id=get_config_entry_unique_id(
+                    NetworkInfo(
+                        extended_pan_id=ExtendedPanId(
+                            uint64_t(discovery_info.zigbee_extended_pan_id).serialize()
+                        )
+                    )
+                ),
+                device_path=device_path,
+            )
+
+        self.context["title_placeholders"] = {CONF_NAME: discovery_info.name}
+        self._radio_mgr.device_path = device_path
+        self._radio_mgr.radio_type = RadioType.ezsp
+        self._radio_mgr.device_settings = DEVICE_SCHEMA(
+            {
+                CONF_DEVICE_PATH: device_path,
+                CONF_BAUDRATE: ESPHOME_EZSP_BAUDRATE,
+                # ESPHome's serial proxy has no hardware flow control
                 CONF_FLOW_CONTROL: None,
             }
         )

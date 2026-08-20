@@ -1,13 +1,16 @@
 """Test ESPHome entry data."""
 
-from unittest.mock import Mock, patch
+from unittest.mock import Mock, call, patch
 
 from aioesphomeapi import (
     APIClient,
+    DeviceInfo,
     EntityCategory as ESPHomeEntityCategory,
     EntityInfo,
     SensorInfo,
     SensorState,
+    SerialProxyInfo,
+    SerialProxyMode,
 )
 import pytest
 
@@ -146,12 +149,12 @@ async def test_discover_zwave() -> None:
         ),
         None,
     )
-    device_info = Mock(
+    device_info = DeviceInfo(
+        name="mock-device-infoname",
         mac_address="mock-device-info-mac",
         zwave_proxy_feature_flags=1,
         zwave_home_id=1234,
     )
-    device_info.name = "mock-device-infoname"
 
     with patch(
         "homeassistant.helpers.discovery_flow.async_create_flow"
@@ -194,12 +197,12 @@ async def test_discover_zwave_without_home_id() -> None:
         ),
         None,
     )
-    device_info = Mock(
+    device_info = DeviceInfo(
+        name="mock-device-infoname",
         mac_address="mock-device-info-mac",
         zwave_proxy_feature_flags=1,
         zwave_home_id=0,  # No home ID (fresh adapter or unplugged)
     )
-    device_info.name = "mock-device-infoname"
 
     with patch(
         "homeassistant.helpers.discovery_flow.async_create_flow"
@@ -211,6 +214,116 @@ async def test_discover_zwave_without_home_id() -> None:
         )
         # Verify async_create_flow was NOT called when zwave_home_id is 0
         mock_create_flow.assert_not_called()
+
+
+ZIGBEE_EXTENDED_PAN_ID = 0xD3B461708C2CF940
+
+
+def _zigbee_device_info(
+    *,
+    zigbee_extended_pan_id: int = ZIGBEE_EXTENDED_PAN_ID,
+    detected_mode: SerialProxyMode = SerialProxyMode.EZSP_ASH,
+) -> DeviceInfo:
+    """Return device info for a device proxying a Zigbee radio and two RS-232 ports."""
+    return DeviceInfo(
+        name="mock-device-infoname",
+        mac_address="mock-device-info-mac",
+        zigbee_proxy_feature_flags=1,
+        zigbee_extended_pan_id=zigbee_extended_pan_id,
+        serial_proxies=[
+            SerialProxyInfo(name="RS-232 Port 1", baud_rate=9600),
+            SerialProxyInfo(
+                name="Zigbee", detected_mode=detected_mode, baud_rate=460800
+            ),
+            SerialProxyInfo(name="RS-232 Port 2", baud_rate=9600),
+        ],
+    )
+
+
+@pytest.mark.parametrize(
+    "zigbee_extended_pan_id",
+    [
+        pytest.param(ZIGBEE_EXTENDED_PAN_ID, id="network_formed"),
+        # A radio that has no network yet is still a radio worth setting up
+        pytest.param(0, id="no_network_formed"),
+    ],
+)
+async def test_discover_zigbee(zigbee_extended_pan_id: int) -> None:
+    """Test ESPHome discovery of ZHA."""
+    hass = Mock()
+    hass.config_entries.async_get_entry.return_value = Mock(
+        data={CONF_NOISE_PSK: "mock-noise-psk"}
+    )
+    entry_data = RuntimeEntryData(
+        "mock-id",
+        "mock-title",
+        Mock(
+            connected_address="mock-client-address",
+            port=1234,
+            noise_psk=None,
+        ),
+        None,
+    )
+
+    with patch(
+        "homeassistant.helpers.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        entry_data.async_on_connect(
+            hass,
+            _zigbee_device_info(zigbee_extended_pan_id=zigbee_extended_pan_id),
+            None,
+        )
+
+    assert mock_create_flow.mock_calls == [
+        call(
+            hass,
+            "zha",
+            {"source": "esphome"},
+            ESPHomeServiceInfo(
+                name="mock-device-infoname",
+                zwave_home_id=None,
+                ip_address="mock-client-address",
+                port=1234,
+                noise_psk="mock-noise-psk",
+                zigbee_extended_pan_id=zigbee_extended_pan_id,
+                serial_port_name="Zigbee",
+                serial_port_baudrate=460800,
+            ),
+            discovery_key=discovery_flow.DiscoveryKey(
+                domain="esphome",
+                key="mock-device-info-mac",
+                version=1,
+            ),
+        )
+    ]
+
+
+async def test_discover_zigbee_without_detected_radio() -> None:
+    """Test ESPHome does not start ZHA discovery until a radio is detected."""
+    hass = Mock()
+    entry_data = RuntimeEntryData(
+        "mock-id",
+        "mock-title",
+        Mock(
+            connected_address="mock-client-address",
+            port=1234,
+            noise_psk=None,
+        ),
+        None,
+    )
+
+    with patch(
+        "homeassistant.helpers.discovery_flow.async_create_flow"
+    ) as mock_create_flow:
+        entry_data.async_on_connect(
+            hass,
+            # The tap has not gotten an answer out of the port, so what is behind it -- a
+            # Zigbee radio, a Z-Wave one, nothing at all -- is still unknown
+            _zigbee_device_info(detected_mode=SerialProxyMode.RAW),
+            None,
+        )
+
+    assert len(mock_create_flow.mock_calls) == 0
 
 
 async def test_unknown_entity_type_skipped(
