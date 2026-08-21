@@ -21,9 +21,9 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
 
 from . import setup_integration
+from .conftest import MOCK_PARSE_DATA
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-from tests.components.guntamatic.conftest import MOCK_PARSE_DATA
 
 
 @pytest.mark.usefixtures("mock_heater")
