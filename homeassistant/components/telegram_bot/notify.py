@@ -61,10 +61,11 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
         )
 
     @property
+    @override
     def suggested_object_id(self) -> str | None:
         """Suggest an object id based on the chat title only."""
         return self._chat_title
-    
+
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
