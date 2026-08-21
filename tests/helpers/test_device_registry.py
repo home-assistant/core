@@ -11123,7 +11123,7 @@ async def test_link_device_info_matching_child_raises(
     # The child device is left untouched: not converted, no new device created
     assert len(device_registry.devices) == 1
     assert len(device_registry.child_devices) == 1
-    assert device_registry.child_devices[child_device.id] == child_device
+    assert device_registry._child_devices[child_device.id] == child_device
     assert child_device.identifiers == {("test", "strip_outlet_1")}
 
 
@@ -12420,7 +12420,7 @@ async def test_recreate_child_clears_stale_config_entry_disable(
     _, child_device = _create_parent_and_child(
         device_registry, mock_config_entry.entry_id
     )
-    device_registry.child_devices[child_device.id] = attr.evolve(
+    device_registry._child_devices[child_device.id] = attr.evolve(
         device_registry.async_get(child_device.id, include_main_devices=False),
         disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY,
     )

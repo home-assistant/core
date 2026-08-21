@@ -92,8 +92,7 @@ def websocket_list_devices(
     inner = b",".join(
         [
             entry.json_repr
-            for container in (registry._devices, registry.child_devices)  # noqa: SLF001
-            for entry in container.values()
+            for entry in (*registry.devices, *registry.child_devices)
             if entry.json_repr is not None
         ]
     )

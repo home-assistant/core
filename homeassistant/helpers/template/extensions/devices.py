@@ -84,9 +84,8 @@ class DeviceExtension(BaseTemplateExtension):
         dev_reg = dr.async_get(self.hass)
         return next(
             (
-                device_id
-                for container in (dev_reg._devices, dev_reg.child_devices)  # noqa: SLF001
-                for device_id, device in container.items()
+                device.id
+                for device in (*dev_reg.devices, *dev_reg.child_devices)
                 if (name := device.name_by_user or device.name)
                 and (str(entity_id_or_device_name) == name)
             ),
