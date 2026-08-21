@@ -201,12 +201,21 @@ async def test_user_flow_duplicate(hass: HomeAssistant) -> None:
     assert result["reason"] == "already_configured"
 
 
-async def test_reconfigure_preserves_bearer_token(hass: HomeAssistant) -> None:
-    """Test reconfiguring without re-entering the stored token."""
+@pytest.mark.parametrize(
+    ("entry_data", "credential"),
+    [
+        pytest.param(USER_INPUT, CONF_TOKEN, id="bearer-token"),
+        pytest.param(VALID_BASIC_INPUT, CONF_PASSWORD, id="basic-password"),
+    ],
+)
+async def test_reconfigure_preserves_credentials(
+    hass: HomeAssistant, entry_data: dict[str, Any], credential: str
+) -> None:
+    """Test reconfiguring without re-entering the stored credential."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         title="Custom endpoint",
-        data=USER_INPUT,
+        data=entry_data,
         unique_id="endpoint-id",
     )
     entry.add_to_hass(hass)
@@ -215,10 +224,10 @@ async def test_reconfigure_preserves_bearer_token(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
 
     new_input = {
-        **USER_INPUT,
+        **entry_data,
         CONF_URL: "https://new.example.com/hook",
     }
-    new_input.pop(CONF_TOKEN)
+    new_input.pop(credential)
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], new_input
     )
@@ -226,7 +235,7 @@ async def test_reconfigure_preserves_bearer_token(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert entry.title == "Custom endpoint"
-    assert entry.data[CONF_TOKEN] == "secret-token"
+    assert entry.data[credential] == entry_data[credential]
 
 
 async def test_reconfigure_removes_credentials(hass: HomeAssistant) -> None:
