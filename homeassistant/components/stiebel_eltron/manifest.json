@@ -13,5 +13,5 @@
   "iot_class": "local_polling",
   "loggers": ["pymodbus", "pystiebeleltron"],
   "quality_scale": "silver",
-  "requirements": ["pystiebeleltron==0.6.3"]
+  "requirements": ["pystiebeleltron==0.7.0"]
 }
