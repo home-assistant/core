@@ -8,12 +8,14 @@ rules:
       domain/entity services are reintroduced in a follow-up PR.
   appropriate-polling: done
   brands:
-    status: done
+    status: todo
     comment: |
-      Brand images ship inside the integration (brand/ folder with icon,
-      dark_icon and @2x variants), served locally by HA 2026.3+. The brands
-      repository no longer accepts custom-integration submissions, so this is
-      the supported path. A core migration would still need a brands-repo PR.
+      Brand images already ship inside the integration (brand/ folder with
+      icon, dark_icon and @2x variants) and work fully as-is, served locally
+      by HA 2026.3+. For a core-bundled integration this rule still formally
+      requires a home-assistant/brands submission; home-assistant/brands#10948
+      is open for this but not yet merged. Planned as a follow-up alongside
+      the bronze PR.
   common-modules: done
   config-flow: done
   config-flow-test-coverage:
