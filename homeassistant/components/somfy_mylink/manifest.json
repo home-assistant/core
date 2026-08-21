@@ -1,7 +1,7 @@
 {
   "domain": "somfy_mylink",
   "name": "Somfy MyLink",
-  "codeowners": [],
+  "codeowners": ["@sslivins"],
   "config_flow": true,
   "dhcp": [
     {
@@ -12,6 +12,6 @@
   "documentation": "https://www.home-assistant.io/integrations/somfy_mylink",
   "integration_type": "hub",
   "iot_class": "assumed_state",
-  "loggers": ["somfy_mylink_synergy"],
-  "requirements": ["somfy-mylink-synergy==1.0.6"]
+  "loggers": ["pysomfymylink"],
+  "requirements": ["pysomfymylink==1.0.0"]
 }

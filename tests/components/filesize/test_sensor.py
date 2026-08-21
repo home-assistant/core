@@ -90,8 +90,8 @@ async def test_valid_path(
     assert state
     assert state.state == "0.0"
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device.name == mock_config_entry.title
 

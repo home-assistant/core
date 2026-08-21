@@ -209,7 +209,7 @@ class IntesisAC(ClimateEntity):
     async def async_added_to_hass(self) -> None:
         """Subscribe to event updates."""
         _LOGGER.debug("Added climate device with state: %s", repr(self._ih_device))
-        await self._controller.add_update_callback(self.async_update_callback)
+        self._controller.add_update_callback(self.async_update_callback)
         try:
             await self._controller.connect()
         except IHConnectionError as ex:

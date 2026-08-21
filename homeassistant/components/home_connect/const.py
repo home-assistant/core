@@ -104,7 +104,7 @@ TRANSLATION_KEYS_PROGRAMS_MAP = {
     if program not in (ProgramKey.UNKNOWN, *FAVORITE_PROGRAMS)
 }
 
-PROGRAMS_TRANSLATION_KEYS_MAP = {
+PROGRAMS_TRANSLATION_KEYS_MAP: dict[ProgramKey, str] = {
     value: key for key, value in TRANSLATION_KEYS_PROGRAMS_MAP.items()
 }
 

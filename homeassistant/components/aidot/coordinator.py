@@ -163,6 +163,4 @@ class AidotDeviceManagerCoordinator(DataUpdateCoordinator[None]):
         ):
             if not set(device.identifiers) & identifiers:
                 _LOGGER.debug("Removing obsolete device entry %s", device.name)
-                device_reg.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_reg.async_remove_device(device.id)
