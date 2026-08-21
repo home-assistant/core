@@ -665,7 +665,6 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         key="service_days",
         translation_key="service_days",
         device_class=SensorDeviceClass.DURATION,
-        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement=UnitOfTime.DAYS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
@@ -735,6 +734,14 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
 
         self._attr_unique_id = f"{serial.replace('.', '_')}_{entity_description.key}"
         self._attr_device_info = device_info
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return whether the entity is available."""
+        return (
+            super().available and self.entity_description.key in self.coordinator.data
+        )
 
     @property
     @override
