@@ -1789,7 +1789,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     devices: Collection[DeviceEntry]
     _child_devices: ChildDeviceRegistryItems
     child_devices: Collection[ChildDeviceEntry]
-    deleted_devices: DeletedDeviceRegistryItems
+    _deleted_devices: DeletedDeviceRegistryItems
     _device_data: dict[str, DeviceEntry]
     _child_device_data: dict[str, ChildDeviceEntry]
 
@@ -1809,6 +1809,22 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             minor_version=STORAGE_VERSION_MINOR,
             serialize_in_event_loop=False,
         )
+
+    @property
+    def deleted_devices(self) -> DeletedDeviceRegistryItems:
+        """Return the deleted devices container (deprecated).
+
+        Can be removed in release 2027.9.
+        """
+        report_usage(
+            "accesses `device_registry.deleted_devices`, which is deprecated and "
+            "an internal implementation detail of the device registry",
+            breaks_in_ha_version="2027.9.0",
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.LOG,
+        )
+        return self._deleted_devices
 
     @overload
     def async_get(
@@ -2390,7 +2406,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if device is None:
             is_new = True
 
-            deleted_device = self.deleted_devices.get_entry(
+            deleted_device = self._deleted_devices.get_entry(
                 connections=connections,
                 identifiers=identifiers,
                 config_entry_id=config_entry_id,
@@ -2401,7 +2417,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 # rather than create a fresh device. Matching on the recorded domain keeps
                 # a chance identifier/connection collision from restoring another
                 # integration's device.
-                deleted_device = self.deleted_devices.get_orphaned_entry(
+                deleted_device = self._deleted_devices.get_orphaned_entry(
                     identifiers, connections, config_entry.domain
                 )
             if deleted_device is None:
@@ -2428,7 +2444,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
 
             else:
-                self.deleted_devices.pop(deleted_device.id)
+                self._deleted_devices.pop(deleted_device.id)
                 device = deleted_device.to_device_entry(
                     config_entry,
                     # Interpret not specifying a subentry as None
@@ -2739,14 +2755,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if child_device is None:
             is_new = True
 
-            deleted_device = self.deleted_devices.get_entry(
+            deleted_device = self._deleted_devices.get_entry(
                 identifiers=identifiers,
                 config_entry_id=config_entry_id,
             )
             if deleted_device is None:
                 # Fall back to an orphan (its owning config entry was removed), as
                 # for a full device
-                deleted_device = self.deleted_devices.get_orphaned_entry(
+                deleted_device = self._deleted_devices.get_orphaned_entry(
                     identifiers, None, domain
                 )
             if deleted_device is None:
@@ -2768,7 +2784,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     parent_device_id=parent.id,
                 )
             else:
-                self.deleted_devices.pop(deleted_device.id)
+                self._deleted_devices.pop(deleted_device.id)
                 child_device = deleted_device.to_child_device_entry(
                     config_entry,
                     effective_config_subentry_id,
@@ -3385,13 +3401,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             match_identifiers = added_identifiers
             match_connections = added_connections
         # A deleted device holding an identity the device now owns can never restore
-        for deleted_device_id in self.deleted_devices.get_colliding_device_ids(
+        for deleted_device_id in self._deleted_devices.get_colliding_device_ids(
             match_identifiers or set(),
             match_connections or set(),
             config_entry_id=effective_config_entry_id,
             exclude_device_id=None,
         ):
-            del self.deleted_devices[deleted_device_id]
+            del self._deleted_devices[deleted_device_id]
 
         # If its only run time attributes (suggested_area)
         # that do not get saved we do not want to write
@@ -3577,13 +3593,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         # A deleted device holding an identity the child device now owns can never
         # restore
-        for deleted_device_id in self.deleted_devices.get_colliding_device_ids(
+        for deleted_device_id in self._deleted_devices.get_colliding_device_ids(
             added_identifiers or set(),
             set(),
             config_entry_id=old.config_entry_id,
             exclude_device_id=None,
         ):
-            del self.deleted_devices[deleted_device_id]
+            del self._deleted_devices[deleted_device_id]
 
         self.async_schedule_save()
 
@@ -3884,7 +3900,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         elif not device.has_composite_identifiers:
             identifiers = device.identifiers | identifiers
             connections = device.connections | connections
-        colliding = self.deleted_devices.get_colliding_device_ids(
+        colliding = self._deleted_devices.get_colliding_device_ids(
             identifiers,
             connections,
             config_entry_id=device.config_entry_id,
@@ -3899,7 +3915,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 deleted_device_id,
                 device.id,
             )
-            del self.deleted_devices[deleted_device_id]
+            del self._deleted_devices[deleted_device_id]
         self.async_schedule_save()
 
     @callback
@@ -4055,7 +4071,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._async_remove_child_device(child)
         device = self._devices.pop(device_id)
         config_entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
-        self.deleted_devices[device_id] = DeletedDeviceEntry(
+        self._deleted_devices[device_id] = DeletedDeviceEntry(
             area_id=device.area_id,
             config_entry_id=device.config_entry_id,
             config_subentry_id=device.config_subentry_id,
@@ -4089,7 +4105,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         config_entry = self.hass.config_entries.async_get_entry(
             child_device.config_entry_id
         )
-        self.deleted_devices[child_device.id] = DeletedDeviceEntry(
+        self._deleted_devices[child_device.id] = DeletedDeviceEntry(
             area_id=child_device.area_id,
             config_entry_id=child_device.config_entry_id,
             config_subentry_id=child_device.config_subentry_id,
@@ -4266,7 +4282,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self.devices = _DeprecatedDeviceRegistryItemsView(self._devices)
         self._child_devices = child_devices
         self.child_devices = self._child_devices.values()
-        self.deleted_devices = deleted_devices
+        self._deleted_devices = deleted_devices
         self._device_data = devices.data
         self._child_device_data = child_devices.data
 
@@ -4297,7 +4313,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ],
             "deleted_devices": [
                 entry.as_storage_fragment
-                for entry in list(self.deleted_devices.values())
+                for entry in list(self._deleted_devices.values())
             ],
         }
 
@@ -4325,7 +4341,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # device from the same integration is orphaned, drop any existing orphan
             # it overlaps so the newest one wins deterministically instead of shadowing
             # it.
-            for existing in list(self.deleted_devices.values()):
+            for existing in list(self._deleted_devices.values()):
                 if (
                     existing.config_entry_id is None
                     and existing.domain == domain
@@ -4334,8 +4350,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                         or existing.identifiers & deleted_device.identifiers
                     )
                 ):
-                    del self.deleted_devices[existing.id]
-        self.deleted_devices[deleted_device.id] = attr.evolve(
+                    del self._deleted_devices[existing.id]
+        self._deleted_devices[deleted_device.id] = attr.evolve(
             deleted_device,
             config_entry_id=None,
             config_subentry_id=None,
@@ -4384,7 +4400,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 and pending_move.config_entry_id == config_entry_id
             ):
                 self._devices[device.id] = attr.evolve(device, pending_move=None)
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if deleted_device.config_entry_id != config_entry_id:
                 continue
             self._async_orphan_deleted_device(deleted_device, domain, now_time)
@@ -4419,7 +4435,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 and pending_move.config_subentry_id == config_subentry_id
             ):
                 self._devices[device.id] = attr.evolve(device, pending_move=None)
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if (
                 deleted_device.config_entry_id != config_entry_id
                 or deleted_device.config_subentry_id != config_subentry_id
@@ -4435,7 +4451,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         growing without bound.
         """
         now_time = time.time()
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if deleted_device.orphaned_timestamp is None:
                 continue
 
@@ -4443,7 +4459,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 deleted_device.orphaned_timestamp + ORPHANED_DEVICE_KEEP_SECONDS
                 < now_time
             ):
-                del self.deleted_devices[deleted_device.id]
+                del self._deleted_devices[deleted_device.id]
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
@@ -4452,10 +4468,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._async_update_device(device.id, area_id=None)
         for child_device in self._child_devices.get_devices_for_area_id(area_id):
             self._async_update_child_device(child_device.id, area_id=None)
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if deleted_device.area_id != area_id:
                 continue
-            self.deleted_devices[deleted_device.id] = attr.evolve(
+            self._deleted_devices[deleted_device.id] = attr.evolve(
                 deleted_device, area_id=None
             )
             self.async_schedule_save()
@@ -4469,10 +4485,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._async_update_child_device(
                 child_device.id, labels=child_device.labels - {label_id}
             )
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if label_id not in deleted_device.labels:
                 continue
-            self.deleted_devices[deleted_device.id] = attr.evolve(
+            self._deleted_devices[deleted_device.id] = attr.evolve(
                 deleted_device, labels=deleted_device.labels - {label_id}
             )
             self.async_schedule_save()
