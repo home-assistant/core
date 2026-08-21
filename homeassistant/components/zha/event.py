@@ -1,12 +1,9 @@
 """Events on Zigbee Home Automation networks."""
 
-from __future__ import annotations
-
 import functools
-from typing import Any, cast
+from typing import Any, cast, override
 
-from zha.application.platforms.event import BaseEvent, EntityStateChangedEvent
-from zha.const import STATE_CHANGED
+from zha.application.platforms.event import BaseEvent, EntityEventTriggeredEvent
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
 from homeassistant.config_entries import ConfigEntry
@@ -43,7 +40,6 @@ async def async_setup_entry(
     config_entry.async_on_unload(unsub)
 
 
-# pylint: disable-next=hass-invalid-inheritance # needs fixing
 class Event(ZHAEntity, EventEntity):
     """ZHA sensor."""
 
@@ -57,13 +53,18 @@ class Event(ZHAEntity, EventEntity):
 
         self._attr_event_types = entity.event_types
 
+    @override
+    async def async_added_to_hass(self) -> None:
+        await super().async_added_to_hass()
+        entity = cast(BaseEvent, self.entity_data.entity)
+        self._unsubs.append(
+            entity.on_event(EntityEventTriggeredEvent.event, self._handle_entity_events)
+        )
+
     @callback
-    def _handle_entity_events(self, event: Any) -> None:
+    def _handle_entity_events(self, data: EntityEventTriggeredEvent) -> None:
         """Entity state changed."""
 
-        self.debug("Handling event from entity: %s", event)
-        if isinstance(event, EntityStateChangedEvent) and event.event == STATE_CHANGED:
-            state = self.entity_data.entity.state
-            if event_type := state.get("event_type"):
-                self._trigger_event(event_type, state.get("event_attributes"))
-                self.async_write_ha_state()
+        self.debug("Handling event from entity: %s", data.triggered.event_type)
+        self._trigger_event(data.triggered.event_type, data.triggered.event_attributes)
+        self.async_write_ha_state()
