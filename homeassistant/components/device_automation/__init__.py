@@ -240,7 +240,7 @@ async def async_get_device_automations(
     entity_registry = er.async_get(hass)
     domain_devices: dict[str, set[str]] = {}
     device_entities_domains: dict[str, set[str]] = {}
-    match_device_ids = set(device_ids or device_registry.devices)
+    match_device_ids = set(device_ids or device_registry._devices)  # noqa: SLF001
     combined_results: dict[str, list[dict[str, Any]]] = {}
 
     for device_id in match_device_ids:

@@ -7,7 +7,7 @@ from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 
@@ -84,9 +84,12 @@ async def async_unload_entry(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: UnifiConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: UnifiConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove config entry from a device."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     hub = config_entry.runtime_data
     return not any(
         identifier in hub.api.devices for _, identifier in device_entry.connections
