@@ -103,7 +103,9 @@ async def test_setup_creates_device(
 ) -> None:
     """Test that setup registers a device in the device registry."""
     dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, TEST_UNIQUE_ID)})
+    device = dev_reg.async_get_device_by_identifier(
+        (DOMAIN, TEST_UNIQUE_ID), setup_integration.entry_id
+    )
 
     assert device is not None
     assert device.manufacturer == "ALLNET"

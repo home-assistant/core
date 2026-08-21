@@ -11,16 +11,16 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
     PERCENTAGE,
+    UnitOfDensity,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
     UnitOfEnergy,
     UnitOfFrequency,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
@@ -57,11 +57,11 @@ _UNIT_MAP: dict[str, _UnitMapping] = {
     ),
     "ppm": _UnitMapping(
         SensorDeviceClass.CO2,
-        CONCENTRATION_PARTS_PER_MILLION,
+        UnitOfRatio.PARTS_PER_MILLION,
         SensorStateClass.MEASUREMENT,
     ),
     "µg/m³": _UnitMapping(
-        None, CONCENTRATION_MICROGRAMS_PER_CUBIC_METER, SensorStateClass.MEASUREMENT
+        None, UnitOfDensity.MICROGRAMS_PER_CUBIC_METER, SensorStateClass.MEASUREMENT
     ),
     "pt./cm³": _UnitMapping(None, "pt./cm³", SensorStateClass.MEASUREMENT),
     "µm": _UnitMapping(None, "µm", SensorStateClass.MEASUREMENT),
@@ -132,7 +132,7 @@ def _resolve_mapping(channel: Channel) -> _UnitMapping:
         pm_class = _pm_device_class(channel.name)
         return _UnitMapping(
             pm_class,
-            CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+            UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
             SensorStateClass.MEASUREMENT,
         )
     return mapping
