@@ -240,8 +240,8 @@
       "title": "TrueNAS CE migration — rollback available"
     },
     "migration_rollback_failed": {
-      "title": "TrueNAS CE migration rollback failed",
-      "description": "Rolling back the TrueNAS CE migration for {name} failed partway through. The integration may be left in an inconsistent state — check the Home Assistant logs for details, then try pressing the rollback button again or reinstalling the integration."
+      "description": "Rolling back the TrueNAS CE migration for {name} failed partway through. The integration may be left in an inconsistent state — check the Home Assistant logs for details, then try pressing the rollback button again or reinstalling the integration.",
+      "title": "TrueNAS CE migration rollback failed"
     }
   }
 }
