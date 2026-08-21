@@ -21,14 +21,14 @@
         "data_description": {
           "api_secret": "Secret you received from Threema",
           "gateway_id": "ID of your Gateway, including '*', e.g.: *ABCD123",
-          "private_key": "Private key, including 'private:' prefix",
-          "public_key": "Public key, including 'public:' prefix"
+          "private_key": "Private key as hex string (64 characters)",
+          "public_key": "Public key as hex string (64 characters)"
         },
         "description": "Enter your Threema Gateway ID and secret obtained from gateway.threema.ch.",
         "title": "Gateway credentials"
       },
       "setup_new": {
-        "description": "Your keys have been generated. Save them now before continuing!\n\nPublic key: `{public_key}`\nPrivate key: `{private_key}`\n\nWhen registering at gateway.threema.ch, paste only the hex part of the public key (without the `public:` prefix). Store the private key securely.",
+        "description": "Your keys have been generated. Save them now before continuing!\n\nPublic key: `{public_key}`\nPrivate key: `{private_key}`\n\nWhen registering at gateway.threema.ch, paste the public key as shown above. Store the private key securely — it cannot be recovered.",
         "title": "Keys generated"
       },
       "user": {

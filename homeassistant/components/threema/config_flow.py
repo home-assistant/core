@@ -17,6 +17,11 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_NAME
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .client import (
     ThreemaAPIClient,
@@ -109,12 +114,8 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._gateway_id = gateway_id
                 self._api_secret = user_input[CONF_API_SECRET].strip()
 
-                private_key = user_input.get(CONF_PRIVATE_KEY, "").strip() or None
-                if private_key:
-                    self._private_key = private_key
-                public_key = user_input.get(CONF_PUBLIC_KEY, "").strip() or None
-                if public_key:
-                    self._public_key = public_key
+                self._private_key = user_input.get(CONF_PRIVATE_KEY, "").strip() or None
+                self._public_key = user_input.get(CONF_PUBLIC_KEY, "").strip() or None
 
                 client = ThreemaAPIClient(
                     self.hass,
@@ -150,8 +151,12 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
         schema = vol.Schema(
             {
                 vol.Required(CONF_GATEWAY_ID): str,
-                vol.Required(CONF_API_SECRET): str,
-                vol.Optional(CONF_PRIVATE_KEY, default=self._private_key or ""): str,
+                vol.Required(CONF_API_SECRET): TextSelector(
+                    TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                ),
+                vol.Optional(
+                    CONF_PRIVATE_KEY, default=self._private_key or ""
+                ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
                 vol.Optional(CONF_PUBLIC_KEY, default=self._public_key or ""): str,
             }
         )
