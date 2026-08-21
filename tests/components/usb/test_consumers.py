@@ -173,9 +173,14 @@ async def test_config_entry_upb_url(
     [
         pytest.param(ConfigEntryState.LOADED, True, id="loaded"),
         pytest.param(ConfigEntryState.SETUP_RETRY, True, id="setup_retry"),
+        pytest.param(ConfigEntryState.SETUP_IN_PROGRESS, True, id="setup_in_progress"),
+        pytest.param(
+            ConfigEntryState.UNLOAD_IN_PROGRESS, True, id="unload_in_progress"
+        ),
         pytest.param(ConfigEntryState.FAILED_UNLOAD, True, id="failed_unload"),
         pytest.param(ConfigEntryState.NOT_LOADED, False, id="not_loaded"),
         pytest.param(ConfigEntryState.SETUP_ERROR, False, id="setup_error"),
+        pytest.param(ConfigEntryState.MIGRATION_ERROR, False, id="migration_error"),
     ],
 )
 async def test_config_entry_active_states(
