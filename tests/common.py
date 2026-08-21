@@ -761,7 +761,7 @@ def mock_device_registry(
     registry = dr.DeviceRegistry(hass)
     registry._devices = dr.ActiveDeviceRegistryItems()
     registry.devices = registry._devices.values()
-    registry._device_data = registry.devices.data
+    registry._device_data = registry._devices.data
     registry._child_devices = dr.ChildDeviceRegistryItems()
     registry.child_devices = registry._child_devices.values()
     registry._child_device_data = registry._child_devices.data
