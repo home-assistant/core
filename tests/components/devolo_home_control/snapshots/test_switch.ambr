@@ -2,7 +2,7 @@
 # name: test_switch
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_test',

@@ -2,7 +2,7 @@
 
 import logging
 import os
-from typing import Any
+from typing import Any, override
 
 from batinfo import Batteries
 import voluptuous as vol
@@ -101,6 +101,7 @@ class LinuxBatterySensor(SensorEntity):
         self._system = system
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the sensor."""
         if self._system == "android":

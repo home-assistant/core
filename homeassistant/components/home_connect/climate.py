@@ -1,11 +1,11 @@
 """Provides climate entities for Home Connect."""
 
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey
 from aiohomeconnect.model.error import HomeConnectError
-from aiohomeconnect.model.program import Execution
+from aiohomeconnect.model.program import Execution, ProgramDefinitionConstraints
 
 from homeassistant.components.climate import (
     FAN_AUTO,
@@ -14,13 +14,13 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     HVACMode,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .common import setup_home_connect_entry
-from .const import BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN
+from .const import BSH_POWER_ON, BSH_POWER_STANDBY, DOMAIN, UNIT_MAP
 from .coordinator import HomeConnectApplianceCoordinator, HomeConnectConfigEntry
 from .entity import HomeConnectEntity
 from .utils import get_dict_from_home_connect_error
@@ -111,10 +111,6 @@ async def async_setup_entry(
 class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
     """Representation of a Home Connect climate entity."""
 
-    # Note: The base class requires this to be set even though this
-    # class doesn't support any temperature related functionality.
-    _attr_temperature_unit = UnitOfTemperature.CELSIUS
-
     def __init__(
         self,
         coordinator: HomeConnectApplianceCoordinator,
@@ -127,6 +123,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     @property
+    @override
     def hvac_modes(self) -> list[HVACMode]:
         """Return the list of available hvac operation modes."""
         hvac_modes = [
@@ -144,6 +141,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         return hvac_modes
 
     @property
+    @override
     def preset_modes(self) -> list[str] | None:
         """Return a list of available preset modes."""
         active_clean = (
@@ -156,6 +154,71 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     @property
+    @override
+    def target_temperature(self) -> float | None:
+        """Return the temperature we try to reach."""
+        if event := self.appliance.events.get(
+            EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_SETPOINT_TEMPERATURE
+        ):
+            return cast(float, event.value)
+        return None
+
+    @property
+    @override
+    def temperature_unit(self) -> str:
+        """Return the unit of measurement."""
+        if (
+            (
+                option_definition := self.appliance.options.get(
+                    OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+                )
+            )
+            and (proto_unit := option_definition.unit) is not None
+            and (unit := UNIT_MAP.get(proto_unit)) is not None
+        ):
+            return unit
+        return UnitOfTemperature.CELSIUS
+
+    def _get_temperature_constraints(self) -> ProgramDefinitionConstraints | None:
+        """Get the temperature constraints for the appliance."""
+        if option_definition := self.appliance.options.get(
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+        ):
+            return option_definition.constraints
+        return None
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        if (
+            option_constraints := self._get_temperature_constraints()
+        ) and option_constraints.min is not None:
+            return option_constraints.min
+        return super().min_temp
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        if (
+            option_constraints := self._get_temperature_constraints()
+        ) and option_constraints.max is not None:
+            return option_constraints.max
+        return super().max_temp
+
+    @property
+    @override
+    def target_temperature_step(self) -> float | None:
+        """Return the temperature step."""
+        if (
+            option_constraints := self._get_temperature_constraints()
+        ) and option_constraints.step_size is not None:
+            return option_constraints.step_size
+        return None
+
+    @property
+    @override
     def supported_features(self) -> ClimateEntityFeature:
         """Return the list of supported features."""
         features = ClimateEntityFeature(0)
@@ -163,6 +226,10 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             features |= ClimateEntityFeature.TURN_ON | ClimateEntityFeature.TURN_OFF
         if self.preset_modes:
             features |= ClimateEntityFeature.PRESET_MODE
+        if self.appliance.options.get(
+            OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE
+        ):
+            features |= ClimateEntityFeature.TARGET_TEMPERATURE
         if self.appliance.options.get(
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE
         ):
@@ -177,6 +244,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             "Updated %s (fan mode), new state: %s", self.entity_id, self.fan_mode
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -198,7 +266,14 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 EventKey.BSH_COMMON_SETTING_POWER_STATE,
             )
         )
+        self.async_on_remove(
+            self.coordinator.async_add_listener(
+                self._handle_coordinator_update,
+                EventKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_OPTION_SETPOINT_TEMPERATURE,
+            )
+        )
 
+    @override
     def update_native_value(self) -> None:
         """Set the HVAC Mode and preset mode values."""
         event = self.appliance.events.get(EventKey.BSH_COMMON_ROOT_ACTIVE_PROGRAM)
@@ -221,6 +296,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     @property
+    @override
     def fan_mode(self) -> str | None:
         """Return the fan setting."""
         option_value = None
@@ -235,6 +311,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         )
 
     @property
+    @override
     def fan_modes(self) -> list[str] | None:
         """Return the list of available fan modes."""
         if (
@@ -257,6 +334,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             return list(FAN_MODES_OPTIONS.keys())
         return None
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Switch the device on."""
         try:
@@ -275,6 +353,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
                 },
             ) from err
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Switch the device off."""
         try:
@@ -310,6 +389,7 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
             ) from err
         _LOGGER.debug("Updated %s, new state: %s", self.entity_id, self.state)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target hvac mode."""
         if hvac_mode is HVACMode.OFF:
@@ -317,13 +397,24 @@ class HomeConnectAirConditioningEntity(HomeConnectEntity, ClimateEntity):
         else:
             await self._set_program(HVAC_MODES_PROGRAMS_MAP[hvac_mode])
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         await self._set_program(PRESET_MODES_PROGRAMS_MAP[preset_mode])
 
+    @override
+    async def async_set_temperature(self, **kwargs: Any) -> None:
+        """Set new target temperature."""
+        if (temp := kwargs.get(ATTR_TEMPERATURE)) is not None:
+            await self.async_set_option_with_key(
+                OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_SETPOINT_TEMPERATURE,
+                temp,
+            )
+
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set new target fan mode."""
-        await super().async_set_option_with_key(
+        await self.async_set_option_with_key(
             OptionKey.HEATING_VENTILATION_AIR_CONDITIONING_AIR_CONDITIONER_FAN_SPEED_MODE,
             FAN_MODES_OPTIONS[fan_mode],
         )

@@ -29,6 +29,7 @@ AUTH_METHODS = [AUTH_PAM, AUTH_PVE, AUTH_OTHER]
 
 DEFAULT_PORT = 8006
 DEFAULT_REALM = AUTH_PAM
+DEFAULT_TIMEOUT = 30
 DEFAULT_VERIFY_SSL = True
 TYPE_VM = 0
 TYPE_CONTAINER = 1
@@ -40,4 +41,6 @@ class ProxmoxPermission(StrEnum):
 
     POWER = "VM.PowerMgmt"
     SNAPSHOT = "VM.Snapshot"
+    SYSAUDIT = "Sys.Audit"
     SYSPOWER = "Sys.PowerMgmt"
+    VMAUDIT = "VM.Audit"

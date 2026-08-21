@@ -13,7 +13,6 @@ from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntityFeature,
     AlarmControlPanelState,
 )
-from homeassistant.components.demo import alarm_control_panel as demo
 from homeassistant.components.manual.alarm_control_panel import (
     ATTR_NEXT_STATE,
     ATTR_PREVIOUS_STATE,
@@ -36,14 +35,6 @@ from tests.common import async_fire_time_changed, mock_component, mock_restore_c
 from tests.components.alarm_control_panel import common
 
 CODE = "HELLO_CODE"
-
-
-async def test_setup_demo_platform(hass: HomeAssistant) -> None:
-    """Test setup."""
-    mock = MagicMock()
-    add_entities = mock.MagicMock()
-    await demo.async_setup_entry(hass, {}, add_entities)
-    assert add_entities.call_count == 1
 
 
 @pytest.mark.parametrize(
@@ -239,7 +230,7 @@ async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
 
-    with pytest.raises(ServiceValidationError, match=r"^Invalid alarm code provided$"):
+    with pytest.raises(ServiceValidationError) as err:
         await hass.services.async_call(
             alarm_control_panel.DOMAIN,
             service,
@@ -249,6 +240,7 @@ async def test_with_invalid_code(hass: HomeAssistant, service, expected_state) -
             },
             blocking=True,
         )
+    assert err.value.translation_key == "invalid_code"
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.DISARMED
 
@@ -1107,8 +1099,9 @@ async def test_disarm_during_trigger_with_invalid_code(hass: HomeAssistant) -> N
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.PENDING
 
-    with pytest.raises(ServiceValidationError, match=r"^Invalid alarm code provided$"):
+    with pytest.raises(ServiceValidationError) as err:
         await common.async_alarm_disarm(hass, entity_id=entity_id)
+    assert err.value.translation_key == "invalid_code"
 
     assert hass.states.get(entity_id).state == AlarmControlPanelState.PENDING
 
@@ -1225,8 +1218,9 @@ async def test_disarm_with_template_code(hass: HomeAssistant) -> None:
     state = hass.states.get(entity_id)
     assert state.state == AlarmControlPanelState.ARMED_HOME
 
-    with pytest.raises(ServiceValidationError, match=r"^Invalid alarm code provided$"):
+    with pytest.raises(ServiceValidationError) as err:
         await common.async_alarm_disarm(hass, "def")
+    assert err.value.translation_key == "invalid_code"
 
     state = hass.states.get(entity_id)
     assert state.state == AlarmControlPanelState.ARMED_HOME

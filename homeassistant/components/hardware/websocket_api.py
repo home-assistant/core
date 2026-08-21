@@ -34,8 +34,8 @@ async def ws_info(
     """Return hardware info."""
     hardware_info = []
 
-    hardware_platform = hass.data[DATA_HARDWARE].hardware_platform
-    for platform in hardware_platform.values():
+    platforms = await hass.data[DATA_HARDWARE].hardware_platforms.async_get_platforms()
+    for platform in platforms.values():
         if hasattr(platform, "async_info"):
             with contextlib.suppress(HomeAssistantError):
                 hardware_info.extend([asdict(hw) for hw in platform.async_info(hass)])

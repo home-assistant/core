@@ -1,6 +1,6 @@
 """The conversation platform for the Ollama integration."""
 
-from typing import Literal
+from typing import Literal, override
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -46,21 +46,25 @@ class OllamaConversationEntity(
                 conversation.ConversationEntityFeature.CONTROL
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
         conversation.async_set_agent(self.hass, self.entry, self)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """When entity will be removed from Home Assistant."""
         conversation.async_unset_agent(self.hass, self.entry)
         await super().async_will_remove_from_hass()
 
     @property
+    @override
     def supported_languages(self) -> list[str] | Literal["*"]:
         """Return a list of supported languages."""
         return MATCH_ALL
 
+    @override
     async def _async_handle_message(
         self,
         user_input: conversation.ConversationInput,

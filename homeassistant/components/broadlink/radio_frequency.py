@@ -1,6 +1,7 @@
 """Radio Frequency platform for Broadlink."""
 
 import logging
+from typing import override
 
 from broadlink.exceptions import BroadlinkException
 from rf_protocols import RadioFrequencyCommand
@@ -92,7 +93,7 @@ class BroadlinkRadioFrequency(BroadlinkEntity, RadioFrequencyTransmitterEntity):
     """Representation of a Broadlink RF transmitter."""
 
     _attr_has_entity_name = True
-    _attr_name = None
+    _attr_translation_key = "rf_transmitter"
 
     def __init__(self, device: BroadlinkDevice) -> None:
         """Initialize the entity."""
@@ -100,10 +101,12 @@ class BroadlinkRadioFrequency(BroadlinkEntity, RadioFrequencyTransmitterEntity):
         self._attr_unique_id = device.unique_id
 
     @property
+    @override
     def supported_frequency_ranges(self) -> list[tuple[int, int]]:
         """Return the Broadlink-supported narrow RF bands."""
         return SUPPORTED_FREQUENCY_RANGES
 
+    @override
     async def async_send_command(self, command: RadioFrequencyCommand) -> None:
         """Encode an OOK command and transmit it via the Broadlink device."""
         type_byte = _type_byte_for_frequency(command.frequency)

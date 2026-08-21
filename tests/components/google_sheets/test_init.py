@@ -235,7 +235,7 @@ async def test_setup_oauth_reauth_error(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_async_start_reauth.assert_called_once_with(hass)
+    mock_async_start_reauth.assert_called_once_with(hass, None, None)
 
 
 async def test_setup_oauth_transient_error(

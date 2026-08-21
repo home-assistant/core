@@ -16,6 +16,7 @@ from homeassistant.components.homeassistant_hardware.util import (
     FirmwareInfo,
     OwningIntegration,
 )
+from homeassistant.components.zha import DOMAIN
 from homeassistant.components.zha.homeassistant_hardware import get_firmware_info
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -28,7 +29,7 @@ async def test_get_firmware_info_normal(hass: HomeAssistant) -> None:
     """Test `get_firmware_info`."""
 
     zha = MockConfigEntry(
-        domain="zha",
+        domain=DOMAIN,
         unique_id="some_unique_id",
         data={
             "device": {
@@ -87,7 +88,7 @@ async def test_get_firmware_info_errors(
 ) -> None:
     """Test `get_firmware_info` with config entry data format errors."""
     zha = MockConfigEntry(
-        domain="zha",
+        domain=DOMAIN,
         unique_id="some_unique_id",
         data=data,
         version=5,

@@ -442,7 +442,7 @@ async def test_form_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
-        domain="bosch_shc", unique_id="test-mac", data={"host": "0.0.0.0"}
+        domain=DOMAIN, unique_id="test-mac", data={"host": "0.0.0.0"}
     )
     entry.add_to_hass(hass)
 
@@ -562,7 +562,7 @@ async def test_zeroconf_already_configured(hass: HomeAssistant) -> None:
     """Test we get the form."""
 
     entry = MockConfigEntry(
-        domain="bosch_shc", unique_id="test-mac", data={"host": "0.0.0.0"}
+        domain=DOMAIN, unique_id="test-mac", data={"host": "0.0.0.0"}
     )
     entry.add_to_hass(hass)
 

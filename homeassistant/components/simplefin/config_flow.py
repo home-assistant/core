@@ -1,6 +1,6 @@
 """Config flow for SimpleFIN integration."""
 
-from typing import Any
+from typing import Any, override
 
 from simplefin4py import SimpleFin
 from simplefin4py.exceptions import (
@@ -20,6 +20,7 @@ from .const import CONF_ACCESS_URL, DOMAIN, LOGGER
 class SimpleFinConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for the initial setup of a SimpleFIN integration."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

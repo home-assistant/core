@@ -1,7 +1,7 @@
 """Platform for the opengarage.io binary sensor component."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
@@ -55,11 +55,13 @@ class OpenGarageBinarySensor(OpenGarageEntity, BinarySensorEntity):
         super().__init__(coordinator, device_id, description)
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._available
 
     @callback
+    @override
     def _update_attr(self) -> None:
         """Handle updated data from the coordinator."""
         state = self.coordinator.data.get(self.entity_description.key)

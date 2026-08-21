@@ -225,6 +225,7 @@ async def test_sending_location(
             "altitude": 50.0,
             "course": 60,
             "speed": 70,
+            "tracking_type": "position",
             "vertical_accuracy": 80,
         }
         | expected_attributes
@@ -262,6 +263,7 @@ async def test_sending_location(
         "altitude": 5.0,
         "course": 6,
         "speed": 7,
+        "tracking_type": "position",
         "vertical_accuracy": 8,
         "in_zones": [],
     }
@@ -347,6 +349,7 @@ async def test_restoring_location(
                 "longitude": 20.0,
                 "gps_accuracy": 30,
                 "in_zones": ["zone.home"],
+                "tracking_type": "position",
             },
             {
                 "data": {
@@ -373,6 +376,7 @@ async def test_restoring_location(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": [],
+                "tracking_type": "position",
             },
             {
                 "data": {
@@ -399,6 +403,7 @@ async def test_restoring_location(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": ["zone.office"],
+                "tracking_type": "position",
             },
             {
                 "data": {
@@ -483,6 +488,7 @@ async def test_saving_state(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": ["zone.home"],
+                "tracking_type": "position",
             },
         ),
         # Coordinates outside any zone
@@ -501,6 +507,7 @@ async def test_saving_state(
                 "gps_accuracy": 3,
                 "battery_level": 4,
                 "in_zones": [],
+                "tracking_type": "position",
             },
         ),
         # Last update was a named location only (no coords)
@@ -523,6 +530,7 @@ async def test_saving_state(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": [],
+                "tracking_type": "position",
             },
         ),
         # Last update was an in_zones list (no coords)
@@ -545,6 +553,7 @@ async def test_saving_state(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": ["zone.office"],
+                "tracking_type": "position",
             },
         ),
         # Empty in_zones list - not_home
@@ -559,6 +568,7 @@ async def test_saving_state(
                 "source_type": "gps",
                 "battery_level": 40,
                 "in_zones": [],
+                "tracking_type": "position",
             },
         ),
     ],
@@ -620,6 +630,7 @@ async def test_restoring_state(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": ["zone.home"],
+                "tracking_type": "position",
             },
         ),
         # Coordinates outside any zone
@@ -641,6 +652,7 @@ async def test_restoring_state(
                 "gps_accuracy": 3,
                 "battery_level": 4,
                 "in_zones": [],
+                "tracking_type": "position",
             },
         ),
         # Last update was a named location only (no coords). The location name
@@ -666,6 +678,7 @@ async def test_restoring_state(
                 "speed": 70,
                 "vertical_accuracy": 80,
                 "in_zones": [],
+                "tracking_type": "position",
             },
         ),
     ],
@@ -762,4 +775,5 @@ async def test_restoring_state_invalid_extra_data(
         "friendly_name": "Test 1",
         "source_type": "gps",
         "in_zones": [],
+        "tracking_type": "position",
     }

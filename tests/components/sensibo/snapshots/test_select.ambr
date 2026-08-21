@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
       ]),
@@ -44,8 +44,8 @@
 # name: test_select[load_platforms0][select.hallway_hallway_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Hallway Light',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Hallway Light',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'off',
       ]),
@@ -65,7 +65,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'dim',
         'off',
@@ -104,8 +104,8 @@
 # name: test_select[load_platforms0][select.kitchen_kitchen_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Kitchen Light',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kitchen Light',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'on',
         'dim',
         'off',

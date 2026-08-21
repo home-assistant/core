@@ -32,7 +32,7 @@ async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) ->
     with patch("homeassistant.components.homekit.HomeKit") as mock_homekit:
         mock_homekit.return_value = homekit = Mock()
         type(homekit).async_start = AsyncMock()
-        assert await async_setup_component(hass, "homekit", {"homekit": {}})
+        assert await async_setup_component(hass, DOMAIN, {"homekit": {}})
     assert await async_setup_component(hass, "logbook", {})
     await hass.async_block_till_done()
 
@@ -74,6 +74,7 @@ async def test_humanify_homekit_changed_event(hass: HomeAssistant, hk_driver) ->
 async def test_bridge_with_triggers(
     hass: HomeAssistant,
     hk_driver,
+    demo_cleanup,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
