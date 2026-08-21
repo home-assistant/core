@@ -17,6 +17,7 @@
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_account": "Please ensure you reconfigure against the same account."
     },
     "create_entry": {
@@ -38,6 +39,16 @@
       "reauth_confirm": {
         "description": "The Home Connect integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "scopes": {
+        "data": {
+          "images_scope": "Images scope"
+        },
+        "data_description": {
+          "images_scope": "Allows Home Assistant to access images from your Home Connect devices."
+        },
+        "description": "Select the optional scopes you want to enable for Home Connect authentication.",
+        "title": "Scopes"
       }
     }
   },
@@ -1645,6 +1656,9 @@
     },
     "start_program": {
       "message": "Error starting program {program}: {error}"
+    },
+    "start_program_option_not_writable": {
+      "message": "Option {option} is not writable for program {program}"
     },
     "stop_program": {
       "message": "Error stopping program: {error}"
