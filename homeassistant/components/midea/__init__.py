@@ -20,9 +20,10 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from .const import CONF_KEY, CONF_SUBTYPE
 from .entity import MideaConfigEntry
 
-PLATFORMS: list[Platform] = [
+_PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
-    Platform.CLIMATE,
+    Platform.CLIMATE, 
+    Platform.HUMIDIFIER
 ]
 
 
