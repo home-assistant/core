@@ -247,7 +247,7 @@ async def test_get_image_http_log_credentials_redacted(
     assert f"Error retrieving proxied image from {url}" not in caplog.text
     assert (
         "Error retrieving proxied image from "
-        f"{url.replace('pass', 'xxxxxxxx').replace('vi', 'xxxx')}"
+        f"{url.replace('pass', 'xxxxxxxx').replace('vi', 'xxxx')}: TimeoutError"
     ) in caplog.text
 
 
@@ -307,6 +307,57 @@ async def test_get_image_http_exception_text_credentials_redacted(
     assert "usr51" not in caplog.text
     redacted = str(URL(url).with_user("xxxx").with_password("xxxxxxxx"))
     assert f"Error retrieving proxied image from {redacted}: {redacted}" in caplog.text
+
+
+# The malformed-URL paths below cannot be exercised through the HTTP proxy
+# flow because AiohttpClientMocker parses the URL itself, so the redaction
+# helpers are tested directly.
+@pytest.mark.parametrize(
+    ("url", "expected"),
+    [
+        pytest.param(
+            "http://vi:pass@example.com/image.jpg",
+            "http://xxxx:xxxxxxxx@example.com/image.jpg",
+            id="credentials",
+        ),
+        pytest.param(
+            "http://[invalid",
+            "[malformed URL redacted]",
+            id="malformed_url",
+        ),
+    ],
+)
+def test_redact_credentials(url: str, expected: str) -> None:
+    """Test URL credential redaction, including unparsable URLs."""
+    assert media_player._redact_credentials(url) == expected
+
+
+@pytest.mark.parametrize(
+    ("text", "url", "expected"),
+    [
+        pytest.param(
+            "error for http://victor:vi@example.com/a.jpg",
+            "http://victor:vi@example.com/a.jpg",
+            "error for http://xxxx:xxxxxxxx@example.com/a.jpg",
+            id="password_prefixes_username",
+        ),
+        pytest.param(
+            "error for http://vi:p%40ss@example.com/a.jpg (decoded p@ss)",
+            "http://vi:p%40ss@example.com/a.jpg",
+            "error for http://xxxx:xxxxxxxx@example.com/a.jpg (decoded xxxxxxxx)",
+            id="raw_and_decoded_password",
+        ),
+        pytest.param(
+            "anything",
+            "http://[invalid",
+            "[text redacted: malformed URL]",
+            id="malformed_url",
+        ),
+    ],
+)
+def test_redact_credentials_in_text(text: str, url: str, expected: str) -> None:
+    """Test exception-text credential redaction edge cases."""
+    assert media_player._redact_credentials_in_text(text, url) == expected
 
 
 @pytest.mark.parametrize(

@@ -1492,7 +1492,12 @@ def _image_response_appears_complete(
 
 def _redact_credentials(url: str) -> str:
     """Return url with any user/password replaced by placeholders."""
-    parts = URL(url)
+    # An unparsable URL can raise here while handling InvalidUrlClientError
+    # for that same URL; it must not escalate the logged failure into a 500.
+    try:
+        parts = URL(url)
+    except ValueError:
+        return "[malformed URL redacted]"
     if parts.user is not None:
         parts = parts.with_user("xxxx")
     if parts.password is not None:
@@ -1506,15 +1511,26 @@ def _redact_credentials_in_text(text: str, url: str) -> str:
     aiohttp exceptions can embed the request URL in their message, in either
     raw (percent-encoded) or decoded form, so both variants are replaced.
     """
-    parts = URL(url)
-    passwords = [
-        p for p in (parts.raw_password, parts.password) if p is not None and p != ""
+    try:
+        parts = URL(url)
+    except ValueError:
+        # The userinfo of an unparsable URL cannot be identified, so drop
+        # the text rather than risk leaking credentials through it.
+        return "[text redacted: malformed URL]"
+    replacements = [
+        (password, "xxxxxxxx")
+        for password in (parts.raw_password, parts.password)
+        if password is not None and password != ""
+    ] + [
+        (user, "xxxx")
+        for user in (parts.raw_user, parts.user)
+        if user is not None and user != ""
     ]
-    for password in passwords:
-        text = text.replace(password, "xxxxxxxx")
-    users = [u for u in (parts.raw_user, parts.user) if u is not None and u != ""]
-    for user in users:
-        text = text.replace(user, "xxxx")
+    # Longest first, so a secret that is a prefix of another cannot mangle it
+    for secret, placeholder in sorted(
+        replacements, key=lambda r: len(r[0]), reverse=True
+    ):
+        text = text.replace(secret, placeholder)
     return text
 
 
@@ -1550,6 +1566,7 @@ async def async_fetch_image(
         logger.warning(
             "Error retrieving proxied image from %s: %s",
             _redact_credentials(url),
-            _redact_credentials_in_text(str(err), url),
+            # str(TimeoutError()) is empty; fall back to the exception type
+            _redact_credentials_in_text(str(err), url) or type(err).__name__,
         )
         return None, None
