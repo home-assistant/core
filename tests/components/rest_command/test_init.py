@@ -41,6 +41,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.helpers import service
 
 from .conftest import TEST_URL, ComponentSetup
 
@@ -124,6 +125,8 @@ async def test_yaml_call_endpoint_takes_precedence(
         )
 
     assert mock_post.call_args.kwargs["data"] == b"YAML payload"
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert descriptions[DOMAIN][SERVICE_CALL_ENDPOINT]["fields"] == {}
 
 
 async def test_reload_yaml_call_endpoint_ownership(
@@ -161,6 +164,8 @@ async def test_reload_yaml_call_endpoint_ownership(
 
     assert mock_post.call_args.kwargs["data"] == b"Reloaded YAML payload"
     assert not hass.services.has_service(DOMAIN, "get_test")
+    descriptions = await service.async_get_all_descriptions(hass)
+    assert descriptions[DOMAIN][SERVICE_CALL_ENDPOINT]["fields"] == {}
 
 
 async def test_reload_restores_ui_call_endpoint(
@@ -205,6 +210,10 @@ async def test_reload_restores_ui_call_endpoint(
     )
 
     assert len(aioclient_mock.mock_calls) == 1
+    descriptions = await service.async_get_all_descriptions(hass)
+    fields = descriptions[DOMAIN][SERVICE_CALL_ENDPOINT]["fields"]
+    assert set(fields) == {ATTR_CONFIG_ENTRY_ID, CONF_PAYLOAD}
+    assert fields[ATTR_CONFIG_ENTRY_ID]["required"] is True
 
 
 async def test_setup_tests(

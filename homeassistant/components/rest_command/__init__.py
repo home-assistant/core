@@ -100,6 +100,19 @@ CALL_ENDPOINT_SCHEMA = vol.Schema(
     }
 )
 
+CALL_ENDPOINT_SERVICE_DESCRIPTION = {
+    "fields": {
+        ATTR_CONFIG_ENTRY_ID: {
+            "required": True,
+            "selector": {"config_entry": {"integration": DOMAIN}},
+        },
+        CONF_PAYLOAD: {
+            "example": '{"message": "The event occurred"}',
+            "selector": {"text": {"multiline": True}},
+        },
+    }
+}
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
@@ -125,6 +138,12 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_call_endpoint_handler,
             schema=CALL_ENDPOINT_SCHEMA,
             supports_response=SupportsResponse.OPTIONAL,
+        )
+        service.async_set_service_schema(
+            hass,
+            DOMAIN,
+            SERVICE_CALL_ENDPOINT,
+            CALL_ENDPOINT_SERVICE_DESCRIPTION,
         )
 
     async def reload_service_handler(call: ServiceCall) -> None:
@@ -183,6 +202,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_service_handler,
             supports_response=SupportsResponse.OPTIONAL,
         )
+        if name == SERVICE_CALL_ENDPOINT:
+            service.async_set_service_schema(hass, DOMAIN, name, {})
 
     async_register_call_endpoint()
     for name, command_config in config.get(DOMAIN, {}).items():
