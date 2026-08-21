@@ -83,17 +83,22 @@ async def test_upload_image_no_device_id_raises(
         )
 
 
-async def test_device_not_in_registry_skips(
+async def test_device_not_in_registry_raises(
     hass: HomeAssistant,
     mock_list_devices,
     mock_get_status,
     mock_setup_webhook,
 ) -> None:
-    """Test service skips when device_id is not found in device registry."""
+    """Test service raises when device_id is not found in device registry."""
     entry = await _setup(hass, mock_list_devices, mock_get_status)
-    with patch.object(
-        entry.runtime_data.api, "send_command", new_callable=AsyncMock
-    ) as mock_send:
+    with (
+        patch.object(
+            entry.runtime_data.api, "send_command", new_callable=AsyncMock
+        ) as mock_send,
+        pytest.raises(
+            ServiceValidationError, match="Device nonexistent-device-id not found"
+        ),
+    ):
         await hass.services.async_call(
             DOMAIN,
             AI_ART_FRAME_UPLOAD_IMAGE_SERVICE,

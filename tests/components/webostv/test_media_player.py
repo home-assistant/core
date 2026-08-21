@@ -62,6 +62,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_UP,
     STATE_OFF,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
@@ -323,7 +324,9 @@ async def test_device_info_startup_off(
 
     assert hass.states.get(ENTITY_ID).state == STATE_OFF
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.unique_id), entry.entry_id
+    )
 
     assert device
     assert device.identifiers == {(DOMAIN, entry.unique_id)}
@@ -362,7 +365,9 @@ async def test_entity_attributes(
     assert attrs[ATTR_MEDIA_TITLE] == "Channel Name 2"
 
     # Device Info
-    device = device_registry.async_get_device(identifiers={(DOMAIN, entry.unique_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.unique_id), entry.entry_id
+    )
     assert device == snapshot
 
     # Sound output when off
@@ -498,6 +503,30 @@ async def test_client_disconnected(
 ) -> None:
     """Test error not raised when client is disconnected."""
     await setup_webostv(hass)
+
+    # Support turn on
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": "webostv.turn_on",
+                        "entity_id": ENTITY_ID,
+                    },
+                    "action": {
+                        "service": "test.automation",
+                        "data_template": {
+                            "some": ENTITY_ID,
+                            "id": "{{ trigger.id }}",
+                        },
+                    },
+                },
+            ],
+        },
+    )
+
     client.is_connected.return_value = False
     client.connect.side_effect = TimeoutError
 
@@ -520,6 +549,14 @@ async def test_client_key_update_on_connect(
     await mock_scan_interval(hass, freezer)
 
     assert config_entry.data[CONF_CLIENT_SECRET] == client.client_key
+
+    # validate that the key is not updated if the client is already connected
+    client.is_connected.return_value = True
+    client.client_key = "old_key"
+
+    await mock_scan_interval(hass, freezer)
+
+    assert config_entry.data[CONF_CLIENT_SECRET] == "new_key"
 
 
 @pytest.mark.parametrize(
@@ -879,23 +916,41 @@ async def test_reauth_reconnect(
 
 async def test_update_media_state(hass: HomeAssistant, client) -> None:
     """Test updating media state."""
+    client.tv_state.media_state = []
     await setup_webostv(hass)
 
+    # on but no media state, assumed state is set
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.ON
+    assert state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
+
+    # playing state, assumed state is not set
     client.tv_state.media_state = [{"playState": "playing"}]
     await client.mock_state_update()
-    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PLAYING
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.PLAYING
+    assert not state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
 
+    # paused state, assumed state is not set
     client.tv_state.media_state = [{"playState": "paused"}]
     await client.mock_state_update()
-    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.PAUSED
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.PAUSED
+    assert not state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
 
+    # unloaded state, assumed state is not set
     client.tv_state.media_state = [{"playState": "unloaded"}]
     await client.mock_state_update()
-    assert hass.states.get(ENTITY_ID).state == MediaPlayerState.IDLE
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.IDLE
+    assert not state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
 
+    # off state, assumed state is not set
     client.tv_state.is_on = False
     await client.mock_state_update()
-    assert hass.states.get(ENTITY_ID).state == STATE_OFF
+    assert (state := hass.states.get(ENTITY_ID))
+    assert state.state == MediaPlayerState.OFF
+    assert not state.attributes.get(EntityStateAttribute.ASSUMED_STATE)
 
 
 async def test_availability(
@@ -916,7 +971,7 @@ async def test_availability(
     await mock_scan_interval(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
-    unavailable_log = f"LG webOS TV entity {ENTITY_ID} is unavailable"
+    unavailable_log = f"Device {TV_NAME} is unavailable"
     assert unavailable_log in caplog.text
 
     # Clear logs and update the offline entity again - should NOT log again
@@ -930,7 +985,7 @@ async def test_availability(
     await mock_scan_interval(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
-    available_log = f"LG webOS TV entity {ENTITY_ID} is back online"
+    available_log = f"Fetching {TV_NAME} data recovered"
     assert available_log in caplog.text
 
     # Clear logs and make update again - should NOT log again
@@ -973,5 +1028,5 @@ async def test_availability(
     await mock_scan_interval(hass, freezer)
 
     assert hass.states.get(ENTITY_ID).state == MediaPlayerState.ON
-    available_log = f"LG webOS TV entity {ENTITY_ID} is back online"
+    available_log = f"Fetching {TV_NAME} data recovered"
     assert available_log in caplog.text

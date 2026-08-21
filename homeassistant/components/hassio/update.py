@@ -257,7 +257,9 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     def installed_version(self) -> str | None:
         """Return the installed version."""
         assert self.coordinator.data.os is not None
-        return self.coordinator.data.os.version
+        return (
+            self.coordinator.data.os.version_pending or self.coordinator.data.os.version
+        )
 
     @property
     @override
@@ -282,6 +284,7 @@ class SupervisorOSUpdateEntity(HassioOSEntity, UpdateEntity):
     ) -> None:
         """Install an update."""
         await update_os(self.hass, version, backup)
+        await self.coordinator.async_refresh()
 
     @override
     async def async_release_notes(self) -> str | None:

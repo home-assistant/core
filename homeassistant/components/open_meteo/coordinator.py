@@ -13,9 +13,8 @@ from open_meteo import (
     WindSpeedUnit,
 )
 
-from homeassistant.components.zone import ZoneEntityStateAttribute
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ZONE
+from homeassistant.const import CONF_ZONE, EntityStateAttribute
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -50,8 +49,8 @@ class OpenMeteoDataUpdateCoordinator(DataUpdateCoordinator[Forecast]):
 
         try:
             return await self.open_meteo.forecast(
-                latitude=zone.attributes[ZoneEntityStateAttribute.LATITUDE],
-                longitude=zone.attributes[ZoneEntityStateAttribute.LONGITUDE],
+                latitude=zone.attributes[EntityStateAttribute.LATITUDE],
+                longitude=zone.attributes[EntityStateAttribute.LONGITUDE],
                 current_weather=True,
                 daily=[
                     DailyParameters.PRECIPITATION_SUM,

@@ -110,8 +110,8 @@ async def test_light_unique_id(
     entity_id = "light.my_group_my_bulb"
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, SERIAL)}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, SERIAL), already_migrated_config_entry.entry_id
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
 
@@ -137,8 +137,8 @@ async def test_light_unique_id_new_firmware(
 
     entity_id = "light.my_group_my_bulb"
     assert entity_registry.async_get(entity_id).unique_id == SERIAL
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS)},
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, MAC_ADDRESS), already_migrated_config_entry.entry_id
     )
     assert device.identifiers == {(DOMAIN, SERIAL)}
 

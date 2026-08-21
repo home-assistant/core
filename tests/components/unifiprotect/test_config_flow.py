@@ -149,14 +149,21 @@ async def test_user_flow(hass: HomeAssistant, bootstrap: Bootstrap, nvr: NVR) ->
     assert len(mock_setup.mock_calls) == 1
 
 
+@pytest.mark.parametrize("version", ["1.19.0", "7.0.107"])
 async def test_form_version_too_old(
-    hass: HomeAssistant, bootstrap: Bootstrap, old_nvr: NVR, nvr: NVR, mock_setup: None
+    hass: HomeAssistant,
+    bootstrap: Bootstrap,
+    old_nvr: NVR,
+    nvr: NVR,
+    version: str,
+    mock_setup: None,
 ) -> None:
     """Test we handle the version being too old and can recover."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
+    old_nvr.version = Version(version)
     bootstrap.nvr = old_nvr
     with (
         patch(
@@ -1619,7 +1626,7 @@ async def test_reconfigure_outdated_version(
 
     # Set up NVR with outdated version
     old_nvr = nvr.model_copy()
-    old_nvr.version = Version("5.0.0")  # Below MIN_REQUIRED_PROTECT_V (6.0.0)
+    old_nvr.version = Version("5.0.0")  # Below MIN_REQUIRED_PROTECT_V (7.1.0)
     bootstrap.nvr = old_nvr
 
     result = await hass.config_entries.flow.async_configure(

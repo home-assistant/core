@@ -6,7 +6,11 @@ from typing import Any, override
 
 from python_dropbox_api import DropboxAPIClient
 
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_TOKEN
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import AbstractOAuth2FlowHandler
@@ -46,15 +50,24 @@ class DropboxConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         account_info = await client.get_account_info()
 
         await self.async_set_unique_id(account_info.account_id)
-        if self.source == SOURCE_REAUTH:
-            self._abort_if_unique_id_mismatch(reason="wrong_account")
-            return self.async_update_reload_and_abort(
-                self._get_reauth_entry(), data=data
+        if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
+            entry = (
+                self._get_reauth_entry()
+                if self.source == SOURCE_REAUTH
+                else self._get_reconfigure_entry()
             )
+            self._abort_if_unique_id_mismatch(reason="wrong_account")
+            return self.async_update_reload_and_abort(entry, data=data)
 
         self._abort_if_unique_id_configured()
 
         return self.async_create_entry(title=account_info.email, data=data)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow."""
+        return await self.async_step_user(user_input)
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]
