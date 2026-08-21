@@ -31,6 +31,13 @@ MOCK_PARSE_DATA = {
     "heating_circulation_pump_1": ["auto", ""],
     "heating_circulation_program_1": ["heat", ""],
     "auxiliary_pump_0": ["nonstop", ""],
+    "room_1_temperature": ["21.50", "°C"],
+    "circuit_1_temp": ["55.00", "°C"],
+    "operating_time": ["1188", "h"],
+    "service_days": ["2012", "d"],
+    "interruption_1": ["", ""],
+    "extra_dhw_1_temperature": ["52.10", "°C"],
+    "extra_dhw_boost_0": ["auto", ""],
 }
 
 

@@ -23,6 +23,7 @@ from homeassistant.helpers.translation import async_get_translations
 from . import setup_integration
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.components.guntamatic.conftest import MOCK_PARSE_DATA
 
 
 @pytest.mark.usefixtures("mock_heater")
@@ -148,3 +149,21 @@ async def test_enum_states_translated(
     prefix = f"component.{DOMAIN}.entity.sensor.{description.translation_key}.state."
     for option in description.options:
         assert f"{prefix}{option}.name" in translations
+
+
+async def test_enum_sensor_unmapped_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_heater: MagicMock,
+) -> None:
+    """Test an unmapped enum value is exposed as unknown instead of raising."""
+    return_value = MOCK_PARSE_DATA.copy()
+    return_value["heating_circulation_pump_1"] = ["BROKEN", ""]
+    mock_heater.parse_data.return_value = return_value
+
+    await setup_integration(hass, mock_config_entry)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.heating_circuit_1_pump")
+    assert state is not None
+    assert state.state != "unavailable"

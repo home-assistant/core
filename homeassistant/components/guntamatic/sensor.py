@@ -326,6 +326,32 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    *[
+        SensorEntityDescription(
+            key=f"extra_dhw_{nr}_temperature",
+            translation_key=f"extra_dhw_{nr}_temperature",
+            device_class=SensorDeviceClass.TEMPERATURE,
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+            entity_registry_enabled_default=False,
+        )
+        for nr in (1, 2)
+    ],
+    *[
+        SensorEntityDescription(
+            key=f"extra_dhw_boost_{nr}",
+            translation_key="extra_dhw_boost",
+            device_class=SensorDeviceClass.ENUM,
+            options=[
+                "auto",
+                "off",
+                "nonstop",
+            ],
+            entity_registry_enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+        for nr in range(3)
+    ],
     SensorEntityDescription(
         key="heating_circulation_pump_0",
         translation_key="heating_circulation_pump",
@@ -714,4 +740,12 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the current value of the sensor."""
-        return self.coordinator.data[self.entity_description.key][0]
+        value = self.coordinator.data[self.entity_description.key][0]
+        if (
+            self.entity_description.device_class is SensorDeviceClass.ENUM
+            and value not in (self.entity_description.options or [])
+        ):
+            # The library passes through unmapped values of new firmware
+            # languages; expose them as unknown instead of raising.
+            return None
+        return value
