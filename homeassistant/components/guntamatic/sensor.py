@@ -234,7 +234,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="auxiliary_pump_0",
-        translation_key="auxiliary_pump_0",
+        translation_key="auxiliary_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -246,7 +246,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="auxiliary_pump_1",
-        translation_key="auxiliary_pump_1",
+        translation_key="auxiliary_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -258,7 +258,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="auxiliary_pump_2",
-        translation_key="auxiliary_pump_2",
+        translation_key="auxiliary_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",

@@ -1,7 +1,5 @@
 """Tests for the Guntamatic sensor platform."""
 
-import json
-from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -14,12 +12,13 @@ import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.guntamatic.const import SCAN_INTERVAL
+from homeassistant.components.guntamatic.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.guntamatic.sensor import GUNTAMATIC_SENSORS
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 
 from . import setup_integration
 
@@ -128,18 +127,24 @@ def test_enum_options_match_library(
     assert set(option_sets.pop()) == set(translation_table.values())
 
 
-def test_enum_states_translated() -> None:
-    """Test every enum option has a state translation."""
-    strings = json.loads(
-        (
-            Path(__file__).parents[3]
-            / "homeassistant/components/guntamatic/strings.json"
-        ).read_text()
-    )
-    sensor_strings = strings["entity"]["sensor"]
-    for description in GUNTAMATIC_SENSORS:
-        if description.device_class is not SensorDeviceClass.ENUM:
-            continue
-        assert description.translation_key is not None
-        states = sensor_strings[description.translation_key]["state"]
-        assert set(description.options) == set(states)
+enum_descriptions = [
+    description
+    for description in GUNTAMATIC_SENSORS
+    if description.device_class is SensorDeviceClass.ENUM
+]
+
+
+@pytest.mark.parametrize(
+    "description",
+    enum_descriptions,
+    ids=lambda description: description.key,
+)
+async def test_enum_states_translated(
+    hass: HomeAssistant,
+    description: SensorEntityDescription,
+) -> None:
+    """Test every option of an enum sensor has a state translation."""
+    translations = await async_get_translations(hass, "en", "entity", [DOMAIN])
+    prefix = f"component.{DOMAIN}.entity.sensor.{description.translation_key}.state."
+    for option in description.options:
+        assert f"{prefix}{option}.name" in translations

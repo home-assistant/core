@@ -111,13 +111,27 @@
       "program": {
         "name": "Program",
         "state": {
-          "dhw": "Domestic hot water",
-          "dhw_boost": "Domestic hot water boost",
-          "heat": "Heat",
-          "hibernate": "Setback mode",
-          "hibernate_to": "Away mode",
-          "off": "[%key:common::state::off%]",
-          "timer": "Timer"
+          "dhw": {
+            "name": "Domestic hot water"
+          },
+          "dhw_boost": {
+            "name": "Domestic hot water boost"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Setback mode"
+          },
+          "hibernate_to": {
+            "name": "Away mode"
+          },
+          "off": {
+            "name": "[%key:common::state::off%]"
+          },
+          "timer": {
+            "name": "Timer"
+          }
         }
       },
       "secondary_air": {
@@ -133,10 +147,38 @@
         "name": "Suction fan"
       },
       "heating_circulation_program": {
-        "name": "Program"
+        "name": "Program",
+        "state": {
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Hibernate"
+          },
+          "hibernate_to": {
+            "name": "Hibernate until"
+          }
+        }
       },
       "heating_circulation_pump": {
-        "name": "Pump"
+        "name": "Pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "auxiliary_pump": {
         "name": "Auxiliary pump",

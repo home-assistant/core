@@ -127,7 +127,7 @@
     'state': 'auto',
   })
 # ---
-# name: test_all_entities[sensor.mock_title-entry]
+# name: test_all_entities[sensor.mock_title_auxiliary_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -147,7 +147,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title',
+    'entity_id': 'sensor.mock_title_auxiliary_pump',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -155,26 +155,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Auxiliary pump',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Auxiliary pump',
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'auxiliary_pump_0',
+    'translation_key': 'auxiliary_pump',
     'unique_id': '959103_auxiliary_pump_0',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.mock_title-state]
+# name: test_all_entities[sensor.mock_title_auxiliary_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Auxiliary pump',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'off',
@@ -182,7 +182,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title',
+    'entity_id': 'sensor.mock_title_auxiliary_pump',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
