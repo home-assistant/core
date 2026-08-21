@@ -68,14 +68,13 @@ def _configure_mock_response(mock_request: MagicMock, url: str = TEST_URL) -> No
     )()
 
 
-@pytest.mark.parametrize("reserved_name", [SERVICE_RELOAD, SERVICE_CALL_ENDPOINT])
-async def test_reserved_yaml_action_name(reserved_name: str) -> None:
+async def test_reserved_yaml_action_name() -> None:
     """Test integration-owned action names are rejected in YAML."""
     with pytest.raises(
         vol.Invalid,
-        match=rf'The RESTful Command action name "{reserved_name}" is reserved',
+        match=rf'The RESTful Command action name "{SERVICE_RELOAD}" is reserved',
     ):
-        CONFIG_SCHEMA({DOMAIN: {reserved_name: {CONF_URL: TEST_URL}}})
+        CONFIG_SCHEMA({DOMAIN: {SERVICE_RELOAD: {CONF_URL: TEST_URL}}})
 
 
 async def test_reload(hass: HomeAssistant, setup_component: ComponentSetup) -> None:
@@ -102,27 +101,112 @@ async def test_reload(hass: HomeAssistant, setup_component: ComponentSetup) -> N
     assert hass.services.has_service(DOMAIN, SERVICE_CALL_ENDPOINT)
 
 
-async def test_reload_reserved_action_name(
+async def test_yaml_call_endpoint_takes_precedence(
     hass: HomeAssistant, setup_component: ComponentSetup
 ) -> None:
-    """Test reload cannot replace integration-owned action handlers."""
-    await setup_component()
-    collision_config = {
-        DOMAIN: {SERVICE_CALL_ENDPOINT: {CONF_URL: TEST_URL, CONF_METHOD: "get"}}
-    }
+    """Test an existing YAML call_endpoint action keeps working."""
+    await setup_component(
+        {
+            SERVICE_CALL_ENDPOINT: {
+                CONF_URL: TEST_URL,
+                CONF_METHOD: "post",
+                CONF_PAYLOAD: "{{ message }}",
+            }
+        }
+    )
 
-    with (
-        patch(
-            "homeassistant.components.rest_command.async_integration_yaml_config",
-            autospec=True,
-            return_value=collision_config,
-        ),
-        pytest.raises(vol.Invalid, match="is reserved"),
+    with patch("aiohttp.ClientSession.post") as mock_post:
+        _configure_mock_response(mock_post)
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CALL_ENDPOINT,
+            {"message": "YAML payload"},
+            blocking=True,
+        )
+
+    assert mock_post.call_args.kwargs["data"] == b"YAML payload"
+
+
+async def test_reload_yaml_call_endpoint_ownership(
+    hass: HomeAssistant, setup_component: ComponentSetup
+) -> None:
+    """Test reload gives an existing YAML call_endpoint action precedence."""
+    await setup_component()
+    collision_config = CONFIG_SCHEMA(
+        {
+            DOMAIN: {
+                SERVICE_CALL_ENDPOINT: {
+                    CONF_URL: TEST_URL,
+                    CONF_METHOD: "post",
+                    CONF_PAYLOAD: "{{ message }}",
+                }
+            }
+        }
+    )
+
+    with patch(
+        "homeassistant.components.rest_command.async_integration_yaml_config",
+        autospec=True,
+        return_value=collision_config,
     ):
         await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
 
-    assert hass.services.has_service(DOMAIN, "get_test")
-    assert hass.services.has_service(DOMAIN, SERVICE_CALL_ENDPOINT)
+    with patch("aiohttp.ClientSession.post") as mock_post:
+        _configure_mock_response(mock_post)
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_CALL_ENDPOINT,
+            {"message": "Reloaded YAML payload"},
+            blocking=True,
+        )
+
+    assert mock_post.call_args.kwargs["data"] == b"Reloaded YAML payload"
+    assert not hass.services.has_service(DOMAIN, "get_test")
+
+
+async def test_reload_restores_ui_call_endpoint(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test removing the YAML collision restores the UI-managed action."""
+    await setup_component(
+        {SERVICE_CALL_ENDPOINT: {CONF_URL: TEST_URL, CONF_METHOD: "get"}}
+    )
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="Example",
+        data={
+            CONF_ENDPOINT_NAME: "Example",
+            CONF_URL: TEST_URL,
+            CONF_METHOD: "get",
+            CONF_AUTHENTICATION: AUTHENTICATION_NONE,
+            CONF_TIMEOUT: 10,
+            CONF_VERIFY_SSL: True,
+            CONF_INSECURE_CIPHER: False,
+            CONF_SKIP_URL_ENCODING: False,
+        },
+        unique_id="endpoint-id",
+    )
+    entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(entry.entry_id)
+
+    with patch(
+        "homeassistant.components.rest_command.async_integration_yaml_config",
+        autospec=True,
+        return_value=CONFIG_SCHEMA({DOMAIN: {}}),
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    aioclient_mock.get(TEST_URL, content=b"success")
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_CALL_ENDPOINT,
+        {ATTR_CONFIG_ENTRY_ID: entry.entry_id},
+        blocking=True,
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
 
 
 async def test_setup_tests(

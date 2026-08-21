@@ -68,7 +68,7 @@ COMMAND_SCHEMA = vol.Schema(
     }
 )
 
-RESERVED_ACTIONS = {SERVICE_RELOAD, SERVICE_CALL_ENDPOINT}
+RESERVED_ACTIONS = {SERVICE_RELOAD}
 
 
 def _validate_yaml_action_names(
@@ -104,6 +104,29 @@ CALL_ENDPOINT_SCHEMA = vol.Schema(
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
 
+    async def async_call_endpoint_handler(call: ServiceCall) -> ServiceResponse:
+        """Send a request using a UI-managed endpoint."""
+        entry: RestCommandConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        )
+        return await entry.runtime_data.async_call(
+            entry.data[CONF_URL],
+            call.data.get(CONF_PAYLOAD, entry.data.get(CONF_PAYLOAD)),
+            {},
+            call.return_response,
+        )
+
+    @callback
+    def async_register_call_endpoint() -> None:
+        """Register the action for UI-managed endpoints."""
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_CALL_ENDPOINT,
+            async_call_endpoint_handler,
+            schema=CALL_ENDPOINT_SCHEMA,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
+
     async def reload_service_handler(call: ServiceCall) -> None:
         """Remove all rest_commands and load new ones from config."""
         conf = await async_integration_yaml_config(hass, DOMAIN)
@@ -119,6 +142,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 continue
             hass.services.async_remove(DOMAIN, existing_service)
 
+        async_register_call_endpoint()
         for name, command_config in commands.items():
             async_register_rest_command(name, command_config)
 
@@ -160,28 +184,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             supports_response=SupportsResponse.OPTIONAL,
         )
 
+    async_register_call_endpoint()
     for name, command_config in config.get(DOMAIN, {}).items():
         async_register_rest_command(name, command_config)
-
-    async def async_call_endpoint_handler(call: ServiceCall) -> ServiceResponse:
-        """Send a request using a UI-managed endpoint."""
-        entry: RestCommandConfigEntry = service.async_get_config_entry(
-            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
-        )
-        return await entry.runtime_data.async_call(
-            entry.data[CONF_URL],
-            call.data.get(CONF_PAYLOAD, entry.data.get(CONF_PAYLOAD)),
-            {},
-            call.return_response,
-        )
-
-    hass.services.async_register(
-        DOMAIN,
-        SERVICE_CALL_ENDPOINT,
-        async_call_endpoint_handler,
-        schema=CALL_ENDPOINT_SCHEMA,
-        supports_response=SupportsResponse.OPTIONAL,
-    )
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
