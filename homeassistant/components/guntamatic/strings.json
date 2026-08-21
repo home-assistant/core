@@ -28,13 +28,46 @@
   "entity": {
     "sensor": {
       "auxiliary_pump_0": {
-        "name": "Auxiliary pump 0"
+        "name": "Auxiliary pump 0",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "auxiliary_pump_1": {
-        "name": "Auxiliary pump 1"
+        "name": "Auxiliary pump 1",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "auxiliary_pump_2": {
-        "name": "Auxiliary pump 2"
+        "name": "Auxiliary pump 2",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "boiler_shunt_pump": {
         "name": "Boiler shunt pump"
@@ -130,58 +163,310 @@
         "name": "Extra DHW 2 temperature"
       },
       "heating_circulation_program_0": {
-        "name": "Heating circuit 0 program"
+        "name": "Heating circuit 0 program",
+        "state": {
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Hibernate"
+          },
+          "hibernate_to": {
+            "name": "Hibernate until"
+          }
+        }
       },
       "heating_circulation_program_1": {
-        "name": "Heating circuit 1 program"
+        "name": "Heating circuit 1 program",
+        "state": {
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Hibernate"
+          },
+          "hibernate_to": {
+            "name": "Hibernate until"
+          }
+        }
       },
       "heating_circulation_program_2": {
-        "name": "Heating circuit 2 program"
+        "name": "Heating circuit 2 program",
+        "state": {
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Hibernate"
+          },
+          "hibernate_to": {
+            "name": "Hibernate until"
+          }
+        }
       },
       "heating_circulation_program_3": {
-        "name": "Heating circuit 3 program"
+        "name": "Heating circuit 3 program",
+        "state": {
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Hibernate"
+          },
+          "hibernate_to": {
+            "name": "Hibernate until"
+          }
+        }
       },
       "heating_circulation_program_4": {
-        "name": "Heating circuit 4 program"
+        "name": "Heating circuit 4 program",
+        "state": {
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Hibernate"
+          },
+          "hibernate_to": {
+            "name": "Hibernate until"
+          }
+        }
       },
       "heating_circulation_program_5": {
-        "name": "Heating circuit 5 program"
+        "name": "Heating circuit 5 program",
+        "state": {
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Hibernate"
+          },
+          "hibernate_to": {
+            "name": "Hibernate until"
+          }
+        }
       },
       "heating_circulation_program_6": {
-        "name": "Heating circuit 6 program"
+        "name": "Heating circuit 6 program",
+        "state": {
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Hibernate"
+          },
+          "hibernate_to": {
+            "name": "Hibernate until"
+          }
+        }
       },
       "heating_circulation_program_7": {
-        "name": "Heating circuit 7 program"
+        "name": "Heating circuit 7 program",
+        "state": {
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Hibernate"
+          },
+          "hibernate_to": {
+            "name": "Hibernate until"
+          }
+        }
       },
       "heating_circulation_program_8": {
-        "name": "Heating circuit 8 program"
+        "name": "Heating circuit 8 program",
+        "state": {
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          },
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Hibernate"
+          },
+          "hibernate_to": {
+            "name": "Hibernate until"
+          }
+        }
       },
       "heating_circulation_pump_0": {
-        "name": "Heating circuit 0 pump"
+        "name": "Heating circuit 0 pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "heating_circulation_pump_1": {
-        "name": "Heating circuit 1 pump"
+        "name": "Heating circuit 1 pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "heating_circulation_pump_2": {
-        "name": "Heating circuit 2 pump"
+        "name": "Heating circuit 2 pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "heating_circulation_pump_3": {
-        "name": "Heating circuit 3 pump"
+        "name": "Heating circuit 3 pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "heating_circulation_pump_4": {
-        "name": "Heating circuit 4 pump"
+        "name": "Heating circuit 4 pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "heating_circulation_pump_5": {
-        "name": "Heating circuit 5 pump"
+        "name": "Heating circuit 5 pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "heating_circulation_pump_6": {
-        "name": "Heating circuit 6 pump"
+        "name": "Heating circuit 6 pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "heating_circulation_pump_7": {
-        "name": "Heating circuit 7 pump"
+        "name": "Heating circuit 7 pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "heating_circulation_pump_8": {
-        "name": "Heating circuit 8 pump"
+        "name": "Heating circuit 8 pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          }
+        }
       },
       "interruption_1": {
         "name": "Malfunction 1"

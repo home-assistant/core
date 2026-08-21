@@ -17,6 +17,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -234,24 +235,36 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="auxiliary_pump_0",
         translation_key="auxiliary_pump_0",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="auxiliary_pump_1",
         translation_key="auxiliary_pump_1",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="auxiliary_pump_2",
         translation_key="auxiliary_pump_2",
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
@@ -316,46 +329,100 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="heating_circulation_pump_0",
         translation_key="heating_circulation_pump_0",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_1",
         translation_key="heating_circulation_pump_1",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_2",
         translation_key="heating_circulation_pump_2",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_3",
         translation_key="heating_circulation_pump_3",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_4",
         translation_key="heating_circulation_pump_4",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_5",
         translation_key="heating_circulation_pump_5",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_6",
         translation_key="heating_circulation_pump_6",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_7",
         translation_key="heating_circulation_pump_7",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_8",
         translation_key="heating_circulation_pump_8",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "auto",
+            "off",
+            "nonstop",
+        ],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
@@ -433,46 +500,118 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="heating_circulation_program_0",
         translation_key="heating_circulation_program_0",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "off",
+            "timer",
+            "heat",
+            "hibernate",
+            "hibernate_to",
+        ],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="heating_circulation_program_1",
         translation_key="heating_circulation_program_1",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "off",
+            "timer",
+            "heat",
+            "hibernate",
+            "hibernate_to",
+        ],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="heating_circulation_program_2",
         translation_key="heating_circulation_program_2",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "off",
+            "timer",
+            "heat",
+            "hibernate",
+            "hibernate_to",
+        ],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="heating_circulation_program_3",
         translation_key="heating_circulation_program_3",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "off",
+            "timer",
+            "heat",
+            "hibernate",
+            "hibernate_to",
+        ],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="heating_circulation_program_4",
         translation_key="heating_circulation_program_4",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "off",
+            "timer",
+            "heat",
+            "hibernate",
+            "hibernate_to",
+        ],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="heating_circulation_program_5",
         translation_key="heating_circulation_program_5",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "off",
+            "timer",
+            "heat",
+            "hibernate",
+            "hibernate_to",
+        ],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="heating_circulation_program_6",
         translation_key="heating_circulation_program_6",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "off",
+            "timer",
+            "heat",
+            "hibernate",
+            "hibernate_to",
+        ],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="heating_circulation_program_7",
         translation_key="heating_circulation_program_7",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "off",
+            "timer",
+            "heat",
+            "hibernate",
+            "hibernate_to",
+        ],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="heating_circulation_program_8",
         translation_key="heating_circulation_program_8",
+        device_class=SensorDeviceClass.ENUM,
+        options=[
+            "off",
+            "timer",
+            "heat",
+            "hibernate",
+            "hibernate_to",
+        ],
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
@@ -517,7 +656,9 @@ async def async_setup_entry(
     coordinator = entry.runtime_data
     serial = coordinator.data["serial"][0]
 
-    main_device_info = DeviceInfo(
+    device_registry = dr.async_get(hass)
+    main_device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, serial)},
         manufacturer="Guntamatic",
         serial_number=serial,
@@ -530,15 +671,21 @@ async def async_setup_entry(
             continue
         if match := HEATING_CIRCUIT_REGEX.match(description.key):
             circuit = int(match.group(1))
-            device_info = DeviceInfo(
-                identifiers={(DOMAIN, f"{serial}_hc{circuit}")},
-                via_device=(DOMAIN, serial),
+            identifiers = {(DOMAIN, f"{serial}_hc{circuit}")}
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers=identifiers,
+                via_device_id=main_device.id,
                 name=f"Heating circuit {circuit}",
                 manufacturer="Guntamatic",
             )
         else:
-            device_info = main_device_info
-        entities.append(GuntamaticSensor(coordinator, description, device_info))
+            identifiers = {(DOMAIN, serial)}
+        entities.append(
+            GuntamaticSensor(
+                coordinator, description, DeviceInfo(identifiers=identifiers)
+            )
+        )
 
     async_add_entities(entities)
 

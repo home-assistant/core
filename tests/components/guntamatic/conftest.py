@@ -28,6 +28,9 @@ MOCK_PARSE_DATA = {
     "status": ["Service Ign.", ""],
     "serial": ["959103", ""],
     "version": ["32a", ""],
+    "heating_circulation_pump_1": ["auto", ""],
+    "heating_circulation_program_1": ["heat", ""],
+    "auxiliary_pump_0": ["nonstop", ""],
 }
 
 
