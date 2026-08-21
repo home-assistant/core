@@ -83,6 +83,7 @@ from .const import (
     EVENT_ISSUE_CHANGED,
     EVENT_ISSUE_REMOVED,
     EVENT_JOB,
+    EVENT_STORE_RELOADED,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     EVENT_SUPPORTED_CHANGED,
@@ -1296,6 +1297,23 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
         self.supervisor_client = get_supervisor_client(hass)
+        self._dispatcher_disconnect = async_dispatcher_connect(
+            hass, EVENT_SUPERVISOR_EVENT, self._supervisor_event
+        )
+
+    @callback
+    def _supervisor_event(self, event: dict[str, Any]) -> None:
+        """Refresh add-on data when Supervisor reloads the store."""
+        if event.get(ATTR_WS_EVENT) != EVENT_STORE_RELOADED:
+            return
+        # Without listeners there are no add-on entities to keep in sync.
+        # Scheduled polling is paused in that case as well, so don't let
+        # store reload events trigger refreshes either.
+        if not self._listeners:
+            return
+        self.config_entry.async_create_task(
+            self.hass, self.async_refresh_after_store_reload()
+        )
 
     @override
     async def _async_update_data(self) -> HassioAddonData:
@@ -1461,6 +1479,12 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             # Update addon info cache in hass.data
             addon_info_cache = self.hass.data.setdefault(DATA_ADDONS_INFO, {})
             addon_info_cache[slug] = info
+
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down and clean up when config entry unloaded."""
+        await super().async_shutdown()
+        self._dispatcher_disconnect()
 
 
 class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
