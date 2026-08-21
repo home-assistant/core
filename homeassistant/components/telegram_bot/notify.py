@@ -47,6 +47,7 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
             config_entry, NotifyEntityDescription(key=subentry.data[CONF_CHAT_ID])
         )
         self.chat_id = subentry.data[CONF_CHAT_ID]
+        self._chat_title = subentry.title
         # Each chat gets its own device (keyed per chat) linked to the shared bot device.
         device_info = self._attr_device_info
         assert device_info is not None
@@ -59,6 +60,11 @@ class TelegramBotNotifyEntity(TelegramBotEntity, NotifyEntity):
             config_entry_id=config_entry.entry_id,
         )
 
+    @property
+    def suggested_object_id(self) -> str | None:
+        """Suggest an object id based on the chat title only."""
+        return self._chat_title
+    
     @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message."""
