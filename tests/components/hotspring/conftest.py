@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from hotspring import Heater, Spa, SpaBrand, SpaInfo, Versions
+from hotspring import Heater, Spa, SpaBrand, SpaInfo, Versions, WaterCare
 import pytest
 
 from homeassistant.components.hotspring.const import DOMAIN
@@ -52,7 +52,7 @@ def device_fixture() -> Spa:
     spa.versions = Versions(
         control_box="3.0.0",
         control_panel="2.0.0",
-        fwss="",
+        fwss="1.0.0",
         fwiq="",
         btxr="",
         cool_zone="",
@@ -66,6 +66,16 @@ def device_fixture() -> Spa:
     heater.set_temperature = 104.0
     heater.is_on = True
     spa.heater = heater
+    spa.water_care = WaterCare(
+        cartridge_installed=True,
+        ten_day_timer=0,
+        one_twenty_day_timer=117,
+        level=2,
+        system_enabled=True,
+        ace_mode="inactive",
+        boost_active=False,
+        salt_value=12,
+    )
     return spa
 
 
