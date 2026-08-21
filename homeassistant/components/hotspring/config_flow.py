@@ -12,7 +12,7 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
 )
 from homeassistant.const import CONF_HOST
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import TextSelector
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -120,11 +120,6 @@ class HotSpringConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initiated by zeroconf."""
-        return self._async_create_entry()
-
-    @callback
-    def _async_create_entry(self) -> ConfigFlowResult:
-        """Create entry from discovered spa."""
         return self.async_create_entry(
             title=self.discovered_title,
             data={CONF_HOST: self.discovered_host},
