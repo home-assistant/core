@@ -859,8 +859,8 @@ async def test_cancel_auto_login(
     response = await client.receive_json()
 
     assert response["success"]
-    # The cancel callback returned by register_and_auto_login was called.
-    assert cloud.register_and_auto_login.return_value.call_count == 1
+    # The controller returned by register_and_auto_login was used to cancel.
+    assert cloud.register_and_auto_login.return_value.cancel.call_count == 1
 
     status = await get_cloud_status(client, 6)
     assert status["auto_login"] is None
@@ -878,7 +878,7 @@ async def test_cancel_auto_login_without_pending(
     response = await client.receive_json()
 
     assert response["success"]
-    assert cloud.register_and_auto_login.return_value.call_count == 0
+    assert cloud.register_and_auto_login.return_value.cancel.call_count == 0
 
 
 async def test_auto_login_cleared_on_login(
@@ -978,11 +978,54 @@ async def test_logout_clears_auto_login(
 
     assert req.status == HTTPStatus.OK
     # The library cancels the auto-login task on logout itself.
-    assert cloud.register_and_auto_login.return_value.call_count == 0
+    assert cloud.register_and_auto_login.return_value.cancel.call_count == 0
 
     client = await hass_ws_client(hass)
     status = await get_cloud_status(client, 5)
     assert status["auto_login"] is None
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_attempt_auto_login_now(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test asking for an immediate auto-login attempt."""
+    cloud.id_token = None
+    await register_auto_login(hass_client)
+    controller = cloud.register_and_auto_login.return_value
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "cloud/attempt_auto_login"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert controller.attempt_now.call_count == 1
+    assert controller.cancel.call_count == 0
+
+    # The registration is still pending, the attempt only skips the backoff.
+    status = await get_cloud_status(client, 6)
+    assert status["auto_login"] == {
+        "email": "hello@bla.com",
+        "expires_at": status["auto_login"]["expires_at"],
+    }
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_attempt_auto_login_without_pending(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test asking for an attempt when no auto-login is pending."""
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "cloud/attempt_auto_login"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert cloud.register_and_auto_login.return_value.attempt_now.call_count == 0
 
 
 @pytest.mark.usefixtures("setup_cloud")
@@ -1001,7 +1044,7 @@ async def test_remove_data_cancels_auto_login(
     response = await client.receive_json()
 
     assert response["success"]
-    assert cloud.register_and_auto_login.return_value.call_count == 1
+    assert cloud.register_and_auto_login.return_value.cancel.call_count == 1
 
     status = await get_cloud_status(client, 6)
     assert status["auto_login"] is None
@@ -2213,6 +2256,7 @@ async def test_support_package_requires_admin(
         {"type": "cloud/onboarding/postpone"},
         {"type": "cloud/onboarding/complete", "items": ["remote"]},
         {"type": "cloud/events"},
+        {"type": "cloud/attempt_auto_login"},
         {"type": "cloud/cancel_auto_login"},
     ],
 )

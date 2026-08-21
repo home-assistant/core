@@ -1,8 +1,9 @@
 """Models for the cloud integration."""
 
-from collections.abc import Callable
 import dataclasses
 from datetime import datetime
+
+from hass_nabucasa import AutoLoginController
 
 
 @dataclasses.dataclass
@@ -11,7 +12,7 @@ class PendingAutoLogin:
 
     email: str
     expires_at: datetime
-    cancel: Callable[[], None]
+    controller: AutoLoginController
 
 
 @dataclasses.dataclass

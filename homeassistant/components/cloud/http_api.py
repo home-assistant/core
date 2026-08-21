@@ -110,6 +110,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_postpone)
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_complete)
     websocket_api.async_register_command(hass, websocket_subscribe_events)
+    websocket_api.async_register_command(hass, websocket_attempt_auto_login)
     websocket_api.async_register_command(hass, websocket_cancel_auto_login)
 
     websocket_api.async_register_command(hass, google_assistant_get)
@@ -444,7 +445,7 @@ class CloudRegisterAutoLoginView(HomeAssistantView):
         client_metadata = await _async_location_client_metadata(hass)
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
-            cancel_auto_login = await cloud.register_and_auto_login(
+            controller = await cloud.register_and_auto_login(
                 data["email"],
                 data["password"],
                 client_metadata=client_metadata,
@@ -454,7 +455,7 @@ class CloudRegisterAutoLoginView(HomeAssistantView):
             email=data["email"],
             expires_at=dt_util.utcnow()
             + timedelta(seconds=AUTO_LOGIN_MAX_TOTAL_BACKOFF),
-            cancel=cancel_auto_login,
+            controller=controller,
         )
         return self.json_message("ok")
 
@@ -763,7 +764,7 @@ async def websocket_cloud_remove_data(
     login_state = hass.data[DATA_LOGIN_STATE]
     if (pending := login_state.pending_auto_login) is not None:
         # A pending auto-login would log back in and rewrite the removed data.
-        pending.cancel()
+        pending.controller.cancel()
         login_state.pending_auto_login = None
 
     await cloud.remove_data()
@@ -810,6 +811,20 @@ def websocket_subscribe_events(
 
 
 @websocket_api.require_admin
+@websocket_api.websocket_command({vol.Required("type"): "cloud/attempt_auto_login"})
+@callback
+def websocket_attempt_auto_login(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Retry a pending auto-login now instead of waiting for the backoff."""
+    if (pending := hass.data[DATA_LOGIN_STATE].pending_auto_login) is not None:
+        pending.controller.attempt_now()
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "cloud/cancel_auto_login"})
 @callback
 def websocket_cancel_auto_login(
@@ -820,7 +835,7 @@ def websocket_cancel_auto_login(
     """Cancel a pending auto-login after registration."""
     login_state = hass.data[DATA_LOGIN_STATE]
     if (pending := login_state.pending_auto_login) is not None:
-        pending.cancel()
+        pending.controller.cancel()
         login_state.pending_auto_login = None
     connection.send_result(msg["id"])
 
@@ -1053,7 +1068,7 @@ async def _account_data(
         login_state = hass.data[DATA_LOGIN_STATE]
         pending = login_state.pending_auto_login
         if pending is not None and pending.expires_at < dt_util.utcnow():
-            pending.cancel()
+            pending.controller.cancel()
             login_state.pending_auto_login = pending = None
         return {
             "logged_in": False,
