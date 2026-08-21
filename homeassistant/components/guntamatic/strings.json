@@ -30,15 +30,9 @@
       "auxiliary_pump": {
         "name": "Auxiliary pump",
         "state": {
-          "auto": {
-            "name": "Auto"
-          },
-          "nonstop": {
-            "name": "Non-stop"
-          },
-          "off": {
-            "name": "Off"
-          }
+          "auto": "Auto",
+          "nonstop": "Non-stop",
+          "off": "Off"
         }
       },
       "boiler_shunt_pump": {
@@ -110,49 +104,27 @@
       "extra_dhw_boost": {
         "name": "Extra DHW pump",
         "state": {
-          "auto": {
-            "name": "Auto"
-          },
-          "nonstop": {
-            "name": "Non-stop"
-          },
-          "off": {
-            "name": "Off"
-          }
+          "auto": "Auto",
+          "nonstop": "Non-stop",
+          "off": "Off"
         }
       },
       "heating_circulation_program": {
         "name": "Program",
         "state": {
-          "heat": {
-            "name": "Heat"
-          },
-          "hibernate": {
-            "name": "Setback mode"
-          },
-          "hibernate_to": {
-            "name": "Away mode"
-          },
-          "off": {
-            "name": "Off"
-          },
-          "timer": {
-            "name": "Timer"
-          }
+          "heat": "Heat",
+          "hibernate": "Setback mode",
+          "hibernate_to": "Away mode",
+          "off": "Off",
+          "timer": "Timer"
         }
       },
       "heating_circulation_pump": {
         "name": "Pump",
         "state": {
-          "auto": {
-            "name": "Auto"
-          },
-          "nonstop": {
-            "name": "Non-stop"
-          },
-          "off": {
-            "name": "Off"
-          }
+          "auto": "Auto",
+          "nonstop": "Non-stop",
+          "off": "Off"
         }
       },
       "interruption_1": {
@@ -173,27 +145,13 @@
       "program": {
         "name": "Program",
         "state": {
-          "dhw": {
-            "name": "Domestic hot water"
-          },
-          "dhw_boost": {
-            "name": "Domestic hot water boost"
-          },
-          "heat": {
-            "name": "Heat"
-          },
-          "hibernate": {
-            "name": "Setback mode"
-          },
-          "hibernate_to": {
-            "name": "Away mode"
-          },
-          "off": {
-            "name": "[%key:common::state::off%]"
-          },
-          "timer": {
-            "name": "Timer"
-          }
+          "dhw": "Domestic hot water",
+          "dhw_boost": "Domestic hot water boost",
+          "heat": "Heat",
+          "hibernate": "Setback mode",
+          "hibernate_to": "Away mode",
+          "off": "[%key:common::state::off%]",
+          "timer": "Timer"
         }
       },
       "room_temperature": {

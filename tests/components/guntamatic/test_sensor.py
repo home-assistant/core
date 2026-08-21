@@ -148,7 +148,7 @@ async def test_enum_states_translated(
     translations = await async_get_translations(hass, "en", "entity", [DOMAIN])
     prefix = f"component.{DOMAIN}.entity.sensor.{description.translation_key}.state."
     for option in description.options:
-        assert f"{prefix}{option}.name" in translations
+        assert f"{prefix}{option}" in translations
 
 
 async def test_enum_sensor_unmapped_value(
