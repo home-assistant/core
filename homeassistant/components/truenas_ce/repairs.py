@@ -8,7 +8,12 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 
-from .const import DOMAIN, ISSUE_MIGRATION_ROLLBACK, MIGRATION_RECORDS
+from .const import (
+    DOMAIN,
+    ISSUE_MIGRATION_ROLLBACK,
+    ISSUE_MIGRATION_ROLLBACK_FAILED,
+    MIGRATION_RECORDS,
+)
 from .migration import async_rollback_to_legacy
 
 _LOGGER = getLogger(__name__)
@@ -17,13 +22,15 @@ _LOGGER = getLogger(__name__)
 async def _async_rollback_and_log_errors(
     hass: HomeAssistant, entry: ConfigEntry
 ) -> None:
-    """Run the legacy rollback, logging (not raising) any failure.
+    """Run the legacy rollback, surfacing (not raising) any failure.
 
     Scheduled via ``async_create_task`` because the rollback removes this very
     config entry, which would tear down the repair flow mid-step if awaited
-    inline. An unhandled exception in an untracked task would otherwise only
-    surface as a generic asyncio "Task exception was never retrieved" log
-    entry with no integration context.
+    inline. The ``migration_rollback_available`` issue is already deleted by
+    the time this runs (see ``MigrationRollbackRepairFlow.async_step_rollback``),
+    so a failure here would otherwise only surface as a log entry with no
+    UI-visible signal that the rollback didn't actually happen; raising a
+    second, non-fixable issue closes that gap.
 
     Migration-rollback-specific: the broad ``except Exception`` is this
     coroutine's whole purpose (turning an untracked task's crash into a
@@ -37,6 +44,15 @@ async def _async_rollback_and_log_errors(
             "TrueNAS CE migration rollback failed for entry %s (%s)",
             entry.entry_id,
             entry.title,
+        )
+        ir.async_create_issue(
+            hass,
+            DOMAIN,
+            f"{ISSUE_MIGRATION_ROLLBACK_FAILED}_{entry.entry_id}",
+            is_fixable=False,
+            severity=ir.IssueSeverity.ERROR,
+            translation_key=ISSUE_MIGRATION_ROLLBACK_FAILED,
+            translation_placeholders={"name": entry.title},
         )
 
 
