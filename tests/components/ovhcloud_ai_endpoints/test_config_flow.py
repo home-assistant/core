@@ -201,6 +201,7 @@ async def test_create_conversation_agent_no_control(
     assert result["data"] == {
         CONF_MODEL: "Mistral-Nemo-Instruct-2407",
         CONF_PROMPT: "you are an assistant",
+        CONF_LLM_HASS_API: [],
     }
 
 
@@ -499,29 +500,10 @@ async def test_reconfigure_conversation_agent_clears_llm_api(
 
     subentry = mock_config_entry.subentries[subentry_id]
     assert subentry.data[CONF_PROMPT] == "updated prompt"
-    assert CONF_LLM_HASS_API not in subentry.data
+    assert subentry.data[CONF_LLM_HASS_API] == []
     assert subentry.data[CONF_MODEL] == "Meta-Llama-3_3-70B-Instruct"
 
-
-async def test_reconfigure_conversation_subentry_no_llm_api(
-    hass: HomeAssistant,
-    mock_openai_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test the llm_hass_api field is empty when the subentry has no LLM API."""
-    await setup_integration(hass, mock_config_entry, mock_openai_client)
-
-    subentry = next(iter(mock_config_entry.subentries.values()))
-    hass.config_entries.async_update_subentry(
-        mock_config_entry,
-        subentry,
-        data={k: v for k, v in subentry.data.items() if k != CONF_LLM_HASS_API},
-    )
-    await hass.async_block_till_done()
-
-    result = await mock_config_entry.start_subentry_reconfigure_flow(
-        hass, subentry.subentry_id
-    )
+    result = await mock_config_entry.start_subentry_reconfigure_flow(hass, subentry_id)
 
     schema = result["data_schema"].schema
     key = next(k for k in schema if k == CONF_LLM_HASS_API)

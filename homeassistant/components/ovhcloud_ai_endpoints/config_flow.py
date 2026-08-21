@@ -176,8 +176,6 @@ class ConversationFlowHandler(ConfigSubentryFlow):
         existing = subentry.data
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
-                user_input.pop(CONF_LLM_HASS_API, None)
             user_input[CONF_MODEL] = existing[CONF_MODEL]
             return self.async_update_and_abort(
                 self._get_entry(), subentry, data=user_input
@@ -202,7 +200,10 @@ class ConversationFlowHandler(ConfigSubentryFlow):
                     ): TemplateSelector(),
                     vol.Optional(
                         CONF_LLM_HASS_API,
-                        default=existing.get(CONF_LLM_HASS_API, []),
+                        default=existing.get(
+                            CONF_LLM_HASS_API,
+                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
+                        ),
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),
@@ -218,8 +219,6 @@ class ConversationFlowHandler(ConfigSubentryFlow):
             return self.async_abort(reason="entry_not_loaded")
 
         if user_input is not None:
-            if not user_input.get(CONF_LLM_HASS_API):
-                user_input.pop(CONF_LLM_HASS_API, None)
             return self.async_create_entry(
                 title=user_input[CONF_MODEL], data=user_input
             )
