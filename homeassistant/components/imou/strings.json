@@ -124,8 +124,20 @@
     }
   },
   "exceptions": {
+    "get_image_failed": {
+      "message": "Could not get a snapshot from Imou: {error}"
+    },
+    "get_stream_failed": {
+      "message": "Could not get the live stream URL from Imou: {error}"
+    },
+    "press_button_failed": {
+      "message": "Imou rejected the button press: {error}"
+    },
     "select_option_failed": {
-      "message": "Error communicating with the Imou API"
+      "message": "Imou rejected the new option: {error}"
+    },
+    "switch_operation_failed": {
+      "message": "Imou rejected the switch change: {error}"
     }
   },
   "selector": {

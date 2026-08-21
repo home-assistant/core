@@ -45,12 +45,20 @@
     }
   },
   "entity": {
+    "event": {
+      "transaction": {
+        "name": "Transaction"
+      }
+    },
     "sensor": {
       "balance": {
         "name": "Balance"
       },
       "pot_balance": {
         "name": "[%key:component::monzo::entity::sensor::balance::name%]"
+      },
+      "spend_today": {
+        "name": "Spent today"
       },
       "total_balance": {
         "name": "Total balance"

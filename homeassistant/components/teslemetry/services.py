@@ -70,7 +70,11 @@ def async_get_device_for_service_call(
     """Get the device entry related to a service call."""
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
-    if (device_entry := device_registry.async_get(device_id)) is None:
+    if (
+        device_entry := device_registry.async_get(
+            device_id, include_child_devices=False
+        )
+    ) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_device",

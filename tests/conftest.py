@@ -987,11 +987,7 @@ def hass_ws_client(
             data["id"] = next(id_generator)
             return websocket.send_json(data)
 
-        # config_entry_id is accepted for backwards compatibility with existing
-        # callers but no longer sent: the command now removes the whole device.
-        async def _remove_device(
-            device_id: str, config_entry_id: str | None = None
-        ) -> Any:
+        async def _remove_device(device_id: str) -> Any:
             await _send_json_auto_id(
                 {
                     "type": "config/device_registry/remove",

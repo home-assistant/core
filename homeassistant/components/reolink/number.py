@@ -743,6 +743,7 @@ SMART_AI_NUMBER_ENTITIES = (
     ReolinkSmartAINumberEntityDescription(
         key="crossline_sensitivity",
         smart_type="crossline",
+        cmd_key="527",
         cmd_id=527,
         translation_key="crossline_sensitivity",
         entity_category=EntityCategory.CONFIG,
@@ -761,6 +762,7 @@ SMART_AI_NUMBER_ENTITIES = (
     ReolinkSmartAINumberEntityDescription(
         key="intrusion_sensitivity",
         smart_type="intrusion",
+        cmd_key="529",
         cmd_id=529,
         translation_key="intrusion_sensitivity",
         entity_category=EntityCategory.CONFIG,
@@ -779,6 +781,7 @@ SMART_AI_NUMBER_ENTITIES = (
     ReolinkSmartAINumberEntityDescription(
         key="linger_sensitivity",
         smart_type="loitering",
+        cmd_key="531",
         cmd_id=531,
         translation_key="linger_sensitivity",
         entity_category=EntityCategory.CONFIG,
@@ -797,6 +800,7 @@ SMART_AI_NUMBER_ENTITIES = (
     ReolinkSmartAINumberEntityDescription(
         key="forgotten_item_sensitivity",
         smart_type="legacy",
+        cmd_key="549",
         cmd_id=549,
         translation_key="forgotten_item_sensitivity",
         entity_registry_enabled_default=False,
@@ -813,6 +817,7 @@ SMART_AI_NUMBER_ENTITIES = (
     ReolinkSmartAINumberEntityDescription(
         key="taken_item_sensitivity",
         smart_type="loss",
+        cmd_key="551",
         cmd_id=551,
         translation_key="taken_item_sensitivity",
         entity_registry_enabled_default=False,
@@ -829,6 +834,7 @@ SMART_AI_NUMBER_ENTITIES = (
     ReolinkSmartAINumberEntityDescription(
         key="intrusion_delay",
         smart_type="intrusion",
+        cmd_key="529",
         cmd_id=529,
         translation_key="intrusion_delay",
         entity_registry_enabled_default=False,
@@ -847,6 +853,7 @@ SMART_AI_NUMBER_ENTITIES = (
     ReolinkSmartAINumberEntityDescription(
         key="linger_delay",
         smart_type="loitering",
+        cmd_key="531",
         cmd_id=531,
         translation_key="linger_delay",
         entity_registry_enabled_default=False,
@@ -864,6 +871,7 @@ SMART_AI_NUMBER_ENTITIES = (
     ReolinkSmartAINumberEntityDescription(
         key="forgotten_item_delay",
         smart_type="legacy",
+        cmd_key="549",
         cmd_id=549,
         translation_key="forgotten_item_delay",
         entity_registry_enabled_default=False,
@@ -882,6 +890,7 @@ SMART_AI_NUMBER_ENTITIES = (
     ReolinkSmartAINumberEntityDescription(
         key="taken_item_delay",
         smart_type="loss",
+        cmd_key="551",
         cmd_id=551,
         translation_key="taken_item_delay",
         entity_registry_enabled_default=False,
