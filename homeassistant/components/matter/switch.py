@@ -226,7 +226,7 @@ DISCOVERY_SCHEMAS = [
     MatterDiscoverySchema(
         platform=Platform.SWITCH,
         entity_description=MatterSwitchEntityDescription(
-            key="alpstuga_air_quality_config",
+            key="MatterSwitch",
             entity_category=EntityCategory.CONFIG,
             translation_key="alpstuga_air_quality_config",
             name=None,

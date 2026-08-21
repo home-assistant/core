@@ -536,7 +536,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'alpstuga_air_quality_config',
-    'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-1-alpstuga_air_quality_config-6-0',
+    'unique_id': '00000000000004D2-0000000000000025-MatterNodeDevice-1-MatterSwitch-6-0',
     'unit_of_measurement': None,
   })
 # ---
