@@ -266,6 +266,107 @@ async def test_turn_on_off_broadcast(
     assert state.state == STATE_OFF
 
 
+async def test_turn_on_off_broadcast_last_brightness(
+    hass: HomeAssistant,
+    mock_lunatone_info: AsyncMock,
+    mock_lunatone_devices: AsyncMock,
+    mock_lunatone_sensors: AsyncMock,
+    mock_lunatone_scan: AsyncMock,
+    mock_lunatone_dali_broadcast: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the broadcast light can be turned on and off and last brightness is set correctly."""
+    line_id = mock_lunatone_dali_broadcast.line
+    entity_id = f"light.dali_line_{line_id}"
+    light_status = iter(
+        ((True, 80.0), (False, 50.0), (False, 0.0), (True, 80.0), (False, 0.0))
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    async def fake_update():
+        is_on, brightness = next(light_status)
+        for device in mock_lunatone_devices.data.devices:
+            if device.line == line_id:
+                device.features.switchable.status = is_on
+                if device.features.dimmable is not None:
+                    device.features.dimmable.status = brightness
+
+    mock_lunatone_devices.async_update.side_effect = fake_update
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id, ATTR_BRIGHTNESS: 204},
+        blocking=True,
+    )
+
+    assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 1
+    mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] == 204
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 2
+    mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 3
+    mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 4
+    mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_ON
+    assert state.attributes["brightness"] == 204
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: entity_id},
+        blocking=True,
+    )
+
+    assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 5
+    mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == STATE_OFF
+
+
 async def test_turn_on_off_broadcast_with_connection_error(
     hass: HomeAssistant,
     mock_lunatone_info: AsyncMock,
