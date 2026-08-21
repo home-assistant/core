@@ -39,9 +39,9 @@
 # name: test_sensors[sensor.blue_dragon_earned_achievements-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Blue Dragon Earned achievements',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Blue Dragon Earned achievements',
       'total_achievements': 43,
-      'unit_of_measurement': 'achievements',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'achievements',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.blue_dragon_earned_achievements',
@@ -91,9 +91,9 @@
 # name: test_sensors[sensor.blue_dragon_earned_gamerscore-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Blue Dragon Earned Gamerscore',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Blue Dragon Earned Gamerscore',
       'total_gamerscore': 1000,
-      'unit_of_measurement': 'points',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'points',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.blue_dragon_earned_gamerscore',
@@ -143,8 +143,8 @@
 # name: test_sensors[sensor.blue_dragon_last_time_played-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Blue Dragon Last time played',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Blue Dragon Last time played',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.blue_dragon_last_time_played',
@@ -197,8 +197,8 @@
 # name: test_sensors[sensor.blue_dragon_progress-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Blue Dragon Progress',
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Blue Dragon Progress',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.blue_dragon_progress',
