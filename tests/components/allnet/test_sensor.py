@@ -1,8 +1,14 @@
 """Tests for the ALLNET sensor platform."""
 
+from allnet.models import Channel, ChannelKind
 import pytest
 
 from homeassistant.components.allnet.const import DOMAIN
+from homeassistant.components.allnet.sensor import (
+    AllnetSensorEntity,
+    _pm_device_class,
+    _resolve_mapping,
+)
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -103,3 +109,68 @@ async def test_sensor_no_binary_sensors_in_sensor_platform(
     """Test that binary_sensor channels don't appear as sensor entities."""
     state = hass.states.get("sensor.allnet_test_device_door_contact")
     assert state is None
+
+
+@pytest.mark.parametrize(
+    ("name", "expected_device_class"),
+    [
+        pytest.param("PM10", SensorDeviceClass.PM10, id="pm10"),
+        pytest.param("PM2.5", SensorDeviceClass.PM25, id="pm25"),
+        pytest.param("PM4", SensorDeviceClass.PM4, id="pm4"),
+        pytest.param("PM1", SensorDeviceClass.PM1, id="pm1"),
+        pytest.param("Particles", None, id="unknown"),
+    ],
+)
+def test_pm_device_class(
+    name: str, expected_device_class: SensorDeviceClass | None
+) -> None:
+    """Test particulate matter sensor device class mappings."""
+    assert _pm_device_class(name) is expected_device_class
+
+
+def test_sensor_mapping_for_particulate_matter_and_unknown_unit() -> None:
+    """Test sensor mappings for particulate matter and unknown units."""
+    pm_mapping = _resolve_mapping(
+        Channel(
+            id="pm25",
+            kind=ChannelKind.SENSOR,
+            name="PM2.5",
+            value=10,
+            unit="µg/m³",
+            raw={},
+        )
+    )
+    unknown_mapping = _resolve_mapping(
+        Channel(
+            id="unknown",
+            kind=ChannelKind.SENSOR,
+            name="Unknown",
+            value=1,
+            unit="custom",
+            raw={},
+        )
+    )
+
+    assert pm_mapping.device_class is SensorDeviceClass.PM25
+    assert unknown_mapping.device_class is None
+    assert unknown_mapping.unit == "custom"
+
+
+@pytest.mark.asyncio
+async def test_sensor_without_channel_has_no_native_value(
+    setup_integration: ConfigEntry,
+) -> None:
+    """Test a sensor without a channel returns no native value."""
+    runtime = setup_integration.runtime_data
+    entity = AllnetSensorEntity(
+        runtime.coordinator,
+        "missing",
+        runtime.ha_device_info,
+        "unique_id",
+        "Missing channel",
+        None,
+        None,
+        None,
+    )
+
+    assert entity.native_value is None

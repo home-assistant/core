@@ -6,6 +6,7 @@ from allnet.exceptions import AllnetCommandError
 import pytest
 
 from homeassistant.components.allnet.const import DOMAIN
+from homeassistant.components.allnet.switch import AllnetSwitchEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -116,3 +117,20 @@ async def test_switch_unique_id(
         "switch", DOMAIN, f"{TEST_UNIQUE_ID}_relay_0_switch"
     )
     assert entry is not None
+
+
+@pytest.mark.asyncio
+async def test_switch_without_channel_has_no_state(
+    setup_integration: ConfigEntry,
+) -> None:
+    """Test a switch without a channel returns no state."""
+    runtime = setup_integration.runtime_data
+    entity = AllnetSwitchEntity(
+        runtime.coordinator,
+        "missing",
+        runtime.ha_device_info,
+        "unique_id",
+        "Missing channel",
+    )
+
+    assert entity.is_on is None

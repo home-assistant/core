@@ -5,6 +5,10 @@ from unittest.mock import MagicMock, patch
 from allnet.models import Channel, ChannelKind
 import pytest
 
+from homeassistant.components.allnet.binary_sensor import (
+    AllnetBinarySensorEntity,
+    _device_class_from_channel,
+)
 from homeassistant.components.allnet.const import DOMAIN
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.config_entries import ConfigEntry
@@ -143,3 +147,41 @@ async def test_binary_sensor_name_based_device_class(
     state = hass.states.get("binary_sensor.allnet_test_device_door_sensor")
     assert state is not None
     assert state.attributes.get("device_class") == BinarySensorDeviceClass.OPENING
+
+
+@pytest.mark.parametrize(
+    ("name", "expected_device_class"),
+    [
+        pytest.param("Motion", BinarySensorDeviceClass.MOTION, id="motion"),
+        pytest.param("Smoke alarm", BinarySensorDeviceClass.SMOKE, id="smoke"),
+        pytest.param("Water leak", BinarySensorDeviceClass.MOISTURE, id="moisture"),
+        pytest.param("Input", None, id="unknown"),
+    ],
+)
+def test_binary_sensor_name_based_device_class_mappings(
+    name: str, expected_device_class: BinarySensorDeviceClass | None
+) -> None:
+    """Test name-based binary sensor device class mappings."""
+    assert _device_class_from_channel("50", "on/off", name) is expected_device_class
+
+
+@pytest.mark.asyncio
+async def test_binary_sensor_without_channel_is_unavailable(
+    setup_integration: ConfigEntry,
+) -> None:
+    """Test a binary sensor without a channel returns no state."""
+    runtime = setup_integration.runtime_data
+    entity = AllnetBinarySensorEntity(
+        runtime.coordinator,
+        "missing",
+        runtime.ha_device_info,
+        "unique_id",
+        "Missing channel",
+        None,
+    )
+
+    assert entity.is_on is None
+    assert not entity.available
+
+    runtime.coordinator.last_update_success = False
+    assert not entity.available

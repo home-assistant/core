@@ -7,11 +7,13 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from allnet.exceptions import (
     AllnetAuthenticationError,
     AllnetConnectionError,
+    AllnetInvalidResponseError,
     AllnetUnsupportedFirmwareError,
 )
 from allnet.models import DeviceInfo
 import pytest
 
+from homeassistant.components.allnet.config_flow import _validate_and_get_unique_id
 from homeassistant.components.allnet.const import (
     CONF_DEVICE_PROFILE,
     CONF_USE_SSL,
@@ -67,6 +69,32 @@ def _patch_validate_error(exc):
     )
 
 
+@pytest.mark.asyncio
+async def test_validate_and_get_unique_id(
+    hass: HomeAssistant,
+    mock_allnet_client: MagicMock,
+    mock_device_info: DeviceInfo,
+) -> None:
+    """Test validation creates a client and returns its device information."""
+    mock_session = MagicMock()
+    with (
+        patch(
+            "homeassistant.components.allnet.config_flow.AllnetClient",
+            return_value=mock_allnet_client,
+        ),
+        patch(
+            "homeassistant.components.allnet.config_flow.async_get_clientsession",
+            return_value=mock_session,
+        ) as mock_get_session,
+    ):
+        result = await _validate_and_get_unique_id(
+            hass, TEST_HOST, "user", "password", True, False
+        )
+
+    assert result == (mock_device_info.unique_id, mock_device_info.name)
+    mock_get_session.assert_called_once_with(hass, verify_ssl=False)
+
+
 # ---------------------------------------------------------------------------
 # user step
 # ---------------------------------------------------------------------------
@@ -96,6 +124,8 @@ async def test_user_step_success(
             result["flow_id"],
             user_input={
                 CONF_HOST: TEST_HOST,
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "password",
                 CONF_USE_SSL: False,
                 CONF_VERIFY_SSL: True,
                 CONF_DEVICE_PROFILE: "auto",
@@ -105,6 +135,8 @@ async def test_user_step_success(
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_HOST] == TEST_HOST
+    assert result2["data"][CONF_USERNAME] == "user"
+    assert result2["data"][CONF_PASSWORD] == "password"
     assert result2["result"].unique_id == TEST_UNIQUE_ID
 
 
@@ -169,6 +201,27 @@ async def test_user_step_unsupported_firmware(hass: HomeAssistant) -> None:
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"]["base"] == "unsupported_firmware"
+
+
+@pytest.mark.asyncio
+async def test_user_step_invalid_response(hass: HomeAssistant) -> None:
+    """Test the user step shows an unknown error for an invalid response."""
+    with _patch_validate_error(AllnetInvalidResponseError("invalid")):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": "user"}
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: TEST_HOST,
+                CONF_USE_SSL: False,
+                CONF_VERIFY_SSL: True,
+                CONF_DEVICE_PROFILE: "auto",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == "unknown"
 
 
 @pytest.mark.asyncio
@@ -241,6 +294,44 @@ async def test_zeroconf_step_already_configured(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.asyncio
+async def test_zeroconf_step_authentication_required(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery continues when the device requires credentials."""
+    with _patch_validate_error(AllnetAuthenticationError("401")):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "zeroconf"},
+            data=_make_zeroconf_info(),
+        )
+
+    assert result["type"] == FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        pytest.param(AllnetConnectionError("unreachable"), id="connection"),
+        pytest.param(AllnetUnsupportedFirmwareError("old fw"), id="firmware"),
+        pytest.param(AllnetInvalidResponseError("invalid"), id="invalid_response"),
+    ],
+)
+async def test_zeroconf_step_cannot_connect(
+    hass: HomeAssistant, exception: Exception
+) -> None:
+    """Test zeroconf discovery aborts when the JSON API is unavailable."""
+    with _patch_validate_error(exception):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "zeroconf"},
+            data=_make_zeroconf_info(),
+        )
+
+    assert result["type"] == FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"
+
+
 # ---------------------------------------------------------------------------
 # zeroconf_confirm step
 # ---------------------------------------------------------------------------
@@ -269,12 +360,18 @@ async def test_zeroconf_confirm_success(
 
         result2 = await hass.config_entries.flow.async_configure(
             result["flow_id"],
-            user_input={CONF_DEVICE_PROFILE: "auto"},
+            user_input={
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "password",
+                CONF_DEVICE_PROFILE: "auto",
+            },
         )
         await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_HOST] == TEST_HOST
+    assert result2["data"][CONF_USERNAME] == "user"
+    assert result2["data"][CONF_PASSWORD] == "password"
 
 
 @pytest.mark.asyncio
@@ -304,6 +401,48 @@ async def test_zeroconf_confirm_invalid_auth(
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"]["base"] == "invalid_auth"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        pytest.param(
+            AllnetUnsupportedFirmwareError("old fw"),
+            "unsupported_firmware",
+            id="firmware",
+        ),
+        pytest.param(
+            AllnetConnectionError("unreachable"), "cannot_connect", id="connection"
+        ),
+        pytest.param(
+            AllnetInvalidResponseError("invalid"),
+            "cannot_connect",
+            id="invalid_response",
+        ),
+    ],
+)
+async def test_zeroconf_confirm_connection_errors(
+    hass: HomeAssistant,
+    mock_device_info: DeviceInfo,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test zeroconf confirmation displays validation errors."""
+    with _patch_validate(mock_device_info):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "zeroconf"},
+            data=_make_zeroconf_info(),
+        )
+
+    with _patch_validate_error(exception):
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_DEVICE_PROFILE: "auto"}
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == expected_error
 
 
 # ---------------------------------------------------------------------------
@@ -393,6 +532,89 @@ async def test_reconfigure_aborts_for_different_device(
     assert result2["reason"] == "unique_id_mismatch"
 
 
+@pytest.mark.asyncio
+async def test_reconfigure_success_updates_credentials(
+    hass: HomeAssistant,
+    mock_allnet_client: MagicMock,
+    mock_device_info: DeviceInfo,
+    setup_integration: ConfigEntry,
+) -> None:
+    """Test reconfiguration updates credentials when they are provided."""
+    entry = setup_integration
+
+    with (
+        _patch_validate(mock_device_info),
+        patch(
+            "homeassistant.components.allnet.AllnetClient",
+            return_value=mock_allnet_client,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reconfigure", "entry_id": entry.entry_id},
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: TEST_HOST,
+                CONF_USERNAME: "user",
+                CONF_PASSWORD: "password",
+                CONF_USE_SSL: False,
+                CONF_VERIFY_SSL: True,
+                CONF_DEVICE_PROFILE: "auto",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert entry.data[CONF_USERNAME] == "user"
+    assert entry.data[CONF_PASSWORD] == "password"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        pytest.param(AllnetAuthenticationError("401"), "invalid_auth", id="auth"),
+        pytest.param(
+            AllnetUnsupportedFirmwareError("old fw"),
+            "unsupported_firmware",
+            id="firmware",
+        ),
+        pytest.param(
+            AllnetConnectionError("unreachable"), "cannot_connect", id="connection"
+        ),
+        pytest.param(
+            AllnetInvalidResponseError("invalid"), "unknown", id="invalid_response"
+        ),
+    ],
+)
+async def test_reconfigure_validation_errors(
+    hass: HomeAssistant,
+    setup_integration: ConfigEntry,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test reconfiguration displays validation errors."""
+    with _patch_validate_error(exception):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reconfigure", "entry_id": setup_integration.entry_id},
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: TEST_HOST,
+                CONF_USE_SSL: False,
+                CONF_VERIFY_SSL: True,
+                CONF_DEVICE_PROFILE: "auto",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == expected_error
+
+
 # ---------------------------------------------------------------------------
 # reauth step
 # ---------------------------------------------------------------------------
@@ -448,3 +670,63 @@ async def test_reauth_invalid_auth(hass: HomeAssistant, setup_integration) -> No
 
     assert result2["type"] == FlowResultType.FORM
     assert result2["errors"]["base"] == "invalid_auth"
+
+
+@pytest.mark.asyncio
+@pytest.mark.parametrize(
+    ("exception"),
+    [
+        pytest.param(AllnetConnectionError("unreachable"), id="connection"),
+        pytest.param(AllnetInvalidResponseError("invalid"), id="invalid_response"),
+    ],
+)
+async def test_reauth_connection_errors(
+    hass: HomeAssistant, setup_integration: ConfigEntry, exception: Exception
+) -> None:
+    """Test reauthentication displays connection errors."""
+    with _patch_validate_error(exception):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "entry_id": setup_integration.entry_id},
+            data=setup_integration.data,
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_USERNAME: "admin", CONF_PASSWORD: "password"},
+        )
+
+    assert result2["type"] == FlowResultType.FORM
+    assert result2["errors"]["base"] == "cannot_connect"
+
+
+@pytest.mark.asyncio
+async def test_reauth_success_removes_empty_credentials(
+    hass: HomeAssistant,
+    mock_allnet_client: MagicMock,
+    mock_device_info: DeviceInfo,
+    setup_integration: ConfigEntry,
+) -> None:
+    """Test reauthentication removes credentials when submitted empty."""
+    entry = setup_integration
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, CONF_USERNAME: "old", CONF_PASSWORD: "old"}
+    )
+
+    with _patch_validate(mock_device_info):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reauth", "entry_id": entry.entry_id},
+            data=entry.data,
+        )
+        with patch(
+            "homeassistant.components.allnet.AllnetClient",
+            return_value=mock_allnet_client,
+        ):
+            result2 = await hass.config_entries.flow.async_configure(
+                result["flow_id"], user_input={}
+            )
+            await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert CONF_USERNAME not in entry.data
+    assert CONF_PASSWORD not in entry.data
