@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_entity_heater_unavailable_not_connected(
+async def test_entity_unavailable_not_connected(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
@@ -29,7 +29,7 @@ async def test_entity_heater_unavailable_not_connected(
     assert state.state == STATE_UNAVAILABLE
 
 
-async def test_entity_heater_unavailable_data_value_none(
+async def test_entity_unavailable_data_value_none(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
