@@ -133,7 +133,7 @@ WSDiscovery==2.1.2
 accuweather==5.1.0
 
 # homeassistant.components.actron_air
-actron-neo-api==0.5.13
+actron-neo-api==0.5.14
 
 # homeassistant.components.adax
 adax==0.4.0
@@ -1237,7 +1237,7 @@ hanna-cloud==0.0.7
 harbor-python==1.5.0
 
 # homeassistant.components.cloud
-hass-nabucasa==2.2.0
+hass-nabucasa==2.3.0
 
 # homeassistant.components.splunk
 hass-splunk==0.1.4
@@ -1640,7 +1640,7 @@ mozart-api==6.2.0.44.0
 mullvad-api==1.0.0
 
 # homeassistant.components.music_assistant
-music-assistant-client==1.4.3
+music-assistant-client==1.5.1
 
 # homeassistant.components.tts
 mutagen==1.48.1
@@ -2737,7 +2737,7 @@ python-open-router==0.4.0
 python-opendata-transport==0.5.0
 
 # homeassistant.components.openevse
-python-openevse-http==1.0.1
+python-openevse-http==1.5.0
 
 # homeassistant.components.opensky
 python-opensky==1.0.1
@@ -2928,7 +2928,7 @@ renault-api==0.5.12
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.8
+reolink-aio==0.21.9
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -3250,7 +3250,7 @@ ttn_client==1.3.0
 tuya-device-handlers==0.0.26
 
 # homeassistant.components.tuya
-tuya-device-sharing-sdk==0.2.14
+tuya-device-sharing-sdk==0.2.15
 
 # homeassistant.components.twentemilieu
 twentemilieu==3.0.0
