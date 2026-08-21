@@ -664,21 +664,31 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
 
         # the server resolves current_media for every playback scenario
         current_media = player.current_media
-        self._attr_media_content_id = current_media.uri if current_media else None
-        self._attr_media_title = current_media.title if current_media else None
-        self._attr_media_artist = current_media.artist if current_media else None
-        self._attr_media_album_name = current_media.album if current_media else None
-        self._attr_media_album_artist = (
-            current_media.album_artist if current_media else None
+        self._attr_media_content_id = (
+            current_media.uri if current_media is not None else None
         )
-        self._attr_media_duration = current_media.duration if current_media else None
+        self._attr_media_title = (
+            current_media.title if current_media is not None else None
+        )
+        self._attr_media_artist = (
+            current_media.artist if current_media is not None else None
+        )
+        self._attr_media_album_name = (
+            current_media.album if current_media is not None else None
+        )
+        self._attr_media_album_artist = (
+            current_media.album_artist if current_media is not None else None
+        )
+        self._attr_media_duration = (
+            current_media.duration if current_media is not None else None
+        )
 
         # the server pushes a fresh position anchor on jumps (e.g. seeking)
-        if current_media and current_media.elapsed_time is not None:
+        if current_media is not None and current_media.elapsed_time is not None:
             self._attr_media_position = int(current_media.elapsed_time)
             self._attr_media_position_updated_at = (
                 utc_from_timestamp(current_media.elapsed_time_last_updated)
-                if current_media.elapsed_time_last_updated
+                if current_media.elapsed_time_last_updated is not None
                 else None
             )
         else:
