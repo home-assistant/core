@@ -1500,6 +1500,24 @@ def _redact_credentials(url: str) -> str:
     return str(parts)
 
 
+def _redact_credentials_in_text(text: str, url: str) -> str:
+    """Redact url's userinfo anywhere it appears in text.
+
+    aiohttp exceptions can embed the request URL in their message, in either
+    raw (percent-encoded) or decoded form, so both variants are replaced.
+    """
+    parts = URL(url)
+    passwords = [
+        p for p in (parts.raw_password, parts.password) if p is not None and p != ""
+    ]
+    for password in passwords:
+        text = text.replace(password, "xxxxxxxx")
+    users = [u for u in (parts.raw_user, parts.user) if u is not None and u != ""]
+    for user in users:
+        text = text.replace(user, "xxxx")
+    return text
+
+
 async def async_fetch_image(
     logger: logging.Logger, hass: HomeAssistant, url: str
 ) -> tuple[bytes | None, str | None]:
@@ -1532,6 +1550,6 @@ async def async_fetch_image(
         logger.warning(
             "Error retrieving proxied image from %s: %s",
             _redact_credentials(url),
-            err,
+            _redact_credentials_in_text(str(err), url),
         )
         return None, None

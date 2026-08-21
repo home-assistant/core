@@ -280,6 +280,35 @@ async def test_get_image_http_truncated_log_credentials_redacted(
     assert f"Discarding truncated image from {redacted}" in caplog.text
 
 
+async def test_get_image_http_exception_text_credentials_redacted(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test credentials embedded in exception text are redacted."""
+    url = "http://usr51:s3cr3t99@example.com/default.jpg"
+    with patch(
+        "homeassistant.components.demo.media_player.DemoYoutubePlayer.media_image_url",
+        url,
+    ):
+        await async_setup_component(
+            hass, "media_player", {"media_player": {"platform": "demo"}}
+        )
+        await hass.async_block_till_done()
+        state = hass.states.get("media_player.bedroom")
+        # InvalidUrlClientError stringifies to the offending URL itself
+        aioclient_mock.get(url, exc=aiohttp.InvalidUrlClientError(url))
+        client = await hass_client_no_auth()
+        resp = await client.get(state.attributes["entity_picture"])
+
+    assert resp.status == HTTPStatus.NOT_FOUND
+    assert "s3cr3t99" not in caplog.text
+    assert "usr51" not in caplog.text
+    redacted = str(URL(url).with_user("xxxx").with_password("xxxxxxxx"))
+    assert f"Error retrieving proxied image from {redacted}: {redacted}" in caplog.text
+
+
 @pytest.mark.parametrize(
     "fetch_exception",
     [
