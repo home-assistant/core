@@ -46,7 +46,7 @@ async def test_all_entities(
         },
     )
     config_entry = mock_config_entry(device)
-    with patch("homeassistant.components.midea.PLATFORMS", [Platform.BINARY_SENSOR]):
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.BINARY_SENSOR]):
         await setup_integration(hass, config_entry, device)
 
     await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)
@@ -71,7 +71,7 @@ async def test_binary_sensor_state_update(
         },
     )
     config_entry = mock_config_entry(device)
-    with patch("homeassistant.components.midea.PLATFORMS", [Platform.BINARY_SENSOR]):
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.BINARY_SENSOR]):
         await setup_integration(hass, config_entry, device)
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_full_dust"]
