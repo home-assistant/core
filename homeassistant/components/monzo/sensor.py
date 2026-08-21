@@ -16,6 +16,8 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoData
 from .entity import MonzoBaseEntity
 
+PARALLEL_UPDATES = 0
+
 
 @dataclass(frozen=True, kw_only=True)
 class MonzoSensorEntityDescription(SensorEntityDescription):
@@ -36,6 +38,13 @@ ACCOUNT_SENSORS = (
         key="total_balance",
         translation_key="total_balance",
         value_fn=lambda data: data["balance"]["total_balance"] / 100,
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+    ),
+    MonzoSensorEntityDescription(
+        key="spend_today",
+        translation_key="spend_today",
+        value_fn=lambda data: abs(data["balance"]["spend_today"]) / 100,
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
     ),

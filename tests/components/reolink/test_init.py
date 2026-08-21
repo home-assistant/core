@@ -339,6 +339,40 @@ async def test_removing_chime(
     assert sorted(device_models) == sorted(expected_models)
 
 
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test removing an unexpected child device is rejected."""
+    reolink_host.channels = [0]
+    assert await async_setup_component(hass, "config", {})
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.SWITCH]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    parent_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_parent_device")},
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=parent_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)
+
+
 async def test_via_device_id_chain(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
