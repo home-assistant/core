@@ -1168,8 +1168,8 @@ def _validate_item(
     if device_id and device_id is not UNDEFINED:
         device_registry = dr.async_get(hass)
         if (
-            device_id not in device_registry.devices
-            and device_id not in device_registry.child_devices
+            device_registry.async_get(device_id, include_composite_devices=False)
+            is None
         ):
             raise ValueError(f"Device {device_id} does not exist")
     if (
@@ -1815,7 +1815,12 @@ class EntityRegistry(BaseRegistry):
         if not device_id or device_id is UNDEFINED:
             return device_id
         device_registry = dr.async_get(self.hass)
-        if not device_registry.async_is_composite_device_id(device_id):
+        if (
+            device_registry.async_get(
+                device_id, include_main_devices=False, include_child_devices=False
+            )
+            is None
+        ):
             # A real device or an unknown id; let _validate_item handle it
             return device_id
         report_issue = async_suggest_report_issue(
@@ -2176,13 +2181,10 @@ class EntityRegistry(BaseRegistry):
             config_subentry_id: str | None,
         ) -> str | None:
             """Map a device id to the split device matching the entity's config entry."""
-            # Note: check container membership, not async_get, which returns a restored
-            # composite for a composite device id. Child devices are their own container
-            # and are never composites, so an entity on one keeps its device id.
             if (
                 device_id is None
-                or device_id in device_registry.devices
-                or device_id in device_registry.child_devices
+                or device_registry.async_get(device_id, include_composite_devices=False)
+                is not None
             ):
                 return device_id
             successors = device_registry.async_get_devices_for_composite_device_id(
