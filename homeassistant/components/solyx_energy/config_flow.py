@@ -61,7 +61,7 @@ class SolyxEnergyConfigFlow(ConfigFlow, domain=DOMAIN):
             except SolyxEnergyAuthError:
                 errors["base"] = "invalid_auth"
             except (SolyxEnergyTokenError, SolyxEnergyDataError) as _err:
-                errors["base"] = "data_error"
+                errors["base"] = "cannot_connect"
             else:
                 return self.async_create_entry(
                     title=f"Nymo {user_input[CONF_NYMO_DEVICE_ID]}",

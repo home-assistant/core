@@ -5,19 +5,19 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
-      "data_error": "Couldn't retrieve device data due to a communication error.",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]"
     },
     "step": {
       "user": {
         "data": {
           "nymo_client_id": "Client ID",
-          "nymo_client_secret": "Client Secret",
+          "nymo_client_secret": "Client secret",
           "nymo_device_id": "Nymo device ID"
         },
         "data_description": {
           "nymo_client_id": "The Client ID that is copied from the Solyx Energy app.",
-          "nymo_client_secret": "The Client Secret that is copied from the Solyx Energy app.",
+          "nymo_client_secret": "The Client secret that is copied from the Solyx Energy app.",
           "nymo_device_id": "The Nymo device ID that is copied from the Solyx Energy app."
         },
         "description": "Set up your Nymo to integrate with Home Assistant."

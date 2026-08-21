@@ -61,8 +61,8 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     ("side_effect", "error_key"),
     [
         (SolyxEnergyAuthError(), "invalid_auth"),
-        (SolyxEnergyTokenError(), "data_error"),
-        (SolyxEnergyDataError(), "data_error"),
+        (SolyxEnergyTokenError(), "cannot_connect"),
+        (SolyxEnergyDataError(), "cannot_connect"),
     ],
 )
 async def test_user_flow_errors(
