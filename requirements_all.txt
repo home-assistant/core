@@ -1697,7 +1697,7 @@ nhc==0.8.0
 nibe==2.24.0
 
 # homeassistant.components.nice_go
-nice-go==1.0.2
+nice-go==1.0.3
 
 # homeassistant.components.nilu
 niluclient==0.1.2
