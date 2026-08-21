@@ -58,13 +58,14 @@ from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     # mypy cannot workout _cache Protocol with attrs
-    from propcache.api import cached_property as under_cached_property
+    # pylint: disable-next=reimported
+    from propcache.api import cached_property, cached_property as under_cached_property
 
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
 else:
-    from propcache.api import under_cached_property
+    from propcache.api import cached_property, under_cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1542,20 +1543,16 @@ class _DeprecatedDeviceRegistryItemsView:
     underlying container.
     """
 
-    __slots__ = ("_registry",)
+    __slots__ = ("_devices",)
 
-    def __init__(self, registry: DeviceRegistry) -> None:
+    def __init__(self, devices: ActiveDeviceRegistryItems) -> None:
         """Initialize the view over a device registry."""
-        self._registry = registry
+        self._devices = devices
 
     @property
     def _items(self) -> ActiveDeviceRegistryItems:
-        """Return the registry's live active-device container.
-
-        Read live rather than captured at construction, so a cached view keeps
-        working after `_devices` is replaced (e.g. on reload).
-        """
-        return self._registry._devices  # noqa: SLF001
+        """Return the registry's device container."""
+        return self._devices
 
     def __iter__(self) -> Iterator[DeviceEntry]:
         """Iterate over the device entries."""
@@ -1799,18 +1796,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     deleted_devices: DeletedDeviceRegistryItems
     _device_data: dict[str, DeviceEntry]
     _child_device_data: dict[str, ChildDeviceEntry]
-    _cache: dict[str, Any]
 
-    @under_cached_property
+    @cached_property
     def devices(self) -> Collection[DeviceEntry]:
         """Return a collection of the registered device entries."""
-        return _DeprecatedDeviceRegistryItemsView(self)
+        return _DeprecatedDeviceRegistryItemsView(self._devices)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
         self.hass = hass
-        # Backing store for under_cached_property (e.g. the `devices` view).
-        self._cache = {}
         # Devices registered through async_get_or_create in the current setup session
         # of their config entry, keyed by config entry id. A key collision with one of
         # these raises; one with a not yet registered device is reconciled.
