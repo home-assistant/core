@@ -9,6 +9,7 @@ from pythonxbox.api.provider.smartglass.models import ConsoleType, SmartglassCon
 from pythonxbox.api.provider.titlehub.models import Title
 from yarl import URL
 
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -179,7 +180,11 @@ class XboxGameBaseEntity(CoordinatorEntity[XboxTitleHistoryCoordinator]):
             ),
             model=self.data.name,
             name=self.data.name,
-            via_device=(DOMAIN, coordinator.client.xuid),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.client.xuid),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
 
     @property
@@ -188,6 +193,7 @@ class XboxGameBaseEntity(CoordinatorEntity[XboxTitleHistoryCoordinator]):
         return self.coordinator.data[self.title_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.title_id in self.coordinator.data

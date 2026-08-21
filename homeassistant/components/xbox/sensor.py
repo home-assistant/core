@@ -484,11 +484,13 @@ class XboxGameSensorEntity(XboxGameBaseEntity, SensorEntity):
     entity_description: XboxGameSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state of the requested attribute."""
         return self.entity_description.value_fn(self.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, float | None] | None:
         """Return entity specific state attributes."""
         return (

@@ -291,6 +291,7 @@ class XboxTitleHistoryCoordinator(XboxBaseCoordinator[dict[str, Title]]):
     config_entry: XboxConfigEntry
     _update_interval = timedelta(minutes=10)
 
+    @override
     async def update_data(self) -> dict[str, Title]:
         """Fetch game title history data."""
 
