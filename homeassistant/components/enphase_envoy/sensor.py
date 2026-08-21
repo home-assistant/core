@@ -1054,19 +1054,23 @@ async def async_setup_entry(
     ):
         entities.extend(
             EnvoyProductionPhaseEntity(coordinator, description)
-            for use_phase, descriptions in PRODUCTION_PHASE_SENSORS.items()
-            for description in descriptions
+            for index, use_phase in enumerate(PHASENAMES)
+            for description in PRODUCTION_PHASE_SENSORS[use_phase]
+            if index < (envoy.phase_count if envoy.phase_count > 1 else 0)
         )
     # For each consumption phase reported add consumption entities
     # if TOTAL_CONSUMPTION is available and phases detected even if None
     # to overcome None value at startup caused by envoy fw issues
-    if envoy.active_phase_count and (
-        envoy.supported_features & SupportedFeatures.TOTAL_CONSUMPTION
+    if (
+        envoy.active_phase_count
+        and envoy.phase_count > 1
+        and (envoy.supported_features & SupportedFeatures.TOTAL_CONSUMPTION)
     ):
         entities.extend(
             EnvoyConsumptionPhaseEntity(coordinator, description)
-            for use_phase, descriptions in CONSUMPTION_PHASE_SENSORS.items()
-            for description in descriptions
+            for index, use_phase in enumerate(PHASENAMES)
+            for description in CONSUMPTION_PHASE_SENSORS[use_phase]
+            if index < (envoy.phase_count if envoy.phase_count > 1 else 0)
         )
     # For each net_consumption phase reported add consumption entities
     # if NET_CONSUMPTION is available and phases detected even if None
@@ -1076,8 +1080,9 @@ async def async_setup_entry(
     ):
         entities.extend(
             EnvoyNetConsumptionPhaseEntity(coordinator, description)
-            for use_phase, descriptions in NET_CONSUMPTION_PHASE_SENSORS.items()
-            for description in descriptions
+            for index, use_phase in enumerate(PHASENAMES)
+            for description in NET_CONSUMPTION_PHASE_SENSORS[use_phase]
+            if index < (envoy.phase_count if envoy.phase_count > 1 else 0)
         )
     # Add Current Transformer entities
     if envoy_data.ctmeters:
