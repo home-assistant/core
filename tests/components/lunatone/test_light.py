@@ -1,8 +1,10 @@
 """Tests for the Lunatone integration."""
 
 import copy
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from lunatone_rest_api_client.models import LineStatus
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -27,7 +29,7 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup(
@@ -167,8 +169,16 @@ async def test_turn_on_off_broadcast(
 ) -> None:
     """Test the broadcast light can be turned on and off."""
     entity_id = f"light.dali_line_{mock_lunatone_dali_broadcast.line}"
+    light_status = iter((True, True, False))
 
     await setup_integration(hass, mock_config_entry)
+
+    async def fake_update():
+        status = next(light_status)
+        for device in mock_lunatone_devices.data.devices:
+            device.features.switchable.status = status
+
+    mock_lunatone_devices.async_update.side_effect = fake_update
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -179,6 +189,10 @@ async def test_turn_on_off_broadcast(
 
     assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 1
     mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "on"
 
     await hass.services.async_call(
         LIGHT_DOMAIN,
@@ -200,6 +214,10 @@ async def test_turn_on_off_broadcast(
     assert mock_lunatone_dali_broadcast.fade_to_brightness.await_count == 3
     mock_lunatone_dali_broadcast.fade_to_brightness.assert_awaited()
 
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "off"
+
 
 async def test_line_broadcast_available_status(
     hass: HomeAssistant,
@@ -209,15 +227,17 @@ async def test_line_broadcast_available_status(
     mock_lunatone_scan: AsyncMock,
     mock_lunatone_dali_broadcast: AsyncMock,
     mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test if the broadcast light is available."""
-    entity_id = f"light.dali_line_{mock_lunatone_dali_broadcast.line}"
+    line_id = str(mock_lunatone_dali_broadcast.line)
+    entity_id = f"light.dali_line_{line_id}"
 
     await setup_integration(hass, mock_config_entry)
 
     async def fake_update():
         info_data = copy.deepcopy(mock_lunatone_info.data)
-        info_data.lines["0"].line_status = LineStatus.NOT_REACHABLE
+        info_data.lines[line_id].line_status = LineStatus.NOT_REACHABLE
         mock_lunatone_info.data = info_data
 
     mock_lunatone_info.async_update.side_effect = fake_update
@@ -227,6 +247,10 @@ async def test_line_broadcast_available_status(
     assert state.state != "unavailable"
 
     await mock_config_entry.runtime_data.coordinator_info.async_refresh()
+    await hass.async_block_till_done()
+
+    freezer.tick(timedelta(seconds=10))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     state = hass.states.get(entity_id)
