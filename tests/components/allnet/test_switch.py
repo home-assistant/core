@@ -107,11 +107,12 @@ async def test_turn_on_raises_ha_error_on_command_error(
 
 @pytest.mark.asyncio
 async def test_switch_unique_id(
-    hass: HomeAssistant, setup_integration: ConfigEntry
+    hass: HomeAssistant,
+    setup_integration: ConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that switch entities have the correct unique_id."""
-    ent_reg = er.async_get(hass)
-    entry = ent_reg.async_get_entity_id(
+    entry = entity_registry.async_get_entity_id(
         "switch", DOMAIN, f"{TEST_UNIQUE_ID}_relay_0_switch"
     )
     assert entry is not None

@@ -85,11 +85,12 @@ async def test_sensor_unavailable_when_value_none(
 
 @pytest.mark.asyncio
 async def test_sensor_unique_id(
-    hass: HomeAssistant, setup_integration: ConfigEntry
+    hass: HomeAssistant,
+    setup_integration: ConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that sensor entities have the correct unique_id."""
-    ent_reg = er.async_get(hass)
-    entry = ent_reg.async_get_entity_id(
+    entry = entity_registry.async_get_entity_id(
         "sensor", DOMAIN, f"{TEST_UNIQUE_ID}_temp_0_sensor"
     )
     assert entry is not None

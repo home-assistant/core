@@ -98,11 +98,12 @@ async def test_binary_sensor_door_no_specific_device_class(
 
 @pytest.mark.asyncio
 async def test_binary_sensor_unique_id(
-    hass: HomeAssistant, setup_integration: ConfigEntry
+    hass: HomeAssistant,
+    setup_integration: ConfigEntry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test that binary sensor entities have the correct unique_id."""
-    ent_reg = er.async_get(hass)
-    entry = ent_reg.async_get_entity_id(
+    entry = entity_registry.async_get_entity_id(
         "binary_sensor", DOMAIN, f"{TEST_UNIQUE_ID}_door_0_binary_sensor"
     )
     assert entry is not None

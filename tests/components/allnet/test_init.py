@@ -99,11 +99,12 @@ async def test_unload_entry(
 
 @pytest.mark.asyncio
 async def test_setup_creates_device(
-    hass: HomeAssistant, setup_integration: ConfigEntry
+    hass: HomeAssistant,
+    setup_integration: ConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test that setup registers a device in the device registry."""
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device_by_identifier(
+    device = device_registry.async_get_device_by_identifier(
         (DOMAIN, TEST_UNIQUE_ID), setup_integration.entry_id
     )
 
