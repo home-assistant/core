@@ -2282,6 +2282,32 @@ async def _async_setup_target_reload_test(
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_group_target_membership_change_reloads(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test HomeKit reloads when a target group's membership changes."""
+    hass.states.async_set(
+        "group.downstairs", STATE_ON, {ATTR_ENTITY_ID: ["light.kitchen"]}
+    )
+    entry = await _async_setup_target_reload_test(
+        hass, {ATTR_ENTITY_ID: ["group.downstairs"]}
+    )
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        hass.states.async_set(
+            "group.downstairs", STATE_ON, {ATTR_ENTITY_ID: ["light.living_room"]}
+        )
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
+
+        freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once_with(entry.entry_id)
+
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
 async def test_entity_label_change_reloads_for_configured_labels(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
