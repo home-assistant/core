@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import pytest
 
@@ -22,12 +22,8 @@ from tests.common import MockConfigEntry
 
 MOCK_GATEWAY_ID = "*TESTGWY"
 MOCK_API_SECRET = "test_secret_key_12345"
-MOCK_PRIVATE_KEY = (
-    "private:0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
-)
-MOCK_PUBLIC_KEY = (
-    "public:fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
-)
+MOCK_PRIVATE_KEY = "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
+MOCK_PUBLIC_KEY = "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
 MOCK_RECIPIENT_ID = "ABCD1234"
 MOCK_SUBENTRY_ID = "mock_subentry_id"
 
@@ -83,35 +79,21 @@ def mock_config_entry_with_keys(
 
 
 @pytest.fixture
-def mock_connection() -> Generator[MagicMock]:
-    """Mock the Threema Gateway Connection."""
+def mock_credentials() -> Generator[AsyncMock]:
+    """Mock ThreemaAPIClient.validate_credentials to succeed by default."""
     with patch(
-        "homeassistant.components.threema.client.Connection", autospec=True
-    ) as connection_class:
-        connection = connection_class.return_value
-        connection.__aenter__ = AsyncMock(return_value=connection)
-        connection.__aexit__ = AsyncMock(return_value=None)
-        connection.get_credits = AsyncMock(return_value=100)
-        yield connection
+        "homeassistant.components.threema.client.ThreemaAPIClient.validate_credentials",
+        new_callable=AsyncMock,
+    ) as mock:
+        yield mock
 
 
 @pytest.fixture
-def mock_send() -> Generator[tuple[MagicMock, MagicMock]]:
-    """Mock TextMessage and SimpleTextMessage send methods."""
-    with (
-        patch(
-            "homeassistant.components.threema.client.TextMessage", autospec=True
-        ) as e2e_mock,
-        patch(
-            "homeassistant.components.threema.client.SimpleTextMessage", autospec=True
-        ) as simple_mock,
-    ):
-        e2e_instance = MagicMock()
-        e2e_instance.send = AsyncMock(return_value="mock_message_id")
-        e2e_mock.return_value = e2e_instance
-
-        simple_instance = MagicMock()
-        simple_instance.send = AsyncMock(return_value="mock_message_id")
-        simple_mock.return_value = simple_instance
-
-        yield (e2e_mock, simple_mock)
+def mock_send_message() -> Generator[AsyncMock]:
+    """Mock ThreemaAPIClient.send_text_message to return a message ID."""
+    with patch(
+        "homeassistant.components.threema.client.ThreemaAPIClient.send_text_message",
+        new_callable=AsyncMock,
+        return_value="mock_message_id",
+    ) as mock:
+        yield mock

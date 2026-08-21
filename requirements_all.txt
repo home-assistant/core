@@ -70,6 +70,7 @@ PyMicroBot==0.0.23
 
 # homeassistant.components.mobile_app
 # homeassistant.components.owntracks
+# homeassistant.components.threema
 PyNaCl==1.6.2
 
 # homeassistant.auth.mfa_modules.totp
@@ -3106,9 +3107,6 @@ thingspeak==1.0.0
 
 # homeassistant.components.lg_thinq
 thinqconnect==1.0.11
-
-# homeassistant.components.threema
-threema.gateway==8.0.0
 
 # homeassistant.components.tikteck
 tikteck==0.4

@@ -2,13 +2,16 @@
 
 from __future__ import annotations
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock
 
 import pytest
-from threema.gateway import GatewayError
-from threema.gateway.exception import GatewayServerError
 
 from homeassistant.components.notify import DOMAIN as NOTIFY_DOMAIN
+from homeassistant.components.threema.client import (
+    ThreemaAuthError,
+    ThreemaConnectionError,
+    ThreemaSendError,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -21,8 +24,8 @@ from tests.common import MockConfigEntry
 async def test_notify_entity_created(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_connection: MagicMock,
-    mock_send: tuple[MagicMock, MagicMock],
+    mock_credentials: AsyncMock,
+    mock_send_message: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test notify entity is created from subentry."""
@@ -42,8 +45,8 @@ async def test_notify_entity_created(
 async def test_notify_entity_not_created_without_subentry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_connection: MagicMock,
-    mock_send: tuple[MagicMock, MagicMock],
+    mock_credentials: AsyncMock,
+    mock_send_message: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test no notify entity without subentries."""
@@ -61,8 +64,8 @@ async def test_notify_entity_not_created_without_subentry(
 async def test_send_message_simple(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_connection: MagicMock,
-    mock_send: tuple[MagicMock, MagicMock],
+    mock_credentials: AsyncMock,
+    mock_send_message: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sending a message via notify entity (simple mode)."""
@@ -83,18 +86,14 @@ async def test_send_message_simple(
         blocking=True,
     )
 
-    mock_send[1].assert_called_once()
-    call_kwargs = mock_send[1].call_args[1]
-    assert call_kwargs["to_id"] == MOCK_RECIPIENT_ID
-    assert call_kwargs["text"] == "Hello from tests!"
-    mock_send[1].return_value.send.assert_awaited_once()
+    mock_send_message.assert_called_once_with(MOCK_RECIPIENT_ID, "Hello from tests!")
 
 
 async def test_send_message_e2e(
     hass: HomeAssistant,
     mock_config_entry_with_keys: MockConfigEntry,
-    mock_connection: MagicMock,
-    mock_send: tuple[MagicMock, MagicMock],
+    mock_credentials: AsyncMock,
+    mock_send_message: AsyncMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test sending a message via notify entity (E2E mode)."""
@@ -115,33 +114,29 @@ async def test_send_message_e2e(
         blocking=True,
     )
 
-    mock_send[0].assert_called_once()
-    call_kwargs = mock_send[0].call_args[1]
-    assert call_kwargs["to_id"] == MOCK_RECIPIENT_ID
-    assert call_kwargs["text"] == "Hello E2E!"
-    mock_send[0].return_value.send.assert_awaited_once()
+    mock_send_message.assert_called_once_with(MOCK_RECIPIENT_ID, "Hello E2E!")
 
 
 @pytest.mark.parametrize(
     ("side_effect", "match"),
     [
-        (GatewayServerError(status=401), "Error sending message"),
-        (GatewayError("Network error"), "Error sending message"),
-        (GatewayServerError(status=500), "Error sending message"),
+        (ThreemaAuthError("Invalid credentials"), "Error sending message"),
+        (ThreemaSendError("Send failed"), "Error sending message"),
+        (ThreemaConnectionError("Connection error"), "Error sending message"),
     ],
-    ids=["auth_error", "send_error", "server_error_non_auth"],
+    ids=["auth_error", "send_error", "connection_error"],
 )
 async def test_send_message_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_connection: MagicMock,
-    mock_send: tuple[MagicMock, MagicMock],
+    mock_credentials: AsyncMock,
+    mock_send_message: AsyncMock,
     entity_registry: er.EntityRegistry,
     side_effect: Exception,
     match: str,
 ) -> None:
     """Test notify entity handles send errors."""
-    mock_send[1].return_value.send.side_effect = side_effect
+    mock_send_message.side_effect = side_effect
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)

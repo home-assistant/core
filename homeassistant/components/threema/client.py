@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
+import base64
 import logging
+import os
 
-from threema.gateway import Connection, GatewayError, key
-from threema.gateway.e2e import TextMessage
-from threema.gateway.exception import GatewayServerError
-from threema.gateway.simple import TextMessage as SimpleTextMessage
+import aiohttp
+import nacl.public
+import nacl.utils
 
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 _LOGGER = logging.getLogger(__name__)
 
-# HTTP 401 from Threema Gateway means invalid credentials
+_BASE_URL = "https://msgapi.threema.ch"
 _HTTP_UNAUTHORIZED = 401
+_MSG_TYPE_TEXT = 0x01
 
 
 class ThreemaConnectionError(Exception):
@@ -45,41 +48,76 @@ class ThreemaAPIClient:
         self.api_secret = api_secret
         self.private_key = private_key
 
-    def _get_connection(self) -> Connection:
-        """Get a Threema Gateway connection.
-
-        Note: Connection manages its own aiohttp session lifecycle.
-        Do not pass HA's shared session as Connection will close it.
-        """
-        return Connection(
-            identity=self.gateway_id,
-            secret=self.api_secret,
-            key=self.private_key,
-        )
-
     async def validate_credentials(self) -> None:
         """Validate the Gateway credentials by checking credits.
 
         Raises ThreemaAuthError for invalid credentials.
         Raises ThreemaConnectionError for other failures.
         """
+        session = async_get_clientsession(self.hass)
         try:
-            async with self._get_connection() as conn:
-                remaining_credits = await conn.get_credits()
-                _LOGGER.debug(
-                    "Gateway credentials validated, credits: %s",
-                    remaining_credits,
-                )
-        except GatewayServerError as err:
-            if err.status == _HTTP_UNAUTHORIZED:
-                raise ThreemaAuthError("Invalid Threema Gateway credentials") from err
+            resp = await session.get(
+                f"{_BASE_URL}/credits",
+                params={"from": self.gateway_id, "secret": self.api_secret},
+            )
+        except aiohttp.ClientError as err:
             raise ThreemaConnectionError(
-                f"Gateway server error validating credentials: {err}"
+                f"Connection error validating credentials: {err}"
             ) from err
-        except GatewayError as err:
+
+        if resp.status == _HTTP_UNAUTHORIZED:
+            raise ThreemaAuthError("Invalid Threema Gateway credentials")
+        if not resp.ok:
             raise ThreemaConnectionError(
-                f"Gateway error validating credentials: {err}"
+                f"Gateway error validating credentials: HTTP {resp.status}"
+            )
+
+        remaining_credits = await resp.text()
+        _LOGGER.debug("Gateway credentials validated, credits: %s", remaining_credits)
+
+    async def _fetch_recipient_public_key(
+        self, recipient_id: str
+    ) -> nacl.public.PublicKey:
+        """Fetch recipient public key from Threema Gateway."""
+        session = async_get_clientsession(self.hass)
+        try:
+            resp = await session.get(
+                f"{_BASE_URL}/pubkeys/{recipient_id}",
+                params={"from": self.gateway_id, "secret": self.api_secret},
+            )
+        except aiohttp.ClientError as err:
+            raise ThreemaSendError(
+                f"Failed to fetch public key for {recipient_id}: {err}"
             ) from err
+
+        if resp.status == _HTTP_UNAUTHORIZED:
+            raise ThreemaAuthError("Invalid Threema Gateway credentials")
+        if not resp.ok:
+            raise ThreemaSendError(
+                f"Failed to fetch public key for {recipient_id}: HTTP {resp.status}"
+            )
+
+        key_b64 = await resp.text()
+        return nacl.public.PublicKey(base64.b64decode(key_b64))
+
+    def _build_encrypted_message(
+        self, text: str, recipient_public_key: nacl.public.PublicKey
+    ) -> tuple[bytes, bytes]:
+        """Build and encrypt a text message for E2E delivery.
+
+        Returns (nonce, ciphertext) as raw bytes.
+        """
+        assert self.private_key is not None
+        text_bytes = text.encode("utf-8")
+        padding_length = os.urandom(1)[0] or 255
+        padding = bytes([padding_length] * padding_length)
+        plaintext = bytes([_MSG_TYPE_TEXT]) + text_bytes + padding
+
+        private_key = nacl.public.PrivateKey(bytes.fromhex(self.private_key))
+        nonce = nacl.utils.random(nacl.public.Box.NONCE_SIZE)
+        box = nacl.public.Box(private_key, recipient_public_key)
+        encrypted = box.encrypt(plaintext, nonce)
+        return encrypted.nonce, encrypted.ciphertext
 
     async def send_text_message(self, recipient_id: str, text: str) -> str:
         """Send a text message to a Threema ID.
@@ -87,47 +125,57 @@ class ThreemaAPIClient:
         Returns the message ID on success.
         Raises ThreemaSendError on failure.
         """
-        async with self._get_connection() as conn:
+        session = async_get_clientsession(self.hass)
+
+        try:
             if self.private_key:
                 _LOGGER.debug("Sending E2E encrypted message to %s", recipient_id)
-                message = TextMessage(
-                    connection=conn,
-                    to_id=recipient_id,
-                    text=text,
+                recipient_pub_key = await self._fetch_recipient_public_key(recipient_id)
+                nonce, ciphertext = self._build_encrypted_message(
+                    text, recipient_pub_key
+                )
+                resp = await session.post(
+                    f"{_BASE_URL}/send_e2e",
+                    data={
+                        "from": self.gateway_id,
+                        "to": recipient_id,
+                        "secret": self.api_secret,
+                        "nonce": nonce.hex(),
+                        "box": ciphertext.hex(),
+                    },
                 )
             else:
                 _LOGGER.debug("Sending simple message to %s", recipient_id)
-                message = SimpleTextMessage(
-                    connection=conn,
-                    to_id=recipient_id,
-                    text=text,
+                resp = await session.post(
+                    f"{_BASE_URL}/send_simple",
+                    data={
+                        "from": self.gateway_id,
+                        "to": recipient_id,
+                        "secret": self.api_secret,
+                        "text": text,
+                    },
                 )
+        except aiohttp.ClientError as err:
+            raise ThreemaSendError(
+                f"Connection error sending message to {recipient_id}: {err}"
+            ) from err
 
-            try:
-                message_id: str = await message.send()
-            except GatewayServerError as err:
-                if err.status == _HTTP_UNAUTHORIZED:
-                    raise ThreemaAuthError(
-                        "Invalid Threema Gateway credentials"
-                    ) from err
-                raise ThreemaSendError(
-                    f"Gateway server error sending message to {recipient_id}: {err}"
-                ) from err
-            except GatewayError as err:
-                raise ThreemaSendError(
-                    f"Gateway error sending message to {recipient_id}: {err}"
-                ) from err
+        if resp.status == _HTTP_UNAUTHORIZED:
+            raise ThreemaAuthError("Invalid Threema Gateway credentials")
+        if not resp.ok:
+            raise ThreemaSendError(
+                f"Gateway error sending message to {recipient_id}: HTTP {resp.status}"
+            )
 
+        message_id = await resp.text()
         _LOGGER.debug("Message sent to %s (ID: %s)", recipient_id, message_id)
         return message_id
 
 
 def generate_key_pair() -> tuple[str, str]:
-    """Generate a new key pair for E2E encryption using official SDK.
+    """Generate a new key pair for E2E encryption.
 
-    Returns tuple of (private_key, public_key) as encoded strings.
+    Returns tuple of (private_key, public_key) as hex-encoded strings.
     """
-    private_key_obj, public_key_obj = key.Key.generate_pair()
-    private_key_str = key.Key.encode(private_key_obj)
-    public_key_str = key.Key.encode(public_key_obj)
-    return private_key_str, public_key_str
+    private_key = nacl.public.PrivateKey.generate()
+    return private_key.encode().hex(), private_key.public_key.encode().hex()
