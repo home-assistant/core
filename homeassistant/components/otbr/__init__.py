@@ -49,6 +49,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
         border_agent_id = await otbrdata.get_border_agent_id()
         dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
         extended_address = await otbrdata.get_extended_address()
+        otbrdata.ephemeral_key_supported = await otbrdata.get_ephemeral_key_supported(
+            hass
+        )
     except GetBorderAgentIdNotSupported:
         ir.async_create_issue(
             hass,

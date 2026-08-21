@@ -37,6 +37,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_info)
     websocket_api.async_register_command(hass, websocket_create_network)
     websocket_api.async_register_command(hass, websocket_create_ephemeral_key)
+    websocket_api.async_register_command(hass, websocket_delete_ephemeral_key)
     websocket_api.async_register_command(hass, websocket_set_channel)
     websocket_api.async_register_command(hass, websocket_set_network)
 
@@ -87,6 +88,7 @@ async def websocket_info(
             "channel": dataset.channel if dataset else None,
             "extended_address": extended_address,
             "extended_pan_id": extended_pan_id,
+            "ephemeral_key_supported": data.ephemeral_key_supported,
             "url": data.url,
         }
 
@@ -243,6 +245,38 @@ async def websocket_create_ephemeral_key(
             "port": port,
         },
     )
+
+
+@websocket_api.websocket_command(
+    {
+        "type": "otbr/delete_ephemeral_key",
+        vol.Required("extended_address"): str,
+    }
+)
+@websocket_api.require_admin
+@websocket_api.async_response
+@async_get_otbr_data
+async def websocket_delete_ephemeral_key(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict,
+    data: OTBRData,
+) -> None:
+    """Deactivate the active ephemeral key, revoking the shared credentials."""
+    try:
+        await data.deactivate_ephemeral_key(hass)
+    except EphemeralKeyNotSupported:
+        connection.send_error(
+            msg["id"],
+            "ephemeral_key_not_supported",
+            "The border router does not support credential sharing",
+        )
+        return
+    except HomeAssistantError as exc:
+        connection.send_error(msg["id"], "delete_ephemeral_key_failed", str(exc))
+        return
+
+    connection.send_result(msg["id"])
 
 
 @websocket_api.websocket_command(
