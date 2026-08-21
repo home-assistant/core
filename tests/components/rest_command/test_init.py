@@ -101,6 +101,23 @@ async def test_reload(hass: HomeAssistant, setup_component: ComponentSetup) -> N
     assert hass.services.has_service(DOMAIN, SERVICE_CALL_ENDPOINT)
 
 
+async def test_reload_preserves_actions_when_config_unavailable(
+    hass: HomeAssistant, setup_component: ComponentSetup
+) -> None:
+    """Test reload preserves actions when YAML configuration is unavailable."""
+    await setup_component()
+    existing_services = set(hass.services.async_services_for_domain(DOMAIN))
+
+    with patch(
+        "homeassistant.components.rest_command.async_integration_yaml_config",
+        autospec=True,
+        return_value=None,
+    ):
+        await hass.services.async_call(DOMAIN, SERVICE_RELOAD, blocking=True)
+
+    assert set(hass.services.async_services_for_domain(DOMAIN)) == existing_services
+
+
 async def test_yaml_call_endpoint_takes_precedence(
     hass: HomeAssistant, setup_component: ComponentSetup
 ) -> None:
