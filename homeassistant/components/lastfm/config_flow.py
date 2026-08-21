@@ -19,10 +19,13 @@ from homeassistant.helpers.selector import (
     SelectSelectorConfig,
 )
 
-from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN
+from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN, ERROR_CODE_LOGIN_REQUIRED
 from .coordinator import LastFMConfigEntry
 
-PLACEHOLDERS = {"api_account_url": "https://www.last.fm/api/account/create"}
+PLACEHOLDERS = {
+    "api_account_url": "https://www.last.fm/api/account/create",
+    "privacy_settings_url": "https://www.last.fm/settings/privacy",
+}
 
 CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
@@ -40,8 +43,11 @@ def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
     errors = {}
     try:
         user.get_playcount()
+        user.get_recent_tracks(limit=1)
     except WSError as error:
-        if error.details == "User not found":
+        if error.status == ERROR_CODE_LOGIN_REQUIRED:
+            errors["base"] = "hidden_recent_tracks"
+        elif error.details == "User not found":
             errors["base"] = "invalid_account"
         elif (
             error.details
@@ -144,6 +150,7 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         return self.async_show_form(
             step_id="friends",
             errors=errors,
+            description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
@@ -203,6 +210,7 @@ class LastFmOptionsFlowHandler(OptionsFlowWithReload):
         return self.async_show_form(
             step_id="init",
             errors=errors,
+            description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(
                 vol.Schema(
                     {
