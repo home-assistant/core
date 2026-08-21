@@ -9,7 +9,6 @@ from homeassistant.components.rest_command.const import (
     AUTHENTICATION_BEARER,
     AUTHENTICATION_NONE,
     CONF_CONTENT_TYPE,
-    CONF_ENDPOINT_NAME,
     CONF_INSECURE_CIPHER,
     CONF_SKIP_URL_ENCODING,
     DEFAULT_PAYLOAD,
@@ -37,7 +36,6 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 USER_INPUT = {
-    CONF_ENDPOINT_NAME: "Primary webhook",
     CONF_URL: "https://example.com/hooks/notify?key=secret",
     CONF_METHOD: "post",
     CONF_AUTHENTICATION: AUTHENTICATION_BEARER,
@@ -86,7 +84,7 @@ async def test_user_flow(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Primary webhook"
+    assert result["title"] == "example.com"
     assert result["data"] == USER_INPUT
     assert result["result"].unique_id is not None
 
@@ -99,7 +97,6 @@ async def test_user_flow_json_defaults(hass: HomeAssistant) -> None:
 
     defaults = result["data_schema"](
         {
-            CONF_ENDPOINT_NAME: "Webhook",
             CONF_URL: "https://example.com/hook",
         }
     )
@@ -208,7 +205,7 @@ async def test_reconfigure_preserves_bearer_token(hass: HomeAssistant) -> None:
     """Test reconfiguring without re-entering the stored token."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        title="example.com",
+        title="Custom endpoint",
         data=USER_INPUT,
         unique_id="endpoint-id",
     )
@@ -219,7 +216,6 @@ async def test_reconfigure_preserves_bearer_token(hass: HomeAssistant) -> None:
 
     new_input = {
         **USER_INPUT,
-        CONF_ENDPOINT_NAME: "Backup webhook",
         CONF_URL: "https://new.example.com/hook",
     }
     new_input.pop(CONF_TOKEN)
@@ -229,8 +225,7 @@ async def test_reconfigure_preserves_bearer_token(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert entry.title == "Backup webhook"
-    assert entry.data[CONF_ENDPOINT_NAME] == "Backup webhook"
+    assert entry.title == "Custom endpoint"
     assert entry.data[CONF_TOKEN] == "secret-token"
 
 

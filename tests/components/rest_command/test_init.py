@@ -16,7 +16,6 @@ from homeassistant.components.rest_command import CONFIG_SCHEMA
 from homeassistant.components.rest_command.const import (
     AUTHENTICATION_BEARER,
     AUTHENTICATION_NONE,
-    CONF_ENDPOINT_NAME,
     CONF_INSECURE_CIPHER,
     CONF_SKIP_URL_ENCODING,
     DOMAIN,
@@ -177,7 +176,6 @@ async def test_reload_restores_ui_call_endpoint(
         domain=DOMAIN,
         title="Example",
         data={
-            CONF_ENDPOINT_NAME: "Example",
             CONF_URL: TEST_URL,
             CONF_METHOD: "get",
             CONF_AUTHENTICATION: AUTHENTICATION_NONE,
@@ -688,7 +686,6 @@ async def test_ui_managed_bearer_endpoint(
         domain=DOMAIN,
         title="Example",
         data={
-            CONF_ENDPOINT_NAME: "Example",
             CONF_URL: TEST_URL,
             CONF_METHOD: "post",
             CONF_AUTHENTICATION: AUTHENTICATION_BEARER,
@@ -744,7 +741,6 @@ async def test_ui_managed_basic_endpoint(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="Basic endpoint",
         data={
-            CONF_ENDPOINT_NAME: "Basic endpoint",
             CONF_URL: TEST_URL,
             CONF_METHOD: "get",
             CONF_AUTHENTICATION: HTTP_BASIC_AUTHENTICATION,
@@ -780,7 +776,6 @@ async def test_ui_managed_digest_endpoint(hass: HomeAssistant) -> None:
         domain=DOMAIN,
         title="Digest endpoint",
         data={
-            CONF_ENDPOINT_NAME: "Digest endpoint",
             CONF_URL: TEST_URL,
             CONF_METHOD: "get",
             CONF_AUTHENTICATION: HTTP_DIGEST_AUTHENTICATION,
@@ -817,7 +812,6 @@ async def test_loaded_reconfigure_updates_runtime_data(
         domain=DOMAIN,
         title="Original endpoint",
         data={
-            CONF_ENDPOINT_NAME: "Original endpoint",
             CONF_URL: TEST_URL,
             CONF_METHOD: "get",
             CONF_AUTHENTICATION: AUTHENTICATION_NONE,
@@ -837,7 +831,6 @@ async def test_loaded_reconfigure_updates_runtime_data(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            CONF_ENDPOINT_NAME: "Reconfigured endpoint",
             CONF_URL: new_url,
             CONF_METHOD: "post",
             CONF_AUTHENTICATION: AUTHENTICATION_NONE,
@@ -851,7 +844,7 @@ async def test_loaded_reconfigure_updates_runtime_data(
 
     assert result["reason"] == "reconfigure_successful"
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.title == "Reconfigured endpoint"
+    assert entry.title == "Original endpoint"
     assert entry.runtime_data is not original_runtime_data
 
     aioclient_mock.post(new_url, content=b"success")
@@ -873,7 +866,6 @@ async def test_ui_managed_endpoint_unload(
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            CONF_ENDPOINT_NAME: "Example",
             CONF_URL: TEST_URL,
             CONF_METHOD: "get",
             CONF_AUTHENTICATION: "none",

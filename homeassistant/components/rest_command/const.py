@@ -8,7 +8,6 @@ AUTHENTICATION_BEARER: Final = "bearer"
 AUTHENTICATION_NONE: Final = "none"
 
 CONF_CONTENT_TYPE: Final = "content_type"
-CONF_ENDPOINT_NAME: Final = "endpoint_name"
 CONF_INSECURE_CIPHER: Final = "insecure_cipher"
 CONF_SKIP_URL_ENCODING: Final = "skip_url_encoding"
 SERVICE_CALL_ENDPOINT: Final = "call_endpoint"

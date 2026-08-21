@@ -38,7 +38,6 @@ from .const import (
     AUTHENTICATION_BEARER,
     AUTHENTICATION_NONE,
     CONF_CONTENT_TYPE,
-    CONF_ENDPOINT_NAME,
     CONF_INSECURE_CIPHER,
     CONF_SKIP_URL_ENCODING,
     DEFAULT_METHOD,
@@ -58,7 +57,6 @@ AUTHENTICATION_METHODS = [
 
 ENDPOINT_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_ENDPOINT_NAME): TextSelector(),
         vol.Required(CONF_URL): TextSelector(
             TextSelectorConfig(type=TextSelectorType.URL)
         ),
@@ -108,9 +106,6 @@ def _validated_data(
     """Validate and normalize endpoint data."""
     errors: dict[str, str] = {}
     data = user_input.copy()
-    data[CONF_ENDPOINT_NAME] = data[CONF_ENDPOINT_NAME].strip()
-    if not data[CONF_ENDPOINT_NAME]:
-        errors[CONF_ENDPOINT_NAME] = "required"
 
     try:
         parsed_url = URL(data[CONF_URL])
@@ -184,8 +179,10 @@ class RestCommandConfigFlow(ConfigFlow, domain=DOMAIN):
                     }
                 )
                 await self.async_set_unique_id(uuid4().hex)
+                title = URL(data[CONF_URL]).host
+                assert title is not None
                 return self.async_create_entry(
-                    title=data[CONF_ENDPOINT_NAME],
+                    title=title,
                     data=data,
                 )
 
@@ -215,7 +212,6 @@ class RestCommandConfigFlow(ConfigFlow, domain=DOMAIN):
                 return self.async_update_and_abort(
                     entry,
                     data=data,
-                    title=data[CONF_ENDPOINT_NAME],
                 )
 
         return self.async_show_form(

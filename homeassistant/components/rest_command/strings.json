@@ -14,7 +14,6 @@
         "data": {
           "authentication": "Authentication",
           "content_type": "Content type",
-          "endpoint_name": "Endpoint name",
           "insecure_cipher": "Use legacy TLS ciphers",
           "method": "HTTP method",
           "password": "[%key:common::config_flow::data::password%]",
@@ -29,7 +28,6 @@
         "data_description": {
           "authentication": "Authentication method for requests to this endpoint.",
           "content_type": "Content-Type header sent with each request. New endpoints default to application/json.",
-          "endpoint_name": "Name used to identify this endpoint in actions.",
           "insecure_cipher": "Allow legacy TLS ciphers. Enable only when the endpoint cannot use modern ciphers.",
           "method": "HTTP method used for each request.",
           "password": "Password for Basic or Digest authentication. Leave blank to keep the current password.",
@@ -47,7 +45,6 @@
         "data": {
           "authentication": "Authentication",
           "content_type": "Content type",
-          "endpoint_name": "Endpoint name",
           "insecure_cipher": "Use legacy TLS ciphers",
           "method": "HTTP method",
           "password": "[%key:common::config_flow::data::password%]",
@@ -62,7 +59,6 @@
         "data_description": {
           "authentication": "Authentication method for requests to this endpoint.",
           "content_type": "Content-Type header sent with each request. Defaults to application/json.",
-          "endpoint_name": "Name used to identify this endpoint in actions.",
           "insecure_cipher": "Allow legacy TLS ciphers. Enable only when the endpoint cannot use modern ciphers.",
           "method": "HTTP method used for each request.",
           "password": "Password for Basic or Digest authentication.",
