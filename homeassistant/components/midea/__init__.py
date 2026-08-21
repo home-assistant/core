@@ -21,9 +21,9 @@ from .const import CONF_KEY, CONF_SUBTYPE
 from .entity import MideaConfigEntry
 
 _PLATFORMS: list[Platform] = [
-    Platform.CLIMATE, 
+    Platform.CLIMATE,
     Platform.HUMIDIFIER,
-    Platform.NUMBER
+    Platform.NUMBER,
 ]
 
 
