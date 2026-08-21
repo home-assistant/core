@@ -1,6 +1,5 @@
 """Support for Vivotek IP Cameras."""
 
-import asyncio
 from collections.abc import Callable
 from functools import partial
 import logging
@@ -30,19 +29,38 @@ DEFAULT_STREAM_SOURCE = "live.sdp"
 PLATFORM_SCHEMA: Final = cv.removed(DOMAIN, raise_if_present=False)
 
 
-async def _async_fetch_str_metadata(
-    hass: HomeAssistant,
+def _fetch_str_metadata(
     fetcher: Callable[[], Any],
     log_message: str,
 ) -> str | None:
     """Fetch optional string metadata from the camera."""
     try:
-        value: Any = await hass.async_add_executor_job(fetcher)
+        value: Any = fetcher()
     except VivotekCameraError:
         _LOGGER.debug(log_message)
         return None
 
     return value if isinstance(value, str) else None
+
+
+def _fetch_metadata(
+    cam_client: VivotekCamera, entry_title: str
+) -> tuple[str | None, ...]:
+    """Fetch optional metadata from the camera in a single executor job."""
+    return (
+        _fetch_str_metadata(
+            cam_client.get_serial,
+            f"Failed to fetch serial number for {entry_title}",
+        ),
+        _fetch_str_metadata(
+            partial(cam_client.get_param, "system_info_firmwareversion"),
+            f"Failed to fetch firmware version for {entry_title}",
+        ),
+        _fetch_str_metadata(
+            partial(cam_client.get_param, "system_info_modelname"),
+            f"Failed to fetch model for {entry_title}",
+        ),
+    )
 
 
 async def async_setup_entry(
@@ -57,22 +75,10 @@ async def async_setup_entry(
         f"rtsp://{creds}@{config[CONF_IP_ADDRESS]}:554/{config[CONF_STREAM_PATH]}"
     )
     cam_client = entry.runtime_data
-    serial_number, sw_version, model = await asyncio.gather(
-        _async_fetch_str_metadata(
-            hass,
-            cam_client.get_serial,
-            f"Failed to fetch serial number for {entry.title}",
-        ),
-        _async_fetch_str_metadata(
-            hass,
-            partial(cam_client.get_param, "system_info_firmwareversion"),
-            f"Failed to fetch firmware version for {entry.title}",
-        ),
-        _async_fetch_str_metadata(
-            hass,
-            partial(cam_client.get_param, "system_info_modelname"),
-            f"Failed to fetch model for {entry.title}",
-        ),
+    serial_number, sw_version, model = await hass.async_add_executor_job(
+        _fetch_metadata,
+        cam_client,
+        entry.title,
     )
 
     if TYPE_CHECKING:

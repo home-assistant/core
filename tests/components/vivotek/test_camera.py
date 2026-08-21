@@ -1,14 +1,18 @@
 """Tests for the Vivotek camera integration."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from libpyvivotek.vivotek import VivotekCameraError
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vivotek.camera import VivotekCam
 from homeassistant.components.vivotek.const import DOMAIN
+from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
 
 from . import setup_integration
 
@@ -82,45 +86,40 @@ async def test_camera_device_info_with_metadata_errors(
     assert device.sw_version is None
 
 
-def test_camera_available_when_update_succeeds(
+async def test_camera_available_when_update_succeeds(
+    hass: HomeAssistant,
     mock_vivotek_camera: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test camera is available when update probe succeeds."""
-    camera = VivotekCam(
-        mock_vivotek_camera,
-        "rtsp://example/live.sdp",
-        "11:22:33:44:55:66",
-        None,
-        None,
-        None,
-        2,
-        "Vivotek Camera",
-    )
+    await setup_integration(hass, mock_config_entry)
 
-    camera.update()
+    freezer.tick(timedelta(seconds=1))
+    await async_update_entity(hass, "camera.vivotek_camera")
 
-    assert camera.available
+    state = hass.states.get("camera.vivotek_camera")
+    assert state is not None
+    assert state.state != STATE_UNAVAILABLE
 
 
-def test_camera_unavailable_when_update_fails(
+async def test_camera_unavailable_when_update_fails(
+    hass: HomeAssistant,
     mock_vivotek_camera: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test camera is unavailable when update probe raises error."""
-    camera = VivotekCam(
-        mock_vivotek_camera,
-        "rtsp://example/live.sdp",
-        "11:22:33:44:55:66",
-        None,
-        None,
-        None,
-        2,
-        "Vivotek Camera",
-    )
+    await setup_integration(hass, mock_config_entry)
+
     mock_vivotek_camera.get_serial.side_effect = VivotekCameraError
+    freezer.tick(timedelta(seconds=1))
+    await async_update_entity(hass, "camera.vivotek_camera")
 
-    camera.update()
+    state = hass.states.get("camera.vivotek_camera")
+    assert state is not None
 
-    assert not camera.available
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_camera_stream_source(
@@ -157,6 +156,7 @@ def test_camera_motion_detection_methods(
         2,
         "Vivotek Camera",
     )
+
     mock_vivotek_camera.set_param.side_effect = ["1", "0"]
 
     camera.enable_motion_detection()
@@ -180,6 +180,7 @@ def test_camera_image_returns_snapshot(
         2,
         "Vivotek Camera",
     )
+
     mock_vivotek_camera.snapshot.return_value = b"snapshot-bytes"
 
     image = camera.camera_image()
