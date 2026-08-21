@@ -183,10 +183,14 @@ async def test_user_flow_aborts_on_duplicate_system_id(hass: HomeAssistant) -> N
     assert existing.data[CONF_HOST] == "new-host.example.com"
 
 
-async def test_user_flow_name_already_exists(hass: HomeAssistant) -> None:
-    """Two different devices whose auto-derived name collides must not both be added.
+async def test_user_flow_allows_duplicate_name_for_distinct_host(
+    hass: HomeAssistant,
+) -> None:
+    """Two different devices whose auto-derived name collides may both be added.
 
-    The name is no longer user-chosen (see _async_get_hostname), so this
+    Real duplicate-device protection is host/system_id based (see the
+    duplicate-host test below), so a name collision alone must not block
+    setup. The name is not user-chosen (see _async_get_hostname), so this
     exercises the case where system.info carries no usable hostname for
     either box and both fall back to the same DEFAULT_DEVICE_NAME.
     """
@@ -207,8 +211,7 @@ async def test_user_flow_name_already_exists(hass: HomeAssistant) -> None:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], _user_input()
         )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "name_exists"}
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_user_flow_aborts_on_duplicate_host(hass: HomeAssistant) -> None:

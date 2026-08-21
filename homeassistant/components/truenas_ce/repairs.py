@@ -28,23 +28,25 @@ async def _async_rollback_and_log_errors(
     config entry, which would tear down the repair flow mid-step if awaited
     inline. The ``migration_rollback_available`` issue is already deleted by
     the time this runs (see ``MigrationRollbackRepairFlow.async_step_rollback``),
-    so a failure here would otherwise only surface as a log entry with no
+    so neither a crash nor a "did nothing" result would otherwise have any
     UI-visible signal that the rollback didn't actually happen; raising a
-    second, non-fixable issue closes that gap.
+    second, non-fixable issue closes that gap for both cases.
 
     Migration-rollback-specific: the broad ``except Exception`` is this
     coroutine's whole purpose (turning an untracked task's crash into a
     logged, actionable message), not a generic error-swallowing helper —
     don't reuse it for other background tasks.
     """
+    rolled_back = False
     try:
-        await async_rollback_to_legacy(hass, entry)
+        rolled_back = await async_rollback_to_legacy(hass, entry)
     except Exception:
         _LOGGER.exception(
             "TrueNAS CE migration rollback failed for entry %s (%s)",
             entry.entry_id,
             entry.title,
         )
+    if not rolled_back:
         ir.async_create_issue(
             hass,
             DOMAIN,

@@ -1,5 +1,6 @@
 """Helper functions."""
 
+import re
 from typing import TYPE_CHECKING
 
 from homeassistant.const import UnitOfInformation
@@ -9,6 +10,35 @@ from .const import DOMAIN
 
 if TYPE_CHECKING:
     from .coordinator import TrueNASCoordinator
+
+# Strip a leading URL scheme (e.g. "https://" or "http://") from the host.
+_SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*://")
+# Everything from the first path/query/fragment delimiter is not part of host.
+_HOST_TAIL_RE = re.compile(r"[/?#]")
+
+
+# ---------------------------
+#   sanitize_host
+# ---------------------------
+def sanitize_host(host: str) -> str:
+    """Normalize user input to the bare hostname/IP[:port] the API expects.
+
+    Users frequently paste a full URL (for example
+    ``https://nas.example.com/ui?tab=1``). The API layer requires a bare host,
+    so strip any scheme as well as a trailing path, query or fragment here
+    instead of erroring out, so the value just works. Hostnames (and DNS in
+    general) are case-insensitive, so the result is also lowercased -- this
+    keeps ``NAS.local`` and ``nas.local`` from being treated as two different
+    hosts by the exact-string duplicate/rediscovery matching elsewhere.
+
+    Lives here (rather than in ``config_flow``) so both ``config_flow`` and
+    ``migration`` can depend on it without either importing the other.
+    """
+    host = host.strip()
+    host = _SCHEME_RE.sub("", host)  # drop a leading scheme
+    host = _HOST_TAIL_RE.split(host, maxsplit=1)[0]  # drop path/query/fragment
+    return host.strip().lower()
+
 
 # Data-size display tiers as (threshold_in_bytes, unit, precision). The first
 # tier whose threshold the value reaches is used; a precision of ``None`` keeps

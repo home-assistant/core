@@ -210,7 +210,7 @@ class TrueNASAPI:
             Bare TrueNAS hostname or IP address without scheme or path
             (for example, ``"truenas.local"`` or ``"192.168.1.10"``). This
             class does not itself validate or strip a scheme/path -- callers
-            (``config_flow._sanitize_host``) are expected to normalize user
+            (``helper.sanitize_host``) are expected to normalize user
             input before constructing this class, to avoid malformed
             WebSocket URLs.
         api_key:

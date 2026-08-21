@@ -45,6 +45,7 @@ from .const import (
     PLATFORMS,
     TO_REDACT,
 )
+from .helper import sanitize_host
 
 _LOGGER = getLogger(__name__)
 
@@ -235,14 +236,15 @@ def _find_legacy_entry(
     unrelated entry's entities. ``async_step_migrate_import`` copies the
     legacy entry's host verbatim into the new entry, so the normal takeover
     path still matches exactly here as long as the user keeps the pre-filled
-    host.
+    host. Both sides are run through ``sanitize_host`` before comparing, so a
+    legacy host stored in a different case (e.g. ``NAS.local``) still matches.
     """
-    host = config_entry.data.get(CONF_HOST)
+    host = sanitize_host(config_entry.data.get(CONF_HOST, ""))
     return next(
         (
             entry
             for entry in hass.config_entries.async_entries(LEGACY_DOMAIN)
-            if entry.data.get(CONF_HOST) == host
+            if sanitize_host(entry.data.get(CONF_HOST, "")) == host
         ),
         None,
     )

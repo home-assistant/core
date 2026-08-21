@@ -71,6 +71,17 @@ def test_find_legacy_entry_matches_by_host(hass: HomeAssistant) -> None:
     assert _find_legacy_entry(hass, new_entry) is legacy
 
 
+def test_find_legacy_entry_matches_regardless_of_host_case(
+    hass: HomeAssistant,
+) -> None:
+    """A legacy host stored in a different case still matches (e.g. NAS.local)."""
+    legacy = MockConfigEntry(domain=LEGACY_DOMAIN, data={CONF_HOST: "NAS.local"})
+    legacy.add_to_hass(hass)
+    new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
+
+    assert _find_legacy_entry(hass, new_entry) is legacy
+
+
 def test_find_legacy_entry_ignores_unrelated_host(hass: HomeAssistant) -> None:
     """Regression test: a lone legacy entry for a *different* box must not be adopted.
 

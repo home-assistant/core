@@ -128,7 +128,7 @@ async def test_rollback_task_success_raises_no_failure_issue() -> None:
     with (
         patch(
             "homeassistant.components.truenas_ce.repairs.async_rollback_to_legacy",
-            new=AsyncMock(),
+            new=AsyncMock(return_value=True),
         ),
         patch(
             "homeassistant.components.truenas_ce.repairs.ir.async_create_issue"
@@ -137,6 +137,36 @@ async def test_rollback_task_success_raises_no_failure_issue() -> None:
         await _async_rollback_and_log_errors(hass, entry)
 
     create_issue.assert_not_called()
+
+
+async def test_rollback_task_false_result_raises_visible_issue() -> None:
+    """A ``False`` result (nothing torn down) must surface just like a crash.
+
+    ``async_rollback_to_legacy`` returns ``False`` without raising when there
+    is nothing to roll back or the legacy entry failed to set up; since the
+    ``migration_rollback_available`` issue is already deleted by the caller,
+    a silent ``False`` would otherwise leave the user with no feedback at all.
+    """
+    hass = SimpleNamespace()
+    entry = SimpleNamespace(entry_id="entry2", title="TrueNAS")
+
+    with (
+        patch(
+            "homeassistant.components.truenas_ce.repairs.async_rollback_to_legacy",
+            new=AsyncMock(return_value=False),
+        ),
+        patch(
+            "homeassistant.components.truenas_ce.repairs.ir.async_create_issue"
+        ) as create_issue,
+    ):
+        await _async_rollback_and_log_errors(hass, entry)
+
+    create_issue.assert_called_once()
+    _, args, kwargs = create_issue.mock_calls[0]
+    assert args == (hass, "truenas_ce", "migration_rollback_failed_entry2")
+    assert kwargs["is_fixable"] is False
+    assert kwargs["translation_key"] == "migration_rollback_failed"
+    assert kwargs["translation_placeholders"] == {"name": "TrueNAS"}
 
 
 async def test_rollback_task_failure_raises_visible_issue() -> None:
