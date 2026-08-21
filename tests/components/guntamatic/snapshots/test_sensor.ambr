@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[sensor.heating_circuit_1_heating_circuit_1_program-entry]
+# name: test_all_entities[sensor.heating_circuit_1_program-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -21,7 +21,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.heating_circuit_1_heating_circuit_1_program',
+    'entity_id': 'sensor.heating_circuit_1_program',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -29,26 +29,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Heating circuit 1 program',
+    'object_id_base': 'Program',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Heating circuit 1 program',
+    'original_name': 'Program',
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'heating_circulation_program_1',
+    'translation_key': 'heating_circulation_program',
     'unique_id': '959103_heating_circulation_program_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.heating_circuit_1_heating_circuit_1_program-state]
+# name: test_all_entities[sensor.heating_circuit_1_program-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Heating circuit 1 program',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Program',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'off',
         'timer',
@@ -58,14 +58,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_heating_circuit_1_program',
+    'entity_id': 'sensor.heating_circuit_1_program',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
   })
 # ---
-# name: test_all_entities[sensor.heating_circuit_1_heating_circuit_1_pump-entry]
+# name: test_all_entities[sensor.heating_circuit_1_pump-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -85,7 +85,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.heating_circuit_1_heating_circuit_1_pump',
+    'entity_id': 'sensor.heating_circuit_1_pump',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -93,26 +93,26 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Heating circuit 1 pump',
+    'object_id_base': 'Pump',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Heating circuit 1 pump',
+    'original_name': 'Pump',
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'heating_circulation_pump_1',
+    'translation_key': 'heating_circulation_pump',
     'unique_id': '959103_heating_circulation_pump_1',
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.heating_circuit_1_heating_circuit_1_pump-state]
+# name: test_all_entities[sensor.heating_circuit_1_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Heating circuit 1 pump',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Heating circuit 1 Pump',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'off',
@@ -120,14 +120,14 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.heating_circuit_1_heating_circuit_1_pump',
+    'entity_id': 'sensor.heating_circuit_1_pump',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'auto',
   })
 # ---
-# name: test_all_entities[sensor.mock_title_auxiliary_pump_0-entry]
+# name: test_all_entities[sensor.mock_title-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -147,7 +147,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_auxiliary_pump_0',
+    'entity_id': 'sensor.mock_title',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -155,12 +155,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Auxiliary pump 0',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Auxiliary pump 0',
+    'original_name': None,
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -170,11 +170,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.mock_title_auxiliary_pump_0-state]
+# name: test_all_entities[sensor.mock_title-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Auxiliary pump 0',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'off',
@@ -182,7 +182,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_auxiliary_pump_0',
+    'entity_id': 'sensor.mock_title',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

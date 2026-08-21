@@ -158,63 +158,63 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="room_0_temperature",
-        translation_key="room_0_temperature",
+        translation_key="room_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="room_1_temperature",
-        translation_key="room_1_temperature",
+        translation_key="room_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="room_2_temperature",
-        translation_key="room_2_temperature",
+        translation_key="room_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="room_3_temperature",
-        translation_key="room_3_temperature",
+        translation_key="room_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="room_4_temperature",
-        translation_key="room_4_temperature",
+        translation_key="room_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="room_5_temperature",
-        translation_key="room_5_temperature",
+        translation_key="room_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="room_6_temperature",
-        translation_key="room_6_temperature",
+        translation_key="room_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="room_7_temperature",
-        translation_key="room_7_temperature",
+        translation_key="room_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="room_8_temperature",
-        translation_key="room_8_temperature",
+        translation_key="room_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -328,7 +328,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_0",
-        translation_key="heating_circulation_pump_0",
+        translation_key="heating_circulation_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -339,7 +339,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_1",
-        translation_key="heating_circulation_pump_1",
+        translation_key="heating_circulation_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -350,7 +350,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_2",
-        translation_key="heating_circulation_pump_2",
+        translation_key="heating_circulation_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -361,7 +361,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_3",
-        translation_key="heating_circulation_pump_3",
+        translation_key="heating_circulation_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -372,7 +372,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_4",
-        translation_key="heating_circulation_pump_4",
+        translation_key="heating_circulation_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -383,7 +383,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_5",
-        translation_key="heating_circulation_pump_5",
+        translation_key="heating_circulation_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -394,7 +394,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_6",
-        translation_key="heating_circulation_pump_6",
+        translation_key="heating_circulation_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -405,7 +405,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_7",
-        translation_key="heating_circulation_pump_7",
+        translation_key="heating_circulation_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -416,7 +416,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_pump_8",
-        translation_key="heating_circulation_pump_8",
+        translation_key="heating_circulation_pump",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -427,7 +427,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="circuit_0_temp",
-        translation_key="circuit_0_temp",
+        translation_key="circuit_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -435,7 +435,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="circuit_1_temp",
-        translation_key="circuit_1_temp",
+        translation_key="circuit_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -443,7 +443,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="circuit_2_temp",
-        translation_key="circuit_2_temp",
+        translation_key="circuit_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -451,7 +451,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="circuit_3_temp",
-        translation_key="circuit_3_temp",
+        translation_key="circuit_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -459,7 +459,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="circuit_4_temp",
-        translation_key="circuit_4_temp",
+        translation_key="circuit_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -467,7 +467,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="circuit_5_temp",
-        translation_key="circuit_5_temp",
+        translation_key="circuit_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -475,7 +475,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="circuit_6_temp",
-        translation_key="circuit_6_temp",
+        translation_key="circuit_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -483,7 +483,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="circuit_7_temp",
-        translation_key="circuit_7_temp",
+        translation_key="circuit_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -491,7 +491,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="circuit_8_temp",
-        translation_key="circuit_8_temp",
+        translation_key="circuit_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -499,7 +499,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_program_0",
-        translation_key="heating_circulation_program_0",
+        translation_key="heating_circulation_program",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "off",
@@ -512,7 +512,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_program_1",
-        translation_key="heating_circulation_program_1",
+        translation_key="heating_circulation_program",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "off",
@@ -525,7 +525,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_program_2",
-        translation_key="heating_circulation_program_2",
+        translation_key="heating_circulation_program",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "off",
@@ -538,7 +538,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_program_3",
-        translation_key="heating_circulation_program_3",
+        translation_key="heating_circulation_program",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "off",
@@ -551,7 +551,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_program_4",
-        translation_key="heating_circulation_program_4",
+        translation_key="heating_circulation_program",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "off",
@@ -564,7 +564,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_program_5",
-        translation_key="heating_circulation_program_5",
+        translation_key="heating_circulation_program",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "off",
@@ -577,7 +577,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_program_6",
-        translation_key="heating_circulation_program_6",
+        translation_key="heating_circulation_program",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "off",
@@ -590,7 +590,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_program_7",
-        translation_key="heating_circulation_program_7",
+        translation_key="heating_circulation_program",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "off",
@@ -603,7 +603,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="heating_circulation_program_8",
-        translation_key="heating_circulation_program_8",
+        translation_key="heating_circulation_program",
         device_class=SensorDeviceClass.ENUM,
         options=[
             "off",
