@@ -174,11 +174,7 @@
                     "access": "read"
                   },
                   "targetTemperature": {
-                    "range": [
-                      16,
-                      32,
-                      1
-                    ],
+                    "range": [16, 32, 1],
                     "disabled": false,
                     "access": "readwrite",
                     "default": 16
@@ -203,11 +199,7 @@
                     "access": "readwrite"
                   },
                   "targetTemperature": {
-                    "range": [
-                      16,
-                      32,
-                      1
-                    ],
+                    "range": [16, 32, 1],
                     "disabled": false,
                     "access": "readwrite",
                     "default": 16
@@ -228,11 +220,7 @@
                     "access": "read"
                   },
                   "targetTemperature": {
-                    "range": [
-                      23,
-                      23,
-                      1
-                    ],
+                    "range": [23, 23, 1],
                     "disabled": true,
                     "access": "readwrite",
                     "default": 23
@@ -256,11 +244,7 @@
                     "access": "readwrite"
                   },
                   "targetTemperature": {
-                    "range": [
-                      23,
-                      23,
-                      1
-                    ],
+                    "range": [23, 23, 1],
                     "disabled": true,
                     "access": "readwrite",
                     "default": 23
@@ -288,11 +272,7 @@
           "type": "number"
         },
         "targetTemperature": {
-          "range": [
-            16,
-            32,
-            1
-          ],
+          "range": [16, 32, 1],
           "access": "readwrite",
           "type": "number"
         },
@@ -302,32 +282,16 @@
         },
         "startTime": {
           "ranges": [
-            [
-              0,
-              36000,
-              1800
-            ],
-            [
-              39600,
-              86400,
-              3600
-            ]
+            [0, 36000, 1800],
+            [39600, 86400, 3600]
           ],
           "access": "readwrite",
           "type": "number"
         },
         "stopTime": {
           "ranges": [
-            [
-              0,
-              36000,
-              1800
-            ],
-            [
-              39600,
-              86400,
-              3600
-            ]
+            [0, 36000, 1800],
+            [39600, 86400, 3600]
           ],
           "access": "readwrite",
           "type": "number"
