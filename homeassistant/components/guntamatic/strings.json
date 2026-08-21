@@ -240,8 +240,8 @@
       "secondary_air": {
         "name": "Secondary air"
       },
-      "service_hours": {
-        "name": "Service hours"
+      "service_days": {
+        "name": "Service days"
       },
       "status": {
         "name": "Status"
