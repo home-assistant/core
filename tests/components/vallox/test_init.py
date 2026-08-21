@@ -67,6 +67,8 @@ async def test_create_service(
         ("fireplace", 15),
         ("extra", None),
         ("extra", 15),
+        ("auto", None),
+        ("auto", 15),
     ],
 )
 async def test_set_profile_service(
