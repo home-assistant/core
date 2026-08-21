@@ -13,6 +13,7 @@ AUTH_RETRIES = 2
 
 ATTR_EVENT_SCORE = "event_score"
 ATTR_EVENT_ID = "event_id"
+ATTR_SMART_DETECT_TYPES = "smart_detect_types"
 ATTR_WIDTH = "width"
 ATTR_HEIGHT = "height"
 ATTR_FPS = "fps"
@@ -54,7 +55,7 @@ DEVICES_FOR_SUBSCRIBE = DEVICES_WITH_ENTITIES | {ModelType.EVENT}
 # the public API devices WebSocket.
 DEVICES_WS_SUBSCRIBED_MODELS: set[ModelType] = set()
 
-MIN_REQUIRED_PROTECT_V = Version("6.0.0")
+MIN_REQUIRED_PROTECT_V = Version("7.1.0")
 OUTDATED_LOG_MESSAGE = (
     "You are running v%s of UniFi Protect. Minimum required version is v%s. Please"
     " upgrade UniFi Protect and then retry"

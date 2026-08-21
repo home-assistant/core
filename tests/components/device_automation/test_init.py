@@ -1814,8 +1814,8 @@ async def test_device_automation_resolves_legacy_id(
     await dr.async_load(hass)
     await er.async_load(hass)
     await ar.async_load(hass)
-    device_registry = dr.async_get(hass)
-    entity_registry = er.async_get(hass)
+    device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     by_entry = {
         d.config_entry_id: d.id
         for d in device_registry.async_get_devices_for_composite_device_id(COMPOSITE_ID)
@@ -1865,13 +1865,13 @@ async def test_validate_config_rewrites_composite_device_id(
     )
     old_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_fake.id] = attr.evolve(
+    device_registry._devices[device_fake.id] = attr.evolve(
         device_fake, composite_device_id=old_id
     )
-    device_registry.devices[device_other.id] = attr.evolve(
+    device_registry._devices[device_other.id] = attr.evolve(
         device_other, composite_device_id=old_id
     )
-    assert old_id not in device_registry.devices
+    assert old_id not in device_registry._devices
 
     validated = await async_validate_device_automation_config(
         hass,

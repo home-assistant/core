@@ -57,7 +57,6 @@ from .utils import (
     get_circuits,
     get_compressors,
     get_condensers,
-    get_device_serial,
     get_evaporators,
     get_inverters,
     is_supported,
@@ -1201,6 +1200,38 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
+        key="exhaust_humidity",
+        translation_key="exhaust_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getExhaustHumidity(),
+    ),
+    ViCareSensorEntityDescription(
+        key="exhaust_temperature",
+        translation_key="exhaust_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getExhaustTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="extract_humidity",
+        translation_key="extract_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getExtractHumidity(),
+    ),
+    ViCareSensorEntityDescription(
+        key="extract_temperature",
+        translation_key="extract_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getExtractTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
         key="filter_hours",
         translation_key="filter_hours",
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -1513,7 +1544,7 @@ def _build_entities(
         entities.extend(
             ViCareSensor(
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
             )
@@ -1525,7 +1556,7 @@ def _build_entities(
             entities.extend(
                 ViCareSensor(
                     description,
-                    get_device_serial(device.api),
+                    device.serial,
                     device.config,
                     device.api,
                 )
@@ -1544,7 +1575,7 @@ def _build_entities(
             entities.extend(
                 ViCareSensor(
                     description,
-                    get_device_serial(device.api),
+                    device.serial,
                     device.config,
                     device.api,
                     component,

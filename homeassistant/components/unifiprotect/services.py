@@ -111,6 +111,9 @@ def _async_get_ufp_instance(hass: HomeAssistant, device_id: str) -> ProtectApiCl
             translation_placeholders={"device_id": device_id},
         )
 
+    if isinstance(device_entry, dr.ChildDeviceEntry):
+        return _async_get_ufp_instance(hass, device_entry.parent_device_id)
+
     if device_entry.via_device_id is not None:
         return _async_get_ufp_instance(hass, device_entry.via_device_id)
 

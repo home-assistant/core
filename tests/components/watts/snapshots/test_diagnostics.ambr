@@ -102,7 +102,7 @@
       'version': 1,
     }),
     'hub_coordinator': dict({
-      'last_discovery': '2026-01-01T12:00:00',
+      'last_discovery': '2026-01-01T12:00:00+00:00',
       'last_exception': None,
       'last_update_success': True,
       'supported_devices': 3,

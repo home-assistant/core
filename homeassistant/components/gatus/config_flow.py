@@ -12,6 +12,11 @@ from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers.selector import (
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
+)
 
 from .const import DOMAIN
 
@@ -19,7 +24,12 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_URL): str,
+        vol.Required(CONF_URL): TextSelector(
+            TextSelectorConfig(
+                type=TextSelectorType.URL,
+                autocomplete="url",
+            ),
+        ),
     }
 )
 
@@ -46,13 +56,14 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            user_input[CONF_URL] = str(
-                URL(user_input[CONF_URL])
-                .with_query(None)
-                .with_fragment(None)
-                .with_user(None)
-                .with_password(None)
-            ).rstrip("/")
+            if URL(user_input[CONF_URL]).host is not None:
+                user_input[CONF_URL] = str(
+                    URL(user_input[CONF_URL])
+                    .with_query(None)
+                    .with_fragment(None)
+                    .with_user(None)
+                    .with_password(None)
+                ).rstrip("/")
 
             self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})
 
@@ -82,13 +93,14 @@ class GatusConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            url = URL(user_input[CONF_URL])
-            user_input[CONF_URL] = str(
-                url.with_query(None)
-                .with_fragment(None)
-                .with_user(None)
-                .with_password(None)
-            ).rstrip("/")
+            if URL(user_input[CONF_URL]).host is not None:
+                user_input[CONF_URL] = str(
+                    URL(user_input[CONF_URL])
+                    .with_query(None)
+                    .with_fragment(None)
+                    .with_user(None)
+                    .with_password(None)
+                ).rstrip("/")
 
             if user_input[CONF_URL] != reconfigure_entry.data[CONF_URL]:
                 self._async_abort_entries_match({CONF_URL: user_input[CONF_URL]})

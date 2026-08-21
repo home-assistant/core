@@ -32,7 +32,7 @@ async def async_setup_entry(
     pyvlx = config_entry.runtime_data.pyvlx
     limitation_coordinators = config_entry.runtime_data.limitation_coordinators
     entities: list[NumberEntity] = [
-        VeluxExteriorHeatingNumber(node, config_entry.entry_id)
+        VeluxExteriorHeatingNumber(hass, node, config_entry.entry_id)
         for node in pyvlx.nodes
         if isinstance(node, ExteriorHeating)
     ]
@@ -105,7 +105,9 @@ class VeluxPositionLimitNumber(
         unique_id = velux_unique_id(node, config_entry_id)
         self._attr_unique_id = f"{unique_id}_{self._limitation_kind}_limitation"
         self._attr_translation_key = f"{self._limitation_kind}_position_limitation"
-        self._attr_device_info = velux_device_info(node, config_entry_id)
+        self._attr_device_info = velux_device_info(
+            self.coordinator.hass, node, config_entry_id
+        )
 
     @override
     async def async_added_to_hass(self) -> None:

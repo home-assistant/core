@@ -679,6 +679,7 @@ def mock_registry(
         mock_entries = {}
     registry.deleted_entities = {}
     registry.entities = er.EntityRegistryItems(hass)
+    registry.settings = er.EntityRegistrySettings()
     registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
         registry.entities[key] = entry
@@ -758,12 +759,15 @@ def mock_device_registry(
     fixture instead.
     """
     registry = dr.DeviceRegistry(hass)
-    registry.devices = dr.ActiveDeviceRegistryItems()
-    registry._device_data = registry.devices.data
+    registry._devices = dr.ActiveDeviceRegistryItems()
+    registry.devices = registry._devices.values()
+    registry._device_data = registry._devices.data
+    registry.child_devices = dr.ChildDeviceRegistryItems()
+    registry._child_device_data = registry.child_devices.data
     if mock_entries is None:
         mock_entries = {}
     for key, entry in mock_entries.items():
-        registry.devices[key] = entry
+        registry._devices[key] = entry
     registry.deleted_devices = dr.DeletedDeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry

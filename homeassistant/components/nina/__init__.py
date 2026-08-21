@@ -8,13 +8,13 @@ from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    _LOGGER,
     ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_FILTER_CORONA,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
     DOMAIN,
+    LOGGER,
     NO_MATCH_REGEX,
 )
 from .coordinator import NinaConfigEntry, NINADataUpdateCoordinator
@@ -54,7 +54,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bo
     version = entry.version
     minor_version = entry.minor_version
 
-    _LOGGER.debug("Migrating from version %s.%s", version, minor_version)
+    LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 
     new_data: dict[str, Any] = {**entry.data, CONF_FILTERS: {}}
 

@@ -9,7 +9,7 @@ from homeassistant.components.homeassistant import (
     DOMAIN as HASS_DOMAIN,
     SERVICE_HOMEASSISTANT_RESTART,
 )
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
 from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
@@ -17,6 +17,7 @@ from .const import ATTR_CONFIG, CONF_SERVER_PORT
 from .server import async_verify_can_bind
 
 ERR_BIND_FAILED: Final = "bind_failed"
+ERR_NOT_RUNNING: Final = "not_running"
 
 
 @callback
@@ -39,8 +40,12 @@ async def websocket_get_config(
 
     ``stable`` is the confirmed-working config
     ``pending`` is an unconfirmed config awaiting promotion, or ``None``.
+    A pending config that failed its trial is kept with its ``error``
+    (and ``error_message``) recorded, but is never applied again.
     ``revert_at`` is when an unconfirmed pending config auto-reverts to
     stable, or ``None`` when no revert is scheduled.
+    ``active_config_type`` is the slot the running server was started with.
+    ``default`` is the built-in default config.
     """
     store = await async_get_and_load_store(hass)
     connection.send_result(
@@ -49,6 +54,8 @@ async def websocket_get_config(
             "stable": store.stable,
             "pending": store.pending,
             "revert_at": store.revert_deadline,
+            "active_config_type": store.active_config_type,
+            "default": store.default,
         },
     )
 
@@ -68,6 +75,10 @@ async def websocket_set_config(
 ) -> None:
     """Store a new pending HTTP configuration and restart to apply it.
 
+    Only allowed while Home Assistant is running: applying a config means
+    restarting, and restarting a start that has not finished yet leaves
+    integrations that are still setting up in an undefined state.
+
     A new config is first verified to be applicable by binding its
     configured address, so an unusable config is rejected here instead of
     being discovered after the restart. The check is skipped when the port
@@ -79,6 +90,15 @@ async def websocket_set_config(
     refreshed. The result reports whether a restart was triggered via
     ``{"restart": bool}``.
     """
+    if hass.state is not CoreState.running:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_RUNNING,
+            "The HTTP configuration can only be changed while Home Assistant "
+            f"is running, current state: {hass.state.value}",
+        )
+        return
+
     config: ConfData | None = msg[ATTR_CONFIG]
     if config is not None and config[CONF_SERVER_PORT] != hass.http.server_port:
         try:

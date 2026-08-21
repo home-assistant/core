@@ -104,6 +104,7 @@ Every check has a code following the
 | `R7401` | [`home-assistant-consider-usefixtures-decorator`](#r7401-home-assistant-consider-usefixtures-decorator) | Use `@pytest.mark.usefixtures` for unused fixtures |
 | `R7402` | [`home-assistant-unused-test-fixture-argument`](#r7402-home-assistant-unused-test-fixture-argument) | Unused test function argument should use `@pytest.mark.usefixtures` |
 | `R7403` | [`home-assistant-tests-redundant-usefixtures`](#r7403-home-assistant-tests-redundant-usefixtures) | `@pytest.mark.usefixtures` redundant when `pytestmark` already applies it |
+| `R7404` | [`home-assistant-tests-registry-fixtures`](#r7404-home-assistant-tests-registry-fixtures) | Use the registry fixture instead of calling `<registry>.async_get(hass)` directly in tests |
 | `W7401` | [`home-assistant-deprecated-import`](#w7401-home-assistant-deprecated-import) | Import uses a deprecated path |
 | `W7402` | [`home-assistant-async-callback-decorator`](#w7402-home-assistant-async-callback-decorator) | Coroutine should not be decorated with `@callback` |
 | `W7403` | [`home-assistant-pytest-fixture-decorator`](#w7403-home-assistant-pytest-fixture-decorator) | Pytest fixture has invalid scope or autouse config |
@@ -131,8 +132,11 @@ Every check has a code following the
 | `W7425` | [`home-assistant-entity-unique-id-redundant-domain`](#w7425-home-assistant-entity-unique-id-redundant-domain) | Entity unique ID references the `DOMAIN` constant or includes the integration's domain as a string-literal delimited segment |
 | `W7426` | [`home-assistant-tests-direct-async-unload-entry`](#w7426-home-assistant-tests-direct-async-unload-entry) | Tests should not call an integration's `async_unload_entry` directly |
 | `W7427` | [`home-assistant-entity-unique-id-redundant-platform`](#w7427-home-assistant-entity-unique-id-redundant-platform) | Entity unique ID includes the entity platform name (e.g. `sensor`, `light`) as a delimited string-literal segment |
+| `W7428` | [`home-assistant-config-flow-field-not-translated`](#w7428-home-assistant-config-flow-field-not-translated) | Config flow form field missing translation in `strings.json` |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
 | `W7430` | [`home-assistant-serial-port-selector-usb-dependency`](#w7430-home-assistant-serial-port-selector-usb-dependency) | Config flow using `SerialPortSelector` must declare `usb` in `dependencies` |
+| `W7431` | [`home-assistant-options-flow-field-not-translated`](#w7431-home-assistant-options-flow-field-not-translated) | Options flow form field missing translation in `strings.json` |
+| `W7432` | [`home-assistant-subentry-flow-field-not-translated`](#w7432-home-assistant-subentry-flow-field-not-translated) | Subentry flow form field missing translation in `strings.json` |
 | `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
 
 
@@ -744,6 +748,36 @@ Drop the redundant `@pytest.mark.usefixtures` decorator; the fixture is
 already applied to every test in the module.
 
 
+## `home_assistant_tests_registry_fixtures` checker
+
+Detects test functions and pytest fixtures that call a registry helper's
+`async_get(hass)` directly instead of using the registry fixtures defined
+in `tests/conftest.py` (`area_registry`, `category_registry`,
+`device_registry`, `entity_registry`, `floor_registry`, `issue_registry`,
+`label_registry`).
+
+### `R7404`: `home-assistant-tests-registry-fixtures`
+
+A `test_*` function or `@pytest.fixture`-decorated function calls
+`<registry>.async_get(hass)` directly (e.g. `er.async_get(hass)`) where
+`<registry>` resolves via a module-level
+`from homeassistant.helpers import ...` statement to one of the seven
+registry helper modules. Request the corresponding registry fixture as a
+test/fixture argument instead:
+
+```python
+async def test_entities(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    entry = entity_registry.async_get(entity_id)
+```
+
+Only aliases imported from `homeassistant.helpers` are tracked. The
+checker is scoped to test modules; `conftest.py` files (where the
+fixtures themselves are defined) and `tests.helpers` (which exercises the
+registry helpers directly) are exempt.
+
+
 ## `home_assistant_test_determinism` checker
 
 `if` and `match` statements inside test functions create non-deterministic
@@ -831,6 +865,37 @@ either set at class level, set unconditionally at the top of a method, or
 supplied by an `entity_description` whose class sets `has_entity_name = True`.
 Conditional patterns are rejected.
 
+
+## `home_assistant_config_flow_translations` checker
+
+Ensures that every field in a config flow, options flow, or subentry flow
+form schema has a corresponding translation entry in `strings.json`. When
+`async_show_form` is called with a `data_schema`, each key in the schema
+dict should have a translation at the expected path. The checker also
+handles section fields (nested under `sections.<key>.data` in translations).
+
+### `W7428`: `home-assistant-config-flow-field-not-translated`
+
+A config flow form field is missing its translation in `strings.json`.
+The expected path is `config.step.<step_id>.data.<field_name>` (or
+`config.step.<step_id>.sections.<key>.data.<field_name>` for section
+fields).
+
+### `W7431`: `home-assistant-options-flow-field-not-translated`
+
+An options flow form field is missing its translation in `strings.json`.
+The expected path is `options.step.<step_id>.data.<field_name>` (or
+`options.step.<step_id>.sections.<key>.data.<field_name>` for section
+fields).
+
+### `W7432`: `home-assistant-subentry-flow-field-not-translated`
+
+A subentry flow form field is missing its translation in `strings.json`.
+The expected path is `config_subentries.<type>.step.<step_id>.data.<field_name>`
+(or `config_subentries.<type>.step.<step_id>.sections.<key>.data.<field_name>`
+for section fields). The checker resolves the subentry type by finding the
+`ConfigFlow` class's `async_get_supported_subentry_types` method and mapping
+subentry handler class names to their type keys.
 
 ## `home_assistant_test_before_configure` checker
 
