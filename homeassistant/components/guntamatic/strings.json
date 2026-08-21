@@ -27,6 +27,20 @@
   },
   "entity": {
     "sensor": {
+      "auxiliary_pump": {
+        "name": "Auxiliary pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          },
+          "off": {
+            "name": "Off"
+          }
+        }
+      },
       "boiler_shunt_pump": {
         "name": "Boiler shunt pump"
       },
@@ -63,6 +77,9 @@
       "buffer_top_temperature": {
         "name": "Buffer top temperature"
       },
+      "circuit_temperature": {
+        "name": "Flow temperature"
+      },
       "co2_content": {
         "name": "Flue CO2 content"
       },
@@ -89,6 +106,54 @@
       },
       "extra_dhw_2_temperature": {
         "name": "Extra DHW 2 temperature"
+      },
+      "extra_dhw_boost": {
+        "name": "Extra DHW pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          },
+          "off": {
+            "name": "Off"
+          }
+        }
+      },
+      "heating_circulation_program": {
+        "name": "Program",
+        "state": {
+          "heat": {
+            "name": "Heat"
+          },
+          "hibernate": {
+            "name": "Setback mode"
+          },
+          "hibernate_to": {
+            "name": "Away mode"
+          },
+          "off": {
+            "name": "Off"
+          },
+          "timer": {
+            "name": "Timer"
+          }
+        }
+      },
+      "heating_circulation_pump": {
+        "name": "Pump",
+        "state": {
+          "auto": {
+            "name": "Auto"
+          },
+          "nonstop": {
+            "name": "Non-stop"
+          },
+          "off": {
+            "name": "Off"
+          }
+        }
       },
       "interruption_1": {
         "name": "Malfunction 1"
@@ -131,6 +196,9 @@
           }
         }
       },
+      "room_temperature": {
+        "name": "Room temperature"
+      },
       "secondary_air": {
         "name": "Secondary air"
       },
@@ -142,74 +210,6 @@
       },
       "suction_fan": {
         "name": "Suction fan"
-      },
-      "heating_circulation_program": {
-        "name": "Program",
-        "state": {
-          "off": {
-            "name": "Off"
-          },
-          "timer": {
-            "name": "Timer"
-          },
-          "heat": {
-            "name": "Heat"
-          },
-          "hibernate": {
-            "name": "Hibernate"
-          },
-          "hibernate_to": {
-            "name": "Hibernate until"
-          }
-        }
-      },
-      "heating_circulation_pump": {
-        "name": "Pump",
-        "state": {
-          "auto": {
-            "name": "Auto"
-          },
-          "off": {
-            "name": "Off"
-          },
-          "nonstop": {
-            "name": "Non-stop"
-          }
-        }
-      },
-      "auxiliary_pump": {
-        "name": "Auxiliary pump",
-        "state": {
-          "auto": {
-            "name": "Auto"
-          },
-          "off": {
-            "name": "Off"
-          },
-          "nonstop": {
-            "name": "Non-stop"
-          }
-        }
-      },
-      "room_temperature": {
-        "name": "Room temperature"
-      },
-      "circuit_temperature": {
-        "name": "Flow temperature"
-      },
-      "extra_dhw_boost": {
-        "name": "Extra DHW pump",
-        "state": {
-          "auto": {
-            "name": "Auto"
-          },
-          "off": {
-            "name": "Off"
-          },
-          "nonstop": {
-            "name": "Non-stop"
-          }
-        }
       }
     }
   }
