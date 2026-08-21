@@ -13,11 +13,10 @@ from homeassistant import config_entries, loader
 from homeassistant.components.allnet.const import (
     CONF_DEVICE_PROFILE,
     CONF_USE_SSL,
-    CONF_VERIFY_SSL,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST
+from homeassistant.const import CONF_HOST, CONF_VERIFY_SSL
 from homeassistant.core import CoreState, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,

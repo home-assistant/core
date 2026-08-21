@@ -1,22 +1,24 @@
 """Tests for the ALLNET config flow."""
 
+from dataclasses import replace
 from ipaddress import IPv4Address
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from allnet.exceptions import (
     AllnetAuthenticationError,
     AllnetConnectionError,
     AllnetUnsupportedFirmwareError,
 )
+from allnet.models import DeviceInfo
 import pytest
 
 from homeassistant.components.allnet.const import (
     CONF_DEVICE_PROFILE,
     CONF_USE_SSL,
-    CONF_VERIFY_SSL,
     DOMAIN,
 )
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
@@ -71,9 +73,19 @@ def _patch_validate_error(exc):
 
 
 @pytest.mark.asyncio
-async def test_user_step_success(hass: HomeAssistant, mock_device_info) -> None:
+async def test_user_step_success(
+    hass: HomeAssistant,
+    mock_allnet_client: MagicMock,
+    mock_device_info: DeviceInfo,
+) -> None:
     """Test the user step completes successfully."""
-    with _patch_validate(mock_device_info):
+    with (
+        _patch_validate(mock_device_info),
+        patch(
+            "homeassistant.components.allnet.AllnetClient",
+            return_value=mock_allnet_client,
+        ),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": "user"}
         )
@@ -89,6 +101,7 @@ async def test_user_step_success(hass: HomeAssistant, mock_device_info) -> None:
                 CONF_DEVICE_PROFILE: "auto",
             },
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_HOST] == TEST_HOST
@@ -234,9 +247,19 @@ async def test_zeroconf_step_already_configured(
 
 
 @pytest.mark.asyncio
-async def test_zeroconf_confirm_success(hass: HomeAssistant, mock_device_info) -> None:
+async def test_zeroconf_confirm_success(
+    hass: HomeAssistant,
+    mock_allnet_client: MagicMock,
+    mock_device_info: DeviceInfo,
+) -> None:
     """Test zeroconf confirm step creates a config entry."""
-    with _patch_validate(mock_device_info):
+    with (
+        _patch_validate(mock_device_info),
+        patch(
+            "homeassistant.components.allnet.AllnetClient",
+            return_value=mock_allnet_client,
+        ),
+    ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": "zeroconf"},
@@ -248,6 +271,7 @@ async def test_zeroconf_confirm_success(hass: HomeAssistant, mock_device_info) -
             result["flow_id"],
             user_input={CONF_DEVICE_PROFILE: "auto"},
         )
+        await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.CREATE_ENTRY
     assert result2["data"][CONF_HOST] == TEST_HOST
@@ -283,13 +307,103 @@ async def test_zeroconf_confirm_invalid_auth(
 
 
 # ---------------------------------------------------------------------------
+# reconfigure step
+# ---------------------------------------------------------------------------
+
+
+@pytest.mark.asyncio
+async def test_reconfigure_success_removes_credentials(
+    hass: HomeAssistant,
+    mock_allnet_client: MagicMock,
+    mock_device_info: DeviceInfo,
+    setup_integration: ConfigEntry,
+) -> None:
+    """Test reconfiguration updates the entry and removes credentials."""
+    entry = setup_integration
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            **entry.data,
+            CONF_PASSWORD: "old-password",
+            CONF_USERNAME: "old-username",
+        },
+    )
+
+    with (
+        _patch_validate(mock_device_info),
+        patch(
+            "homeassistant.components.allnet.AllnetClient",
+            return_value=mock_allnet_client,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reconfigure", "entry_id": entry.entry_id},
+        )
+        assert result["type"] == FlowResultType.FORM
+        assert result["step_id"] == "reconfigure"
+
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.0.2.11",
+                CONF_USE_SSL: True,
+                CONF_VERIFY_SSL: False,
+                CONF_DEVICE_PROFILE: "msr",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "reconfigure_successful"
+    assert entry.data == {
+        CONF_HOST: "192.0.2.11",
+        CONF_USE_SSL: True,
+        CONF_VERIFY_SSL: False,
+        CONF_DEVICE_PROFILE: "msr",
+    }
+
+
+@pytest.mark.asyncio
+async def test_reconfigure_aborts_for_different_device(
+    hass: HomeAssistant,
+    mock_device_info: DeviceInfo,
+    setup_integration: ConfigEntry,
+) -> None:
+    """Test reconfiguration aborts when the device ID does not match."""
+    entry = setup_integration
+    different_device_info = replace(mock_device_info, unique_id="001122334455")
+
+    with _patch_validate(different_device_info):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": "reconfigure", "entry_id": entry.entry_id},
+        )
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_HOST: "192.0.2.11",
+                CONF_USE_SSL: False,
+                CONF_VERIFY_SSL: True,
+                CONF_DEVICE_PROFILE: "auto",
+            },
+        )
+
+    assert result2["type"] == FlowResultType.ABORT
+    assert result2["reason"] == "unique_id_mismatch"
+
+
+# ---------------------------------------------------------------------------
 # reauth step
 # ---------------------------------------------------------------------------
 
 
 @pytest.mark.asyncio
 async def test_reauth_success(
-    hass: HomeAssistant, setup_integration, mock_device_info
+    hass: HomeAssistant,
+    mock_allnet_client: MagicMock,
+    setup_integration: ConfigEntry,
+    mock_device_info: DeviceInfo,
 ) -> None:
     """Test reauth flow updates credentials and reloads the entry."""
     entry = setup_integration
@@ -304,12 +418,13 @@ async def test_reauth_success(
 
         with patch(
             "homeassistant.components.allnet.AllnetClient",
-            return_value=mock_device_info,
+            return_value=mock_allnet_client,
         ):
             result2 = await hass.config_entries.flow.async_configure(
                 result["flow_id"],
                 user_input={CONF_USERNAME: "admin", CONF_PASSWORD: "newpass"},
             )
+            await hass.async_block_till_done()
 
     assert result2["type"] == FlowResultType.ABORT
     assert result2["reason"] == "reauth_successful"

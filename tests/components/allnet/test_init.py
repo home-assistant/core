@@ -1,11 +1,12 @@
 """Tests for ALLNET async_setup_entry and async_unload_entry."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from allnet.exceptions import AllnetAuthenticationError, AllnetConnectionError
 import pytest
 
-from homeassistant.components.allnet.const import DOMAIN
+from homeassistant.components.allnet.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntry, ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
@@ -23,6 +24,9 @@ async def test_setup_entry_success(
     assert entry.runtime_data is not None
     assert entry.runtime_data.client is not None
     assert entry.runtime_data.coordinator is not None
+    assert entry.runtime_data.coordinator.update_interval == timedelta(
+        seconds=DEFAULT_SCAN_INTERVAL
+    )
     assert entry.runtime_data.ha_device_info is not None
 
 

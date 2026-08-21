@@ -572,6 +572,10 @@ ZEROCONF = {
             },
         },
         {
+            "domain": "allnet",
+            "name": "all*",
+        },
+        {
             "domain": "awair",
             "name": "awair*",
         },

@@ -7,7 +7,13 @@ from allnet.exceptions import AllnetAuthenticationError
 from allnet.models import DeviceProfile
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, Platform
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    CONF_VERIFY_SSL,
+    Platform,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -16,7 +22,6 @@ from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, Device
 from .const import (
     CONF_DEVICE_PROFILE,
     CONF_USE_SSL,
-    CONF_VERIFY_SSL,
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
     DOMAIN,

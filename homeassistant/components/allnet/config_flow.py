@@ -15,7 +15,7 @@ import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     SelectOptionDict,
@@ -28,7 +28,6 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .const import (
     CONF_DEVICE_PROFILE,
     CONF_USE_SSL,
-    CONF_VERIFY_SSL,
     DEFAULT_DEVICE_PROFILE,
     DEFAULT_USE_SSL,
     DEFAULT_VERIFY_SSL,
@@ -270,6 +269,70 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 "name": self._discovered_name or host,
                 "host": host,
             },
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle a reconfiguration flow."""
+        entry = self._get_reconfigure_entry()
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            host = user_input[CONF_HOST].strip()
+            username = user_input.get(CONF_USERNAME, "").strip() or None
+            password = user_input.get(CONF_PASSWORD, "") or None
+            use_ssl = user_input.get(CONF_USE_SSL, DEFAULT_USE_SSL)
+            verify_ssl = user_input.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL)
+
+            try:
+                unique_id, name = await _validate_and_get_unique_id(
+                    self.hass, host, username, password, use_ssl, verify_ssl
+                )
+            except AllnetAuthenticationError:
+                errors["base"] = "invalid_auth"
+            except AllnetUnsupportedFirmwareError:
+                errors["base"] = "unsupported_firmware"
+            except AllnetConnectionError:
+                errors["base"] = "cannot_connect"
+            except AllnetInvalidResponseError:
+                _LOGGER.exception("Unexpected error connecting to %s", host)
+                errors["base"] = "unknown"
+            else:
+                if unique_id != entry.unique_id:
+                    return self.async_abort(reason="unique_id_mismatch")
+                data: dict[str, Any] = {
+                    CONF_HOST: host,
+                    CONF_USE_SSL: use_ssl,
+                    CONF_VERIFY_SSL: verify_ssl,
+                }
+                if username:
+                    data[CONF_USERNAME] = username
+                if password:
+                    data[CONF_PASSWORD] = password
+                if user_input.get(CONF_DEVICE_PROFILE):
+                    data[CONF_DEVICE_PROFILE] = user_input[CONF_DEVICE_PROFILE]
+                return self.async_update_reload_and_abort(
+                    entry,
+                    title=name,
+                    data=data,
+                )
+
+        suggested: dict[str, Any] = {
+            CONF_HOST: entry.data.get(CONF_HOST, ""),
+            CONF_USERNAME: entry.data.get(CONF_USERNAME, ""),
+            CONF_USE_SSL: entry.data.get(CONF_USE_SSL, DEFAULT_USE_SSL),
+            CONF_VERIFY_SSL: entry.data.get(CONF_VERIFY_SSL, DEFAULT_VERIFY_SSL),
+            CONF_DEVICE_PROFILE: entry.data.get(
+                CONF_DEVICE_PROFILE, DEFAULT_DEVICE_PROFILE
+            ),
+        }
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, suggested
+            ),
             errors=errors,
         )
 
