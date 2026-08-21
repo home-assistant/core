@@ -497,7 +497,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
-        key="service_hours",
+        key="service_days",
         translation_key="service_days",
         device_class=SensorDeviceClass.DURATION,
         state_class=SensorStateClass.TOTAL,
