@@ -941,7 +941,9 @@ async def test_write_ac_charge_times_encodes_all_periods(
     """Test a V1 charge-time write passes all 3 explicit periods through unchanged."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -1324,7 +1326,9 @@ async def test_write_ac_charge_times_classic_auth(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -1379,7 +1383,9 @@ async def test_write_ac_discharge_times_classic_auth(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -1441,7 +1447,9 @@ async def test_write_ac_charge_times_classic_auth_api_error(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     mock_growatt_classic_api.update_mix_inverter_setting.return_value = response
@@ -1480,7 +1488,9 @@ async def test_write_ac_charge_times_classic_auth_transport_error(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     mock_growatt_classic_api.update_mix_inverter_setting.side_effect = side_effect
@@ -1519,7 +1529,9 @@ async def test_write_ac_discharge_times_classic_auth_transport_error(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     mock_growatt_classic_api.update_mix_inverter_setting.side_effect = side_effect
@@ -1548,7 +1560,9 @@ async def test_write_ac_charge_times_classic_auth_encodes_all_periods(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -1609,7 +1623,9 @@ async def test_write_ac_discharge_times_classic_auth_encodes_all_periods(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -1668,7 +1684,9 @@ async def test_write_ac_discharge_times_classic_auth_updates_coordinator_cache(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -1704,7 +1722,9 @@ async def test_read_ac_charge_times_classic_auth_transport_error(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     mock_growatt_classic_api.get_mix_inverter_settings.side_effect = RequestException(
@@ -1737,7 +1757,9 @@ async def test_read_ac_charge_times_classic_auth_empty_settings(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     mock_growatt_classic_api.get_mix_inverter_settings.return_value = {"success": False}
@@ -1795,7 +1817,9 @@ async def test_read_ac_charge_times_classic_auth(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     response = await hass.services.async_call(
@@ -1844,7 +1868,9 @@ async def test_read_ac_discharge_times_classic_auth(
         hass, mock_config_entry_classic, mock_growatt_classic_api
     )
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     response = await hass.services.async_call(
