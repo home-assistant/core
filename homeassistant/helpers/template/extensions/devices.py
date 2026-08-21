@@ -85,7 +85,7 @@ class DeviceExtension(BaseTemplateExtension):
         return next(
             (
                 device_id
-                for container in (dev_reg.devices, dev_reg.child_devices)
+                for container in (dev_reg._devices, dev_reg.child_devices)  # noqa: SLF001
                 for device_id, device in container.items()
                 if (name := device.name_by_user or device.name)
                 and (str(entity_id_or_device_name) == name)
