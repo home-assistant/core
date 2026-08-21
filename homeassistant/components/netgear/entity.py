@@ -34,8 +34,8 @@ class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
         self._attr_unique_id = self._mac
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            default_name=self._device_name,
-            default_model=device["device_model"],
+            name=self._device_name,
+            model=device["device_model"],
             via_device_id=dr.async_get_device_id_by_identifier(
                 coordinator.hass,
                 (DOMAIN, coordinator.router.unique_id),
