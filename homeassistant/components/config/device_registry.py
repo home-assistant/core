@@ -178,8 +178,26 @@ def websocket_update_device(
         # Convert labels to a set
         msg["labels"] = set(msg["labels"])
 
+    device_id = msg["device_id"]
+
+    # A composite device id has no single underlying device to update; reject it.
+    if (
+        registry.async_get(
+            device_id, include_main_devices=False, include_child_devices=False
+        )
+        is not None
+    ):
+        connection.send_error(
+            msg_id, websocket_api.ERR_NOT_ALLOWED, "Cannot update a composite device"
+        )
+        return
+    if (
+        device := registry.async_get(device_id, include_composite_devices=False)
+    ) is None:
+        connection.send_error(msg_id, websocket_api.ERR_NOT_FOUND, "Device not found")
+        return
+
     entry: dr.AnyDeviceEntry | None
-    device = registry.async_get(msg["device_id"], include_composite_devices=False)
     if isinstance(device, dr.ChildDeviceEntry):
         entry = registry.async_update_child_device(**msg)
     else:
