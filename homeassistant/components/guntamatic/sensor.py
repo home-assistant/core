@@ -1,5 +1,6 @@
 """Support for Guntamatic sensors in Home Assistant."""
 
+import re
 from typing import override
 
 from homeassistant.components.sensor import (
@@ -9,7 +10,12 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    UnitOfTemperature,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -19,6 +25,10 @@ from .const import DOMAIN
 from .coordinator import GuntamaticConfigEntry, GuntamaticCoordinator
 
 PARALLEL_UPDATES = 0
+
+HEATING_CIRCUIT_REGEX = re.compile(
+    r"^(?:room|circuit|heating_circulation_pump|heating_circulation_program)_(\d+)"
+)
 
 GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
@@ -354,6 +364,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="circuit_1_temp",
@@ -361,6 +372,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="circuit_2_temp",
@@ -368,6 +380,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="circuit_3_temp",
@@ -375,6 +388,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="circuit_4_temp",
@@ -382,6 +396,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="circuit_5_temp",
@@ -389,6 +404,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="circuit_6_temp",
@@ -396,6 +412,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="circuit_7_temp",
@@ -403,6 +420,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="circuit_8_temp",
@@ -410,6 +428,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SensorEntityDescription(
         key="heating_circulation_program_0",
@@ -471,12 +490,18 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="operating_time",
         translation_key="operating_time",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="service_hours",
         translation_key="service_hours",
+        device_class=SensorDeviceClass.DURATION,
+        state_class=SensorStateClass.TOTAL,
+        native_unit_of_measurement=UnitOfTime.HOURS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -490,12 +515,32 @@ async def async_setup_entry(
 ) -> None:
     """Set up Guntamatic sensors from config entry."""
     coordinator = entry.runtime_data
+    serial = coordinator.data["serial"][0]
 
-    async_add_entities(
-        GuntamaticSensor(coordinator, description)
-        for description in GUNTAMATIC_SENSORS
-        if description.key in coordinator.data
+    main_device_info = DeviceInfo(
+        identifiers={(DOMAIN, serial)},
+        manufacturer="Guntamatic",
+        serial_number=serial,
+        sw_version=coordinator.data["version"][0],
     )
+
+    entities: list[GuntamaticSensor] = []
+    for description in GUNTAMATIC_SENSORS:
+        if description.key not in coordinator.data:
+            continue
+        if match := HEATING_CIRCUIT_REGEX.match(description.key):
+            circuit = int(match.group(1))
+            device_info = DeviceInfo(
+                identifiers={(DOMAIN, f"{serial}_hc{circuit}")},
+                via_device=(DOMAIN, serial),
+                name=f"Heating circuit {circuit}",
+                manufacturer="Guntamatic",
+            )
+        else:
+            device_info = main_device_info
+        entities.append(GuntamaticSensor(coordinator, description, device_info))
+
+    async_add_entities(entities)
 
 
 class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
@@ -507,6 +552,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
         self,
         coordinator: GuntamaticCoordinator,
         entity_description: SensorEntityDescription,
+        device_info: DeviceInfo,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
@@ -515,13 +561,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
         serial = coordinator.data["serial"][0]
 
         self._attr_unique_id = f"{serial.replace('.', '_')}_{entity_description.key}"
-
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial)},
-            manufacturer="Guntamatic",
-            serial_number=serial,
-            sw_version=coordinator.data["version"][0],
-        )
+        self._attr_device_info = device_info
 
     @property
     @override
