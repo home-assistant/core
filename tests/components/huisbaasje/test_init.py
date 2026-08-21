@@ -59,11 +59,17 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         assert len(mock_customer_overview.mock_calls) == 1
 
 
-async def test_setup_entry_error(hass: HomeAssistant) -> None:
+async def test_setup_entry_error_authenticate(hass: HomeAssistant) -> None:
     """Test for successfully setting a config entry."""
-    with patch(
-        "energyflip.EnergyFlip.authenticate", side_effect=EnergyFlipException
-    ) as mock_authenticate:
+    with (
+        patch(
+            "energyflip.EnergyFlip.authenticate", side_effect=EnergyFlipException
+        ) as mock_authenticate,
+        patch(
+            "energyflip.EnergyFlip.customer_overview",
+            side_effect=EnergyFlipException,
+        ) as mock_customer_overview,
+    ):
         config_entry = MockConfigEntry(
             version=1,
             domain=DOMAIN,
@@ -91,6 +97,50 @@ async def test_setup_entry_error(hass: HomeAssistant) -> None:
 
         # Assert mocks are called
         assert len(mock_authenticate.mock_calls) == 1
+
+        # Assert customer_overview wasn't called and authenticate exception was handled properly
+        assert len(mock_customer_overview.mock_calls) == 0
+
+
+async def test_setup_entry_error_customer_overview(hass: HomeAssistant) -> None:
+    """Test for successfully setting a config entry."""
+    with (
+        patch(
+            "energyflip.EnergyFlip.authenticate", return_value=None
+        ) as mock_authenticate,
+        patch(
+            "energyflip.EnergyFlip.customer_overview",
+            side_effect=EnergyFlipException,
+        ) as mock_customer_overview,
+    ):
+        config_entry = MockConfigEntry(
+            version=1,
+            domain=DOMAIN,
+            title="userId",
+            data={
+                CONF_ID: "userId",
+                CONF_USERNAME: "username",
+                CONF_PASSWORD: "password",
+            },
+            source="test",
+        )
+        config_entry.add_to_hass(hass)
+
+        assert config_entry.state is ConfigEntryState.NOT_LOADED
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Assert integration is loaded with error
+        assert config_entry.state is ConfigEntryState.SETUP_ERROR
+        assert DOMAIN not in hass.data
+
+        # Assert entities are not loaded
+        entities = hass.states.async_entity_ids("sensor")
+        assert len(entities) == 0
+
+        # Assert mocks are called
+        assert len(mock_authenticate.mock_calls) == 1
+        assert len(mock_customer_overview.mock_calls) == 1
 
 
 async def test_unload_entry(hass: HomeAssistant) -> None:
