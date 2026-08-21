@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .test_data import MOCK_CURRENT_MEASUREMENTS
+from .test_data import MOCK_CURRENT_MEASUREMENTS, MOCK_CUSTOMER_OVERVIEW
 
 from tests.common import MockConfigEntry
 
@@ -21,12 +21,13 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
             "energyflip.EnergyFlip.authenticate", return_value=None
         ) as mock_authenticate,
         patch(
-            "energyflip.EnergyFlip.is_authenticated", return_value=True
-        ) as mock_is_authenticated,
-        patch(
             "energyflip.EnergyFlip.current_measurements",
             return_value=MOCK_CURRENT_MEASUREMENTS,
         ) as mock_current_measurements,
+        patch(
+            "energyflip.EnergyFlip.customer_overview",
+            return_value=MOCK_CUSTOMER_OVERVIEW,
+        ) as mock_customer_overview,
     ):
         config_entry = MockConfigEntry(
             version=1,
@@ -50,12 +51,12 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
 
         # Assert entities are loaded
         entities = hass.states.async_entity_ids("sensor")
-        assert len(entities) == 18
+        assert len(entities) == 14
 
         # Assert mocks are called
         assert len(mock_authenticate.mock_calls) == 1
-        assert len(mock_is_authenticated.mock_calls) == 1
         assert len(mock_current_measurements.mock_calls) == 1
+        assert len(mock_customer_overview.mock_calls) == 1
 
 
 async def test_setup_entry_error(hass: HomeAssistant) -> None:
@@ -99,12 +100,13 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
             "energyflip.EnergyFlip.authenticate", return_value=None
         ) as mock_authenticate,
         patch(
-            "energyflip.EnergyFlip.is_authenticated", return_value=True
-        ) as mock_is_authenticated,
-        patch(
             "energyflip.EnergyFlip.current_measurements",
             return_value=MOCK_CURRENT_MEASUREMENTS,
         ) as mock_current_measurements,
+        patch(
+            "energyflip.EnergyFlip.customer_overview",
+            return_value=MOCK_CUSTOMER_OVERVIEW,
+        ) as mock_customer_overview,
     ):
         config_entry = MockConfigEntry(
             version=1,
@@ -124,13 +126,13 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.LOADED
         entities = hass.states.async_entity_ids("sensor")
-        assert len(entities) == 18
+        assert len(entities) == 14
 
         # Unload config entry
         await hass.config_entries.async_unload(config_entry.entry_id)
         assert config_entry.state is ConfigEntryState.NOT_LOADED
         entities = hass.states.async_entity_ids("sensor")
-        assert len(entities) == 18
+        assert len(entities) == 14
         for entity in entities:
             assert hass.states.get(entity).state == STATE_UNAVAILABLE
 
@@ -142,5 +144,5 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
 
         # Assert mocks are called
         assert len(mock_authenticate.mock_calls) == 1
-        assert len(mock_is_authenticated.mock_calls) == 1
         assert len(mock_current_measurements.mock_calls) == 1
+        assert len(mock_customer_overview.mock_calls) == 1
