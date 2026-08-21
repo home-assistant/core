@@ -240,7 +240,7 @@ def _load_json_2_meter_data(
     if meters := json_fixture["data"].get("ctmeters_phases"):
         mocked_data.ctmeters_phases = {}
         for meter, meter_data in meters.items():
-            meter_phase_data: dict[str, EnvoyMeterData] = {}
+            meter_phase_data: dict[str, EnvoyMeterData | None] = {}
             [
                 meter_phase_data.update(
                     {phase: None if not phase_data else EnvoyMeterData(**phase_data)}
