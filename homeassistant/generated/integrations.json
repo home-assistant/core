@@ -532,6 +532,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "ariston": {
+      "name": "Ariston",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "arris_tg2492lg": {
       "name": "Arris TG2492LG",
       "integration_type": "hub",
