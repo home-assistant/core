@@ -1,7 +1,6 @@
 """Tests for the Hot Spring sensor platform."""
 
-from collections.abc import Generator
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -15,18 +14,10 @@ from . import setup_with_selected_platforms
 from tests.common import MockConfigEntry, snapshot_platform
 
 
-@pytest.fixture(autouse=True)
-def override_platforms() -> Generator[None]:
-    """Override PLATFORMS."""
-    with patch("homeassistant.components.hotspring.PLATFORMS", [Platform.SENSOR]):
-        yield
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "mock_hotspring")
 async def test_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_hotspring: MagicMock,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -35,6 +26,7 @@ async def test_sensors(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("mock_hotspring")
 @pytest.mark.parametrize(
     "entity_id",
     [
@@ -46,7 +38,6 @@ async def test_sensors(
 async def test_disabled_by_default_sensors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_hotspring: MagicMock,
     entity_registry: er.EntityRegistry,
     entity_id: str,
 ) -> None:
