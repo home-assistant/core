@@ -2450,7 +2450,10 @@ class EntityRegistry(BaseRegistry):
         ]:
             self.async_remove(entity_id)
         for key, deleted_entity in list(self.deleted_entities.items()):
-            if config_subentry_id != deleted_entity.config_subentry_id:
+            if (
+                deleted_entity.config_entry_id != config_entry_id
+                or deleted_entity.config_subentry_id != config_subentry_id
+            ):
                 continue
             # Add a time stamp when the deleted entity became orphaned
             self.deleted_entities[key] = attr.evolve(
