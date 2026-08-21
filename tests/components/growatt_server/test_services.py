@@ -32,7 +32,9 @@ async def test_read_time_segments_single_device(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Test service call
@@ -59,7 +61,9 @@ async def test_update_time_segment_charge_mode(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Test successful update
@@ -93,7 +97,9 @@ async def test_update_time_segment_discharge_mode(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -125,7 +131,9 @@ async def test_update_time_segment_standby_mode(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -157,7 +165,9 @@ async def test_update_time_segment_disabled(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -189,7 +199,9 @@ async def test_update_time_segment_with_seconds(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Test with HH:MM:SS format (what the UI time selector sends)
@@ -222,7 +234,9 @@ async def test_update_time_segment_api_error(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Mock API error - the library raises an exception instead of returning error dict
@@ -274,7 +288,9 @@ async def test_no_min_devices_skips_service_registration(
     assert hass.services.has_service(DOMAIN, "read_time_segments")
 
     # Get the TLX device (non-MIN)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "TLX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     # But calling them with a non-MIN device should fail with appropriate error
@@ -316,7 +332,9 @@ async def test_multiple_devices_with_valid_device_id_works(
     await hass.async_block_till_done()
 
     # Get the device registry ID for the first MIN device
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Test update service with specific device_id (device registry ID)
@@ -361,7 +379,9 @@ async def test_update_time_segment_invalid_time_format(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Test with invalid time format
@@ -395,7 +415,9 @@ async def test_update_time_segment_invalid_segment_id(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Test segment_id too low
@@ -449,7 +471,9 @@ async def test_update_time_segment_invalid_batt_mode(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Test invalid batt_mode
@@ -485,7 +509,9 @@ async def test_read_time_segments_api_error(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Mock API error by making coordinator.read_time_segments raise an exception
@@ -637,7 +663,9 @@ async def test_update_time_segment_invalid_end_time_format(
     await hass.async_block_till_done()
 
     # Get the device registry ID
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "MIN123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIN123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Test with invalid end_time format
@@ -676,7 +704,9 @@ async def test_service_with_unloaded_config_entry(
     await hass.async_block_till_done()
 
     # Get the device
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "TLX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     # Unload the config entry
@@ -730,7 +760,9 @@ async def test_read_ac_charge_times(
     """Test reading AC charge times from SPH device."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     response = await hass.services.async_call(
@@ -755,7 +787,9 @@ async def test_read_ac_discharge_times(
     """Test reading AC discharge times from SPH device."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     response = await hass.services.async_call(
@@ -778,7 +812,9 @@ async def test_write_ac_charge_times(
     """Test writing AC charge times to SPH device."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -808,7 +844,9 @@ async def test_write_ac_charge_times_with_seconds_format(
     """Test writing AC charge times with HH:MM:SS format from UI time selector."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -838,7 +876,9 @@ async def test_write_ac_discharge_times(
     """Test writing AC discharge times to SPH device."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     await hass.services.async_call(
@@ -867,7 +907,9 @@ async def test_write_ac_charge_times_api_error(
     """Test handling API error when writing AC charge times."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     mock_growatt_v1_api.sph_write_ac_charge_times.side_effect = (
@@ -950,7 +992,9 @@ async def test_write_ac_discharge_times_api_error(
     """Test handling API error when writing AC discharge times."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     mock_growatt_v1_api.sph_write_ac_discharge_times.side_effect = (
@@ -979,7 +1023,9 @@ async def test_write_ac_charge_times_invalid_charge_power(
     """Test validation of charge_power range."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     with pytest.raises(ServiceValidationError) as excinfo:
@@ -1008,7 +1054,9 @@ async def test_write_ac_charge_times_invalid_charge_stop_soc(
     """Test validation of charge_stop_soc range."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     with pytest.raises(ServiceValidationError) as excinfo:
@@ -1037,7 +1085,9 @@ async def test_write_ac_discharge_times_invalid_discharge_power(
     """Test validation of discharge_power range."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     with pytest.raises(ServiceValidationError) as excinfo:
@@ -1065,7 +1115,9 @@ async def test_write_ac_discharge_times_invalid_discharge_stop_soc(
     """Test validation of discharge_stop_soc range."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     with pytest.raises(ServiceValidationError) as excinfo:
@@ -1093,7 +1145,9 @@ async def test_write_ac_charge_times_invalid_period_time(
     """Test validation of invalid period time format."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     with pytest.raises(ServiceValidationError) as excinfo:
@@ -1133,7 +1187,9 @@ async def test_no_sph_devices_fails_gracefully(
     assert hass.services.has_service(DOMAIN, "write_ac_charge_times")
     assert hass.services.has_service(DOMAIN, "read_ac_charge_times")
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "TLX123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "TLX123456"), mock_config_entry_classic.entry_id
+    )
     assert device_entry is not None
 
     with pytest.raises(ServiceValidationError) as excinfo:
@@ -1197,7 +1253,9 @@ async def test_write_ac_charge_times_uses_cached_periods_for_unspecified(
     """Test that unspecified periods are filled from cached settings."""
     await _setup_sph_integration(hass, mock_config_entry, mock_growatt_v1_api)
 
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "SPH123456")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "SPH123456"), mock_config_entry.entry_id
+    )
     assert device_entry is not None
 
     # Only override period 1; periods 2 and 3 should come from cache (all 00:00)

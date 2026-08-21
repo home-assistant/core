@@ -26,9 +26,7 @@ CONF_API_URL = "api_url"
 CONF_APP_ID = "app_id"
 CONF_APP_SECRET = "app_secret"
 
-PARAM_STATUS = "status"
-PARAM_STATE = "state"
-PARAM_MOTION_DETECT = "motion_detect"
+# Switch keys not yet exported by pyimouapi (keep integration-local).
 PARAM_HEADER_DETECT = "header_detect"
 PARAM_WHITE_LIGHT = "white_light"
 PARAM_CLOSE_CAMERA = "close_camera"
@@ -43,4 +41,10 @@ PTZ_MOVE_DURATION_MS = 500
 # Upper bound for a full coordinator refresh (device list + status for all devices).
 UPDATE_TIMEOUT = 300
 
-PLATFORMS = [Platform.BUTTON, Platform.CAMERA, Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [
+    Platform.BUTTON,
+    Platform.CAMERA,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+]

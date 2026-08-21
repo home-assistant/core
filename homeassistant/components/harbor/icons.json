@@ -1,5 +1,10 @@
 {
   "entity": {
+    "select": {
+      "night_mode_preference": {
+        "default": "mdi:weather-night"
+      }
+    },
     "sensor": {
       "num_viewers": {
         "default": "mdi:account-eye"
@@ -9,6 +14,17 @@
       },
       "wifi_strength": {
         "default": "mdi:wifi"
+      }
+    },
+    "switch": {
+      "camera_on": {
+        "default": "mdi:cctv"
+      },
+      "clock_display": {
+        "default": "mdi:clock-outline"
+      },
+      "video_flip": {
+        "default": "mdi:flip-vertical"
       }
     }
   }

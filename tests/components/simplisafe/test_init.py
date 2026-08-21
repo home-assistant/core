@@ -33,7 +33,6 @@ async def test_base_station_migration(
 ) -> None:
     """Test that old integer-based device identifiers are migrated to strings."""
     old_identifiers = {(DOMAIN, 12345)}
-    new_identifiers = {(DOMAIN, "12345")}
 
     device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
@@ -45,8 +44,18 @@ async def test_base_station_migration(
     assert await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done()
 
-    assert device_registry.async_get_device(identifiers=old_identifiers) is None
-    assert device_registry.async_get_device(identifiers=new_identifiers) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, 12345), config_entry.entry_id
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "12345"), config_entry.entry_id
+        )
+        is not None
+    )
 
 
 async def test_base_station_model_is_string(
@@ -59,7 +68,9 @@ async def test_base_station_model_is_string(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "12345")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "12345"), config_entry.entry_id
+    )
     assert device is not None
     assert isinstance(device.model, str)
 

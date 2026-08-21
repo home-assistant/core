@@ -21,6 +21,9 @@ BUTTON_TYPES: dict[str, ButtonEntityDescription] = {
     "fav": ButtonEntityDescription(key="fav", translation_key="fav"),
     "open": ButtonEntityDescription(key="open", translation_key="open"),
     "close": ButtonEntityDescription(key="close", translation_key="close"),
+    "second_output": ButtonEntityDescription(
+        key="second_output", translation_key="second_output"
+    ),
 }
 
 _DEFAULT_BUTTON = ButtonEntityDescription(key="button")

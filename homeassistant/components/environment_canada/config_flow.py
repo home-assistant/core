@@ -30,6 +30,7 @@ from homeassistant.helpers.selector import (
 )
 
 from .const import (
+    CONF_RADAR_COLORS,
     CONF_RADAR_DURATION,
     CONF_RADAR_FPS,
     CONF_RADAR_LAYER,
@@ -39,6 +40,7 @@ from .const import (
     CONF_RADAR_TIMESTAMP,
     CONF_STATION,
     CONF_TITLE,
+    DEFAULT_RADAR_COLORS,
     DEFAULT_RADAR_DURATION,
     DEFAULT_RADAR_FPS,
     DEFAULT_RADAR_LAYER,
@@ -47,6 +49,7 @@ from .const import (
     DEFAULT_RADAR_RADIUS,
     DEFAULT_RADAR_TIMESTAMP,
     DOMAIN,
+    RADAR_COLOR_OPTIONS,
     RADAR_LAYERS,
 )
 
@@ -228,6 +231,15 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                 ): NumberSelector(
                     NumberSelectorConfig(
                         min=1, max=30, step=1, unit_of_measurement="fps"
+                    )
+                ),
+                vol.Required(
+                    CONF_RADAR_COLORS,
+                    default=options.get(CONF_RADAR_COLORS, DEFAULT_RADAR_COLORS),
+                ): SelectSelector(
+                    SelectSelectorConfig(
+                        options=RADAR_COLOR_OPTIONS,
+                        translation_key="radar_colors",
                     )
                 ),
             }

@@ -90,6 +90,7 @@ async def test_dual_lens_sub_devices(
     """Test dual lens camera with separate sensors per lens uses lens sub-devices."""
     reolink_host.model = TEST_DUO_MODEL
     reolink_host.is_nvr = False
+    reolink_host.is_dual_lens = True
     reolink_host.channels = [0, 1]
     reolink_host.stream_channels = [0, 1]
     # a Reolink Duo reports a junk name like "2" for the second channel,
@@ -123,8 +124,8 @@ async def test_dual_lens_sub_devices(
     assert config_entry.state is ConfigEntryState.LOADED
 
     for channel in (0, 1):
-        lens_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, f"{TEST_UID}_lens{channel}")}
+        lens_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{TEST_UID}_lens{channel}"), config_entry.entry_id
         )
         assert lens_device is not None
         assert lens_device.name == f"{TEST_CAM_NAME} lens {channel}"
@@ -143,8 +144,8 @@ async def test_dual_lens_sub_devices(
     assert entity.device_id == host_device.id
 
     # the pre-existing lens sub-device and entity should have been reused
-    lens_0_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_UID}_lens0")}
+    lens_0_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_lens0"), config_entry.entry_id
     )
     assert lens_0_device is not None
     assert lens_0_device.id == old_lens_device.id
@@ -184,12 +185,42 @@ async def test_dual_lens_sub_devices_nvr(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    parent_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, parent_dev_id)}
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, parent_dev_id), config_entry.entry_id
     )
     assert parent_device is not None
-    lens_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_UID}_lens0")}
+    lens_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_lens0"), config_entry.entry_id
+    )
+    assert lens_device is not None
+    assert lens_device.via_device_id == parent_device.id
+
+
+async def test_dual_lens_sub_devices_nvr_multi_channel(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    reolink_host: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a lens sub-device on channel >= 1 links to its camera device on a NVR host."""
+    reolink_host.model = TEST_DUO_MODEL
+    reolink_host.channels = [0, 1]
+    reolink_host.stream_channels = [0, 1]
+    # channel 1 camera device uses the "_ch{channel}" id (no UID support)
+    reolink_host.supported.side_effect = lambda ch, cap: (
+        not (cap == "UID" and ch is not None)
+    )
+
+    with patch("homeassistant.components.reolink.PLATFORMS", [Platform.BINARY_SENSOR]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_ch1"), config_entry.entry_id
+    )
+    assert parent_device is not None
+    lens_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_UID}_lens1"), config_entry.entry_id
     )
     assert lens_device is not None
     assert lens_device.via_device_id == parent_device.id
