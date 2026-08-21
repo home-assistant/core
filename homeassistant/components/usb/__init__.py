@@ -31,7 +31,7 @@ from homeassistant.loader import USBMatcher, async_get_usb
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
-from .consumers import async_get_serial_port_consumers
+from .consumers import UNSCANNABLE_PORT_SCHEMES, async_get_serial_port_consumers
 from .models import SerialDevice, SerialPortConsumer, USBDevice
 from .serial_proxy_stub import register_serialx_transport
 from .utils import (
@@ -620,7 +620,8 @@ async def websocket_usb_list_serial_ports(
     if msg["include_usage"]:
         consumers = await async_get_serial_port_consumers(hass, ports)
 
-        # Ports that are configured but missing from the scan are shown as absent
+        # Configured ports missing from the scan are absent, except for URLs no
+        # scanner can contribute, which are assumed present while claimed
         scanned_devices = {port.device for port in ports}
         result.extend(
             _async_serialize_port(
@@ -631,7 +632,7 @@ async def websocket_usb_list_serial_ports(
                     manufacturer=None,
                     description=None,
                 ),
-                present=False,
+                present=device.startswith(UNSCANNABLE_PORT_SCHEMES),
             )
             for device in consumers
             if device not in scanned_devices

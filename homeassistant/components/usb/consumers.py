@@ -15,29 +15,40 @@ from .const import DOMAIN
 from .models import SerialDevice, SerialPortConsumer, USBDevice
 
 # Key paths holding a serial port in the config entry data and options of
-# integrations depending on `usb`. Traversed literally, never recursively.
+# searched integrations. Traversed literally, never recursively.
 SERIAL_PORT_KEY_PATHS: tuple[tuple[str, ...], ...] = (
     ("device",),
     ("device", "path"),  # zha
+    ("device_path",),  # alarmdecoder
+    ("filename",),  # bryant_evolution
+    ("host",),  # elkm1
     ("port",),
-    ("usb_path",),  # zwave_js, crownstone
     ("serial_port",),  # edl21, teleinfo
+    ("socket_path",),  # zwave_js
+    ("usb_path",),  # zwave_js, crownstone
 )
 
+# Integrations configured with a serial port but not depending on `usb`
+NON_USB_SERIAL_DOMAINS = ("alarmdecoder", "bryant_evolution", "elkm1", "mysensors")
+
 # States in which the entry claims its configured port, even if the port is not
-# open right now: a retrying setup typically failed to open the port and a
-# failed unload may still hold it
+# open right now: a retrying setup typically failed to open the port, while an
+# unloading or failed-to-unload entry may still hold it
 ACTIVE_CONFIG_ENTRY_STATES = (
     ConfigEntryState.LOADED,
     ConfigEntryState.SETUP_RETRY,
     ConfigEntryState.SETUP_IN_PROGRESS,
+    ConfigEntryState.UNLOAD_IN_PROGRESS,
     ConfigEntryState.FAILED_UNLOAD,
 )
 
-# Schemes of remote serial port URLs, listed even when they cannot be tied to
-# a scanned port, e.g. when the providing integration is offline
-REMOTE_PORT_SCHEMES = (
-    "esphome-hass://",
+# Remote ports contributed by serial port scanners; a configured port missing
+# from the scan is absent, e.g. because the providing integration is offline
+SCANNED_PORT_SCHEMES = ("esphome-hass://",)
+
+# Serial port URLs no scanner contributes; they can never be scanned, so a
+# claiming consumer is the only evidence such a port exists
+UNSCANNABLE_PORT_SCHEMES = (
     "esphome://",
     "rfc2217://",
     "socket://",
@@ -74,12 +85,12 @@ def _serial_port_from_value(
     if value in known_devices:
         return value
 
-    if value.startswith(REMOTE_PORT_SCHEMES):
+    if value.startswith(SCANNED_PORT_SCHEMES):
         return value
 
     path = value
 
-    if domain == "upb":
+    if domain in ("elkm1", "upb"):
         path = path.removeprefix("serial://").removeprefix("device://")
         path = BAUD_SUFFIX_RE.sub("", path)
 
@@ -113,7 +124,8 @@ async def _async_get_config_entry_consumers(
             continue
 
         if (
-            DOMAIN not in integration.dependencies
+            entry.domain not in NON_USB_SERIAL_DOMAINS
+            and DOMAIN not in integration.dependencies
             and DOMAIN not in integration.after_dependencies
         ):
             continue

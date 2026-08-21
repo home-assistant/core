@@ -252,6 +252,32 @@ async def test_config_entry_ignored_and_disabled(
 
 
 @pytest.mark.usefixtures("setup_ports")
+@pytest.mark.usefixtures("setup_ports")
+@pytest.mark.parametrize(
+    ("domain", "data"),
+    [
+        pytest.param("alarmdecoder", {"device_path": TTY_USB0}, id="alarmdecoder"),
+        pytest.param("bryant_evolution", {"filename": TTY_USB0}, id="bryant_evolution"),
+        pytest.param("elkm1", {"host": f"serial://{TTY_USB0}:115200"}, id="elkm1"),
+        pytest.param("mysensors", {"device": TTY_USB0}, id="mysensors"),
+    ],
+)
+async def test_non_usb_serial_domains(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    domain: str,
+    data: dict[str, Any],
+) -> None:
+    """Test integrations holding a serial port without a `usb` dependency."""
+    mock_integration(hass, MockModule(domain))
+    MockConfigEntry(domain=domain, title="Test", data=data).add_to_hass(hass)
+
+    result = await _async_get_serial_ports(hass_ws_client, hass)
+
+    assert [len(port["consumers"]) for port in result] == [1, 0]
+
+
+@pytest.mark.usefixtures("setup_ports")
 async def test_config_entry_unknown_integration(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -322,21 +348,26 @@ async def test_remote_port_consumer(
 
 @pytest.mark.usefixtures("setup_ports")
 @pytest.mark.parametrize(
-    "device",
+    ("device", "present"),
     [
-        pytest.param(TTY_USB1, id="local"),
-        pytest.param("esphome-hass://02AB/uart0", id="esphome_proxy"),
-        pytest.param("esphome://ttl-to-serial.local/uart1", id="esphome"),
-        pytest.param("socket://192.0.2.1:1234", id="socket"),
-        pytest.param("rfc2217://192.0.2.1:1234", id="rfc2217"),
+        pytest.param(TTY_USB1, False, id="local"),
+        pytest.param("esphome-hass://02AB/uart0", False, id="esphome_proxy"),
+        pytest.param("esphome://ttl-to-serial.local/uart1", True, id="esphome"),
+        pytest.param("socket://192.0.2.1:1234", True, id="socket"),
+        pytest.param("tcp://192.0.2.1:1234", True, id="tcp"),
+        pytest.param("rfc2217://192.0.2.1:1234", True, id="rfc2217"),
     ],
 )
-async def test_absent_configured_port(
+async def test_configured_port_not_scanned(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device: str,
+    present: bool,
 ) -> None:
-    """Test a configured port that is not currently present."""
+    """Test a configured port that is not in the scan.
+
+    Scannable ports are absent, unscannable URLs are assumed present.
+    """
     mock_integration(hass, MockModule("test_usb", dependencies=["usb"]))
     entry = MockConfigEntry(
         domain="test_usb", title="Test USB", data={"device": device}
@@ -348,7 +379,7 @@ async def test_absent_configured_port(
     assert [(port["device"], port["present"]) for port in result] == [
         (TTY_USB0, True),
         (ESPHOME_PORT, True),
-        (device, False),
+        (device, present),
     ]
     assert result[2] == {
         "device": device,
@@ -359,7 +390,7 @@ async def test_absent_configured_port(
         "interface_description": None,
         "interface_num": None,
         "matching_integrations": [],
-        "present": False,
+        "present": present,
         "discovery_flows": [],
         "consumers": [
             {
