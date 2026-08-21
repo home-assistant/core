@@ -207,10 +207,7 @@ class ConversationFlowHandler(OpenRouterSubentryFlowHandler):
                     ): TemplateSelector(),
                     vol.Optional(
                         CONF_LLM_HASS_API,
-                        default=self.options.get(
-                            CONF_LLM_HASS_API,
-                            RECOMMENDED_CONVERSATION_OPTIONS[CONF_LLM_HASS_API],
-                        ),
+                        default=self.options.get(CONF_LLM_HASS_API, []),
                     ): SelectSelector(
                         SelectSelectorConfig(options=hass_apis, multiple=True)
                     ),

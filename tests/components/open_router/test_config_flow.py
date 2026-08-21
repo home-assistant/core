@@ -528,3 +528,29 @@ async def test_reconfigure_conversation_subentry_llm_api_schema(
     assert [
         opt["value"] for opt in field_schema.config.get("options")
     ] == expected_options
+
+
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_reconfigure_conversation_subentry_no_llm_api(
+    hass: HomeAssistant,
+    mock_open_router_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the llm_hass_api field is empty when the subentry has no LLM API."""
+    await setup_integration(hass, mock_config_entry)
+
+    subentry = next(iter(mock_config_entry.subentries.values()))
+    hass.config_entries.async_update_subentry(
+        mock_config_entry,
+        subentry,
+        data={k: v for k, v in subentry.data.items() if k != CONF_LLM_HASS_API},
+    )
+    await hass.async_block_till_done()
+
+    result = await mock_config_entry.start_subentry_reconfigure_flow(
+        hass, subentry.subentry_id
+    )
+
+    schema = result["data_schema"].schema
+    key = next(k for k in schema if k == CONF_LLM_HASS_API)
+    assert key.default() == []
