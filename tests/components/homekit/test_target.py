@@ -6,7 +6,7 @@ from freezegun.api import FrozenDateTimeFactory
 
 from homeassistant.components.homekit.const import TARGET_CHANGE_RELOAD_COOLDOWN
 from homeassistant.components.homekit.target import async_track_target_entity_change
-from homeassistant.const import ATTR_LABEL_ID
+from homeassistant.const import ATTR_ENTITY_ID, ATTR_LABEL_ID
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
     entity_registry as er,
@@ -15,6 +15,71 @@ from homeassistant.helpers import (
 )
 
 from tests.common import async_fire_time_changed
+
+
+async def test_group_target_membership_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test group targets refresh when their membership changes."""
+    hass.states.async_set("group.downstairs", "on", {ATTR_ENTITY_ID: ["light.kitchen"]})
+    action = Mock()
+    unsubscribe = await async_track_target_entity_change(
+        hass, {ATTR_ENTITY_ID: ["group.downstairs"]}, action
+    )
+
+    hass.states.async_set(
+        "group.downstairs", "on", {ATTR_ENTITY_ID: ["light.living_room"]}
+    )
+    await hass.async_block_till_done()
+    freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    action.assert_called_once_with({"light.living_room"}, {"light.kitchen"})
+    unsubscribe()
+
+
+async def test_nested_group_target_membership_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test nested group targets refresh when membership changes."""
+    hass.states.async_set("group.downstairs", "on", {ATTR_ENTITY_ID: ["group.lights"]})
+    hass.states.async_set("group.lights", "on", {ATTR_ENTITY_ID: ["light.kitchen"]})
+    action = Mock()
+    unsubscribe = await async_track_target_entity_change(
+        hass, {ATTR_ENTITY_ID: ["group.downstairs"]}, action
+    )
+
+    hass.states.async_set("group.lights", "on", {ATTR_ENTITY_ID: ["light.living_room"]})
+    await hass.async_block_till_done()
+    freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    action.assert_called_once_with({"light.living_room"}, {"light.kitchen"})
+    unsubscribe()
+
+
+async def test_entity_target_state_change_does_not_refresh(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test state changes do not refresh non-group targets."""
+    action = Mock()
+    unsubscribe = await async_track_target_entity_change(
+        hass, {ATTR_ENTITY_ID: ["light.kitchen"]}, action
+    )
+
+    hass.states.async_set("light.kitchen", "on")
+    await hass.async_block_till_done()
+    freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    action.assert_not_called()
+    unsubscribe()
 
 
 async def test_selective_refresh_and_unsubscribe(
