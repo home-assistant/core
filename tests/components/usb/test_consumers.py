@@ -252,6 +252,30 @@ async def test_config_entry_ignored_and_disabled(
 
 
 @pytest.mark.usefixtures("setup_ports")
+async def test_socket_path_psk_not_exposed(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test the noise PSK in zwave_js's esphome socket path is stripped."""
+    mock_integration(hass, MockModule("test_usb", dependencies=["usb"]))
+    MockConfigEntry(
+        domain="test_usb",
+        title="Test USB",
+        data={"socket_path": "esphome://192.0.2.5:6053/?key=secret-psk"},
+    ).add_to_hass(hass)
+
+    result = await _async_get_serial_ports(hass_ws_client, hass)
+
+    assert [
+        (port["device"], port["present"], len(port["consumers"])) for port in result
+    ] == [
+        (TTY_USB0, True, 0),
+        (ESPHOME_PORT, True, 0),
+        ("esphome://192.0.2.5:6053/", True, 1),
+    ]
+    assert "secret-psk" not in str(result)
+
+
 @pytest.mark.usefixtures("setup_ports")
 @pytest.mark.parametrize(
     ("domain", "data"),

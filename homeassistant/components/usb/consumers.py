@@ -88,6 +88,10 @@ def _serial_port_from_value(
     if value.startswith(SCANNED_PORT_SCHEMES):
         return value
 
+    if value.startswith(UNSCANNABLE_PORT_SCHEMES):
+        # zwave_js's esphome:// socket path embeds the noise PSK as `?key=`
+        return value.partition("?")[0]
+
     path = value
 
     if domain in ("elkm1", "upb"):
