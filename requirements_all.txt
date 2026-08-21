@@ -3339,7 +3339,7 @@ voip-utils==0.4.0
 volkszaehler==0.4.0
 
 # homeassistant.components.volvo
-volvocarsapi==0.4.3
+volvocarsapi==0.4.4
 
 # homeassistant.components.verisure
 vsure==2.10.0
