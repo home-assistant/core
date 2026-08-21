@@ -674,9 +674,29 @@ async def test_trigger_sentence_response_translation(
 
 
 @pytest.mark.usefixtures("init_components", "sl_setup")
+async def test_shopping_list_add_new_item(hass: HomeAssistant) -> None:
+    """Test adding a new item to the shopping list through the default agent."""
+    shopping_data = _get_shopping_data(hass)
+
+    result = await conversation.async_converse(
+        hass, "add apples to my shopping list", None, Context()
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert result.response.speech == {
+        "plain": {"speech": "Added apples", "extra_data": None}
+    }
+    assert len(shopping_data.items) == 1
+    assert shopping_data.items[0]["name"] == "Apples"
+    assert shopping_data.items[0]["complete"] is False
+
+
+@pytest.mark.usefixtures("init_components", "sl_setup")
 @pytest.mark.parametrize("complete", [False, True])
-async def test_shopping_list_add_item(hass: HomeAssistant, complete: bool) -> None:
-    """Test adding an item to the shopping list through the default agent."""
+async def test_shopping_list_add_existing_item(
+    hass: HomeAssistant, complete: bool
+) -> None:
+    """Test adding an existing item through the default agent."""
     shopping_data = _get_shopping_data(hass)
     existing_item = await shopping_data.async_add("Apples", complete=complete)
     existing_item_id = existing_item["id"]
