@@ -1528,61 +1528,69 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         }
 
 
-class _DeprecatedDeviceRegistryItemsView:
-    """Backwards-compatible view returned by the `DeviceRegistry.devices` property.
+class _DeprecatedRegistryItemsView[_EntryTypeT: (DeviceEntry, DeletedDeviceEntry)]:
+    """Backwards-compatible view for devices and deleted_devices.
 
     Can be removed in release 2027.9.
 
-    Iterating this yields the `DeviceEntry` values, which is the supported way to
-    enumerate the registry (`for entry in registry.devices`, `list(registry.devices)`
-    and similar). Using it as a mapping - subscription, device-id membership,
-    `.values()`, `.get()`, `.get_entry()` and the other container methods - is
-    deprecated: each such access is reported via `report_usage` (raising for core code
-    and core integrations, warning for custom integrations) and then delegated to the
-    underlying container.
+    Iterating this yields the entry values, which is the supported way to enumerate the
+    registry (`for entry in view`, `list(view)` and similar). Using it as a mapping -
+    subscription, device-id membership, `.values()`, `.get()`, `.get_entry()` and the
+    other container methods - is deprecated: each such access is reported via
+    `report_usage` (raising for core code and core integrations, warning for custom
+    integrations) and then delegated to the underlying container.
     """
 
-    __slots__ = ("_devices",)
+    __slots__ = ("_deprecation_message", "_devices", "_entry_type")
 
-    def __init__(self, devices: ActiveDeviceRegistryItems) -> None:
-        """Initialize the view over a device registry."""
+    # Explicit annotations so the `__getattr__` fallback below does not make these
+    # slots resolve to `Any`.
+    _devices: DeviceRegistryItems[_EntryTypeT]
+    _entry_type: type[_EntryTypeT]
+
+    def __init__(
+        self,
+        devices: DeviceRegistryItems[_EntryTypeT],
+        entry_type: type[_EntryTypeT],
+        deprecation_message: str,
+    ) -> None:
+        """Initialize the view over a device registry container."""
         self._devices = devices
+        self._entry_type = entry_type
+        self._deprecation_message = deprecation_message
 
-    def __iter__(self) -> Iterator[DeviceEntry]:
-        """Iterate over the device entries."""
+    def __iter__(self) -> Iterator[_EntryTypeT]:
+        """Iterate over the entries."""
         return iter(self._devices.values())
 
     def __len__(self) -> int:
-        """Return the number of device entries."""
+        """Return the number of entries."""
         return len(self._devices)
 
     def _report_deprecated_use(self) -> None:
-        """Report deprecated use of `DeviceRegistry.devices`."""
+        """Report deprecated mapping use of the container."""
         report_usage(
-            "uses `device_registry.devices` as a mapping or calls its lookup "
-            "methods, which is deprecated; iterate it to get the device entries, "
-            "or use `async_get`, `async_entries_for_config_entry` and similar "
-            "helpers for lookups",
+            self._deprecation_message,
             breaks_in_ha_version="2027.9.0",
             core_behavior=ReportBehavior.ERROR,
             core_integration_behavior=ReportBehavior.ERROR,
             custom_integration_behavior=ReportBehavior.LOG,
         )
 
-    def __getitem__(self, key: str) -> DeviceEntry:
-        """Return the device entry for a device id (deprecated)."""
+    def __getitem__(self, key: str) -> _EntryTypeT:
+        """Return the entry for a device id (deprecated)."""
         self._report_deprecated_use()
         return self._devices[key]
 
     def __contains__(self, obj: object) -> bool:
-        """Return whether a device entry - or, deprecated, a device id - is registered.
+        """Return whether an entry - or, deprecated, a device id - is registered.
 
-        Value membership (`DeviceEntry in registry.devices`) is the supported use and
-        matches the `Collection[DeviceEntry]` type. Membership by device id (a `str`)
-        is the old key-based mapping behavior and is deprecated.
+        Value membership (`entry in view`) is the supported use and matches the
+        `Collection` type. Membership by device id (a `str`) is the old key-based
+        mapping behavior and is deprecated.
         """
-        # DeviceEntry is never subclassed, a direct type check is safe
-        if type(obj) is DeviceEntry:
+        # The entry type is never subclassed, a direct type check is safe
+        if type(obj) is self._entry_type:
             return self._devices.get(obj.id) == obj
         if isinstance(obj, str):
             self._report_deprecated_use()
@@ -1788,7 +1796,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     _devices: ActiveDeviceRegistryItems
     devices: Collection[DeviceEntry]
     child_devices: ChildDeviceRegistryItems
-    deleted_devices: DeletedDeviceRegistryItems
+    _deleted_devices: DeletedDeviceRegistryItems
+    deleted_devices: Collection[DeletedDeviceEntry]
     _device_data: dict[str, DeviceEntry]
     _child_device_data: dict[str, ChildDeviceEntry]
 
@@ -2389,7 +2398,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if device is None:
             is_new = True
 
-            deleted_device = self.deleted_devices.get_entry(
+            deleted_device = self._deleted_devices.get_entry(
                 connections=connections,
                 identifiers=identifiers,
                 config_entry_id=config_entry_id,
@@ -2400,7 +2409,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 # rather than create a fresh device. Matching on the recorded domain keeps
                 # a chance identifier/connection collision from restoring another
                 # integration's device.
-                deleted_device = self.deleted_devices.get_orphaned_entry(
+                deleted_device = self._deleted_devices.get_orphaned_entry(
                     identifiers, connections, config_entry.domain
                 )
             if deleted_device is None:
@@ -2427,7 +2436,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
 
             else:
-                self.deleted_devices.pop(deleted_device.id)
+                self._deleted_devices.pop(deleted_device.id)
                 device = deleted_device.to_device_entry(
                     config_entry,
                     # Interpret not specifying a subentry as None
@@ -2738,14 +2747,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if child_device is None:
             is_new = True
 
-            deleted_device = self.deleted_devices.get_entry(
+            deleted_device = self._deleted_devices.get_entry(
                 identifiers=identifiers,
                 config_entry_id=config_entry_id,
             )
             if deleted_device is None:
                 # Fall back to an orphan (its owning config entry was removed), as
                 # for a full device
-                deleted_device = self.deleted_devices.get_orphaned_entry(
+                deleted_device = self._deleted_devices.get_orphaned_entry(
                     identifiers, None, domain
                 )
             if deleted_device is None:
@@ -2767,7 +2776,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     parent_device_id=parent.id,
                 )
             else:
-                self.deleted_devices.pop(deleted_device.id)
+                self._deleted_devices.pop(deleted_device.id)
                 child_device = deleted_device.to_child_device_entry(
                     config_entry,
                     effective_config_subentry_id,
@@ -3384,13 +3393,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             match_identifiers = added_identifiers
             match_connections = added_connections
         # A deleted device holding an identity the device now owns can never restore
-        for deleted_device_id in self.deleted_devices.get_colliding_device_ids(
+        for deleted_device_id in self._deleted_devices.get_colliding_device_ids(
             match_identifiers or set(),
             match_connections or set(),
             config_entry_id=effective_config_entry_id,
             exclude_device_id=None,
         ):
-            del self.deleted_devices[deleted_device_id]
+            del self._deleted_devices[deleted_device_id]
 
         # If its only run time attributes (suggested_area)
         # that do not get saved we do not want to write
@@ -3576,13 +3585,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         # A deleted device holding an identity the child device now owns can never
         # restore
-        for deleted_device_id in self.deleted_devices.get_colliding_device_ids(
+        for deleted_device_id in self._deleted_devices.get_colliding_device_ids(
             added_identifiers or set(),
             set(),
             config_entry_id=old.config_entry_id,
             exclude_device_id=None,
         ):
-            del self.deleted_devices[deleted_device_id]
+            del self._deleted_devices[deleted_device_id]
 
         self.async_schedule_save()
 
@@ -3883,7 +3892,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         elif not device.has_composite_identifiers:
             identifiers = device.identifiers | identifiers
             connections = device.connections | connections
-        colliding = self.deleted_devices.get_colliding_device_ids(
+        colliding = self._deleted_devices.get_colliding_device_ids(
             identifiers,
             connections,
             config_entry_id=device.config_entry_id,
@@ -3898,7 +3907,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 deleted_device_id,
                 device.id,
             )
-            del self.deleted_devices[deleted_device_id]
+            del self._deleted_devices[deleted_device_id]
         self.async_schedule_save()
 
     @callback
@@ -4054,7 +4063,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._async_remove_child_device(child)
         device = self._devices.pop(device_id)
         config_entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
-        self.deleted_devices[device_id] = DeletedDeviceEntry(
+        self._deleted_devices[device_id] = DeletedDeviceEntry(
             area_id=device.area_id,
             config_entry_id=device.config_entry_id,
             config_subentry_id=device.config_subentry_id,
@@ -4088,7 +4097,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         config_entry = self.hass.config_entries.async_get_entry(
             child_device.config_entry_id
         )
-        self.deleted_devices[child_device.id] = DeletedDeviceEntry(
+        self._deleted_devices[child_device.id] = DeletedDeviceEntry(
             area_id=child_device.area_id,
             config_entry_id=child_device.config_entry_id,
             config_subentry_id=child_device.config_subentry_id,
@@ -4262,9 +4271,23 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
         self._devices = devices
-        self.devices = _DeprecatedDeviceRegistryItemsView(self._devices)
+        self.devices = _DeprecatedRegistryItemsView(
+            self._devices,
+            DeviceEntry,
+            "uses `device_registry.devices` as a mapping or calls its lookup "
+            "methods, which is deprecated; iterate it to get the device entries, "
+            "or use `async_get`, `async_entries_for_config_entry` and similar "
+            "helpers for lookups",
+        )
         self.child_devices = child_devices
-        self.deleted_devices = deleted_devices
+        self._deleted_devices = deleted_devices
+        self.deleted_devices = _DeprecatedRegistryItemsView(
+            self._deleted_devices,
+            DeletedDeviceEntry,
+            "uses `device_registry.deleted_devices` as a mapping or calls its "
+            "lookup methods, which is deprecated; iterate it to get the deleted "
+            "device entries",
+        )
         self._device_data = devices.data
         self._child_device_data = child_devices.data
 
@@ -4294,7 +4317,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             ],
             "deleted_devices": [
                 entry.as_storage_fragment
-                for entry in list(self.deleted_devices.values())
+                for entry in list(self._deleted_devices.values())
             ],
         }
 
@@ -4322,7 +4345,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # device from the same integration is orphaned, drop any existing orphan
             # it overlaps so the newest one wins deterministically instead of shadowing
             # it.
-            for existing in list(self.deleted_devices.values()):
+            for existing in list(self._deleted_devices.values()):
                 if (
                     existing.config_entry_id is None
                     and existing.domain == domain
@@ -4331,8 +4354,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                         or existing.identifiers & deleted_device.identifiers
                     )
                 ):
-                    del self.deleted_devices[existing.id]
-        self.deleted_devices[deleted_device.id] = attr.evolve(
+                    del self._deleted_devices[existing.id]
+        self._deleted_devices[deleted_device.id] = attr.evolve(
             deleted_device,
             config_entry_id=None,
             config_subentry_id=None,
@@ -4381,7 +4404,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 and pending_move.config_entry_id == config_entry_id
             ):
                 self._devices[device.id] = attr.evolve(device, pending_move=None)
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if deleted_device.config_entry_id != config_entry_id:
                 continue
             self._async_orphan_deleted_device(deleted_device, domain, now_time)
@@ -4416,7 +4439,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 and pending_move.config_subentry_id == config_subentry_id
             ):
                 self._devices[device.id] = attr.evolve(device, pending_move=None)
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if (
                 deleted_device.config_entry_id != config_entry_id
                 or deleted_device.config_subentry_id != config_subentry_id
@@ -4432,7 +4455,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         growing without bound.
         """
         now_time = time.time()
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if deleted_device.orphaned_timestamp is None:
                 continue
 
@@ -4440,7 +4463,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 deleted_device.orphaned_timestamp + ORPHANED_DEVICE_KEEP_SECONDS
                 < now_time
             ):
-                del self.deleted_devices[deleted_device.id]
+                del self._deleted_devices[deleted_device.id]
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
@@ -4449,10 +4472,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._async_update_device(device.id, area_id=None)
         for child_device in self.child_devices.get_devices_for_area_id(area_id):
             self._async_update_child_device(child_device.id, area_id=None)
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if deleted_device.area_id != area_id:
                 continue
-            self.deleted_devices[deleted_device.id] = attr.evolve(
+            self._deleted_devices[deleted_device.id] = attr.evolve(
                 deleted_device, area_id=None
             )
             self.async_schedule_save()
@@ -4466,10 +4489,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             self._async_update_child_device(
                 child_device.id, labels=child_device.labels - {label_id}
             )
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if label_id not in deleted_device.labels:
                 continue
-            self.deleted_devices[deleted_device.id] = attr.evolve(
+            self._deleted_devices[deleted_device.id] = attr.evolve(
                 deleted_device, labels=deleted_device.labels - {label_id}
             )
             self.async_schedule_save()
