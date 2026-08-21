@@ -484,7 +484,7 @@
         "state_attributes": {
           "action": { "name": "Action" },
           "color_temp_max_mireds": {
-            "name": "Color temperature minimum mireds"
+            "name": "Color temperature maximum mireds"
           },
           "color_temp_min_mireds": {
             "name": "Color temperature minimum mireds"
@@ -493,6 +493,7 @@
           "color_x": { "name": "Color `X`" },
           "color_y": { "name": "Color `Y`" },
           "direction": { "name": "Direction" },
+          "duration": { "name": "Duration" },
           "enhanced_hue": { "name": "Enhanced Hue" },
           "event_type": {
             "state": {
@@ -502,6 +503,7 @@
               "enhanced_move_to_hue_and_saturation": "Enhanced move to hue and saturation",
               "enhanced_step_hue": "Enhanced step hue",
               "move_color": "Move color",
+              "move_hue": "Move hue",
               "move_color_temp": "Move color temperature",
               "move_saturation": "Move saturation",
               "move_to_color": "Move to color",
@@ -527,6 +529,7 @@
           "step_size": { "name": "Step Size" },
           "step_x": { "name": "Step `X`" },
           "step_y": { "name": "Step `Y`" },
+          "time": { "name": "Time" },
           "transition_time": { "name": "Transition Time" },
           "update_flags": { "name": "Update Flags" }
         }
@@ -560,19 +563,18 @@
           "event_type": {
             "state": {
               "off": "Off",
-              "off_with_effect": "Off wait effect",
+              "off_with_effect": "Off with effect",
               "on": "On",
               "on_with_recall_global_scene": "On with recall of global scene",
               "on_with_timed_off": "On with timed off",
               "toggle": "Toggle"
             }
           },
-          "level": { "name": "Level" },
-          "move_mode": { "name": "Move Mode" },
-          "rate": { "name": "Rate" },
-          "step_mode": { "name": "Step Mode" },
-          "step_size": { "name": "Step Size" },
-          "transition_time": { "name": "Transition Time" }
+          "effect_id": { "name": "Effect ID" },
+          "effect_variant": { "name": "Effect variant" },
+          "off_wait_time": { "name": "Off wait time" },
+          "on_off_control": { "name": "On/off control" },
+          "on_time": { "name": "On time" }
         }
       }
     },

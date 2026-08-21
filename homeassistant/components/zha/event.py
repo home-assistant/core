@@ -26,7 +26,7 @@ async def async_setup_entry(
     config_entry: ConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the Zigbee Home Automation sensor from config entry."""
+    """Set up Zigbee Home Automation event entities from a config entry."""
     zha_data = get_zha_data(hass)
     entities_to_create = zha_data.platforms[Platform.EVENT]
 
@@ -41,10 +41,10 @@ async def async_setup_entry(
 
 
 class Event(ZHAEntity, EventEntity):
-    """ZHA sensor."""
+    """ZHA event entity."""
 
     def __init__(self, entity_data: EntityData, **kwargs: Any) -> None:
-        """Initialize the ZHA select entity."""
+        """Initialize the ZHA event entity."""
         super().__init__(entity_data, **kwargs)
         entity = cast(BaseEvent, self.entity_data.entity)
 
