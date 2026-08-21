@@ -11,14 +11,10 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
-    ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
-    ATTR_MAX_COLOR_TEMP_KELVIN,
-    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
-    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
     ATTR_XY_COLOR,
     DEFAULT_MAX_KELVIN,
@@ -26,7 +22,9 @@ from homeassistant.components.light import (
     ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
+    LightEntityStateAttribute,
     valid_supported_color_modes,
 )
 from homeassistant.const import (
@@ -120,19 +118,19 @@ DEFAULT_NAME = "MQTT LightEntity"
 
 MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
     {
-        ATTR_COLOR_MODE,
-        ATTR_BRIGHTNESS,
-        ATTR_COLOR_TEMP_KELVIN,
-        ATTR_EFFECT,
-        ATTR_EFFECT_LIST,
-        ATTR_HS_COLOR,
-        ATTR_MAX_COLOR_TEMP_KELVIN,
-        ATTR_MIN_COLOR_TEMP_KELVIN,
-        ATTR_RGB_COLOR,
-        ATTR_RGBW_COLOR,
-        ATTR_RGBWW_COLOR,
-        ATTR_SUPPORTED_COLOR_MODES,
-        ATTR_XY_COLOR,
+        LightEntityCapabilityAttribute.EFFECT_LIST,
+        LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+        LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
+        LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES,
+        LightEntityStateAttribute.BRIGHTNESS,
+        LightEntityStateAttribute.COLOR_MODE,
+        LightEntityStateAttribute.COLOR_TEMP_KELVIN,
+        LightEntityStateAttribute.EFFECT,
+        LightEntityStateAttribute.HS_COLOR,
+        LightEntityStateAttribute.RGB_COLOR,
+        LightEntityStateAttribute.RGBW_COLOR,
+        LightEntityStateAttribute.RGBWW_COLOR,
+        LightEntityStateAttribute.XY_COLOR,
     }
 )
 

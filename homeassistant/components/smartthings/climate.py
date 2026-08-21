@@ -26,6 +26,7 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -165,7 +166,9 @@ async def async_setup_entry(
         )
     )
     entities.extend(
-        SmartThingsHeatPumpZone(entry_data.client, device, component)
+        SmartThingsHeatPumpZone(
+            hass, entry_data.client, device, component, entry.entry_id
+        )
         for device in entry_data.devices.values()
         for component in device.status
         if component in {"INDOOR", "INDOOR1", "INDOOR2"}
@@ -579,6 +582,39 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
         )
 
+    def _get_setpoint_range_value(self, key: str) -> float | None:
+        """Return a value from the cooling setpoint range, if the device reports it."""
+        if (
+            setpoint_range := self.get_attribute_value(
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Attribute.COOLING_SETPOINT_RANGE,
+            )
+        ) is None:
+            return None
+        return setpoint_range.get(key)
+
+    @property
+    @override
+    def target_temperature_step(self) -> float | None:
+        """Return the supported step of target temperature."""
+        return self._get_setpoint_range_value("step")
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        if (minimum := self._get_setpoint_range_value("minimum")) is None:
+            return DEFAULT_MIN_TEMP
+        return minimum
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        if (maximum := self._get_setpoint_range_value("maximum")) is None:
+            return DEFAULT_MAX_TEMP
+        return maximum
+
     @property
     @override
     def temperature_unit(self) -> str:
@@ -682,7 +718,14 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
 
     _attr_name = None
 
-    def __init__(self, client: SmartThings, device: FullDevice, component: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        client: SmartThings,
+        device: FullDevice,
+        component: str,
+        entry_id: str,
+    ) -> None:
         """Init the class."""
         super().__init__(
             client,
@@ -699,7 +742,11 @@ class SmartThingsHeatPumpZone(SmartThingsEntity, ClimateEntity):
         self._attr_hvac_modes = self._determine_hvac_modes()
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, f"{device.device.device_id}_{component}")},
-            via_device=(DOMAIN, device.device.device_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, device.device.device_id),
+                config_entry_id=entry_id,
+            ),
             name=f"{device.device.label} {component}",
         )
 

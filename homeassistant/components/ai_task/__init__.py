@@ -181,8 +181,8 @@ class AITaskPreferences:
     def async_set_preferences(
         self,
         *,
-        gen_data_entity_id: str | None | UndefinedType = UNDEFINED,
-        gen_image_entity_id: str | None | UndefinedType = UNDEFINED,
+        gen_data_entity_id: str | UndefinedType | None = UNDEFINED,
+        gen_image_entity_id: str | UndefinedType | None = UNDEFINED,
     ) -> None:
         """Set the preferences."""
         changed = False

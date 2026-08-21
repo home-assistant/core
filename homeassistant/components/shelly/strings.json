@@ -263,6 +263,11 @@
         "name": "Unmute alarm"
       }
     },
+    "camera": {
+      "stream": {
+        "name": "Stream {stream_id}"
+      }
+    },
     "climate": {
       "thermostat": {
         "state_attributes": {
@@ -576,6 +581,9 @@
       }
     },
     "switch": {
+      "camera_privacy": {
+        "name": "Privacy"
+      },
       "charging": {
         "name": "Charging"
       },
@@ -616,6 +624,9 @@
     "update": {
       "beta_firmware": {
         "name": "Beta firmware"
+      },
+      "lora_firmware": {
+        "name": "LoRa add-on firmware"
       }
     },
     "valve": {

@@ -108,6 +108,7 @@ class FreeboxRouter:
     ) -> None:
         """Initialize a Freebox router."""
         self.hass = hass
+        self.config_entry = entry
         self._host = entry.data[CONF_HOST]
         self._port = entry.data[CONF_PORT]
 

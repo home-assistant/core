@@ -1,5 +1,6 @@
 """Config flow for Midea."""
 
+from functools import partial
 from operator import itemgetter
 from typing import Any, override
 
@@ -11,6 +12,7 @@ from midealocal.cloud import (
 )
 from midealocal.const import DeviceType, ProtocolVersion
 from midealocal.device import MideaDevice
+from midealocal.devices import device_selector
 from midealocal.discover import discover
 import voluptuous as vol
 
@@ -30,7 +32,7 @@ from homeassistant.const import (
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import SelectSelector, SelectSelectorConfig
 
-from .const import _LOGGER, CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN
+from .const import CONF_ACCOUNT, CONF_KEY, CONF_SERVER, CONF_SUBTYPE, DOMAIN, LOGGER
 from .device_catalog import MIDEA_DEVICE_NAMES
 
 DEFAULT_CLOUD: str = get_default_cloud()
@@ -45,6 +47,40 @@ def _connect_and_close(dm: MideaDevice) -> bool:
         return dm.connect(check_protocol=True)
     finally:
         dm.close_socket()
+
+
+def _select_and_connect(
+    *,
+    device_id: int,
+    device_type: int,
+    ip_address: str,
+    port: int,
+    token: str,
+    key: str,
+    device_protocol: ProtocolVersion,
+    model: str,
+    subtype: int,
+) -> bool | None:
+    """Select the device implementation and connect to it in a single executor job.
+
+    Returns None if there is no device implementation for device_type.
+    """
+    dm = device_selector(
+        "",
+        device_id,
+        device_type,
+        ip_address,
+        port,
+        token,
+        key,
+        device_protocol,
+        model,
+        subtype,
+        "",
+    )
+    if dm is None:
+        return None
+    return _connect_and_close(dm)
 
 
 class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -142,7 +178,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input={CONF_DEVICE: self.found_device[CONF_DEVICE_ID]},
                 )
             # return error with login failed
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Failed to login to %s cloud with user credentials",
                 cloud_server,
             )
@@ -340,12 +376,12 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         # check cloud login after self.cloud exist
         if await self.cloud.login():
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Cloud login succeeded for %s",
                 cloud_name,
             )
             return True
-        _LOGGER.debug(
+        LOGGER.debug(
             "Unable to login to %s cloud",
             cloud_name,
         )
@@ -366,33 +402,41 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         keys = await self.cloud.get_cloud_keys(appliance_id)
         if default_key:
             keys = {**keys, **(await MideaCloud.get_default_keys())}
+        error = "connect_error"
         # use token/key to connect device and confirm token result
         for k, value in keys.items():
-            dm = MideaDevice(
-                name="",
-                device_id=appliance_id,
-                device_type=device.get(CONF_TYPE),
-                ip_address=device.get(CONF_IP_ADDRESS),
-                port=device.get(CONF_PORT),
-                token=value["token"],
-                key=value["key"],
-                device_protocol=ProtocolVersion.V3,
-                model=device.get(CONF_MODEL),
-                subtype=device.get(CONF_SUBTYPE, 0),
-                attributes={},
+            connected = await self.hass.async_add_executor_job(
+                partial(
+                    _select_and_connect,
+                    device_id=appliance_id,
+                    device_type=device.get(CONF_TYPE),
+                    ip_address=device.get(CONF_IP_ADDRESS),
+                    port=device.get(CONF_PORT),
+                    token=value["token"],
+                    key=value["key"],
+                    device_protocol=ProtocolVersion.V3,
+                    model=device.get(CONF_MODEL),
+                    subtype=device.get(CONF_SUBTYPE, 0),
+                ),
             )
-            connected = await self.hass.async_add_executor_job(_connect_and_close, dm)
+            if connected is None:
+                LOGGER.debug(
+                    "No device implementation for device_type %s",
+                    device.get(CONF_TYPE),
+                )
+                error = "no_device_implementation"
+                break
             if connected:
                 return value
             # return debug log with failed key
-            _LOGGER.debug(
+            LOGGER.debug(
                 "Connect device using method %s token/key failed",
                 k,
             )
-        _LOGGER.debug(
+        LOGGER.debug(
             "Unable to connect device with all the token/key",
         )
-        return {"error": "connect_error"}
+        return {"error": error}
 
     async def async_step_auto(
         self,
@@ -432,7 +476,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # no available key, continue the phase 2
                 if not keys.get("token") or not keys.get("key"):
-                    _LOGGER.debug(
+                    LOGGER.debug(
                         "Can't get valid token using user credentials on %s",
                         self._login_data[CONF_SERVER],
                     )
@@ -451,7 +495,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                     # phase 2 got no available token/key, disable device add
                     if not keys.get("token") or not keys.get("key"):
-                        _LOGGER.debug(
+                        LOGGER.debug(
                             "Can't get available token from Midea server for device %s",
                             device_id,
                         )
@@ -512,20 +556,20 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(str(device_id))
         self._abort_if_unique_id_configured()
 
-        dm = MideaDevice(
-            name="",
-            device_id=device_id,
-            device_type=user_input[CONF_TYPE],
-            ip_address=user_input[CONF_IP_ADDRESS],
-            port=user_input[CONF_PORT],
-            token=user_input[CONF_TOKEN],
-            key=user_input[CONF_KEY],
-            device_protocol=user_input[CONF_PROTOCOL],
-            model=user_input[CONF_MODEL],
-            subtype=user_input[CONF_SUBTYPE],
-            attributes={},
+        connected = await self.hass.async_add_executor_job(
+            partial(
+                _select_and_connect,
+                device_id=device_id,
+                device_type=user_input[CONF_TYPE],
+                ip_address=user_input[CONF_IP_ADDRESS],
+                port=user_input[CONF_PORT],
+                token=user_input[CONF_TOKEN],
+                key=user_input[CONF_KEY],
+                device_protocol=user_input[CONF_PROTOCOL],
+                model=user_input[CONF_MODEL],
+                subtype=user_input[CONF_SUBTYPE],
+            ),
         )
-        connected = await self.hass.async_add_executor_job(_connect_and_close, dm)
         if connected:
             device_type = user_input[CONF_TYPE]
             found_name = self.found_device.get(CONF_NAME)
@@ -622,7 +666,7 @@ class MideaConfigFlow(ConfigFlow, domain=DOMAIN):
 
                 # no available token/key, disable device add
                 if not keys.get("token") or not keys.get("key"):
-                    _LOGGER.debug(
+                    LOGGER.debug(
                         "Can't get a valid token from Midea server for device %s",
                         user_input[CONF_DEVICE_ID],
                     )

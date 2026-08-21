@@ -804,19 +804,15 @@ async def test_search_and_play_media_player_intent(hass: HomeAssistant) -> None:
 
     # Test no search results
     search_results.clear()
-    response = await intent.async_handle(
-        hass,
-        "test",
-        media_player_intent.INTENT_MEDIA_SEARCH_AND_PLAY,
-        {"search_query": {"value": "another query"}},
-    )
+    with pytest.raises(intent.IntentHandleError, match="No results found"):
+        await intent.async_handle(
+            hass,
+            "test",
+            media_player_intent.INTENT_MEDIA_SEARCH_AND_PLAY,
+            {"search_query": {"value": "another query"}},
+        )
     await hass.async_block_till_done()
 
-    assert response.response_type is intent.IntentResponseType.ACTION_DONE
-
-    # A search failure is indicated by no "media" slot in the response.
-    assert not response.speech
-    assert "media" not in response.speech_slots
     assert len(search_calls) == 2  # Search was called again
     assert len(play_calls) == 1  # Play was not called again
 

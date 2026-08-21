@@ -105,7 +105,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: MieleConfigEntry) -> bo
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: MieleConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: MieleConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     return not any(

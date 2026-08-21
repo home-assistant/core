@@ -1247,6 +1247,17 @@ async def test_ping(websocket_client: MockHAClientWebSocket) -> None:
     assert msg["type"] == "pong"
 
 
+async def test_slugify(websocket_client: MockHAClientWebSocket) -> None:
+    """Test slugify command."""
+    await websocket_client.send_json_auto_id(
+        {"type": "slugify", "text": "Living room Thermostat Temperature"}
+    )
+
+    msg = await websocket_client.receive_json()
+    assert msg["success"] is True
+    assert msg["result"] == {"slug": "living_room_thermostat_temperature"}
+
+
 async def test_call_service_context_with_user(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
