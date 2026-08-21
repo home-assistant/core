@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from gatus_api import EndpointStatus, Result
+from gatus_api import EndpointStatus, Event, Result
 import pytest
 
 from homeassistant.components.gatus.const import DOMAIN
@@ -41,7 +41,8 @@ def mock_gatus_client() -> Generator[AsyncMock]:
                     key="backend_service",
                     name="Backend Service",
                     group="Core",
-                    results=[Result(success=True, status=200)],
+                    results=[Result(success=True, status=200, duration=23123100)],
+                    events=[Event(type="HEALTHY", timestamp="2026-01-01T00:00:00Z")],
                 )
             ]
         )

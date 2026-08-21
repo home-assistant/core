@@ -20,6 +20,7 @@ from .const import (
     VS_DEVICES,
     VS_DISCOVERY,
     VS_FAN_MODE_AUTO,
+    VS_FAN_MODE_ECO,
     VS_FAN_MODE_MANUAL,
     VS_FAN_MODE_NORMAL,
     VS_FAN_MODE_PET,
@@ -40,6 +41,7 @@ VS_TO_HA_MODE_MAP = {
     VS_FAN_MODE_PET: VS_FAN_MODE_PET,
     VS_FAN_MODE_MANUAL: VS_FAN_MODE_MANUAL,
     VS_FAN_MODE_NORMAL: VS_FAN_MODE_NORMAL,
+    VS_FAN_MODE_ECO: VS_FAN_MODE_ECO,
 }
 
 PARALLEL_UPDATES = 1
@@ -313,6 +315,8 @@ class VeSyncFanHA(VeSyncBaseEntity[VeSyncFanBase | VeSyncPurifier], FanEntity):
         elif vs_mode == VS_FAN_MODE_NORMAL:
             if hasattr(self.device, "set_normal_mode"):
                 success = await self.device.set_normal_mode()
+        elif vs_mode == VS_FAN_MODE_ECO:
+            success = await self.device.set_mode(VS_FAN_MODE_ECO)
 
         if not success:
             if self.device.last_response:

@@ -20,7 +20,6 @@
         'enabled_entities': list([
           'binary_sensor.zone_a_charging',
           'binary_sensor.zone_a_microphone',
-          'button.zone_a_cancel_announcement',
           'media_player.zone_a',
           'number.zone_a_audio_delay',
           'number.zone_a_balance',
@@ -113,7 +112,6 @@
     'enabled_entities': list([
       'binary_sensor.zone_a_charging',
       'binary_sensor.zone_a_microphone',
-      'button.zone_a_cancel_announcement',
       'media_player.zone_a',
       'number.zone_a_audio_delay',
       'number.zone_a_balance',

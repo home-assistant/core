@@ -30,14 +30,15 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
     def __init__(
         self,
         hass: HomeAssistant,
-        unique_id: str | None,
+        config_entry: AprilaireConfigEntry | None,
         host: str,
         port: int,
     ) -> None:
         """Initialize the coordinator."""
 
         self.hass = hass
-        self.unique_id = unique_id
+        self.config_entry = config_entry
+        self.unique_id = config_entry.unique_id if config_entry else None
         self.data: dict[str, Any] = {}
 
         self._listeners: dict[CALLBACK_TYPE, tuple[CALLBACK_TYPE, object | None]] = {}
@@ -88,13 +89,16 @@ class AprilaireCoordinator(BaseDataUpdateCoordinatorProtocol):
         new_device_info = self.create_device_info(data)
 
         if (
-            old_device_info is not None
+            self.config_entry is not None
+            and old_device_info is not None
             and new_device_info is not None
             and old_device_info != new_device_info
         ):
             device_registry = dr.async_get(self.hass)
 
-            device = device_registry.async_get_device(old_device_info["identifiers"])
+            device = device_registry.async_get_device_by_identifier(
+                next(iter(old_device_info["identifiers"])), self.config_entry.entry_id
+            )
 
             if device is not None:
                 new_device_info.pop("identifiers", None)

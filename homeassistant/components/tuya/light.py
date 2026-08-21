@@ -164,6 +164,16 @@ LIGHTS: dict[DeviceCategory, tuple[TuyaLightEntityDescription, ...]] = {
             color_data=DPCode.COLOUR_DATA,
         ),
     ),
+    DeviceCategory.HCDD: (
+        TuyaLightEntityDescription(
+            key=DPCode.SWITCH_LED,
+            name=None,
+            color_mode=DPCode.WORK_MODE,
+            brightness=DPCode.BRIGHT_VALUE,
+            color_temp=DPCode.TEMP_VALUE,
+            color_data=DPCode.COLOUR_DATA,
+        ),
+    ),
     DeviceCategory.HXD: (
         TuyaLightEntityDescription(
             key=DPCode.SWITCH_LED,

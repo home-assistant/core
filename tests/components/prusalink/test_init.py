@@ -33,8 +33,8 @@ async def test_device_info(
     """Test device info is populated with serial and firmware."""
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.serial_number == "serial-1337"

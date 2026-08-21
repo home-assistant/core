@@ -3,5 +3,6 @@
   dict({
     'device_type': 'generic_24_key',
     'infrared_entity_id': 'infrared.test_ir_emitter',
+    'infrared_receiver_entity_id': 'infrared.test_ir_receiver',
   })
 # ---
