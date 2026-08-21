@@ -26,9 +26,10 @@ PUSH_POLL_INTERVAL = timedelta(minutes=5)
 ERROR_NO_SYSTEMS_FOUND = "no_systems_found"
 ERROR_UNKNOWN = "unknown_error"
 
-# Transitions into CONNECTED from one of these mean updates were missed while the
-# transport was down, so the coordinator resyncs instead of waiting for the next poll.
-RECONNECTED_FROM = (
+# States in which the transport is not delivering updates. CONNECTING is excluded
+# because the transport reports it before every connection attempt, including the
+# first one, which has no missed updates to recover.
+OUTAGE_STATES = (
     RealtimeConnectionState.RECONNECTING,
     RealtimeConnectionState.DISCONNECTED,
     RealtimeConnectionState.ERROR,
@@ -74,6 +75,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
         self.push_enabled = push_enabled
         self.status = self.api.state_manager.get_status(self.serial_number)
         self.peripherals: dict[str, ActronAirPeripheral] = {}
+        self._missed_updates = False
 
     @override
     async def _async_setup(self) -> None:
@@ -100,11 +102,16 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
         self.async_set_updated_data(status)
 
     async def _handle_connection_event(self, event: RealtimeConnectionEvent) -> None:
-        """Resync after the realtime transport recovers from an outage."""
-        if (
-            event.state is RealtimeConnectionState.CONNECTED
-            and event.previous_state in RECONNECTED_FROM
-        ):
+        """Resync after the realtime transport recovers from an outage.
+
+        The outage is latched rather than read from `event.previous_state`: the
+        transport reports CONNECTING between RECONNECTING and CONNECTED, so every
+        CONNECTED event looks alike regardless of what preceded the attempt.
+        """
+        if event.state in OUTAGE_STATES:
+            self._missed_updates = True
+        elif event.state is RealtimeConnectionState.CONNECTED and self._missed_updates:
+            self._missed_updates = False
             await self.async_request_refresh()
 
     @override

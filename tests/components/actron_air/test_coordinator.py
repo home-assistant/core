@@ -10,7 +10,6 @@ from actron_neo_api.rt import (
     RealtimeTransportType,
 )
 from freezegun.api import FrozenDateTimeFactory
-import pytest
 
 from homeassistant.components.actron_air.coordinator import (
     POLL_INTERVAL,
@@ -27,16 +26,12 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 CLIMATE_ENTITY_ID = "climate.test_system"
 
 
-def connection_event(
-    state: RealtimeConnectionState,
-    previous_state: RealtimeConnectionState | None,
-) -> RealtimeConnectionEvent:
+def connection_event(state: RealtimeConnectionState) -> RealtimeConnectionEvent:
     """Build a realtime connection state transition."""
     return RealtimeConnectionEvent(
         transport=RealtimeTransportType.MQTT,
         kind=RealtimeEventKind.CONNECTION,
         state=state,
-        previous_state=previous_state,
     )
 
 
@@ -153,39 +148,52 @@ async def test_push_update_offline(
     assert hass.states.get(CLIMATE_ENTITY_ID).state == STATE_UNAVAILABLE
 
 
-@pytest.mark.parametrize(
-    ("previous_state", "expect_refresh"),
-    [
-        pytest.param(RealtimeConnectionState.RECONNECTING, True, id="reconnecting"),
-        pytest.param(RealtimeConnectionState.DISCONNECTED, True, id="disconnected"),
-        pytest.param(RealtimeConnectionState.ERROR, True, id="error"),
-        pytest.param(RealtimeConnectionState.CONNECTING, False, id="initial_connect"),
-    ],
-)
 async def test_reconnect_resync(
     hass: HomeAssistant,
     mock_actron_api: AsyncMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
-    previous_state: RealtimeConnectionState,
-    expect_refresh: bool,
 ) -> None:
     """Test the coordinator only resyncs after the transport recovers from an outage."""
     with patch("homeassistant.components.actron_air.PLATFORMS", [Platform.CLIMATE]):
         await setup_integration(hass, mock_config_entry)
 
     connection_callback = mock_actron_api.subscribe_connection_state.call_args.args[0]
-    mock_actron_api.update_status.reset_mock()
 
-    await connection_callback(
-        connection_event(RealtimeConnectionState.CONNECTED, previous_state)
+    async def replay(*states: RealtimeConnectionState) -> int:
+        """Feed a transport state sequence and return the refreshes it triggered."""
+        mock_actron_api.update_status.reset_mock()
+        for state in states:
+            await connection_callback(connection_event(state))
+        # The coordinator debounces refresh requests, so let the debouncer fire.
+        freezer.tick(POLL_INTERVAL)
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+        return mock_actron_api.update_status.call_count
+
+    # The transport reports CONNECTING before every attempt, including the first
+    # one, so a first connection must not be mistaken for a recovery.
+    assert await replay(RealtimeConnectionState.CONNECTED) == 0
+
+    # A dropped connection: the transport retries and reconnects.
+    assert (
+        await replay(
+            RealtimeConnectionState.RECONNECTING,
+            RealtimeConnectionState.CONNECTING,
+            RealtimeConnectionState.CONNECTED,
+        )
+        == 1
     )
-    # The coordinator debounces refresh requests, so let the debouncer fire.
-    freezer.tick(POLL_INTERVAL)
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
 
-    assert (mock_actron_api.update_status.call_count > 0) is expect_refresh
+    # Rotating the access token disconnects and reconnects the transport.
+    assert (
+        await replay(
+            RealtimeConnectionState.DISCONNECTED,
+            RealtimeConnectionState.CONNECTING,
+            RealtimeConnectionState.CONNECTED,
+        )
+        == 1
+    )
 
 
 async def test_push_unavailable_falls_back_to_polling(
