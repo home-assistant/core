@@ -595,8 +595,8 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_key="mix_settings_read_failed",
                 translation_placeholders={"error": str(err)},
             ) from err
-        # obj/mixBean can be absent or null on a failure payload; `or {}` handles both.
-        settings = (response.get("obj") or {}).get("mixBean") or {}
+        # Unlike its siblings, this endpoint returns the raw envelope, so unwrap obj here.
+        settings = (response.get("obj") or {}).get("mixBean")
         if not settings:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
@@ -611,10 +611,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             {
                 "period_id": i,
                 "start_time": self._format_time(
-                    settings.get(f"forced{time_type}TimeStart{i}", "0:0")
+                    settings.get(f"forced{time_type}TimeStart{i}", "00:00")
                 ),
                 "end_time": self._format_time(
-                    settings.get(f"forced{time_type}TimeStop{i}", "0:0")
+                    settings.get(f"forced{time_type}TimeStop{i}", "00:00")
                 ),
                 "enabled": int(settings.get(f"forced{time_type}StopSwitch{i}") or 0)
                 == 1,
