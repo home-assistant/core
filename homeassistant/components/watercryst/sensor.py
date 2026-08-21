@@ -227,6 +227,16 @@ class WatercrystSensor[DataT, CoordinatorT: WatercrystDataUpdateCoordinator[Any]
         WatercrystEntity.__init__(self, config_entry, coordinator, entity_description)
 
     @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to coordinator updates."""
+        await super().async_added_to_hass()
+
+        if self.coordinator is not self.runtime_data.state:
+            self.async_on_remove(
+                self.runtime_data.state.async_add_listener(self.async_write_ha_state)
+            )
+
+    @override
     @property
     def native_value(self) -> StateType:
         return self.entity_description.value_fn(self.coordinator.data)
