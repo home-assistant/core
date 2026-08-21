@@ -15,9 +15,9 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.guntamatic.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.guntamatic.sensor import GUNTAMATIC_SENSORS
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
 
 from . import setup_integration
@@ -167,3 +167,32 @@ async def test_enum_sensor_unmapped_value(
     state = hass.states.get("sensor.heating_circuit_1_pump")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+_SERIAL = "959103"
+
+
+@pytest.mark.usefixtures("mock_heater")
+async def test_heating_circuit_devices(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test circuit sub-devices link to the main unit and absent slots create none."""
+    await setup_integration(hass, mock_config_entry)
+
+    main = device_registry.async_get_device_by_identifier(
+        (DOMAIN, _SERIAL), mock_config_entry.entry_id
+    )
+    circuit = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{_SERIAL}_hc1"), mock_config_entry.entry_id
+    )
+    assert main is not None
+    assert circuit is not None
+    assert circuit.via_device_id == main.id
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{_SERIAL}_hc2"), mock_config_entry.entry_id
+        )
+        is None
+    )
