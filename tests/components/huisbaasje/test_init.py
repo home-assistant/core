@@ -9,7 +9,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ID, CONF_PASSWORD, CONF_USERNAME, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from .test_data import MOCK_CURRENT_MEASUREMENTS, MOCK_CUSTOMER_OVERVIEW
+from .test_data import MOCK_CURRENT_MEASUREMENTS
 
 from tests.common import MockConfigEntry
 
@@ -26,7 +26,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         ) as mock_current_measurements,
         patch(
             "energyflip.EnergyFlip.customer_overview",
-            return_value=MOCK_CUSTOMER_OVERVIEW,
+            return_value=None,
         ) as mock_customer_overview,
     ):
         config_entry = MockConfigEntry(
@@ -105,7 +105,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
         ) as mock_current_measurements,
         patch(
             "energyflip.EnergyFlip.customer_overview",
-            return_value=MOCK_CUSTOMER_OVERVIEW,
+            return_value=None,
         ) as mock_customer_overview,
     ):
         config_entry = MockConfigEntry(

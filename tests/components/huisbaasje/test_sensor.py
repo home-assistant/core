@@ -21,11 +21,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 
-from .test_data import (
-    MOCK_CURRENT_MEASUREMENTS,
-    MOCK_CUSTOMER_OVERVIEW,
-    MOCK_LIMITED_CURRENT_MEASUREMENTS,
-)
+from .test_data import MOCK_CURRENT_MEASUREMENTS, MOCK_LIMITED_CURRENT_MEASUREMENTS
 
 from tests.common import MockConfigEntry
 
@@ -42,7 +38,7 @@ async def test_setup_entry(hass: HomeAssistant) -> None:
         ) as mock_current_measurements,
         patch(
             "energyflip.EnergyFlip.customer_overview",
-            return_value=MOCK_CUSTOMER_OVERVIEW,
+            return_value=None,
         ) as mock_customer_overview,
     ):
         config_entry = MockConfigEntry(
@@ -269,7 +265,7 @@ async def test_setup_entry_absent_measurement(hass: HomeAssistant) -> None:
         ) as mock_authenticate,
         patch(
             "energyflip.EnergyFlip.customer_overview",
-            return_value=MOCK_CUSTOMER_OVERVIEW,
+            return_value=None,
         ) as mock_customer_overview,
         patch(
             "energyflip.EnergyFlip.current_measurements",
