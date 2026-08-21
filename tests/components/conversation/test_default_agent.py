@@ -674,11 +674,12 @@ async def test_trigger_sentence_response_translation(
 
 
 @pytest.mark.usefixtures("init_components", "sl_setup")
-async def test_shopping_list_add_item(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize("complete", [False, True])
+async def test_shopping_list_add_item(hass: HomeAssistant, complete: bool) -> None:
     """Test adding an item to the shopping list through the default agent."""
     shopping_data = _get_shopping_data(hass)
-    completed_item = await shopping_data.async_add("Apples", complete=True)
-    completed_item_id = completed_item["id"]
+    existing_item = await shopping_data.async_add("Apples", complete=complete)
+    existing_item_id = existing_item["id"]
 
     result = await conversation.async_converse(
         hass, "add apples to my shopping list", None, Context()
@@ -688,7 +689,7 @@ async def test_shopping_list_add_item(hass: HomeAssistant) -> None:
         "plain": {"speech": "Added apples", "extra_data": None}
     }
     assert len(shopping_data.items) == 1
-    assert shopping_data.items[0]["id"] == completed_item_id
+    assert shopping_data.items[0]["id"] == existing_item_id
     assert shopping_data.items[0]["complete"] is False
 
 

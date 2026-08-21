@@ -126,8 +126,13 @@ class ShoppingData:
         self, name: str, context: Context | None = None
     ) -> list[dict[str, JsonValueType]]:
         """Mark all incomplete shopping list items with the given name as complete."""
+        normalized_name = name.casefold()
         complete_items = [
-            item for item in self.items if item["name"] == name and not item["complete"]
+            item
+            for item in self.items
+            if isinstance(item["name"], str)
+            and item["name"].casefold() == normalized_name
+            and not item["complete"]
         ]
 
         if len(complete_items) == 0:

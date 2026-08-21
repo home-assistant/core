@@ -94,7 +94,7 @@ class ListAddItemIntentHandler(ListBaseIntentHandler):
         summary = item[:1].upper() + item[1:] if item else item
 
         # Add to list
-        await target_list.async_create_todo_item(
+        await target_list.async_create_todo_item_from_intent(
             TodoItem(summary=summary, status=TodoItemStatus.NEEDS_ACTION)
         )
 

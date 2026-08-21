@@ -6,7 +6,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, intent
 
 from .common import NoMatchingShoppingListItem, _get_shopping_data
-from .const import DOMAIN, EVENT_SHOPPING_LIST_UPDATED
+from .const import DOMAIN
 
 INTENT_ADD_ITEM = "HassShoppingListAddItem"
 INTENT_COMPLETE_ITEM = "HassShoppingListCompleteItem"
@@ -58,8 +58,6 @@ class CompleteItemIntent(intent.IntentHandler):
             )
         except NoMatchingShoppingListItem:
             complete_items = []
-
-        intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
 
         response = intent_obj.create_response()
         response.async_set_speech_slots({"completed_items": complete_items})

@@ -274,6 +274,10 @@ class TodoListEntity(Entity, cached_properties=CACHED_PROPERTIES_WITH_ATTR_):
         """Add an item to the To-do list."""
         raise NotImplementedError
 
+    async def async_create_todo_item_from_intent(self, item: TodoItem) -> None:
+        """Add an item to the To-do list from an intent."""
+        await self.async_create_todo_item(item)
+
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
         raise NotImplementedError
