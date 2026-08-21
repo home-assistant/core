@@ -617,32 +617,35 @@ async def websocket_usb_list_serial_ports(
 
     result = [_async_serialize_port(hass, port) for port in ports]
 
-    if msg["include_usage"]:
-        consumers = await async_get_serial_port_consumers(hass, ports)
+    if not msg["include_usage"]:
+        connection.send_result(msg["id"], result)
+        return
 
-        # Configured ports missing from the scan are absent, except for URLs no
-        # scanner can contribute, which are assumed present while claimed
-        scanned_devices = {port.device for port in ports}
-        result.extend(
-            _async_serialize_port(
-                hass,
-                SerialDevice(
-                    device=device,
-                    serial_number=None,
-                    manufacturer=None,
-                    description=None,
-                ),
-                present=device.startswith(UNSCANNABLE_PORT_SCHEMES),
-            )
-            for device in consumers
-            if device not in scanned_devices
+    consumers = await async_get_serial_port_consumers(hass, ports)
+
+    # Configured ports missing from the scan are absent, except for URLs no
+    # scanner can contribute, which are assumed present while claimed
+    scanned_devices = {port.device for port in ports}
+    result.extend(
+        _async_serialize_port(
+            hass,
+            SerialDevice(
+                device=device,
+                serial_number=None,
+                manufacturer=None,
+                description=None,
+            ),
+            present=device.startswith(UNSCANNABLE_PORT_SCHEMES),
         )
+        for device in consumers
+        if device not in scanned_devices
+    )
 
-        for entry in result:
-            device = entry["device"]
-            entry["consumers"] = [
-                _serialize_consumer(consumer) for consumer in consumers.get(device, [])
-            ]
-            entry["discovery_flows"] = _async_get_discovery_flows(hass, device)
+    for entry in result:
+        device = entry["device"]
+        entry["consumers"] = [
+            _serialize_consumer(consumer) for consumer in consumers.get(device, [])
+        ]
+        entry["discovery_flows"] = _async_get_discovery_flows(hass, device)
 
     connection.send_result(msg["id"], result)
