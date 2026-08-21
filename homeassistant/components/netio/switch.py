@@ -217,8 +217,6 @@ class NetioOutputSwitch(CoordinatorEntity[NetioDataUpdateCoordinator], SwitchEnt
         await self.coordinator.async_set_output(self._output_id, False)
 
 
-# Deprecated YAML entity without unique ID, pending removal
-# pylint: disable-next=home-assistant-missing-entity-unique-id,home-assistant-missing-has-entity-name
 class NetioSwitch(SwitchEntity):
     """Provide a Netio linked switch."""
 

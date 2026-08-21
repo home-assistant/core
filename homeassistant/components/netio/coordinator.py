@@ -1,6 +1,7 @@
 """Data update coordinator for the Netio integration."""
 
 from collections.abc import Mapping
+import dataclasses
 from datetime import timedelta
 import logging
 from typing import Any, override
@@ -125,5 +126,8 @@ class NetioDataUpdateCoordinator(DataUpdateCoordinator[dict[int, Netio.OUTPUT]])
         # optimistically instead and let the next poll reconcile.
         if (output := self.data.get(output_id)) is not None:
             self.async_set_updated_data(
-                {**self.data, output_id: output._replace(State=int(state))}
+                {
+                    **self.data,
+                    output_id: dataclasses.replace(output, State=int(state)),
+                }
             )

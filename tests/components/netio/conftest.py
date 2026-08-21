@@ -56,8 +56,12 @@ def mock_netio() -> Generator[MagicMock]:
                 Delay=5000,
                 Current=61,
                 PowerFactor=0.61,
-                Load=14,
+                Phase=180.0,
                 Energy=6673,
+                EnergyNR=9871,
+                ReverseEnergy=0,
+                ReverseEnergyNR=0,
+                Load=14,
             ),
             Netio.OUTPUT(
                 ID=2,
@@ -67,8 +71,12 @@ def mock_netio() -> Generator[MagicMock]:
                 Delay=5000,
                 Current=0,
                 PowerFactor=0.0,
-                Load=0,
+                Phase=0.0,
                 Energy=142,
+                EnergyNR=304,
+                ReverseEnergy=0,
+                ReverseEnergyNR=0,
+                Load=0,
             ),
         ]
         yield netio_mock
