@@ -1,7 +1,7 @@
 """Test repairs handling for Shelly."""
 
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import Mock, patch
 
 from aioshelly.const import MODEL_CAMERA, MODEL_PLUG, MODEL_WALL_DISPLAY
 from aioshelly.exceptions import DeviceConnectionError, NotInitialized, RpcCallError
@@ -772,7 +772,6 @@ async def test_rtsp_disabled_issue(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test repair issue when camera RTSP is disabled."""
-    mock_camera_rpc_device.set_camera_rtsp = AsyncMock()
     monkeypatch.setitem(
         mock_camera_rpc_device.config["camera:0"]["rtsp"], "enable", False
     )
@@ -800,3 +799,53 @@ async def test_rtsp_disabled_issue(
 
     assert not issue_registry.async_get_issue(DOMAIN, issue_id)
     assert len(issue_registry.issues) == 0
+
+
+async def test_no_rtsp_disabled_issue_when_enabled(
+    hass: HomeAssistant,
+    mock_camera_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test no repair issue when camera RTSP is enabled."""
+    issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
+    await init_integration(hass, 3, MODEL_CAMERA)
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 0
+
+
+async def test_rtsp_disabled_issue_ignore(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    mock_camera_rpc_device: Mock,
+    issue_registry: ir.IssueRegistry,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test ignoring the RTSP disabled issue."""
+    monkeypatch.setitem(
+        mock_camera_rpc_device.config["camera:0"]["rtsp"], "enable", False
+    )
+
+    issue_id = RTSP_DISABLED_ISSUE_ID.format(unique=MOCK_MAC)
+    assert await async_setup_component(hass, "repairs", {})
+    await hass.async_block_till_done()
+    await init_integration(hass, 3, MODEL_CAMERA)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id)
+    assert len(issue_registry.issues) == 1
+
+    client = await hass_client()
+    result = await start_repair_fix_flow(client, DOMAIN, issue_id)
+
+    assert result["step_id"] == "init"
+    assert result["type"] == "menu"
+
+    result = await process_repair_fix_flow(
+        client, result["flow_id"], {"next_step_id": "ignore"}
+    )
+    assert result["type"] == "abort"
+    assert result["reason"] == "issue_ignored"
+    assert mock_camera_rpc_device.set_camera_rtsp.call_count == 0
+
+    assert (issue := issue_registry.async_get_issue(DOMAIN, issue_id))
+    assert issue.dismissed_version
