@@ -70,6 +70,13 @@
       }
     },
     "switch": {
+      "camera_privacy": {
+        "default": "mdi:eye-outline",
+        "state": {
+          "off": "mdi:eye-outline",
+          "on": "mdi:eye-off-outline"
+        }
+      },
       "cury_away_mode": {
         "default": "mdi:home-outline",
         "state": {
