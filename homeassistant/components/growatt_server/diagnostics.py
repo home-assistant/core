@@ -6,14 +6,11 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
+# __init__.py always sets this package attribute (to the generated module or
+# None) before diagnostics.py can be imported, so this can't raise ImportError.
+from . import _build_info
 from .const import CONF_PLANT_ID
 from .coordinator import GrowattConfigEntry
-
-try:
-    # See the matching import in __init__.py for why this is optional.
-    from . import _build_info
-except ImportError:
-    _build_info = None
 
 TO_REDACT = {
     CONF_PASSWORD,
