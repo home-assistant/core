@@ -11,4 +11,6 @@ MIDEA_DEVICE_NAMES: dict[DeviceType, str] = {
     DeviceType.C2: "Toilet",
     DeviceType.CD: "Heat Pump Water Heater",
     DeviceType.ED: "Water Drinking Appliance",
+    DeviceType.A1: "Dehumidifier",
+    DeviceType.FD: "Humidifier",
 }
