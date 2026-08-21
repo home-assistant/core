@@ -49,7 +49,7 @@ from . import (  # noqa: F401
     update,
 )
 from .addon_manager import AddonError, AddonInfo, AddonManager, AddonState
-from .addon_panel import async_setup_addon_panel
+from .addon_panel import async_setup_addon_panel, async_setup_addon_panel_coordinator
 from .auth import async_setup_auth_view
 from .config import HassioConfigStore, StoredHassioConfig
 from .config_entry import async_get_hassio_entry
@@ -426,6 +426,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     coordinator = HassioMainDataUpdateCoordinator(hass, entry, dev_reg)
     await coordinator.async_config_entry_first_refresh()
     hass.data[MAIN_COORDINATOR] = coordinator
+    entry.async_on_unload(async_setup_addon_panel_coordinator(hass, coordinator))
 
     jobs_coordinator = SupervisorJobsCoordinator(hass, entry)
     await jobs_coordinator.async_config_entry_first_refresh()
