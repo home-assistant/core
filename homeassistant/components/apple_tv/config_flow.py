@@ -45,7 +45,7 @@ DEVICE_INPUT = "device_input"
 INPUT_PIN_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PIN, default=""): vol.All(
-            cv.string, vol.Match(r"^[0-9]+$", msg="invalid PIN")
+            cv.string, vol.Match(r"^[0-9]+\Z", msg="invalid_pin")
         )
     }
 )
@@ -584,6 +584,7 @@ class AppleTVConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.protocol
         if user_input is not None:
             return await self.async_pair_next_protocol()
+
         return self.async_show_form(
             step_id="password",
             description_placeholders={"protocol": protocol_str(self.protocol)},

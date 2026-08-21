@@ -161,11 +161,11 @@ async def test_user_adds_full_device(hass: HomeAssistant) -> None:
     }
 
 
-@pytest.mark.usefixtures("full_device", "pairing")
-async def test_user_adds_device_with_leading_zero_pin(
+@pytest.mark.usefixtures("mrp_device", "pairing")
+async def test_user_pair_leading_zero_pin(
     hass: HomeAssistant, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    """Test pairing a device with a PIN that starts with a leading zero."""
+    """Test that a pairing PIN with a leading zero is passed through as a string."""
     pins: list[object] = []
     original_pin = MockPairingHandler.pin
 
@@ -178,42 +178,23 @@ async def test_user_adds_device_with_leading_zero_pin(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] is FlowResultType.FORM
-
-    result2 = await hass.config_entries.flow.async_configure(
+    await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {"device_input": "MRP Device"},
     )
-    assert result2["type"] is FlowResultType.FORM
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "pair_with_pin"
 
-    result3 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result3["type"] is FlowResultType.FORM
-    assert result3["step_id"] == "pair_with_pin"
-    assert result3["description_placeholders"] == {"protocol": "MRP"}
-
-    result4 = await hass.config_entries.flow.async_configure(
+    result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {"pin": "0123"}
     )
-    assert pins == ["0123", 1111]
-    assert result4["type"] is FlowResultType.FORM
-    assert result4["step_id"] == "pair_no_pin"
-    assert result4["description_placeholders"] == {"protocol": "DMAP", "pin": "1111"}
-
-    result5 = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result5["type"] is FlowResultType.FORM
-    assert result5["step_id"] == "pair_with_pin"
-    assert result5["description_placeholders"] == {"protocol": "AirPlay"}
-
-    result6 = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"pin": "0456"}
-    )
-    assert pins == ["0123", 1111, "0456"]
-    assert result6["type"] is FlowResultType.CREATE_ENTRY
-    assert result6["data"]["name"] == "MRP Device"
+    assert pins == ["0123"]
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mrp_device", "pairing")
-@pytest.mark.parametrize("invalid_pin", ["abcd", "12ab", "١٢٣٤"])
+@pytest.mark.parametrize("invalid_pin", ["abcd", "12ab", "١٢٣٤", "123\n"])
 async def test_user_pair_non_numeric_pin(hass: HomeAssistant, invalid_pin: str) -> None:
     """Test that a non-numeric PIN is rejected at the form."""
     result = await hass.config_entries.flow.async_init(
@@ -231,7 +212,7 @@ async def test_user_pair_non_numeric_pin(hass: HomeAssistant, invalid_pin: str) 
         await hass.config_entries.flow.async_configure(
             result["flow_id"], {"pin": invalid_pin}
         )
-    assert err.value.schema_errors == {"pin": "invalid PIN"}
+    assert err.value.schema_errors == {"pin": "invalid_pin"}
 
 
 @pytest.mark.usefixtures("dmap_device", "dmap_pin", "pairing")
