@@ -38,6 +38,43 @@
         None,
       ]),
       'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.air_purifier_131s_fan_level',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Fan level',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Fan level',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'fan_level',
+      'unique_id': 'air-purifier-fan-level',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
       'capabilities': None,
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -120,6 +157,20 @@
     'state': 'excellent',
   })
 # ---
+# name: test_sensor_state[Air Purifier 131s][sensor.air_purifier_131s_fan_level]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 131s Fan level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_131s_fan_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
+# ---
 # name: test_sensor_state[Air Purifier 131s][sensor.air_purifier_131s_filter_lifetime]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -184,6 +235,43 @@
       'disabled_by': None,
       'domain': 'sensor',
       'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.air_purifier_200s_fan_level',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Fan level',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Fan level',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'fan_level',
+      'unique_id': 'asd_sdfKIHG7IJHGwJGJ7GJ_ag5h3G55-fan-level',
+      'unit_of_measurement': None,
+    }),
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
       'entity_id': 'sensor.air_purifier_200s_filter_lifetime',
       'has_entity_name': True,
       'hidden_by': None,
@@ -207,6 +295,20 @@
       'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
     }),
   ])
+# ---
+# name: test_sensor_state[Air Purifier 200s][sensor.air_purifier_200s_fan_level]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 200s Fan level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_200s_fan_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
 # ---
 # name: test_sensor_state[Air Purifier 200s][sensor.air_purifier_200s_filter_lifetime]
   StateSnapshot({
@@ -257,6 +359,43 @@
 # ---
 # name: test_sensor_state[Air Purifier 400s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.air_purifier_400s_fan_level',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Fan level',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Fan level',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'fan_level',
+      'unique_id': '400s-purifier-fan-level',
+      'unit_of_measurement': None,
+    }),
     EntityRegistryEntrySnapshot({
       'aliases': list([
         None,
@@ -381,6 +520,20 @@
     'state': 'excellent',
   })
 # ---
+# name: test_sensor_state[Air Purifier 400s][sensor.air_purifier_400s_fan_level]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 400s Fan level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_400s_fan_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
+  })
+# ---
 # name: test_sensor_state[Air Purifier 400s][sensor.air_purifier_400s_filter_lifetime]
   StateSnapshot({
     'attributes': ReadOnlyDict({
@@ -446,6 +599,43 @@
 # ---
 # name: test_sensor_state[Air Purifier 600s][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.air_purifier_600s_fan_level',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Fan level',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Fan level',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'fan_level',
+      'unique_id': '600s-purifier-fan-level',
+      'unit_of_measurement': None,
+    }),
     EntityRegistryEntrySnapshot({
       'aliases': list([
         None,
@@ -568,6 +758,20 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'excellent',
+  })
+# ---
+# name: test_sensor_state[Air Purifier 600s][sensor.air_purifier_600s_fan_level]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Purifier 600s Fan level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.air_purifier_600s_fan_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
   })
 # ---
 # name: test_sensor_state[Air Purifier 600s][sensor.air_purifier_600s_filter_lifetime]
@@ -1239,6 +1443,93 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'unknown',
+  })
+# ---
+# name: test_sensor_state[CoreBreeze 432S][devices]
+  list([
+    DeviceRegistryEntrySnapshot({
+      'area_id': None,
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'configuration_url': None,
+      'connections': set({
+      }),
+      'disabled_by': None,
+      'entry_type': None,
+      'hw_version': None,
+      'id': <ANY>,
+      'identifiers': set({
+        tuple(
+          'vesync',
+          'corebreeze432s',
+        ),
+      }),
+      'labels': set({
+      }),
+      'manufacturer': 'VeSync',
+      'model': 'LPF-R432S-AEU',
+      'model_id': None,
+      'name': 'CoreBreeze 432S',
+      'name_by_user': None,
+      'serial_number': None,
+      'sw_version': None,
+      'via_device_id': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CoreBreeze 432S][entities]
+  list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.corebreeze_432s_fan_level',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Fan level',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Fan level',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'fan_level',
+      'unique_id': 'corebreeze432s-fan-level',
+      'unit_of_measurement': None,
+    }),
+  ])
+# ---
+# name: test_sensor_state[CoreBreeze 432S][sensor.corebreeze_432s_fan_level]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'CoreBreeze 432S Fan level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.corebreeze_432s_fan_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1',
   })
 # ---
 # name: test_sensor_state[Dimmable Light][devices]
@@ -2094,7 +2385,58 @@
 # ---
 # name: test_sensor_state[SmartTowerFan][entities]
   list([
+    EntityRegistryEntrySnapshot({
+      'aliases': list([
+        None,
+      ]),
+      'area_id': None,
+      'capabilities': dict({
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      }),
+      'config_entry_id': <ANY>,
+      'config_subentry_id': <ANY>,
+      'device_class': None,
+      'device_id': <ANY>,
+      'disabled_by': None,
+      'domain': 'sensor',
+      'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+      'entity_id': 'sensor.smarttowerfan_fan_level',
+      'has_entity_name': True,
+      'hidden_by': None,
+      'icon': None,
+      'id': <ANY>,
+      'labels': set({
+      }),
+      'name': None,
+      'object_id_base': 'Fan level',
+      'options': dict({
+      }),
+      'original_device_class': None,
+      'original_icon': None,
+      'original_name': 'Fan level',
+      'platform': 'vesync',
+      'previous_unique_id': None,
+      'suggested_object_id': None,
+      'supported_features': 0,
+      'translation_key': 'fan_level',
+      'unique_id': 'smarttowerfan-fan-level',
+      'unit_of_measurement': None,
+    }),
   ])
+# ---
+# name: test_sensor_state[SmartTowerFan][sensor.smarttowerfan_fan_level]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SmartTowerFan Fan level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.smarttowerfan_fan_level',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0',
+  })
 # ---
 # name: test_sensor_state[Temperature Light][devices]
   list([
@@ -2165,42 +2507,6 @@
   ])
 # ---
 # name: test_sensor_state[Wall Switch][entities]
-  list([
-  ])
-# ---
-# name: test_sensor_state[CoreBreeze 432S][devices]
-  list([
-    DeviceRegistryEntrySnapshot({
-      'area_id': None,
-      'config_entry_id': <ANY>,
-      'config_subentry_id': <ANY>,
-      'configuration_url': None,
-      'connections': set({
-      }),
-      'disabled_by': None,
-      'entry_type': None,
-      'hw_version': None,
-      'id': <ANY>,
-      'identifiers': set({
-        tuple(
-          'vesync',
-          'corebreeze432s',
-        ),
-      }),
-      'labels': set({
-      }),
-      'manufacturer': 'VeSync',
-      'model': 'LPF-R432S-AEU',
-      'model_id': None,
-      'name': 'CoreBreeze 432S',
-      'name_by_user': None,
-      'serial_number': None,
-      'sw_version': None,
-      'via_device_id': None,
-    }),
-  ])
-# ---
-# name: test_sensor_state[CoreBreeze 432S][entities]
   list([
   ])
 # ---

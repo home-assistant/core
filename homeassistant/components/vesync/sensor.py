@@ -50,6 +50,22 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
     use_device_temperature_unit: bool = False
 
 
+def fan_level(device: VeSyncBaseDevice) -> StateType:
+    """Return the fan level the device is running at.
+
+    Unlike the fan entity's percentage, this is reported in every mode, including
+    auto and sleep, where the device chooses the level itself. Levels outside the
+    device's supported range are reported as unknown rather than passed through --
+    the same guard the fan platform applies, for the same reason: a device can
+    report a placeholder level such as -1 when no speed applies.
+    """
+    level = device.state.fan_level
+    supported = getattr(device, "fan_levels", None)
+    if level == 0 or supported is None or level in supported:
+        return level
+    return None
+
+
 SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
     VeSyncSensorEntityDescription(
         key="filter-life",
@@ -59,6 +75,14 @@ SENSORS: tuple[VeSyncSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda device: device.state.filter_life,
         exists_fn=lambda device: rgetattr(device, "state.filter_life") is not None,
+    ),
+    VeSyncSensorEntityDescription(
+        key="fan-level",
+        translation_key="fan_level",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=fan_level,
+        exists_fn=lambda device: rgetattr(device, "state.fan_level") is not None,
     ),
     VeSyncSensorEntityDescription(
         key="air-quality",
