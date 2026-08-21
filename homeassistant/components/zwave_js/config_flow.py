@@ -24,6 +24,7 @@ from homeassistant.components.hassio import (
 )
 from homeassistant.config_entries import (
     SOURCE_ESPHOME,
+    SOURCE_IGNORE,
     SOURCE_USB,
     SOURCE_ZEROCONF,
     ConfigEntry,
@@ -235,6 +236,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self._recommended_install = False
         self._rf_region: str | None = None
         self._entry_unloaded_by_flow = False
+        # Set if the flow unique id is a placeholder that must be replaced
+        # with the home ID before a config entry is created.
+        self._unique_id_is_placeholder = False
 
     async def async_step_install_addon(
         self, user_input: dict[str, Any] | None = None
@@ -571,10 +575,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         await self.async_set_unique_id(
             f"{vid}:{pid}_{serial_number}_{manufacturer}_{description}"
         )
-        # We don't need to check if the unique_id is already configured
-        # since we will update the unique_id before finishing the flow.
-        # The unique_id set above is just a temporary value to avoid
-        # duplicate discovery flows.
+        # The unique id set above is a placeholder that is replaced with the
+        # home ID before an entry is created, so only check ignored entries.
+        if any(
+            entry.source == SOURCE_IGNORE and entry.unique_id == self.unique_id
+            for entry in self._async_current_entries(include_ignore=True)
+        ):
+            return self.async_abort(reason="already_configured")
         dev_path = discovery_info.device
         self.usb_path = dev_path
         if manufacturer == "Nabu Casa" and description == "ZWA-2 - Nabu Casa ZWA-2":
@@ -766,6 +773,16 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self.use_addon = True
 
+        if any(
+            entry.data.get(CONF_USE_ADDON) and entry.unique_id != self.unique_id
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            # The add-on can only connect to a single adapter, so abort before
+            # the flow changes the add-on config of the existing entry.
+            # A discovery of the existing entry's own adapter passes, so the
+            # entry can be updated, e.g. from a USB path to a socket.
+            return self.async_abort(reason="addon_already_configured")
+
         addon_info = await self._async_get_addon_info()
 
         if addon_info.state is AddonState.RUNNING:
@@ -791,6 +808,19 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             self.lr_s2_authenticated_key = addon_config.get(
                 CONF_ADDON_LR_S2_AUTHENTICATED_KEY, ""
             )
+
+            if self._adapter_discovered:
+                # Apply the discovered adapter to the add-on config and
+                # restart the add-on before connecting, so the server
+                # version info reflects the discovered adapter.
+                self._addon_config_updates.update(
+                    {
+                        CONF_ADDON_DEVICE: self.usb_path,
+                        CONF_ADDON_SOCKET: self.socket_path,
+                    }
+                )
+                return await self.async_step_start_addon()
+
             return await self.async_step_finish_addon_setup_user()
 
         if addon_info.state is AddonState.NOT_RUNNING:
@@ -1002,7 +1032,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info = await self._async_get_addon_discovery_info()
             self.ws_address = f"ws://{discovery_info['host']}:{discovery_info['port']}"
 
-        if not self.unique_id or self.source == SOURCE_USB:
+        if (
+            not self.unique_id
+            or self.source == SOURCE_USB
+            or self._unique_id_is_placeholder
+        ):
             if not self.version_info:
                 try:
                     self.version_info = await async_get_version_info(
@@ -1014,6 +1048,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 str(self.version_info.home_id), raise_on_progress=False
             )
+            self._unique_id_is_placeholder = False
 
         if (
             existing_entry := next(
@@ -1029,24 +1064,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             # e.g. via zeroconf discovery, so don't rewrite that entry
             # with add-on data.
             return self.async_abort(reason="already_configured")
-
-        # When we came from discovery, make sure we update the add-on
-        if self._adapter_discovered and self.use_addon:
-            await self._async_set_addon_config(
-                {
-                    CONF_ADDON_DEVICE: self.usb_path,
-                    CONF_ADDON_SOCKET: self.socket_path,
-                    CONF_ADDON_S0_LEGACY_KEY: self.s0_legacy_key,
-                    CONF_ADDON_S2_ACCESS_CONTROL_KEY: self.s2_access_control_key,
-                    CONF_ADDON_S2_AUTHENTICATED_KEY: self.s2_authenticated_key,
-                    CONF_ADDON_S2_UNAUTHENTICATED_KEY: self.s2_unauthenticated_key,
-                    CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: self.lr_s2_access_control_key,
-                    CONF_ADDON_LR_S2_AUTHENTICATED_KEY: self.lr_s2_authenticated_key,
-                }
-            )
-            if self.restart_addon:
-                manager = get_addon_manager(self.hass)
-                await manager.async_stop_addon()
 
         self._abort_if_unique_id_configured(
             updates={
@@ -1343,6 +1360,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     self._async_schedule_entry_reload()
                     raise AbortFlow("addon_stop_failed") from err
             return await self.async_step_manual_reconfigure()
+
+        if any(
+            entry.data.get(CONF_USE_ADDON) and entry.entry_id != config_entry.entry_id
+            for entry in self._async_current_entries(include_ignore=False)
+        ):
+            # The add-on can only connect to a single adapter, so abort before
+            # the flow changes the add-on config of the other entry.
+            return self.async_abort(reason="addon_already_configured")
 
         addon_info = await self._async_get_addon_info()
 
@@ -1646,6 +1671,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         if not is_hassio(self.hass):
             return self.async_abort(reason="not_hassio")
 
+        # The adapter may first be discovered without a home ID and get the
+        # placeholder unique id below, then report a home ID on a later
+        # discovery. Track the placeholder id so such a discovery can be
+        # deduplicated against a pending prompt or an ignored entry.
+        placeholder_unique_id = f"esphome_{discovery_info.name}"
         if discovery_info.zwave_home_id:
             existing_entry: ConfigEntry | None = None
             if (
@@ -1693,6 +1723,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
                     return self.async_abort(reason="already_configured")
 
+            if any(
+                flow["context"].get("unique_id") == placeholder_unique_id
+                for flow in self._async_in_progress()
+            ):
+                return self.async_abort(reason="already_in_progress")
             # We are not aborting if home ID configured
             # here, we just want to make sure that it's set
             # We will update a USB based config entry
@@ -1701,6 +1736,19 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             await self.async_set_unique_id(
                 str(discovery_info.zwave_home_id), raise_on_progress=False
             )
+        else:
+            # Set a placeholder unique id so the discovery can be ignored
+            # also when the adapter doesn't report a home ID yet.
+            # It is replaced with the home ID before an entry is created.
+            self._unique_id_is_placeholder = True
+            await self.async_set_unique_id(placeholder_unique_id)
+
+        if any(
+            entry.source == SOURCE_IGNORE
+            and entry.unique_id in (self.unique_id, placeholder_unique_id)
+            for entry in self._async_current_entries(include_ignore=True)
+        ):
+            return self.async_abort(reason="already_configured")
 
         self.socket_path = discovery_info.socket_path
         home_id_display = format_home_id_for_display(discovery_info.zwave_home_id)
@@ -1708,6 +1756,32 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             CONF_NAME: f"Network {home_id_display} via {discovery_info.name} (ESPHome)"
         }
         self._adapter_discovered = True
+
+        # A discovered adapter that doesn't belong to an existing add-on based
+        # entry is a different adapter, so offer to migrate the existing
+        # network to it instead of repointing the shared add-on config.
+        discovered_home_id = (
+            str(discovery_info.zwave_home_id) if discovery_info.zwave_home_id else None
+        )
+        addon_entries = [
+            entry
+            for entry in self._async_current_entries(include_ignore=False)
+            if entry.data.get(CONF_USE_ADDON)
+        ]
+        if discovered_home_id is None and any(
+            entry.data.get(CONF_SOCKET_PATH) == discovery_info.socket_path
+            for entry in addon_entries
+        ):
+            # A reconnect of the configured adapter without a home ID is the
+            # same adapter, not a new one to migrate to.
+            return self.async_abort(reason="already_configured")
+
+        if addon_entry := next(
+            (entry for entry in addon_entries if entry.unique_id != discovered_home_id),
+            None,
+        ):
+            self._reconfigure_config_entry = addon_entry
+            return await self.async_step_confirm_usb_migration()
 
         return await self.async_step_installation_type()
 

@@ -466,6 +466,25 @@ MOCK_STATUS_RPC = {
     "wifi": {"rssi": -63},
 }
 
+MOCK_CAMERA_CONFIG = {
+    "camera:0": {
+        "id": 0,
+        "rtsp": {"enable": True},
+    }
+}
+
+MOCK_CAMERA_STATUS = {
+    "camera:0": {
+        "id": 0,
+        "privacy": False,
+        "arm": True,
+        "streamer": "running",
+        "motion": False,
+        "streams": 0,
+        "recordings": None,
+    }
+}
+
 MOCK_SCRIPTS = [
     """"
 function eventHandler(event, userdata) {
@@ -821,3 +840,14 @@ def disable_async_remove_shelly_rpc_entities() -> Generator[None]:
         "homeassistant.components.shelly.utils.async_remove_shelly_rpc_entities"
     ):
         yield
+
+
+@pytest.fixture
+def mock_camera_rpc_device(
+    monkeypatch: pytest.MonkeyPatch, mock_rpc_device: Mock
+) -> Mock:
+    """Set up mock RPC device with camera component data."""
+    monkeypatch.setattr(mock_rpc_device, "config", MOCK_CAMERA_CONFIG)
+    monkeypatch.setattr(mock_rpc_device, "status", MOCK_CAMERA_STATUS)
+
+    return mock_rpc_device

@@ -1743,17 +1743,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self,
         device_id: str,
         *,
-        include_child_devices: Literal[True] = True,
-        include_main_devices: Literal[True] = True,
-    ) -> AnyDeviceEntry | None: ...
-
-    @overload
-    def async_get(
-        self,
-        device_id: str,
-        *,
         include_child_devices: Literal[False],
-        include_main_devices: Literal[True] = True,
+        include_main_devices: bool = True,
+        include_composite_devices: bool = True,
     ) -> DeviceEntry | None: ...
 
     @overload
@@ -1763,7 +1755,28 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: Literal[True] = True,
         include_main_devices: Literal[False],
+        include_composite_devices: Literal[False],
     ) -> ChildDeviceEntry | None: ...
+
+    @overload
+    def async_get(
+        self,
+        device_id: str,
+        *,
+        include_child_devices: Literal[True] = True,
+        include_main_devices: Literal[False],
+        include_composite_devices: Literal[True] = True,
+    ) -> AnyDeviceEntry | None: ...
+
+    @overload
+    def async_get(
+        self,
+        device_id: str,
+        *,
+        include_child_devices: Literal[True] = True,
+        include_main_devices: Literal[True] = True,
+        include_composite_devices: bool = True,
+    ) -> AnyDeviceEntry | None: ...
 
     @callback
     def async_get(
@@ -1772,6 +1785,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         *,
         include_child_devices: bool = True,
         include_main_devices: bool = True,
+        include_composite_devices: bool = True,
     ) -> AnyDeviceEntry | None:
         """Get device or child device.
 
@@ -1786,8 +1800,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         With include_child_devices=False a child-device id resolves to None (the child
         is treated as absent) and the return type excludes children. With
-        include_main_devices=False a main-device id (including a composite) resolves to
-        None and the return type excludes main devices.
+        include_main_devices=False a main-device id resolves to None. With
+        include_composite_devices=False a composite-device id resolves to None.
         """
         if (
             include_main_devices
@@ -1799,7 +1813,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             and (child_device := self._child_device_data.get(device_id)) is not None
         ):
             return child_device
-        if include_main_devices and (
+        if include_composite_devices and (
             split_devices := self.devices.get_devices_for_composite_device_id(device_id)
         ):
             return self._restore_composite_device(device_id, split_devices)
@@ -2021,6 +2035,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         composite device id no longer refers to a registered device. Returns
         False for a registered device id, and None for an unknown id.
         """
+        report_usage(
+            "calls `device_registry.async_is_composite_device_id`, which is "
+            "deprecated; use `async_get` with `include_composite_devices=False` "
+            "instead - a composite device id resolves with `async_get(device_id)` but "
+            "not with `async_get(device_id, include_composite_devices=False)`",
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            breaks_in_ha_version="2027.9.0",
+        )
         if device_id in self.devices:
             return False
         if self.devices.get_devices_for_composite_device_id(device_id):
@@ -2949,8 +2972,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if (
             via_device_id is not UNDEFINED
             and via_device_id is not None
-            and via_device_id not in self.devices
-            and not self.devices.get_devices_for_composite_device_id(via_device_id)
+            and self.async_get(via_device_id, include_child_devices=False) is None
         ):
             if via_device_id in self._child_device_data:
                 raise HomeAssistantError(

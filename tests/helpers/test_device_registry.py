@@ -48,10 +48,10 @@ def _downgrade_device_registry_deprecation_reports(
 ) -> Generator[None]:
     """Keep the deprecated device registry APIs from raising in tests.
 
-    async_get_device, the config entry parameters and merge_connections/merge_identifiers
-    parameters of async_update_device, and via_device on async_get_or_create are
-    deprecated and raise for core and core integration callers, disable them here so we
-    can run tests without triggering deprecation errors.
+    async_get_device, async_is_composite_device_id, the config entry parameters and
+    merge_connections/merge_identifiers parameters of async_update_device, and via_device
+    on async_get_or_create are deprecated and raise for core and core integration callers,
+    disable them here so we can run tests without triggering deprecation errors.
 
     Tests which use `mock_integration_frame` will not be affected by this fixture, so
     they can test the deprecation.
@@ -3307,6 +3307,153 @@ async def test_async_is_composite_device_id(
     assert device_registry.async_is_composite_device_id(device_1.id) is False
     assert device_registry.async_is_composite_device_id(device_2.id) is False
     assert device_registry.async_is_composite_device_id("unknown_id") is None
+
+
+@pytest.mark.parametrize(
+    ("integration_frame_path", "expectation", "expected_log"),
+    [
+        pytest.param(
+            "homeassistant/test_core", pytest.raises(RuntimeError), 0, id="core"
+        ),
+        pytest.param(
+            "homeassistant/components/test_integration",
+            pytest.raises(RuntimeError),
+            1,
+            id="core integration",
+        ),
+        pytest.param(
+            "custom_components/test_integration",
+            nullcontext(),
+            1,
+            id="custom integration",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_async_is_composite_device_id_deprecated(
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    expectation: AbstractContextManager,
+    expected_log: int,
+) -> None:
+    """Test async_is_composite_device_id is deprecated.
+
+    It logs for custom integrations and raises for core and core integrations. Use
+    async_get with include_composite_devices=False instead.
+    """
+    what = "calls `device_registry.async_is_composite_device_id`"
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
+        device_registry.async_is_composite_device_id("some_device_id")
+
+    assert caplog.text.count(what) == expected_log
+
+
+async def test_async_get_include_composite_devices(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test async_get gates main, child and composite devices independently."""
+    entry_1 = MockConfigEntry(domain="test")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="test")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=entry_1.entry_id,
+        identifiers={("test", "child")},
+        parent_device_id=device_1.id,
+        name="Child",
+    )
+    old_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry.devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=old_id
+    )
+    device_registry.devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=old_id
+    )
+
+    # By default a composite id resolves to the synthesized composite
+    composite = device_registry.async_get(old_id)
+    assert composite is not None
+    assert composite.id == old_id
+    assert device_registry.async_get(old_id, include_child_devices=False) == composite
+
+    # include_composite_devices=False resolves a composite id to None, matching
+    # `old_id in device_registry.devices`, which is composite-blind
+    assert old_id not in device_registry.devices
+    assert device_registry.async_get(old_id, include_composite_devices=False) is None
+    assert (
+        device_registry.async_get(
+            old_id, include_child_devices=False, include_composite_devices=False
+        )
+        is None
+    )
+
+    # A registered main device resolves regardless of include_composite_devices
+    assert (
+        device_registry.async_get(device_1.id, include_composite_devices=False).id
+        == device_1.id
+    )
+    assert (
+        device_registry.async_get(
+            device_1.id, include_child_devices=False, include_composite_devices=False
+        ).id
+        == device_1.id
+    )
+
+    # An unknown id is None with or without the flag
+    assert (
+        device_registry.async_get("unknown_id", include_composite_devices=False) is None
+    )
+
+    # include_main_devices=False, include_child_devices=False resolves only a composite
+    assert (
+        device_registry.async_get(
+            old_id, include_main_devices=False, include_child_devices=False
+        )
+        == composite
+    )
+    # a registered main device, a child device and an unknown id resolve to None
+    assert (
+        device_registry.async_get(
+            device_1.id, include_main_devices=False, include_child_devices=False
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get(
+            child_device.id, include_main_devices=False, include_child_devices=False
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get(
+            "unknown_id", include_main_devices=False, include_child_devices=False
+        )
+        is None
+    )
+
+    # include_main_devices=False, include_composite_devices=False resolves only a child:
+    # a composite id resolves to None, a child device still resolves
+    assert (
+        device_registry.async_get(
+            old_id, include_main_devices=False, include_composite_devices=False
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get(
+            child_device.id,
+            include_main_devices=False,
+            include_composite_devices=False,
+        )
+        == child_device
+    )
 
 
 @pytest.mark.parametrize("load_registries", [False])
