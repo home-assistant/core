@@ -10,7 +10,10 @@ from homeassistant.components import zone
 from homeassistant.components.device_tracker import (
     DOMAIN as DEVICE_TRACKER_DOMAIN,
     ENTITY_ID_FORMAT,
+    DeviceTrackerEntityCapabilityAttribute,
+    DeviceTrackerEntityStateAttribute,
     TrackerEntity,
+    TrackerEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE
@@ -32,7 +35,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -117,8 +120,14 @@ TRACKER_COMMON_SCHEMA = vol.Schema(
 TRACKER_YAML_SCHEMA = vol.All(
     _validate_in_zones_or_lat_and_lon,
     TRACKER_COMMON_SCHEMA.extend(
-        make_template_entity_common_modern_schema(
-            DEVICE_TRACKER_DOMAIN, DEFAULT_NAME
+        make_template_entity_common_schema(
+            DEVICE_TRACKER_DOMAIN,
+            DEFAULT_NAME,
+            (
+                DeviceTrackerEntityCapabilityAttribute,
+                DeviceTrackerEntityStateAttribute,
+                TrackerEntityStateAttribute,
+            ),
         ).schema
     ),
 )

@@ -959,22 +959,31 @@ def hass_ws_client(
     """Websocket client fixture connected to websocket server."""
 
     async def create_client(
-        hass: HomeAssistant = hass, access_token: str | None = hass_access_token
+        hass: HomeAssistant = hass,
+        access_token: str | None = hass_access_token,
+        supervisor_unix_socket: bool = False,
     ) -> MockHAClientWebSocket:
-        """Create a websocket client."""
+        """Create a client, skipping token auth for Supervisor Unix sockets."""
         assert await async_setup_component(hass, "websocket_api", {})
         client = await aiohttp_client(hass.http.app)
         websocket = await client.ws_connect(URL)
         auth_resp = await websocket.receive_json()
-        assert auth_resp["type"] == TYPE_AUTH_REQUIRED
-
-        if access_token is None:
-            await websocket.send_json({"type": TYPE_AUTH, "access_token": "incorrect"})
+        if supervisor_unix_socket:
+            assert auth_resp["type"] == TYPE_AUTH_OK
         else:
-            await websocket.send_json({"type": TYPE_AUTH, "access_token": access_token})
+            assert auth_resp["type"] == TYPE_AUTH_REQUIRED
 
-        auth_ok = await websocket.receive_json()
-        assert auth_ok["type"] == TYPE_AUTH_OK
+            if access_token is None:
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": "incorrect"}
+                )
+            else:
+                await websocket.send_json(
+                    {"type": TYPE_AUTH, "access_token": access_token}
+                )
+
+            auth_ok = await websocket.receive_json()
+            assert auth_ok["type"] == TYPE_AUTH_OK
 
         def _get_next_id() -> Generator[int]:
             i = 0
@@ -987,11 +996,10 @@ def hass_ws_client(
             data["id"] = next(id_generator)
             return websocket.send_json(data)
 
-        async def _remove_device(device_id: str, config_entry_id: str) -> Any:
+        async def _remove_device(device_id: str) -> Any:
             await _send_json_auto_id(
                 {
-                    "type": "config/device_registry/remove_config_entry",
-                    "config_entry_id": config_entry_id,
+                    "type": "config/device_registry/remove",
                     "device_id": device_id,
                 }
             )
@@ -2014,7 +2022,6 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
     # We need to drop the stop method from the object since we patched
     # out start and this fixture will expire before the stop method is called
     # when EVENT_HOMEASSISTANT_STOP is fired.
-    # pylint: disable-next=c-extension-no-member
     bluetooth_scanner.OriginalBleakScanner.stop = AsyncMock()  # type: ignore[assignment]
 
     # Mock BlueZ management controller to successfully setup
@@ -2024,7 +2031,7 @@ def mock_bleak_scanner_start() -> Generator[MagicMock]:
 
     with (
         patch.object(
-            bluetooth_scanner.OriginalBleakScanner,  # pylint: disable=c-extension-no-member
+            bluetooth_scanner.OriginalBleakScanner,
             "start",
         ) as mock_bleak_scanner_start,
         patch.object(bluetooth_scanner, "HaScanner"),
