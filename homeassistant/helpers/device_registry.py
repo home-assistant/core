@@ -1549,18 +1549,13 @@ class _DeprecatedDeviceRegistryItemsView:
         """Initialize the view over a device registry."""
         self._devices = devices
 
-    @property
-    def _items(self) -> ActiveDeviceRegistryItems:
-        """Return the registry's device container."""
-        return self._devices
-
     def __iter__(self) -> Iterator[DeviceEntry]:
         """Iterate over the device entries."""
-        return iter(self._items.values())
+        return iter(self._devices.values())
 
     def __len__(self) -> int:
         """Return the number of device entries."""
-        return len(self._items)
+        return len(self._devices)
 
     def _report_deprecated_use(self) -> None:
         """Report deprecated use of `DeviceRegistry.devices`."""
@@ -1578,7 +1573,7 @@ class _DeprecatedDeviceRegistryItemsView:
     def __getitem__(self, key: str) -> DeviceEntry:
         """Return the device entry for a device id (deprecated)."""
         self._report_deprecated_use()
-        return self._items[key]
+        return self._devices[key]
 
     def __contains__(self, obj: object) -> bool:
         """Return whether a device entry - or, deprecated, a device id - is registered.
@@ -1589,10 +1584,10 @@ class _DeprecatedDeviceRegistryItemsView:
         """
         # DeviceEntry is never subclassed, a direct type check is safe
         if type(obj) is DeviceEntry:
-            return self._items.get(obj.id) == obj
+            return self._devices.get(obj.id) == obj
         if isinstance(obj, str):
             self._report_deprecated_use()
-            return obj in self._items
+            return obj in self._devices
         return False
 
     def __getattr__(self, name: str) -> Any:
@@ -1601,7 +1596,7 @@ class _DeprecatedDeviceRegistryItemsView:
         if name.startswith("_"):
             raise AttributeError(name)
         self._report_deprecated_use()
-        return getattr(self._items, name)
+        return getattr(self._devices, name)
 
 
 class ChildDeviceRegistryItems(BaseRegistryItems[ChildDeviceEntry]):
