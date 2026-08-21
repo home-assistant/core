@@ -2508,10 +2508,8 @@ async def test_stt_vad_end_emitted_when_provider_abandons_stream_early(
     assert assist_pipeline.PipelineEventType.STT_VAD_START in event_types
     assert assist_pipeline.PipelineEventType.STT_VAD_END in event_types
     assert assist_pipeline.PipelineEventType.STT_END in event_types
-    # STT_VAD_END is emitted from the ``finally`` block when the generator is
-    # torn down as the provider's frame unwinds (it abandons the stream after
-    # one chunk). That teardown happens while ``async_process_audio_stream``
-    # is still running, so STT_VAD_END still precedes STT_END.
+    # speech_to_text closes the abandoned stream after the provider returns,
+    # ensuring STT_VAD_END still precedes STT_END.
     vad_start_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_START)
     vad_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_VAD_END)
     stt_end_idx = event_types.index(assist_pipeline.PipelineEventType.STT_END)
