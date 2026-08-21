@@ -73,24 +73,25 @@ class YardianSwitch(YardianZoneEntity, SwitchEntity):
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
+        # Optimistic UI update
         self.coordinator.data.active_zones.add(self._zone_id)
         self.async_write_ha_state()
 
         duration = kwargs.get("duration", DEFAULT_WATERING_DURATION)
-        async with self.coordinator.api_lock:
-            await self.coordinator.controller.start_irrigation(self._zone_id, duration)
-            await asyncio.sleep(SWITCH_ON_REFRESH_DELAY)
+
+        await self.coordinator.controller.start_irrigation(self._zone_id, duration)
+        await asyncio.sleep(SWITCH_ON_REFRESH_DELAY)
 
         await self.coordinator.async_request_refresh()
 
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
+        # Optimistic UI update
         self.coordinator.data.active_zones.discard(self._zone_id)
         self.async_write_ha_state()
 
-        async with self.coordinator.api_lock:
-            await self.coordinator.controller.stop_zone(self._zone_id)
-            await asyncio.sleep(SWITCH_OFF_REFRESH_DELAY)
+        await self.coordinator.controller.stop_zone(self._zone_id)
+        await asyncio.sleep(SWITCH_OFF_REFRESH_DELAY)
 
         await self.coordinator.async_request_refresh()

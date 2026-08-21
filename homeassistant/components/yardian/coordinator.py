@@ -1,6 +1,5 @@
 """Update coordinators for Yardian."""
 
-import asyncio
 from dataclasses import dataclass
 import datetime
 import logging
@@ -69,9 +68,6 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
         self._model = entry.data["model"]
         self._serial = entry.data.get("serialNumber")
 
-        # Lock to serialize API commands and prevent race conditions
-        self.api_lock = asyncio.Lock()
-
     @property
     def device_info(self) -> DeviceInfo:
         """Return information about the device."""
@@ -92,10 +88,8 @@ class YardianUpdateCoordinator(DataUpdateCoordinator[YardianCoordinatorData]):
             type(self.controller).__name__,
         )
         try:
-            async with self.api_lock:
-                async with asyncio.timeout(10):
-                    dev_state = await self.controller.fetch_device_state()
-                    oper_info = await self.controller.fetch_oper_info()
+            dev_state = await self.controller.fetch_device_state()
+            oper_info = await self.controller.fetch_oper_info()
 
         except TimeoutError as e:
             raise UpdateFailed("Timeout communicating with device") from e
