@@ -1,14 +1,22 @@
 """Tests for the Guntamatic sensor platform."""
 
+import json
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
-from guntamatic.heater import NoSerialException
+from guntamatic.heater import (
+    TRANSLATE_HC_PROGRAM,
+    TRANSLATE_PUMP_MODE,
+    NoSerialException,
+)
 import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.guntamatic.const import SCAN_INTERVAL
+from homeassistant.components.guntamatic.sensor import GUNTAMATIC_SENSORS
+from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -91,3 +99,47 @@ async def test_state_unavailable(
     await hass.async_block_till_done()
     state = hass.states.get("sensor.mock_title_boiler_temperature")
     assert state.state != STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("key_prefix", "translation_table"),
+    [
+        pytest.param("heating_circulation_program", TRANSLATE_HC_PROGRAM, id="program"),
+        pytest.param(
+            "heating_circulation_pump",
+            TRANSLATE_PUMP_MODE,
+            id="heating_circulation_pump",
+        ),
+        pytest.param("auxiliary_pump", TRANSLATE_PUMP_MODE, id="auxiliary_pump"),
+    ],
+)
+def test_enum_options_match_library(
+    key_prefix: str,
+    translation_table: dict[str, str],
+) -> None:
+    """Test enum options mirror the canonical values emitted by the library."""
+    option_sets = {
+        tuple(description.options)
+        for description in GUNTAMATIC_SENSORS
+        if description.key.startswith(key_prefix)
+        and description.device_class is SensorDeviceClass.ENUM
+    }
+    assert len(option_sets) == 1, f"Inconsistent options across {key_prefix} sensors"
+    assert set(option_sets.pop()) == set(translation_table.values())
+
+
+def test_enum_states_translated() -> None:
+    """Test every enum option has a state translation."""
+    strings = json.loads(
+        (
+            Path(__file__).parents[3]
+            / "homeassistant/components/guntamatic/strings.json"
+        ).read_text()
+    )
+    sensor_strings = strings["entity"]["sensor"]
+    for description in GUNTAMATIC_SENSORS:
+        if description.device_class is not SensorDeviceClass.ENUM:
+            continue
+        assert description.translation_key is not None
+        states = sensor_strings[description.translation_key]["state"]
+        assert set(description.options) == set(states)
