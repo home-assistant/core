@@ -388,6 +388,82 @@ async def test_update_device_labels(
         assert getattr(device, key) == value
 
 
+async def test_update_device_unknown_device(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+) -> None:
+    """Test updating an unknown device returns an error."""
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": "does_not_exist",
+            "name_by_user": "Test Friendly Name",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_found"
+    assert msg["error"]["message"] == "Device not found"
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_update_device_composite(
+    hass: HomeAssistant,
+    client: MockHAClientWebSocket,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test updating a pre-migration composite device id is rejected."""
+    entry_1 = MockConfigEntry()
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry()
+    entry_2.add_to_hass(hass)
+
+    composite_id = "compositea000000000000000000000"
+    hass_storage[dr.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 12,
+        "key": dr.STORAGE_KEY,
+        "data": {
+            "devices": [
+                # Composite spanning two config entries; splitting it on load removes
+                # the composite device, so composite_id no longer refers to a device
+                _storage_device_v1_12(
+                    composite_id,
+                    [entry_1.entry_id, entry_2.entry_id],
+                    entry_1.entry_id,
+                    "a",
+                ),
+            ],
+            "deleted_devices": [],
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+    # pylint: disable-next=home-assistant-tests-registry-fixtures
+    registry = dr.async_get(hass)
+    assert registry.async_get(composite_id) is not None
+    assert registry.async_get(composite_id, include_composite_devices=False) is None
+
+    await client.send_json_auto_id(
+        {
+            "type": "config/device_registry/update",
+            "device_id": composite_id,
+            "name_by_user": "Test Friendly Name",
+        }
+    )
+    msg = await client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "not_allowed"
+    assert msg["error"]["message"] == "Cannot update a composite device"
+
+    # The update was not fanned out to the underlying split devices
+    for split in registry.async_get_devices_for_composite_device_id(composite_id):
+        assert split.name_by_user is None
+
+
 _DEPRECATION_WARNING = (
     "The websocket command config/device_registry/remove_config_entry is "
     "deprecated and will be removed in Home Assistant 2027.9"
@@ -435,7 +511,7 @@ async def test_remove_device(
     can_remove = False
 
     async def async_remove_config_entry_device(
-        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
     ) -> bool:
         return can_remove
 
@@ -521,7 +597,7 @@ async def test_remove_device_fails(
     ws_client = await hass_ws_client(hass)
 
     async def async_remove_config_entry_device(
-        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
     ) -> bool:
         return True
 
@@ -626,7 +702,7 @@ async def test_remove_device_if_integration_removes(
     can_remove = False
 
     async def async_remove_config_entry_device(
-        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
     ) -> bool:
         if can_remove:
             device_registry.async_remove_device(device_entry.id)
@@ -737,7 +813,8 @@ async def test_remove_device_composite(
     await dr.async_load(hass)
     # pylint: disable-next=home-assistant-tests-registry-fixtures
     registry = dr.async_get(hass)
-    assert registry.async_is_composite_device_id(composite_id) is True
+    assert registry.async_get(composite_id) is not None
+    assert registry.async_get(composite_id, include_composite_devices=False) is None
 
     response = await _send_remove_device(
         client, command, composite_id, entry_1.entry_id
@@ -759,7 +836,7 @@ async def test_remove_config_entry_from_device_deprecated_config_entry_mismatch(
     ws_client = await hass_ws_client(hass)
 
     async def async_remove_config_entry_device(
-        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.DeviceEntry
+        hass: HomeAssistant, config_entry: ConfigEntry, device_entry: dr.AnyDeviceEntry
     ) -> bool:
         return True
 
@@ -1070,7 +1147,7 @@ async def test_remove_config_entry_from_child_device(
     async def async_remove_config_entry_device(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        device_entry: dr.DeviceEntry | dr.ChildDeviceEntry,
+        device_entry: dr.AnyDeviceEntry,
     ) -> bool:
         removed_devices.append(device_entry.id)
         return can_remove
@@ -1117,7 +1194,7 @@ async def test_remove_config_entry_from_parent_with_children(
     async def async_remove_config_entry_device(
         hass: HomeAssistant,
         config_entry: ConfigEntry,
-        device_entry: dr.DeviceEntry | dr.ChildDeviceEntry,
+        device_entry: dr.AnyDeviceEntry,
     ) -> bool:
         consulted_devices.append(device_entry.id)
         return True

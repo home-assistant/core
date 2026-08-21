@@ -467,7 +467,10 @@ def _get_media_event_data(
     # The file_path in the event is the full local filesystem path to the
     # media. To convert that to the media path that motionEye will
     # understand, we need to strip the root directory from the path.
-    if os.path.commonprefix([root_directory, event_file_path]) != root_directory:
+    try:
+        if os.path.commonpath([root_directory, event_file_path]) != root_directory:
+            return {}
+    except ValueError:
         return {}
 
     file_path = "/" + os.path.relpath(event_file_path, root_directory)
