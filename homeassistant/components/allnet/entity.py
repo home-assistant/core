@@ -1,5 +1,7 @@
 """Base entity for ALLNET."""
 
+from typing import override
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -23,6 +25,7 @@ class AllnetEntity(CoordinatorEntity[AllnetDataUpdateCoordinator]):
         self._attr_device_info = device_info
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if coordinator is up and the channel has a valid value."""
         if not super().available:

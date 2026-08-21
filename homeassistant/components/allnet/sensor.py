@@ -1,7 +1,7 @@
 """Sensor platform for ALLNET."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from allnet.models import Channel, ChannelKind
 
@@ -204,6 +204,7 @@ class AllnetSensorEntity(AllnetEntity, SensorEntity):
         self._attr_state_class = state_class
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         channel = self.coordinator.data.get(self._channel_id)

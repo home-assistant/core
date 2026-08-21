@@ -1,6 +1,6 @@
 """Switch platform for ALLNET."""
 
-from typing import Any
+from typing import Any, override
 
 from allnet.exceptions import AllnetCommandError
 from allnet.models import ChannelKind
@@ -71,6 +71,7 @@ class AllnetSwitchEntity(AllnetEntity, SwitchEntity):
         self._attr_name = name
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True when the switch is on."""
         channel = self.coordinator.data.get(self._channel_id)
@@ -78,10 +79,12 @@ class AllnetSwitchEntity(AllnetEntity, SwitchEntity):
             return None
         return bool(channel.value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._set_state(True)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._set_state(False)

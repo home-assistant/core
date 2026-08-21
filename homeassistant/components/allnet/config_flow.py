@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from allnet import AllnetClient
 from allnet.exceptions import (
@@ -120,6 +120,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovered_name: str | None = None
         self._reauth_entry: config_entries.ConfigEntry | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -168,6 +169,7 @@ class AllnetConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

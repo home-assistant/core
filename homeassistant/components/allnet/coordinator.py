@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from allnet import AllnetClient, AllnetConnectionError
 from allnet.exceptions import AllnetAuthenticationError, AllnetInvalidResponseError
@@ -38,6 +38,7 @@ class AllnetDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Channel]]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict[str, Channel]:
         """Fetch channel data from the ALLNET device."""
         try:

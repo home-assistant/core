@@ -1,6 +1,6 @@
 """Binary sensor platform for ALLNET."""
 
-from typing import Any
+from typing import Any, override
 
 from allnet.models import ChannelKind
 
@@ -114,6 +114,7 @@ class AllnetBinarySensorEntity(AllnetEntity, BinarySensorEntity):
         self._attr_device_class = device_class
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return True when the binary sensor is active."""
         channel = self.coordinator.data.get(self._channel_id)
