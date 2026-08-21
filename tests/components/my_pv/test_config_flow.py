@@ -21,7 +21,7 @@ from tests.common import MockConfigEntry
 DHCP_DISCOVERY = DhcpServiceInfo(
     "127.0.0.1",
     macaddress="986d35cabcde",
-    hostname="",
+    hostname=f"my-pv-ac-elwa-2-{ELWA2_SERIAL_NUMBER}.local.",
 )
 
 ZEROCONF_DISCOVERY = ZeroconfServiceInfo(
