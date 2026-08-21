@@ -7,6 +7,7 @@ from homeassistant.const import CONF_API_TOKEN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import DOMAIN, LOGGER
 from .coordinator import (
@@ -27,7 +28,10 @@ PLATFORMS = [
 async def async_setup_entry(hass: HomeAssistant, entry: ActronAirConfigEntry) -> bool:
     """Set up Actron Air integration from a config entry."""
 
-    api = ActronAirAPI(refresh_token=entry.data[CONF_API_TOKEN])
+    api = ActronAirAPI(
+        refresh_token=entry.data[CONF_API_TOKEN],
+        session=async_get_clientsession(hass),
+    )
     systems: list[ActronAirSystemInfo] = []
 
     try:

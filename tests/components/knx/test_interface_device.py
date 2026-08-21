@@ -124,8 +124,8 @@ async def test_remove_interface_device(
     assert await async_setup_component(hass, "config", {})
     await knx.setup_integration()
     client = await hass_ws_client(hass)
-    knx_devices = device_registry.devices.get_devices_for_config_entry_id(
-        knx.mock_config_entry.entry_id
+    knx_devices = dr.async_entries_for_config_entry(
+        device_registry, knx.mock_config_entry.entry_id
     )
     assert len(knx_devices) == 1
     assert knx_devices[0].name == "KNX Interface"
