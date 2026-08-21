@@ -354,3 +354,13 @@ def reset_diagnostics() -> Generator[None]:
     """Fixture to reset client library diagnostic counters."""
     yield
     diagnostics.reset()
+
+
+@pytest.fixture(autouse=True)
+def disable_rate_limiter_delays() -> Generator[None]:
+    """Disable SDM command rate limiter delays in tests."""
+    with patch(
+        "google_nest_sdm.rate_limiter.RateLimiter._get_wait_time",
+        return_value=0.0,
+    ):
+        yield

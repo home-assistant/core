@@ -83,6 +83,7 @@ from .utils import (
 PLATFORMS: Final = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.CAMERA,
     Platform.CLIMATE,
     Platform.COVER,
     Platform.EVENT,
