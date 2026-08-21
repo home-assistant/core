@@ -43,7 +43,6 @@
 # name: test_setup[light.dali_line_0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
       <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI Line 0',
@@ -57,7 +56,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'off',
   })
 # ---
 # name: test_setup[light.dali_line_1-entry]
@@ -104,9 +103,8 @@
 # name: test_setup[light.dali_line_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ASSUMED_STATE: 'assumed_state'>: True,
       <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: None,
-      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: None,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.BRIGHTNESS: 'brightness'>,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'DALI Line 1',
       <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.BRIGHTNESS: 'brightness'>,
@@ -118,7 +116,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'unknown',
+    'state': 'on',
   })
 # ---
 # name: test_setup[light.device_1-entry]
