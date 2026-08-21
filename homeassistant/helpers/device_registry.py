@@ -58,14 +58,13 @@ from .typing import UNDEFINED, UndefinedType
 
 if TYPE_CHECKING:
     # mypy cannot workout _cache Protocol with attrs
-    # pylint: disable-next=reimported
-    from propcache.api import cached_property, cached_property as under_cached_property
+    from propcache.api import cached_property as under_cached_property
 
     from homeassistant.config_entries import ConfigEntry
 
     from . import entity_registry
 else:
-    from propcache.api import cached_property, under_cached_property
+    from propcache.api import under_cached_property
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -1787,15 +1786,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     """Class to hold a registry of devices."""
 
     _devices: ActiveDeviceRegistryItems
+    devices: Collection[DeviceEntry]
     child_devices: ChildDeviceRegistryItems
     deleted_devices: DeletedDeviceRegistryItems
     _device_data: dict[str, DeviceEntry]
     _child_device_data: dict[str, ChildDeviceEntry]
-
-    @cached_property
-    def devices(self) -> Collection[DeviceEntry]:
-        """Return a collection of the registered device entries."""
-        return _DeprecatedDeviceRegistryItemsView(self._devices)
 
     def __init__(self, hass: HomeAssistant) -> None:
         """Initialize the device registry."""
@@ -4267,6 +4262,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             )
 
         self._devices = devices
+        self.devices = _DeprecatedDeviceRegistryItemsView(self._devices)
         self.child_devices = child_devices
         self.deleted_devices = deleted_devices
         self._device_data = devices.data
