@@ -9,9 +9,6 @@
     },
     {
       "macaddress": "986D35C*"
-    },
-    {
-      "macaddress": "6869C4*"
     }
   ],
   "documentation": "https://www.home-assistant.io/integrations/my_pv",

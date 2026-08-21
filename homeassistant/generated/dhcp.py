@@ -620,10 +620,6 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "986D35C*",
     },
     {
-        "domain": "my_pv",
-        "macaddress": "6869C4*",
-    },
-    {
         "domain": "mystrom",
         "hostname": "mystrom-*",
     },
