@@ -116,6 +116,22 @@ async def test_step_user_cannot_connect(
     assert result["step_id"] == "user"
     assert result["errors"]["base"] == "cannot_connect"
 
+    mock_my_pv_client.connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "127.0.0.1",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-PV AC ELWA 2 0000000000"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+    }
+    assert result["result"].unique_id == ELWA2_SERIAL_NUMBER
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_auth(
@@ -201,6 +217,23 @@ async def test_step_auth_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "auth"
     assert result["errors"]["base"] == "cannot_connect"
+
+    mock_my_pv_client.connect.return_value = True
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_PASSWORD: "test-password",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-PV AC ELWA 2 0000000000"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PASSWORD: "test-password",
+    }
+    assert result["result"].unique_id == ELWA2_SERIAL_NUMBER
 
 
 @pytest.mark.usefixtures("mock_setup_entry", "mock_my_pv_client")
@@ -335,6 +368,21 @@ async def test_step_dhcp_auth_wrong_password(
     assert result["step_id"] == "discovery_auth"
     assert result["errors"]["password"] == "invalid_password"
 
+    mock_my_pv_client.connect.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {CONF_PASSWORD: "test-password"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-PV AC ELWA 2 0000000000"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PASSWORD: "test-password",
+    }
+    assert result["result"].unique_id == ELWA2_SERIAL_NUMBER
+
 
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_step_zeroconf(
@@ -441,3 +489,17 @@ async def test_step_zeroconf_wrong_password(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_auth"
     assert result["errors"]["password"] == "invalid_password"
+
+    mock_my_pv_client.connect.side_effect = None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_PASSWORD: "test-password"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "my-PV AC ELWA 2 0000000000"
+    assert result["data"] == {
+        CONF_HOST: "127.0.0.1",
+        CONF_PASSWORD: "test-password",
+    }
+    assert result["result"].unique_id == ELWA2_SERIAL_NUMBER
