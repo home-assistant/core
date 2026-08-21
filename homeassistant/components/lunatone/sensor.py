@@ -1,10 +1,9 @@
 """Platform for Lunatone sensor integration."""
 
-import re
 from typing import Final, override
 
 from lunatone_rest_api_client import Sensor
-from lunatone_rest_api_client.models import SensorAddressType, SensorType
+from lunatone_rest_api_client.models import LineStatus, SensorAddressType, SensorType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -24,6 +23,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import slugify
 
 from .const import DOMAIN
 from .coordinator import (
@@ -184,6 +184,7 @@ class LunatoneDALILineStatusSensor(
     _attr_entity_category = EntityCategory.DIAGNOSTIC
     _attr_has_entity_name = True
     _attr_icon = "mdi:current-ac"
+    _attr_options = [slugify(str(status)) for status in LineStatus]
     _attr_state_class = None
     _attr_translation_key = "dali_line_status"
 
@@ -209,8 +210,4 @@ class LunatoneDALILineStatusSensor(
     @override
     def native_value(self) -> str:
         """Return the value of the sensor."""
-        return re.sub(
-            r"([a-z])([A-Z])",
-            r"\1_\2",
-            str(self.coordinator.data.lines[self._line_id].line_status),
-        ).lower()
+        return slugify(str(self.coordinator.data.lines[self._line_id].line_status))

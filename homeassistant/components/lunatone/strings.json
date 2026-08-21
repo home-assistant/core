@@ -47,9 +47,9 @@
       "dali_line_status": {
         "name": "DALI line status",
         "state": {
-          "low_power": "Low bus power",
-          "no_power": "Bus power failure",
-          "not_reachable": "Not reachable",
+          "lowpower": "Low bus power",
+          "nopower": "Bus power failure",
+          "notreachable": "Not reachable",
           "ok": "OK"
         }
       }
