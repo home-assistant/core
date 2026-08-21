@@ -4,11 +4,9 @@ from unittest.mock import AsyncMock, Mock
 
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.water_heater import (
-    ATTR_CURRENT_TEMPERATURE,
-    ATTR_MAX_TEMP,
-    ATTR_MIN_TEMP,
     ATTR_OPERATION_MODE,
     ATTR_TEMPERATURE,
     DOMAIN as WATER_HEATER_DOMAIN,
@@ -32,6 +30,7 @@ async def test_water_heater(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_my_pv_client: AsyncMock,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful setup of a water heater."""
 
@@ -45,11 +44,7 @@ async def test_water_heater(
     await hass.async_block_till_done()
 
     state = hass.states.get("water_heater.my_pv_ac_elwa_2")
-    assert state.state == STATE_ELECTRIC
-    assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 54.3
-    assert state.attributes[ATTR_MAX_TEMP] == 95
-    assert state.attributes[ATTR_MIN_TEMP] == 5
-    assert state.attributes[ATTR_TEMPERATURE] == 62.1
+    assert state == snapshot
 
 
 async def test_water_heater_turn_off(
