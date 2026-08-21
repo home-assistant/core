@@ -15,7 +15,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.guntamatic.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.components.guntamatic.sensor import GUNTAMATIC_SENSORS
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntityDescription
-from homeassistant.const import STATE_UNAVAILABLE, Platform
+from homeassistant.const import STATE_UNKNOWN, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
@@ -166,4 +166,4 @@ async def test_enum_sensor_unmapped_value(
 
     state = hass.states.get("sensor.heating_circuit_1_pump")
     assert state is not None
-    assert state.state != "unavailable"
+    assert state.state == STATE_UNKNOWN
