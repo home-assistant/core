@@ -93,7 +93,7 @@ class CentriConnectCoordinator(DataUpdateCoordinator[Tank]):
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
                 translation_placeholders={
-                    "error": err,
+                    "error": repr(err),
                 },
             ) from err
         except CentriConnectError as err:
@@ -101,7 +101,7 @@ class CentriConnectCoordinator(DataUpdateCoordinator[Tank]):
                 translation_domain=DOMAIN,
                 translation_key="unexpected_response",
                 translation_placeholders={
-                    "error": err,
+                    "error": repr(err),
                 },
             ) from err
         return state
