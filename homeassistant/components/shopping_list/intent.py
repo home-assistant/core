@@ -33,11 +33,9 @@ class AddItemIntent(intent.IntentHandler):
         """Handle the intent."""
         slots = self.async_validate_slots(intent_obj.slots)
         item = slots["item"]["value"].strip()
-        await _get_shopping_data(intent_obj.hass).async_add(item)
+        await _get_shopping_data(intent_obj.hass).async_add_or_reactivate(item)
 
-        response = intent_obj.create_response()
-        intent_obj.hass.bus.async_fire(EVENT_SHOPPING_LIST_UPDATED)
-        return response
+        return intent_obj.create_response()
 
 
 class CompleteItemIntent(intent.IntentHandler):

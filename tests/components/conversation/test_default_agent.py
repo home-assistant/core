@@ -35,6 +35,7 @@ from homeassistant.components.intent import (
     async_register_timer_handler,
 )
 from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.shopping_list import _get_shopping_data
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
@@ -675,6 +676,10 @@ async def test_trigger_sentence_response_translation(
 @pytest.mark.usefixtures("init_components", "sl_setup")
 async def test_shopping_list_add_item(hass: HomeAssistant) -> None:
     """Test adding an item to the shopping list through the default agent."""
+    shopping_data = _get_shopping_data(hass)
+    completed_item = await shopping_data.async_add("Apples", complete=True)
+    completed_item_id = completed_item["id"]
+
     result = await conversation.async_converse(
         hass, "add apples to my shopping list", None, Context()
     )
@@ -682,6 +687,9 @@ async def test_shopping_list_add_item(hass: HomeAssistant) -> None:
     assert result.response.speech == {
         "plain": {"speech": "Added apples", "extra_data": None}
     }
+    assert len(shopping_data.items) == 1
+    assert shopping_data.items[0]["id"] == completed_item_id
+    assert shopping_data.items[0]["complete"] is False
 
 
 @pytest.mark.usefixtures("init_components")

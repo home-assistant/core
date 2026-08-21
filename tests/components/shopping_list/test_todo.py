@@ -5,6 +5,7 @@ from typing import Any
 
 import pytest
 
+from homeassistant.components.shopping_list.common import _get_shopping_data
 from homeassistant.components.todo import (
     ATTR_ITEM,
     ATTR_RENAME,
@@ -123,6 +124,29 @@ async def test_add_item(
     assert state.state == "1"
 
 
+async def test_add_item_reactivates_completed_item(
+    hass: HomeAssistant,
+    sl_setup: None,
+    ws_get_items: WsGetItemsType,
+) -> None:
+    """Test reactivating a completed shopping list item."""
+    completed_item = await _get_shopping_data(hass).async_add("Soda", complete=True)
+
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.ADD_ITEM,
+        {ATTR_ITEM: "soda"},
+        target={ATTR_ENTITY_ID: TEST_ENTITY},
+        blocking=True,
+    )
+
+    items = await ws_get_items()
+    assert len(items) == 1
+    assert items[0]["uid"] == completed_item["id"]
+    assert items[0]["summary"] == "Soda"
+    assert items[0]["status"] == "needs_action"
+
+
 async def test_remove_item(
     hass: HomeAssistant,
     sl_setup: None,
@@ -172,15 +196,7 @@ async def test_bulk_remove(
     """Test removing a todo item."""
 
     for _i in range(5):
-        await hass.services.async_call(
-            TODO_DOMAIN,
-            TodoServices.ADD_ITEM,
-            {
-                ATTR_ITEM: "soda",
-            },
-            target={ATTR_ENTITY_ID: TEST_ENTITY},
-            blocking=True,
-        )
+        await _get_shopping_data(hass).async_add("soda")
 
     items = await ws_get_items()
     assert len(items) == 5

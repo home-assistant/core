@@ -47,9 +47,12 @@ class ShoppingTodoListEntity(TodoListEntity):
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
-        await self._data.async_add(
-            item.summary, complete=(item.status == TodoItemStatus.COMPLETED)
-        )
+        if item.status == TodoItemStatus.COMPLETED or item.summary is None:
+            await self._data.async_add(
+                item.summary, complete=(item.status == TodoItemStatus.COMPLETED)
+            )
+            return
+        await self._data.async_add_or_reactivate(item.summary)
 
     @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
