@@ -21,7 +21,7 @@ from pyenphase import (
     EnvoySystemConsumption,
     EnvoySystemProduction,
 )
-from pyenphase.const import PHASENAMES
+from pyenphase.const import PHASENAMES, SupportedFeatures
 from pyenphase.models.acb import ACBChargeStatus, ACBSleepState
 from pyenphase.models.meters import (
     CtMeterStatus,
@@ -1022,7 +1022,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up envoy sensor platform."""
     coordinator = config_entry.runtime_data
-    envoy_data = coordinator.envoy.data
+    envoy = coordinator.envoy
+    assert envoy is not None
+    envoy_data = envoy.data
     assert envoy_data is not None
     _LOGGER.debug("Envoy data: %s", envoy_data)
 
@@ -1030,39 +1032,52 @@ async def async_setup_entry(
         EnvoyProductionEntity(coordinator, description)
         for description in PRODUCTION_SENSORS
     ]
-    if envoy_data.system_consumption:
+    # add unconditionally if TOTAL_CONSUMPTION is available to overcome
+    # None value at startup caused by envoy fw issues
+    if envoy.supported_features & SupportedFeatures.TOTAL_CONSUMPTION:
         entities.extend(
             EnvoyConsumptionEntity(coordinator, description)
             for description in CONSUMPTION_SENSORS
         )
-    if envoy_data.system_net_consumption:
+    # add unconditionally if NET_CONSUMPTION is available to overcome
+    # None value at startup caused by envoy fw issues
+    if envoy.supported_features & SupportedFeatures.NET_CONSUMPTION:
         entities.extend(
             EnvoyNetConsumptionEntity(coordinator, description)
             for description in NET_CONSUMPTION_SENSORS
         )
     # For each production phase reported add production entities
-    if envoy_data.system_production_phases:
+    # if PRODUCTION is available and phases detected even if None
+    # to overcome None value at startup caused by envoy fw issues
+    if envoy.active_phase_count and (
+        envoy.supported_features & SupportedFeatures.PRODUCTION
+    ):
         entities.extend(
             EnvoyProductionPhaseEntity(coordinator, description)
-            for use_phase, phase in envoy_data.system_production_phases.items()
-            for description in PRODUCTION_PHASE_SENSORS[use_phase]
-            if phase is not None
+            for use_phase, descriptions in PRODUCTION_PHASE_SENSORS.items()
+            for description in descriptions
         )
     # For each consumption phase reported add consumption entities
-    if envoy_data.system_consumption_phases:
+    # if TOTAL_CONSUMPTION is available and phases detected even if None
+    # to overcome None value at startup caused by envoy fw issues
+    if envoy.active_phase_count and (
+        envoy.supported_features & SupportedFeatures.TOTAL_CONSUMPTION
+    ):
         entities.extend(
             EnvoyConsumptionPhaseEntity(coordinator, description)
-            for use_phase, phase in envoy_data.system_consumption_phases.items()
-            for description in CONSUMPTION_PHASE_SENSORS[use_phase]
-            if phase is not None
+            for use_phase, descriptions in CONSUMPTION_PHASE_SENSORS.items()
+            for description in descriptions
         )
     # For each net_consumption phase reported add consumption entities
-    if envoy_data.system_net_consumption_phases:
+    # if NET_CONSUMPTION is available and phases detected even if None
+    # to overcome None value at startup caused by envoy fw issues
+    if envoy.active_phase_count and (
+        envoy.supported_features & SupportedFeatures.NET_CONSUMPTION
+    ):
         entities.extend(
             EnvoyNetConsumptionPhaseEntity(coordinator, description)
-            for use_phase, phase in envoy_data.system_net_consumption_phases.items()
-            for description in NET_CONSUMPTION_PHASE_SENSORS[use_phase]
-            if phase is not None
+            for use_phase, descriptions in NET_CONSUMPTION_PHASE_SENSORS.items()
+            for description in descriptions
         )
     # Add Current Transformer entities
     if envoy_data.ctmeters:
