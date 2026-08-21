@@ -1,9 +1,12 @@
 """Number for Midea."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
 from midealocal.const import DeviceType
+from midealocal.device import MideaDevice
+from midealocal.devices.c2 import MideaC2Device
 
 from homeassistant.components.number import NumberEntity, NumberEntityDescription
 from homeassistant.const import UnitOfTime, UnitOfVolume
@@ -20,8 +23,7 @@ class MideaNumberEntityDescription(NumberEntityDescription):
     """Description for a Midea number entity."""
 
     models: list[DeviceType]
-    max_value_attribute: str | None = None
-    """Device property name for a dynamic max value, overriding native_max_value."""
+    max_value_fn: Callable[[MideaDevice], float | None] | None = None
 
 
 NUMBERS: list[MideaNumberEntityDescription] = [
@@ -30,7 +32,7 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         translation_key="dry_level",
         models=[DeviceType.C2],
         native_min_value=0,
-        max_value_attribute="max_dry_level",
+        max_value_fn=lambda device: cast(MideaC2Device, device).max_dry_level,
         native_step=1,
     ),
     MideaNumberEntityDescription(
@@ -38,7 +40,7 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         translation_key="water_temp_level",
         models=[DeviceType.C2],
         native_min_value=0,
-        max_value_attribute="max_water_temp_level",
+        max_value_fn=lambda device: cast(MideaC2Device, device).max_water_temp_level,
         native_step=1,
     ),
     MideaNumberEntityDescription(
@@ -46,7 +48,7 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         translation_key="seat_temp_level",
         models=[DeviceType.C2],
         native_min_value=0,
-        max_value_attribute="max_seat_temp_level",
+        max_value_fn=lambda device: cast(MideaC2Device, device).max_seat_temp_level,
         native_step=1,
     ),
     MideaNumberEntityDescription(
@@ -119,8 +121,10 @@ class MideaNumber(MideaEntity, NumberEntity):
     @override
     def native_max_value(self) -> float:
         """Return the maximum value, reading it off the device if dynamic."""
-        if self.entity_description.max_value_attribute is not None:
-            return getattr(self._device, self.entity_description.max_value_attribute)
+        if self.entity_description.max_value_fn is not None:
+            value = self.entity_description.max_value_fn(self._device)
+            if value is not None:
+                return value
         return super().native_max_value
 
     @property
