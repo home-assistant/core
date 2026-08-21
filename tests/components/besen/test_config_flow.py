@@ -377,7 +377,7 @@ async def test_user_step_no_devices_found_aborts(
 ) -> None:
     """Test manual setup aborts when no unconfigured chargers are discovered."""
 
-    mock_discovered_service_info.return_value = []
+    mock_discovered_service_info.return_value = [_discovery("Other")]
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
