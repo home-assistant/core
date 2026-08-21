@@ -73,43 +73,18 @@
       "temperature_unit": "F",
       "zigbee_dongle_fw_version": "1009"
     },
-    "system_consumption": {
-      "watt_hours_lifetime": 1234,
-      "watt_hours_last_7_days": 1234,
-      "watt_hours_today": 1234,
-      "watts_now": 1234
-    },
+    "system_consumption": null,
     "system_net_consumption": {
       "watt_hours_lifetime": 4321,
       "watt_hours_last_7_days": -1,
       "watt_hours_today": -1,
       "watts_now": 2341
     },
-    "system_production": {
-      "watt_hours_lifetime": 1234,
-      "watt_hours_last_7_days": 1234,
-      "watt_hours_today": 1234,
-      "watts_now": 1234
-    },
+    "system_production": null,
     "system_consumption_phases": {
-      "L1": {
-        "watt_hours_lifetime": 1322,
-        "watt_hours_last_7_days": 1321,
-        "watt_hours_today": 1323,
-        "watts_now": 1324
-      },
-      "L2": {
-        "watt_hours_lifetime": 2322,
-        "watt_hours_last_7_days": 2321,
-        "watt_hours_today": 2323,
-        "watts_now": 2324
-      },
-      "L3": {
-        "watt_hours_lifetime": 3322,
-        "watt_hours_last_7_days": 3321,
-        "watt_hours_today": 3323,
-        "watts_now": 3324
-      }
+      "L1": null,
+      "L2": null,
+      "L3": null
     },
     "system_net_consumption_phases": {
       "L1": {
@@ -132,24 +107,9 @@
       }
     },
     "system_production_phases": {
-      "L1": {
-        "watt_hours_lifetime": 1232,
-        "watt_hours_last_7_days": 1231,
-        "watt_hours_today": 1233,
-        "watts_now": 1234
-      },
-      "L2": {
-        "watt_hours_lifetime": 2232,
-        "watt_hours_last_7_days": 2231,
-        "watt_hours_today": 2233,
-        "watts_now": 2234
-      },
-      "L3": {
-        "watt_hours_lifetime": 3232,
-        "watt_hours_last_7_days": 3231,
-        "watt_hours_today": 3233,
-        "watts_now": 3234
-      }
+      "L1": null,
+      "L2": null,
+      "L3": null
     },
     "ctmeters": {
       "production": {
@@ -182,36 +142,8 @@
         "metering_status": "normal",
         "status_flags": []
       },
-      "storage": {
-        "eid": "100000030",
-        "timestamp": 1708006120,
-        "energy_delivered": 31234,
-        "energy_received": 32345,
-        "active_power": 103,
-        "power_factor": 0.23,
-        "voltage": 113,
-        "current": 0.4,
-        "frequency": 50.3,
-        "state": "enabled",
-        "measurement_type": "storage",
-        "metering_status": "normal",
-        "status_flags": []
-      },
-      "backfeed": {
-        "eid": "100000040",
-        "timestamp": 1708006120,
-        "energy_delivered": 41234,
-        "energy_received": 42345,
-        "active_power": 104,
-        "power_factor": 0.24,
-        "voltage": 114,
-        "current": 0.5,
-        "frequency": 50.4,
-        "state": "enabled",
-        "measurement_type": "backfeed",
-        "metering_status": "normal",
-        "status_flags": []
-      },
+      "storage": null,
+      "backfeed": null,
       "load": {
         "eid": "100000050",
         "timestamp": 1708006120,
@@ -354,21 +286,7 @@
         }
       },
       "storage": {
-        "L1": {
-          "eid": "100000031",
-          "timestamp": 1708006121,
-          "energy_delivered": 312341,
-          "energy_received": 323451,
-          "active_power": 22,
-          "power_factor": 0.32,
-          "voltage": 113,
-          "current": 0.4,
-          "frequency": 50.3,
-          "state": "enabled",
-          "measurement_type": "storage",
-          "metering_status": "normal",
-          "status_flags": []
-        },
+        "L1": null,
         "L2": {
           "eid": "100000032",
           "timestamp": 1708006122,
@@ -401,51 +319,9 @@
         }
       },
       "backfeed": {
-        "L1": {
-          "eid": "100000041",
-          "timestamp": 1708006121,
-          "energy_delivered": 412341,
-          "energy_received": 423451,
-          "active_power": 114,
-          "power_factor": 0.24,
-          "voltage": 114,
-          "current": 4.1,
-          "frequency": 50.4,
-          "state": "enabled",
-          "measurement_type": "backfeed",
-          "metering_status": "normal",
-          "status_flags": []
-        },
-        "L2": {
-          "eid": "100000042",
-          "timestamp": 1708006122,
-          "energy_delivered": 412342,
-          "energy_received": 423452,
-          "active_power": 124,
-          "power_factor": 0.24,
-          "voltage": 114,
-          "current": 4.2,
-          "frequency": 50.4,
-          "state": "enabled",
-          "measurement_type": "backfeed",
-          "metering_status": "normal",
-          "status_flags": []
-        },
-        "L3": {
-          "eid": "100000042",
-          "timestamp": 1708006123,
-          "energy_delivered": 412343,
-          "energy_received": 423453,
-          "active_power": 134,
-          "power_factor": 0.24,
-          "voltage": 114,
-          "current": 4.3,
-          "frequency": 50.4,
-          "state": "enabled",
-          "measurement_type": "backfeed",
-          "metering_status": "normal",
-          "status_flags": []
-        }
+        "L1": null,
+        "L2": null,
+        "L3": null
       },
       "load": {
         "L1": {
