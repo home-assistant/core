@@ -37,6 +37,9 @@ RPC_CAMERA_ENTITIES: Final = {
         stream=0,
         translation_key="stream",
         translation_placeholders={"stream_id": "0"},
+        removal_condition=lambda config, _, key: (
+            config[key]["rtsp"]["enable"] is not True
+        ),
     ),
     "stream_1": RpcCameraEntityDescription(
         key="camera",
@@ -44,6 +47,9 @@ RPC_CAMERA_ENTITIES: Final = {
         translation_key="stream",
         translation_placeholders={"stream_id": "1"},
         entity_registry_enabled_default=False,
+        removal_condition=lambda config, _, key: (
+            config[key]["rtsp"]["enable"] is not True
+        ),
     ),
 }
 
@@ -94,8 +100,7 @@ class ShellyCameraEntity(ShellyRpcAttributeEntity, Camera):
         if not available:
             return False
 
-        config = self.coordinator.device.config[self.key]
-        return not self.status["privacy"] and config["rtsp"]["enable"]
+        return not self.status["privacy"]
 
     @override
     @property
