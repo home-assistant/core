@@ -7,6 +7,7 @@ from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
 from midealocal.devices.cc import DeviceAttributes as CCAttributes
+from midealocal.devices.cf import DeviceAttributes as CFAttributes
 from midealocal.exceptions import SocketException
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -117,7 +118,7 @@ async def _assert_service_call(
             id="cc",
         ),
         pytest.param(
-            DummyDevice(DeviceType.CF, attributes={"aux_heating": True}),
+            DummyDevice(DeviceType.CF, attributes={CFAttributes.aux_heating: True}),
             id="cf",
         ),
     ],
@@ -176,6 +177,44 @@ async def test_ac_switch_services(
         [("set_attribute", ACAttributes.aux_heating, False)],
         device,
     )
+
+
+async def test_switch_unknown_when_attribute_becomes_non_bool(
+    hass: HomeAssistant,
+    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+) -> None:
+    """Test is_on gracefully reports unknown if a later update clears it."""
+    device = DummyDevice(
+        DeviceType.AC,
+        attributes={
+            ACAttributes.power: True,
+            ACAttributes.mode: 1,
+            ACAttributes.target_temperature: 22.0,
+            ACAttributes.indoor_temperature: 21.0,
+            ACAttributes.aux_heating: False,
+        },
+    )
+    config_entry = mock_config_entry(device)
+    with patch("homeassistant.components.midea._PLATFORMS", [Platform.SWITCH]):
+        await setup_integration(hass, config_entry, device)
+
+    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_aux_heating"]
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == "off"
+
+    device.attributes[ACAttributes.aux_heating] = True
+    device.notify_update({ACAttributes.aux_heating: True})
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == "on"
+
+    device.attributes[ACAttributes.aux_heating] = None
+    device.notify_update({ACAttributes.aux_heating: None})
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(entity_entry.entity_id))
+    assert state.state == "unknown"
 
 
 async def test_switch_turn_on_raises_on_device_communication_error(

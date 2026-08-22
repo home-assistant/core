@@ -1,7 +1,7 @@
 """Switch for Midea."""
 
 from dataclasses import dataclass
-from typing import Any, cast, override
+from typing import Any, override
 
 from midealocal.const import DeviceType
 
@@ -102,7 +102,7 @@ async def async_setup_entry(
         MideaSwitch(device, description)
         for description in SWITCHES
         if device.device_type in description.models
-        and device.attributes.get(description.key) is not None
+        and description.key in device.attributes
     )
 
 
@@ -113,9 +113,12 @@ class MideaSwitch(MideaEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if switch is on."""
-        return cast("bool", self._device.get_attribute(self.entity_description.key))
+        value = self._device.get_attribute(self.entity_description.key)
+        if not isinstance(value, bool):
+            return None
+        return value
 
     @override
     def turn_on(self, **kwargs: Any) -> None:
