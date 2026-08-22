@@ -1,6 +1,8 @@
 """The base entity for the rest component."""
 
 from abc import abstractmethod
+import logging
+import ssl
 from typing import override
 
 from homeassistant.components.sensor import CONF_STATE_CLASS
@@ -12,7 +14,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import PlatformNotReady
+from homeassistant.exceptions import HomeAssistantError, PlatformNotReady
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.template import Template
 from homeassistant.helpers.trigger_template_entity import (
@@ -34,6 +36,8 @@ TRIGGER_ENTITY_OPTIONS = (
     CONF_STATE_CLASS,
     CONF_UNIT_OF_MEASUREMENT,
 )
+
+_LOGGER = logging.getLogger(__name__)
 
 
 async def async_get_config_rest_data_and_coordinator(
@@ -57,6 +61,13 @@ async def async_get_config_rest_data_and_coordinator(
 
     if rest.data is None:
         if rest.last_exception:
+            if isinstance(rest.last_exception, ssl.SSLError):
+                _LOGGER.error(
+                    "Error connecting %s failed with %s",
+                    rest.url,
+                    rest.last_exception,
+                )
+                raise HomeAssistantError from rest.last_exception
             raise PlatformNotReady from rest.last_exception
         raise PlatformNotReady
 
