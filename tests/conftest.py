@@ -169,10 +169,6 @@ def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line(
         "markers", "no_fail_on_log_exception: mark test to not fail on logged exception"
     )
-    config.addinivalue_line(
-        "markers", "disable_autouse_fixture: mark test to skip an autouse fixture"
-    )
-    config.addinivalue_line("markers", "dataset: mark test with the dataset to load")
     if config.getoption("verbose") > 0:
         logging.getLogger().setLevel(logging.DEBUG)
 
