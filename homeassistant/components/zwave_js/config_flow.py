@@ -91,7 +91,7 @@ class SecurityKeys:
     @classmethod
     def from_config(
         cls, config: Mapping[str, Any], defaults: SecurityKeys | None = None
-    ) -> SecurityKeys:
+    ) -> Self:
         """Return keys from an add-on config or entry data, with defaults."""
         return cls(
             **{
@@ -282,7 +282,6 @@ class AddonFlowManager:
 
         if addon_info.state is AddonState.RUNNING:
             self.restart_addon = True
-        # Copy the add-on config to keep the objects separate.
         self.original_config = dict(addon_config)
         # Remove legacy network_key
         new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
