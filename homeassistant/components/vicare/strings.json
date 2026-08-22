@@ -682,6 +682,9 @@
     "circulation_schedule_mode_not_supported": {
       "message": "The device does not support circulation mode {mode} for {day}, supported modes are: {modes}"
     },
+    "circulation_schedule_overlap_not_allowed": {
+      "message": "The device does not support overlapping circulation slots, but {day} has overlapping slots"
+    },
     "circulation_schedule_too_many_slots": {
       "message": "The device supports at most {max_entries} circulation schedule slots per day, but {day} has more"
     },

@@ -113,6 +113,25 @@ def _serialize_slot(slot: dict[str, Any]) -> dict[str, Any]:
     }
 
 
+def _slot_minutes(slot: dict[str, Any]) -> tuple[int, int]:
+    """Return a slot's (start, end) as minutes since midnight, 24:00 as 1440."""
+    start_time: dt_time = slot["start_time"]
+    end_time: dt_time = slot["end_time"]
+    start = start_time.hour * 60 + start_time.minute
+    end = 24 * 60 if end_time == dt_time(0, 0) else end_time.hour * 60 + end_time.minute
+    return start, end
+
+
+def _slots_overlap(slots: list[dict[str, Any]]) -> bool:
+    """Return True if any two slots overlap. Touching slots do not overlap."""
+    max_end = 0
+    for start, end in sorted(_slot_minutes(slot) for slot in slots):
+        if start < max_end:
+            return True
+        max_end = max(max_end, end)
+    return False
+
+
 def _build_entities(
     device_list: list[ViCareDevice],
 ) -> list[ViCareWater]:
@@ -164,6 +183,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _circuit_modes: list[str] | None = None
     _circulation_schedule_max_entries: int | None = None
     _circulation_schedule_modes: list[str] | None = None
+    _circulation_schedule_overlap_allowed: bool | None = None
 
     def __init__(
         self,
@@ -217,6 +237,13 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                     "maxEntries"
                 ]
 
+            with suppress(PyViCareNotSupportedFeatureError, KeyError):
+                self._circulation_schedule_overlap_allowed = self._api.getProperty(
+                    "heating.dhw.pumps.circulation.schedule"
+                )["commands"]["setSchedule"]["params"]["newSchedule"]["constraints"][
+                    "overlapAllowed"
+                ]
+
     @override
     def set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperatures."""
@@ -233,6 +260,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         """Set the DHW circulation pump schedule."""
         max_entries = self._circulation_schedule_max_entries
         modes = self._circulation_schedule_modes
+        overlap_allowed = self._circulation_schedule_overlap_allowed
         for day, slots in schedule_by_day.items():
             if max_entries is not None and len(slots) > max_entries:
                 raise ServiceValidationError(
@@ -255,6 +283,12 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                                 "modes": ", ".join(modes),
                             },
                         )
+            if overlap_allowed is False and _slots_overlap(slots):
+                raise ServiceValidationError(
+                    translation_domain=DOMAIN,
+                    translation_key="circulation_schedule_overlap_not_allowed",
+                    translation_placeholders={"day": day},
+                )
 
         schedule = {
             short_day: [_serialize_slot(slot) for slot in schedule_by_day[full_day]]

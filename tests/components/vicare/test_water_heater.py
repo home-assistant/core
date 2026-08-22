@@ -657,3 +657,113 @@ async def test_set_circulation_schedule_service_invalid_mode_literal(
             blocking=True,
         )
     mock_set.assert_not_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_set_circulation_schedule_service_overlap_not_allowed(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set_circulation_schedule rejects overlapping slots when not allowed."""
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(
+                [Fixture(set(), "vicare/Vitocal222G_Vitovent300W.json")]
+            ).as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
+    await entity.async_update_ha_state(force_refresh=True)
+    assert entity._circulation_schedule_overlap_allowed is True
+
+    # Simulate a device that does not allow overlapping circulation slots.
+    entity._circulation_schedule_overlap_allowed = False
+
+    with patch.object(
+        entity._api, "setDomesticHotWaterCirculationSchedule"
+    ) as mock_set:
+        with pytest.raises(ServiceValidationError):
+            await hass.services.async_call(
+                "vicare",
+                SERVICE_SET_CIRCULATION_SCHEDULE,
+                {
+                    ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                    **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
+                    "monday": [
+                        {
+                            "start_time": "06:00",
+                            "end_time": "08:00",
+                            "mode": "on",
+                            "position": 0,
+                        },
+                        {
+                            "start_time": "07:00",
+                            "end_time": "09:00",
+                            "mode": "on",
+                            "position": 1,
+                        },
+                    ],
+                },
+                blocking=True,
+            )
+        mock_set.assert_not_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_set_circulation_schedule_service_touching_slots_not_overlap(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set_circulation_schedule accepts touching, non-overlapping slots."""
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(
+                [Fixture(set(), "vicare/Vitocal222G_Vitovent300W.json")]
+            ).as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
+    await entity.async_update_ha_state(force_refresh=True)
+    entity._circulation_schedule_overlap_allowed = False
+
+    with patch.object(
+        entity._api, "setDomesticHotWaterCirculationSchedule"
+    ) as mock_set:
+        await hass.services.async_call(
+            "vicare",
+            SERVICE_SET_CIRCULATION_SCHEDULE,
+            {
+                ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
+                "monday": [
+                    {
+                        "start_time": "06:00",
+                        "end_time": "08:00",
+                        "mode": "on",
+                        "position": 0,
+                    },
+                    {
+                        "start_time": "08:00",
+                        "end_time": "10:00",
+                        "mode": "on",
+                        "position": 1,
+                    },
+                ],
+            },
+            blocking=True,
+        )
+        mock_set.assert_called_once()
