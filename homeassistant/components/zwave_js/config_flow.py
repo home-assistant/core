@@ -7,7 +7,7 @@ from contextlib import suppress
 from dataclasses import asdict, dataclass, fields
 import logging
 from pathlib import Path
-from typing import Any, override
+from typing import Any, Self, override
 
 from awesomeversion import AwesomeVersion
 from propcache.api import cached_property
