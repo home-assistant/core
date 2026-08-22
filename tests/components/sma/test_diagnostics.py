@@ -1,5 +1,6 @@
 """Test the SMA diagnostics."""
 
+import pytest
 from syrupy.assertion import SnapshotAssertion
 from syrupy.filters import props
 
@@ -10,6 +11,8 @@ from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
 
+@pytest.mark.freeze_time("2025-01-01 00:00:00+00:00")
+@pytest.mark.usefixtures("mock_sma_client")
 async def test_get_config_entry_diagnostics(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
@@ -25,5 +28,5 @@ async def test_get_config_entry_diagnostics(
         hass, hass_client, mock_config_entry
     )
     assert diagnostics == snapshot(
-        exclude=props("created_at", "modified_at", "entry_id")
+        exclude=props("created_at", "modified_at", "entry_id", "id")
     )
