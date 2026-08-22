@@ -297,7 +297,7 @@ async def test_remove_config_entry_device_detaches_subdevices(
         name="Missing Module Channel 1",
         manufacturer="Velleman",
         model="VMBX",
-        via_device=(DOMAIN, "999"),
+        via_device_id=stale_device.id,
     )
 
     result = await async_remove_config_entry_device(hass, config_entry, stale_device)

@@ -1,5 +1,6 @@
 """The tests for the go2rtc component."""
 
+import asyncio
 from collections.abc import Awaitable, Callable
 import logging
 from pathlib import Path
@@ -194,14 +195,16 @@ async def _test_setup_and_signaling(
         receive_message_callback.assert_called_once_with(
             WebRTCError("go2rtc_webrtc_offer_failed", "Camera has no stream source")
         )
-        teardown.assert_called_once()
+        # Only the sessions of the failing camera are closed, the provider stays up
+        teardown.assert_not_called()
         # We use one ws_client mock for all sessions
         assert ws_client.close.call_count == len(sessions)
+        assert not provider._sessions
 
         await hass.config_entries.async_unload(config_entry.entry_id)
         await hass.async_block_till_done()
         assert config_entry.state is ConfigEntryState.NOT_LOADED
-        assert teardown.call_count == 2
+        teardown.assert_called_once()
 
 
 @pytest.mark.usefixtures(
@@ -466,8 +469,7 @@ async def test_close_session(
     session_id = "session_id"
 
     # Session doesn't exist
-    with pytest.raises(KeyError):
-        camera.close_webrtc_session(session_id)
+    camera.close_webrtc_session(session_id)
     ws_client.close.assert_not_called()
 
     # Store session
@@ -485,11 +487,181 @@ async def test_close_session(
     camera.close_webrtc_session(session_id)
     ws_client.close.assert_called_once()
 
-    # Close again should raise an error
+    # Closing an already closed session is a no-op
     ws_client.reset_mock()
-    with pytest.raises(KeyError):
-        camera.close_webrtc_session(session_id)
+    camera.close_webrtc_session(session_id)
     ws_client.close.assert_not_called()
+
+
+async def _fail_with_offer(hass: HomeAssistant, camera: MockCamera, error: str) -> None:
+    """Update the stream source via a new WebRTC offer, expecting an error."""
+    send_message = Mock(spec_set=WebRTCSendMessage)
+    await camera.async_handle_async_webrtc_offer(OFFER_SDP, "new_session", send_message)
+    send_message.assert_called_once_with(
+        WebRTCError("go2rtc_webrtc_offer_failed", error)
+    )
+
+
+async def _fail_with_image_request(
+    hass: HomeAssistant, camera: MockCamera, error: str
+) -> None:
+    """Update the stream source via a snapshot request, expecting an error."""
+    with pytest.raises(HomeAssistantError, match=error):
+        await async_get_image(hass, camera.entity_id)
+
+
+@pytest.mark.parametrize(
+    ("stream_source", "error"),
+    [
+        (
+            None,
+            "Camera has no stream source",
+        ),
+        (
+            "invalid://not_supported",
+            "Stream source is not supported by go2rtc",
+        ),
+    ],
+    ids=["no_stream_source", "unsupported_stream_source"],
+)
+@pytest.mark.parametrize(
+    "trigger",
+    [
+        _fail_with_offer,
+        _fail_with_image_request,
+    ],
+    ids=["offer", "image_request"],
+)
+@pytest.mark.usefixtures("init_integration")
+async def test_invalid_stream_source_closes_only_sessions_of_that_camera(
+    hass: HomeAssistant,
+    ws_clients: list[Mock],
+    init_test_integration_two_cameras: tuple[MockCamera, MockCamera],
+    caplog: pytest.LogCaptureFixture,
+    trigger: Callable[[HomeAssistant, MockCamera, str], Awaitable[None]],
+    stream_source: str | None,
+    error: str,
+) -> None:
+    """Test an invalid stream source only closes the sessions of that camera."""
+    camera_1, camera_2 = init_test_integration_two_cameras
+
+    await camera_1.async_handle_async_webrtc_offer(OFFER_SDP, "session_1", Mock())
+    await camera_2.async_handle_async_webrtc_offer(OFFER_SDP, "session_2", Mock())
+    ws_client_1, ws_client_2 = ws_clients
+    ws_client_1.reset_mock()
+    ws_client_2.reset_mock()
+    caplog.clear()
+
+    camera_1.set_stream_source(stream_source)
+    await trigger(hass, camera_1, error)
+
+    ws_client_1.close.assert_called_once()
+    ws_client_2.close.assert_not_called()
+
+    # The session of camera 1 is gone
+    await camera_1.async_on_webrtc_candidate(
+        "session_1", RTCIceCandidateInit("candidate")
+    )
+    assert (
+        "homeassistant.components.go2rtc",
+        logging.DEBUG,
+        "Unknown session session_1. Ignoring candidate",
+    ) in caplog.record_tuples
+    ws_client_1.send.assert_not_called()
+
+    # Closing the already closed session, e.g. by the frontend, is a no-op
+    camera_1.close_webrtc_session("session_1")
+    ws_client_1.close.assert_called_once()
+
+    # The session of camera 2 is untouched
+    await camera_2.async_on_webrtc_candidate(
+        "session_2", RTCIceCandidateInit("candidate")
+    )
+    ws_client_2.send.assert_called_once_with(WebRTCCandidate("candidate"))
+    camera_2.close_webrtc_session("session_2")
+    ws_client_2.close.assert_called_once()
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_unregister_camera_closes_only_sessions_of_that_camera(
+    ws_clients: list[Mock],
+    init_test_integration_two_cameras: tuple[MockCamera, MockCamera],
+) -> None:
+    """Test removing a camera closes only the sessions of that camera."""
+    camera_1, camera_2 = init_test_integration_two_cameras
+
+    await camera_1.async_handle_async_webrtc_offer(OFFER_SDP, "session_1", Mock())
+    await camera_2.async_handle_async_webrtc_offer(OFFER_SDP, "session_2", Mock())
+    ws_client_1, ws_client_2 = ws_clients
+    ws_client_1.reset_mock()
+    ws_client_2.reset_mock()
+
+    await camera_1.async_remove()
+
+    ws_client_1.close.assert_called_once()
+    ws_client_2.close.assert_not_called()
+
+    # The session of camera 2 is untouched
+    await camera_2.async_on_webrtc_candidate(
+        "session_2", RTCIceCandidateInit("candidate")
+    )
+    ws_client_2.send.assert_called_once_with(WebRTCCandidate("candidate"))
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_teardown_while_a_camera_is_removed(
+    ws_clients: list[Mock],
+    init_test_integration_two_cameras: tuple[MockCamera, MockCamera],
+) -> None:
+    """Test tearing down the provider while a camera is removed."""
+    camera_1, camera_2 = init_test_integration_two_cameras
+
+    await camera_1.async_handle_async_webrtc_offer(OFFER_SDP, "session_1", Mock())
+    await camera_2.async_handle_async_webrtc_offer(OFFER_SDP, "session_2", Mock())
+    ws_client_1, ws_client_2 = ws_clients
+    assert isinstance(camera_1.webrtc_provider, WebRTCProvider)
+    provider = camera_1.webrtc_provider
+
+    async def yield_control() -> None:
+        """Let the camera removal run while the teardown is in progress."""
+        await asyncio.sleep(0)
+
+    ws_client_1.close.side_effect = yield_control
+    ws_client_2.close.side_effect = yield_control
+
+    await asyncio.gather(provider.teardown(), camera_2.async_remove())
+
+    ws_client_1.close.assert_called_once()
+    ws_client_2.close.assert_called_once()
+    assert not provider._sessions
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_camera_removed_while_a_snapshot_fails(
+    hass: HomeAssistant,
+    ws_clients: list[Mock],
+    init_test_integration: MockCamera,
+) -> None:
+    """Test a camera being removed while a snapshot closes the same session."""
+    camera = init_test_integration
+
+    await camera.async_handle_async_webrtc_offer(OFFER_SDP, "session_1", Mock())
+    (ws_client,) = ws_clients
+
+    async def yield_control() -> None:
+        """Let the camera removal run while the snapshot is still failing."""
+        await asyncio.sleep(0)
+
+    ws_client.close.side_effect = yield_control
+    camera.set_stream_source(None)
+
+    async def failing_snapshot() -> None:
+        with pytest.raises(HomeAssistantError, match="Camera has no stream source"):
+            await async_get_image(hass, camera.entity_id)
+
+    await asyncio.gather(failing_snapshot(), camera.async_remove())
+
+    ws_client.close.assert_called_once()
 
 
 ERR_BINARY_NOT_FOUND = "Could not find go2rtc docker binary"
