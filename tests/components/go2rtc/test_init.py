@@ -7,7 +7,7 @@ from pathlib import Path
 from typing import NamedTuple
 from unittest.mock import ANY, AsyncMock, Mock, patch
 
-from aiohttp import UnixConnector, encode_basic_auth
+from aiohttp import BasicAuth, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Stream
@@ -1299,7 +1299,7 @@ async def test_unix_socket_not_used_for_custom_server(hass: HomeAssistant) -> No
 
 @pytest.mark.usefixtures("rest_client", "server")
 async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
-    """Test an auth header session is created with username/password and URL."""
+    """Test BasicAuth session is created with username/password and URL."""
     config = {
         DOMAIN: {
             CONF_URL: "http://localhost:1984/",
@@ -1317,12 +1317,14 @@ async def test_basic_auth_with_custom_url(hass: HomeAssistant) -> None:
         assert await async_setup_component(hass, DOMAIN, config)
         await hass.async_block_till_done(wait_background_tasks=True)
 
-        # Verify async_create_clientsession was called with an auth header
+        # Verify async_create_clientsession was called with BasicAuth
         mock_create_session.assert_called_once()
         call_kwargs = mock_create_session.call_args[1]
-        assert call_kwargs["headers"] == {
-            "Authorization": encode_basic_auth("test_user", "test_pass")
-        }
+        assert "auth" in call_kwargs
+        auth = call_kwargs["auth"]
+        assert isinstance(auth, BasicAuth)
+        assert auth.login == "test_user"
+        assert auth.password == "test_pass"
 
 
 @pytest.mark.usefixtures("rest_client")
