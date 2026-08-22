@@ -58,7 +58,9 @@ async def test_get_actions(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+            entity_entry.entity_id,
+            "attributes",
+            {"supported_features": features_state},
         )
     expected_actions = []
     basic_action_types = ["set_humidity", "turn_on", "turn_off", "toggle"]
@@ -471,7 +473,7 @@ async def test_capabilities(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678",
+            entity_entry.entity_id,
             STATE_ON,
             capabilities_state,
         )
@@ -615,7 +617,7 @@ async def test_capabilities_legacy(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678",
+            entity_entry.entity_id,
             STATE_ON,
             capabilities_state,
         )

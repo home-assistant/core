@@ -54,7 +54,9 @@ def _get_device_for_config_entry(
     connections: set[tuple[str, str]] | None = None,
 ) -> dr.DeviceEntry | None:
     """Return the device for a config entry matching identifiers or connections."""
-    for device in device_registry.devices.get_entries(identifiers, connections):
+    for device in device_registry.async_get_devices(
+        identifiers=identifiers, connections=connections
+    ):
         if device.config_entry_id == config_entry_id:
             return device
     return None
