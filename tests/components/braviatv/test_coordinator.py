@@ -14,17 +14,16 @@ from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
-    ("start_datetime", "expected_position"),
+    "start_datetime",
     [
-        ("2026-08-22T12:00:00", 7200),  # naive, treated as local time (CEST UTC+2)
-        ("2026-08-22T12:00:00+02:00", 7200),  # aware
+        "2026-08-22T12:00:00",  # naive, treated as local time (CEST UTC+2)
+        "2026-08-22T12:00:00+02:00",  # aware
     ],
 )
 @pytest.mark.freeze_time("2026-08-22T12:00:00+00:00")
 async def test_async_update_playing(
     hass: HomeAssistant,
     start_datetime: str,
-    expected_position: int,
 ) -> None:
     """Test updating playing info with a start datetime."""
     await hass.config.async_set_time_zone("Europe/Warsaw")
@@ -43,7 +42,7 @@ async def test_async_update_playing(
 
     await coordinator.async_update_playing()
 
-    assert coordinator.media_position == expected_position
+    assert coordinator.media_position == 7200
     assert coordinator.media_position_updated_at == datetime(
         2026, 8, 22, 12, 0, 0, tzinfo=UTC
     )
