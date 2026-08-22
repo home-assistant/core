@@ -53,7 +53,7 @@ def _to_mbtc(btc_value: float | None) -> float | None:
 def _power(current_profit: CurrentProfit) -> float | int | None:
     """Return the total power draw in watts, or None if unavailable.
 
-    The API returns either a single number or a dict with CPU/GPU/Offset keys.
+    The API returns a single number or a dict of CPU/GPU/Offset values.
     """
     power = current_profit.Power
     if isinstance(power, dict):
