@@ -3,7 +3,6 @@
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
-from freezegun import freeze_time
 import pytest
 
 from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
@@ -21,6 +20,7 @@ from tests.common import MockConfigEntry
         ("2026-08-22T12:00:00+02:00", 7200),  # aware
     ],
 )
+@pytest.mark.freeze_time("2026-08-22T12:00:00+00:00")
 async def test_async_update_playing(
     hass: HomeAssistant,
     start_datetime: str,
@@ -41,10 +41,9 @@ async def test_async_update_playing(
     client.get_playing_info.return_value = {"startDateTime": start_datetime}
     coordinator = BraviaTVCoordinator(hass, config_entry, client)
 
-    with freeze_time("2026-08-22 12:00:00+00:00"):
-        await coordinator.async_update_playing()
+    await coordinator.async_update_playing()
 
-        assert coordinator.media_position == expected_position
-        assert coordinator.media_position_updated_at == datetime(
-            2026, 8, 22, 12, 0, 0, tzinfo=UTC
-        )
+    assert coordinator.media_position == expected_position
+    assert coordinator.media_position_updated_at == datetime(
+        2026, 8, 22, 12, 0, 0, tzinfo=UTC
+    )
