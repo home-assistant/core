@@ -1,9 +1,10 @@
 """The tests for the Universal Media player platform."""
 
 from copy import copy
-from unittest.mock import Mock, patch
+from unittest.mock import ANY, Mock, call, patch
 
 import pytest
+from pytest_unordered import unordered
 from voluptuous.error import MultipleInvalid
 
 from homeassistant import config as hass_config
@@ -1325,25 +1326,77 @@ async def test_active_child_template(hass: HomeAssistant) -> None:
     hass.states.async_set("media_player.mock1", STATE_PLAYING)
     hass.states.async_set("media_player.mock2", STATE_PAUSED)
 
-    await async_setup_component(
-        hass,
-        "media_player",
-        {
-            "media_player": {
-                "platform": "universal",
-                "name": "tv",
-                "children": ["media_player.mock1", "media_player.mock2"],
-                "active_child_template": "{{ 'media_player.mock2' }}",
-            }
-        },
-    )
-    await hass.async_block_till_done()
-    await hass.async_start()
+    with patch(
+        "homeassistant.components.universal.media_player.async_track_state_change_event",
+        wraps=async_track_state_change_event,
+    ) as atsce:
+        await async_setup_component(
+            hass,
+            "media_player",
+            {
+                "media_player": {
+                    "platform": "universal",
+                    "name": "tv",
+                    "children": ["media_player.mock1", "media_player.mock2"],
+                    "active_child_template": "{{ 'media_player.mock2' }}",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+        await hass.async_start()
+        atsce.assert_called_once_with(
+            hass, unordered(["media_player.mock1", "media_player.mock2"]), ANY
+        )
 
-    hass.states.async_set("media_player.mock2", STATE_ON)
+        hass.states.async_set("media_player.mock2", STATE_ON)
 
-    await hass.async_block_till_done()
-    assert hass.states.get("media_player.tv").state == STATE_ON
+        await hass.async_block_till_done()
+        assert hass.states.get("media_player.tv").state == STATE_ON
+
+
+async def test_active_child_template_tracking(hass: HomeAssistant) -> None:
+    """Test active child template state tracking without explicit child listed."""
+    hass.states.async_set("media_player.mock1", STATE_ON)
+    hass.states.async_set("media_player.mock2", STATE_PAUSED)
+
+    with patch(
+        "homeassistant.components.universal.media_player.async_track_state_change_event",
+        wraps=async_track_state_change_event,
+    ) as atsce:
+        await async_setup_component(
+            hass,
+            "media_player",
+            {
+                "media_player": {
+                    "platform": "universal",
+                    "name": "tv",
+                    "active_child_template": "{{ 'media_player.mock2' if is_state('media_player.mock2', 'playing') else 'media_player.mock1' }}",
+                }
+            },
+        )
+        await hass.async_block_till_done()
+        await hass.async_start()
+        atsce.assert_has_calls(
+            [call(hass, [], ANY), call(hass, "media_player.mock1", ANY)]
+        )
+        atsce.reset_mock()
+
+        hass.states.async_set("media_player.mock2", STATE_PLAYING)
+        await hass.async_block_till_done()
+        assert hass.states.get("media_player.tv").state == STATE_PLAYING
+        assert (
+            hass.states.get("media_player.tv").attributes["active_child"]
+            == "media_player.mock2"
+        )
+        atsce.assert_called_once_with(hass, "media_player.mock2", ANY)
+
+        hass.states.async_set("media_player.mock2", STATE_OFF)
+        await hass.async_block_till_done()
+        assert hass.states.get("media_player.tv").state == STATE_ON
+        assert (
+            hass.states.get("media_player.tv").attributes["active_child"]
+            == "media_player.mock1"
+        )
 
 
 async def test_reload(hass: HomeAssistant) -> None:
