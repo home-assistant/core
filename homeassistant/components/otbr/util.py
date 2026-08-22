@@ -23,6 +23,7 @@ from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers.storage import Store
 from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN
@@ -34,6 +35,64 @@ _LOGGER = logging.getLogger(__name__)
 
 
 DATASET_LOCK_KEY: HassKey[asyncio.Lock] = HassKey("otbr_dataset_lock")
+ISSUED_TIMESTAMPS_KEY: HassKey[IssuedTimestamps] = HassKey("otbr_issued_timestamps")
+ISSUED_TIMESTAMPS_STORAGE_KEY = f"{DOMAIN}.issued_timestamps"
+ISSUED_TIMESTAMPS_STORAGE_VERSION = 1
+
+
+class IssuedTimestamps:
+    """The newest timestamp this integration has issued, per source network.
+
+    Keyed by extended PAN ID: a busy network must not raise the floor for the
+    others, which would eventually exhaust their timestamps too.
+
+    Kept on disk, not only in memory: a pending dataset takes its delay to
+    reach every router on the mesh, and a restart inside that window must not
+    let the next migration hand out the stamp again.
+    """
+
+    def __init__(self, hass: HomeAssistant) -> None:
+        """Initialize the record."""
+        self._store = Store[dict[str, list[int]]](
+            hass,
+            ISSUED_TIMESTAMPS_STORAGE_VERSION,
+            ISSUED_TIMESTAMPS_STORAGE_KEY,
+            # This file exists to survive an ill-timed restart; the same
+            # restart must not be able to truncate an in-place rewrite.
+            atomic_writes=True,
+        )
+        self._issued: dict[str, tuple[int, int]] = {}
+
+    async def async_load(self) -> None:
+        """Load what was issued before the last restart."""
+        if data := await self._store.async_load():
+            self._issued = {
+                xpan: (seconds, ticks) for xpan, (seconds, ticks) in data.items()
+            }
+
+    def get(self, extended_pan_id: str) -> tuple[int, int]:
+        """Return the newest timestamp issued for a network."""
+        return self._issued.get(extended_pan_id, (0, 0))
+
+    async def async_set(self, extended_pan_id: str, timestamp: tuple[int, int]) -> None:
+        """Record a timestamp about to be issued for a network.
+
+        Written through before the caller hands the dataset to the router:
+        delaying the save would reopen the window this record exists to close.
+        """
+        self._issued[extended_pan_id] = timestamp
+        await self._store.async_save(
+            {xpan: list(stamp) for xpan, stamp in self._issued.items()}
+        )
+
+
+async def async_get_issued_timestamps(hass: HomeAssistant) -> IssuedTimestamps:
+    """Return the record of issued timestamps, loading it on first use."""
+    if (issued := hass.data.get(ISSUED_TIMESTAMPS_KEY)) is None:
+        issued = IssuedTimestamps(hass)
+        await issued.async_load()
+        hass.data[ISSUED_TIMESTAMPS_KEY] = issued
+    return issued
 
 
 @callback
