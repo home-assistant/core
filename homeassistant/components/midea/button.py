@@ -23,8 +23,13 @@ class MideaButtonEntityDescription(ButtonEntityDescription):
 
     models: list[DeviceType]
     device_models: list[str]
-    press_action: str
+    press_fn: Callable[[MideaDevice], None]
     available_fn: Callable[[MideaDevice], bool]
+
+
+def _e1_button_press(device: MideaDevice) -> None:
+    """Start the dishwasher using its currently selected work mode."""
+    cast(MideaE1Device, device).start_work()
 
 
 def _e1_button_available(device: MideaDevice) -> bool:
@@ -42,7 +47,7 @@ BUTTONS: list[MideaButtonEntityDescription] = [
         translation_key="start",
         models=[DeviceType.E1],
         device_models=["7600024L"],
-        press_action="start_work",
+        press_fn=_e1_button_press,
         available_fn=_e1_button_available,
     ),
 ]
@@ -83,6 +88,5 @@ class MideaButton(MideaEntity, ButtonEntity):
     @override
     def press(self) -> None:
         """Press the button."""
-        method = getattr(self._device, self.entity_description.press_action)
         with midea_api_call():
-            method()
+            self.entity_description.press_fn(self._device)
