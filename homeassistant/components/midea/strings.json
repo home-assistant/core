@@ -478,7 +478,7 @@
         "name": "Soak time"
       },
       "softwater_available": {
-        "name": "Softwater available"
+        "name": "Soft water available"
       },
       "tank_actual_temperature": {
         "name": "Tank temperature"
