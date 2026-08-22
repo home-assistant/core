@@ -121,4 +121,7 @@ async def mock_imap_protocol(
         imap_mock.fetch.return_value = Response(*imap_fetch)
         imap_mock.wait_hello_from_server.side_effect = wait_hello_from_server
         imap_mock.timeout = 3
+        # The coordinator checks the IDLE result with done(). Without this the
+        # autospecced AsyncMock returns a coroutine that is never awaited.
+        imap_mock.idle_start.return_value.done = MagicMock(return_value=True)
         yield imap_mock
