@@ -1,9 +1,9 @@
 """Test the Flexit config flow."""
 
-from unittest.mock import AsyncMock
+from unittest.mock import MagicMock
 
 from modbus_connection import ModbusError
-from modbus_connection.mock import MockModbusUnit
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
 from homeassistant.components.flexit.const import DOMAIN, TYPE_TCP
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
@@ -60,7 +60,6 @@ async def test_full_flow(hass: HomeAssistant) -> None:
 
 async def test_full_flow_serial(
     hass: HomeAssistant,
-    mock_connect_serial: AsyncMock,
 ) -> None:
     """Test the full serial (RTU) flow."""
     result = await hass.config_entries.flow.async_init(
@@ -87,7 +86,8 @@ async def test_full_flow_serial(
 
 async def test_form_cannot_connect_and_retry(
     hass: HomeAssistant,
-    mock_connect_tcp: AsyncMock,
+    mock_create_modbus_connection: MagicMock,
+    mock_modbus_unit: MockModbusUnit,
 ) -> None:
     """Test we handle a connect error, then allow retrying successfully."""
     result = await hass.config_entries.flow.async_init(
@@ -97,7 +97,7 @@ async def test_form_cannot_connect_and_retry(
         result["flow_id"], {"next_step_id": "tcp"}
     )
 
-    mock_connect_tcp.side_effect = ModbusError
+    mock_modbus_unit.fail_requests(ModbusError("update failed"))
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -107,7 +107,8 @@ async def test_form_cannot_connect_and_retry(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_connect_tcp.side_effect = None
+    mock_modbus_unit.fail_requests(None)
+    mock_create_modbus_connection.return_value = MockModbusConnection()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -141,7 +142,7 @@ async def test_form_cannot_read_device(
 
 async def test_form_unknown_exception(
     hass: HomeAssistant,
-    mock_connect_tcp: AsyncMock,
+    mock_create_modbus_connection: MagicMock,
 ) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
@@ -151,7 +152,7 @@ async def test_form_unknown_exception(
         result["flow_id"], {"next_step_id": "tcp"}
     )
 
-    mock_connect_tcp.side_effect = Exception
+    mock_create_modbus_connection.side_effect = Exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -161,7 +162,7 @@ async def test_form_unknown_exception(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
-    mock_connect_tcp.side_effect = None
+    mock_create_modbus_connection.side_effect = None
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -196,7 +197,6 @@ async def test_reconfigure_flow(
 async def test_reconfigure_flow_serial(
     hass: HomeAssistant,
     mock_serial_config_entry: MockConfigEntry,
-    mock_connect_serial: AsyncMock,
 ) -> None:
     """Test reconfiguration flow for a serial connection."""
     mock_serial_config_entry.add_to_hass(hass)
@@ -223,7 +223,8 @@ async def test_reconfigure_flow_serial(
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_connect_tcp: AsyncMock,
+    mock_create_modbus_connection: MagicMock,
+    mock_modbus_unit: MockModbusUnit,
 ) -> None:
     """Test error handling in reconfiguration flow."""
     mock_config_entry.add_to_hass(hass)
@@ -233,7 +234,7 @@ async def test_reconfigure_flow_errors(
     )
     assert result["type"] is FlowResultType.FORM
 
-    mock_connect_tcp.side_effect = ModbusError
+    mock_modbus_unit.fail_requests(ModbusError("update failed"))
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TCP_RECONFIGURE_INPUT,
@@ -241,7 +242,8 @@ async def test_reconfigure_flow_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
 
-    mock_connect_tcp.side_effect = None
+    mock_modbus_unit.fail_requests(None)
+    mock_create_modbus_connection.return_value = MockModbusConnection()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TCP_RECONFIGURE_INPUT,

@@ -1,7 +1,7 @@
 """Common fixtures for the Flexit tests."""
 
-from collections.abc import AsyncGenerator
-from unittest.mock import AsyncMock, patch
+from collections.abc import Generator
+from unittest.mock import MagicMock, patch
 
 from modbus_connection.mock import MockModbusConnection
 import pytest
@@ -13,33 +13,22 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-async def mock_connect_tcp(
+def mock_create_modbus_connection(
     mock_modbus_connection: MockModbusConnection,
-) -> AsyncGenerator[AsyncMock]:
-    """Patch connect_tcp to return the in-memory mock connection."""
-    await mock_modbus_connection.connect()
-    connect = AsyncMock(return_value=mock_modbus_connection)
+) -> Generator[MagicMock]:
+    """Patch the connection factory to return the in-memory mock connection."""
+    create_connection = MagicMock(return_value=mock_modbus_connection)
     with (
-        patch("homeassistant.components.flexit.connect_tcp", new=connect),
-        patch("homeassistant.components.flexit.config_flow.connect_tcp", new=connect),
-    ):
-        yield connect
-
-
-@pytest.fixture
-async def mock_connect_serial(
-    mock_modbus_connection: MockModbusConnection,
-) -> AsyncGenerator[AsyncMock]:
-    """Patch connect_serial to return the in-memory mock connection."""
-    await mock_modbus_connection.connect()
-    connect = AsyncMock(return_value=mock_modbus_connection)
-    with (
-        patch("homeassistant.components.flexit.connect_serial", new=connect),
         patch(
-            "homeassistant.components.flexit.config_flow.connect_serial", new=connect
+            "homeassistant.components.flexit.create_modbus_connection",
+            new=create_connection,
+        ),
+        patch(
+            "homeassistant.components.flexit.config_flow.create_modbus_connection",
+            new=create_connection,
         ),
     ):
-        yield connect
+        yield create_connection
 
 
 @pytest.fixture

@@ -4,8 +4,7 @@ import logging
 from typing import Any, override
 
 from flexit_modbus import Flexit
-from modbus_connection import ModbusConnection, ModbusError
-from modbus_connection.pymodbus import connect_serial, connect_tcp
+from modbus_connection import ModbusError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -20,6 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
+from .connection import create_modbus_connection
 from .const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
@@ -78,23 +78,10 @@ STEP_SERIAL_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def _connect(data: dict[str, Any]) -> ModbusConnection:
-    """Open a Modbus connection matching the given config entry data."""
-    if data[CONF_TYPE] == TYPE_SERIAL:
-        return await connect_serial(
-            data[CONF_DEVICE],
-            baudrate=data[CONF_BAUDRATE],
-            bytesize=data[CONF_BYTESIZE],
-            parity=data[CONF_PARITY],
-            stopbits=data[CONF_STOPBITS],
-        )
-    return await connect_tcp(data[CONF_HOST], port=data[CONF_PORT])
-
-
 async def check_connection(data: dict[str, Any]) -> str | None:
     """Check we can open a connection and read from the Flexit unit."""
     try:
-        connection = await _connect(data)
+        connection = create_modbus_connection(data)
         try:
             await Flexit(connection.for_unit(data[CONF_SLAVE])).async_update()
         finally:

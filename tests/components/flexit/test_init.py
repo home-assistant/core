@@ -1,6 +1,6 @@
 """Tests for the Flexit integration."""
 
-from unittest.mock import AsyncMock, patch
+from unittest.mock import MagicMock, patch
 
 from modbus_connection import ModbusError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
@@ -27,7 +27,7 @@ async def test_async_setup_entry_success(
 
 async def test_async_setup_entry_with_custom_port(
     hass: HomeAssistant,
-    mock_connect_tcp: AsyncMock,
+    mock_create_modbus_connection: MagicMock,
 ) -> None:
     """Test setup with custom port."""
     config_entry = MockConfigEntry(
@@ -45,12 +45,12 @@ async def test_async_setup_entry_with_custom_port(
     result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is True
-    mock_connect_tcp.assert_called_once_with("192.168.1.100", port=5020)
+    mock_create_modbus_connection.assert_called_once_with(config_entry.data)
 
 
 async def test_async_setup_entry_without_port(
     hass: HomeAssistant,
-    mock_connect_tcp: AsyncMock,
+    mock_create_modbus_connection: MagicMock,
 ) -> None:
     """Test setup without port (should use default)."""
     config_entry = MockConfigEntry(
@@ -63,13 +63,13 @@ async def test_async_setup_entry_without_port(
     result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is True
-    mock_connect_tcp.assert_called_once_with("192.168.1.100", port=502)
+    mock_create_modbus_connection.assert_called_once_with(config_entry.data)
 
 
 async def test_async_setup_entry_serial(
     hass: HomeAssistant,
     mock_serial_config_entry: MockConfigEntry,
-    mock_connect_serial: AsyncMock,
+    mock_create_modbus_connection: MagicMock,
 ) -> None:
     """Test setup of a serial (RTU) config entry."""
     mock_serial_config_entry.add_to_hass(hass)
@@ -78,18 +78,16 @@ async def test_async_setup_entry_serial(
 
     assert result is True
     assert mock_serial_config_entry.state is ConfigEntryState.LOADED
-    mock_connect_serial.assert_called_once_with(
-        "/dev/ttyUSB0", baudrate=9600, bytesize=8, parity="N", stopbits=1
-    )
+    mock_create_modbus_connection.assert_called_once_with(mock_serial_config_entry.data)
 
 
 async def test_async_setup_entry_cannot_connect(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_connect_tcp: AsyncMock,
+    mock_modbus_unit: MockModbusUnit,
 ) -> None:
-    """Test setup retries when the connection cannot be opened."""
-    mock_connect_tcp.side_effect = ModbusTimeoutError("could not connect")
+    """Test setup retries when the first request cannot connect."""
+    mock_modbus_unit.fail_requests(ModbusTimeoutError("could not connect"))
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -115,22 +113,24 @@ async def test_async_setup_entry_coordinator_update_fails(
     assert mock_modbus_connection.connected is False
 
 
-async def test_connection_lost_reloads_entry(
+async def test_connection_lost_recovers_on_next_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_modbus_connection: MockModbusConnection,
 ) -> None:
-    """Test a lost connection schedules a reload of the config entry."""
+    """Test the next update reconnects without reloading the config entry."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
+    mock_modbus_connection.simulate_connection_lost()
     with patch.object(
         hass.config_entries, "async_schedule_reload"
     ) as mock_schedule_reload:
-        mock_modbus_connection.simulate_connection_lost()
+        await mock_config_entry.runtime_data.async_refresh()
 
-    mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
+    assert mock_config_entry.runtime_data.last_update_success
+    assert mock_modbus_connection.connected
+    mock_schedule_reload.assert_not_called()
 
 
 async def test_unload_entry_closes_connection(
