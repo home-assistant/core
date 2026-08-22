@@ -6,6 +6,8 @@ from hotspring import HotSpringConnectionError, HotSpringError, Spa
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from typing import cast
+
 from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -22,7 +24,7 @@ async def test_async_setup_entry(
 
     assert await hass.config_entries.async_unload(init_integration.entry_id)
     await hass.async_block_till_done()
-    assert init_integration.state is ConfigEntryState.NOT_LOADED
+    assert cast(ConfigEntryState, init_integration.state) is ConfigEntryState.NOT_LOADED
 
 
 async def test_device_info(

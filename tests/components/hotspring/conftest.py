@@ -24,11 +24,11 @@ from hotspring import (
     SpaFailureState,
     SpaInfo,
     SpaLock,
-    SpaTestData,
     TemperatureUnit,
     Versions,
     WaterCare,
 )
+from hotspring.models import SpaTestData
 import pytest
 
 from homeassistant.components.hotspring.const import DOMAIN
