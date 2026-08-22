@@ -4,6 +4,7 @@ from dataclasses import dataclass, replace
 from datetime import timedelta
 import logging
 import time
+from typing import override
 
 from pyowershades import (
     MODEL_NAMES,
@@ -144,6 +145,7 @@ class PowerShadesCoordinator(DataUpdateCoordinator[PowerShadesData]):
     def _handle_status_push(self, status: StatusReply) -> None:
         self.async_set_updated_data(self._data_from_status(status))
 
+    @override
     async def _async_update_data(self) -> PowerShadesData:
         """Poll the device for status."""
         try:

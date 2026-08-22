@@ -2,7 +2,7 @@
 
 import ipaddress
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyowershades import (
     DiscoveredDevice,
@@ -37,6 +37,7 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
         self._discovered_mac: str | None = None
         self._discovered_model: int | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -105,6 +106,7 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_integration_discovery(
         self, discovery_info: dict[str, Any]
     ) -> ConfigFlowResult:
@@ -114,6 +116,7 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
             discovery_info["ip"], discovery_info["serial"]
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
