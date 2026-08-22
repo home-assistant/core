@@ -207,6 +207,41 @@ async def test_async_setup_entry_wires_coordinator_and_platforms(
     assert coordinator.system_device_id is register_device_mock.return_value
 
 
+async def test_async_setup_entry_raises_migration_rollback_issue(
+    hass: HomeAssistant,
+) -> None:
+    """Setup asks the coordinator to (re)raise the migration-rollback Repairs issue.
+
+    The post-migration success notification tells the user this issue exists
+    (Settings -> Repairs); nothing else creates it, so setup must ask the
+    coordinator to do so or the notification's promise is false. Coverage for
+    when the issue is actually created/omitted lives in
+    test_coordinator.py's ``raise_migration_rollback_issue`` tests.
+    """
+    entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"}, entry_id="e1")
+    entry.add_to_hass(hass)
+    hass.config_entries.async_forward_entry_setups = AsyncMock()
+
+    coordinator = MagicMock()
+    coordinator.async_config_entry_first_refresh = AsyncMock()
+    coordinator.async_add_listener = MagicMock(return_value=MagicMock())
+
+    with (
+        patch.object(init_module, "TrueNASCoordinator", return_value=coordinator),
+        patch.object(
+            init_module, "async_adopt_legacy_entities", new=AsyncMock(return_value=[])
+        ),
+        patch.object(init_module, "_migrate_data_size_units"),
+        patch.object(init_module, "finalize_legacy_adoption"),
+        patch.object(init_module, "async_notify_migration_result"),
+        patch.object(init_module, "register_system_device"),
+    ):
+        result = await hass.config_entries.async_setup(entry.entry_id)
+
+    assert result is True
+    coordinator.raise_migration_rollback_issue.assert_called_once_with()
+
+
 async def test_async_setup_entry_refresh_listener_dispatches_update_signal(
     hass: HomeAssistant,
 ) -> None:

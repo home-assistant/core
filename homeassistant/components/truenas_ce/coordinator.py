@@ -540,7 +540,14 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return bool(legacy_id and self.hass.config_entries.async_get_entry(legacy_id))
 
     def raise_migration_rollback_issue(self) -> None:
-        """Raise the rollback confirm issue on demand (from the diagnostic button)."""
+        """Raise the rollback confirm issue if a rollback is currently possible.
+
+        Called after a successful migration so the success notification's
+        promise of a Repairs entry is fulfilled; safe to call repeatedly
+        (e.g. on every setup) since it's a no-op once the issue already
+        exists and the fix flow / :meth:`_clear_stale_migration_rollback_issue`
+        take care of removing it again.
+        """
         if not self._rollback_possible():
             return
         count = len(self.config_entry.data.get(MIGRATION_RECORDS, []))

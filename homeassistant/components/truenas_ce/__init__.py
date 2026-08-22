@@ -128,6 +128,10 @@ async def async_setup_entry(
         hass, config_entry, pending_legacy_records(hass, config_entry)
     )
     async_notify_migration_result(hass, config_entry, adopted)
+    # The notification above tells the user a Repairs entry lets them roll
+    # back; make sure that entry actually exists (a no-op once already
+    # raised, and it self-clears once rollback is no longer possible).
+    coordinator.raise_migration_rollback_issue()
 
     # Re-discover entities on every refresh (new interface/pool/dataset) without a reload.
     @callback
