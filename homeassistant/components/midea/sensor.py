@@ -832,8 +832,13 @@ class MideaSensor(MideaEntity, SensorEntity):
              self.entity_description.key == "indoor_humidity"
              and isinstance(value, (int, float))
              and value in {0, 0xFF}
-         ):
-             return None
-         if value == "unknown":
-             return None
+        ):
+            return None
+        if (
+            self.entity_description.translation_key == "error_ed"
+            and isinstance(value, int)
+        ):
+            return str(value)
+        if value == "unknown":
+            return None
         return cast("StateType", value)
