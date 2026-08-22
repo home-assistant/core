@@ -117,7 +117,7 @@ async def async_setup_entry(
         MideaSelect(device, description)
         for description in SELECTS
         if device.device_type in description.models
-        and device.attributes.get(description.key) is not None
+        and description.key in device.attributes
     )
 
 
