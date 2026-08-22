@@ -19,6 +19,7 @@ from tests.common import MockConfigEntry
         ("first_time_user"),
         ("default_user"),
         ("hidden_user"),
+        ("recent_tracks_error_user"),
     ],
 )
 async def test_sensors(
@@ -53,4 +54,11 @@ async def test_sensor_hidden_listening_information(
     state = hass.states.get("sensor.lastfm_testaccount1")
     assert state.state == STATE_NOT_SCROBBLING
     assert state.attributes[ATTR_LAST_PLAYED] is None
-    assert "has hidden their recent listening information" in caplog.text
+    warnings = caplog.text.count("has hidden their recent listening information")
+    assert warnings > 0
+
+    await config_entry.runtime_data.async_refresh()
+
+    assert (
+        caplog.text.count("has hidden their recent listening information") == warnings
+    )

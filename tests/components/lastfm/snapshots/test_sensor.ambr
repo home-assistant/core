@@ -56,3 +56,6 @@
 # name: test_sensors[not_found_user]
   None
 # ---
+# name: test_sensors[recent_tracks_error_user]
+  None
+# ---

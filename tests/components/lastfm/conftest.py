@@ -103,3 +103,12 @@ def mock_hidden_user() -> MockUser:
             "network", "17", "Login: User required to be logged in"
         ),
     )
+
+
+@pytest.fixture(name="recent_tracks_error_user")
+def mock_recent_tracks_error_user() -> MockUser:
+    """Return mock user whose recent tracks request fails."""
+    return MockUser(
+        recent_tracks=[Track("artist", "title", MockNetwork("lastfm"))],
+        recent_tracks_error=WSError("network", "status", "Something strange"),
+    )
