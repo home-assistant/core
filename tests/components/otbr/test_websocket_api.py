@@ -1,10 +1,12 @@
 """Test OTBR Websocket API."""
 
+from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import python_otbr_api
 from yarl import URL
@@ -1002,6 +1004,56 @@ async def test_create_ephemeral_key_replaces_active_key(
     ]
 
 
+@pytest.mark.parametrize(
+    ("elapsed", "success"),
+    [
+        pytest.param(timedelta(minutes=1), False, id="key_still_valid"),
+        pytest.param(timedelta(minutes=6), True, id="key_expired"),
+    ],
+)
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_create_ephemeral_key_twice(
+    aioclient_mock: AiohttpClientMocker,
+    websocket_client: MockHAClientWebSocket,
+    freezer: FrozenDateTimeFactory,
+    elapsed: timedelta,
+    success: bool,
+) -> None:
+    """Test a key handed out by this instance is not replaced until it expires."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state")
+    aioclient_mock.post(
+        f"{BASE_URL}/node/ba-epskc/key", json={"tap": "700855744", "port": 49154}
+    )
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        assert (await websocket_client.receive_json())["success"]
+        posts = aioclient_mock.call_count
+        freezer.tick(elapsed)
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["success"] is success
+    assert msg.get("error", {}).get("code") == (
+        None if success else "ephemeral_key_in_use"
+    )
+    # The router is only asked for another key once the first one has expired
+    assert (aioclient_mock.call_count > posts) is success
+
+
 @pytest.mark.parametrize("state", ["connected", "accepted"])
 @pytest.mark.usefixtures("otbr_config_entry_multipan")
 async def test_create_ephemeral_key_in_use(
@@ -1303,6 +1355,58 @@ async def test_delete_ephemeral_key_by_key(
 
     assert msg["success"]
     assert any(call[0] == "DELETE" for call in aioclient_mock.mock_calls) is deleted
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_delete_ephemeral_key_retry_after_failure(
+    aioclient_mock: AiohttpClientMocker,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test a key is still known after a failed delete, so a retry deletes it."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state")
+    aioclient_mock.post(
+        f"{BASE_URL}/node/ba-epskc/key", json={"tap": "700855744", "port": 49154}
+    )
+    responses = [
+        AiohttpClientMockResponse(
+            "DELETE",
+            URL(f"{BASE_URL}/node/ba-epskc/key"),
+            status=HTTPStatus.INTERNAL_SERVER_ERROR,
+        ),
+        AiohttpClientMockResponse("DELETE", URL(f"{BASE_URL}/node/ba-epskc/key")),
+    ]
+
+    async def delete(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
+        return responses.pop(0)
+
+    aioclient_mock.delete(f"{BASE_URL}/node/ba-epskc/key", side_effect=delete)
+    delete_msg = {
+        "type": "otbr/delete_ephemeral_key",
+        "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        "ephemeral_key": "700855744",
+    }
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        assert (await websocket_client.receive_json())["success"]
+        await websocket_client.send_json_auto_id(delete_msg)
+        failed = await websocket_client.receive_json()
+        await websocket_client.send_json_auto_id(delete_msg)
+        retried = await websocket_client.receive_json()
+
+    assert not failed["success"]
+    assert failed["error"]["code"] == "delete_ephemeral_key_failed"
+    assert retried["success"]
+    # Both attempts reached the router
+    assert not responses
 
 
 @pytest.mark.parametrize("error", [aiohttp.ClientError, TimeoutError])

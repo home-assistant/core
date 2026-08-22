@@ -238,7 +238,7 @@ async def websocket_create_ephemeral_key(
         connection.send_error(
             msg["id"],
             "ephemeral_key_in_use",
-            "A device is currently joining through the active ephemeral key",
+            "The active ephemeral key is still in use",
         )
         return
     except HomeAssistantError as exc:
@@ -275,7 +275,7 @@ async def websocket_delete_ephemeral_key(
 ) -> None:
     """Deactivate the active ephemeral key, revoking the shared credentials."""
     try:
-        await data.deactivate_ephemeral_key(hass, msg.get("ephemeral_key"))
+        deleted = await data.deactivate_ephemeral_key(hass, msg.get("ephemeral_key"))
     except EphemeralKeyNotSupported:
         connection.send_error(
             msg["id"],
@@ -287,7 +287,10 @@ async def websocket_delete_ephemeral_key(
         connection.send_error(msg["id"], "delete_ephemeral_key_failed", str(exc))
         return
 
-    _LOGGER.info("Ephemeral key for %s deleted by %s", data.url, connection.user.name)
+    if deleted:
+        _LOGGER.info(
+            "Ephemeral key for %s deleted by %s", data.url, connection.user.name
+        )
     connection.send_result(msg["id"])
 
 
