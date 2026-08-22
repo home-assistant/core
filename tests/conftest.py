@@ -32,6 +32,7 @@ from aiohttp.test_utils import (
 from aiohttp.typedefs import JSONDecoder
 from aiohttp.web import Application
 import bcrypt
+from bleak_retry_connector import bleak_manager
 import freezegun
 import multidict
 import pytest
@@ -1975,9 +1976,6 @@ async def mock_enable_bluetooth(
 @pytest.fixture(autouse=True, scope="session")
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
-    # Late import to avoid loading bleak unless we need it
-    from bleak_retry_connector import bleak_manager  # noqa: PLC0415
-
     bleak_manager.get_global_bluez_manager_with_timeout._has_dbus_socket = False
 
     with (
