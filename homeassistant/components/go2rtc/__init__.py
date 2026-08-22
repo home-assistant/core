@@ -7,7 +7,7 @@ import shutil
 from tempfile import mkdtemp
 from typing import override
 
-from aiohttp import BasicAuth, ClientSession, UnixConnector, encode_basic_auth
+from aiohttp import ClientSession, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Go2RtcRestClient
@@ -185,9 +185,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         url = HA_MANAGED_URL
     elif username and password:
-        # async_create_clientsession overwrites the session default headers, so the
-        # deprecated auth argument is the only way to authenticate this session
-        session = async_create_clientsession(hass, auth=BasicAuth(username, password))
+        session = async_create_clientsession(
+            hass, headers={"Authorization": encode_basic_auth(username, password)}
+        )
     else:
         session = async_get_clientsession(hass)
 
