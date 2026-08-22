@@ -10,7 +10,9 @@ DOMAIN: Final = "lastfm"
 PLATFORMS = [Platform.SENSOR]
 DEFAULT_NAME = "LastFM"
 
+CONF_API_SECRET = "api_secret"
 CONF_MAIN_USER = "main_user"
+CONF_SESSION_KEY = "session_key"
 CONF_USERS = "users"
 
 # Last.fm API error returned when a user hides their recent listening information

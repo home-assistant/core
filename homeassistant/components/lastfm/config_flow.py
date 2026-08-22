@@ -2,8 +2,9 @@
 
 import logging
 from typing import Any, override
+from urllib.parse import parse_qs, urlparse
 
-from pylast import LastFMNetwork, PyLastError, User, WSError
+from pylast import LastFMNetwork, PyLastError, SessionKeyGenerator, User, WSError
 import voluptuous as vol
 
 from homeassistant.config_entries import (
@@ -17,9 +18,19 @@ from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
+    TextSelector,
+    TextSelectorConfig,
+    TextSelectorType,
 )
 
-from .const import CONF_MAIN_USER, CONF_USERS, DOMAIN, ERROR_CODE_LOGIN_REQUIRED
+from .const import (
+    CONF_API_SECRET,
+    CONF_MAIN_USER,
+    CONF_SESSION_KEY,
+    CONF_USERS,
+    DOMAIN,
+    ERROR_CODE_LOGIN_REQUIRED,
+)
 from .coordinator import LastFMConfigEntry
 
 PLACEHOLDERS = {
@@ -27,9 +38,12 @@ PLACEHOLDERS = {
     "privacy_settings_url": "https://www.last.fm/settings/privacy",
 }
 
+CONF_REDIRECT_URL = "redirect_url"
+
 CONFIG_SCHEMA: vol.Schema = vol.Schema(
     {
         vol.Required(CONF_API_KEY): str,
+        vol.Optional(CONF_API_SECRET): str,
         vol.Required(CONF_MAIN_USER): str,
     }
 )
@@ -83,10 +97,20 @@ def get_user_friends(api_key: str, username: str) -> list[User]:
     return user.get_friends()
 
 
+def get_web_auth_url(api_key: str, api_secret: str) -> tuple[SessionKeyGenerator, str]:
+    """Start web authentication and return the session key generator and auth URL."""
+    session_key_generator = SessionKeyGenerator(
+        LastFMNetwork(api_key=api_key, api_secret=api_secret)
+    )
+    return session_key_generator, session_key_generator.get_web_auth_url()
+
+
 class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for LastFm."""
 
     data: dict[str, Any] = {}
+    _auth_url: str
+    _session_key_generator: SessionKeyGenerator
 
     @staticmethod
     @callback
@@ -105,16 +129,75 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self.data = user_input.copy()
+            if not self.data.get(CONF_API_SECRET):
+                self.data.pop(CONF_API_SECRET, None)
             _, errors = await self.hass.async_add_executor_job(
                 get_lastfm_user, self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
             if not errors:
-                return await self.async_step_friends()
+                if CONF_API_SECRET in self.data:
+                    try:
+                        (
+                            self._session_key_generator,
+                            self._auth_url,
+                        ) = await self.hass.async_add_executor_job(
+                            get_web_auth_url,
+                            self.data[CONF_API_KEY],
+                            self.data[CONF_API_SECRET],
+                        )
+                    except WSError:
+                        errors["base"] = "invalid_auth"
+                    except Exception:
+                        _LOGGER.exception("Unexpected exception")
+                        errors["base"] = "unknown"
+                    else:
+                        return await self.async_step_auth_url()
+                else:
+                    return await self.async_step_friends()
         return self.async_show_form(
             step_id="user",
             errors=errors,
             description_placeholders=PLACEHOLDERS,
             data_schema=self.add_suggested_values_to_schema(CONFIG_SCHEMA, user_input),
+        )
+
+    async def async_step_auth_url(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the web authorization step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            token = parse_qs(urlparse(user_input[CONF_REDIRECT_URL]).query).get(
+                "token", [None]
+            )[0]
+            if token is None:
+                errors["base"] = "invalid_url"
+            else:
+                try:
+                    session_key, _username = await self.hass.async_add_executor_job(
+                        self._session_key_generator.get_web_auth_session_key_username,
+                        "",
+                        token,
+                    )
+                except WSError:
+                    errors["base"] = "invalid_auth"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception")
+                    errors["base"] = "unknown"
+                else:
+                    self.data[CONF_SESSION_KEY] = session_key
+                    return await self.async_step_friends()
+        return self.async_show_form(
+            step_id="auth_url",
+            errors=errors,
+            description_placeholders={"auth_url": self._auth_url, **PLACEHOLDERS},
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_REDIRECT_URL): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
+                }
+            ),
         )
 
     async def async_step_friends(
@@ -130,17 +213,21 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             user_input[CONF_USERS] = users
             if not errors:
+                options = {
+                    CONF_API_KEY: self.data[CONF_API_KEY],
+                    CONF_MAIN_USER: self.data[CONF_MAIN_USER],
+                    CONF_USERS: [
+                        self.data[CONF_MAIN_USER],
+                        *user_input[CONF_USERS],
+                    ],
+                }
+                if CONF_SESSION_KEY in self.data:
+                    options[CONF_API_SECRET] = self.data[CONF_API_SECRET]
+                    options[CONF_SESSION_KEY] = self.data[CONF_SESSION_KEY]
                 return self.async_create_entry(
                     title="LastFM",
                     data={},
-                    options={
-                        CONF_API_KEY: self.data[CONF_API_KEY],
-                        CONF_MAIN_USER: self.data[CONF_MAIN_USER],
-                        CONF_USERS: [
-                            self.data[CONF_MAIN_USER],
-                            *user_input[CONF_USERS],
-                        ],
-                    },
+                    options=options,
                 )
         try:
             friends_response = await self.hass.async_add_executor_job(

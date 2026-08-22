@@ -4,9 +4,19 @@
       "hidden_recent_tracks": "User has hidden their recent listening information. Disable \"Hide recent listening information\" at {privacy_settings_url}",
       "invalid_account": "Invalid username",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_url": "Invalid redirect URL",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "auth_url": {
+        "data": {
+          "redirect_url": "Redirect URL"
+        },
+        "data_description": {
+          "redirect_url": "URL of the page Last.fm redirected you to after authorizing"
+        },
+        "description": "Open [{auth_url}]({auth_url}) to authorize Home Assistant with your Last.fm account, then paste the URL you were redirected to."
+      },
       "friends": {
         "data": {
           "users": "Last.fm usernames"
@@ -16,7 +26,11 @@
       "user": {
         "data": {
           "api_key": "[%key:common::config_flow::data::api_key%]",
+          "api_secret": "API secret",
           "main_user": "Last.fm username"
+        },
+        "data_description": {
+          "api_secret": "Optional. Lets the integration read listening information hidden by the user's Last.fm privacy settings."
         },
         "description": "Request an API account at {api_account_url}."
       }

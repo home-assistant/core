@@ -11,7 +11,14 @@ from homeassistant.const import CONF_API_KEY
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_USERS, DOMAIN, ERROR_CODE_LOGIN_REQUIRED, LOGGER
+from .const import (
+    CONF_API_SECRET,
+    CONF_SESSION_KEY,
+    CONF_USERS,
+    DOMAIN,
+    ERROR_CODE_LOGIN_REQUIRED,
+    LOGGER,
+)
 
 type LastFMConfigEntry = ConfigEntry[LastFMDataUpdateCoordinator]
 
@@ -49,7 +56,11 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             name=DOMAIN,
             update_interval=timedelta(seconds=30),
         )
-        self._client = LastFMNetwork(api_key=config_entry.options[CONF_API_KEY])
+        self._client = LastFMNetwork(
+            api_key=config_entry.options[CONF_API_KEY],
+            api_secret=config_entry.options.get(CONF_API_SECRET, ""),
+            session_key=config_entry.options.get(CONF_SESSION_KEY, ""),
+        )
         self._warned_hidden_users: set[str] = set()
 
     @override
