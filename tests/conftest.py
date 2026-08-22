@@ -1,6 +1,7 @@
 """Set up some common test helper things."""
 
 import asyncio
+from asyncio import AbstractEventLoop
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
 import datetime
@@ -151,9 +152,11 @@ _LOGGER = logging.getLogger(__name__)
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
 
-asyncio.set_event_loop_policy(runner.HassEventLoopPolicy(False))
-# Disable fixtures overriding our beautiful policy
-asyncio.set_event_loop_policy = lambda policy: None
+
+def pytest_asyncio_loop_factories() -> dict[str, Callable[[], AbstractEventLoop]]:
+    """Build every test loop the way Home Assistant builds its own."""
+    return {"homeassistant": runner.create_event_loop}
+
 
 # Capture the real socket functions before any test patches them
 _real_getaddrinfo = socket.getaddrinfo
