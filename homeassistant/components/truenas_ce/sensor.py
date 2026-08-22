@@ -468,9 +468,29 @@ class TrueNASSnapshotTaskSensor(TrueNASSensor):
     def _schedule_suffix(self) -> str | None:
         """Return a best-effort Hourly/Daily/Weekly/Monthly label.
 
-        Classifies via TrueNAS's known presets (pinned dom/dow/hour, `month`
-        always wildcard). Returns None for anything that doesn't match a
-        known preset shape, rather than risk a misleading guess.
+        Derived from the task's cron `schedule` dict (minute/hour/dom/month/
+        dow) using TrueNAS's known periodic-snapshot-task presets, which pin
+        exactly one of dom/dow/hour to a single fixed number, pin `minute`
+        to a single fixed number too (the run time within that hour/day),
+        and leave `month` plus the remaining fields at "*". If any field is
+        neither wildcarded nor a single fixed number -- a step ("*/2" on
+        `minute` or `hour`), range ("1-5") or list ("1,15") -- or if `month`
+        is pinned (which never occurs in any of the four presets), the
+        schedule doesn't match a known preset at all, so it's left
+        unclassified rather than guessed at from whichever field happens to
+        still look pinned. `minute` itself never distinguishes between
+        presets (every preset pins it), so it's only used for this shape
+        check, not for the dom -> dow -> hour classification below, which
+        means a schedule that (contrary to any known preset) has both dom
+        and dow pinned is labeled Monthly. An empty `schedule` dict (no
+        fields at all) is rejected up front rather than falling through to
+        "every field is missing, so every field is wildcard" -> Hourly, and
+        a fully wildcard schedule (minute included) is likewise left
+        unclassified rather than labeled Hourly, since a genuine Hourly
+        preset always pins `minute` to the run time within the hour --
+        minute *also* being "*" would mean "every minute", not hourly.
+        Tasks matching no preset keep the plain dataset-only name rather
+        than risk a misleading guess.
         """
         schedule = self._data.get("schedule") if self._data else None
         if not isinstance(schedule, dict) or not schedule:
