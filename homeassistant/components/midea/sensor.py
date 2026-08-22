@@ -624,7 +624,7 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     MideaSensorEntityDescription(
         key="water_consumption",
         translation_key="water_consumption",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
