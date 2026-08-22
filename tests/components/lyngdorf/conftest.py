@@ -63,6 +63,7 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver = MagicMock(spec=Receiver)
         receiver.name = "Mock Lyngdorf"
         receiver.connected = True
+        receiver.model = LyngdorfModel.MP_60
 
         # Diagnostics reports the whole receiver, so every property it reads
         # needs a value here; an unset one is a mock the response cannot encode.
@@ -81,6 +82,9 @@ def mock_receiver() -> Generator[MagicMock]:
             setattr(receiver, f"trim_{_t}", None)
             setattr(receiver, f"trim_{_t}_range", NumericRange(-10.0, 10.0, 0.1))
 
+        receiver.volume_range = NumericRange(-99.9, 24.0, 0.1)
+        receiver.zone_b_volume_range = NumericRange(-99.9, 24.0, 0.1)
+
         receiver.power_on = False
         receiver.volume = -40.0
         receiver.mute_enabled = False
@@ -97,6 +101,28 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver.available_audio_inputs = ["optical", "aux"]
         receiver.available_video_inputs = ["hdmi"]
         receiver.available_stream_types = ["AirPlay", "DLNA"]
+
+        receiver.now_playing = None
+        receiver.has_position = False
+        receiver.position_ms = None
+        receiver.position_updated_at = None
+        receiver.shuffle = None
+        receiver.repeat = None
+        receiver.can_shuffle = False
+        receiver.available_repeat_modes = frozenset()
+
+        receiver.lipsync = 50
+        receiver.lipsync_range = NumericRange(0, 500, 1)
+        receiver.trim_bass = 3.0
+        receiver.trim_treble = 0.0
+        receiver.trim_centre = 0.0
+        receiver.trim_height = 4.0
+        receiver.trim_lfe = 3.0
+        receiver.trim_surround = 0.0
+        receiver.trim_bass_range = NumericRange(-12.0, 12.0, 0.1)
+        receiver.trim_treble_range = NumericRange(-12.0, 12.0, 0.1)
+        for _trim in ("centre", "height", "lfe", "surround"):
+            setattr(receiver, f"trim_{_trim}_range", NumericRange(-10.0, 10.0, 0.1))
 
         receiver.zone_b_power_on = False
         receiver.zone_b_volume = -40.0
@@ -134,6 +160,12 @@ def notify_receiver_update(receiver: MagicMock) -> None:
     """Fire every notification callback the entities registered."""
     for call in receiver.register_notification_callback.call_args_list:
         call.args[0]()
+
+
+def notify_position_jump(receiver: MagicMock, position_ms: int | None) -> None:
+    """Fire every position jump callback the entities registered."""
+    for call in receiver.register_position_jump_callback.call_args_list:
+        call.args[0](position_ms)
 
 
 @pytest.fixture
