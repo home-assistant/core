@@ -183,6 +183,7 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
     StarlinkSensorEntityDescription(
         key="gps_satellites",
         translation_key="gps_satellites",
+        state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         value_fn=lambda data: data.status["gps_sats"],
