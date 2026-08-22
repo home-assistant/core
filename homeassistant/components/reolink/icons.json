@@ -390,6 +390,9 @@
       "auto_track_method": {
         "default": "mdi:target-account"
       },
+      "battery_mode": {
+        "default": "mdi:battery"
+      },
       "binning_mode": {
         "default": "mdi:code-block-brackets"
       },

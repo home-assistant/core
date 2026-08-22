@@ -507,6 +507,15 @@
           "pantiltfirst": "Pan/tilt first"
         }
       },
+      "battery_mode": {
+        "name": "Battery mode",
+        "state": {
+          "custom": "Custom",
+          "optimalsurveillance": "Optimal surveillance",
+          "powersaving": "Power saving",
+          "smart": "Smart power"
+        }
+      },
       "binning_mode": {
         "name": "Binning mode",
         "state": {

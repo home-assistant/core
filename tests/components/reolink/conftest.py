@@ -200,6 +200,8 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.hub_visitor_tone_id.return_value = 1
     host_mock.recording_packing_time_list = ["30 Minutes", "60 Minutes"]
     host_mock.recording_packing_time = "60 Minutes"
+    host_mock.battery_mode_list.return_value = ["custom", "smart", "powersaving"]
+    host_mock.battery_mode.return_value = "custom"
 
     # Baichuan
     host_mock.baichuan = MagicMock()

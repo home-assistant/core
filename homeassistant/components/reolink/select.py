@@ -346,6 +346,16 @@ SELECT_ENTITIES = (
         value=lambda api, ch: api.post_recording_time(ch),
         method=lambda api, ch, value: api.set_post_recording_time(ch, value),
     ),
+    ReolinkSelectEntityDescription(
+        key="battery_mode",
+        cmd_key="626",
+        translation_key="battery_mode",
+        entity_category=EntityCategory.CONFIG,
+        get_options=lambda api, ch: api.battery_mode_list(ch),
+        supported=lambda api, ch: api.supported(ch, "battery_mode"),
+        value=lambda api, ch: api.battery_mode(ch),
+        method=lambda api, ch, value: api.baichuan.set_battery_mode(ch, value),
+    ),
 )
 
 HOST_SELECT_ENTITIES = (
