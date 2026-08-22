@@ -48,6 +48,10 @@ def satellite(
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
 
+    # Tones are up to 2s of audio, streamed in real time. Tests that assert on a
+    # tone enable the one they need.
+    satellite._tones = Tones(0)
+
     yield satellite
 
     if satellite.voip_device.is_active:
@@ -348,7 +352,6 @@ async def test_pipeline(
         ),
         patch.object(satellite, "tts_response_finished", tts_response_finished),
     ):
-        satellite._tones = Tones(0)
         satellite.connection_made(Mock())
 
         assert satellite.state == AssistSatelliteState.IDLE
@@ -400,7 +403,6 @@ async def test_stt_stream_timeout(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
     ):
-        satellite._tones = Tones(0)
         satellite._audio_chunk_timeout = 0.001
         transport = Mock(spec=["close"])
         satellite.connection_made(transport)
@@ -577,8 +579,6 @@ async def test_tts_wrong_extension(
 
         satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
-        # The listening tone is ~1s of audio, streamed in real time
-        satellite._tones = Tones(0)
         satellite.connection_made(Mock())
 
         # silence
@@ -669,8 +669,6 @@ async def test_tts_wrong_wav_format(
 
         satellite._send_tts = AsyncMock(side_effect=send_tts)  # type: ignore[method-assign]
 
-        # The listening tone is ~1s of audio, streamed in real time
-        satellite._tones = Tones(0)
         satellite.connection_made(Mock())
 
         # silence
@@ -751,8 +749,6 @@ async def test_empty_tts_output(
             "homeassistant.components.voip.assist_satellite.VoipAssistSatellite._send_tts",
         ) as mock_send_tts,
     ):
-        # The listening tone is ~1s of audio, streamed in real time
-        satellite._tones = Tones(0)
         satellite.connection_made(Mock())
 
         # silence
