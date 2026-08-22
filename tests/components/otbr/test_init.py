@@ -341,7 +341,8 @@ async def test_unload_entry_revokes_ephemeral_key(
     [
         pytest.param(HTTPStatus.OK, True, id="supported"),
         pytest.param(HTTPStatus.NOT_FOUND, False, id="not_supported"),
-        pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, False, id="probe_error"),
+        pytest.param(HTTPStatus.METHOD_NOT_ALLOWED, False, id="not_supported_method"),
+        pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, None, id="probe_error"),
     ],
 )
 @pytest.mark.usefixtures(
@@ -353,7 +354,7 @@ async def test_unload_entry_revokes_ephemeral_key(
 async def test_ephemeral_key_support_probe(
     hass: HomeAssistant, ephemeral_key_supported: bool
 ) -> None:
-    """Test only a 200 from the probe marks ephemeral key mode as supported."""
+    """Test the ephemeral key support probe handles router response statuses."""
     config_entry = MockConfigEntry(
         data=CONFIG_ENTRY_DATA_MULTIPAN,
         domain=otbr.DOMAIN,

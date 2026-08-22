@@ -200,9 +200,11 @@ class OTBRData:
             f"{self.url}/node/ba-epskc/state",
             timeout=aiohttp.ClientTimeout(total=10),
         )
-        # Only 200 proves support; any other status hides the optional feature,
-        # while connection errors fail setup like the other startup calls
-        return response.status == HTTPStatus.OK
+        if response.status == HTTPStatus.OK:
+            return True
+        if response.status in EPHEMERAL_KEY_UNSUPPORTED_STATUS:
+            return False
+        raise python_otbr_api.OTBRError(f"unexpected http status {response.status}")
 
     @_handle_otbr_error
     async def activate_ephemeral_key(
