@@ -1,9 +1,10 @@
 """Diagnostics support for Hot Spring."""
 
 from dataclasses import asdict
+import re
 from typing import Any
 
-from homeassistant.components.diagnostics import async_redact_data
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
@@ -14,6 +15,13 @@ TO_REDACT = {
 }
 
 
+def _redact_mac(value: str, patterns: list[str]) -> str:
+    """Redact MAC address patterns from a string."""
+    for pattern in patterns:
+        value = re.sub(re.escape(pattern), REDACTED, value, flags=re.IGNORECASE)
+    return value
+
+
 async def async_get_config_entry_diagnostics(
     hass: HomeAssistant, entry: HotSpringConfigEntry
 ) -> dict[str, Any]:
@@ -21,10 +29,17 @@ async def async_get_config_entry_diagnostics(
     coordinator = entry.runtime_data
     spa = coordinator.data
 
+    info = asdict(spa.info)
+    if mac_address := spa.info.mac_address:
+        clean_mac = mac_address.replace(":", "")
+        patterns = [mac_address, clean_mac, clean_mac[-6:]]
+        info["root_topic"] = _redact_mac(info["root_topic"], patterns)
+        info["hostname"] = _redact_mac(info["hostname"], patterns)
+
     return {
         "entry": async_redact_data(entry.data, TO_REDACT),
         "data": {
-            "info": asdict(spa.info),
+            "info": info,
             "heater": asdict(spa.heater),
             "jets": [asdict(jet) for jet in spa.jets],
             "blower": asdict(spa.blower),
