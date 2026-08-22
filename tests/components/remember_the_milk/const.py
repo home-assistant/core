@@ -3,16 +3,32 @@
 import json
 
 PROFILE = "myprofile"
-CONFIG = {
-    "name": f"{PROFILE}",
+CREATE_ENTRY_DATA = {
     "api_key": "test-api-key",
-    "shared_secret": "test-shared-secret",
+    "shared_secret": "test-secret",
+    "token": "test-token",
+    "username": PROFILE,
 }
-TOKEN = "mytoken"
+TOKEN_RESPONSE = {
+    "token": "test-token",
+    "perms": "delete",
+    "user": {"id": "1234567", "username": PROFILE, "fullname": "John Smith"},
+}
+
+# The legacy configuration file format:
+LEGACY_JSON_STRING = json.dumps(
+    {
+        PROFILE: {
+            "token": "mytoken",
+            "id_map": {"123": {"list_id": "1", "timeseries_id": "2", "task_id": "3"}},
+        }
+    }
+)
+
+# The new configuration file format:
 JSON_STRING = json.dumps(
     {
-        "myprofile": {
-            "token": "mytoken",
+        PROFILE: {
             "id_map": {"123": {"list_id": "1", "timeseries_id": "2", "task_id": "3"}},
         }
     }
