@@ -1305,6 +1305,9 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
+      - name: Register pytest slow test problem matcher
+        run: |
+          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Compile English translations
         run: |
           . venv/bin/activate
