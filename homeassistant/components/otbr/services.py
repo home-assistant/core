@@ -1,5 +1,6 @@
 """Actions for the Open Thread Border Router integration."""
 
+import logging
 from typing import TYPE_CHECKING, Any
 
 from python_otbr_api import PENDING_DATASET_DELAY_TIMER, tlv_parser
@@ -12,16 +13,24 @@ from homeassistant.components.thread import (
     async_get_preferred_dataset,
     async_get_store,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant, ServiceCall, SupportsResponse, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.selector import ConfigEntrySelector
 
 from .const import DOMAIN
-from .util import async_get_dataset_lock, get_allowed_channel, update_issues
+from .util import (
+    async_get_dataset_lock,
+    async_get_issued_timestamps,
+    get_allowed_channel,
+    update_issues,
+)
 
 if TYPE_CHECKING:
     from .types import OTBRConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 SERVICE_MIGRATE_NETWORK = "migrate_network"
 
@@ -154,6 +163,65 @@ async def _async_repoint_preferred_dataset(
         store.preferred_dataset = target_id
 
 
+async def _pinned_channel_of_another_router(
+    hass: HomeAssistant,
+    entry: OTBRConfigEntry,
+    active: dict[MeshcopTLVType | int, tlv_parser.MeshcopTLVItem],
+) -> int | None:
+    """Return a channel another router on the same network is pinned to.
+
+    Only routers that are actually pinned are asked which network they are
+    on, so the common setup pays for no extra calls. A pinned router that
+    cannot be read is an error rather than skipped: its REST API being down
+    says nothing about its radio, which may still be on this mesh and would
+    follow the pending dataset off the channel it shares with Zigbee.
+    Configured entries count even when they are not loaded, for the same
+    reason: a failed setup or an unload does not stop the radio.
+    """
+    source_xpan = active.get(MeshcopTLVType.EXTPANID)
+    if source_xpan is None:
+        return None
+
+    other: OTBRConfigEntry
+    for other in hass.config_entries.async_entries(DOMAIN):
+        if other.entry_id == entry.entry_id:
+            continue
+        # An ignored discovery has no URL to judge; nothing to check.
+        if (url := other.data.get("url")) is None:
+            continue
+        pinned = await get_allowed_channel(hass, url)
+        if pinned is None:
+            continue
+        # Not loaded means it cannot be asked which network it is on;
+        # fail safe, exactly like a router whose read fails below.
+        if other.state is not ConfigEntryState.LOADED:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="pinned_router_unreachable",
+                translation_placeholders={"router": other.title},
+            )
+        try:
+            other_tlvs = await other.runtime_data.get_active_dataset_tlvs()
+            other_active = (
+                tlv_parser.parse_tlv(other_tlvs.hex())
+                if other_tlvs is not None
+                else None
+            )
+        except (HomeAssistantError, tlv_parser.TLVError) as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="pinned_router_unreachable",
+                translation_placeholders={"router": other.title},
+            ) from err
+        # No active dataset: the router is not on any mesh.
+        if other_active is None:
+            continue
+        if other_active.get(MeshcopTLVType.EXTPANID) == source_xpan:
+            return pinned
+
+    return None
+
+
 async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
     """Migrate a border router and every device on its network.
 
@@ -229,6 +297,13 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
             assert isinstance(channel_item, tlv_parser.Channel)
         target_channel = channel_item.channel
         allowed_channel = await get_allowed_channel(call.hass, entry.data["url"])
+        if allowed_channel is None:
+            # The pending dataset reaches every router on the mesh, not only
+            # the one it is handed to, so a router that shares its radio has
+            # a say even when the migration is started through another.
+            allowed_channel = await _pinned_channel_of_another_router(
+                call.hass, entry, active
+            )
         if allowed_channel and target_channel != allowed_channel:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
@@ -258,6 +333,17 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
                     newest,
                     _timestamp_parts(entry_.dataset, MeshcopTLVType.ACTIVETIMESTAMP),
                 )
+        # A pending dataset takes its delay to propagate, so a second
+        # migration of the same mesh -- another border router on it, moving to
+        # a different network -- can still read the old active dataset and no
+        # pending one, and would otherwise pick the same timestamp. Stamp
+        # above what this integration has already handed out for this mesh.
+        issued = await async_get_issued_timestamps(call.hass)
+        source_xpan_item = active.get(MeshcopTLVType.EXTPANID)
+        source_xpan = str(source_xpan_item).lower() if source_xpan_item else None
+        if source_xpan is not None:
+            newest = max(newest, issued.get(source_xpan))
+
         # Always step the seconds, never the ticks: python_otbr_api's channel
         # change stamps seconds + 1 and ignores ticks, so a network left at the
         # last representable second would wrap that write to zero and have the
@@ -285,6 +371,21 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         border_agent_id = (await data.get_border_agent_id()).hex()
         extended_address = (await data.get_extended_address()).hex()
 
+        if call.data.get(ATTR_DATASET) is None:
+            # The target came from the preferred dataset, which another writer
+            # can replace while the router is being read. Sending the snapshot
+            # now would put credentials on the mesh that Home Assistant has
+            # already superseded -- and stamped newer, so the newer ones would
+            # be lost. Nothing has been written yet, so this can still refuse.
+            preferred = await async_get_preferred_dataset(call.hass)
+            if preferred is not None and bytes.fromhex(preferred) != dataset:
+                raise HomeAssistantError(
+                    translation_domain=DOMAIN,
+                    translation_key="preferred_dataset_changed",
+                )
+
+        if source_xpan is not None:
+            await issued.async_set(source_xpan, (seconds, 0))
         await data.set_pending_dataset_tlvs(
             bytes.fromhex(tlv_parser.encode_tlv(pending))
         )
@@ -305,9 +406,9 @@ async def _async_migrate_network(call: ServiceCall) -> dict[str, Any]:
         # The repair issues describe the credentials the network is adopting,
         # the same way the create and set-network paths report them.
         await update_issues(call.hass, data, migrated_tlvs)
-        if (source_xpan := active.get(MeshcopTLVType.EXTPANID)) is not None:
+        if source_xpan is not None:
             await _async_repoint_preferred_dataset(
-                call.hass, str(source_xpan), str(target[MeshcopTLVType.EXTPANID])
+                call.hass, source_xpan, str(target[MeshcopTLVType.EXTPANID])
             )
         if result is DatasetAddResult.DISCARDED:
             # Newer credentials for this network were stored while the router
