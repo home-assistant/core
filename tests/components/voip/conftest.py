@@ -1,5 +1,6 @@
 """Test helpers for VoIP integration."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 import pytest
@@ -28,6 +29,40 @@ from tests.components.tts.conftest import (
 async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture(autouse=True)
+def reduce_satellite_delays() -> Generator[None]:
+    """Shorten the delays that the satellite always waits out.
+
+    Tests must send audio chunks more often than _HANGUP_SEC, or the satellite
+    treats the gap as the caller hanging up. Timeouts that only elapse when audio
+    never arrives are left alone: they cost nothing unless a test exercises them.
+    """
+    with (
+        patch("homeassistant.components.voip.assist_satellite._HANGUP_SEC", 0.2),
+        patch(
+            "homeassistant.components.voip.assist_satellite._ANNOUNCEMENT_BEFORE_DELAY",
+            0.1,
+        ),
+        patch(
+            "homeassistant.components.voip.assist_satellite._ANNOUNCEMENT_AFTER_DELAY",
+            0.1,
+        ),
+    ):
+        yield
+
+
+@pytest.fixture
+def silent_tones() -> Generator[None]:
+    """Give every tone empty audio.
+
+    A real tone is up to two seconds streamed in real time, which outlasts the
+    shortened hangup window. The tone paths still run, so the processing tone
+    still gates _send_tts.
+    """
+    with patch.object(VoipAssistSatellite, "_load_pcm", return_value=b""):
+        yield
 
 
 @pytest.fixture

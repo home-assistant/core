@@ -475,6 +475,7 @@ async def test_tts_timeout(
             await done.wait()
 
 
+@pytest.mark.usefixtures("silent_tones")
 async def test_tts_wrong_extension(
     hass: HomeAssistant,
     satellite: VoipAssistSatellite,
@@ -558,6 +559,7 @@ async def test_tts_wrong_extension(
             await done.wait()
 
 
+@pytest.mark.usefixtures("silent_tones")
 async def test_tts_wrong_wav_format(
     hass: HomeAssistant,
     satellite: VoipAssistSatellite,
@@ -641,6 +643,7 @@ async def test_tts_wrong_wav_format(
             await done.wait()
 
 
+@pytest.mark.usefixtures("silent_tones")
 async def test_empty_tts_output(
     hass: HomeAssistant,
     satellite: VoipAssistSatellite,
@@ -707,9 +710,9 @@ async def test_empty_tts_output(
 
         # silence (assumes relaxed VAD sensitivity)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
 
-        # Wait for mock pipeline to finish
+        # No more chunks: another chunk would start a second pipeline run, which
+        # clears _tts_done again.
         async with asyncio.timeout(2):
             await satellite._tts_done.wait()
 
@@ -820,9 +823,9 @@ async def test_announce(
 
         # Trigger announcement
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
         satellite.on_chunk(bytes(_ONE_SECOND))
         async with asyncio.timeout(2):
             await announce_task
@@ -880,9 +883,9 @@ async def test_voip_id_is_ip_address(
 
         # Trigger announcement
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
         satellite.on_chunk(bytes(_ONE_SECOND))
         async with asyncio.timeout(2):
             await announce_task
@@ -975,11 +978,11 @@ async def test_announce_disconnect(
 
         # Trigger announcement
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
 
         assert satellite._announcement is announcement
         assert voip_device.is_active
@@ -1139,18 +1142,17 @@ async def test_start_conversation(
 
         # Trigger announcement and wait for it to finish
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
         satellite.on_chunk(bytes(_ONE_SECOND))
         async with asyncio.timeout(2):
             await tts_sent.wait()
 
         # Trigger pipeline
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(0.2)
+        await asyncio.sleep(0.05)
         satellite.on_chunk(bytes(_ONE_SECOND))
-        await asyncio.sleep(3)
         async with asyncio.timeout(3):
             # Wait for Conversation end
             await conversation_task
