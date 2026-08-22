@@ -2,7 +2,6 @@
 
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
 from .coordinator import PowerShadesCoordinator
 
 
@@ -15,7 +14,7 @@ class PowerShadesEntity(CoordinatorEntity[PowerShadesCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         if coordinator.serial_number:
-            self._attr_unique_id = f"{DOMAIN}_{coordinator.serial_number}_{key}"
+            self._attr_unique_id = f"{coordinator.serial_number}_{key}"
         else:
-            self._attr_unique_id = f"{DOMAIN}_{coordinator.entry_id}_{key}"
+            self._attr_unique_id = f"{coordinator.entry_id}_{key}"
         self._attr_device_info = coordinator.device_info
