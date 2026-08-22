@@ -182,10 +182,7 @@ async def test_confirm_no_upcoming_departures(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
     assert result["type"] is FlowResultType.MENU
-    assert (
-        result["description_placeholders"]["departures"]
-        == "No upcoming departures right now."
-    )
+    assert result["description_placeholders"]["departures"] == ""
 
     result = await _select_menu_option(hass, result["flow_id"], "create_entry")
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -207,9 +204,7 @@ async def test_confirm_departures_error(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
     assert result["type"] is FlowResultType.MENU
-    assert result["description_placeholders"]["departures"] == (
-        "Could not load departures."
-    )
+    assert result["description_placeholders"]["departures"] == ""
 
     result = await _select_menu_option(hass, result["flow_id"], "create_entry")
     assert result["type"] is FlowResultType.CREATE_ENTRY

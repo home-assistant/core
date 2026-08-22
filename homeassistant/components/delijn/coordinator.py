@@ -49,9 +49,12 @@ class DeLijnCoordinator(DataUpdateCoordinator[list[Passage]]):
             return await self._client.get_passages(self._stop_number, max_passages)
         except DeLijnAuthError as err:
             raise ConfigEntryAuthFailed(
-                "The De Lijn API key is no longer valid"
+                translation_domain=DOMAIN,
+                translation_key="auth_failed",
             ) from err
         except DeLijnError as err:
             raise UpdateFailed(
-                f"Error communicating with the De Lijn API: {err}"
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": str(err)},
             ) from err

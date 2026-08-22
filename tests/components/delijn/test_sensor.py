@@ -98,6 +98,40 @@ async def test_sensor_passage_without_due_time(
     assert state.attributes["next_passages"][0]["due_in_min"] is None
 
 
+async def test_sensor_passage_without_colours(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_line: Line,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a line without known colours reports the colour attributes as None."""
+    line_without_colours = Line(
+        entity_number=mock_line.entity_number, number=mock_line.number
+    )
+    mock_delijn_client.get_passages.return_value = [
+        Passage(line=line_without_colours),
+    ]
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{mock_config_entry.unique_id}_next_departure"
+    )
+    state = hass.states.get(entity_id)
+    assert state is not None
+    passage = state.attributes["next_passages"][0]
+    assert passage["line_number_colourFront"] is None
+    assert passage["line_number_colourFrontHex"] is None
+    assert passage["line_number_colourBack"] is None
+    assert passage["line_number_colourBackHex"] is None
+    assert passage["line_number_colourFrontBorder"] is None
+    assert passage["line_number_colourFrontBorderHex"] is None
+    assert passage["line_number_colourBackBorder"] is None
+    assert passage["line_number_colourBackBorderHex"] is None
+
+
 async def test_sensor_becomes_unavailable_on_update_failure(
     hass: HomeAssistant,
     load_integration: MockConfigEntry,

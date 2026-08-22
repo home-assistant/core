@@ -13,7 +13,7 @@
     },
     "step": {
       "confirm": {
-        "description": "**{name}{municipality}** (stop {number})\n\nUpcoming departures:\n{departures}\n\n{links}",
+        "description": "**{name}{municipality}** (stop {number})\n\nUpcoming departures:\n{departures}\n\nIf no departures are listed above, none may be expected right now, or they could not be loaded — you can still add the stop.\n\n{links}",
         "menu_options": {
           "create_entry": "Add this stop",
           "pick": "Back to search results",
@@ -62,6 +62,14 @@
       "next_departure": {
         "name": "Next departure"
       }
+    }
+  },
+  "exceptions": {
+    "auth_failed": {
+      "message": "The De Lijn API key is no longer valid"
+    },
+    "update_error": {
+      "message": "Error communicating with the De Lijn API: {error}"
     }
   },
   "issues": {

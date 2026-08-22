@@ -52,9 +52,6 @@ from .coordinator import DeLijnConfigEntry
 MAX_SEARCH_RESULTS = 10
 PREVIEW_PASSAGES = 3
 
-_NO_DEPARTURES_TEXT = "No upcoming departures right now."
-_DEPARTURES_ERROR_TEXT = "Could not load departures."
-
 
 def _stop_title(stop: Stop) -> str:
     """Return the config entry title for a stop."""
@@ -119,7 +116,12 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def _async_departure_preview(self, stop: Stop) -> str:
-        """Return a short preview of the next few departures for a stop."""
+        """Return a short preview of the next few departures for a stop.
+
+        Returns an empty string if there is nothing to show (no upcoming
+        departures, or the preview could not be loaded); the confirm step's
+        description already explains that case to the user.
+        """
         client = DeLijnClient(self._api_key, async_get_clientsession(self.hass))
         try:
             passages = await client.get_passages(
@@ -127,10 +129,10 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             )
         except DeLijnError:
             LOGGER.exception("Unexpected error loading a De Lijn departure preview")
-            return _DEPARTURES_ERROR_TEXT
+            return ""
 
         if not passages:
-            return _NO_DEPARTURES_TEXT
+            return ""
 
         lines = []
         for passage in passages:
@@ -210,9 +212,18 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
                         stop = await client.get_stop(query)
                     except DeLijnNotFoundError:
                         errors["base"] = "invalid_stop"
-                    except DeLijnAuthError:
+                    except DeLijnAuthError as err:
+                        LOGGER.error(
+                            "De Lijn rejected the API key while looking up a stop: %s",
+                            err,
+                        )
                         errors["base"] = "invalid_auth"
-                    except DeLijnConnectionError:
+                    except DeLijnConnectionError as err:
+                        LOGGER.error(
+                            "Error connecting to the De Lijn API while looking up a"
+                            " stop: %s",
+                            err,
+                        )
                         errors["base"] = "cannot_connect"
                     except DeLijnError:
                         LOGGER.exception("Unexpected error looking up De Lijn stop")
@@ -225,9 +236,19 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
                         results = await client.search_stops(
                             query, max_results=MAX_SEARCH_RESULTS
                         )
-                    except DeLijnAuthError:
+                    except DeLijnAuthError as err:
+                        LOGGER.error(
+                            "De Lijn rejected the API key while searching for"
+                            " stops: %s",
+                            err,
+                        )
                         errors["base"] = "invalid_auth"
-                    except DeLijnConnectionError:
+                    except DeLijnConnectionError as err:
+                        LOGGER.error(
+                            "Error connecting to the De Lijn API while searching for"
+                            " stops: %s",
+                            err,
+                        )
                         errors["base"] = "cannot_connect"
                     except DeLijnError:
                         LOGGER.exception("Unexpected error searching De Lijn stops")
@@ -250,9 +271,18 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
                     results = await client.get_stops_near(
                         latitude, longitude, max_results=MAX_SEARCH_RESULTS
                     )
-                except DeLijnAuthError:
+                except DeLijnAuthError as err:
+                    LOGGER.error(
+                        "De Lijn rejected the API key while finding nearby stops: %s",
+                        err,
+                    )
                     errors["base"] = "invalid_auth"
-                except DeLijnConnectionError:
+                except DeLijnConnectionError as err:
+                    LOGGER.error(
+                        "Error connecting to the De Lijn API while finding nearby"
+                        " stops: %s",
+                        err,
+                    )
                     errors["base"] = "cannot_connect"
                 except DeLijnError:
                     LOGGER.exception("Unexpected error finding nearby De Lijn stops")
@@ -324,9 +354,16 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             client = DeLijnClient(api_key, async_get_clientsession(self.hass))
             try:
                 await client.get_stop(reauth_entry.data[CONF_STOP_NUMBER])
-            except DeLijnAuthError:
+            except DeLijnAuthError as err:
+                LOGGER.error(
+                    "De Lijn rejected the API key during reauthentication: %s", err
+                )
                 errors["base"] = "invalid_auth"
-            except DeLijnConnectionError:
+            except DeLijnConnectionError as err:
+                LOGGER.error(
+                    "Error connecting to the De Lijn API during reauthentication: %s",
+                    err,
+                )
                 errors["base"] = "cannot_connect"
             except DeLijnError:
                 LOGGER.exception("Unexpected error during De Lijn reauthentication")
@@ -352,9 +389,19 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             stop = await client.get_stop(stop_id)
         except DeLijnNotFoundError:
             return self.async_abort(reason="invalid_stop")
-        except DeLijnAuthError:
+        except DeLijnAuthError as err:
+            LOGGER.error(
+                "De Lijn rejected the API key while importing stop %s: %s",
+                stop_id,
+                err,
+            )
             return self.async_abort(reason="invalid_auth")
-        except DeLijnConnectionError:
+        except DeLijnConnectionError as err:
+            LOGGER.error(
+                "Error connecting to the De Lijn API while importing stop %s: %s",
+                stop_id,
+                err,
+            )
             return self.async_abort(reason="cannot_connect")
         except DeLijnError:
             LOGGER.exception("Unexpected error importing De Lijn stop %s", stop_id)
