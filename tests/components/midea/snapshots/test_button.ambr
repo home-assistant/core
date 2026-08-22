@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_button_state_snapshot[button.bedroom_ac_start-entry]
+# name: test_button_state_snapshot[button.dishwasher_start-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': None,
-    'entity_id': 'button.bedroom_ac_start',
+    'entity_id': 'button.dishwasher_start',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,13 +36,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_button_state_snapshot[button.bedroom_ac_start-state]
+# name: test_button_state_snapshot[button.dishwasher_start-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Start',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Start',
     }),
     'context': <ANY>,
-    'entity_id': 'button.bedroom_ac_start',
+    'entity_id': 'button.dishwasher_start',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

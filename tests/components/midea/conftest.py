@@ -8,6 +8,7 @@ from midealocal.const import DeviceType
 import pytest
 
 from homeassistant.components.midea.const import CONF_KEY, CONF_SUBTYPE, DOMAIN
+from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
 from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -18,7 +19,6 @@ from .const import (
     TEST_KEY,
     TEST_MAC_ADDRESS,
     TEST_MODEL,
-    TEST_NAME,
     TEST_SERIAL_NUMBER,
     TEST_SUBTYPE,
     TEST_TOKEN,
@@ -39,7 +39,7 @@ class DummyDevice:
         """Initialize fake device."""
         self.device_type = device_type
         self.device_id = TEST_DEVICE_ID
-        self.name = TEST_NAME
+        self.name = MIDEA_DEVICE_NAMES[device_type]
         self.model = TEST_MODEL
         self.subtype = TEST_SUBTYPE
         self.available = False
@@ -168,7 +168,7 @@ def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
             data={
                 **BASE_DATA,
                 CONF_TYPE: device.device_type,
-                CONF_NAME: TEST_NAME,
+                CONF_NAME: MIDEA_DEVICE_NAMES[device.device_type],
                 CONF_TOKEN: TEST_TOKEN,
                 CONF_KEY: TEST_KEY,
                 CONF_SUBTYPE: TEST_SUBTYPE,

@@ -1,5 +1,6 @@
 """Button for Midea."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import override
 
@@ -21,6 +22,8 @@ class MideaButtonEntityDescription(ButtonEntityDescription):
 
     models: list[DeviceType]
     device_models: list[str]
+    press_fn: Callable[[MideaE1Device], None]
+    available_fn: Callable[[MideaE1Device], bool]
 
 
 BUTTONS: list[MideaButtonEntityDescription] = [
@@ -29,6 +32,13 @@ BUTTONS: list[MideaButtonEntityDescription] = [
         translation_key="start",
         models=[DeviceType.E1],
         device_models=["7600024L"],
+        press_fn=lambda device: device.start_work(),
+        # Mode code 0 ("Neutral Gear") means no wash program is selected, so
+        # pressing start would have nothing to run.
+        available_fn=lambda device: (
+            (mode := device.get_attribute("mode")) is not None
+            and mode != device.modes.get(0)
+        ),
     ),
 ]
 
@@ -58,18 +68,15 @@ class MideaButton(MideaEntity, ButtonEntity):
     @property
     @override
     def available(self) -> bool:
-        """Return whether the device is on and has a work mode selected.
-
-        Mode code 0 ("Neutral Gear") means no wash program is selected, so
-        pressing start would have nothing to run.
-        """
-        if not super().available or not self._device.get_attribute("power"):
-            return False
-        mode_name = self._device.get_attribute("mode")
-        return mode_name is not None and mode_name != self._device.modes.get(0)
+        """Return whether the device is on and the selected button function is available."""
+        return (
+            super().available
+            and bool(self._device.get_attribute("power"))
+            and self.entity_description.available_fn(self._device)
+        )
 
     @override
     def press(self) -> None:
-        """Start the dishwasher using its currently selected work mode."""
+        """Press the button."""
         with midea_api_call():
-            self._device.start_work()
+            self.entity_description.press_fn(self._device)
