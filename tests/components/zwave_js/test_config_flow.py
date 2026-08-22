@@ -24,7 +24,6 @@ from homeassistant.components.zwave_js.config_flow import (
     TITLE,
     SecurityKeys,
     async_get_usb_ports,
-    migrate_network_key,
 )
 from homeassistant.components.zwave_js.const import (
     ADDON_SLUG,
@@ -1341,7 +1340,7 @@ def test_migrate_legacy_network_key(
     """Test the legacy network key is migrated to the S0 legacy key."""
     original = dict(addon_config)
 
-    migrated = migrate_network_key(addon_config)
+    migrated = SecurityKeys.migrate_network_key(addon_config)
     assert "network_key" not in migrated
     assert migrated.get("s0_legacy_key", "") == expected_s0
 
