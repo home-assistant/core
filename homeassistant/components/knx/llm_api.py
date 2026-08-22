@@ -24,11 +24,12 @@ from typing import (
     override,
 )
 
-from knx_telegram_store import KnxTelegramStoreException, mcp as kts_mcp
+from knx_telegram_store import KnxTelegramStoreException, TelegramStore, mcp as kts_mcp
 import voluptuous as vol
 from xknx import mcp as xknx_mcp
 from xknx.exceptions import XKNXException
 from xknxproject import mcp as xknxproject_mcp
+from xknxproject.models import KNXProject as KNXProjectModel
 
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -42,32 +43,56 @@ if TYPE_CHECKING:
 
 LLM_API_ID = DOMAIN
 LLM_API_NAME = "KNX"
-API_PROMPT = (
+_API_PROMPT_BASE = (
     "Tools to inspect a KNX installation: stored bus telegrams, the loaded ETS "
     "project (group addresses, devices, communication objects, functions, "
-    "topology, locations), KNX data point types, and live bus "
-    'reads and writes. Address formats: group addresses like "1/2/3", individual '
-    'device addresses like "1.1.5", DPTs like "9.001".'
+    "topology, locations) and KNX data point types."
 )
+_API_PROMPT_BUS = " Live bus reads and writes are available too."
+_API_PROMPT_ADDRESSES = (
+    ' Address formats: group addresses like "1/2/3", individual device addresses '
+    'like "1.1.5", DPTs like "9.001".'
+)
+
+
+def _api_prompt(*, include_bus_tools: bool) -> str:
+    """The API prompt, describing only the tools this instance actually got."""
+    bus = _API_PROMPT_BUS if include_bus_tools else ""
+    return f"{_API_PROMPT_BASE}{bus}{_API_PROMPT_ADDRESSES}"
+
 
 type _ToolFunc = Callable[["KNXModule", dict[str, Any]], Awaitable[Any]]
 
 
-def _coerce_int(value: Any) -> int:
-    """Coerce to int, rejecting fractional floats instead of truncating them.
+def _reject_fractional(value: Any) -> Any:
+    """Reject fractional floats so they are not silently truncated.
 
-    ``vol.Coerce(int)`` calls ``int(value)``, which truncates a float like
-    ``5.5`` to ``5`` instead of raising. That silently discards data, and in a
+    ``vol.Coerce(int)`` calls ``int(value)``, which turns a float like ``5.5``
+    into ``5`` instead of raising. That silently discards data, and in an
     ``int | float`` union (e.g. a KNX group value) it makes the int validator
-    swallow every float before the float validator is ever tried. Only pass
-    through floats that are exactly representable as int (``5.0``).
+    swallow every float before the float validator is ever tried. Only let
+    floats through that are exactly representable as int (``5.0``).
     """
     if isinstance(value, float) and not value.is_integer():
         raise vol.Invalid("value has a fractional part; not a valid int")
-    try:
-        return int(value)
-    except (ValueError, TypeError) as err:
-        raise vol.Invalid("expected int") from err
+    return value
+
+
+# ``vol.Coerce(int)`` has to be the validator that does the conversion:
+# ``voluptuous_openapi.convert`` cannot type a bare callable and would advertise
+# the parameter to the LLM as a string.
+_INT = vol.All(_reject_fractional, vol.Coerce(int))
+
+
+def _union_member_order(annotation: Any) -> int:
+    """Sort key placing exact-type union members before coercing ones.
+
+    ``vol.Any`` takes the first member that validates. ``str`` and ``bool`` are
+    plain isinstance checks while the int/float members coerce, so in source
+    order a ``bool | int | float | str`` group value turns the string ``"5"``
+    into the int ``5`` - writing a number where a DPT 16.000 text was meant.
+    """
+    return 0 if annotation in (str, bool) else 1
 
 
 def _validator(annotation: Any) -> Any:
@@ -79,7 +104,9 @@ def _validator(annotation: Any) -> Any:
         inner = (
             _validator(non_none[0])
             if len(non_none) == 1
-            else vol.Any(*(_validator(arg) for arg in non_none))
+            else vol.Any(
+                *(_validator(arg) for arg in sorted(non_none, key=_union_member_order))
+            )
         )
         return vol.Maybe(inner) if allows_none else inner
     if annotation is str:
@@ -87,7 +114,7 @@ def _validator(annotation: Any) -> Any:
     if annotation is bool:
         return bool
     if annotation is int:
-        return _coerce_int
+        return _INT
     if annotation is float:
         return vol.Coerce(float)
     if origin is list:
@@ -188,7 +215,9 @@ class KNXTool(llm.Tool):
         args = self.parameters(tool_input.tool_args)
         try:
             result = await self._func(self._knx, args)
-        except (KnxTelegramStoreException, XKNXException) as err:
+        except (KnxTelegramStoreException, ValueError, XKNXException) as err:
+            # ``ValueError`` covers an unknown DPT name passed to the xknx DPT
+            # tools - the likeliest way for a model to get an argument wrong.
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="llm_tool_failed",
@@ -197,7 +226,7 @@ class KNXTool(llm.Tool):
         return _serialize(result)
 
 
-def _require_store(knx: KNXModule) -> Any:
+def _require_store(knx: KNXModule) -> TelegramStore:
     """The telegram store, or raise if it is not configured/available."""
     store = knx.telegrams.store
     if store is None:
@@ -208,7 +237,7 @@ def _require_store(knx: KNXModule) -> Any:
     return store
 
 
-async def _require_project(knx: KNXModule) -> Any:
+async def _require_project(knx: KNXModule) -> KNXProjectModel:
     """The full parsed ETS project, or raise if none is loaded."""
     project = await knx.project.get_knxproject()
     if project is None:
@@ -475,13 +504,12 @@ class KNXLLMAPI(llm.API):
         self, llm_context: llm.LLMContext
     ) -> llm.APIInstance:
         """Return the instance of the API."""
+        include_bus_tools = await self._user_is_admin(llm_context)
         return llm.APIInstance(
             api=self,
-            api_prompt=API_PROMPT,
+            api_prompt=_api_prompt(include_bus_tools=include_bus_tools),
             llm_context=llm_context,
-            tools=_build_tools(
-                self.knx, include_bus_tools=await self._user_is_admin(llm_context)
-            ),
+            tools=_build_tools(self.knx, include_bus_tools=include_bus_tools),
         )
 
     async def _user_is_admin(self, llm_context: llm.LLMContext) -> bool:
