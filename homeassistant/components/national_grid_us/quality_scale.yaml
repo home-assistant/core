@@ -52,10 +52,10 @@ rules:
   diagnostics: todo
   discovery:
     status: exempt
-    comment: The integration is for a cloud service, and does not have a discoverable local device.
+    comment: The meters communicate with National Grid's cloud service through its private mesh network and are not connected to the user's local network.
   discovery-update-info:
     status: exempt
-    comment: The integration is for a cloud service, and does not have a discoverable local device.
+    comment: The meters communicate with National Grid's cloud service through its private mesh network and are not connected to the user's local network.
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
