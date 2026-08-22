@@ -199,8 +199,14 @@ class UniversalMediaPlayer(MediaPlayerEntity):
                         None if isinstance(result, TemplateError) else result
                     )
                     self._clean_up_active_child_change_tracker()
-                    if self._active_child_template_result:
-                        self._active_child_change_tracker_cancel = async_track_state_change_event(self.hass, self._active_child_template_result, _async_on_dependency_update)
+                    if (_ac := self._active_child_template_result) and _ac not in (
+                        self._children + list(self._attrs.values())
+                    ):
+                        self._active_child_change_tracker_cancel = (
+                            async_track_state_change_event(
+                                self.hass, _ac, _async_on_dependency_update
+                            )
+                        )
 
             if event:
                 self.async_set_context(event.context)
