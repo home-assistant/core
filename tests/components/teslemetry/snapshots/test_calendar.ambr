@@ -147,6 +147,7 @@
           'end': '2023-12-31T21:00:00-08:00',
           'start': '2023-12-31T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2023-12-31T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -157,6 +158,7 @@
           'end': '2024-01-01T16:00:00-08:00',
           'start': '2023-12-31T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2023-12-31T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -167,6 +169,7 @@
           'end': '2024-01-01T21:00:00-08:00',
           'start': '2024-01-01T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-01T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -177,6 +180,7 @@
           'end': '2024-01-02T16:00:00-08:00',
           'start': '2024-01-01T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-01T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -187,6 +191,7 @@
           'end': '2024-01-02T21:00:00-08:00',
           'start': '2024-01-02T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-02T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -197,6 +202,7 @@
           'end': '2024-01-03T16:00:00-08:00',
           'start': '2024-01-02T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-02T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -207,6 +213,7 @@
           'end': '2024-01-03T21:00:00-08:00',
           'start': '2024-01-03T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-03T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -217,6 +224,7 @@
           'end': '2024-01-04T16:00:00-08:00',
           'start': '2024-01-03T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-03T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -227,6 +235,7 @@
           'end': '2024-01-04T21:00:00-08:00',
           'start': '2024-01-04T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-04T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -237,6 +246,7 @@
           'end': '2024-01-05T16:00:00-08:00',
           'start': '2024-01-04T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-04T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -247,6 +257,7 @@
           'end': '2024-01-05T21:00:00-08:00',
           'start': '2024-01-05T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-05T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -257,6 +268,7 @@
           'end': '2024-01-06T16:00:00-08:00',
           'start': '2024-01-05T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-05T21:00:00-08:00',
         }),
       ]),
     }),
@@ -290,6 +302,7 @@
           'end': '2023-12-31T21:00:00-08:00',
           'start': '2023-12-31T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2023-12-31T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -300,6 +313,7 @@
           'end': '2024-01-01T16:00:00-08:00',
           'start': '2023-12-31T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2023-12-31T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -310,6 +324,7 @@
           'end': '2024-01-01T21:00:00-08:00',
           'start': '2024-01-01T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-01T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -320,6 +335,7 @@
           'end': '2024-01-02T16:00:00-08:00',
           'start': '2024-01-01T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-01T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -330,6 +346,7 @@
           'end': '2024-01-02T21:00:00-08:00',
           'start': '2024-01-02T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-02T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -340,6 +357,7 @@
           'end': '2024-01-03T16:00:00-08:00',
           'start': '2024-01-02T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-02T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -350,6 +368,7 @@
           'end': '2024-01-03T21:00:00-08:00',
           'start': '2024-01-03T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-03T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -360,6 +379,7 @@
           'end': '2024-01-04T16:00:00-08:00',
           'start': '2024-01-03T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-03T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -370,6 +390,7 @@
           'end': '2024-01-04T21:00:00-08:00',
           'start': '2024-01-04T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-04T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -380,6 +401,7 @@
           'end': '2024-01-05T16:00:00-08:00',
           'start': '2024-01-04T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-04T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -390,6 +412,7 @@
           'end': '2024-01-05T21:00:00-08:00',
           'start': '2024-01-05T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-05T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -400,6 +423,7 @@
           'end': '2024-01-06T16:00:00-08:00',
           'start': '2024-01-05T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-05T21:00:00-08:00',
         }),
       ]),
     }),
@@ -433,6 +457,7 @@
           'end': '2023-12-31T21:00:00-08:00',
           'start': '2023-12-31T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2023-12-31T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -443,6 +468,7 @@
           'end': '2024-01-01T16:00:00-08:00',
           'start': '2023-12-31T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2023-12-31T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -453,6 +479,7 @@
           'end': '2024-01-01T21:00:00-08:00',
           'start': '2024-01-01T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-01T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -463,6 +490,7 @@
           'end': '2024-01-02T16:00:00-08:00',
           'start': '2024-01-01T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-01T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -473,6 +501,7 @@
           'end': '2024-01-02T21:00:00-08:00',
           'start': '2024-01-02T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-02T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -483,6 +512,7 @@
           'end': '2024-01-03T16:00:00-08:00',
           'start': '2024-01-02T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-02T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -493,6 +523,7 @@
           'end': '2024-01-03T21:00:00-08:00',
           'start': '2024-01-03T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-03T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -503,6 +534,7 @@
           'end': '2024-01-04T16:00:00-08:00',
           'start': '2024-01-03T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-03T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -513,6 +545,7 @@
           'end': '2024-01-04T21:00:00-08:00',
           'start': '2024-01-04T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-04T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -523,6 +556,7 @@
           'end': '2024-01-05T16:00:00-08:00',
           'start': '2024-01-04T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-04T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -533,6 +567,7 @@
           'end': '2024-01-05T21:00:00-08:00',
           'start': '2024-01-05T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-05T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -543,6 +578,7 @@
           'end': '2024-01-06T16:00:00-08:00',
           'start': '2024-01-05T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-05T21:00:00-08:00',
         }),
       ]),
     }),
@@ -576,6 +612,7 @@
           'end': '2023-12-31T21:00:00-08:00',
           'start': '2023-12-31T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2023-12-31T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -586,6 +623,7 @@
           'end': '2024-01-01T16:00:00-08:00',
           'start': '2023-12-31T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2023-12-31T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -596,6 +634,7 @@
           'end': '2024-01-01T21:00:00-08:00',
           'start': '2024-01-01T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-01T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -606,6 +645,7 @@
           'end': '2024-01-02T16:00:00-08:00',
           'start': '2024-01-01T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-01T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -616,6 +656,7 @@
           'end': '2024-01-02T21:00:00-08:00',
           'start': '2024-01-02T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-02T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -626,6 +667,7 @@
           'end': '2024-01-03T16:00:00-08:00',
           'start': '2024-01-02T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-02T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -636,6 +678,7 @@
           'end': '2024-01-03T21:00:00-08:00',
           'start': '2024-01-03T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-03T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -646,6 +689,7 @@
           'end': '2024-01-04T16:00:00-08:00',
           'start': '2024-01-03T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-03T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -656,6 +700,7 @@
           'end': '2024-01-04T21:00:00-08:00',
           'start': '2024-01-04T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-04T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -666,6 +711,7 @@
           'end': '2024-01-05T16:00:00-08:00',
           'start': '2024-01-04T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-04T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -676,6 +722,7 @@
           'end': '2024-01-05T21:00:00-08:00',
           'start': '2024-01-05T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-05T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -686,6 +733,7 @@
           'end': '2024-01-06T16:00:00-08:00',
           'start': '2024-01-05T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-05T21:00:00-08:00',
         }),
       ]),
     }),
@@ -719,6 +767,7 @@
           'end': '2023-12-31T21:00:00-08:00',
           'start': '2023-12-31T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2023-12-31T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -729,6 +778,7 @@
           'end': '2024-01-01T16:00:00-08:00',
           'start': '2023-12-31T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2023-12-31T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -739,6 +789,7 @@
           'end': '2024-01-01T21:00:00-08:00',
           'start': '2024-01-01T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-01T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -749,6 +800,7 @@
           'end': '2024-01-02T16:00:00-08:00',
           'start': '2024-01-01T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-01T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -759,6 +811,7 @@
           'end': '2024-01-02T21:00:00-08:00',
           'start': '2024-01-02T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-02T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -769,6 +822,7 @@
           'end': '2024-01-03T16:00:00-08:00',
           'start': '2024-01-02T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-02T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -779,6 +833,7 @@
           'end': '2024-01-03T21:00:00-08:00',
           'start': '2024-01-03T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-03T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -789,6 +844,7 @@
           'end': '2024-01-04T16:00:00-08:00',
           'start': '2024-01-03T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-03T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -799,6 +855,7 @@
           'end': '2024-01-04T21:00:00-08:00',
           'start': '2024-01-04T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-04T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -809,6 +866,7 @@
           'end': '2024-01-05T16:00:00-08:00',
           'start': '2024-01-04T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-04T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -819,6 +877,7 @@
           'end': '2024-01-05T21:00:00-08:00',
           'start': '2024-01-05T16:00:00-08:00',
           'summary': 'On peak: 0.22/kWh',
+          'uid': 'tariff_content_v2_Summer_ON_PEAK_2024-01-05T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -829,6 +888,7 @@
           'end': '2024-01-06T16:00:00-08:00',
           'start': '2024-01-05T21:00:00-08:00',
           'summary': 'Off peak: 0.20/kWh',
+          'uid': 'tariff_content_v2_Summer_OFF_PEAK_2024-01-05T21:00:00-08:00',
         }),
       ]),
     }),
@@ -862,6 +922,7 @@
           'end': '2023-12-31T21:00:00-08:00',
           'start': '2023-12-31T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2023-12-31T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -872,6 +933,7 @@
           'end': '2024-01-01T16:00:00-08:00',
           'start': '2023-12-31T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2023-12-31T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -882,6 +944,7 @@
           'end': '2024-01-01T21:00:00-08:00',
           'start': '2024-01-01T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-01T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -892,6 +955,7 @@
           'end': '2024-01-02T16:00:00-08:00',
           'start': '2024-01-01T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-01T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -902,6 +966,7 @@
           'end': '2024-01-02T21:00:00-08:00',
           'start': '2024-01-02T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-02T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -912,6 +977,7 @@
           'end': '2024-01-03T16:00:00-08:00',
           'start': '2024-01-02T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-02T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -922,6 +988,7 @@
           'end': '2024-01-03T21:00:00-08:00',
           'start': '2024-01-03T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-03T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -932,6 +999,7 @@
           'end': '2024-01-04T16:00:00-08:00',
           'start': '2024-01-03T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-03T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -942,6 +1010,7 @@
           'end': '2024-01-04T21:00:00-08:00',
           'start': '2024-01-04T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-04T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -952,6 +1021,7 @@
           'end': '2024-01-05T16:00:00-08:00',
           'start': '2024-01-04T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-04T21:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -962,6 +1032,7 @@
           'end': '2024-01-05T21:00:00-08:00',
           'start': '2024-01-05T16:00:00-08:00',
           'summary': 'On peak: 0.16/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_ON_PEAK_2024-01-05T16:00:00-08:00',
         }),
         dict({
           'description': '''
@@ -972,6 +1043,7 @@
           'end': '2024-01-06T16:00:00-08:00',
           'start': '2024-01-05T21:00:00-08:00',
           'summary': 'Off peak: 0.08/kWh',
+          'uid': 'tariff_content_v2_sell_tariff_Summer_OFF_PEAK_2024-01-05T21:00:00-08:00',
         }),
       ]),
     }),
