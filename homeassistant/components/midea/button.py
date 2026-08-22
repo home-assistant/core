@@ -31,6 +31,8 @@ def _e1_button_available(device: MideaDevice) -> bool:
     """Return whether the start button is available for an E1 dishwasher."""
     e1_device = cast(MideaE1Device, device)
     mode = e1_device.get_attribute("mode")
+    # Mode code 0 ("Neutral Gear") means no wash program is selected, so
+    # pressing start would have nothing to run.
     return mode is not None and mode != e1_device.modes.get(0)
 
 
@@ -41,8 +43,6 @@ BUTTONS: list[MideaButtonEntityDescription] = [
         models=[DeviceType.E1],
         device_models=["7600024L"],
         press_action="start_work",
-        # Mode code 0 ("Neutral Gear") means no wash program is selected, so
-        # pressing start would have nothing to run.
         available_fn=_e1_button_available,
     ),
 ]
