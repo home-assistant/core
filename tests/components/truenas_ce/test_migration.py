@@ -16,6 +16,7 @@ from homeassistant.components.truenas_ce.const import (
     DOMAIN,
     LEGACY_DOMAIN,
     MIGRATION_DONE,
+    MIGRATION_LEFT_BEHIND_DOMAINS,
 )
 from homeassistant.components.truenas_ce.migration import (
     _R_AREA,
@@ -28,6 +29,7 @@ from homeassistant.components.truenas_ce.migration import (
     _find_legacy_entry,
     _remap_and_restore,
     async_adopt_legacy_entities,
+    async_notify_migration_result,
     async_rollback_to_legacy,
     finalize_legacy_adoption,
     pending_legacy_records,
@@ -127,6 +129,8 @@ async def test_forward_adoption_frees_and_reattaches_entity_id(
     assert entity_registry.async_get(legacy_entity.entity_id) is None
     assert legacy.disabled_by == ConfigEntryDisabler.USER
     assert new_entry.data[MIGRATION_DONE] is True
+    # No domains outside PLATFORMS were present, so nothing is left behind.
+    assert MIGRATION_LEFT_BEHIND_DOMAINS not in new_entry.data
 
     # The new platform creates its entity under the same unique_id, but at a
     # fresh, unrelated auto-assigned entity_id.
@@ -141,6 +145,56 @@ async def test_forward_adoption_frees_and_reattaches_entity_id(
         entity_registry.async_get_entity_id("sensor", DOMAIN, "uptime-uid")
         == legacy_entity.entity_id
     )
+
+
+async def test_left_behind_domains_are_recorded_and_disclosed(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Domains outside PLATFORMS stay on the disabled legacy entry, disclosed.
+
+    This build only sets up ``sensor`` (see ``PLATFORMS``); a legacy
+    ``binary_sensor`` entity has no replacement to reclaim its id, so it must
+    stay registered rather than being removed -- but the user must be told
+    this happened instead of just finding it stopped working.
+    """
+    legacy = MockConfigEntry(domain=LEGACY_DOMAIN, data={CONF_HOST: "nas.local"})
+    legacy.add_to_hass(hass)
+    entity_registry.async_get_or_create(
+        "sensor", LEGACY_DOMAIN, "uptime-uid", config_entry=legacy
+    )
+    left_behind_entity = entity_registry.async_get_or_create(
+        "binary_sensor", LEGACY_DOMAIN, "online-uid", config_entry=legacy
+    )
+
+    new_entry = MockConfigEntry(domain=DOMAIN, data={CONF_HOST: "nas.local"})
+    new_entry.add_to_hass(hass)
+    with patch.object(
+        hass.config_entries,
+        "async_set_disabled_by",
+        side_effect=_fake_set_disabled_by(hass),
+    ):
+        records = await async_adopt_legacy_entities(hass, new_entry)
+
+    # Only the sensor record was adopted (freed); the binary_sensor entity is
+    # left untouched -- still registered -- on the now-disabled legacy entry.
+    assert len(records) == 1
+    assert entity_registry.async_get(left_behind_entity.entity_id) is not None
+    assert new_entry.data[MIGRATION_LEFT_BEHIND_DOMAINS] == ["binary_sensor"]
+
+    entity_registry.async_get_or_create(
+        "sensor", DOMAIN, "uptime-uid", config_entry=new_entry
+    )
+    finalize_legacy_adoption(hass, new_entry, records)
+
+    with patch(
+        "homeassistant.components.truenas_ce.migration"
+        ".persistent_notification.async_create"
+    ) as mock_create:
+        async_notify_migration_result(hass, new_entry, records)
+
+    message = mock_create.call_args.args[1]
+    assert "binary_sensor" in message
 
 
 async def test_second_setup_is_idempotent_noop(

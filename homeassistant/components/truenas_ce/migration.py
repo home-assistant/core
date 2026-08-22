@@ -18,6 +18,7 @@ from .const import (
     LEGACY_DOMAIN,
     MIGRATION_BACKUP_KEY,
     MIGRATION_DONE,
+    MIGRATION_LEFT_BEHIND_DOMAINS,
     MIGRATION_LEGACY_CONFIG,
     MIGRATION_LEGACY_ENTRY_ID,
     MIGRATION_RECORDS,
@@ -70,6 +71,7 @@ async def async_adopt_legacy_entities(
     legacy_entry = _find_legacy_entry(hass, config_entry)
     records: list[dict[str, Any]] = []
     backup_key: str | None = None
+    left_behind: list[str] = []
 
     if legacy_entry is not None:
         # Disable first so its coordinator can't re-add entities as we release
@@ -91,6 +93,7 @@ async def async_adopt_legacy_entities(
         # Write the backup before mutating the registry, so a failed backup
         # never leaves a half-freed state.
         records = _collect_legacy_records(ent_reg, legacy_entry)
+        left_behind = _collect_left_behind_domains(ent_reg, legacy_entry)
         backup_key = await _write_migration_backup(
             hass, config_entry, legacy_entry, records
         )
@@ -101,8 +104,23 @@ async def async_adopt_legacy_entities(
             LEGACY_DOMAIN,
             legacy_entry.entry_id,
         )
+        if left_behind:
+            # These stay registered on the now-disabled legacy entry (see
+            # _collect_legacy_records) and go inactive along with it -- surfaced
+            # to the user via the post-migration notification, see
+            # async_notify_migration_result.
+            _LOGGER.warning(
+                "CE migration: legacy '%s' entry %s also has %s entities this "
+                "build does not adopt yet; they remain registered but inactive "
+                "until a later release adds that platform",
+                LEGACY_DOMAIN,
+                legacy_entry.entry_id,
+                ", ".join(left_behind),
+            )
 
-    _persist_migration_state(hass, config_entry, legacy_entry, records, backup_key)
+    _persist_migration_state(
+        hass, config_entry, legacy_entry, records, backup_key, left_behind
+    )
     return records
 
 
@@ -234,6 +252,28 @@ def _collect_legacy_records(
     ]
 
 
+def _collect_left_behind_domains(
+    ent_reg: er.EntityRegistry, legacy_entry: ConfigEntry
+) -> list[str]:
+    """Return the legacy entry's entity domains this build cannot adopt yet.
+
+    The complement of :func:`_collect_legacy_records`'s ``PLATFORMS`` filter --
+    these entries stay registered on the still-disabled legacy entry rather
+    than being freed, since there is no replacement entity to reclaim their
+    id. Reported to the user via :func:`async_notify_migration_result` so the
+    gap is disclosed instead of silent.
+    """
+    return sorted(
+        {
+            entry.domain
+            for entry in er.async_entries_for_config_entry(
+                ent_reg, legacy_entry.entry_id
+            )
+            if entry.domain not in PLATFORMS
+        }
+    )
+
+
 def _remove_legacy_entities(
     ent_reg: er.EntityRegistry, records: list[dict[str, Any]]
 ) -> None:
@@ -337,6 +377,7 @@ def _persist_migration_state(
     legacy_entry: ConfigEntry | None,
     records: list[dict[str, Any]],
     backup_key: str | None,
+    left_behind: list[str] | None = None,
 ) -> None:
     """Store the idempotency flag, reverse map and legacy snapshot on the entry."""
     new_data = {
@@ -349,6 +390,8 @@ def _persist_migration_state(
         new_data[MIGRATION_LEGACY_CONFIG] = _redacted_legacy_snapshot(legacy_entry)
     if backup_key:
         new_data[MIGRATION_BACKUP_KEY] = backup_key
+    if left_behind:
+        new_data[MIGRATION_LEFT_BEHIND_DOMAINS] = left_behind
     hass.config_entries.async_update_entry(config_entry, data=new_data)
 
 
@@ -426,7 +469,11 @@ def async_notify_migration_result(
     """Surface a one-time success notification after a legacy adoption.
 
     Only fires on the run that actually adopted entities (first successful
-    migration); inert before the rename.
+    migration); inert before the rename. Also calls out any entity domains
+    outside ``PLATFORMS`` found on the legacy entry (see
+    :func:`_collect_left_behind_domains`) -- they stay registered but inactive
+    on the now-disabled legacy entry, so the user is told why rather than
+    finding those entities silently gone.
     """
     if DOMAIN == LEGACY_DOMAIN or not records:
         return
@@ -460,6 +507,13 @@ def async_notify_migration_result(
             "Rollback available",
         ),
     }
+    if left_behind := config_entry.data.get(MIGRATION_LEFT_BEHIND_DOMAINS, []):
+        checks["left_behind"] = (
+            False,
+            f"Not yet migrated: {', '.join(left_behind)} entities remain on the "
+            "disabled previous integration until a future update adds that "
+            "platform",
+        )
     persistent_notification.async_create(
         hass,
         _build_migration_message(total, checks),
