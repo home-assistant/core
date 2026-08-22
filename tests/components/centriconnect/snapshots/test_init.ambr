@@ -1,0 +1,31 @@
+# serializer version: 1
+# name: test_device_info
+  DeviceRegistryEntrySnapshot({
+    'area_id': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'configuration_url': None,
+    'connections': set({
+    }),
+    'disabled_by': None,
+    'entry_type': None,
+    'hw_version': '4.1',
+    'id': <ANY>,
+    'identifiers': set({
+      tuple(
+        'centriconnect',
+        '123a4b5c-678d-9e0f-a123-4b567c8d901e',
+      ),
+    }),
+    'labels': set({
+    }),
+    'manufacturer': 'CentriConnect',
+    'model': None,
+    'model_id': None,
+    'name': 'My Tank',
+    'name_by_user': None,
+    'serial_number': '123a4b5c-678d-9e0f-a123-4b567c8d901e',
+    'sw_version': '1.1.2',
+    'via_device_id': None,
+  })
+# ---
