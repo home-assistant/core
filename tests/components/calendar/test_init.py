@@ -1,10 +1,11 @@
 """The tests for the calendar component."""
 
 from collections.abc import Generator
-from datetime import timedelta
+from datetime import date, timedelta
 from http import HTTPStatus
 import re
 from typing import Any
+from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
 import pytest
@@ -13,11 +14,14 @@ import voluptuous as vol
 
 from homeassistant.components.calendar import (
     CREATE_EVENT_SERVICE,
+    DELETE_EVENT_SERVICE,
     DOMAIN,
     SERVICE_GET_EVENTS,
+    UPDATE_EVENT_SERVICE,
     CalendarEntity,
     CalendarEntityDescription,
 )
+from homeassistant.components.calendar.const import CalendarEntityFeature
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotSupported
 from homeassistant.helpers import entity_registry as er
@@ -78,6 +82,8 @@ async def test_events_http_api(
     assert response.status == HTTPStatus.OK
     events = await response.json()
     assert events[0]["summary"] == "Future Event"
+    assert events[0]["uid"] == "calendar-event-uid-1"
+    assert events[0]["recurrence_id"] == "20260415"
 
 
 async def test_events_http_api_missing_fields(
@@ -242,6 +248,224 @@ async def test_unsupported_create_event_service(hass: HomeAssistant) -> None:
             target={"entity_id": "calendar.calendar_1"},
             blocking=True,
         )
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (DELETE_EVENT_SERVICE, {"uid": "some-uid"}),
+        (
+            UPDATE_EVENT_SERVICE,
+            {
+                "uid": "some-uid",
+                "summary": "Bastille Day Party",
+                "start_date_time": "1997-07-14T17:00:00+00:00",
+                "end_date_time": "1997-07-15T04:00:00+00:00",
+            },
+        ),
+    ],
+)
+async def test_unsupported_mutation_service(
+    hass: HomeAssistant, service: str, service_data: dict[str, str]
+) -> None:
+    """Test unsupported calendar mutation services."""
+    with pytest.raises(
+        ServiceNotSupported,
+        match=f"Entity calendar.calendar_1 does not support action calendar.{service}",
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            service_data,
+            target={"entity_id": "calendar.calendar_1"},
+            blocking=True,
+        )
+
+
+async def test_delete_event_service(
+    hass: HomeAssistant, test_entities: list[MockCalendarEntity]
+) -> None:
+    """Test deleting an event using the delete_event service."""
+    entity = test_entities[0]
+    entity._attr_supported_features = CalendarEntityFeature.DELETE_EVENT
+    entity.async_delete_event = AsyncMock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        DELETE_EVENT_SERVICE,
+        {
+            "uid": "some-uid",
+            "recurrence_id": "1997-07-14T17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+        },
+        target={"entity_id": entity.entity_id},
+        blocking=True,
+    )
+
+    entity.async_delete_event.assert_awaited_once_with(
+        "some-uid",
+        recurrence_id="1997-07-14T17:00:00+00:00",
+        recurrence_range="THISANDFUTURE",
+    )
+
+
+async def test_update_event_service(
+    hass: HomeAssistant, test_entities: list[MockCalendarEntity]
+) -> None:
+    """Test updating an event using the update_event service."""
+    entity = test_entities[0]
+    entity._attr_supported_features = CalendarEntityFeature.UPDATE_EVENT
+    entity.async_update_event = AsyncMock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        UPDATE_EVENT_SERVICE,
+        {
+            "uid": "some-uid",
+            "recurrence_id": "1997-07-14T17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "summary": "Bastille Day Party",
+            "description": "Updated description",
+            "location": "Paris",
+            "rrule": "FREQ=DAILY;COUNT=2",
+            "start_date_time": "1997-07-14T17:00:00+00:00",
+            "end_date_time": "1997-07-15T04:00:00+00:00",
+        },
+        target={"entity_id": entity.entity_id},
+        blocking=True,
+    )
+
+    entity.async_update_event.assert_awaited_once()
+    assert entity.async_update_event.await_args.kwargs == {
+        "recurrence_id": "1997-07-14T17:00:00+00:00",
+        "recurrence_range": "THISANDFUTURE",
+    }
+    uid, event = entity.async_update_event.await_args.args
+    assert uid == "some-uid"
+    assert event == {
+        "summary": "Bastille Day Party",
+        "description": "Updated description",
+        "location": "Paris",
+        "rrule": "FREQ=DAILY;COUNT=2",
+        "dtstart": dt_util.parse_datetime("1997-07-14T11:00:00-06:00"),
+        "dtend": dt_util.parse_datetime("1997-07-14T22:00:00-06:00"),
+    }
+
+
+async def test_update_event_service_all_day(
+    hass: HomeAssistant, test_entities: list[MockCalendarEntity]
+) -> None:
+    """Test updating an all-day event using the update_event service."""
+    entity = test_entities[0]
+    entity._attr_supported_features = CalendarEntityFeature.UPDATE_EVENT
+    entity.async_update_event = AsyncMock()
+
+    await hass.services.async_call(
+        DOMAIN,
+        UPDATE_EVENT_SERVICE,
+        {
+            "uid": "some-uid",
+            "summary": "All-day event",
+            "start_date": "1997-07-14",
+            "end_date": "1997-07-15",
+        },
+        target={"entity_id": entity.entity_id},
+        blocking=True,
+    )
+
+    uid, event = entity.async_update_event.await_args.args
+    assert uid == "some-uid"
+    assert event == {
+        "summary": "All-day event",
+        "dtstart": date(1997, 7, 14),
+        "dtend": date(1997, 7, 15),
+    }
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (
+            DELETE_EVENT_SERVICE,
+            {"uid": "some-uid", "recurrence_range": "THISANDFUTURE"},
+        ),
+        (
+            UPDATE_EVENT_SERVICE,
+            {
+                "uid": "some-uid",
+                "recurrence_range": "THISANDFUTURE",
+                "summary": "Bastille Day Party",
+                "start_date_time": "1997-07-14T17:00:00+00:00",
+                "end_date_time": "1997-07-15T04:00:00+00:00",
+            },
+        ),
+    ],
+)
+async def test_mutation_service_recurrence_range_requires_recurrence_id(
+    hass: HomeAssistant,
+    test_entities: list[MockCalendarEntity],
+    service: str,
+    service_data: dict[str, str],
+) -> None:
+    """Test recurrence ranges require a recurrence ID."""
+    entity = test_entities[0]
+    entity._attr_supported_features = (
+        CalendarEntityFeature.DELETE_EVENT | CalendarEntityFeature.UPDATE_EVENT
+    )
+
+    with pytest.raises(HomeAssistantError, match="recurrence_range requires"):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            service_data,
+            target={"entity_id": entity.entity_id},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        {
+            "type": "calendar/event/delete",
+            "uid": "some-uid",
+            "recurrence_range": "THISANDFUTURE",
+        },
+        {
+            "type": "calendar/event/update",
+            "uid": "some-uid",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    ],
+)
+async def test_mutation_websocket_recurrence_range_requires_recurrence_id(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+    command: dict[str, Any],
+) -> None:
+    """Test recurrence ranges require a recurrence ID in WebSocket commands."""
+    entity = test_entities[0]
+    entity._attr_supported_features = (
+        CalendarEntityFeature.DELETE_EVENT | CalendarEntityFeature.UPDATE_EVENT
+    )
+    entity.async_delete_event = AsyncMock()
+    entity.async_update_event = AsyncMock()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({**command, "entity_id": entity.entity_id})
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "failed"
+    assert "recurrence_range requires a recurrence_id" in msg["error"]["message"]
+    entity.async_delete_event.assert_not_awaited()
+    entity.async_update_event.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
@@ -436,6 +660,8 @@ async def test_create_event_service_invalid_params(
                             "summary": "Future Event",
                             "description": "Future Description",
                             "location": "Future Location",
+                            "uid": "calendar-event-uid-1",
+                            "recurrence_id": "20260415",
                         }
                     ]
                 }

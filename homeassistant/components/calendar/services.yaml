@@ -36,6 +36,79 @@ create_event:
       example: "Conference Room - F123, Bldg. 002"
       selector:
         text:
+delete_event:
+  target:
+    entity:
+      domain: calendar
+      supported_features:
+        - calendar.CalendarEntityFeature.DELETE_EVENT
+  fields:
+    uid:
+      required: true
+      example: "1234567890"
+      selector:
+        text:
+    recurrence_id:
+      example: "2022-03-22 20:00:00"
+      selector:
+        text:
+    recurrence_range:
+      example: "THISANDFUTURE"
+      selector:
+        text:
+update_event:
+  target:
+    entity:
+      domain: calendar
+      supported_features:
+        - calendar.CalendarEntityFeature.UPDATE_EVENT
+  fields:
+    uid:
+      required: true
+      example: "1234567890"
+      selector:
+        text:
+    recurrence_id:
+      example: "2022-03-22 20:00:00"
+      selector:
+        text:
+    recurrence_range:
+      example: "THISANDFUTURE"
+      selector:
+        text:
+    summary:
+      required: true
+      example: "Department Party"
+      selector:
+        text:
+    description:
+      example: "Meeting to provide technical review for 'Phoenix' design."
+      selector:
+        text:
+    start_date_time:
+      example: "2022-03-22 20:00:00"
+      selector:
+        datetime:
+    end_date_time:
+      example: "2022-03-22 22:00:00"
+      selector:
+        datetime:
+    start_date:
+      example: "2022-03-22"
+      selector:
+        date:
+    end_date:
+      example: "2022-03-23"
+      selector:
+        date:
+    location:
+      example: "Conference Room - F123, Bldg. 002"
+      selector:
+        text:
+    rrule:
+      example: "FREQ=WEEKLY;COUNT=3"
+      selector:
+        text:
 get_events:
   target:
     entity:

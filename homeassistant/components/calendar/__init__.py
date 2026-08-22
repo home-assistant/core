@@ -24,7 +24,7 @@ from homeassistant.components.websocket_api import (
     ActiveConnection,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_EVENT, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_ENTITY_ID, CONF_EVENT, STATE_OFF, STATE_ON
 from homeassistant.core import (
     CALLBACK_TYPE,
     HomeAssistant,
@@ -221,7 +221,17 @@ def _empty_as_none(value: str | None) -> str | None:
     return value or None
 
 
+def _validate_recurrence_params(
+    recurrence_id: str | None, recurrence_range: str | None
+) -> None:
+    """Validate that a recurrence range has an occurrence to apply to."""
+    if recurrence_id is None and recurrence_range is not None:
+        raise HomeAssistantError("recurrence_range requires a recurrence_id")
+
+
 CREATE_EVENT_SERVICE = "create_event"
+DELETE_EVENT_SERVICE = "delete_event"
+UPDATE_EVENT_SERVICE = "update_event"
 CREATE_EVENT_SCHEMA = vol.All(
     cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
     cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME, EVENT_IN),
@@ -253,6 +263,54 @@ CREATE_EVENT_SCHEMA = vol.All(
                 }
             ),
         },
+    ),
+    _has_consistent_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
+    _as_local_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
+    _has_min_duration(EVENT_START_DATE, EVENT_END_DATE, MIN_NEW_EVENT_DURATION),
+    _has_min_duration(EVENT_START_DATETIME, EVENT_END_DATETIME, MIN_NEW_EVENT_DURATION),
+)
+
+DELETE_EVENT_SCHEMA = cv.make_entity_service_schema(
+    {
+        vol.Required(EVENT_UID): cv.string,
+        vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
+            vol.All(cv.string, _empty_as_none), None
+        ),
+        vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+    }
+)
+
+UPDATE_EVENT_SCHEMA = vol.All(
+    cv.has_at_least_one_key(EVENT_START_DATE, EVENT_START_DATETIME),
+    cv.has_at_most_one_key(EVENT_START_DATE, EVENT_START_DATETIME),
+    cv.make_entity_service_schema(
+        {
+            vol.Required(EVENT_UID): cv.string,
+            vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
+                vol.All(cv.string, _empty_as_none), None
+            ),
+            vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+            vol.Required(EVENT_SUMMARY): cv.string,
+            vol.Optional(EVENT_DESCRIPTION): cv.string,
+            vol.Optional(EVENT_LOCATION): cv.string,
+            vol.Inclusive(
+                EVENT_START_DATE, "dates", "Start and end dates must both be specified"
+            ): cv.date,
+            vol.Inclusive(
+                EVENT_END_DATE, "dates", "Start and end dates must both be specified"
+            ): cv.date,
+            vol.Inclusive(
+                EVENT_START_DATETIME,
+                "datetimes",
+                "Start and end datetimes must both be specified",
+            ): cv.datetime,
+            vol.Inclusive(
+                EVENT_END_DATETIME,
+                "datetimes",
+                "Start and end datetimes must both be specified",
+            ): cv.datetime,
+            vol.Optional(EVENT_RRULE): _validate_rrule,
+        }
     ),
     _has_consistent_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
     _as_local_timezone(EVENT_START_DATETIME, EVENT_END_DATETIME),
@@ -332,6 +390,18 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         CREATE_EVENT_SCHEMA,
         async_create_event,
         required_features=[CalendarEntityFeature.CREATE_EVENT],
+    )
+    component.async_register_entity_service(
+        DELETE_EVENT_SERVICE,
+        DELETE_EVENT_SCHEMA,
+        async_delete_event,
+        required_features=[CalendarEntityFeature.DELETE_EVENT],
+    )
+    component.async_register_entity_service(
+        UPDATE_EVENT_SERVICE,
+        UPDATE_EVENT_SCHEMA,
+        async_update_event,
+        required_features=[CalendarEntityFeature.UPDATE_EVENT],
     )
     component.async_register_entity_service(
         SERVICE_GET_EVENTS,
@@ -783,7 +853,7 @@ class CalendarEntity(Entity):
         recurrence_id: str | None = None,
         recurrence_range: str | None = None,
     ) -> None:
-        """Delete an event on the calendar."""
+        """Update an event on the calendar."""
         raise NotImplementedError
 
 
@@ -942,10 +1012,13 @@ async def handle_calendar_event_delete(
         return
 
     try:
+        recurrence_id = msg.get(EVENT_RECURRENCE_ID)
+        recurrence_range = msg.get(EVENT_RECURRENCE_RANGE)
+        _validate_recurrence_params(recurrence_id, recurrence_range)
         await entity.async_delete_event(
             msg[EVENT_UID],
-            recurrence_id=msg.get(EVENT_RECURRENCE_ID),
-            recurrence_range=msg.get(EVENT_RECURRENCE_RANGE),
+            recurrence_id=recurrence_id,
+            recurrence_range=recurrence_range,
         )
     except (HomeAssistantError, ValueError) as ex:
         _LOGGER.error("Error handling Calendar Event call: %s", ex)
@@ -990,11 +1063,14 @@ async def handle_calendar_event_update(
         return
 
     try:
+        recurrence_id = msg.get(EVENT_RECURRENCE_ID)
+        recurrence_range = msg.get(EVENT_RECURRENCE_RANGE)
+        _validate_recurrence_params(recurrence_id, recurrence_range)
         await entity.async_update_event(
             msg[EVENT_UID],
             msg[CONF_EVENT],
-            recurrence_id=msg.get(EVENT_RECURRENCE_ID),
-            recurrence_range=msg.get(EVENT_RECURRENCE_RANGE),
+            recurrence_id=recurrence_id,
+            recurrence_range=recurrence_range,
         )
     except (HomeAssistantError, ValueError) as ex:
         _LOGGER.error("Error handling Calendar Event call: %s", ex)
@@ -1106,6 +1182,52 @@ async def async_create_event(entity: CalendarEntity, call: ServiceCall) -> None:
         EVENT_END: end,
     }
     await entity.async_create_event(**params)
+
+
+async def async_delete_event(entity: CalendarEntity, call: ServiceCall) -> None:
+    """Delete an event on a calendar."""
+    recurrence_id = call.data.get(EVENT_RECURRENCE_ID)
+    recurrence_range = call.data.get(EVENT_RECURRENCE_RANGE)
+    _validate_recurrence_params(recurrence_id, recurrence_range)
+
+    await entity.async_delete_event(
+        call.data[EVENT_UID],
+        recurrence_id=recurrence_id,
+        recurrence_range=recurrence_range,
+    )
+
+
+async def async_update_event(entity: CalendarEntity, call: ServiceCall) -> None:
+    """Update an event on a calendar."""
+    recurrence_id = call.data.get(EVENT_RECURRENCE_ID)
+    recurrence_range = call.data.get(EVENT_RECURRENCE_RANGE)
+    _validate_recurrence_params(recurrence_id, recurrence_range)
+
+    start, end = _validate_timespan(call.data)
+    event = {
+        **{
+            key: value
+            for key, value in call.data.items()
+            if key
+            not in (
+                EVENT_TIME_FIELDS
+                | {
+                    ATTR_ENTITY_ID,
+                    EVENT_UID,
+                    EVENT_RECURRENCE_ID,
+                    EVENT_RECURRENCE_RANGE,
+                }
+            )
+        },
+        EVENT_START: start,
+        EVENT_END: end,
+    }
+    await entity.async_update_event(
+        call.data[EVENT_UID],
+        event,
+        recurrence_id=recurrence_id,
+        recurrence_range=recurrence_range,
+    )
 
 
 async def async_get_events_service(

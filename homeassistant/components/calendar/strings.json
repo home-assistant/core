@@ -110,6 +110,24 @@
       },
       "name": "Create calendar event"
     },
+    "delete_event": {
+      "description": "Deletes a calendar event.",
+      "fields": {
+        "recurrence_id": {
+          "description": "The recurrence ID of a single event in a recurring series.",
+          "name": "Recurrence ID"
+        },
+        "recurrence_range": {
+          "description": "Whether the action applies to this event and future events in the series.",
+          "name": "Recurrence range"
+        },
+        "uid": {
+          "description": "The unique identifier of the event to delete.",
+          "name": "UID"
+        }
+      },
+      "name": "Delete calendar event"
+    },
     "get_events": {
       "description": "Retrieves events on a calendar within a time range.",
       "fields": {
@@ -127,6 +145,56 @@
         }
       },
       "name": "Get calendar events"
+    },
+    "update_event": {
+      "description": "Updates a calendar event.",
+      "fields": {
+        "description": {
+          "description": "A more complete description of the event than the one provided by the summary.",
+          "name": "Description"
+        },
+        "end_date": {
+          "description": "The date the all-day event should end (exclusive).",
+          "name": "End date"
+        },
+        "end_date_time": {
+          "description": "The date and time the event should end.",
+          "name": "End time"
+        },
+        "location": {
+          "description": "The location of the event.",
+          "name": "Location"
+        },
+        "recurrence_id": {
+          "description": "The recurrence ID of a single event in a recurring series.",
+          "name": "Recurrence ID"
+        },
+        "recurrence_range": {
+          "description": "Whether the action applies to this event and future events in the series.",
+          "name": "Recurrence range"
+        },
+        "rrule": {
+          "description": "The recurrence rule for the event.",
+          "name": "Recurrence rule"
+        },
+        "start_date": {
+          "description": "The date the all-day event should start.",
+          "name": "Start date"
+        },
+        "start_date_time": {
+          "description": "The date and time the event should start.",
+          "name": "Start time"
+        },
+        "summary": {
+          "description": "Defines the short summary or subject for the event.",
+          "name": "Summary"
+        },
+        "uid": {
+          "description": "The unique identifier of the event to update.",
+          "name": "UID"
+        }
+      },
+      "name": "Update calendar event"
     }
   },
   "title": "Calendar",
