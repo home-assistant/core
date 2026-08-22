@@ -726,7 +726,7 @@ async def test_set_circulation_schedule_service_overlap_not_allowed(
         patch(
             f"{MODULE}._setup_vicare_api",
             return_value=MockPyViCare(
-                [Fixture(set(), "vicare/Vitocal222G_Vitovent300W.json")]
+                [Fixture(set(), "vicare/Vitocal250A.json")]
             ).as_vicare_data(),
         ),
         patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
@@ -735,10 +735,7 @@ async def test_set_circulation_schedule_service_overlap_not_allowed(
 
     entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
     await entity.async_update_ha_state(force_refresh=True)
-    assert entity._circulation_schedule_overlap_allowed is True
-
-    # Simulate a device that does not allow overlapping circulation slots.
-    entity._circulation_schedule_overlap_allowed = False
+    assert entity._circulation_schedule_overlap_allowed is False
 
     with patch.object(
         entity._api, "setDomesticHotWaterCirculationSchedule"
@@ -783,7 +780,7 @@ async def test_set_circulation_schedule_service_touching_slots_not_overlap(
         patch(
             f"{MODULE}._setup_vicare_api",
             return_value=MockPyViCare(
-                [Fixture(set(), "vicare/Vitocal222G_Vitovent300W.json")]
+                [Fixture(set(), "vicare/Vitocal250A.json")]
             ).as_vicare_data(),
         ),
         patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
@@ -792,7 +789,7 @@ async def test_set_circulation_schedule_service_touching_slots_not_overlap(
 
     entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
     await entity.async_update_ha_state(force_refresh=True)
-    entity._circulation_schedule_overlap_allowed = False
+    assert entity._circulation_schedule_overlap_allowed is False
 
     with patch.object(
         entity._api, "setDomesticHotWaterCirculationSchedule"
