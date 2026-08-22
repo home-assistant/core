@@ -223,11 +223,14 @@
       "keep_warm_time": {
         "name": "Keep Warm Time"
       },
+      "middle_compartment_temperature": {
+        "name": "Middle Compartment Temperature"
+      },
       "mode": {
         "name": "Mode",
         "state": {
           "appetizing_congee": "Appetizing Congee",
-          "assorte_rice": "Assorte Rice",
+          "assorte_rice": "Assorted Rice",
           "baby_congee": "Baby Congee",
           "baby_rice": "Baby Rice",
           "baby_side": "Baby Side",
@@ -262,7 +265,7 @@
           "fast_rice": "Fast Rice",
           "few_rice": "Few Rice",
           "firewood_rice": "Firewood Rice",
-          "five_ceeals_rice": "Five Ceeals Rice",
+          "five_ceeals_rice": "Five Cereals Rice",
           "four_color_vegetables": "Four Color Vegetables",
           "fragrant_dense_congee": "Fragrant Dense Congee",
           "fragrant_rice": "Fragrant Rice",
@@ -291,7 +294,7 @@
           "olla_pan_rice": "Olla Pan Rice",
           "one_two_cook": "One Two Cook",
           "online_celebrity_rice": "Online Celebrity Rice",
-          "original_steame": "Original Steame",
+          "original_steame": "Original Steam",
           "pork_porridge": "Pork Porridge",
           "pottery_jar_soup": "Pottery Jar Soup",
           "quick_freeze_bun": "Quick Freeze Bun",
@@ -367,6 +370,9 @@
       },
       "softwater_available": {
         "name": "Softwater Available"
+      },
+      "tank_actual_temperature": {
+        "name": "Tank Temperature"
       },
       "tank_level": {
         "name": "Tank Level"
