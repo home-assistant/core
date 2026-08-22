@@ -2,6 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from functools import wraps
+import logging
 from typing import TYPE_CHECKING, Any, cast
 
 import python_otbr_api
@@ -17,8 +18,9 @@ from homeassistant.components.thread import async_add_dataset, async_get_dataset
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .const import DEFAULT_CHANNEL, DOMAIN, EPHEMERAL_KEY_LIFETIME
+from .const import DEFAULT_CHANNEL, DOMAIN, EPHEMERAL_KEY_LIFETIME_MS
 from .util import (
+    EphemeralKeyInUse,
     EphemeralKeyNotSupported,
     OTBRData,
     compose_default_network_name,
@@ -29,6 +31,8 @@ from .util import (
 
 if TYPE_CHECKING:
     from . import OTBRConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @callback
@@ -219,12 +223,9 @@ async def websocket_create_ephemeral_key(
     data: OTBRData,
 ) -> None:
     """Create an ephemeral key for sharing the Thread network credentials."""
-    # Seconds on the wire, as otbr/set_channel does with its delay
-    lifetime: float = EPHEMERAL_KEY_LIFETIME / 1000
-
     try:
         ephemeral_key, port = await data.activate_ephemeral_key(
-            hass, EPHEMERAL_KEY_LIFETIME
+            hass, EPHEMERAL_KEY_LIFETIME_MS
         )
     except EphemeralKeyNotSupported:
         connection.send_error(
@@ -233,15 +234,24 @@ async def websocket_create_ephemeral_key(
             "The border router does not support credential sharing",
         )
         return
+    except EphemeralKeyInUse:
+        connection.send_error(
+            msg["id"],
+            "ephemeral_key_in_use",
+            "A device is currently joining through the active ephemeral key",
+        )
+        return
     except HomeAssistantError as exc:
         connection.send_error(msg["id"], "create_ephemeral_key_failed", str(exc))
         return
 
+    # The key grants Thread administration to whoever enters it, so leave a trace
+    _LOGGER.info("Ephemeral key for %s created by %s", data.url, connection.user.name)
     connection.send_result(
         msg["id"],
         {
             "ephemeral_key": ephemeral_key,
-            "lifetime": lifetime,
+            "lifetime": EPHEMERAL_KEY_LIFETIME_MS // 1000,
             "port": port,
         },
     )
@@ -251,6 +261,7 @@ async def websocket_create_ephemeral_key(
     {
         "type": "otbr/delete_ephemeral_key",
         vol.Required("extended_address"): str,
+        vol.Optional("ephemeral_key"): str,
     }
 )
 @websocket_api.require_admin
@@ -264,7 +275,7 @@ async def websocket_delete_ephemeral_key(
 ) -> None:
     """Deactivate the active ephemeral key, revoking the shared credentials."""
     try:
-        await data.deactivate_ephemeral_key(hass)
+        await data.deactivate_ephemeral_key(hass, msg.get("ephemeral_key"))
     except EphemeralKeyNotSupported:
         connection.send_error(
             msg["id"],
@@ -276,6 +287,7 @@ async def websocket_delete_ephemeral_key(
         connection.send_error(msg["id"], "delete_ephemeral_key_failed", str(exc))
         return
 
+    _LOGGER.info("Ephemeral key for %s deleted by %s", data.url, connection.user.name)
     connection.send_result(msg["id"])
 
 

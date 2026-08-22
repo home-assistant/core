@@ -4,6 +4,7 @@ from http import HTTPStatus
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+import aiohttp
 import pytest
 import python_otbr_api
 from yarl import URL
@@ -21,6 +22,7 @@ from . import (
     TEST_BORDER_AGENT_ID,
 )
 
+from tests.common import MockUser
 from tests.test_util.aiohttp import AiohttpClientMocker, AiohttpClientMockResponse
 from tests.typing import MockHAClientWebSocket, WebSocketGenerator
 
@@ -38,7 +40,13 @@ def mock_supervisor_client(supervisor_client: AsyncMock) -> None:
     """Mock supervisor client."""
 
 
-@pytest.mark.parametrize("ephemeral_key_supported", [True, False])
+@pytest.mark.parametrize(
+    ("ephemeral_key_probe_status", "ephemeral_key_supported"),
+    [
+        pytest.param(HTTPStatus.OK, True, id="supported"),
+        pytest.param(HTTPStatus.NOT_FOUND, False, id="not_supported"),
+    ],
+)
 async def test_get_info(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
@@ -893,11 +901,12 @@ async def test_create_ephemeral_key(
     assert msg["success"]
     assert msg["result"] == {
         "ephemeral_key": "700855744",
-        "lifetime": 120.0,
+        "lifetime": 300,
         "port": 49154,
     }
-    # The border agent API takes the lifetime in milliseconds
-    assert aioclient_mock.mock_calls[-1][2] == {"lifetime": 120000}
+    # The feature is enabled first; the border agent API takes the lifetime in ms
+    assert aioclient_mock.mock_calls[-2][2] == "enable"
+    assert aioclient_mock.mock_calls[-1][2] == {"lifetime": 300000}
 
 
 @pytest.mark.parametrize(
@@ -946,8 +955,11 @@ async def test_create_ephemeral_key_replaces_active_key(
     aioclient_mock: AiohttpClientMocker,
     websocket_client: MockHAClientWebSocket,
 ) -> None:
-    """Test an already active key is dropped so a new one can be created."""
+    """Test an unused active key is dropped so a new one can be created."""
     aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state")
+    aioclient_mock.get(
+        f"{BASE_URL}/node/ba-epskc/key", json={"state": "started", "port": 49154}
+    )
     aioclient_mock.delete(f"{BASE_URL}/node/ba-epskc/key")
     # The border router only accepts a new key from the stopped state, so the
     # first activation conflicts and only the one after the delete succeeds
@@ -981,39 +993,105 @@ async def test_create_ephemeral_key_replaces_active_key(
 
     assert msg["success"]
     assert msg["result"]["ephemeral_key"] == "700855744"
-    assert any(call[0] == "DELETE" for call in aioclient_mock.mock_calls)
+    assert [call[0] for call in aioclient_mock.mock_calls[-5:]] == [
+        "PUT",
+        "POST",
+        "GET",
+        "DELETE",
+        "POST",
+    ]
+
+
+@pytest.mark.parametrize("state", ["connected", "accepted"])
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_create_ephemeral_key_in_use(
+    aioclient_mock: AiohttpClientMocker,
+    websocket_client: MockHAClientWebSocket,
+    state: str,
+) -> None:
+    """Test a key a device is joining through is not replaced."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state")
+    aioclient_mock.post(f"{BASE_URL}/node/ba-epskc/key", status=HTTPStatus.CONFLICT)
+    aioclient_mock.get(
+        f"{BASE_URL}/node/ba-epskc/key", json={"state": state, "port": 49154}
+    )
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "ephemeral_key_in_use"
+    assert not any(call[0] == "DELETE" for call in aioclient_mock.mock_calls)
+
+
+KEY_STARTED = (HTTPStatus.OK, {"state": "started", "port": 49154})
 
 
 @pytest.mark.parametrize(
-    ("state_status", "key_responses", "delete_status"),
+    ("state_status", "key_responses", "key_status", "delete_status"),
     [
         pytest.param(
-            HTTPStatus.INTERNAL_SERVER_ERROR, [], HTTPStatus.OK, id="enable_fails"
+            HTTPStatus.INTERNAL_SERVER_ERROR,
+            [],
+            KEY_STARTED,
+            HTTPStatus.OK,
+            id="enable_fails",
         ),
         pytest.param(
             HTTPStatus.OK,
             [(HTTPStatus.INTERNAL_SERVER_ERROR, None)],
+            KEY_STARTED,
             HTTPStatus.OK,
             id="activate_fails",
         ),
         pytest.param(
             HTTPStatus.OK,
             [(HTTPStatus.OK, {"tap": "700855744"})],
+            KEY_STARTED,
             HTTPStatus.OK,
             id="missing_port",
         ),
         pytest.param(
-            HTTPStatus.OK, [(HTTPStatus.OK, [])], HTTPStatus.OK, id="not_a_dict"
+            HTTPStatus.OK,
+            [(HTTPStatus.OK, [])],
+            KEY_STARTED,
+            HTTPStatus.OK,
+            id="not_a_dict",
         ),
         pytest.param(
             HTTPStatus.OK,
             [(HTTPStatus.CONFLICT, None), (HTTPStatus.CONFLICT, None)],
+            KEY_STARTED,
             HTTPStatus.OK,
             id="conflict_after_replacement",
         ),
         pytest.param(
             HTTPStatus.OK,
             [(HTTPStatus.CONFLICT, None)],
+            (HTTPStatus.INTERNAL_SERVER_ERROR, None),
+            HTTPStatus.OK,
+            id="key_status_fails",
+        ),
+        pytest.param(
+            HTTPStatus.OK,
+            [(HTTPStatus.CONFLICT, None)],
+            (HTTPStatus.OK, {"port": 49154}),
+            HTTPStatus.OK,
+            id="key_status_missing_state",
+        ),
+        pytest.param(
+            HTTPStatus.OK,
+            [(HTTPStatus.CONFLICT, None)],
+            KEY_STARTED,
             HTTPStatus.INTERNAL_SERVER_ERROR,
             id="delete_fails",
         ),
@@ -1025,10 +1103,14 @@ async def test_create_ephemeral_key_fails(
     websocket_client: MockHAClientWebSocket,
     state_status: HTTPStatus,
     key_responses: list[tuple[HTTPStatus, Any]],
+    key_status: tuple[HTTPStatus, Any],
     delete_status: HTTPStatus,
 ) -> None:
     """Test create ephemeral key when the border router returns an error."""
     aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state", status=state_status)
+    aioclient_mock.get(
+        f"{BASE_URL}/node/ba-epskc/key", status=key_status[0], json=key_status[1]
+    )
     aioclient_mock.delete(f"{BASE_URL}/node/ba-epskc/key", status=delete_status)
     responses = [
         AiohttpClientMockResponse(
@@ -1058,6 +1140,55 @@ async def test_create_ephemeral_key_fails(
     assert msg["error"]["code"] == "create_ephemeral_key_failed"
     # Every scripted activation response was consumed and no extra one requested
     assert not responses
+
+
+@pytest.mark.parametrize("error", [aiohttp.ClientError, TimeoutError])
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_create_ephemeral_key_connection_error(
+    aioclient_mock: AiohttpClientMocker,
+    websocket_client: MockHAClientWebSocket,
+    error: type[Exception],
+) -> None:
+    """Test create ephemeral key when the border router cannot be reached."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state", exc=error)
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "create_ephemeral_key_failed"
+
+
+@pytest.mark.parametrize("command", EPHEMERAL_KEY_COMMANDS)
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_ephemeral_key_not_admin(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    hass_admin_user: MockUser,
+    command: str,
+) -> None:
+    """Test ephemeral key commands require an admin user."""
+    hass_admin_user.groups = []
+    websocket_client = await hass_ws_client(hass)
+    await websocket_client.send_json_auto_id(
+        {
+            "type": command,
+            "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        }
+    )
+
+    msg = await websocket_client.receive_json()
+    assert not msg["success"]
+    assert msg["error"]["code"] == "unauthorized"
 
 
 @pytest.mark.parametrize("command", EPHEMERAL_KEY_COMMANDS)
@@ -1127,6 +1258,77 @@ async def test_delete_ephemeral_key(
     assert msg["success"]
     assert msg["result"] is None
     assert aioclient_mock.mock_calls[-1][0] == "DELETE"
+
+
+@pytest.mark.parametrize(
+    ("ephemeral_key", "deleted"),
+    [
+        pytest.param("700855744", True, id="active_key"),
+        pytest.param("123456789", False, id="replaced_key"),
+    ],
+)
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_delete_ephemeral_key_by_key(
+    aioclient_mock: AiohttpClientMocker,
+    websocket_client: MockHAClientWebSocket,
+    ephemeral_key: str,
+    deleted: bool,
+) -> None:
+    """Test deleting a specific key only deactivates it if it is still active."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state")
+    aioclient_mock.post(
+        f"{BASE_URL}/node/ba-epskc/key", json={"tap": "700855744", "port": 49154}
+    )
+    aioclient_mock.delete(f"{BASE_URL}/node/ba-epskc/key")
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/create_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        assert (await websocket_client.receive_json())["success"]
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/delete_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+                "ephemeral_key": ephemeral_key,
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert msg["success"]
+    assert any(call[0] == "DELETE" for call in aioclient_mock.mock_calls) is deleted
+
+
+@pytest.mark.parametrize("error", [aiohttp.ClientError, TimeoutError])
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_delete_ephemeral_key_connection_error(
+    aioclient_mock: AiohttpClientMocker,
+    websocket_client: MockHAClientWebSocket,
+    error: type[Exception],
+) -> None:
+    """Test delete ephemeral key when the border router cannot be reached."""
+    aioclient_mock.delete(f"{BASE_URL}/node/ba-epskc/key", exc=error)
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address",
+        return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+    ):
+        await websocket_client.send_json_auto_id(
+            {
+                "type": "otbr/delete_ephemeral_key",
+                "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+            }
+        )
+        msg = await websocket_client.receive_json()
+
+    assert not msg["success"]
+    assert msg["error"]["code"] == "delete_ephemeral_key_failed"
 
 
 @pytest.mark.parametrize(

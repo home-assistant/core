@@ -69,19 +69,20 @@ def mock_api_actions(
     aioclient_mock.get(re.compile(r".*/api/actions$"), status=status)
 
 
-@pytest.fixture(name="ephemeral_key_supported")
-def ephemeral_key_supported_fixture() -> bool:
+@pytest.fixture(name="ephemeral_key_probe_status")
+def ephemeral_key_probe_status_fixture() -> HTTPStatus:
     """Override to control the ephemeral key support probe outcome."""
-    return True
+    return HTTPStatus.OK
 
 
 @pytest.fixture(autouse=True)
 def mock_ephemeral_key_state(
-    aioclient_mock: AiohttpClientMocker, ephemeral_key_supported: bool
+    aioclient_mock: AiohttpClientMocker, ephemeral_key_probe_status: HTTPStatus
 ) -> None:
     """Mock the /node/ba-epskc/state probe used to detect ephemeral key support."""
-    status = HTTPStatus.OK if ephemeral_key_supported else HTTPStatus.NOT_FOUND
-    aioclient_mock.get(re.compile(r".*/node/ba-epskc/state$"), status=status)
+    aioclient_mock.get(
+        re.compile(r".*/node/ba-epskc/state$"), status=ephemeral_key_probe_status
+    )
 
 
 @pytest.fixture(name="get_active_dataset_tlvs")
