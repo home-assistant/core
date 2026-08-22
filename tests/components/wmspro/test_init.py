@@ -96,6 +96,11 @@ async def test_device_setup(
     )
     assert len(device_entries) > len(mock_hub_configuration.destinations)
 
+    hub_device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert hub_device_entry is not None
+
     device_entries = list(
         filter(
             lambda e: e.identifiers != {(DOMAIN, mock_config_entry.entry_id)},
@@ -104,4 +109,5 @@ async def test_device_setup(
     )
     assert len(device_entries) >= len(mock_hub_configuration.destinations)
     for device_entry in device_entries:
+        assert device_entry.via_device_id == hub_device_entry.id
         assert device_entry == snapshot(name=f"device-{device_entry.serial_number}")

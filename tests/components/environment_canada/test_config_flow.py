@@ -9,6 +9,7 @@ import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.environment_canada.const import (
+    CONF_RADAR_COLORS,
     CONF_RADAR_DURATION,
     CONF_RADAR_FPS,
     CONF_RADAR_LAYER,
@@ -17,6 +18,7 @@ from homeassistant.components.environment_canada.const import (
     CONF_RADAR_RADIUS,
     CONF_RADAR_TIMESTAMP,
     CONF_STATION,
+    DEFAULT_RADAR_COLORS,
     DEFAULT_RADAR_DURATION,
     DEFAULT_RADAR_FPS,
     DEFAULT_RADAR_LAYER,
@@ -252,6 +254,7 @@ async def test_options_flow_form(hass: HomeAssistant, ec_data: dict[str, Any]) -
         CONF_RADAR_RADIUS,
         CONF_RADAR_DURATION,
         CONF_RADAR_FPS,
+        CONF_RADAR_COLORS,
     }
 
 
@@ -269,6 +272,7 @@ async def test_options_flow_save(hass: HomeAssistant, ec_data: dict[str, Any]) -
         CONF_RADAR_RADIUS: 100,
         CONF_RADAR_DURATION: 30,
         CONF_RADAR_FPS: 10,
+        CONF_RADAR_COLORS: "8",
     }
     with patch(
         "homeassistant.components.environment_canada.async_setup_entry",
@@ -296,6 +300,7 @@ async def test_options_flow_prefills_saved_options(
         CONF_RADAR_RADIUS: 300,
         CONF_RADAR_DURATION: 60,
         CONF_RADAR_FPS: 15,
+        CONF_RADAR_COLORS: "8",
     }
     config_entry = await init_integration(hass, ec_data, options=saved_options)
 
@@ -309,6 +314,7 @@ async def test_options_flow_prefills_saved_options(
     assert defaults[CONF_RADAR_RADIUS] == 300
     assert defaults[CONF_RADAR_DURATION] == 60
     assert defaults[CONF_RADAR_FPS] == 15
+    assert defaults[CONF_RADAR_COLORS] == "8"
 
 
 @pytest.mark.parametrize(
@@ -324,6 +330,7 @@ async def test_options_flow_prefills_saved_options(
                 "radius": DEFAULT_RADAR_RADIUS,
                 "loop_minutes": DEFAULT_RADAR_DURATION,
                 "fps": DEFAULT_RADAR_FPS,
+                "colors": int(DEFAULT_RADAR_COLORS),
             },
             id="defaults",
         ),
@@ -336,6 +343,7 @@ async def test_options_flow_prefills_saved_options(
                 CONF_RADAR_RADIUS: 150.0,
                 CONF_RADAR_DURATION: 30.0,
                 CONF_RADAR_FPS: 10.0,
+                CONF_RADAR_COLORS: "8",
             },
             {
                 "layer": "snow",
@@ -345,6 +353,7 @@ async def test_options_flow_prefills_saved_options(
                 "radius": 150,
                 "loop_minutes": 30,
                 "fps": 10,
+                "colors": 8,
             },
             id="custom",
         ),
@@ -373,3 +382,5 @@ async def test_ecmap_built_from_options(
     assert isinstance(kwargs["loop_minutes"], int)
     assert kwargs["fps"] == expected["fps"]
     assert isinstance(kwargs["fps"], int)
+    assert kwargs["colors"] == expected["colors"]
+    assert isinstance(kwargs["colors"], int)

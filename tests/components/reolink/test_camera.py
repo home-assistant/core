@@ -51,6 +51,14 @@ async def test_camera(
     reolink_host: MagicMock,
 ) -> None:
     """Test camera entity with fluent."""
+
+    def mock_supported(ch, capability):
+        if capability == "ext_stream":
+            return False
+        return True
+
+    reolink_host.supported = mock_supported
+
     with patch("homeassistant.components.reolink.PLATFORMS", [Platform.CAMERA]):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()

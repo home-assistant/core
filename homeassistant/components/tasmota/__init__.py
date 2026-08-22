@@ -114,17 +114,15 @@ async def _remove_device(
     device_registry: DeviceRegistry,
 ) -> None:
     """Remove a discovered Tasmota device."""
-    device = device_registry.async_get_device(
-        connections={(CONNECTION_NETWORK_MAC, mac)}
+    device = device_registry.async_get_device_by_connection(
+        (CONNECTION_NETWORK_MAC, mac), config_entry.entry_id
     )
 
-    if device is None or config_entry.entry_id not in device.config_entries:
+    if device is None:
         return
 
     _LOGGER.debug("Removing tasmota from device %s", mac)
-    device_registry.async_update_device(
-        device.id, remove_config_entry_id=config_entry.entry_id
-    )
+    device_registry.async_remove_device(device.id)
 
 
 def _update_device(

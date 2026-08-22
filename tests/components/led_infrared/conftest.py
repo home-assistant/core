@@ -8,12 +8,13 @@ import pytest
 from homeassistant.components.led_infrared.const import (
     CONF_DEVICE_TYPE,
     CONF_INFRARED_ENTITY_ID,
+    CONF_INFRARED_RECEIVER_ENTITY_ID,
     DOMAIN,
     LEDIrDeviceType,
 )
 
 from tests.common import MockConfigEntry
-from tests.components.infrared import EMITTER_ENTITY_ID
+from tests.components.infrared import EMITTER_ENTITY_ID, RECEIVER_ENTITY_ID
 
 
 @pytest.fixture
@@ -26,15 +27,20 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 
 @pytest.fixture(name="config_entry")
-def mock_config_entry() -> MockConfigEntry:
+def mock_config_entry(request: pytest.FixtureRequest) -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="LED Infrared via Test IR emitter",
         entry_id="1234567890",
         data={
-            CONF_DEVICE_TYPE: LEDIrDeviceType.GENERIC_24_KEY,
+            CONF_DEVICE_TYPE: (
+                request.param
+                if hasattr(request, "param")
+                else LEDIrDeviceType.GENERIC_24_KEY
+            ),
             CONF_INFRARED_ENTITY_ID: EMITTER_ENTITY_ID,
+            CONF_INFRARED_RECEIVER_ENTITY_ID: RECEIVER_ENTITY_ID,
         },
     )
 
@@ -54,6 +60,14 @@ def mock_infrared_code_to_command() -> Generator[None]:
         ) as mock_to_command,
         patch(
             "infrared_protocols.codes.generic.led.Generic13KeyCode.to_command",
+            new=mock_to_command,
+        ),
+        patch(
+            "infrared_protocols.codes.generic.led.Generic40KeyCode.to_command",
+            new=mock_to_command,
+        ),
+        patch(
+            "infrared_protocols.codes.generic.led.Generic44KeyCode.to_command",
             new=mock_to_command,
         ),
     ):

@@ -116,7 +116,7 @@ class SystemBridgeConfigFlow(
     """Handle a config flow for System Bridge."""
 
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     _name: str
 
