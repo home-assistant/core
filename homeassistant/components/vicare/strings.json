@@ -696,6 +696,15 @@
       "title": "Update your API client in the Viessmann Developer Portal"
     }
   },
+  "selector": {
+    "circulation_schedule_mode": {
+      "options": {
+        "5_10_cycles": "5/10 cycles",
+        "5_25_cycles": "5/25 cycles",
+        "on": "On"
+      }
+    }
+  },
   "services": {
     "set_circulation_schedule": {
       "description": "Sets the DHW circulation pump weekly schedule.",

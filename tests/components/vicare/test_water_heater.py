@@ -631,6 +631,9 @@ async def test_set_circulation_schedule_service_unsupported_mode(
     await entity.async_update_ha_state(force_refresh=True)
     assert entity._circulation_schedule_modes == ["5/25-cycles", "5/10-cycles", "on"]
 
+    # Simulate a device that does not report every known circulation mode.
+    entity._circulation_schedule_modes = ["on"]
+
     with patch.object(
         entity._api, "setDomesticHotWaterCirculationSchedule"
     ) as mock_set:
@@ -645,7 +648,7 @@ async def test_set_circulation_schedule_service_unsupported_mode(
                         {
                             "start_time": "06:00",
                             "end_time": "07:00",
-                            "mode": "unsupported-mode",
+                            "mode": "5_10_cycles",
                             "position": 0,
                         }
                     ],
@@ -653,6 +656,49 @@ async def test_set_circulation_schedule_service_unsupported_mode(
                 blocking=True,
             )
         mock_set.assert_not_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_set_circulation_schedule_service_invalid_mode_literal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test set_circulation_schedule rejects a mode outside the known options."""
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(_FIXTURES).as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
+    with (
+        patch.object(entity._api, "setDomesticHotWaterCirculationSchedule") as mock_set,
+        pytest.raises(vol.Invalid),
+    ):
+        await hass.services.async_call(
+            "vicare",
+            SERVICE_SET_CIRCULATION_SCHEDULE,
+            {
+                ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
+                "monday": [
+                    {
+                        "start_time": "06:00",
+                        "end_time": "07:00",
+                        "mode": "unsupported-mode",
+                        "position": 0,
+                    }
+                ],
+            },
+            blocking=True,
+        )
+    mock_set.assert_not_called()
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

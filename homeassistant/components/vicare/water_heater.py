@@ -50,6 +50,15 @@ CIRCULATION_SCHEDULE_DAYS = (
 # is treated as the sentinel for "24:00" once serialized back to the ViCare API.
 CIRCULATION_SCHEDULE_MIDNIGHT_END = "24:00"
 
+# Maps the snake_case, translatable service field values to the raw ViCare
+# circulation mode strings (which are not valid translation keys as-is).
+CIRCULATION_SCHEDULE_MODES = (
+    ("on", "on"),
+    ("5_25_cycles", "5/25-cycles"),
+    ("5_10_cycles", "5/10-cycles"),
+)
+CIRCULATION_SCHEDULE_MODE_TO_RAW = dict(CIRCULATION_SCHEDULE_MODES)
+
 
 def _parse_end_time(value: Any) -> dt_time:
     """Parse a slot end time, accepting the literal "24:00" for midnight."""
@@ -72,7 +81,7 @@ CIRCULATION_SCHEDULE_SLOT_SCHEMA = vol.All(
         {
             vol.Required("start_time"): cv.time,
             vol.Required("end_time"): _parse_end_time,
-            vol.Required("mode"): cv.string,
+            vol.Required("mode"): vol.In(CIRCULATION_SCHEDULE_MODE_TO_RAW),
             vol.Required("position"): vol.All(int, vol.Range(min=0)),
         }
     ),
@@ -99,7 +108,7 @@ def _serialize_slot(slot: dict[str, Any]) -> dict[str, Any]:
     return {
         "start": slot["start_time"].strftime("%H:%M"),
         "end": end,
-        "mode": slot["mode"],
+        "mode": CIRCULATION_SCHEDULE_MODE_TO_RAW[slot["mode"]],
         "position": slot["position"],
     }
 
@@ -168,6 +177,9 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         super().__init__(circuit.id, device_serial, device_config, device)
         self._circuit = circuit
         self._attributes: dict[str, Any] = {}
+        # Populate modes/constraints before the entity is advertised, so
+        # supported_features and schedule validation are correct immediately.
+        self.update()
 
     def update(self) -> None:
         """Let HA know there has been an update from the ViCare API."""
@@ -239,7 +251,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                 )
             if modes is not None:
                 for slot in slots:
-                    if slot["mode"] not in modes:
+                    if CIRCULATION_SCHEDULE_MODE_TO_RAW[slot["mode"]] not in modes:
                         raise ServiceValidationError(
                             translation_domain=DOMAIN,
                             translation_key="circulation_schedule_mode_not_supported",
@@ -255,6 +267,7 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             for full_day, short_day in CIRCULATION_SCHEDULE_DAYS
         }
         self._api.setDomesticHotWaterCirculationSchedule(schedule)
+        self._circulation_schedule = schedule
 
     @property
     def _circuit_mode_map(self) -> dict[str, str]:

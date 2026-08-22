@@ -20,8 +20,9 @@
             select:
               options:
                 - "on"
-                - "5/25-cycles"
-                - "5/10-cycles"
+                - "5_25_cycles"
+                - "5_10_cycles"
+              translation_key: circulation_schedule_mode
               mode: dropdown
         position:
           required: true
