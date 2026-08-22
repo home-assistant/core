@@ -31,7 +31,6 @@ from homeassistant.util.dt import utcnow
 
 from . import mock_cloud, mock_cloud_prefs
 
-# PyJWT warns about HS256 keys shorter than 32 bytes
 ID_TOKEN_SIGNING_KEY = "cloud-test-id-token-signing-key-0"
 
 
