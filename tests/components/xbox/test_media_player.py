@@ -63,11 +63,7 @@ def media_player_only() -> Generator[None]:
 
 @pytest.fixture(autouse=True)
 def mock_token() -> Generator[MagicMock]:
-    """Mock token generator.
-
-    This also fixes the JWT key of Home Assistant's own access tokens, so the
-    value has to stay at least the 32 bytes PyJWT wants for HS256.
-    """
+    """Mock token generator."""
     with patch(
         "secrets.token_hex", return_value="mock_token_0123456789abcdef01234"
     ) as token:
