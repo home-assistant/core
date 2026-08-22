@@ -99,6 +99,7 @@ class ProtectDetectionEventEntityDescription(ProtectEventEntityDescription):
     """Describes a category detection event entity driven by the public events WS."""
 
     ufp_public_event_types: tuple[EventType, ...]
+    include_event_source: bool = False
 
 
 class ProtectDevicePublicEventEntity(
@@ -134,6 +135,8 @@ class ProtectDevicePublicEventEntity(
         # Pop-and-reinsert so any dispatch refreshes this event id's recency; a
         # long-running event that keeps updating is then not evicted below.
         types = fired.pop(event.id, frozenset())
+        # Protect can reuse an event id across overlapping smart-detect sources,
+        # so omitting event.type would swallow a later line or loiter event.
         fired_type = (event_type, event.type)
         if fired_type in types:
             fired[event.id] = types
@@ -529,7 +532,8 @@ class ProtectDeviceDetectionEventEntity(ProtectDevicePublicEventEntity):
 
     @callback
     def _async_detection_event(self, event: ProtectEvent) -> None:
-        allowed = self.entity_description.event_types or ()
+        description = self.entity_description
+        allowed = description.event_types or ()
         # One fire per detected type so each stays independently automatable
         # (incl. types with no binary sensor); carries the co-detected set known
         # at fire time (types can still arrive on a later update).
@@ -540,7 +544,10 @@ class ProtectDeviceDetectionEventEntity(ProtectDevicePublicEventEntity):
                     ATTR_EVENT_ID: event.id,
                     ATTR_SMART_DETECT_TYPES: detected,
                 }
-                if event.type in _SMART_DETECT_EVENT_TYPES:
+                if description.include_event_source:
+                    # Keep this raw: hassfest state translation keys reject
+                    # camelCase, so normalization belongs in uiprotect. It remains
+                    # recordable to distinguish overlapping sources in history.
                     event_data[ATTR_EVENT_SOURCE] = event.type.value
                 self._fire_once(
                     event,
@@ -616,6 +623,7 @@ EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
         ufp_required_field="feature_flags.has_smart_detect",
         event_types=_SMART_OBJECT_EVENT_TYPES,
         ufp_public_event_types=_SMART_DETECT_EVENT_TYPES,
+        include_event_source=True,
         entity_class=ProtectDeviceDetectionEventEntity,
     ),
     ProtectDetectionEventEntityDescription(

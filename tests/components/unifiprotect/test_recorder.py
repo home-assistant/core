@@ -71,7 +71,7 @@ async def test_exclude_attributes(
     states = await hass.async_add_executor_job(
         get_significant_states, hass, now, None, hass.states.async_entity_ids()
     )
-    assert len(states) >= 1
+    assert entity_id in states
     assert (
         states[entity_id][-1].attributes[ATTR_EVENT_SOURCE]
         == EventType.SMART_DETECT.value

@@ -1793,24 +1793,36 @@ async def test_motion_detection_event(
         hass, Platform.EVENT, doorbell, description
     )
 
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, entity_id, _capture)
+    motion_event = ProtectEvent(
+        id="motion-1",
+        type=EventType.MOTION,
+        channel=ProtectEventChannel.DETECTION,
+        device_id=doorbell.id,
+        device_mac=doorbell.mac,
+        start=fixed_now - timedelta(seconds=1),
+        end=fixed_now,
+    )
     ufp.events_msg(
-        ProtectEvent(
-            id="motion-1",
-            type=EventType.MOTION,
-            channel=ProtectEventChannel.DETECTION,
-            device_id=doorbell.id,
-            device_mac=doorbell.mac,
-            start=fixed_now - timedelta(seconds=1),
-            end=fixed_now,
-        ),
+        motion_event,
         EventChange.STARTED,
     )
+    ufp.events_msg(motion_event, EventChange.UPDATED)
     await hass.async_block_till_done()
+    unsub()
 
+    assert len(events) == 1
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["event_type"] == "motion"
     assert state.attributes[ATTR_EVENT_ID] == "motion-1"
+    assert ATTR_EVENT_SOURCE not in state.attributes
 
 
 @pytest.mark.parametrize(
