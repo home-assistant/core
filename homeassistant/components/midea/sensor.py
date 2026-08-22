@@ -584,7 +584,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
             "partial_freezing",
             "dry_zone",
             "freeze_warm",
-            "partial_freezing",
         ],
     ),
     MideaSensorEntityDescription(
