@@ -31,6 +31,9 @@ from homeassistant.util.dt import utcnow
 
 from . import mock_cloud, mock_cloud_prefs
 
+# PyJWT warns about HS256 keys shorter than 32 bytes
+ID_TOKEN_SIGNING_KEY = "cloud-test-id-token-signing-key-0"
+
 
 @pytest.fixture(autouse=True)
 async def load_homeassistant(hass: HomeAssistant) -> None:
@@ -171,7 +174,7 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
                     "custom:sub-exp": "2018-01-03",
                     "cognito:username": "abcdefghjkl",
                 },
-                "test",
+                ID_TOKEN_SIGNING_KEY,
             )
             mock_cloud.access_token = "test_access_token"
             mock_cloud.refresh_token = "test_refresh_token"
@@ -258,7 +261,7 @@ def mock_cloud_login(hass: HomeAssistant, mock_cloud_setup: None) -> Generator[N
             "custom:sub-exp": "2300-01-03",
             "cognito:username": "abcdefghjkl",
         },
-        "test",
+        ID_TOKEN_SIGNING_KEY,
     )
     with patch.object(hass.data[DATA_CLOUD].auth, "async_check_token"):
         yield
@@ -283,5 +286,5 @@ def mock_expired_cloud_login(hass: HomeAssistant, mock_cloud_setup: None) -> Non
             "custom:sub-exp": "2018-01-01",
             "cognito:username": "abcdefghjkl",
         },
-        "test",
+        ID_TOKEN_SIGNING_KEY,
     )
