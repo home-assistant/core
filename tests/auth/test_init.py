@@ -32,8 +32,6 @@ from tests.common import (
     flush_store,
 )
 
-# The signature does not matter for these tests, but PyJWT warns about
-# HS256 keys shorter than 32 bytes
 INVALID_SIGNING_KEY = b"invalid-signing-key-for-testing0"
 
 
