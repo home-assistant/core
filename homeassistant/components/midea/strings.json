@@ -175,10 +175,10 @@
       "filter_life_level": {
         "name": "Filter {filter_number} Life Level"
       },
-      "flex_zone_actual_temperature": {
+      "flex_zone_actual_temp": {
         "name": "Flex Zone Actual Temperature"
       },
-      "flex_zone_setting_temperature": {
+      "flex_zone_setting_temp": {
         "name": "Flex Zone Setting Temperature"
       },
       "flow_rate": {
