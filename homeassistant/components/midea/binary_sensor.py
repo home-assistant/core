@@ -1,6 +1,6 @@
 """Binary sensor for Midea Lan."""
 
-from typing import cast, override
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -102,7 +102,7 @@ async def async_setup_entry(
     binary_sensors = [
         MideaBinarySensor(device, description)
         for description in BINARY_SENSORS
-        if device.attributes.get(description.key) is not None
+        if description.key in device.attributes
     ]
     async_add_entities(binary_sensors)
 
@@ -112,6 +112,9 @@ class MideaBinarySensor(MideaEntity, BinarySensorEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return true if sensor state is on."""
-        return cast("bool", self._device.get_attribute(self.entity_description.key))
+        value = self._device.get_attribute(self.entity_description.key)
+        if not isinstance(value, bool):
+            return None
+        return value
