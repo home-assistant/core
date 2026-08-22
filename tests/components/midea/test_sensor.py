@@ -202,7 +202,7 @@ async def test_sensor_state_update(
             ACAttributes.mode: 1,
             ACAttributes.target_temperature: 22.0,
             ACAttributes.indoor_temperature: 21.0,
-            ACAttributes.indoor_humidity: 50,
+            ACAttributes.indoor_humidity: 0,
             ACAttributes.full_dust: False,
             ACAttributes.outdoor_temperature: "unknown",
         },
@@ -230,6 +230,19 @@ async def test_sensor_state_update(
     entity_entry = entity_entries(hass, config_entry)[
         f"{TEST_DEVICE_ID}_outdoor_temperature"
     ]
+    state = hass.states.get(entity_entry.entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+    entity_entry = entity_entries(hass, config_entry)[
+        f"{TEST_DEVICE_ID}_indoor_humidity"
+    ]
+    state = hass.states.get(entity_entry.entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+    device.set_attribute(ACAttributes.indoor_humidity, 255)
+    await hass.async_block_till_done()
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == "unknown"
