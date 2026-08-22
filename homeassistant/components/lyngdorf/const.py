@@ -7,6 +7,7 @@ DEFAULT_DEVICE_NAME = "Lyngdorf"
 
 PLATFORMS: list[Platform] = [
     Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
     Platform.SENSOR,
 ]
 CONF_SERIAL_NUMBER = "serial_number"
