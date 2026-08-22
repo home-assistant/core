@@ -417,7 +417,7 @@ async def test_device_remove_devices_nvr(
     await hass.config_entries.async_setup(ufp.entry.entry_id)
     await hass.async_block_till_done()
 
-    live_device_entry = list(device_registry.devices.values())[0]
+    live_device_entry = list(device_registry.devices)[0]
     client = await hass_ws_client(hass)
     response = await client.remove_device(live_device_entry.id)
     assert not response["success"]
