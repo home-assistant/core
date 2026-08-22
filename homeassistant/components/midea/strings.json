@@ -309,7 +309,7 @@
         "name": "Heating power"
       },
       "humidity_compensate": {
-        "name": "Humidity compensate"
+        "name": "Humidity compensation"
       },
       "humidity_raw": {
         "name": "Humidity raw"
@@ -502,7 +502,7 @@
         "name": "Water outlet temperature"
       },
       "temperature_compensate": {
-        "name": "Temperature compensate"
+        "name": "Temperature compensation"
       },
       "temperature_raw": {
         "name": "Temperature raw"
