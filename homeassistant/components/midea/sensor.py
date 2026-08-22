@@ -828,6 +828,12 @@ class MideaSensor(MideaEntity, SensorEntity):
     def native_value(self) -> StateType:
         """Native value of the sensor."""
         value = self._device.get_attribute(self.entity_description.key)
-        if type(value) is str and value == "unknown":
-            value = None
+        if (
+             self.entity_description.key == "indoor_humidity"
+             and isinstance(value, (int, float))
+             and value in {0, 0xFF}
+         ):
+             return None
+         if value == "unknown":
+             return None
         return cast("StateType", value)
