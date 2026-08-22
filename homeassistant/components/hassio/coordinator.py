@@ -16,6 +16,7 @@ from aiohasupervisor.models import (
     HomeAssistantInfo,
     HomeAssistantStats,
     HostInfo,
+    IngressPanel,
     InstalledAddon,
     InstalledAddonComplete,
     Issue as SupervisorIssue,
@@ -83,6 +84,7 @@ from .const import (
     EVENT_ISSUE_CHANGED,
     EVENT_ISSUE_REMOVED,
     EVENT_JOB,
+    EVENT_STORE_RELOADED,
     EVENT_SUPERVISOR_EVENT,
     EVENT_SUPERVISOR_UPDATE,
     EVENT_SUPPORTED_CHANGED,
@@ -776,6 +778,7 @@ class HassioMainData:
     host: HostInfo
     mounts: dict[str, CIFSMountResponse | NFSMountResponse]
     os: OSInfo | None
+    panels: dict[str, IngressPanel]
 
     def to_dict(self) -> dict[str, Any]:
         """Return a dictionary representation of the data."""
@@ -785,6 +788,7 @@ class HassioMainData:
             "host": self.host.to_dict(),
             "mounts": {name: mount.to_dict() for name, mount in self.mounts.items()},
             "os": self.os.to_dict() if self.os is not None else None,
+            "panels": {slug: panel.to_dict() for slug, panel in self.panels.items()},
         }
 
 
@@ -1296,6 +1300,23 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
         self.dev_reg = dev_reg
         self._addon_info_subscriptions: defaultdict[str, set[str]] = defaultdict(set)
         self.supervisor_client = get_supervisor_client(hass)
+        self._dispatcher_disconnect = async_dispatcher_connect(
+            hass, EVENT_SUPERVISOR_EVENT, self._supervisor_event
+        )
+
+    @callback
+    def _supervisor_event(self, event: dict[str, Any]) -> None:
+        """Refresh add-on data when Supervisor reloads the store."""
+        if event.get(ATTR_WS_EVENT) != EVENT_STORE_RELOADED:
+            return
+        # Without listeners there are no add-on entities to keep in sync.
+        # Scheduled polling is paused in that case as well, so don't let
+        # store reload events trigger refreshes either.
+        if not self._listeners:
+            return
+        self.config_entry.async_create_task(
+            self.hass, self.async_refresh_after_store_reload()
+        )
 
     @override
     async def _async_update_data(self) -> HassioAddonData:
@@ -1462,6 +1483,12 @@ class HassioAddOnDataUpdateCoordinator(DataUpdateCoordinator[HassioAddonData]):
             addon_info_cache = self.hass.data.setdefault(DATA_ADDONS_INFO, {})
             addon_info_cache[slug] = info
 
+    @override
+    async def async_shutdown(self) -> None:
+        """Shut down and clean up when config entry unloaded."""
+        await super().async_shutdown()
+        self._dispatcher_disconnect()
+
 
 class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
     """Class to retrieve Hass.io status."""
@@ -1502,6 +1529,25 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         ):
             self.config_entry.async_create_task(self.hass, self.async_request_refresh())
 
+    @callback
+    def async_push_panel(self, addon: str, panel: IngressPanel) -> None:
+        """Apply a Supervisor panel push to cached data without touching refresh state."""
+        self.data = replace(self.data, panels={**self.data.panels, addon: panel})
+        self.async_update_listeners()
+
+    @callback
+    def async_push_panel_removal(self, addon: str) -> None:
+        """Apply a Supervisor panel removal push to cached data."""
+        if addon not in self.data.panels:
+            return
+        self.data = replace(
+            self.data,
+            panels={
+                slug: panel for slug, panel in self.data.panels.items() if slug != addon
+            },
+        )
+        self.async_update_listeners()
+
     @override
     async def _async_update_data(self) -> HassioMainData:
         """Update data via library."""
@@ -1511,7 +1557,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
         try:
             # Cast is required here because asyncio.gather only has overloads to
             # maintain typing for 6 arguments. It falls back to list[<common parent>]
-            # after that which is what mypy sees here since we have 7 API calls.
+            # after that which is what mypy sees here since we have 8 API calls.
             (
                 info,
                 core_info,
@@ -1520,6 +1566,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                 host_info,
                 store_info,
                 network_info,
+                panels_info,
             ) = cast(
                 tuple[
                     RootInfo,
@@ -1529,6 +1576,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                     HostInfo,
                     StoreInfo,
                     NetworkInfo,
+                    dict[str, IngressPanel],
                 ],
                 await asyncio.gather(
                     client.info(),
@@ -1538,6 +1586,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
                     client.host.info(),
                     client.store.info(),
                     client.network.info(),
+                    client.ingress.panels(),
                 ),
             )
             mounts_info = await client.mounts.info()
@@ -1552,6 +1601,7 @@ class HassioMainDataUpdateCoordinator(DataUpdateCoordinator[HassioMainData]):
             host=host_info,
             mounts={mount.name: mount for mount in mounts_info.mounts},
             os=os_info if self.is_hass_os else None,
+            panels=panels_info,
         )
 
         # Update hass.data for legacy accessor functions

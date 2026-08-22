@@ -2,7 +2,7 @@
 
 import asyncio
 from collections import defaultdict
-from collections.abc import Iterable, Mapping, Set as AbstractSet
+from collections.abc import Collection, Iterable, Iterator, Mapping, Set as AbstractSet
 import copy
 from dataclasses import dataclass
 from datetime import datetime
@@ -1528,6 +1528,76 @@ class ActiveDeviceRegistryItems(DeviceRegistryItems[DeviceEntry]):
         }
 
 
+class _DeprecatedDeviceRegistryItemsView:
+    """Backwards-compatible view returned by the `DeviceRegistry.devices` property.
+
+    Can be removed in release 2027.9.
+
+    Iterating this yields the `DeviceEntry` values, which is the supported way to
+    enumerate the registry (`for entry in registry.devices`, `list(registry.devices)`
+    and similar). Using it as a mapping - subscription, device-id membership,
+    `.values()`, `.get()`, `.get_entry()` and the other container methods - is
+    deprecated: each such access is reported via `report_usage` (raising for core code
+    and core integrations, warning for custom integrations) and then delegated to the
+    underlying container.
+    """
+
+    __slots__ = ("_devices",)
+
+    def __init__(self, devices: ActiveDeviceRegistryItems) -> None:
+        """Initialize the view over a device registry."""
+        self._devices = devices
+
+    def __iter__(self) -> Iterator[DeviceEntry]:
+        """Iterate over the device entries."""
+        return iter(self._devices.values())
+
+    def __len__(self) -> int:
+        """Return the number of device entries."""
+        return len(self._devices)
+
+    def _report_deprecated_use(self) -> None:
+        """Report deprecated use of `DeviceRegistry.devices`."""
+        report_usage(
+            "uses `device_registry.devices` as a mapping or calls its lookup "
+            "methods, which is deprecated; iterate it to get the device entries, "
+            "or use `async_get`, `async_entries_for_config_entry` and similar "
+            "helpers for lookups",
+            breaks_in_ha_version="2027.9.0",
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.LOG,
+        )
+
+    def __getitem__(self, key: str) -> DeviceEntry:
+        """Return the device entry for a device id (deprecated)."""
+        self._report_deprecated_use()
+        return self._devices[key]
+
+    def __contains__(self, obj: object) -> bool:
+        """Return whether a device entry - or, deprecated, a device id - is registered.
+
+        Value membership (`DeviceEntry in registry.devices`) is the supported use and
+        matches the `Collection[DeviceEntry]` type. Membership by device id (a `str`)
+        is the old key-based mapping behavior and is deprecated.
+        """
+        # DeviceEntry is never subclassed, a direct type check is safe
+        if type(obj) is DeviceEntry:
+            return self._devices.get(obj.id) == obj
+        if isinstance(obj, str):
+            self._report_deprecated_use()
+            return obj in self._devices
+        return False
+
+    def __getattr__(self, name: str) -> Any:
+        """Delegate the remaining mapping methods to the container (deprecated)."""
+        # Private and dunder names are never proxied.
+        if name.startswith("_"):
+            raise AttributeError(name)
+        self._report_deprecated_use()
+        return getattr(self._devices, name)
+
+
 class ChildDeviceRegistryItems(BaseRegistryItems[ChildDeviceEntry]):
     """Container for child device registry entries, maps child device id -> entry.
 
@@ -1715,9 +1785,11 @@ class DeletedDeviceRegistryItems(DeviceRegistryItems[DeletedDeviceEntry]):
 class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     """Class to hold a registry of devices."""
 
-    devices: ActiveDeviceRegistryItems
-    child_devices: ChildDeviceRegistryItems
-    deleted_devices: DeletedDeviceRegistryItems
+    _devices: ActiveDeviceRegistryItems
+    devices: Collection[DeviceEntry]
+    _child_devices: ChildDeviceRegistryItems
+    child_devices: Collection[ChildDeviceEntry]
+    _deleted_devices: DeletedDeviceRegistryItems
     _device_data: dict[str, DeviceEntry]
     _child_device_data: dict[str, ChildDeviceEntry]
 
@@ -1737,6 +1809,22 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             minor_version=STORAGE_VERSION_MINOR,
             serialize_in_event_loop=False,
         )
+
+    @property
+    def deleted_devices(self) -> DeletedDeviceRegistryItems:
+        """Return the deleted devices container (deprecated).
+
+        Can be removed in release 2027.9.
+        """
+        report_usage(
+            "accesses `device_registry.deleted_devices`, which is deprecated and "
+            "an internal implementation detail of the device registry",
+            breaks_in_ha_version="2027.9.0",
+            core_behavior=ReportBehavior.ERROR,
+            core_integration_behavior=ReportBehavior.ERROR,
+            custom_integration_behavior=ReportBehavior.LOG,
+        )
+        return self._deleted_devices
 
     @overload
     def async_get(
@@ -1814,7 +1902,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         ):
             return child_device
         if include_composite_devices and (
-            split_devices := self.devices.get_devices_for_composite_device_id(device_id)
+            split_devices := self._devices.get_devices_for_composite_device_id(
+                device_id
+            )
         ):
             return self._restore_composite_device(device_id, split_devices)
         return None
@@ -1917,7 +2007,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         Identifiers are unique within a config entry, so unlike async_get_device
         the lookup cannot be ambiguous.
         """
-        return self.devices.get_entry(
+        return self._devices.get_entry(
             identifiers={identifier}, config_entry_id=config_entry_id
         )
 
@@ -1930,7 +2020,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         Identifiers are unique within a config entry, so the lookup cannot be
         ambiguous.
         """
-        return self.child_devices.get_entry(
+        return self._child_devices.get_entry(
             identifiers={identifier}, config_entry_id=config_entry_id
         )
 
@@ -1943,7 +2033,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         Connections are unique within a config entry, so unlike async_get_device
         the lookup cannot be ambiguous.
         """
-        return self.devices.get_entry(
+        return self._devices.get_entry(
             connections={connection}, config_entry_id=config_entry_id
         )
 
@@ -1962,7 +2052,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         If config_entry_id is given, only devices owned by that config entry are
         returned.
         """
-        return self.devices.get_entries(
+        return self._devices.get_entries(
             identifiers, connections, config_entry_id=config_entry_id
         )
 
@@ -1983,7 +2073,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         connections: AbstractSet[tuple[str, str]] | None,
     ) -> list[DeviceEntry]:
         """Return devices matching the lookup, narrowed by identifier-domain priority."""
-        matches = self.devices.get_entries(identifiers, connections)
+        matches = self._devices.get_entries(identifiers, connections)
         if len(matches) > 1 and identifiers:
             domains = {identifier[0] for identifier in identifiers}
             preferred = [
@@ -2005,9 +2095,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self, device_id: str
     ) -> list[str] | None:
         """Return the underlying real device ids if device_id is a composite."""
-        if device_id in self.devices:
+        if device_id in self._devices:
             return None
-        if split_devices := self.devices.get_devices_for_composite_device_id(device_id):
+        if split_devices := self._devices.get_devices_for_composite_device_id(
+            device_id
+        ):
             return [split_device.id for split_device in split_devices]
         return None
 
@@ -2025,7 +2117,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         identifier/connection resolved to a single multi-config-entry device. Returns an
         empty list for a device id which is not a composite device id.
         """
-        return self.devices.get_devices_for_composite_device_id(composite_device_id)
+        return self._devices.get_devices_for_composite_device_id(composite_device_id)
 
     @callback
     def async_is_composite_device_id(self, device_id: str) -> bool | None:
@@ -2044,9 +2136,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             core_integration_behavior=ReportBehavior.ERROR,
             breaks_in_ha_version="2027.9.0",
         )
-        if device_id in self.devices:
+        if device_id in self._devices:
             return False
-        if self.devices.get_devices_for_composite_device_id(device_id):
+        if self._devices.get_devices_for_composite_device_id(device_id):
             return True
         return None
 
@@ -2060,9 +2152,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         it was split into - preferring the split owned by config_entry_id, then one
         owned by the same domain, then any of them. Returns None for an unknown id.
         """
-        if via_device_id in self.devices:
+        if via_device_id in self._devices:
             return via_device_id
-        if splits := self.devices.get_devices_for_composite_device_id(via_device_id):
+        if splits := self._devices.get_devices_for_composite_device_id(via_device_id):
             # The composite resolution can be removed in HA Core 2027.8
             report_usage(
                 f"passes the id of a pre-migration composite device {via_device_id} "
@@ -2258,7 +2350,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # We do not allow registering a device without parent_device_id if the
         # identifiers match an existing child.
         if (
-            matched_child_device := self.child_devices.get_entry(
+            matched_child_device := self._child_devices.get_entry(
                 identifiers=identifiers, config_entry_id=config_entry_id
             )
         ) is not None:
@@ -2270,7 +2362,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"{sorted(matched_child_device.identifiers)}",
             )
 
-        device = self.devices.get_entry(
+        device = self._devices.get_entry(
             connections=connections,
             identifiers=identifiers,
             config_entry_id=config_entry_id,
@@ -2286,7 +2378,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if device is not None:
             # Collision reconciliation can update the matched device (e.g. detach
             # its via link)
-            device = self.devices[device.id]
+            device = self._devices[device.id]
 
         # Resolved after collision reconciliation so a removed stale duplicate can't be
         # linked
@@ -2314,7 +2406,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if device is None:
             is_new = True
 
-            deleted_device = self.deleted_devices.get_entry(
+            deleted_device = self._deleted_devices.get_entry(
                 connections=connections,
                 identifiers=identifiers,
                 config_entry_id=config_entry_id,
@@ -2325,7 +2417,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 # rather than create a fresh device. Matching on the recorded domain keeps
                 # a chance identifier/connection collision from restoring another
                 # integration's device.
-                deleted_device = self.deleted_devices.get_orphaned_entry(
+                deleted_device = self._deleted_devices.get_orphaned_entry(
                     identifiers, connections, config_entry.domain
                 )
             if deleted_device is None:
@@ -2352,7 +2444,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
 
             else:
-                self.deleted_devices.pop(deleted_device.id)
+                self._deleted_devices.pop(deleted_device.id)
                 device = deleted_device.to_device_entry(
                     config_entry,
                     # Interpret not specifying a subentry as None
@@ -2363,7 +2455,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
                 disabled_by = UNDEFINED
 
-            self.devices[device.id] = device
+            self._devices[device.id] = device
             # If creating a new device, default to the config entry name
             if not name or name is UNDEFINED:
                 name = config_entry.title
@@ -2407,14 +2499,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # config entry (a via device may legitimately belong to a different config
             # entry). This ambiguity is why via_device is deprecated.
             via = (
-                self.devices.get_entry(
+                self._devices.get_entry(
                     identifiers={via_device}, config_entry_id=config_entry_id
                 )
                 or self._first_device_in_domain(
-                    self.devices.get_entries(identifiers={via_device}),
+                    self._devices.get_entries(identifiers={via_device}),
                     config_entry.domain,
                 )
-                or self.devices.get_entry(identifiers={via_device})
+                or self._devices.get_entry(identifiers={via_device})
             )
             if via is None:
                 report_usage(
@@ -2598,7 +2690,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"parent device {parent.id}",
             )
 
-        child_device = self.child_devices.get_entry(
+        child_device = self._child_devices.get_entry(
             identifiers=identifiers, config_entry_id=config_entry_id
         )
 
@@ -2606,7 +2698,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # owned by another child device.
         for identifier in sorted(identifiers):
             if (
-                other_child := self.child_devices.get_entry(
+                other_child := self._child_devices.get_entry(
                     identifiers={identifier}, config_entry_id=config_entry_id
                 )
             ) is not None and (
@@ -2630,7 +2722,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         matched_device: DeviceEntry | None = None
         if child_device is None:
-            matched_device = self.devices.get_entry(
+            matched_device = self._devices.get_entry(
                 identifiers=identifiers, config_entry_id=config_entry_id
             )
 
@@ -2653,7 +2745,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # The identifiers are registered by a full device of the config entry:
             # the integration split the device into child devices, so convert it,
             # preserving its id.
-            matched_device = self.devices[matched_device.id]
+            matched_device = self._devices[matched_device.id]
             child_device = self._async_convert_device_to_child(
                 matched_device, parent, identifiers
             )
@@ -2663,14 +2755,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         if child_device is None:
             is_new = True
 
-            deleted_device = self.deleted_devices.get_entry(
+            deleted_device = self._deleted_devices.get_entry(
                 identifiers=identifiers,
                 config_entry_id=config_entry_id,
             )
             if deleted_device is None:
                 # Fall back to an orphan (its owning config entry was removed), as
                 # for a full device
-                deleted_device = self.deleted_devices.get_orphaned_entry(
+                deleted_device = self._deleted_devices.get_orphaned_entry(
                     identifiers, None, domain
                 )
             if deleted_device is None:
@@ -2692,7 +2784,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                     parent_device_id=parent.id,
                 )
             else:
-                self.deleted_devices.pop(deleted_device.id)
+                self._deleted_devices.pop(deleted_device.id)
                 child_device = deleted_device.to_child_device_entry(
                     config_entry,
                     effective_config_subentry_id,
@@ -2702,7 +2794,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 )
                 disabled_by = UNDEFINED
 
-            self.child_devices[child_device.id] = child_device
+            self._child_devices[child_device.id] = child_device
 
         self._async_purge_colliding_deleted_devices(child_device, identifiers, set())
 
@@ -2739,7 +2831,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             raise DeviceInfoError(
                 config_entry.domain, device_info, "a device can't be its own parent"
             )
-        if self.child_devices.get_children_for_device_id(device.id):
+        if self._child_devices.get_children_for_device_id(device.id):
             raise DeviceInfoError(
                 config_entry.domain,
                 device_info,
@@ -2831,13 +2923,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             name_by_user=device.name_by_user,
             parent_device_id=parent.id,
         )
-        del self.devices[device.id]
-        self.child_devices[child_device.id] = child_device
+        del self._devices[device.id]
+        self._child_devices[child_device.id] = child_device
 
         # A via_device_id must not resolve to a child device; detach inbound via
         # links to the converted device, as async_remove_device does, before firing
         # the conversion event.
-        for other_device in list(self.devices.values()):
+        for other_device in list(self._devices.values()):
             if other_device.via_device_id == device.id:
                 self._async_update_device(other_device.id, via_device_id=None)
 
@@ -2895,7 +2987,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         :param remove_config_subentry_id: Remove the device from a
             specific subentry of remove_config_entry_id
         """
-        old = self.devices[device_id]
+        old = self._devices[device_id]
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
@@ -3071,7 +3163,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 # A parent with child devices can't move (enforced again below); reject
                 # here before mutating the runtime-only sibling pending moves, so the
                 # rejected move leaves no partial state behind.
-                if self.child_devices.get_children_for_device_id(device_id):
+                if self._child_devices.get_children_for_device_id(device_id):
                     raise HomeAssistantError(
                         f"Can't move device {device_id}: it has child devices"
                     )
@@ -3079,14 +3171,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 # completes the move to the target entry the others must not also move
                 # there and collide; clear their pending moves.
                 if old.composite_device_id is not None:
-                    for sibling in self.devices.get_devices_for_composite_device_id(
+                    for sibling in self._devices.get_devices_for_composite_device_id(
                         old.composite_device_id
                     ):
                         if (
                             sibling.id != device_id
                             and sibling._pending_move is not None  # noqa: SLF001
                         ):
-                            self.devices[sibling.id] = attr.evolve(
+                            self._devices[sibling.id] = attr.evolve(
                                 sibling, pending_move=None
                             )
 
@@ -3140,7 +3232,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # supported.
         if (
             is_move or "config_subentry_id" in new_values
-        ) and self.child_devices.get_children_for_device_id(device_id):
+        ) and self._child_devices.get_children_for_device_id(device_id):
             raise HomeAssistantError(
                 f"Can't move device {device_id}: it has child devices"
             )
@@ -3295,7 +3387,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         self.hass.verify_event_loop_thread("device_registry._async_update_device")
         new = attr.evolve(old, **new_values)
-        self.devices[device_id] = new
+        self._devices[device_id] = new
 
         # On a move, the device's whole retained identity newly appears in the target
         # config entry; added_identifiers/added_connections are empty on a retained-
@@ -3309,13 +3401,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             match_identifiers = added_identifiers
             match_connections = added_connections
         # A deleted device holding an identity the device now owns can never restore
-        for deleted_device_id in self.deleted_devices.get_colliding_device_ids(
+        for deleted_device_id in self._deleted_devices.get_colliding_device_ids(
             match_identifiers or set(),
             match_connections or set(),
             config_entry_id=effective_config_entry_id,
             exclude_device_id=None,
         ):
-            del self.deleted_devices[deleted_device_id]
+            del self._deleted_devices[deleted_device_id]
 
         # If its only run time attributes (suggested_area)
         # that do not get saved we do not want to write
@@ -3342,7 +3434,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # async_config_entry_disabled_by_changed, which iterates all the config
         # entry's devices.
         if "disabled_by" in old_values and (
-            children := self.child_devices.get_children_for_device_id(device_id)
+            children := self._child_devices.get_children_for_device_id(device_id)
         ):
             if new.disabled_by is None:
                 for child in children:
@@ -3372,7 +3464,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         new_identifiers: set[tuple[str, str]] | UndefinedType = UNDEFINED,
     ) -> ChildDeviceEntry | None:
         """Private update child device attributes."""
-        old = self.child_devices[child_device_id]
+        old = self._child_devices[child_device_id]
 
         new_values: dict[str, Any] = {}  # Dict with new key/value pairs
         old_values: dict[str, Any] = {}  # Dict with old key/value pairs
@@ -3497,17 +3589,17 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
 
         self.hass.verify_event_loop_thread("device_registry._async_update_child_device")
         new = attr.evolve(old, **new_values)
-        self.child_devices[child_device_id] = new
+        self._child_devices[child_device_id] = new
 
         # A deleted device holding an identity the child device now owns can never
         # restore
-        for deleted_device_id in self.deleted_devices.get_colliding_device_ids(
+        for deleted_device_id in self._deleted_devices.get_colliding_device_ids(
             added_identifiers or set(),
             set(),
             config_entry_id=old.config_entry_id,
             exclude_device_id=None,
         ):
-            del self.deleted_devices[deleted_device_id]
+            del self._deleted_devices[deleted_device_id]
 
         self.async_schedule_save()
 
@@ -3753,7 +3845,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             if not matched_device.has_composite_identifiers:
                 identifiers = matched_device.identifiers | identifiers
                 connections = matched_device.connections | connections
-        colliding = self.devices.get_colliding_device_ids(
+        colliding = self._devices.get_colliding_device_ids(
             identifiers,
             connections,
             config_entry_id=config_entry.entry_id,
@@ -3771,7 +3863,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 f"registered for device {holder_id} of the same config entry",
             )
         for holder_id, (shared_identifiers, shared_connections) in colliding.items():
-            holder = self.devices[holder_id]
+            holder = self._devices[holder_id]
             remaining_identifiers = holder.identifiers - shared_identifiers
             remaining_connections = holder.connections - shared_connections
             if not remaining_identifiers and not remaining_connections:
@@ -3808,7 +3900,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         elif not device.has_composite_identifiers:
             identifiers = device.identifiers | identifiers
             connections = device.connections | connections
-        colliding = self.deleted_devices.get_colliding_device_ids(
+        colliding = self._deleted_devices.get_colliding_device_ids(
             identifiers,
             connections,
             config_entry_id=device.config_entry_id,
@@ -3823,7 +3915,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 deleted_device_id,
                 device.id,
             )
-            del self.deleted_devices[deleted_device_id]
+            del self._deleted_devices[deleted_device_id]
         self.async_schedule_save()
 
     @callback
@@ -3848,7 +3940,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # conflict, the index will only see the last one and we will not
             # be able to tell which one caused the conflict
             if (
-                existing_device := self.devices.get_entry(
+                existing_device := self._devices.get_entry(
                     connections={connection}, config_entry_id=config_entry_id
                 )
             ) and existing_device.id != device_id:
@@ -3879,13 +3971,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # conflict, the index will only see the last one and we will not
             # be able to tell which one caused the conflict
             if (
-                existing_device := self.devices.get_entry(
+                existing_device := self._devices.get_entry(
                     identifiers={identifier}, config_entry_id=config_entry_id
                 )
             ) and existing_device.id != device_id:
                 raise DeviceIdentifierCollisionError(identifiers, existing_device)
             if (
-                existing_child_device := self.child_devices.get_entry(
+                existing_child_device := self._child_devices.get_entry(
                     identifiers={identifier}, config_entry_id=config_entry_id
                 )
             ) is not None:
@@ -3907,13 +3999,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """
         for identifier in identifiers:
             if (
-                existing_child_device := self.child_devices.get_entry(
+                existing_child_device := self._child_devices.get_entry(
                     identifiers={identifier}, config_entry_id=config_entry_id
                 )
             ) and existing_child_device.id != child_device_id:
                 raise DeviceIdentifierCollisionError(identifiers, existing_child_device)
             if (
-                existing_device := self.devices.get_entry(
+                existing_device := self._devices.get_entry(
                     identifiers={identifier}, config_entry_id=config_entry_id
                 )
             ) is not None:
@@ -3953,9 +4045,9 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         for underlying_id in underlying_ids:
             self.async_update_device(underlying_id, **forward)
         remaining = [
-            self.devices[underlying_id]
+            self._devices[underlying_id]
             for underlying_id in underlying_ids
-            if underlying_id in self.devices
+            if underlying_id in self._devices
         ]
         if not remaining:
             return None
@@ -3975,11 +4067,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             return
         self.hass.verify_event_loop_thread("device_registry.async_remove_device")
         # Removing the parent removes its child devices
-        for child in self.child_devices.get_children_for_device_id(device_id):
+        for child in self._child_devices.get_children_for_device_id(device_id):
             self._async_remove_child_device(child)
-        device = self.devices.pop(device_id)
+        device = self._devices.pop(device_id)
         config_entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
-        self.deleted_devices[device_id] = DeletedDeviceEntry(
+        self._deleted_devices[device_id] = DeletedDeviceEntry(
             area_id=device.area_id,
             config_entry_id=device.config_entry_id,
             config_subentry_id=device.config_subentry_id,
@@ -3994,7 +4086,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             orphaned_timestamp=None,
             domain=config_entry.domain if config_entry is not None else None,
         )
-        for other_device in list(self.devices.values()):
+        for other_device in list(self._devices.values()):
             if other_device.via_device_id == device_id:
                 self._async_update_device(other_device.id, via_device_id=None)
         self.hass.bus.async_fire_internal(
@@ -4009,11 +4101,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     def _async_remove_child_device(self, child_device: ChildDeviceEntry) -> None:
         """Remove a child device from the device registry."""
         self.hass.verify_event_loop_thread("device_registry.async_remove_device")
-        del self.child_devices[child_device.id]
+        del self._child_devices[child_device.id]
         config_entry = self.hass.config_entries.async_get_entry(
             child_device.config_entry_id
         )
-        self.deleted_devices[child_device.id] = DeletedDeviceEntry(
+        self._deleted_devices[child_device.id] = DeletedDeviceEntry(
             area_id=child_device.area_id,
             config_entry_id=child_device.config_entry_id,
             config_subentry_id=child_device.config_subentry_id,
@@ -4186,9 +4278,11 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 shadowed_count,
             )
 
-        self.devices = devices
-        self.child_devices = child_devices
-        self.deleted_devices = deleted_devices
+        self._devices = devices
+        self.devices = _DeprecatedDeviceRegistryItemsView(self._devices)
+        self._child_devices = child_devices
+        self.child_devices = self._child_devices.values()
+        self._deleted_devices = deleted_devices
         self._device_data = devices.data
         self._child_device_data = child_devices.data
 
@@ -4211,14 +4305,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # other than the event loop.
         return {
             "devices": [
-                entry.as_storage_fragment for entry in list(self.devices.values())
+                entry.as_storage_fragment for entry in list(self._devices.values())
             ],
             "child_devices": [
-                entry.as_storage_fragment for entry in list(self.child_devices.values())
+                entry.as_storage_fragment
+                for entry in list(self._child_devices.values())
             ],
             "deleted_devices": [
                 entry.as_storage_fragment
-                for entry in list(self.deleted_devices.values())
+                for entry in list(self._deleted_devices.values())
             ],
         }
 
@@ -4246,7 +4341,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             # device from the same integration is orphaned, drop any existing orphan
             # it overlaps so the newest one wins deterministically instead of shadowing
             # it.
-            for existing in list(self.deleted_devices.values()):
+            for existing in list(self._deleted_devices.values()):
                 if (
                     existing.config_entry_id is None
                     and existing.domain == domain
@@ -4255,8 +4350,8 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                         or existing.identifiers & deleted_device.identifiers
                     )
                 ):
-                    del self.deleted_devices[existing.id]
-        self.deleted_devices[deleted_device.id] = attr.evolve(
+                    del self._deleted_devices[existing.id]
+        self._deleted_devices[deleted_device.id] = attr.evolve(
             deleted_device,
             config_entry_id=None,
             config_subentry_id=None,
@@ -4278,34 +4373,34 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         self._live_device_ids.pop(config_entry_id, None)
         domain = self._resolve_orphan_domain(config_entry_id, domain)
         now_time = time.time()
-        for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
+        for device in self._devices.get_devices_for_config_entry_id(config_entry_id):
             self.async_remove_device(device.id)
         # Child devices share their parent's config entry, so the loop above removes
         # them through the parent cascade; guard against store corruption anyway.
-        for child_device in self.child_devices.get_devices_for_config_entry_id(
+        for child_device in self._child_devices.get_devices_for_config_entry_id(
             config_entry_id
         ):
             self.async_remove_device(child_device.id)
         # A split device records the composite's former primary config entry; when that
         # config entry is removed, clear the now-dangling reference so a restored
         # composite no longer points at a config entry that no longer exists.
-        for device in list(self.devices.values()):
+        for device in list(self._devices.values()):
             if device.composite_primary_config_entry == config_entry_id:
-                self.devices[device.id] = attr.evolve(
+                self._devices[device.id] = attr.evolve(
                     device, composite_primary_config_entry=None
                 )
                 self.async_schedule_save()
         # A device owned by another config entry may hold a transient pending move
         # targeting the entry being removed; clear it so a later completion deletes the
         # device instead of moving it onto the removed entry.
-        for device in list(self.devices.values()):
+        for device in list(self._devices.values()):
             pending_move = device._pending_move  # noqa: SLF001
             if (
                 pending_move is not None
                 and pending_move.config_entry_id == config_entry_id
             ):
-                self.devices[device.id] = attr.evolve(device, pending_move=None)
-        for deleted_device in list(self.deleted_devices.values()):
+                self._devices[device.id] = attr.evolve(device, pending_move=None)
+        for deleted_device in list(self._deleted_devices.values()):
             if deleted_device.config_entry_id != config_entry_id:
                 continue
             self._async_orphan_deleted_device(deleted_device, domain, now_time)
@@ -4317,13 +4412,13 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         """Clear config subentry from registry entries."""
         domain = self._resolve_orphan_domain(config_entry_id, domain)
         now_time = time.time()
-        for device in self.devices.get_devices_for_config_entry_id(config_entry_id):
+        for device in self._devices.get_devices_for_config_entry_id(config_entry_id):
             if device.config_subentry_id != config_subentry_id:
                 continue
             self.async_remove_device(device.id)
         # Child devices share their parent's subentry, so the loop above removes them
         # through the parent cascade; guard against store corruption anyway.
-        for child_device in self.child_devices.get_devices_for_config_entry_id(
+        for child_device in self._child_devices.get_devices_for_config_entry_id(
             config_entry_id
         ):
             if child_device.config_subentry_id != config_subentry_id:
@@ -4332,15 +4427,15 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         # A device may hold a transient pending move targeting the subentry being removed;
         # clear it so a later completion deletes the device instead of validating against
         # the removed subentry.
-        for device in list(self.devices.values()):
+        for device in list(self._devices.values()):
             pending_move = device._pending_move  # noqa: SLF001
             if (
                 pending_move is not None
                 and pending_move.config_entry_id == config_entry_id
                 and pending_move.config_subentry_id == config_subentry_id
             ):
-                self.devices[device.id] = attr.evolve(device, pending_move=None)
-        for deleted_device in list(self.deleted_devices.values()):
+                self._devices[device.id] = attr.evolve(device, pending_move=None)
+        for deleted_device in list(self._deleted_devices.values()):
             if (
                 deleted_device.config_entry_id != config_entry_id
                 or deleted_device.config_subentry_id != config_subentry_id
@@ -4356,7 +4451,7 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
         growing without bound.
         """
         now_time = time.time()
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if deleted_device.orphaned_timestamp is None:
                 continue
 
@@ -4364,19 +4459,19 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 deleted_device.orphaned_timestamp + ORPHANED_DEVICE_KEEP_SECONDS
                 < now_time
             ):
-                del self.deleted_devices[deleted_device.id]
+                del self._deleted_devices[deleted_device.id]
 
     @callback
     def async_clear_area_id(self, area_id: str) -> None:
         """Clear area id from registry entries."""
-        for device in self.devices.get_devices_for_area_id(area_id):
+        for device in self._devices.get_devices_for_area_id(area_id):
             self._async_update_device(device.id, area_id=None)
-        for child_device in self.child_devices.get_devices_for_area_id(area_id):
+        for child_device in self._child_devices.get_devices_for_area_id(area_id):
             self._async_update_child_device(child_device.id, area_id=None)
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if deleted_device.area_id != area_id:
                 continue
-            self.deleted_devices[deleted_device.id] = attr.evolve(
+            self._deleted_devices[deleted_device.id] = attr.evolve(
                 deleted_device, area_id=None
             )
             self.async_schedule_save()
@@ -4384,16 +4479,16 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
     @callback
     def async_clear_label_id(self, label_id: str) -> None:
         """Clear label from registry entries."""
-        for device in self.devices.get_devices_for_label(label_id):
+        for device in self._devices.get_devices_for_label(label_id):
             self._async_update_device(device.id, labels=device.labels - {label_id})
-        for child_device in self.child_devices.get_devices_for_label(label_id):
+        for child_device in self._child_devices.get_devices_for_label(label_id):
             self._async_update_child_device(
                 child_device.id, labels=child_device.labels - {label_id}
             )
-        for deleted_device in list(self.deleted_devices.values()):
+        for deleted_device in list(self._deleted_devices.values()):
             if label_id not in deleted_device.labels:
                 continue
-            self.deleted_devices[deleted_device.id] = attr.evolve(
+            self._deleted_devices[deleted_device.id] = attr.evolve(
                 deleted_device, labels=deleted_device.labels - {label_id}
             )
             self.async_schedule_save()
@@ -4446,7 +4541,7 @@ def async_get_device_and_config_entry_for_domain(
     composite is returned as the device.
     """
     registry = async_get(hass)
-    if (device := registry.devices.get(device_id)) is not None:
+    if (device := registry._devices.get(device_id)) is not None:  # noqa: SLF001
         config_entry = hass.config_entries.async_get_entry(device.config_entry_id)
         if config_entry is not None and config_entry.domain == domain:
             return device, config_entry
@@ -4479,13 +4574,15 @@ def async_entries_for_area(
     Includes child devices with the area set explicitly, and child devices
     inheriting the area from their parent device.
     """
-    devices = registry.devices.get_devices_for_area_id(area_id)
+    devices = registry._devices.get_devices_for_area_id(area_id)  # noqa: SLF001
     entries: list[AnyDeviceEntry] = list(devices)
-    entries.extend(registry.child_devices.get_devices_for_area_id(area_id))
+    entries.extend(
+        registry._child_devices.get_devices_for_area_id(area_id)  # noqa: SLF001
+    )
     for device in devices:
         entries.extend(
             child_device
-            for child_device in registry.child_devices.get_children_for_device_id(
+            for child_device in registry._child_devices.get_children_for_device_id(  # noqa: SLF001
                 device.id
             )
             if child_device.area_id is None
@@ -4522,9 +4619,11 @@ def async_entries_for_label(
     parent, so a child appears here only when the label is set on the child itself.
     """
     entries: list[AnyDeviceEntry] = list(
-        registry.devices.get_devices_for_label(label_id)
+        registry._devices.get_devices_for_label(label_id)  # noqa: SLF001
     )
-    entries.extend(registry.child_devices.get_devices_for_label(label_id))
+    entries.extend(
+        registry._child_devices.get_devices_for_label(label_id)  # noqa: SLF001
+    )
     return entries
 
 
@@ -4533,7 +4632,9 @@ def async_entries_for_config_entry(
     registry: DeviceRegistry, config_entry_id: str
 ) -> list[DeviceEntry]:
     """Return entries that match a config entry."""
-    return registry.devices.get_devices_for_config_entry_id(config_entry_id)
+    return registry._devices.get_devices_for_config_entry_id(  # noqa: SLF001
+        config_entry_id
+    )
 
 
 @callback
@@ -4541,7 +4642,9 @@ def async_entries_for_parent_device(
     registry: DeviceRegistry, parent_device_id: str
 ) -> list[ChildDeviceEntry]:
     """Return the child device entries of a parent device."""
-    return registry.child_devices.get_children_for_device_id(parent_device_id)
+    return registry._child_devices.get_children_for_device_id(  # noqa: SLF001
+        parent_device_id
+    )
 
 
 @callback
@@ -4549,7 +4652,9 @@ def async_child_entries_for_config_entry(
     registry: DeviceRegistry, config_entry_id: str
 ) -> list[ChildDeviceEntry]:
     """Return child device entries that match a config entry."""
-    return registry.child_devices.get_devices_for_config_entry_id(config_entry_id)
+    return registry._child_devices.get_devices_for_config_entry_id(  # noqa: SLF001
+        config_entry_id
+    )
 
 
 @callback
@@ -4626,7 +4731,7 @@ def async_cleanup(
     config_entry_ids = set(hass.config_entries.async_entry_ids())
     references_config_entries = {
         device.id
-        for device in dev_reg.devices.values()
+        for device in dev_reg._devices.values()  # noqa: SLF001
         if device.config_entry_id in config_entry_ids
     }
 
@@ -4634,7 +4739,7 @@ def async_cleanup(
     device_ids_referenced_by_entities = set(ent_reg.entities.get_device_ids())
 
     orphan = (
-        set(dev_reg.devices)
+        set(dev_reg._devices)  # noqa: SLF001
         - device_ids_referenced_by_entities
         - references_config_entries
     )
@@ -4644,7 +4749,7 @@ def async_cleanup(
 
     # Find all referenced config entries that no longer exist
     # This shouldn't happen but have not been able to track down the bug :(
-    for device in list(dev_reg.devices.values()):
+    for device in list(dev_reg._devices.values()):  # noqa: SLF001
         if device.config_entry_id not in config_entry_ids:
             dev_reg._async_update_device(  # noqa: SLF001
                 device.id, remove_config_entry_id=device.config_entry_id
@@ -4652,8 +4757,8 @@ def async_cleanup(
 
     # A child device shares its parent's (valid) config entry, and the remove cascade
     # makes a child without its parent impossible; guard against store corruption anyway.
-    for child_device in list(dev_reg.child_devices.values()):
-        if child_device.parent_device_id not in dev_reg.devices:
+    for child_device in list(dev_reg.child_devices):
+        if child_device.parent_device_id not in dev_reg._devices:  # noqa: SLF001
             _LOGGER.error(
                 "Removing child device %s: its parent device %s is not in the "
                 "device registry",
