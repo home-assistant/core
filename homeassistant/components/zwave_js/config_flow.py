@@ -75,20 +75,6 @@ ADDON_SETUP_TIMEOUT_ROUNDS = 40
 SERVER_CONNECT_TIMEOUT = 60
 
 
-def migrate_network_key(addon_config: Mapping[str, Any]) -> dict[str, Any]:
-    """Migrate the legacy network key to the S0 legacy key.
-
-    The network key was renamed to the S0 legacy key when S2 was added.
-    Old add-on configs may still only carry the legacy network key.
-    """
-    migrated = dict(addon_config)
-    if (network_key := migrated.pop(CONF_ADDON_NETWORK_KEY, None)) and not migrated.get(
-        CONF_ADDON_S0_LEGACY_KEY
-    ):
-        migrated[CONF_ADDON_S0_LEGACY_KEY] = network_key
-    return migrated
-
-
 @dataclass
 class SecurityKeys:
     """Security keys of a Z-Wave network.
@@ -104,12 +90,26 @@ class SecurityKeys:
     lr_s2_access_control_key: str | None = None
     lr_s2_authenticated_key: str | None = None
 
+    @staticmethod
+    def migrate_network_key(config: Mapping[str, Any]) -> dict[str, Any]:
+        """Migrate the legacy network key to the S0 legacy key.
+
+        The network key was renamed to the S0 legacy key when S2 was added.
+        Old add-on configs may still only carry the legacy network key.
+        """
+        migrated = dict(config)
+        if (
+            network_key := migrated.pop(CONF_ADDON_NETWORK_KEY, None)
+        ) and not migrated.get(CONF_ADDON_S0_LEGACY_KEY):
+            migrated[CONF_ADDON_S0_LEGACY_KEY] = network_key
+        return migrated
+
     @classmethod
     def from_config(
         cls, config: Mapping[str, Any], defaults: SecurityKeys | None = None
     ) -> Self:
         """Return keys from an add-on config or entry data, with defaults."""
-        config = migrate_network_key(config)
+        config = cls.migrate_network_key(config)
         return cls(
             **{
                 field.name: config.get(
@@ -300,7 +300,7 @@ class AddonFlowManager:
         if addon_info.state is AddonState.RUNNING:
             self.restart_addon = True
         self.original_config = dict(addon_config)
-        new_addon_config = migrate_network_key(new_addon_config)
+        new_addon_config = SecurityKeys.migrate_network_key(new_addon_config)
         try:
             await self.addon_manager.async_set_addon_options(new_addon_config)
         except AddonError as err:
@@ -1368,11 +1368,9 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Missing keys default to the current add-on config, so
-            # existing keys are preserved. While reverting, the helper only
-            # passes the keys present in the original config, so missing keys
-            # must be treated as empty to actually revert them.
-            key_defaults = SecurityKeys() if self.revert_reason else default_keys
-            self.security_keys = key_defaults.updated_from_user_input(user_input)
+            # existing keys are preserved. The revert helper always passes
+            # all keys, so the defaults never apply while reverting.
+            self.security_keys = default_keys.updated_from_user_input(user_input)
             self.usb_path = user_input.get(CONF_USB_PATH) or None
             self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
 
@@ -1722,13 +1720,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=reason)
 
         self.revert_reason = reason
-        # Migrate a legacy network key so it is reverted as the S0 legacy key,
-        # which is what ADDON_USER_INPUT_MAP knows about.
-        original_config = migrate_network_key(self._addon_setup.original_config)
-        addon_config_input = {
+        original_config = self._addon_setup.original_config
+        addon_config_input = SecurityKeys.from_config(original_config).to_dict() | {
             ADDON_USER_INPUT_MAP[addon_key]: addon_val
             for addon_key, addon_val in original_config.items()
-            if addon_key in ADDON_USER_INPUT_MAP
+            if addon_key in (CONF_ADDON_DEVICE, CONF_ADDON_SOCKET)
         }
         _LOGGER.debug("Reverting app options, reason: %s", reason)
         return await self.async_step_configure_addon_reconfigure(addon_config_input)
