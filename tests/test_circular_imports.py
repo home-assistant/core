@@ -27,32 +27,44 @@ COMPONENTS = sorted(
     }
 )
 
+# Each import is a whole interpreter loading a component's dependency tree, so it
+# is both CPU and memory hungry. The suite already runs one xdist worker per CPU;
+# a small fixed ceiling keeps this from oversubscribing the host, and measuring
+# showed nothing to gain above it.
+MAX_CONCURRENT_IMPORTS = 4
+IMPORT_TIMEOUT = 120
 
-def _import_component(component: str) -> subprocess.CompletedProcess[str]:
-    """Import a component in a clean interpreter."""
-    return subprocess.run(
-        [sys.executable, "-c", f"import homeassistant.components.{component}"],
-        capture_output=True,
-        check=False,
-        text=True,
-    )
+
+def _import_component(component: str) -> tuple[int, str]:
+    """Import a component in a clean interpreter, returning its exit code."""
+    try:
+        result = subprocess.run(
+            [sys.executable, "-c", f"import homeassistant.components.{component}"],
+            capture_output=True,
+            check=False,
+            text=True,
+            timeout=IMPORT_TIMEOUT,
+        )
+    except subprocess.TimeoutExpired:
+        return 1, f"importing timed out after {IMPORT_TIMEOUT} seconds"
+    return result.returncode, result.stderr
 
 
 @pytest.fixture(scope="session", autouse=True)
-def component_imports() -> dict[str, subprocess.CompletedProcess[str]]:
+def component_imports() -> dict[str, tuple[int, str]]:
     """Import every component, several interpreters at a time."""
-    with ThreadPoolExecutor(max_workers=os.process_cpu_count()) as executor:
+    workers = min(MAX_CONCURRENT_IMPORTS, os.process_cpu_count() or 1)
+    with ThreadPoolExecutor(max_workers=workers) as executor:
         return dict(
             zip(COMPONENTS, executor.map(_import_component, COMPONENTS), strict=True)
         )
 
 
-@pytest.mark.timeout(600)  # covers importing every component in the first setup
+@pytest.mark.timeout(600)  # the first test imports every component
 @pytest.mark.parametrize("component", COMPONENTS)
 def test_circular_imports(
-    component: str,
-    component_imports: dict[str, subprocess.CompletedProcess[str]],
+    component: str, component_imports: dict[str, tuple[int, str]]
 ) -> None:
     """Check that components can be imported without circular imports."""
-    result = component_imports[component]
-    assert result.returncode == 0, result.stderr
+    returncode, stderr = component_imports[component]
+    assert returncode == 0, stderr
