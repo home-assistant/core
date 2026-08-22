@@ -1975,6 +1975,12 @@ async def mock_enable_bluetooth(
 @pytest.fixture(autouse=True, scope="session")
 def mock_bluetooth_adapters() -> Generator[None]:
     """Fixture to mock bluetooth adapters."""
+    # Late import to avoid loading bleak unless we need it
+    from bleak_retry_connector import bleak_manager  # noqa: PLC0415
+
+    # Tests have no DBus, and probing for it opens a real socket
+    bleak_manager.get_global_bluez_manager_with_timeout._has_dbus_socket = False
+
     with (
         # Simulate the Bluetooth management API being unavailable, as it is on
         # CI and most dev machines. Letting the real setup() run would attempt
