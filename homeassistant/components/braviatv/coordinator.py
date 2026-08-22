@@ -169,6 +169,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 except BraviaAuthError as err:
                     raise ConfigEntryAuthFailed from err
 
+            was_on = self.is_on
             power_status = await self.client.get_power_status()
             self.is_on = power_status == "active"
             self.skipped_updates = 0
@@ -179,11 +180,12 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             if not self.system_info:
                 self.system_info = await self.client.get_system_info()
 
+            if not self.source_map or (self.is_on and not was_on):
+                await self.async_update_sources()
+
             if self.is_on is False:
                 return
 
-            if not self.source_map:
-                await self.async_update_sources()
             await self.async_update_volume()
             await self.async_update_playing()
         except BraviaNotFound as err:
