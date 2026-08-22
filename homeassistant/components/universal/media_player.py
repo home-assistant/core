@@ -200,7 +200,8 @@ class UniversalMediaPlayer(MediaPlayerEntity):
                     )
                     self._clean_up_active_child_change_tracker()
                     if (_ac := self._active_child_template_result) and _ac not in (
-                        self._children + list(self._attrs.values())
+                        self._children
+                        + [entity[0] for entity in self._attrs.values()]
                     ):
                         self._active_child_change_tracker_cancel = (
                             async_track_state_change_event(
