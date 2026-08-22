@@ -434,3 +434,21 @@ def test_ensure_single_execution_sequential_runs(tmp_path: Path) -> None:
 
     # Lock file should still exist after second run (not unlinked)
     assert lock_file_path.exists()
+
+
+def _assert_hass_event_loop(loop: asyncio.AbstractEventLoop) -> None:
+    """Assert the loop carries the Home Assistant customizations."""
+    assert loop.time is runner.monotonic
+    assert isinstance(loop._default_executor, executor.InterruptibleThreadPoolExecutor)
+
+
+def test_sync_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
+    """Test a synchronous test builds the async hass fixture on our loop."""
+    # pytest-asyncio only parametrizes the loop factory for async tests
+    _assert_hass_event_loop(hass.loop)
+
+
+async def test_async_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
+    """Test an async test runs on our loop."""
+    _assert_hass_event_loop(asyncio.get_running_loop())
+    _assert_hass_event_loop(hass.loop)
