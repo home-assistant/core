@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
@@ -143,10 +142,10 @@ def _e2e_keys() -> tuple[str, nacl.public.PrivateKey]:
 async def test_send_e2e_success(hass: HomeAssistant) -> None:
     """Test successful E2E encrypted message send."""
     sender_hex, recipient_priv = _e2e_keys()
-    pub_b64 = base64.b64encode(bytes(recipient_priv.public_key)).decode()
+    pub_hex = bytes(recipient_priv.public_key).hex()
 
     session = MagicMock()
-    session.get = AsyncMock(return_value=_make_resp(200, pub_b64))
+    session.get = AsyncMock(return_value=_make_resp(200, pub_hex))
     session.post = AsyncMock(return_value=_make_resp(200, "msg456"))
 
     with _patch_session(session):
@@ -205,10 +204,10 @@ async def test_send_e2e_pubkey_client_error(hass: HomeAssistant) -> None:
 async def test_send_e2e_post_client_error(hass: HomeAssistant) -> None:
     """Test that aiohttp.ClientError on POST raises ThreemaSendError."""
     sender_hex, recipient_priv = _e2e_keys()
-    pub_b64 = base64.b64encode(bytes(recipient_priv.public_key)).decode()
+    pub_hex = bytes(recipient_priv.public_key).hex()
 
     session = MagicMock()
-    session.get = AsyncMock(return_value=_make_resp(200, pub_b64))
+    session.get = AsyncMock(return_value=_make_resp(200, pub_hex))
     session.post = AsyncMock(side_effect=aiohttp.ClientError("timeout"))
 
     with _patch_session(session):

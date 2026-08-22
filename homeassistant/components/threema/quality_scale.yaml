@@ -38,7 +38,7 @@ rules:
   parallel-updates:
     status: exempt
     comment: No polling or data updates.
-  reauthentication-flow: todo
+  reauthentication-flow: done
   test-coverage: done
 
   # Gold
@@ -89,4 +89,4 @@ rules:
   # Platinum
   async-dependency: todo
   inject-websession: todo
-  strict-typing: todo
+  strict-typing: done

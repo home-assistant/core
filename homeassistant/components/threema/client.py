@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import base64
 import logging
 import os
 
@@ -97,8 +96,8 @@ class ThreemaAPIClient:
                 f"Failed to fetch public key for {recipient_id}: HTTP {resp.status}"
             )
 
-        key_b64 = await resp.text()
-        return nacl.public.PublicKey(base64.b64decode(key_b64))
+        key_hex = await resp.text()
+        return nacl.public.PublicKey(bytes.fromhex(key_hex.strip()))
 
     def _build_encrypted_message(
         self, text: str, recipient_public_key: nacl.public.PublicKey

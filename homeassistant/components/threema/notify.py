@@ -10,12 +10,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThreemaConfigEntry
-from .client import (
-    ThreemaAPIClient,
-    ThreemaAuthError,
-    ThreemaConnectionError,
-    ThreemaSendError,
-)
+from .client import ThreemaAuthError, ThreemaConnectionError, ThreemaSendError
 from .const import CONF_RECIPIENT, DOMAIN, SUBENTRY_TYPE_RECIPIENT
 
 
@@ -29,7 +24,7 @@ async def async_setup_entry(
         if subentry.subentry_type != SUBENTRY_TYPE_RECIPIENT:
             continue
         async_add_entities(
-            [ThreemaNotifyEntity(entry.runtime_data, subentry)],
+            [ThreemaNotifyEntity(entry, subentry)],
             config_subentry_id=subentry_id,
         )
 
@@ -42,19 +37,20 @@ class ThreemaNotifyEntity(NotifyEntity):
 
     def __init__(
         self,
-        client: ThreemaAPIClient,
+        entry: ThreemaConfigEntry,
         subentry: ConfigSubentry,
     ) -> None:
         """Initialize the notify entity."""
-        self._client = client
+        self._entry = entry
+        self._client = entry.runtime_data
         self._recipient_id: str = subentry.data[CONF_RECIPIENT]
 
-        self._attr_unique_id = f"{client.gateway_id}_{self._recipient_id}"
+        self._attr_unique_id = f"{self._client.gateway_id}_{self._recipient_id}"
         self._attr_name = subentry.title
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             manufacturer="Threema",
-            identifiers={(DOMAIN, client.gateway_id)},
+            identifiers={(DOMAIN, self._client.gateway_id)},
         )
 
     async def async_send_message(self, message: str, title: str | None = None) -> None:
@@ -63,10 +59,10 @@ class ThreemaNotifyEntity(NotifyEntity):
         try:
             await self._client.send_text_message(self._recipient_id, text)
         except ThreemaAuthError as err:
+            self._entry.async_start_reauth(self.hass)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="send_error",
-                translation_placeholders={"error": str(err)},
+                translation_key="invalid_auth",
             ) from err
         except (ThreemaSendError, ThreemaConnectionError) as err:
             raise HomeAssistantError(

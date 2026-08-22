@@ -16,7 +16,6 @@ from homeassistant.components.threema.const import (
     CONF_API_SECRET,
     CONF_GATEWAY_ID,
     CONF_PRIVATE_KEY,
-    CONF_PUBLIC_KEY,
     CONF_RECIPIENT,
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
@@ -72,7 +71,7 @@ async def test_user_flow_existing_gateway(
 async def test_user_flow_existing_with_keys(
     hass: HomeAssistant, mock_credentials: AsyncMock
 ) -> None:
-    """Test user flow with existing gateway including optional keys."""
+    """Test user flow with existing gateway including optional private key."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -89,7 +88,6 @@ async def test_user_flow_existing_with_keys(
             CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
             CONF_API_SECRET: MOCK_API_SECRET,
             CONF_PRIVATE_KEY: "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef",
-            CONF_PUBLIC_KEY: "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210",
         },
     )
 
@@ -98,10 +96,6 @@ async def test_user_flow_existing_with_keys(
         result["data"][CONF_PRIVATE_KEY]
         == "0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef"
     )
-    assert (
-        result["data"][CONF_PUBLIC_KEY]
-        == "fedcba9876543210fedcba9876543210fedcba9876543210fedcba9876543210"
-    )
     assert result["result"].unique_id == MOCK_GATEWAY_ID
 
 
@@ -109,9 +103,12 @@ async def test_user_flow_new_gateway(
     hass: HomeAssistant, mock_credentials: AsyncMock
 ) -> None:
     """Test user flow with new gateway (key generation)."""
+    generated_private_key = "0" * 64
+    generated_public_key = "f" * 64
+
     with patch(
         "homeassistant.components.threema.config_flow.generate_key_pair",
-        return_value=("generated_private_hex", "generated_public_hex"),
+        return_value=(generated_private_key, generated_public_key),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -137,12 +134,12 @@ async def test_user_flow_new_gateway(
             user_input={
                 CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
                 CONF_API_SECRET: MOCK_API_SECRET,
+                CONF_PRIVATE_KEY: generated_private_key,
             },
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_PRIVATE_KEY] == "generated_private_hex"
-    assert result["data"][CONF_PUBLIC_KEY] == "generated_public_hex"
+    assert result["data"][CONF_PRIVATE_KEY] == generated_private_key
     assert result["result"].unique_id == MOCK_GATEWAY_ID
 
 
@@ -402,3 +399,80 @@ async def test_subentry_duplicate_recipient(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_reauth_flow_success(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_credentials: AsyncMock,
+) -> None:
+    """Test reauthentication flow updates the API secret and reloads."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_SECRET: "new_api_secret"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_API_SECRET] == "new_api_secret"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_error"),
+    [
+        (ThreemaAuthError("Invalid credentials"), "invalid_auth"),
+        (ThreemaConnectionError("Connection refused"), "cannot_connect"),
+        (RuntimeError("Unexpected"), "unknown"),
+    ],
+    ids=["invalid_auth", "cannot_connect", "unknown"],
+)
+async def test_reauth_flow_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_credentials: AsyncMock,
+    side_effect: Exception,
+    expected_error: str,
+) -> None:
+    """Test reauthentication flow shows error and allows retry."""
+    mock_config_entry.add_to_hass(hass)
+    mock_credentials.side_effect = side_effect
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_SECRET: "wrong_secret"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": expected_error}
+
+    mock_credentials.side_effect = None
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_API_SECRET: "correct_secret"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"

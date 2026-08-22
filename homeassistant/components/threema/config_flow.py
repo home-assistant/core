@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 import logging
 from typing import Any
 
@@ -33,13 +34,25 @@ from .const import (
     CONF_API_SECRET,
     CONF_GATEWAY_ID,
     CONF_PRIVATE_KEY,
-    CONF_PUBLIC_KEY,
     CONF_RECIPIENT,
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
 )
 
 _LOGGER = logging.getLogger(__name__)
+
+_KEY_HEX_LENGTH = 64
+
+
+def _is_valid_key_hex(value: str) -> bool:
+    """Return True if value is a 64-character hex string (32-byte NaCl key)."""
+    if len(value) != _KEY_HEX_LENGTH:
+        return False
+    try:
+        bytes.fromhex(value)
+    except ValueError:
+        return False
+    return True
 
 
 class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -59,7 +72,6 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
     _gateway_id: str | None = None
     _api_secret: str | None = None
     _private_key: str | None = None
-    _public_key: str | None = None
 
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -86,7 +98,6 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="key_generation_failed")
 
         self._private_key = private_key
-        self._public_key = public_key
 
         return self.async_show_form(
             step_id="setup_new",
@@ -115,38 +126,38 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 self._api_secret = user_input[CONF_API_SECRET].strip()
 
                 self._private_key = user_input.get(CONF_PRIVATE_KEY, "").strip() or None
-                self._public_key = user_input.get(CONF_PUBLIC_KEY, "").strip() or None
 
-                client = ThreemaAPIClient(
-                    self.hass,
-                    gateway_id=gateway_id,
-                    api_secret=self._api_secret,
-                    private_key=self._private_key,
-                )
-
-                try:
-                    await client.validate_credentials()
-                except ThreemaAuthError:
-                    errors["base"] = "invalid_auth"
-                except ThreemaConnectionError:
-                    errors["base"] = "cannot_connect"
-                except Exception:
-                    _LOGGER.exception("Unexpected error validating credentials")
-                    errors["base"] = "unknown"
+                if self._private_key and not _is_valid_key_hex(self._private_key):
+                    errors[CONF_PRIVATE_KEY] = "invalid_key"
                 else:
-                    data: dict[str, str] = {
-                        CONF_GATEWAY_ID: self._gateway_id,
-                        CONF_API_SECRET: self._api_secret,
-                    }
-                    if self._private_key:
-                        data[CONF_PRIVATE_KEY] = self._private_key
-                    if self._public_key:
-                        data[CONF_PUBLIC_KEY] = self._public_key
-
-                    return self.async_create_entry(
-                        title=f"Threema {self._gateway_id}",
-                        data=data,
+                    client = ThreemaAPIClient(
+                        self.hass,
+                        gateway_id=gateway_id,
+                        api_secret=self._api_secret,
+                        private_key=self._private_key,
                     )
+
+                    try:
+                        await client.validate_credentials()
+                    except ThreemaAuthError:
+                        errors["base"] = "invalid_auth"
+                    except ThreemaConnectionError:
+                        errors["base"] = "cannot_connect"
+                    except Exception:
+                        _LOGGER.exception("Unexpected error validating credentials")
+                        errors["base"] = "unknown"
+                    else:
+                        data: dict[str, str] = {
+                            CONF_GATEWAY_ID: self._gateway_id,
+                            CONF_API_SECRET: self._api_secret,
+                        }
+                        if self._private_key:
+                            data[CONF_PRIVATE_KEY] = self._private_key
+
+                        return self.async_create_entry(
+                            title=f"Threema {self._gateway_id}",
+                            data=data,
+                        )
 
         schema = vol.Schema(
             {
@@ -157,7 +168,6 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
                 vol.Optional(
                     CONF_PRIVATE_KEY, default=self._private_key or ""
                 ): TextSelector(TextSelectorConfig(type=TextSelectorType.PASSWORD)),
-                vol.Optional(CONF_PUBLIC_KEY, default=self._public_key or ""): str,
             }
         )
 
@@ -165,6 +175,57 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="credentials",
             data_schema=schema,
             errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle a reauth flow triggered by an expired or invalid API secret."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Confirm new API secret during reauthentication."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+
+        if user_input is not None:
+            new_api_secret = user_input[CONF_API_SECRET].strip()
+            client = ThreemaAPIClient(
+                self.hass,
+                gateway_id=reauth_entry.data[CONF_GATEWAY_ID],
+                api_secret=new_api_secret,
+                private_key=reauth_entry.data.get(CONF_PRIVATE_KEY),
+            )
+            try:
+                await client.validate_credentials()
+            except ThreemaAuthError:
+                errors["base"] = "invalid_auth"
+            except ThreemaConnectionError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected error during reauth")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reauth_entry,
+                    data_updates={CONF_API_SECRET: new_api_secret},
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_API_SECRET): TextSelector(
+                        TextSelectorConfig(type=TextSelectorType.PASSWORD)
+                    ),
+                }
+            ),
+            errors=errors,
+            description_placeholders={
+                "gateway_id": reauth_entry.data[CONF_GATEWAY_ID],
+            },
         )
 
 
