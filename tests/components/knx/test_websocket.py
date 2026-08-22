@@ -198,6 +198,39 @@ async def test_knx_project_file_remove(
 
 
 @pytest.mark.usefixtures("load_knxproj")
+async def test_knx_project_is_cached_and_refreshed_on_upload(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    project_data: dict[str, Any],
+) -> None:
+    """The full project is parsed from storage once and replaced on upload."""
+    await knx.setup_integration()
+    project = hass.data[KNX_MODULE_KEY].project
+
+    # A second read must not re-parse the multi-megabyte store file.
+    assert await project.get_knxproject() is await project.get_knxproject()
+
+    new_data = {**project_data, "info": {**project_data["info"], "name": "Reuploaded"}}
+    client = await hass_ws_client(hass)
+    await client.send_json_auto_id(
+        {"type": "knx/project_file_process", "file_id": "1234", "password": ""}
+    )
+    with (
+        patch(
+            "homeassistant.components.knx.project.process_uploaded_file"
+        ) as file_upload_mock,
+        patch("xknxproject.XKNXProj.parse", return_value=new_data),
+    ):
+        file_upload_mock.return_value.__enter__.return_value = ""
+        res = await client.receive_json()
+
+    assert res["success"], res
+    knxproject = await project.get_knxproject()
+    assert knxproject["info"]["name"] == "Reuploaded"
+
+
+@pytest.mark.usefixtures("load_knxproj")
 async def test_knx_get_project(
     hass: HomeAssistant,
     knx: KNXTestKit,

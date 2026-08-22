@@ -63,6 +63,7 @@ class KNXProject:
     devices: dict[str, Device]
     group_addresses: dict[str, GroupAddressInfo]
     info: ProjectInfo | None
+    _project: KNXProjectModel | None
 
     def __init__(
         self,
@@ -81,6 +82,7 @@ class KNXProject:
         self.devices = {}
         self.group_addresses = {}
         self.info = None
+        self._project = None
 
     async def load_project(
         self, xknx: XKNX, data: KNXProjectModel | None = None
@@ -123,6 +125,7 @@ class KNXProject:
 
         project = await self.hass.async_add_executor_job(_parse_project)
         await self._store.async_save(project)
+        self._project = project
         await self.load_project(xknx, data=project)
 
     async def remove_project_file(self) -> None:
@@ -131,8 +134,15 @@ class KNXProject:
         self.initial_state()
 
     async def get_knxproject(self) -> KNXProjectModel | None:
-        """Load the project file from local storage."""
-        return await self._store.async_load()
+        """Return the full project, loading it from local storage on first use.
+
+        `Store.async_load` re-reads and re-parses the file on every call - its
+        cache is skipped for keys containing "/" - and the full project is
+        multiple megabytes, so it is kept in memory once something asks for it.
+        """
+        if self._project is None:
+            self._project = await self._store.async_load()
+        return self._project
 
     def get_address_format(self) -> GroupAddressType:
         """Return the address format for group addresses used in the project."""
