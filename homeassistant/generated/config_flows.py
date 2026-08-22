@@ -650,6 +650,7 @@ FLOWS = {
         "redgtech",
         "refoss",
         "rehlko",
+        "rejseplanen",
         "remote_calendar",
         "renault",
         "renson",
