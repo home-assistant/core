@@ -96,15 +96,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
 async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
     """Unload a config entry."""
     otbrdata = entry.runtime_data
+    otbrdata.unloading = True
     # The key outlives this entry's memory of it, so revoke it rather than
     # leaving the credential active until it expires
-    if otbrdata.active_ephemeral_key is not None:
-        try:
-            await otbrdata.deactivate_ephemeral_key(hass)
-        except HomeAssistantError:
-            _LOGGER.warning(
-                "Could not deactivate the ephemeral key on %s", otbrdata.url
-            )
+    try:
+        await otbrdata.deactivate_ephemeral_key(hass, only_if_active=True)
+    except HomeAssistantError:
+        _LOGGER.warning("Could not deactivate the ephemeral key on %s", otbrdata.url)
     return True
 
 

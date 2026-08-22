@@ -109,6 +109,7 @@ class OTBRData:
     ephemeral_key_supported: bool | None = None
     active_ephemeral_key: str | None = None
     active_ephemeral_key_expires: datetime | None = None
+    unloading: bool = False
     ephemeral_key_lock: asyncio.Lock = dataclasses.field(
         default_factory=asyncio.Lock, repr=False
     )
@@ -219,6 +220,8 @@ class OTBRData:
         self, hass: HomeAssistant, lifetime: int
     ) -> tuple[str, int]:
         """Activate ephemeral key mode while holding the lock."""
+        if self.unloading:
+            raise HomeAssistantError("OTBR entry is unloading")
         # A key handed out by this instance stays valid until its dialog is
         # closed, so don't silently replace it for a second caller
         if (
@@ -294,7 +297,10 @@ class OTBRData:
 
     @_handle_otbr_error
     async def deactivate_ephemeral_key(
-        self, hass: HomeAssistant, ephemeral_key: str | None = None
+        self,
+        hass: HomeAssistant,
+        ephemeral_key: str | None = None,
+        only_if_active: bool = False,
     ) -> bool:
         """Deactivate the active ephemeral key, returning whether one was deleted.
 
@@ -302,6 +308,8 @@ class OTBRData:
         cannot revoke a key handed out after it.
         """
         async with self.ephemeral_key_lock:
+            if only_if_active and self.active_ephemeral_key is None:
+                return False
             if ephemeral_key is not None and ephemeral_key != self.active_ephemeral_key:
                 return False
             session = async_get_clientsession(hass)
