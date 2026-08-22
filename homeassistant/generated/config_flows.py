@@ -239,6 +239,7 @@ FLOWS = {
         "fitbit",
         "fivem",
         "fjaraskupan",
+        "flexit",
         "flexit_bacnet",
         "flipr",
         "flo",
