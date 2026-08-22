@@ -217,46 +217,46 @@
     },
     "sensor": {
       "bathing_leaving_temperature": {
-        "name": "Bathing Leaving Temperature"
+        "name": "Bathing leaving temperature"
       },
       "bottom_compartment_temperature": {
-        "name": "Bottom Compartment Temperature"
+        "name": "Bottom compartment temperature"
       },
       "bottom_temperature": {
-        "name": "Bottom Temperature"
+        "name": "Bottom temperature"
       },
       "compressor_current": {
-        "name": "Compressor Current"
+        "name": "Compressor current"
       },
       "compressor_frequency": {
-        "name": "Compressor Frequency"
+        "name": "Compressor frequency"
       },
       "compressor_power": {
-        "name": "Compressor Power"
+        "name": "Compressor power"
       },
       "compressor_temperature": {
-        "name": "Compressor Temperature"
+        "name": "Compressor temperature"
       },
       "compressor_voltage": {
-        "name": "Compressor Voltage"
+        "name": "Compressor voltage"
       },
       "condenser_temperature": {
-        "name": "Condenser Temperature"
+        "name": "Condenser temperature"
       },
       "current_energy_consumption": {
-        "name": "Current Energy Consumption"
+        "name": "Current energy consumption"
       },
       "dehydration_time": {
-        "name": "Dehydration Time"
+        "name": "Dehydration time"
       },
       "discharge_pipe_temperature": {
-        "name": "Discharge Pipe Temperature"
+        "name": "Discharge pipe temperature"
       },
       "dry_temperature": {
-        "name": "Dry Temperature"
+        "name": "Dry temperature"
       },
       "energy_consumption": {
-        "name": "Energy Consumption"
+        "name": "Energy consumption"
       },
       "error_ed": {
         "name": "Error",
@@ -273,171 +273,171 @@
         }
       },
       "evaporator_temperature": {
-        "name": "Evaporator Temperature"
+        "name": "Evaporator temperature"
       },
       "filter_available_days": {
-        "name": "Filter {filter_number} Available Days"
+        "name": "Filter {filter_number} available days"
       },
       "filter_life": {
-        "name": "Filter Life"
+        "name": "Filter life"
       },
       "filter_life_level": {
-        "name": "Filter {filter_number} Life Level"
+        "name": "Filter {filter_number} life level"
       },
       "flex_zone_actual_temp": {
-        "name": "Flex Zone Actual Temperature"
+        "name": "Flex zone actual temperature"
       },
       "flex_zone_setting_temp": {
-        "name": "Flex Zone Setting Temperature"
+        "name": "Flex zone setting temperature"
       },
       "flow_rate": {
-        "name": "Flow Rate"
+        "name": "Flow rate"
       },
       "freezer_actual_temp": {
-        "name": "Freezer Actual Temperature"
+        "name": "Freezer actual temperature"
       },
       "freezer_setting_temp": {
-        "name": "Freezer Setting Temperature"
+        "name": "Freezer setting temperature"
       },
       "hcho": {
         "name": "Formaldehyde"
       },
       "heating_leaving_temperature": {
-        "name": "Heating Leaving Temperature"
+        "name": "Heating leaving temperature"
       },
       "heating_power": {
-        "name": "Heating Power"
+        "name": "Heating power"
       },
       "humidity_compensate": {
-        "name": "Humidity Compensate"
+        "name": "Humidity compensate"
       },
       "humidity_raw": {
-        "name": "Humidity Raw"
+        "name": "Humidity raw"
       },
       "in_tds": {
         "name": "In TDS"
       },
       "indoor_coil_temperature": {
-        "name": "Indoor Coil Temperature"
+        "name": "Indoor coil temperature"
       },
       "indoor_fan_speed": {
-        "name": "Indoor Fan Speed"
+        "name": "Indoor fan speed"
       },
       "indoor_humidity": {
-        "name": "Indoor Humidity"
+        "name": "Indoor humidity"
       },
       "indoor_temperature": {
-        "name": "Indoor Temperature"
+        "name": "Indoor temperature"
       },
       "keep_warm_time": {
-        "name": "Keep Warm Time"
+        "name": "Keep warm time"
       },
       "middle_compartment_temperature": {
-        "name": "Middle Compartment Temperature"
+        "name": "Middle compartment temperature"
       },
       "mode": {
         "name": "Mode",
         "state": {
-          "appetizing_congee": "Appetizing Congee",
-          "assorte_rice": "Assorted Rice",
-          "baby_congee": "Baby Congee",
-          "baby_rice": "Baby Rice",
-          "baby_side": "Baby Side",
-          "bean_rice_congee": "Bean Rice Congee",
-          "black_buckwheat_rice": "Black Buckwheat Rice",
-          "boil_congee": "Boil Congee",
-          "boil_egg": "Boil Egg",
-          "canton_soup": "Canton Soup",
+          "appetizing_congee": "Appetizing congee",
+          "assorte_rice": "Assorted rice",
+          "baby_congee": "Baby congee",
+          "baby_rice": "Baby rice",
+          "baby_side": "Baby side",
+          "bean_rice_congee": "Bean rice congee",
+          "black_buckwheat_rice": "Black buckwheat rice",
+          "boil_congee": "Boil congee",
+          "boil_egg": "Boil egg",
+          "canton_soup": "Canton soup",
           "chop": "Chop",
           "clean": "Clean",
-          "coarse_congee": "Coarse Congee",
-          "coarse_rice": "Coarse Rice",
-          "congee_coup": "Congee Coup",
-          "cook_congee": "Cook Congee",
-          "cook_rice": "Cook Rice",
-          "cook_soup": "Cook Soup",
+          "coarse_congee": "Coarse congee",
+          "coarse_rice": "Coarse rice",
+          "congee_coup": "Congee soup",
+          "cook_congee": "Cook congee",
+          "cook_rice": "Cook rice",
+          "cook_soup": "Cook soup",
           "corn": "Corn",
-          "corn_congee": "Corn Congee",
-          "crispy_rice": "Crispy Rice",
-          "delicious_steam": "Delicious Steam",
+          "corn_congee": "Corn congee",
+          "crispy_rice": "Crispy rice",
+          "delicious_steam": "Delicious steam",
           "diy": "DIY",
-          "earthen_pot_congee": "Earthen Pot Congee",
+          "earthen_pot_congee": "Earthen pot congee",
           "egg": "Egg",
-          "egg_custard": "Egg Custard",
-          "eight_treasures_congee": "Eight Treasures Congee",
-          "eight_treasures_rice": "Eight Treasures Rice",
-          "essence_rice": "Essence Rice",
-          "factory_test": "Factory Test",
-          "fast_boil": "Fast Boil",
-          "fast_congee": "Fast Congee",
-          "fast_cook_rice": "Fast Cook Rice",
-          "fast_rice": "Fast Rice",
-          "few_rice": "Few Rice",
-          "firewood_rice": "Firewood Rice",
-          "five_ceeals_rice": "Five Cereals Rice",
-          "four_color_vegetables": "Four Color Vegetables",
-          "fragrant_dense_congee": "Fragrant Dense Congee",
-          "fragrant_rice": "Fragrant Rice",
-          "fruit_vegetable_paste": "Fruit Vegetable Paste",
-          "green_buckwheat_rice": "Green Buckwheat Rice",
+          "egg_custard": "Egg custard",
+          "eight_treasures_congee": "Eight treasures congee",
+          "eight_treasures_rice": "Eight treasures rice",
+          "essence_rice": "Essence rice",
+          "factory_test": "Factory test",
+          "fast_boil": "Fast boil",
+          "fast_congee": "Fast congee",
+          "fast_cook_rice": "Fast cook rice",
+          "fast_rice": "Fast rice",
+          "few_rice": "Few rice",
+          "firewood_rice": "Firewood rice",
+          "five_ceeals_rice": "Five cereals rice",
+          "four_color_vegetables": "Four color vegetables",
+          "fragrant_dense_congee": "Fragrant dense congee",
+          "fragrant_rice": "Fragrant rice",
+          "fruit_vegetable_paste": "Fruit vegetable paste",
+          "green_buckwheat_rice": "Green buckwheat rice",
           "gruel": "Gruel",
-          "heat_rice": "Heat Rice",
-          "hot_fast_rice": "Hot Fast Rice",
-          "hot_spring_egg": "Hot Spring Egg",
-          "infant_congee": "Infant Congee",
-          "iron_pan_rice": "Iron Pan Rice",
-          "keep_fresh": "Keep Fresh",
-          "keep_warm": "Keep Warm",
-          "low_sugar_rice": "Low Sugar Rice",
-          "luscious_boiled": "Luscious Boiled",
-          "luscious_rice": "Luscious Rice",
-          "make_cake": "Make Cake",
-          "millet_congee": "Millet Congee",
-          "millet_mixed_rice": "Millet Mixed Rice",
-          "no_water_treat": "No Water Treat",
+          "heat_rice": "Heat rice",
+          "hot_fast_rice": "Hot fast rice",
+          "hot_spring_egg": "Hot spring egg",
+          "infant_congee": "Infant congee",
+          "iron_pan_rice": "Iron pan rice",
+          "keep_fresh": "Keep fresh",
+          "keep_warm": "Keep warm",
+          "low_sugar_rice": "Low sugar rice",
+          "luscious_boiled": "Luscious boiled",
+          "luscious_rice": "Luscious rice",
+          "make_cake": "Make cake",
+          "millet_congee": "Millet congee",
+          "millet_mixed_rice": "Millet mixed rice",
+          "no_water_treat": "No water treat",
           "normal": "Normal",
-          "normal_continus": "Normal Continuous",
-          "northeast_stew": "Northeast Stew",
-          "nutrition_stew": "Nutrition Stew",
-          "older_rice": "Older Rice",
-          "olla_pan_rice": "Olla Pan Rice",
-          "one_two_cook": "One Two Cook",
-          "online_celebrity_rice": "Online Celebrity Rice",
-          "original_steame": "Original Steam",
-          "pork_porridge": "Pork Porridge",
-          "pottery_jar_soup": "Pottery Jar Soup",
-          "quick_freeze_bun": "Quick Freeze Bun",
-          "red_potato": "Red Potato",
-          "regimen_congee": "Regimen Congee",
-          "regimen_soup": "Regimen Soup",
+          "normal_continus": "Normal continuous",
+          "northeast_stew": "Northeast stew",
+          "nutrition_stew": "Nutrition stew",
+          "older_rice": "Older rice",
+          "olla_pan_rice": "Olla pan rice",
+          "one_two_cook": "One two cook",
+          "online_celebrity_rice": "Online celebrity rice",
+          "original_steame": "Original steam",
+          "pork_porridge": "Pork porridge",
+          "pottery_jar_soup": "Pottery jar soup",
+          "quick_freeze_bun": "Quick freeze bun",
+          "red_potato": "Red potato",
+          "regimen_congee": "Regimen congee",
+          "regimen_soup": "Regimen soup",
           "reserve": "Reserve",
-          "resveratrol_rice": "Resveratrol Rice",
-          "rice_paste": "Rice Paste",
-          "rice_soup": "Rice Soup",
-          "rice_wine": "Rice Wine",
-          "roughage_rice": "Roughage Rice",
+          "resveratrol_rice": "Resveratrol rice",
+          "rice_paste": "Rice paste",
+          "rice_soup": "Rice soup",
+          "rice_wine": "Rice wine",
+          "roughage_rice": "Roughage rice",
           "service": "Service",
-          "shelled_rice": "Shelled Rice",
+          "shelled_rice": "Shelled rice",
           "smart": "Smart",
-          "soup_rice": "Soup Rice",
-          "sprout_rice": "Sprout Rice",
-          "standard_cook_rice": "Standard Cook Rice",
-          "steam_corn": "Steam Corn",
-          "steam_egg": "Steam Egg",
-          "steam_red_potato": "Steam Red Potato",
-          "steam_ribs": "Steam Ribs",
-          "steame_fish": "Steamed Fish",
-          "steep_rice": "Steep Rice",
-          "stew_soup": "Stew Soup",
+          "soup_rice": "Soup rice",
+          "sprout_rice": "Sprout rice",
+          "standard_cook_rice": "Standard cook rice",
+          "steam_corn": "Steam corn",
+          "steam_egg": "Steam egg",
+          "steam_red_potato": "Steam red potato",
+          "steam_ribs": "Steam ribs",
+          "steame_fish": "Steamed fish",
+          "steep_rice": "Steep rice",
+          "stew_soup": "Stew soup",
           "stewing": "Stewing",
-          "stone_bowl_rice": "Stone Bowl Rice",
-          "sushi_rice": "Sushi Rice",
-          "trichromatic_coarse_grain": "Trichromatic Coarse Grain",
-          "uncap_boil": "Uncap Boil",
-          "vegetable_porridge": "Vegetable Porridge",
-          "vegetable_rice": "Vegetable Rice",
-          "warm_milk": "Warm Milk",
-          "yellow_wheat_rice": "Yellow Wheat Rice",
+          "stone_bowl_rice": "Stone bowl rice",
+          "sushi_rice": "Sushi rice",
+          "trichromatic_coarse_grain": "Trichromatic coarse grain",
+          "uncap_boil": "Uncap boil",
+          "vegetable_porridge": "Vegetable porridge",
+          "vegetable_rice": "Vegetable rice",
+          "warm_milk": "Warm milk",
+          "yellow_wheat_rice": "Yellow wheat rice",
           "yoghourt": "Yoghourt"
         }
       },
@@ -445,110 +445,110 @@
         "name": "Out TDS"
       },
       "outdoor_temperature": {
-        "name": "Outdoor Temperature"
+        "name": "Outdoor temperature"
       },
       "pmv": {
-        "name": "Predicted Mean Vote"
+        "name": "Predicted mean vote"
       },
       "realtime_power": {
-        "name": "Realtime Power"
+        "name": "Realtime power"
       },
       "refrigerator_actual_temp": {
-        "name": "Refrigerator Actual Temperature"
+        "name": "Refrigerator actual temperature"
       },
       "refrigerator_setting_temp": {
-        "name": "Refrigerator Setting Temperature"
+        "name": "Refrigerator setting temperature"
       },
       "remaining_days": {
-        "name": "Remaining Days"
+        "name": "Remaining days"
       },
       "right_flex_zone_actual_temp": {
-        "name": "Right Flex Zone Actual Temperature"
+        "name": "Right flex zone actual temperature"
       },
       "right_flex_zone_setting_temp": {
-        "name": "Right Flex Zone Setting Temperature"
+        "name": "Right flex zone setting temperature"
       },
       "salt_available": {
-        "name": "Salt Available"
+        "name": "Salt available"
       },
       "seat_temperature": {
-        "name": "Seat Temperature"
+        "name": "Seat temperature"
       },
       "soak_time": {
-        "name": "Soak Time"
+        "name": "Soak time"
       },
       "softwater_available": {
-        "name": "Softwater Available"
+        "name": "Softwater available"
       },
       "tank_actual_temperature": {
-        "name": "Tank Temperature"
+        "name": "Tank temperature"
       },
       "tank_level": {
-        "name": "Tank Level"
+        "name": "Tank level"
       },
       "target_compressor_frequency": {
-        "name": "Target Compressor Frequency"
+        "name": "Target compressor frequency"
       },
       "target_indoor_fan_speed": {
-        "name": "Target Indoor Fan Speed"
+        "name": "Target indoor fan speed"
       },
       "target_temperature": {
-        "name": "Target Temperature"
+        "name": "Target temperature"
       },
       "temp_tw_in": {
-        "name": "Water Inlet Temperature"
+        "name": "Water inlet temperature"
       },
       "temp_tw_out": {
-        "name": "Water Outlet Temperature"
+        "name": "Water outlet temperature"
       },
       "temperature_compensate": {
-        "name": "Temperature Compensate"
+        "name": "Temperature compensate"
       },
       "temperature_raw": {
-        "name": "Temperature Raw"
+        "name": "Temperature raw"
       },
       "top_compartment_temperature": {
-        "name": "Top Compartment Temperature"
+        "name": "Top compartment temperature"
       },
       "top_temperature": {
-        "name": "Top Temperature"
+        "name": "Top temperature"
       },
       "total_energy_consumption": {
-        "name": "Total Energy Consumption"
+        "name": "Total energy consumption"
       },
       "total_produced_energy": {
-        "name": "Total Produced Energy"
+        "name": "Total produced energy"
       },
       "tvoc": {
         "name": "TVOC"
       },
       "use_days": {
-        "name": "Days of Use"
+        "name": "Days of use"
       },
       "variable_mode": {
-        "name": "Variable Mode",
+        "name": "Variable mode",
         "state": {
-          "cold_drink": "Cold Drink",
-          "dry_zone": "Dry Zone",
-          "freeze_warm": "Freeze Warm",
-          "fresh_product": "Fresh Product",
+          "cold_drink": "Cold drink",
+          "dry_zone": "Dry zone",
+          "freeze_warm": "Freeze warm",
+          "fresh_product": "Fresh product",
           "none": "None",
-          "partial_freezing": "Partial Freezing",
-          "soft_freezing": "Soft Freezing",
-          "zero_fresh": "Zero Fresh"
+          "partial_freezing": "Partial freezing",
+          "soft_freezing": "Soft freezing",
+          "zero_fresh": "Zero fresh"
         }
       },
       "wash_time": {
-        "name": "Wash Time"
+        "name": "Wash time"
       },
       "water_consumption": {
-        "name": "Water Consumption"
+        "name": "Water consumption"
       },
       "water_consumption_average": {
-        "name": "Water Consumption Average"
+        "name": "Water consumption average"
       },
       "water_temperature": {
-        "name": "Water Temperature"
+        "name": "Water temperature"
       }
     }
   },
