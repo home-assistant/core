@@ -344,7 +344,10 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
                     perfect_match_channel_id = channel["channelId"]
                     break
 
-                if media_id == channel["channelNumber"]:
+                if (
+                    media_id == channel["channelNumber"]
+                    and perfect_match_channel_id is None
+                ):
                     perfect_match_channel_id = channel["channelId"]
                     continue
 
