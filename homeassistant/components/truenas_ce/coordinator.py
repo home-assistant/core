@@ -855,8 +855,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.ds["interface"]:
             graph_names.append("interface")
 
-        # TODO: consider making this a config option (some hypervisors do pass
-        # through CPU temps and users may want cputemp polling on VMs anyway).
+        # Possible future config option: some hypervisors do pass through CPU
+        # temps, and users may want cputemp polling on VMs anyway.
         if self._is_virtual and "cputemp" in graph_names:
             graph_names.remove("cputemp")
 
