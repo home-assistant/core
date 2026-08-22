@@ -2,6 +2,8 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
+from hashlib import sha256
+import json
 from typing import Any, Concatenate, override
 
 from async_upnp_client.client import UpnpService, UpnpStateVariable
@@ -219,11 +221,51 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
         self._attr_media_artist = None
         self._attr_media_album_name = None
         self._attr_media_image_url = None
+        self._attr_media_image_hash = None
         self._attr_media_content_id = None
         self._attr_media_content_type = None
         self._attr_media_duration = None
         self._attr_media_position = None
         self._attr_media_position_updated_at = None
+
+    @callback
+    def _set_media_image_hash(
+        self,
+        *,
+        image_url: str | None,
+        media_uri: str | None,
+        title: str | None,
+        artist: str | None,
+        album: str | None,
+    ) -> None:
+        """Set a cache-busting media image hash for Home Assistant.
+
+        Some WiiM sources reuse the same artwork URL across tracks, so the
+        default HA URL-based hash is not sufficient to invalidate the image cache.
+        """
+        if not image_url:
+            self._attr_media_image_hash = None
+            return
+
+        digest_source = json.dumps(
+            [image_url, media_uri, title, artist, album],
+            ensure_ascii=False,
+            separators=(",", ":"),
+        )
+        self._attr_media_image_hash = sha256(
+            digest_source.encode("utf-8"), usedforsecurity=False
+        ).hexdigest()
+
+    @override
+    async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
+        """Fetch the media image using a track-aware cache key."""
+        if (url := self.media_image_url) is None:
+            return None, None
+
+        if (image_hash := self.media_image_hash) is not None:
+            url = f"{url.partition('#')[0]}#{image_hash}"
+
+        return await self._async_fetch_image_from_cache(url)
 
     @callback
     def _get_command_target_device(self, action_name: str) -> WiimDevice:
@@ -342,6 +384,13 @@ class WiimMediaPlayerEntity(WiimBaseEntity, MediaPlayerEntity):
             self._attr_media_artist = media.artist
             self._attr_media_album_name = media.album
             self._attr_media_image_url = media.image_url
+            self._set_media_image_hash(
+                image_url=media.image_url,
+                media_uri=media.uri,
+                title=media.title,
+                artist=media.artist,
+                album=media.album,
+            )
             self._attr_media_content_id = media.uri
             self._attr_media_content_type = MediaType.MUSIC
             self._attr_media_duration = media.duration

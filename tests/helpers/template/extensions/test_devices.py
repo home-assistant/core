@@ -38,7 +38,7 @@ async def test_device_entities(
     assert info.rate_limit is None
 
     # Test device with single entity, which has no state
-    entity_registry.async_get_or_create(
+    entity_entry = entity_registry.async_get_or_create(
         "light",
         "hue",
         "5678",
@@ -46,7 +46,7 @@ async def test_device_entities(
         device_id=device_entry.id,
     )
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
-    assert_result_info(info, ["light.hue_5678"], [])
+    assert_result_info(info, [entity_entry.entity_id], [])
     assert info.rate_limit is None
     info = render_to_info(
         hass,
@@ -55,11 +55,11 @@ async def test_device_entities(
             "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
-    assert_result_info(info, "", ["light.hue_5678"])
+    assert_result_info(info, "", [entity_entry.entity_id])
     assert info.rate_limit is None
 
     # Test device with single entity, with state
-    hass.states.async_set("light.hue_5678", "happy")
+    hass.states.async_set(entity_entry.entity_id, "happy")
     info = render_to_info(
         hass,
         (
@@ -67,20 +67,20 @@ async def test_device_entities(
             "| sort(attribute='entity_id') | map(attribute='entity_id') | join(', ') }}"
         ),
     )
-    assert_result_info(info, "light.hue_5678", ["light.hue_5678"])
+    assert_result_info(info, entity_entry.entity_id, [entity_entry.entity_id])
     assert info.rate_limit is None
 
     # Test device with multiple entities, which have a state
-    entity_registry.async_get_or_create(
+    entity_entry_2 = entity_registry.async_get_or_create(
         "light",
         "hue",
         "ABCD",
         config_entry=config_entry,
         device_id=device_entry.id,
     )
-    hass.states.async_set("light.hue_abcd", "camper")
+    hass.states.async_set(entity_entry_2.entity_id, "camper")
     info = render_to_info(hass, f"{{{{ device_entities('{device_entry.id}') }}}}")
-    assert_result_info(info, ["light.hue_5678", "light.hue_abcd"], [])
+    assert_result_info(info, [entity_entry.entity_id, entity_entry_2.entity_id], [])
     assert info.rate_limit is None
     info = render_to_info(
         hass,
@@ -90,7 +90,9 @@ async def test_device_entities(
         ),
     )
     assert_result_info(
-        info, "light.hue_5678, light.hue_abcd", ["light.hue_5678", "light.hue_abcd"]
+        info,
+        f"{entity_entry.entity_id}, {entity_entry_2.entity_id}",
+        [entity_entry.entity_id, entity_entry_2.entity_id],
     )
     assert info.rate_limit is None
 
