@@ -64,7 +64,7 @@
     'area_id': None,
     'capabilities': dict({
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'normal',
+        'none',
         'sleep',
         'eco',
       ]),
@@ -107,7 +107,7 @@
       <FanEntityStateAttribute.PERCENTAGE_STEP: 'percentage_step'>: 14.285714285714286,
       <FanEntityStateAttribute.PRESET_MODE: 'preset_mode'>: None,
       <FanEntityCapabilityAttribute.PRESET_MODES: 'preset_modes'>: list([
-        'normal',
+        'none',
         'sleep',
         'eco',
       ]),
