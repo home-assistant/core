@@ -134,18 +134,24 @@ class NationalGridDataUpdateCoordinator(
             _LOGGER.debug("Could not fetch usages for account %s: %s", account_id, err)
             usages = []
 
-        try:
-            region = billing_account["region"]
-            if region:
+        region = billing_account["region"]
+        if region:
+            try:
                 costs = await self.api.get_energy_usage_costs(
                     account_number=account_id,
                     query_date=today,
                     company_code=region,
                 )
-            else:
+            except (
+                CannotConnectError,
+                RetryExhaustedError,
+                NationalGridError,
+            ) as err:
+                _LOGGER.debug(
+                    "Could not fetch costs for account %s: %s", account_id, err
+                )
                 costs = []
-        except (CannotConnectError, RetryExhaustedError, NationalGridError) as err:
-            _LOGGER.debug("Could not fetch costs for account %s: %s", account_id, err)
+        else:
             costs = []
 
         return NationalGridCoordinatorData(
