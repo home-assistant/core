@@ -221,6 +221,9 @@ def _empty_as_none(value: str | None) -> str | None:
     return value or None
 
 
+RECURRENCE_RANGE_SCHEMA = vol.All(cv.string, vol.In(("THISANDFUTURE",)))
+
+
 def _validate_recurrence_params(
     recurrence_id: str | None, recurrence_range: str | None
 ) -> None:
@@ -276,7 +279,7 @@ DELETE_EVENT_SCHEMA = cv.make_entity_service_schema(
         vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
             vol.All(cv.string, _empty_as_none), None
         ),
-        vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+        vol.Optional(EVENT_RECURRENCE_RANGE): RECURRENCE_RANGE_SCHEMA,
     }
 )
 
@@ -289,7 +292,7 @@ UPDATE_EVENT_SCHEMA = vol.All(
             vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
                 vol.All(cv.string, _empty_as_none), None
             ),
-            vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+            vol.Optional(EVENT_RECURRENCE_RANGE): RECURRENCE_RANGE_SCHEMA,
             vol.Required(EVENT_SUMMARY): cv.string,
             vol.Optional(EVENT_DESCRIPTION): cv.string,
             vol.Optional(EVENT_LOCATION): cv.string,
@@ -985,7 +988,7 @@ async def handle_calendar_event_create(
         vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
             vol.All(cv.string, _empty_as_none), None
         ),
-        vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+        vol.Optional(EVENT_RECURRENCE_RANGE): RECURRENCE_RANGE_SCHEMA,
     }
 )
 @websocket_api.async_response
@@ -1035,7 +1038,7 @@ async def handle_calendar_event_delete(
         vol.Optional(EVENT_RECURRENCE_ID): vol.Any(
             vol.All(cv.string, _empty_as_none), None
         ),
-        vol.Optional(EVENT_RECURRENCE_RANGE): cv.string,
+        vol.Optional(EVENT_RECURRENCE_RANGE): RECURRENCE_RANGE_SCHEMA,
         vol.Required(CONF_EVENT): WEBSOCKET_EVENT_SCHEMA,
     }
 )

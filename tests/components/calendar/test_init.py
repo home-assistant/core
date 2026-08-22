@@ -424,6 +424,46 @@ async def test_mutation_service_recurrence_range_requires_recurrence_id(
 
 
 @pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        (
+            DELETE_EVENT_SERVICE,
+            {
+                "uid": "some-uid",
+                "recurrence_id": "1997-07-14T17:00:00+00:00",
+                "recurrence_range": "THIS_AND_FUTURE",
+            },
+        ),
+        (
+            UPDATE_EVENT_SERVICE,
+            {
+                "uid": "some-uid",
+                "recurrence_id": "1997-07-14T17:00:00+00:00",
+                "recurrence_range": "THIS_AND_FUTURE",
+                "summary": "Bastille Day Party",
+                "start_date_time": "1997-07-14T17:00:00+00:00",
+                "end_date_time": "1997-07-15T04:00:00+00:00",
+            },
+        ),
+    ],
+)
+async def test_mutation_service_rejects_invalid_recurrence_range(
+    hass: HomeAssistant,
+    service: str,
+    service_data: dict[str, str],
+) -> None:
+    """Test mutation services reject unsupported recurrence ranges."""
+    with pytest.raises(vol.Invalid):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            service_data,
+            target={"entity_id": "calendar.calendar_1"},
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize(
     "command",
     [
         {
@@ -466,6 +506,85 @@ async def test_mutation_websocket_recurrence_range_requires_recurrence_id(
     assert "recurrence_range requires a recurrence_id" in msg["error"]["message"]
     entity.async_delete_event.assert_not_awaited()
     entity.async_update_event.assert_not_awaited()
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        {
+            "type": "calendar/event/delete",
+            "uid": "some-uid",
+            "recurrence_id": "1997-07-14T17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+        },
+        {
+            "type": "calendar/event/update",
+            "uid": "some-uid",
+            "recurrence_id": "1997-07-14T17:00:00+00:00",
+            "recurrence_range": "THISANDFUTURE",
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    ],
+)
+async def test_mutation_websocket_accepts_this_and_future_recurrence_range(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    test_entities: list[MockCalendarEntity],
+    command: dict[str, Any],
+) -> None:
+    """Test WebSocket mutations accept the supported recurrence range."""
+    entity = test_entities[0]
+    entity._attr_supported_features = (
+        CalendarEntityFeature.DELETE_EVENT | CalendarEntityFeature.UPDATE_EVENT
+    )
+    entity.async_delete_event = AsyncMock()
+    entity.async_update_event = AsyncMock()
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({**command, "entity_id": entity.entity_id})
+
+    assert (await client.receive_json())["success"]
+
+
+@pytest.mark.parametrize(
+    "command",
+    [
+        {
+            "type": "calendar/event/delete",
+            "uid": "some-uid",
+            "recurrence_id": "1997-07-14T17:00:00+00:00",
+            "recurrence_range": "THIS_AND_FUTURE",
+        },
+        {
+            "type": "calendar/event/update",
+            "uid": "some-uid",
+            "recurrence_id": "1997-07-14T17:00:00+00:00",
+            "recurrence_range": "THIS_AND_FUTURE",
+            "event": {
+                "summary": "Bastille Day Party",
+                "dtstart": "1997-07-14T17:00:00+00:00",
+                "dtend": "1997-07-15T04:00:00+00:00",
+            },
+        },
+    ],
+)
+async def test_mutation_websocket_rejects_invalid_recurrence_range(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    command: dict[str, Any],
+) -> None:
+    """Test WebSocket mutations reject unsupported recurrence ranges."""
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id({**command, "entity_id": "calendar.calendar_1"})
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+    assert "THISANDFUTURE" in msg["error"]["message"]
 
 
 @pytest.mark.parametrize(
