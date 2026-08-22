@@ -7,7 +7,7 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components.truenas_ce.const import DOMAIN
+from homeassistant.components.truenas_ce.const import CONF_SYSTEM_ID, DOMAIN
 from homeassistant.components.truenas_ce.entity import (
     TrueNASEntity,
     TrueNASEntityDescription,
@@ -20,6 +20,7 @@ from homeassistant.components.truenas_ce.entity import (
     _skip_keyless_description,
     format_device_identifier,
     format_unique_id,
+    resolve_entry_identity,
 )
 from homeassistant.components.truenas_ce.sensor_types import (
     TrueNASSensorEntityDescription,
@@ -512,17 +513,156 @@ def test_device_info_data_group_instance_prefix_prevents_collision() -> None:
     )
     data = {"disk": {"d1": {"guid": "g1", "pool": "tank"}}}
     entity_a = TrueNASEntity(
-        make_coordinator(data=data, config_entry=make_config_entry(name="TrueNAS-A")),
+        make_coordinator(
+            data=data,
+            config_entry=make_config_entry(name="TrueNAS-A", entry_id="entry-a"),
+        ),
         desc,
         "d1",
     )
     entity_b = TrueNASEntity(
-        make_coordinator(data=data, config_entry=make_config_entry(name="TrueNAS-B")),
+        make_coordinator(
+            data=data,
+            config_entry=make_config_entry(name="TrueNAS-B", entry_id="entry-b"),
+        ),
         desc,
         "d1",
     )
-    assert entity_a.device_info["identifiers"] == {("truenas_ce", "TrueNAS-A_tank")}
-    assert entity_b.device_info["identifiers"] == {("truenas_ce", "TrueNAS-B_tank")}
+    assert entity_a.device_info["identifiers"] == {("truenas_ce", "entry-a_tank")}
+    assert entity_b.device_info["identifiers"] == {("truenas_ce", "entry-b_tank")}
+
+
+def test_device_info_same_name_different_system_id_prevents_collision() -> None:
+    """Two config entries sharing CONF_NAME must still get distinct devices.
+
+    Regression test for #179103's Copilot finding: entities/devices used to
+    be namespaced by the user-editable display name (CONF_NAME), so two
+    TrueNAS servers with the same name (e.g. both left on the "TrueNAS"
+    fallback) would collide. They must now be namespaced by the stable
+    per-entry identity (CONF_SYSTEM_ID, falling back to entry_id).
+    """
+    desc = TrueNASSensorEntityDescription(
+        key="disk_temp",
+        name="Temperature",
+        data_path="disk",
+        data_reference="guid",
+        ha_group="data__pool",
+    )
+    data = {"disk": {"d1": {"guid": "g1", "pool": "tank"}}}
+    entity_a = TrueNASEntity(
+        make_coordinator(
+            data=data,
+            config_entry=make_config_entry(
+                name="TrueNAS",
+                entry_id="entry-a",
+                data={CONF_SYSTEM_ID: "system-aaa"},
+            ),
+        ),
+        desc,
+        "d1",
+    )
+    entity_b = TrueNASEntity(
+        make_coordinator(
+            data=data,
+            config_entry=make_config_entry(
+                name="TrueNAS",
+                entry_id="entry-b",
+                data={CONF_SYSTEM_ID: "system-bbb"},
+            ),
+        ),
+        desc,
+        "d1",
+    )
+    assert entity_a.device_info["identifiers"] == {("truenas_ce", "system-aaa_tank")}
+    assert entity_b.device_info["identifiers"] == {("truenas_ce", "system-bbb_tank")}
+    assert entity_a.unique_id != entity_b.unique_id
+    # Display name still collides -- that's cosmetic only, not an identity bug.
+    assert entity_a.device_info["name"] == entity_b.device_info["name"] == "TrueNAS tank"
+
+
+def test_device_info_same_name_missing_system_id_falls_back_to_entry_id() -> None:
+    """Two entries sharing CONF_NAME with no CONF_SYSTEM_ID still get distinct devices.
+
+    CONF_SYSTEM_ID is only populated when the system.global.id lookup
+    succeeded during setup, so both entries falling back to entry_id must
+    still avoid a collision.
+    """
+    desc = TrueNASSensorEntityDescription(
+        key="disk_temp",
+        name="Temperature",
+        data_path="disk",
+        data_reference="guid",
+        ha_group="data__pool",
+    )
+    data = {"disk": {"d1": {"guid": "g1", "pool": "tank"}}}
+    entity_a = TrueNASEntity(
+        make_coordinator(
+            data=data,
+            config_entry=make_config_entry(name="TrueNAS", entry_id="entry-a"),
+        ),
+        desc,
+        "d1",
+    )
+    entity_b = TrueNASEntity(
+        make_coordinator(
+            data=data,
+            config_entry=make_config_entry(name="TrueNAS", entry_id="entry-b"),
+        ),
+        desc,
+        "d1",
+    )
+    assert entity_a.device_info["identifiers"] == {("truenas_ce", "entry-a_tank")}
+    assert entity_b.device_info["identifiers"] == {("truenas_ce", "entry-b_tank")}
+    assert entity_a.unique_id != entity_b.unique_id
+
+
+def test_unique_id_same_name_different_system_id_prevents_collision() -> None:
+    """Entity unique_ids must be namespaced by identity, not the display name."""
+    desc = TrueNASSensorEntityDescription(
+        key="disk_temp", name="Temperature", data_path="disk", data_reference="guid"
+    )
+    entity_a = TrueNASEntity(
+        make_coordinator(
+            data={"disk": {"d1": {"guid": "g1"}}},
+            config_entry=make_config_entry(
+                name="TrueNAS", data={CONF_SYSTEM_ID: "system-aaa"}
+            ),
+        ),
+        desc,
+        "d1",
+    )
+    entity_b = TrueNASEntity(
+        make_coordinator(
+            data={"disk": {"d1": {"guid": "g1"}}},
+            config_entry=make_config_entry(
+                name="TrueNAS", data={CONF_SYSTEM_ID: "system-bbb"}
+            ),
+        ),
+        desc,
+        "d1",
+    )
+    assert entity_a.unique_id == "system-aaa-disk_temp-g1"
+    assert entity_b.unique_id == "system-bbb-disk_temp-g1"
+
+
+def test_resolve_entry_identity_prefers_system_id() -> None:
+    """resolve_entry_identity uses CONF_SYSTEM_ID when present."""
+    entry = make_config_entry(
+        entry_id="entry-1", data={CONF_SYSTEM_ID: "system-guid-123"}
+    )
+    assert resolve_entry_identity(entry) == "system-guid-123"
+
+
+def test_resolve_entry_identity_falls_back_to_entry_id_when_missing() -> None:
+    """resolve_entry_identity falls back to entry_id when system_id is absent."""
+    entry = make_config_entry(entry_id="entry-1")
+    assert resolve_entry_identity(entry) == "entry-1"
+
+
+def test_resolve_entry_identity_falls_back_to_entry_id_when_blank() -> None:
+    """resolve_entry_identity falls back to entry_id when system_id is empty."""
+    entry = make_config_entry(entry_id="entry-1", data={CONF_SYSTEM_ID: ""})
+    assert resolve_entry_identity(entry) == "entry-1"
 
 
 def test_device_info_explicit_connection_and_value() -> None:

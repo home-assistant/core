@@ -192,7 +192,10 @@ async def test_user_flow_allows_duplicate_name_for_distinct_host(
     duplicate-host test below), so a name collision alone must not block
     setup. The name is not user-chosen (see _async_get_hostname), so this
     exercises the case where system.info carries no usable hostname for
-    either box and both fall back to the same DEFAULT_DEVICE_NAME.
+    either box and both fall back to the same DEFAULT_DEVICE_NAME. This is
+    safe at the entity layer too: unique_ids/device identifiers are keyed on
+    CONF_SYSTEM_ID/entry_id, not this display name (see
+    entity.resolve_entry_identity and its dedicated tests).
     """
     existing = MockConfigEntry(
         domain=DOMAIN,

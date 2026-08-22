@@ -8,7 +8,7 @@ import re
 from typing import Any, cast, override
 
 from homeassistant.components.sensor import SensorEntity
-from homeassistant.const import CONF_NAME, UnitOfInformation, UnitOfTime
+from homeassistant.const import UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform as ep
@@ -22,7 +22,12 @@ from homeassistant.util.dt import utc_from_timestamp
 
 from .const import CONF_DATA_UNIT, DEFAULT_DATA_UNIT, DOMAIN, SIGNAL_UPDATE_SENSORS
 from .coordinator import TrueNASConfigEntry, TrueNASCoordinator, get_truenas_coordinator
-from .entity import TrueNASEntity, async_add_entities, format_unique_id
+from .entity import (
+    TrueNASEntity,
+    async_add_entities,
+    format_unique_id,
+    resolve_entry_identity,
+)
 from .helper import alert_action, scaled_data_unit
 from .sensor_types import (  # noqa: F401
     SENSOR_SERVICES,
@@ -98,12 +103,12 @@ def _discover_app_stats(
         if entity.unique_id is not None
     }
 
-    inst = coord.config_entry.data[CONF_NAME]
+    identity = resolve_entry_identity(coord.config_entry)
 
     for description in _app_stats_descriptions():
         for uid, app_data in app_stats_data.items():
             _maybe_discover_app_stats_sensor(
-                description, uid, app_data, inst, loaded, app_stats_entities, coord
+                description, uid, app_data, identity, loaded, app_stats_entities, coord
             )
 
     if app_stats_entities:
@@ -119,7 +124,7 @@ def _maybe_discover_app_stats_sensor(
     description: TrueNASSensorEntityDescription,
     uid: str,
     app_data: dict[str, Any],
-    inst: str,
+    identity: str,
     loaded: set[str],
     entities: list[TrueNASAppStatsSensor],
     coord: TrueNASCoordinator,
@@ -133,10 +138,10 @@ def _maybe_discover_app_stats_sensor(
         "app_stats_network_tx",
     ):
         _discover_network_sensors(
-            description, uid, app_data, inst, loaded, entities, coord
+            description, uid, app_data, identity, loaded, entities, coord
         )
     else:
-        _discover_standard_sensor(description, uid, inst, loaded, entities, coord)
+        _discover_standard_sensor(description, uid, identity, loaded, entities, coord)
 
 
 # Composite UIDs for app network sensors use the format ``app_name::interface_name``.
@@ -189,7 +194,7 @@ def _discover_network_sensors(
     description: TrueNASSensorEntityDescription,
     uid: str,
     app_data: dict[str, Any],
-    inst: str,
+    identity: str,
     loaded: set[str],
     entities: list[TrueNASAppStatsSensor],
     coord: TrueNASCoordinator,
@@ -205,7 +210,7 @@ def _discover_network_sensors(
         if not interface_name:
             continue
         composed_uid = _compose_app_network_uid(uid, interface_name)
-        unique_id = format_unique_id(inst, description.key, composed_uid)
+        unique_id = format_unique_id(identity, description.key, composed_uid)
         if unique_id in loaded:
             continue
         entities.append(TrueNASAppStatsSensor(coord, description, composed_uid))
@@ -215,13 +220,13 @@ def _discover_network_sensors(
 def _discover_standard_sensor(
     description: TrueNASSensorEntityDescription,
     uid: str,
-    inst: str,
+    identity: str,
     loaded: set[str],
     entities: list[TrueNASAppStatsSensor],
     coord: TrueNASCoordinator,
 ) -> None:
     """Create a single standard app stats sensor if not already loaded."""
-    unique_id = format_unique_id(inst, description.key, uid)
+    unique_id = format_unique_id(identity, description.key, uid)
     if unique_id in loaded:
         return
     entities.append(TrueNASAppStatsSensor(coord, description, uid))
@@ -554,7 +559,7 @@ class TrueNASAppStatsSensor(TrueNASEntity, SensorEntity):
     @override
     def unique_id(self) -> str:
         """Return a truly unique id, preventing conflict between apps sharing eth0."""
-        return format_unique_id(self._inst, self.entity_description.key, self._uid)
+        return format_unique_id(self._identity, self.entity_description.key, self._uid)
 
     @property
     @override

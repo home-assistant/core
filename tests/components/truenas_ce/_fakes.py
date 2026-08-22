@@ -27,13 +27,22 @@ def make_config_entry(
     *,
     name: str = "TrueNAS",
     host: str = "truenas.local",
+    entry_id: str = "TrueNAS",
     data: dict[str, Any] | None = None,
     options: dict[str, Any] | None = None,
 ) -> SimpleNamespace:
-    """Build a minimal stand-in for a ConfigEntry."""
+    """Build a minimal stand-in for a ConfigEntry.
+
+    ``entry_id`` defaults to the same string as the default ``name`` so
+    identity-based unique_ids/device identifiers (see
+    ``entity.resolve_entry_identity``) keep matching pre-existing test
+    expectations that were written against the old name-based format;
+    pass distinct ``entry_id``/``data={CONF_SYSTEM_ID: ...}`` values to
+    exercise the identity-vs-display-name distinction explicitly.
+    """
     entry_data = {CONF_NAME: name, CONF_HOST: host, **(data or {})}
     return SimpleNamespace(
-        entry_id="test-entry-id",
+        entry_id=entry_id,
         data=entry_data,
         options=options or {},
         async_get_entry=MagicMock(return_value=None),

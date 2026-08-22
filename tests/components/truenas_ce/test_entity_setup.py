@@ -130,7 +130,9 @@ async def test_async_setup_entry_creates_snapshottask_sensor_via_dispatcher(
     snapshottask_description = next(
         d for d in SENSOR_TYPES if d.func == "TrueNASSnapshotTaskSensor"
     )
-    unique_id = format_unique_id("TrueNAS", snapshottask_description.key, 1)
+    # No CONF_SYSTEM_ID in this entry's data, so identity falls back to
+    # entry_id (see entity.resolve_entry_identity) -- not the display name.
+    unique_id = format_unique_id(entry.entry_id, snapshottask_description.key, 1)
     entity_id = entity_registry.async_get_entity_id("sensor", DOMAIN, unique_id)
     assert entity_id is not None
     assert hass.states.get(entity_id) is not None
