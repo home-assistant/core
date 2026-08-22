@@ -861,9 +861,6 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -998,9 +995,6 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
@@ -1152,9 +1146,6 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
@@ -1314,9 +1305,6 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Compile English translations
         run: |
           . venv/bin/activate
