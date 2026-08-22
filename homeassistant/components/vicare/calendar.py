@@ -53,7 +53,7 @@ class ViCareCirculationScheduleCalendar(ViCareEntity, CalendarEntity):
     """Representation of a ViCare DHW circulation pump schedule."""
 
     _attr_translation_key = "circulation_schedule"
-    _circulation_schedule: dict[str, list[dict[str, Any]]] | None = None
+    _circulation_schedule: dict[str, Any] | None = None
 
     def __init__(
         self,
@@ -95,6 +95,8 @@ class ViCareCirculationScheduleCalendar(ViCareEntity, CalendarEntity):
     ) -> list[CalendarEvent]:
         """Return the schedule slots that fall within a datetime range."""
         if not self._circulation_schedule:
+            return []
+        if self._circulation_schedule.get("active") is False:
             return []
 
         events: list[CalendarEvent] = []
