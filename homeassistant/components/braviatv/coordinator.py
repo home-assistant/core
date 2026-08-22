@@ -245,10 +245,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 start_datetime = start_datetime.replace(
                     tzinfo=dt_util.get_default_time_zone()
                 )
-            self.media_position = int(
-                (dt_util.utcnow() - start_datetime).total_seconds()
-            )
-            self.media_position_updated_at = dt_util.utcnow()
+            now = dt_util.utcnow()
+            self.media_position = int((now - start_datetime).total_seconds())
+            self.media_position_updated_at = now
         else:
             self.media_position = None
             self.media_position_updated_at = None
