@@ -162,7 +162,6 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
     _attr_translation_key = "domestic_hot_water"
     _current_mode: str | None = None
     _circuit_modes: list[str] | None = None
-    _circulation_schedule: dict[str, Any] | None = None
     _circulation_schedule_max_entries: int | None = None
     _circulation_schedule_modes: list[str] | None = None
 
@@ -205,11 +204,6 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._attr_max_temp = self._api.getDomesticHotWaterMaxTemperature()
-
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._circulation_schedule = (
-                    self._api.getDomesticHotWaterCirculationSchedule()
-                )
 
             with suppress(PyViCareNotSupportedFeatureError):
                 self._circulation_schedule_modes = (
@@ -267,7 +261,6 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
             for full_day, short_day in CIRCULATION_SCHEDULE_DAYS
         }
         self._api.setDomesticHotWaterCirculationSchedule(schedule)
-        self._circulation_schedule = schedule
 
     @property
     def _circuit_mode_map(self) -> dict[str, str]:
@@ -298,11 +291,3 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
         if self._current_mode is None:
             return None
         return snakecase(self._current_mode)
-
-    @property
-    @override
-    def extra_state_attributes(self) -> dict[str, Any]:
-        """Return entity specific state attributes."""
-        if self._circulation_schedule is None:
-            return {}
-        return {"circulation_schedule": self._circulation_schedule}

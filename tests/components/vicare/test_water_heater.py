@@ -3,7 +3,6 @@
 from unittest.mock import patch
 
 import pytest
-from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
@@ -315,47 +314,6 @@ async def test_dynamic_temperature_bounds(
     state = hass.states.get(ENTITY_WATER_HEATER)
     assert state.attributes["min_temp"] == 15.0
     assert state.attributes["max_temp"] == 65.0
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_circulation_schedule_in_state_attributes(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that circulation_schedule is exposed as a state attribute."""
-    expected_schedule = {
-        "active": True,
-        "default_mode": "off",
-        "mon": [{"start": "06:00", "end": "22:00", "mode": "on", "position": 0}],
-        "tue": [],
-        "wed": [],
-        "thu": [],
-        "fri": [],
-        "sat": [],
-        "sun": [],
-    }
-    with (
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(_FIXTURES).as_vicare_data(),
-        ),
-        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
-    with patch.object(
-        entity._api,
-        "getDomesticHotWaterCirculationSchedule",
-        return_value=expected_schedule,
-    ):
-        await entity.async_update_ha_state(force_refresh=True)
-
-    state = hass.states.get(ENTITY_WATER_HEATER)
-    assert state.attributes["circulation_schedule"] == expected_schedule
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -699,33 +657,3 @@ async def test_set_circulation_schedule_service_invalid_mode_literal(
             blocking=True,
         )
     mock_set.assert_not_called()
-
-
-@pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_circulation_schedule_not_supported(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that circulation_schedule is absent when not supported by the device."""
-    with (
-        patch(
-            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
-        ),
-        patch(
-            f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(_FIXTURES).as_vicare_data(),
-        ),
-        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
-    with patch.object(
-        entity._api,
-        "getDomesticHotWaterCirculationSchedule",
-        side_effect=PyViCareNotSupportedFeatureError("not supported"),
-    ):
-        await entity.async_update_ha_state(force_refresh=True)
-
-    state = hass.states.get(ENTITY_WATER_HEATER)
-    assert "circulation_schedule" not in state.attributes
