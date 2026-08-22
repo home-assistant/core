@@ -125,8 +125,8 @@ async def async_setup_entry(
         player = coordinator.player
         _LOGGER.debug("Setting up media_player device and entity for player %s", player)
         device_registry = dr.async_get(hass)
-        server_device = device_registry.async_get_device(
-            identifiers={(DOMAIN, coordinator.server_uuid)},
+        server_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, coordinator.server_uuid), entry.entry_id
         )
 
         name = player.name
@@ -134,6 +134,7 @@ async def async_setup_entry(
         manufacturer = player.creator
         model_id = player.model_type
         sw_version = ""
+        via_device_id = server_device.id if server_device else None
         # So we nicely merge with a server and a player
         # linked by a MAC server is not all info lost
         if (
@@ -151,6 +152,9 @@ async def async_setup_entry(
                 else SERVER_MANUFACTURER
             )
             model_id = SERVER_MODEL_ID + "/" + model_id if model_id else SERVER_MODEL_ID
+            # The player shares the server's device (same MAC), so it resolves to
+            # the server device itself; don't link it to itself.
+            via_device_id = None
 
         device = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
@@ -162,7 +166,7 @@ async def async_setup_entry(
             model_id=model_id,
             hw_version=str(player.firmware) if player.firmware is not None else None,
             sw_version=sw_version,
-            via_device=(DOMAIN, coordinator.server_uuid),
+            via_device_id=via_device_id,
         )
         _LOGGER.debug("Creating / Updating player device %s", device)
         async_add_entities([SqueezeBoxMediaPlayerEntity(coordinator)])

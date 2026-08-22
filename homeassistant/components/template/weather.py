@@ -28,6 +28,7 @@ from homeassistant.components.weather import (
     Forecast,
     WeatherEntity,
     WeatherEntityFeature,
+    WeatherEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -65,7 +66,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -227,12 +228,16 @@ WEATHER_YAML_SCHEMA = (
     )
     .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
     .extend(
-        make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
+        make_template_entity_common_schema(
+            WEATHER_DOMAIN, DEFAULT_NAME, WeatherEntityStateAttribute
+        ).schema
     )
 )
 
 WEATHER_MODERN_YAML_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
-    make_template_entity_common_modern_schema(WEATHER_DOMAIN, DEFAULT_NAME).schema
+    make_template_entity_common_schema(
+        WEATHER_DOMAIN, DEFAULT_NAME, WeatherEntityStateAttribute
+    ).schema
 )
 
 WEATHER_CONFIG_ENTRY_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(

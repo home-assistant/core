@@ -20,12 +20,11 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.const import (
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
     CONF_API_KEY,
     CONF_LLM_HASS_API,
     CONF_NAME,
     CONF_PROMPT,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import llm
@@ -49,6 +48,7 @@ from .const import (
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
+    CONF_PRO_MODE,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_RECOMMENDED,
@@ -78,6 +78,7 @@ from .const import (
     RECOMMENDED_CONVERSATION_OPTIONS,
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_PRO_MODE,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_SERVICE_TIER,
@@ -422,6 +423,18 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
         elif CONF_REASONING_EFFORT in options:
             options.pop(CONF_REASONING_EFFORT)
 
+        if model.startswith("gpt-5.6"):
+            step_schema.update(
+                {
+                    vol.Optional(
+                        CONF_PRO_MODE,
+                        default=RECOMMENDED_PRO_MODE,
+                    ): bool,
+                }
+            )
+        elif CONF_PRO_MODE in options:
+            options.pop(CONF_PRO_MODE)
+
         if model.startswith("gpt-5"):
             step_schema.update(
                 {
@@ -593,6 +606,7 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
             return []
 
         models_reasoning_map: dict[str | tuple[str, ...], list[str]] = {
+            "gpt-5.6": ["none", "low", "medium", "high", "xhigh", "max"],
             ("gpt-5.2-pro", "gpt-5.4-pro", "gpt-5.5-pro"): ["medium", "high", "xhigh"],
             ("gpt-5.2", "gpt-5.3", "gpt-5.4", "gpt-5.5"): [
                 "none",
@@ -654,8 +668,8 @@ class OpenAISubentryFlowHandler(ConfigSubentryFlow):
                     {
                         "role": "system",
                         "content": "Where are the following coordinates located: "
-                        f"({zone_home.attributes[ATTR_LATITUDE]},"
-                        f" {zone_home.attributes[ATTR_LONGITUDE]})?",
+                        f"({zone_home.attributes[EntityStateAttribute.LATITUDE]},"
+                        f" {zone_home.attributes[EntityStateAttribute.LONGITUDE]})?",
                     }
                 ],
                 text={

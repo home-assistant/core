@@ -1,7 +1,6 @@
 """Data update coordinator for caldav."""
 
 from datetime import date, datetime, time, timedelta
-from functools import partial
 import logging
 import re
 from typing import TYPE_CHECKING, override
@@ -54,15 +53,17 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         self, hass: HomeAssistant, start_date: datetime, end_date: datetime
     ) -> list[CalendarEvent]:
         """Get all events in a specific time frame."""
-        # Get event list from the current calendar
-        vevent_list = await hass.async_add_executor_job(
-            partial(
-                self.calendar.search,
-                start=start_date,
-                end=end_date,
-                event=True,
-                expand=True,
-            )
+        return await hass.async_add_executor_job(self._get_events, start_date, end_date)
+
+    def _get_events(
+        self, start_date: datetime, end_date: datetime
+    ) -> list[CalendarEvent]:
+        """Fetch and parse events in a specific time frame."""
+        vevent_list = self.calendar.search(
+            start=start_date,
+            end=end_date,
+            event=True,
+            expand=True,
         )
         event_list = []
         for event in vevent_list:
@@ -96,16 +97,23 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
         start_of_today = dt_util.start_of_local_day()
         start_of_tomorrow = dt_util.start_of_local_day() + timedelta(days=self.days)
 
+        event, offset = await self.hass.async_add_executor_job(
+            self._get_next_event, start_of_today, start_of_tomorrow
+        )
+        self.offset = offset
+        return event
+
+    def _get_next_event(
+        self, start_of_today: datetime, start_of_tomorrow: datetime
+    ) -> tuple[CalendarEvent | None, timedelta | None]:
+        """Fetch and parse the next matching event."""
         # We have to retrieve the results for the whole day as the server
         # won't return events that have already started
-        results = await self.hass.async_add_executor_job(
-            partial(
-                self.calendar.search,
-                start=start_of_today,
-                end=start_of_tomorrow,
-                event=True,
-                expand=True,
-            ),
+        results = self.calendar.search(
+            start=start_of_today,
+            end=start_of_tomorrow,
+            event=True,
+            expand=True,
         )
 
         # Create new events for each recurrence of an event that happens today.
@@ -168,15 +176,13 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 len(vevents),
                 self.calendar.name,
             )
-            self.offset = None
-            return None
+            return None, None
 
         # Populate the entity attributes with the event values
         (summary, offset) = extract_offset(
             get_attr_value(vevent, "summary") or "", OFFSET
         )
-        self.offset = offset
-        return CalendarEvent(
+        next_event = CalendarEvent(
             summary=summary,
             start=self.to_local(vevent.dtstart.value),
             end=self.to_local(self.get_end_date(vevent)),
@@ -189,6 +195,7 @@ class CalDavUpdateCoordinator(DataUpdateCoordinator[CalendarEvent | None]):
                 else None
             ),
         )
+        return next_event, offset
 
     @staticmethod
     def is_matching(vevent, search):

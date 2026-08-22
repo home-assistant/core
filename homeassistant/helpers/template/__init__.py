@@ -74,6 +74,7 @@ from .states import (
     StateAttrTranslated,
     StateTranslated,
     TemplateState as TemplateState,
+    TemplateStateBase,
     TemplateStateFromEntityId as TemplateStateFromEntityId,
 )
 
@@ -238,8 +239,31 @@ RESULT_WRAPPERS: dict[type, type] = {kls: gen_result_wrapper(kls) for kls in _ty
 RESULT_WRAPPERS[tuple] = TupleWrapper
 
 
-@lru_cache(maxsize=EVAL_CACHE_SIZE)
 def _parse_result(render_result: str) -> Any:
+    """Parse a rendered result.
+
+    Continuously changing numeric results, like sensor values, produce
+    a new string on every render and would always miss the eval cache,
+    paying for a full literal_eval. Convert them directly instead.
+    Anything the fast path cannot convert falls through to the cached
+    path, which handles the edge cases ("", ".", "+") identically.
+    """
+    if _IS_NUMERIC.match(render_result):
+        if "." in render_result:
+            try:
+                return float(render_result)
+            except ValueError:
+                pass
+        else:
+            try:
+                return int(render_result)
+            except ValueError:
+                pass
+    return _cached_parse_result(render_result)
+
+
+@lru_cache(maxsize=EVAL_CACHE_SIZE)
+def _cached_parse_result(render_result: str) -> Any:
     """Parse a result and cache the result."""
     # lru_cache does not memoize raised exceptions. The most common template
     # results, plain string states such as "on", "off" or "unavailable", are
@@ -817,7 +841,14 @@ class TemplateEnvironment(ImmutableSandboxedEnvironment):
     def is_safe_attribute(self, obj, attr, value):
         """Test if attribute is safe."""
         if isinstance(
-            obj, (AllStates, DomainStates, TemplateState, LoopContext, AsyncLoopContext)
+            obj,
+            (
+                AllStates,
+                DomainStates,
+                TemplateStateBase,
+                LoopContext,
+                AsyncLoopContext,
+            ),
         ):
             return attr[0] != "_"
 

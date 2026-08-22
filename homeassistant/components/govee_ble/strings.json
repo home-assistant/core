@@ -99,6 +99,20 @@
           }
         }
       }
+    },
+    "sensor": {
+      "humidity_probe": {
+        "name": "Humidity probe {probe_id}"
+      },
+      "low_temperature_alarm_probe": {
+        "name": "Low temperature alarm probe {probe_id}"
+      },
+      "temperature_alarm_probe": {
+        "name": "Temperature alarm probe {probe_id}"
+      },
+      "temperature_probe": {
+        "name": "Temperature probe {probe_id}"
+      }
     }
   }
 }

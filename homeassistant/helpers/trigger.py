@@ -26,8 +26,8 @@ import voluptuous as vol
 
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ALIAS,
+    CONF_AT,
     CONF_DEVICE_ID,
     CONF_ENABLED,
     CONF_ENTITY_ID,
@@ -42,6 +42,7 @@ from homeassistant.const import (
     CONF_ZONE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -622,8 +623,6 @@ class EntityTriggerBase(Trigger):
             if not self.is_valid_state(to_state, report_not_triggered):
                 return
 
-            # The trigger should never fire if the origin state is excluded
-            # or the transition is not valid.
             if (
                 from_state.state in self._excluded_from_states
                 or not self.is_valid_transition(from_state, to_state)
@@ -656,9 +655,6 @@ class EntityTriggerBase(Trigger):
             @callback
             def call_action() -> None:
                 """Call action with right context."""
-                # After a `for` delay, keep the original triggering event payload.
-                # `async_track_same_state` only verifies the state remained valid
-                # for the configured duration before firing the action.
                 run_action(
                     {
                         ATTR_ENTITY_ID: entity_id,
@@ -671,7 +667,6 @@ class EntityTriggerBase(Trigger):
                 )
 
             if not self._duration:
-                # Call action immediately if duration is not specified or 0
                 call_action()
                 return
 
@@ -816,7 +811,7 @@ NUMERICAL_ATTRIBUTE_CHANGED_TRIGGER_SCHEMA = ENTITY_STATE_TRIGGER_SCHEMA.extend(
 class EntityNumericalStateTriggerBase(EntityTriggerBase):
     """Base class for numerical state and state attribute triggers."""
 
-    _valid_unit: str | None | UndefinedType = UNDEFINED
+    _valid_unit: str | UndefinedType | None = UNDEFINED
     _threshold_type: NumericThresholdType
 
     def __init__(self, hass: HomeAssistant, config: TriggerConfig) -> None:
@@ -856,7 +851,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
                 entity_id=threshold.entity,
             )
             return None
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         if not self._is_valid_unit(unit):
             # Entity unit does not match the expected unit
             report_not_triggered(
@@ -882,7 +877,9 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
         domain_spec = self._domain_specs[state.domain]
         raw_value: Any
         if domain_spec.value_source is None:
-            if not self._is_valid_unit(state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+            if not self._is_valid_unit(
+                state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+            ):
                 return None
             raw_value = state.state
         else:
@@ -907,7 +904,7 @@ class EntityNumericalStateTriggerBase(EntityTriggerBase):
         domain_spec = self._domain_specs[state.domain]
         raw_value: Any
         if domain_spec.value_source is None:
-            unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+            unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
             if not self._is_valid_unit(unit):
                 report_not_triggered(
                     "entity_unit_not_supported",
@@ -984,7 +981,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
 
     def _get_entity_unit(self, state: State) -> str | None:
         """Get the unit of an entity from its state."""
-        return state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        return state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
 
     @override
     def _report_tracked_value_problem(
@@ -1050,7 +1047,7 @@ class EntityNumericalStateTriggerWithUnitBase(EntityNumericalStateTriggerBase):
             )
             return None
 
-        unit = state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        unit = state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
         try:
             return self._unit_converter.convert(value, unit, self._base_unit)
         except HomeAssistantError:
@@ -1279,7 +1276,7 @@ def make_entity_origin_state_trigger(
 
 def make_entity_numerical_state_changed_trigger(
     domain_specs: Mapping[str, DomainSpec],
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalStateChangedTriggerBase]:
@@ -1297,7 +1294,7 @@ def make_entity_numerical_state_changed_trigger(
 
 def make_entity_numerical_state_crossed_threshold_trigger(
     domain_specs: Mapping[str, DomainSpec],
-    valid_unit: str | None | UndefinedType = UNDEFINED,
+    valid_unit: str | UndefinedType | None = UNDEFINED,
     *,
     primary_entities_only: bool = True,
 ) -> type[EntityNumericalStateCrossedThresholdTriggerBase]:
@@ -2052,6 +2049,26 @@ def async_extract_entities(trigger_conf: dict) -> list[str]:
     """Extract entities from a trigger config."""
     if trigger_conf[CONF_PLATFORM] in ("state", "numeric_state"):
         return trigger_conf[CONF_ENTITY_ID]  # type: ignore[no-any-return]
+
+    if trigger_conf[CONF_PLATFORM] == "time":
+        # Each at time can be a time, an entity id, an entity id with
+        # an offset, or a template.
+        entity_ids: list[str] = []
+        for at_time in trigger_conf[CONF_AT]:
+            if isinstance(at_time, str) and valid_entity_id(at_time):
+                entity_ids.append(at_time)
+            elif isinstance(at_time, dict) and CONF_ENTITY_ID in at_time:
+                entity_ids.append(at_time[CONF_ENTITY_ID])
+        return entity_ids
+
+    if trigger_conf[CONF_PLATFORM] == "device":
+        # Only extract the entity if it has been resolved to an entity id
+        # during validation; unvalidated configs hold an entity registry id.
+        if isinstance(
+            entity_id := trigger_conf.get(CONF_ENTITY_ID), str
+        ) and valid_entity_id(entity_id):
+            return [entity_id]
+        return []
 
     if trigger_conf[CONF_PLATFORM] == "calendar":
         return [trigger_conf[CONF_OPTIONS][CONF_ENTITY_ID]]
