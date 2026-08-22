@@ -1041,12 +1041,7 @@ class PipelineRun:
             and not self.stt_provider.audio_processing.requires_external_vad
         )
         last_ts: int | None = None
-        # Set to True only when the stream is exhausted naturally (the async for
-        # loop completes without breaking). The ``finally`` block uses this to
-        # emit the synthetic STT_VAD_END on clean exhaustion and suppress it on
-        # cancellation, exceptions, or early abandonment. For early abandonment
-        # on a successful STT call, the caller sets ``_synthetic_vad_close`` so
-        # the ``finally`` emits the VAD_END during ``aclose()``.
+        # Track clean exhaustion separately from exceptions and cancellation.
         normal_end = False
         try:
             async for chunk in audio_stream:
