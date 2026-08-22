@@ -44,8 +44,6 @@ def validate(integrations: dict[str, Integration], config: Config) -> None:
     if frontend_version is None:
         return
 
-    # An outdated environment holds the icons of another frontend version,
-    # regenerating the file with those would check in the wrong icons.
     pinned_version = _get_pinned_frontend_version(integrations)
     if pinned_version is not None and pinned_version != frontend_version:
         return
