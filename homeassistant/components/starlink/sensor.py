@@ -173,7 +173,11 @@ SENSORS: tuple[StarlinkSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         suggested_display_precision=2,
-        value_fn=lambda data: data.status["fraction_obstructed"] * 100,
+        value_fn=lambda data: (
+            value * 100
+            if (value := data.status["fraction_obstructed"]) is not None
+            else None
+        ),
         entity_class=StarlinkSensorEntity,
     ),
     StarlinkSensorEntityDescription(
