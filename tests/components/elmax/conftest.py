@@ -27,7 +27,6 @@ from . import (
 
 from tests.common import load_fixture
 
-# PyJWT warns about HS256 keys shorter than 32 bytes
 TOKEN_SIGNING_KEY = "elmax-test-token-signing-key-0123"
 
 MOCK_DIRECT_BASE_URI = (
