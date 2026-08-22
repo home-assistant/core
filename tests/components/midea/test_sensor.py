@@ -8,6 +8,9 @@ from midealocal.devices.ac import DeviceAttributes as ACAttributes
 from midealocal.devices.c3 import DeviceAttributes as C3Attributes
 from midealocal.devices.db import DeviceAttributes as DBAttributes
 from midealocal.devices.e8 import DeviceAttributes as E8Attributes
+from midealocal.devices.ea import DeviceAttributes as EAAttributes
+from midealocal.devices.ec import DeviceAttributes as ECAttributes
+from midealocal.devices.ed import DeviceAttributes as EDAttributes
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -105,6 +108,70 @@ from tests.common import MockConfigEntry, snapshot_platform
                 },
             ),
             id="db_unknown_attributes",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.EA,
+                attributes={
+                    EAAttributes.bottom_temperature: 180,
+                    EAAttributes.cooking: 1,
+                    EAAttributes.keep_warm: True,
+                    EAAttributes.mode: "heat_rice",
+                    EAAttributes.progress: 50,
+                    EAAttributes.keep_warm_time: 30,
+                    EAAttributes.time_remaining: 5,
+                    EAAttributes.top_temperature: 200,
+                },
+            ),
+            id="ea",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.EC,
+                attributes={
+                    ECAttributes.cooking: 1,
+                    ECAttributes.mode: "diy",
+                    ECAttributes.progress: 50,
+                    ECAttributes.keep_warm_time: 30,
+                    ECAttributes.time_remaining: 5,
+                    ECAttributes.top_temperature: 200,
+                    ECAttributes.with_pressure: True,
+                },
+            ),
+            id="ec",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.ED,
+                attributes={
+                    EDAttributes.keep_warm: True,
+                    EDAttributes.boil_temperature: 100,
+                    EDAttributes.boiling: True,
+                    EDAttributes.keep_warm_time: 30,
+                    EDAttributes.child_lock: True,
+                    EDAttributes.cl_sterilization: True,
+                    EDAttributes.cooling: True,
+                    EDAttributes.current_temperature: 150,
+                    EDAttributes.dispensing: True,
+                    EDAttributes.error: 3,
+                    EDAttributes.filter1: 30,
+                    EDAttributes.filter2: 20,
+                    EDAttributes.filter3: 100,
+                    EDAttributes.flushing_days: 50,
+                    EDAttributes.heating: True,
+                    EDAttributes.hot_water_dispensing: True,
+                    EDAttributes.in_tds: 200,
+                    EDAttributes.keep_warm_remaining: 20,
+                    EDAttributes.lack_water: True,
+                    EDAttributes.leak_water: True,
+                    EDAttributes.out_tds: 100,
+                    EDAttributes.power: True,
+                    EDAttributes.water_consumption: 500,
+                    EDAttributes.water_consumption_big: 6000,
+                    EDAttributes.water_consumption_average: 30,
+                },
+            ),
+            id="ed",
         ),
     ],
 )
