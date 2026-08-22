@@ -295,7 +295,7 @@ def _redacted_legacy_snapshot(legacy_entry: ConfigEntry) -> dict[str, Any]:
     """
     return {
         "data": async_redact_data(dict(legacy_entry.data), TO_REDACT),
-        "options": dict(legacy_entry.options),
+        "options": async_redact_data(dict(legacy_entry.options), TO_REDACT),
     }
 
 

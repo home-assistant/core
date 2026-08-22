@@ -23,6 +23,7 @@ from .const import (
     ALLOWED_DATA_UNITS,
     CONF_CRONJOB_SKIP_DISABLED,
     CONF_DATA_UNIT,
+    CONF_POLL_INTERVAL,
     CONF_SYSTEM_ID,
     DEFAULT_CRONJOB_SKIP_DISABLED,
     DEFAULT_DATA_UNIT,
@@ -442,7 +443,11 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_DATA_UNIT: legacy.data.get(CONF_DATA_UNIT, DEFAULT_DATA_UNIT),
                 }
             )
-            self._legacy_options = dict(legacy.options)
+            self._legacy_options = {
+                key: value
+                for key, value in legacy.options.items()
+                if key != CONF_POLL_INTERVAL
+            }
         return await self.async_step_user()
 
     async def async_step_migrate_manual(
