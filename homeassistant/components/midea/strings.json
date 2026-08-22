@@ -547,6 +547,9 @@
       "water_consumption_average": {
         "name": "Water consumption average"
       },
+      "water_consumption_big": {
+        "name": "Water consumption aggregated"
+      },
       "water_temperature": {
         "name": "Water temperature"
       }
