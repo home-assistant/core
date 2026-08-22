@@ -9,21 +9,14 @@ _LOGGER = getLogger(__name__)
 
 
 MILLIS_TIMESTAMP_THRESHOLD: int = 100_000_000_000
-"""Threshold used to distinguish second-based from millisecond-based Unix timestamps.
+"""Values above this are millisecond-, not second-based Unix timestamps."""
 
-Values greater than this are assumed to be in milliseconds and will be divided by 1000
-before conversion.
-"""
-
-# Sentinel marking a source value that could not be resolved (distinct from None,
-# which can be a legitimate value in the API payload).
+# Distinct from None, which can be a legitimate API value.
 _MISSING = object()
 
-# String tokens treated as booleans by from_entry_bool.
 _BOOL_TRUE_VALUES = {"on", "yes", "up", "true", "1"}
 _BOOL_FALSE_VALUES = {"off", "no", "down", "false", "0"}
 
-# Actions supported by fill_vals_proc.
 _SUPPORTED_VALS_PROC_ACTIONS = {"combine"}
 
 
@@ -54,11 +47,7 @@ def utc_from_timestamp(timestamp: float) -> datetime:
 #   human_date_to_utc
 # ---------------------------
 def human_date_to_utc(date_str: Any) -> datetime | None:
-    """Parse human-readable date string to UTC datetime.
-
-    Expects format: "Fri Mar 26 00:59:59 2100" (TrueNAS certificate 'until' format).
-    Returns UTC datetime object or None if unparsable or not a string (unknown expiry).
-    """
+    """Parse a TrueNAS certificate 'until' date, e.g. "Fri Mar 26 00:59:59 2100"."""
     if not isinstance(date_str, str):
         return None
     try:
@@ -185,7 +174,7 @@ def parse_api(
     if isinstance(source, dict):
         source = [source]
     elif isinstance(source, str):
-        # A bare string is a malformed API payload; treat it like no source.
+        # A bare string is a malformed payload; treat as no source.
         source = None
 
     if not source:
@@ -194,8 +183,7 @@ def parse_api(
     keymap = generate_keymap(data, key_search)
     for entry in source:
         if not isinstance(entry, dict):
-            # A malformed API payload can mix in non-dict entries; skip them
-            # rather than letting the only/skip/vals lookups below raise.
+            # Skip non-dict entries so lookups below don't raise.
             continue
         if _should_skip_entry(entry, only, skip):
             continue
@@ -249,11 +237,7 @@ def _resolve_entry_uid(
     key_search: str | None,
     keymap: dict[Hashable, str] | None,
 ) -> tuple[str | None, bool]:
-    """Resolve the uid for an entry.
-
-    Returns a (uid, matched) tuple. ``matched`` is False when the entry has a
-    key requirement that could not be satisfied and should be skipped.
-    """
+    """Resolve the uid for an entry; matched=False means the entry should be skipped."""
     if not (key or key_search):
         return None, True
 
@@ -319,15 +303,7 @@ def get_uid(
 def generate_keymap(
     data: dict[str, Any], key_search: str | None
 ) -> dict[Hashable, str] | None:
-    """Generate keymap.
-
-    ``data``'s values are typed ``Any`` rather than ``dict[str, Any]``: this
-    is a general-purpose helper, and a future/unexpected caller could pass a
-    non-dict value for some uid, so the entry must be runtime-checked rather
-    than trusted from the static type. Entries whose value is not a dict, or
-    that lack ``key_search``, are silently ignored and excluded from the
-    returned keymap.
-    """
+    """Generate keymap, skipping entries that aren't dicts or lack key_search."""
     if not key_search:
         return None
     return {
@@ -389,12 +365,10 @@ def fill_defaults(
 #   _convert_timestamp
 # ---------------------------
 def _convert_timestamp(target: dict[str, Any], name: str) -> None:
-    """Convert an int timestamp stored at target[name] into a UTC datetime.
+    """Convert an int timestamp at target[name] to a UTC datetime, or None.
 
-    Values that cannot be a real timestamp are normalized to None so timestamp
-    sensors report "unknown" instead of crashing on a non-datetime state
-    (TrueNAS sends scan.end_time = null while a scrub is running, which the
-    value spec's default turns into 0).
+    Non-timestamp values become None instead of a bad state (e.g. TrueNAS's
+    scan.end_time=null during a scrub becomes 0 via the spec's default).
     """
     value = target.get(name)
     if isinstance(value, bool) or not isinstance(value, int) or value <= 0:

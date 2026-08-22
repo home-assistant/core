@@ -178,10 +178,7 @@ DEVICE_ATTRIBUTES_APP_STATS_NET = (
 )
 
 
-# Kept in this dedicated module (rather than sensor.py) on purpose: every
-# platform in this integration declares its entity descriptions in a
-# <platform>_types.py sibling module, so descriptions stay easy to scan/diff
-# separately from the entity classes that consume them.
+# Descriptions live in this sibling module (not sensor.py) to stay easy to diff separately from the entity classes.
 @dataclass(frozen=True, kw_only=True)
 class TrueNASSensorEntityDescription(  # pylint: disable=home-assistant-enforce-class-module
     SensorEntityDescription, TrueNASEntityDescription
@@ -189,9 +186,7 @@ class TrueNASSensorEntityDescription(  # pylint: disable=home-assistant-enforce-
     """Class describing entities."""
 
     data_attribute: str | None = None
-    # Optional (key, value): skip creating an entity for a referenced object
-    # whose data[key] == value (e.g. don't create traffic sensors for a
-    # network interface whose link is down).
+    # Skip creating an entity when data[key] == value, e.g. hide traffic sensors for a down NIC.
     data_exclude: tuple[str, Any] | None = None
     func: str = "TrueNASSensor"
 
@@ -797,6 +792,5 @@ class SensorService(NamedTuple):
     admin_only: bool = False
 
 
-# No custom entity services in bronze scope; reintroduced in a follow-up PR
-# (see quality_scale.yaml's action-setup rule).
+# Empty in bronze scope; reintroduced in a follow-up PR (see quality_scale.yaml's action-setup rule).
 SENSOR_SERVICES: tuple[SensorService, ...] = ()

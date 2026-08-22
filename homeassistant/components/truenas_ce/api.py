@@ -50,26 +50,18 @@ from .const import (
 
 _LOGGER = getLogger(__name__)
 
-# Maximum number of characters of an API payload to include in debug logs.
-# Full payloads can be huge (e.g. pool.query with topology or app.query), so
-# they are summarized and truncated to keep debug logs readable.
+# Debug payloads (e.g. pool.query) can be huge, so they get truncated.
 _LOG_PAYLOAD_LIMIT = 5000
 
-# Set for the duration of a quiet connect() so the filter below can drop
-# aiotruenas's own "verify_ssl=False" warning for that call only. A plain
-# module-level flag would leak across concurrent connects (e.g. a real,
-# non-quiet connection racing a zeroconf probe); a ContextVar stays scoped to
-# the current asyncio task instead.
+# ContextVar (not a module-level flag) so a real connect racing a zeroconf
+# probe doesn't have its warning filtering leak into the concurrent one.
 _quiet_insecure_tls_warning: contextvars.ContextVar[bool] = contextvars.ContextVar(
     "_quiet_insecure_tls_warning", default=False
 )
 
-# Message aiotruenas.client logs at WARNING from its own TrueNASClient
-# whenever verify_ssl=False, unconditionally -- including for every zeroconf
-# probe candidate, most of which are unrelated devices on the network
-# (reported as a second follow-up on issue #46). It is genuinely useful for a
-# user's real, configured connection, so it is only filtered out while
-# _quiet_insecure_tls_warning is set, i.e. during probing.
+# aiotruenas logs this at WARNING for every verify_ssl=False connect,
+# including each zeroconf probe candidate (issue #46 follow-up); only
+# filtered while probing quietly.
 _INSECURE_TLS_WARNING_PREFIX = "TrueNASClient configured with verify_ssl=False"
 
 
@@ -89,11 +81,7 @@ getLogger("aiotruenas.client").addFilter(_QuietInsecureTlsWarningFilter())
 
 @contextlib.contextmanager
 def _quiet_insecure_tls_warnings(active: bool) -> Iterator[None]:
-    """Drop aiotruenas's insecure-TLS warning for the duration of the block.
-
-    No-op unless ``active``, so a real (non-probing) connect still sees the
-    warning.
-    """
+    """Drop aiotruenas's insecure-TLS warning for the duration of the block."""
     if not active:
         yield
         return
@@ -105,10 +93,8 @@ def _quiet_insecure_tls_warnings(active: bool) -> Iterator[None]:
         _quiet_insecure_tls_warning.reset(token)
 
 
-# aiotruenas exception -> ERR_* mapping (see const.py). Order matters: more
-# specific subclasses must be checked before their base classes, so this is
-# consulted via isinstance() in declaration order rather than a plain dict
-# keyed by exact type.
+# aiotruenas exception -> ERR_* mapping (see const.py). Checked via
+# isinstance() in order, so subclasses must precede their base classes.
 _EXCEPTION_ERR_MAP: tuple[tuple[type[TrueNASError], str], ...] = (
     (TrueNASCertificateVerificationError, ERR_CERT_VERIFY_FAILED),
     (TrueNASHttpSchemeError, ERR_HTTP_USED),
@@ -157,19 +143,7 @@ def _classify_exception(exc: TrueNASError, *, during_call: bool) -> str:
 
 
 def _log_call_error(host: str, context: str, exc: TrueNASCallError) -> None:
-    """Log a TrueNAS call error, quietly for expected permission errors.
-
-    ``context`` is the service/event/subscription identifier the error
-    occurred on, so recurring errors (e.g. a method unsupported by the
-    TrueNAS version) can be traced back to their source instead of only
-    showing the bare exception text.
-
-    A read-only-scoped API key gets an ``EACCES`` response from admin-only
-    methods (e.g. ``smb.status``). That is a permanent, expected condition
-    for that key -- not an integration bug -- so logging it at ERROR with a
-    full traceback on every call would flood the log for no benefit; log it
-    at debug instead.
-    """
+    """Log a TrueNAS call error, quietly for expected EACCES permission errors."""
     permission_denied = exc.errname == "EACCES"
     _LOGGER.log(
         DEBUG if permission_denied else ERROR,
@@ -181,18 +155,10 @@ def _log_call_error(host: str, context: str, exc: TrueNASCallError) -> None:
     )
 
 
-# ---------------------------
-#   TrueNASAPI
-# ---------------------------
 class TrueNASAPI:
     """Thin async adapter around aiotruenas.TrueNASClient.
 
-    Preserves the public shape of the previous sync/thread-based
-    implementation (``connect``/``connected``/``query``/``connection_test``/
-    ``disconnect``/``close``/``error``/``scheme``) so callers only need to add
-    ``await``; error handling still returns ``None`` on failure and records an
-    ``ERR_*`` code (see const.py) instead of raising, matching the rest of the
-    integration's defensive style.
+    Returns ``None`` on error (and records an ``ERR_*`` code) instead of raising.
     """
 
     def __init__(
@@ -204,21 +170,8 @@ class TrueNASAPI:
     ) -> None:
         """Initialize the TrueNAS API.
 
-        Parameters
-        ----------
-        host:
-            Bare TrueNAS hostname or IP address without scheme or path
-            (for example, ``"truenas.local"`` or ``"192.168.1.10"``). This
-            class does not itself validate or strip a scheme/path -- callers
-            (``helper.sanitize_host``) are expected to normalize user
-            input before constructing this class, to avoid malformed
-            WebSocket URLs.
-        api_key:
-            API key used to authenticate with the TrueNAS API.
-        verify_ssl:
-            Whether to verify the SSL certificate when using ``wss``.
-        scheme:
-            WebSocket scheme, either ``"ws"`` or ``"wss"`` (default).
+        ``host`` must be bare (no scheme/path); callers (``helper.sanitize_host``)
+        are expected to normalize user input before constructing this class.
         """
         scheme = scheme.lower()
         if scheme not in ("ws", "wss"):
@@ -237,22 +190,11 @@ class TrueNASAPI:
             use_tls=(scheme == "wss"),
         )
 
-    # ---------------------------
-    #   connect
-    # ---------------------------
     async def connect(self, *, quiet: bool = False) -> bool:
         """Connect and log in. Return connected boolean.
 
-        Parameters
-        ----------
-        quiet:
-            Log a connection failure at debug instead of error, and drop
-            aiotruenas's own "verify_ssl=False" warning too. Used by zeroconf
-            discovery, which probes many non-TrueNAS devices on the network
-            and expects most connection attempts to fail -- logging those at
-            error with a full traceback (or the insecure-TLS warning, which
-            fires before the failure is even known) would flood the log for
-            no benefit.
+        ``quiet``: log failures at debug (used by zeroconf probing, where
+        most connection attempts are expected to fail).
         """
         if self._closed:
             self._error = ERR_UNKNOWN
@@ -281,9 +223,6 @@ class TrueNASAPI:
         self._error = ""
         return True
 
-    # ---------------------------
-    #   disconnect / close
-    # ---------------------------
     async def disconnect(self) -> None:
         """Close the WebSocket connection (reconnectable)."""
         await self._client.close()
@@ -293,16 +232,10 @@ class TrueNASAPI:
         self._closed = True
         await self._client.close()
 
-    # ---------------------------
-    #   connected
-    # ---------------------------
     def connected(self) -> bool:
         """Return connected boolean."""
         return self._client is not None and self._client.connected
 
-    # ---------------------------
-    #   connection_test
-    # ---------------------------
     async def connection_test(self) -> tuple[bool, str]:
         """Test connection."""
         if not await self.connect():
@@ -315,9 +248,6 @@ class TrueNASAPI:
 
         return True, ""
 
-    # ---------------------------
-    #   query
-    # ---------------------------
     async def query(
         self,
         service: str,
@@ -362,22 +292,15 @@ class TrueNASAPI:
 
         return data
 
-    # ---------------------------
-    #   subscribe_events
-    # ---------------------------
     async def subscribe_events(
         self, event: str
     ) -> tuple[str, asyncio.Queue[Any]] | tuple[None, None]:
         """Subscribe to an event and return (subscription_id, queue).
 
-        The queue yields either raw event payload dicts or aiotruenas's
-        internal subscription-terminator sentinel (an unstable, underscored
-        symbol we deliberately avoid importing); callers should just treat
-        any non-dict item as end-of-subscription. ``asyncio.Queue`` is
-        invariant, so the item type must stay structurally compatible with
-        aiotruenas's own (private) return type -- ``Any`` achieves that
-        without importing the private symbol; a plain ``object`` would not,
-        since it is a supertype rather than a structural match.
+        Queue yields dict payloads or aiotruenas's private terminator
+        sentinel; treat any non-dict item as end-of-subscription. ``Any``
+        (not ``object``) stays structurally compatible with that private
+        type without importing it.
         """
         if not self.connected() and not await self.connect():
             self._error = self._error or ERR_CONNECTION_REFUSED
@@ -407,9 +330,6 @@ class TrueNASAPI:
             )
             return None, None
 
-    # ---------------------------
-    #   unsubscribe_events
-    # ---------------------------
     async def unsubscribe_events(self, subscription_id: str) -> None:
         """Unsubscribe from a TrueNAS event."""
         if not self.connected():

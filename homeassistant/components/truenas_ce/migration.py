@@ -1,24 +1,4 @@
-"""Community-Edition migration: adopt entities from the legacy ``truenas`` domain.
-
-After the integration domain is renamed from ``truenas`` to ``truenas_ce``
-(breaking 2.0.0) a fresh config entry would create brand-new entities with new
-entity_ids, orphaning the recorder history of the old ones. This module makes
-the rename transparent: on first setup of the renamed integration it adopts the
-old entities' entity_ids (so states + long-term statistics reconnect), persists
-a reverse map + a snapshot of the old configuration, and disables — but never
-deletes — the legacy config entry so the whole step can be rolled back.
-
-While ``DOMAIN == LEGACY_DOMAIN`` (i.e. before the rename actually lands) every
-public entry point here is a no-op, so the module is safe to ship ahead of the
-rename. Forward adoption runs in two phases around the platform setup:
-
-1. :func:`async_adopt_legacy_entities` (before platforms load) frees the old
-   entity_ids and remembers them.
-2. :func:`finalize_legacy_adoption` (after platforms load) re-attaches each
-   freed entity_id to the matching freshly-created entity.
-
-:func:`async_rollback_to_legacy` reverses the whole operation.
-"""
+"""Community-Edition migration: adopt entities from the legacy ``truenas`` domain."""
 
 from logging import getLogger
 import os
@@ -67,10 +47,8 @@ _R_ICON = "icon"
 _R_AREA = "area_id"
 _R_DISABLED = "disabled_user"
 
-# Belt-and-suspenders safety snapshot written to ``.storage`` before the registry
-# is mutated. Unlike the reverse map on the config entry, this standalone file
-# survives even if the (new) config entry is later deleted, so the adoption can be
-# reconstructed by hand in the worst case.
+# Standalone `.storage` snapshot; unlike the on-entry reverse map, it survives
+# even if the (new) config entry is later deleted.
 _BACKUP_KEY_PREFIX = "truenas_ce_migration_backup"
 _BACKUP_VERSION = 1
 
@@ -83,10 +61,8 @@ async def async_adopt_legacy_entities(
 ) -> list[dict[str, Any]]:
     """Release the legacy entities' entity_ids for adoption by this entry.
 
-    Returns the list of freed records for :func:`finalize_legacy_adoption` to
-    re-attach once the new platforms have created their entities. Idempotent:
-    after the first successful run (``MIGRATION_DONE``) it returns an empty list.
-    Inert while ``DOMAIN == LEGACY_DOMAIN``.
+    Returns the freed records for :func:`finalize_legacy_adoption` to re-attach.
+    Idempotent (no-op once ``MIGRATION_DONE``); inert before the rename.
     """
     if DOMAIN == LEGACY_DOMAIN or config_entry.data.get(MIGRATION_DONE):
         return []
@@ -96,11 +72,8 @@ async def async_adopt_legacy_entities(
     backup_key: str | None = None
 
     if legacy_entry is not None:
-        # Disable the legacy entry first so its coordinator stops and cannot
-        # re-discover (re-add) the entities we are about to release. Abort
-        # (without persisting MIGRATION_DONE) if that fails, so a later setup
-        # retries instead of stripping entities out from under a still-active
-        # legacy coordinator.
+        # Disable first so its coordinator can't re-add entities as we release
+        # them; abort without persisting MIGRATION_DONE if that fails.
         disabled = legacy_entry.disabled_by is not None or (
             await hass.config_entries.async_set_disabled_by(
                 legacy_entry.entry_id, ConfigEntryDisabler.USER
@@ -115,8 +88,8 @@ async def async_adopt_legacy_entities(
             )
             return []
         ent_reg = er.async_get(hass)
-        # Capture the records read-only, write the safety snapshot, and only then
-        # mutate the registry — so a failed backup never leaves a half-freed state.
+        # Write the backup before mutating the registry, so a failed backup
+        # never leaves a half-freed state.
         records = _collect_legacy_records(ent_reg, legacy_entry)
         backup_key = await _write_migration_backup(
             hass, config_entry, legacy_entry, records
@@ -138,13 +111,10 @@ def pending_legacy_records(
 ) -> list[dict[str, Any]]:
     """Return the reverse-map records not yet resolved.
 
-    Used to retry :func:`finalize_legacy_adoption` on every setup for a record
-    left pending by an earlier run -- its entity was disabled or its monitored
-    group off, so it did not exist yet. ``MIGRATION_RECORDS`` itself is the
-    complete, never-pruned history (needed intact for a full rollback); a
-    record is excluded here once its unique_id is recorded in
-    ``MIGRATION_RESOLVED_UNIQUE_IDS`` by :func:`_mark_resolved_records`, so an
-    already-resolved (or since manually renamed) record is never retried.
+    Retried by :func:`finalize_legacy_adoption` on every setup. Records marked
+    resolved in ``MIGRATION_RESOLVED_UNIQUE_IDS`` are excluded so a manual
+    rename is never retried; ``MIGRATION_RECORDS`` itself stays untouched since
+    a full rollback needs the complete history.
     """
     if DOMAIN == LEGACY_DOMAIN:
         return []
@@ -162,13 +132,9 @@ def finalize_legacy_adoption(
 ) -> None:
     """Re-attach the freed legacy entity_ids to the new entities.
 
-    Called after the platforms have been set up so the new (``truenas_ce``)
-    entities already exist in the registry. The caller must only pass records
-    that are actually safe to (re)attach -- freshly adopted ones from
-    :func:`async_adopt_legacy_entities`, or still-pending ones from
-    :func:`pending_legacy_records`. A record whose entity reclaims its target
-    id this pass is recorded as resolved (see :func:`_mark_resolved_records`),
-    so a later manual rename is never fought by a subsequent retry.
+    Called after platform setup, once the new (``truenas_ce``) entities exist.
+    Callers must only pass records safe to (re)attach — from
+    :func:`async_adopt_legacy_entities` or :func:`pending_legacy_records`.
     """
     if DOMAIN == LEGACY_DOMAIN or not records:
         return
@@ -191,13 +157,11 @@ def finalize_legacy_adoption(
 def _mark_resolved_records(
     hass: HomeAssistant, config_entry: ConfigEntry, attempted: list[dict[str, Any]]
 ) -> None:
-    """Record which of ``attempted`` reclaimed their target id, for pending_legacy_records.
+    """Record which of ``attempted`` reclaimed their target id.
 
-    A record must never be retried once resolved -- a later retry could
-    otherwise force back a user's manual rename. ``MIGRATION_RECORDS`` itself
-    is left untouched (rollback needs the complete original history); records
-    still unresolved (entity absent, or a real collision under a different
-    id) are simply not added here, so a future retry can pick them up again.
+    Once resolved a record must never be retried, or a later retry could force
+    back a user's manual rename. ``MIGRATION_RECORDS`` itself stays untouched
+    since rollback needs the complete original history.
     """
     ent_reg = er.async_get(hass)
     newly_resolved = {
@@ -229,15 +193,10 @@ def _find_legacy_entry(
 ) -> ConfigEntry | None:
     """Find the old ``truenas`` config entry matching this one (by host).
 
-    Only an exact host match is adopted. A single-legacy-entry fallback used
-    to adopt regardless of host, but that also fired for "migrate manually"
-    and for a plain new entry added while an unrelated legacy entry for a
-    *different* box happened to exist -- disabling and stripping that
-    unrelated entry's entities. ``async_step_migrate_import`` copies the
-    legacy entry's host verbatim into the new entry, so the normal takeover
-    path still matches exactly here as long as the user keeps the pre-filled
-    host. Both sides are run through ``sanitize_host`` before comparing, so a
-    legacy host stored in a different case (e.g. ``NAS.local``) still matches.
+    Only an exact (sanitized, case-insensitive) host match is adopted — a
+    single-legacy-entry fallback used to match regardless of host, but that
+    could disable and strip entities of an unrelated legacy entry for a
+    different box.
     """
     host = sanitize_host(config_entry.data.get(CONF_HOST, ""))
     return next(
@@ -255,12 +214,10 @@ def _collect_legacy_records(
 ) -> list[dict[str, Any]]:
     """Snapshot the legacy config entry's registry entries this build can adopt.
 
-    Only entities in a currently loaded platform (``PLATFORMS``) are included.
-    A domain this build doesn't set up (e.g. binary_sensor on a sensor-only
-    build) would never get a replacement entity to reclaim the freed id, so
-    adopting it here would delete the registry entry with nothing to restore
-    it -- it is left in place on the still-disabled legacy entry instead, and
-    picked up once a later release adds that platform.
+    Only entities in a currently loaded platform (``PLATFORMS``) are included —
+    a platform this build doesn't set up has no replacement entity to reclaim
+    a freed id, so those entries are left on the still-disabled legacy entry
+    for a later release to pick up.
     """
     return [
         {
@@ -282,9 +239,8 @@ def _remove_legacy_entities(
 ) -> None:
     """Free the recorded entity_ids for adoption.
 
-    Removing the registry entry frees its entity_id and any user overrides but
-    leaves the long-term statistics in the recorder DB untouched, so reusing
-    the same entity_id later reconnects state + history.
+    Removing the registry entry leaves recorder long-term statistics
+    untouched, so reusing the same entity_id later reconnects the history.
     """
     for record in records:
         ent_reg.async_remove(record[_R_ENTITY_ID])
@@ -293,10 +249,9 @@ def _remove_legacy_entities(
 def _redacted_legacy_snapshot(legacy_entry: ConfigEntry) -> dict[str, Any]:
     """Return the legacy entry's data/options with sensitive fields redacted.
 
-    Neither the standalone backup nor the on-entry snapshot is ever read back
-    by :func:`async_rollback_to_legacy` (rollback re-enables the still-existing
-    legacy entry instead), so there is no reason for either copy to carry a
-    live API key.
+    Neither snapshot is ever read back by :func:`async_rollback_to_legacy`
+    (it re-enables the still-existing legacy entry instead), so there's no
+    reason for either copy to carry a live API key.
     """
     return {
         "data": async_redact_data(dict(legacy_entry.data), TO_REDACT),
@@ -307,9 +262,8 @@ def _redacted_legacy_snapshot(legacy_entry: ConfigEntry) -> dict[str, Any]:
 def _entry_backup_prefix(entry_id: str) -> str:
     """Return the per-entry ``.storage`` key prefix for migration backups.
 
-    Namespaced by config entry id so two TrueNAS instances migrating around
-    the same time never collide on the same timestamped key, and so removing
-    stale snapshots for one entry can never prune another entry's backup.
+    Namespaced by entry id so concurrent migrations never collide, and
+    cleanup of one entry's snapshots can never prune another's.
     """
     return f"{_BACKUP_KEY_PREFIX}_{entry_id}"
 
@@ -322,9 +276,8 @@ async def _write_migration_backup(
 ) -> str | None:
     """Write a human-readable safety snapshot before the registry is mutated.
 
-    Best effort: a failed write only drops the extra safety net (the reverse map
-    on the config entry remains the primary undo), so it must not abort the
-    migration. Returns the ``.storage`` key on success, else ``None``.
+    Best effort: a failed write only drops the extra safety net (the on-entry
+    reverse map remains the primary undo), so it must not abort the migration.
     """
     now = dt_util.utcnow()
     prefix = _entry_backup_prefix(config_entry.entry_id)
@@ -353,14 +306,10 @@ async def _remove_backups(
 ) -> None:
     """Remove this entry's migration backup snapshots from ``.storage``.
 
-    Scans the ``.storage`` directory for stores matching ``prefix`` (already
-    namespaced by config entry id -- see :func:`_entry_backup_prefix`) and
-    removes every one except ``keep_key`` — pass ``None`` to remove all. Used
-    to keep only the latest snapshot after a write, and to drop all of them on
-    rollback, without ever touching another config entry's backups. Listing
-    the directory (rather than trusting a stored key) makes the rollback
-    cleanup robust even if the key was never persisted. Best effort — failures
-    are logged, never raised.
+    Removes every stored file matching ``prefix`` except ``keep_key`` (``None``
+    removes all). Scans the directory rather than trusting a stored key, so
+    cleanup on rollback works even if the key was never persisted. Best
+    effort — failures are logged, never raised.
     """
     storage_dir = hass.config.path(".storage")
 
@@ -408,15 +357,11 @@ def _remap_and_restore(
 ) -> None:
     """Move each entity from its current id onto its target id, then restore overrides.
 
-    ``pairs`` is ``(current_entity_id, target_entity_id, record)``. A naive
-    one-by-one rename fails when the ids form a *permutation* (e.g. unstable
-    Linux disk ``sd*`` letters that re-ordered since the legacy entities were
-    created: ``sda``→``sdb`` while ``sdb``→``sda``), because each target is still
-    held by another member of the cycle. So this runs two passes: first park
-    every entity that isn't already on its target on a free temporary id —
-    vacating all target ids — then move each onto its target. History reconnects
-    by the entity's final id matching the recorder statistics, so only the end
-    state matters.
+    ``pairs`` is ``(current_entity_id, target_entity_id, record)``. Two passes:
+    park every entity on a free temp id first, then move onto the target. A
+    single pass would fail when ids form a permutation (e.g. re-ordered disk
+    ``sd*`` letters: ``sda``→``sdb`` while ``sdb``→``sda``), since each target
+    is still held by another member of the cycle.
     """
     parked: list[tuple[str, str, dict[str, Any]]] = []
     counter = 0
@@ -480,10 +425,8 @@ def async_notify_migration_result(
 ) -> None:
     """Surface a one-time success notification after a legacy adoption.
 
-    Validates the adoption with a few cheap registry/state checks and reports
-    them, links the migration guide and points at the rollback fallback. Only
-    fires on the run that actually adopted entities (``records`` non-empty),
-    which is the first successful migration. Inert before the rename.
+    Only fires on the run that actually adopted entities (first successful
+    migration); inert before the rename.
     """
     if DOMAIN == LEGACY_DOMAIN or not records:
         return
@@ -530,12 +473,9 @@ def _classify_reconnection(
 ) -> tuple[int, list[str], list[str]]:
     """Split adopted records into reconnected / pending / mismatched buckets.
 
-    - **reconnected**: a new entity exists and reclaimed the original entity_id.
-    - **pending**: no new entity yet (a disabled entity, a disabled monitored
-      group, or an object not currently present) — the recorder history stays and
-      re-attaches when the entity reappears.
-    - **mismatched**: a new entity exists but under a *different* id (a real id
-      collision that left the history detached).
+    ``pending`` means no new entity yet (disabled, or its group off); history
+    stays and re-attaches once it reappears. ``mismatched`` means a real id
+    collision left the history detached.
     """
     reconnected = 0
     pending: list[str] = []
@@ -599,13 +539,10 @@ async def async_rollback_to_legacy(
 ) -> bool:
     """Reverse the adoption: hand the entity_ids back to the legacy entry.
 
-    Re-enables the disabled legacy ``truenas`` entry first, while this
-    (``truenas_ce``) entry and its live entities still exist as a fallback; only
-    once that setup is confirmed working does it remove this entry to free the
-    adopted entity_ids and restore them, and finally the user overrides. Returns
-    ``False`` if there is nothing to roll back (no legacy bridge left) or if the
-    legacy entry failed to set up (nothing is torn down in that case, so the
-    working ``truenas_ce`` entry is left in place). Inert before rename.
+    Re-enables the legacy entry first, while this entry still exists as a
+    fallback, and only tears this one down once the legacy setup is confirmed
+    working. Returns ``False`` if there's nothing to roll back or the legacy
+    entry failed to set up (nothing is torn down in that case).
     """
     if DOMAIN == LEGACY_DOMAIN:
         return False
@@ -626,13 +563,10 @@ async def async_rollback_to_legacy(
         legacy_entry_id,
     )
 
-    # 1. Re-enable the legacy entry before touching this one. It cannot reclaim
-    #    the original entity_ids yet -- this entry's entities still hold them --
-    #    so it settles for temporary/auto-suffixed ids for now, resolved by the
-    #    remap below once step 2 frees the originals. Checking the result here,
-    #    before anything is torn down, is what lets a failed legacy setup (e.g.
-    #    the device is unreachable) abort the rollback with both entries intact
-    #    instead of leaving the user with neither.
+    # 1. Re-enable the legacy entry first (it settles for temp ids until step 3
+    #    frees the originals). Checking the result before tearing anything down
+    #    lets a failed setup (e.g. device unreachable) abort with both entries
+    #    intact, instead of leaving the user with neither.
     if not await hass.config_entries.async_set_disabled_by(legacy_entry_id, None):
         _LOGGER.error(
             "Rollback aborted: legacy '%s' entry %s failed to set up; "
@@ -643,11 +577,9 @@ async def async_rollback_to_legacy(
         )
         return False
 
-    # 2. Remove this entry now that the legacy entry is confirmed working, so
-    #    the adopted entity_ids are freed and this integration is unloaded.
+    # 2. Remove this entry, freeing the adopted entity_ids.
     await hass.config_entries.async_remove(config_entry.entry_id)
-    # 3. Restore the original legacy entity_ids (permutation-safe, e.g. disk sd*
-    #    re-lettering) and the user overrides, mirroring the forward adoption.
+    # 3. Restore the original legacy entity_ids and user overrides.
     ent_reg = er.async_get(hass)
     pairs = [
         (legacy_id, record[_R_ENTITY_ID], record)

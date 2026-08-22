@@ -24,23 +24,13 @@ async def _async_rollback_and_log_errors(
 ) -> None:
     """Run the legacy rollback, surfacing (not raising) any failure.
 
-    Scheduled via ``async_create_task`` because the rollback removes this very
-    config entry, which would tear down the repair flow mid-step if awaited
-    inline. The ``migration_rollback_available`` issue is already deleted by
-    the time this runs (see ``MigrationRollbackRepairFlow.async_step_rollback``),
-    so neither a crash nor a "did nothing" result would otherwise have any
-    UI-visible signal that the rollback didn't actually happen; raising a
-    second, non-fixable issue closes that gap for both cases.
-
-    Migration-rollback-specific: the broad ``except Exception`` is this
-    coroutine's whole purpose (turning an untracked task's crash into a
-    logged, actionable message), not a generic error-swallowing helper —
-    don't reuse it for other background tasks.
+    Scheduled as a task because rollback deletes this config entry, which
+    would tear down the flow if awaited inline.
     """
     rolled_back = False
     try:
         rolled_back = await async_rollback_to_legacy(hass, entry)
-    except Exception:
+    except Exception:  # broad on purpose: only path to report a crashed task
         _LOGGER.exception(
             "TrueNAS CE migration rollback failed for entry %s (%s)",
             entry.entry_id,
@@ -59,12 +49,7 @@ async def _async_rollback_and_log_errors(
 
 
 class MigrationRollbackRepairFlow(RepairsFlow):
-    """Confirm-gated rollback of the Community-Edition migration.
-
-    Replaces the old one-tap diagnostic button: the user must open the issue and
-    deliberately pick "roll back" (or dismiss it), so an accidental click can no
-    longer tear the integration down without confirmation.
-    """
+    """Confirm-gated rollback of the Community-Edition migration."""
 
     def __init__(self, entry_id: str) -> None:
         """Remember which config entry this issue belongs to."""
@@ -101,8 +86,7 @@ class MigrationRollbackRepairFlow(RepairsFlow):
     ) -> RepairsFlowResult:
         """Keep TrueNAS CE and close the dialog.
 
-        Only the issue is removed (no permanent suppression): pressing the
-        rollback button again re-opens it while the legacy entry still exists.
+        No permanent suppression: rollback re-opens this issue on demand.
         """
         ir.async_delete_issue(
             self.hass, DOMAIN, f"{ISSUE_MIGRATION_ROLLBACK}_{self._entry_id}"
@@ -117,8 +101,7 @@ async def async_create_fix_flow(
 ) -> RepairsFlow:
     """Create the fix flow matching the issue id.
 
-    Each issue id is ``<key>_<entry_id>``; the entry id is parsed back out so the
-    flow can act on the right coordinator/config entry.
+    Issue ids are ``<key>_<entry_id>``; the entry id is parsed back out here.
     """
     if issue_id.startswith(f"{ISSUE_MIGRATION_ROLLBACK}_"):
         entry_id = issue_id.removeprefix(f"{ISSUE_MIGRATION_ROLLBACK}_")

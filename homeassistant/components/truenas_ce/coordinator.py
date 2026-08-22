@@ -51,8 +51,7 @@ _LOGGER = logging.getLogger(__name__)
 _NETDATA_GRAPH = "reporting.netdata_graph"
 _NETDATA_GRAPHS = "reporting.netdata_graphs"
 
-# Field mapping shared by ``pool.query`` and ``boot.get_state`` (the boot-pool
-# reports the same top-level shape, so both are parsed with these lists).
+# Shared by pool.query and boot.get_state (same top-level shape).
 _POOL_VALS: list[ApiValueSpec] = [
     {"name": "guid", "default": 0},
     {"name": "id", "default": 0},
@@ -127,9 +126,7 @@ _JOB_PROGRESS_VALS: list[ApiValueSpec] = [
     },
 ]
 
-# Cloudsync and rsync report their status via the last job (job/state).
-# Replication has its own persistent ``state`` object (``state/state``) — the
-# value shown in the TrueNAS WebUI — and overrides this (see get_replication, #34).
+# Replication overrides "state" with its own state/state field (see get_replication).
 _JOB_STATUS_VALS: list[ApiValueSpec] = [
     {"name": "state", "source": "job/state", "default": "unknown"},
     *_JOB_PROGRESS_VALS,
@@ -151,9 +148,6 @@ _CERTIFICATE_VALS: list[ApiValueSpec] = [
 ]
 
 
-# ---------------------------
-#   _stat_name_similar
-# ---------------------------
 def _stat_name_similar(a: str, b: str) -> bool:
     """Return True if two stat graph names look like near-misses of each other."""
     a_l, b_l = a.lower(), b.lower()
@@ -171,9 +165,6 @@ def _stat_name_similar(a: str, b: str) -> bool:
     return abs(len(a_l) - len(b_l)) <= 2 and a_l[:3] == b_l[:3]
 
 
-# ---------------------------
-#   _median
-# ---------------------------
 def _median(values: list[float]) -> float:
     """Return the median of a non-empty list of numbers."""
     sorted_vals = sorted(values)
@@ -184,9 +175,6 @@ def _median(values: list[float]) -> float:
     return (sorted_vals[mid - 1] + sorted_vals[mid]) / 2
 
 
-# ---------------------------
-#   topology error aggregation
-# ---------------------------
 def _as_int(value: Any) -> int:
     """Return value as an int, or 0 if it is not an integer."""
     return value if isinstance(value, int) else 0
@@ -201,11 +189,7 @@ def _to_int(value: Any, default: int = 0) -> int:
 
 
 def _accumulate_vdev_errors(vdev: Any, totals: dict[str, int]) -> None:
-    """Recursively accumulate leaf-device error counts into totals.
-
-    Only leaf vdevs (those without children) are counted, so the error totals
-    of parent vdevs (e.g. mirrors) are not added on top of their disks.
-    """
+    """Recursively accumulate leaf-device error counts (skips parents to avoid double-counting)."""
     if not isinstance(vdev, dict):
         return
 
@@ -237,9 +221,6 @@ def _aggregate_topology_errors(topology: Any) -> tuple[int, int, int]:
     return totals["read"], totals["write"], totals["checksum"]
 
 
-# ---------------------------
-#   ARC netdata graphs
-# ---------------------------
 # Maps the netdata graph name (reporting.netdata_graphs) to the ds["arc"] field.
 _ARC_GRAPHS = {
     "demanddatahitpercentage": "data_hit_percent",
@@ -247,9 +228,6 @@ _ARC_GRAPHS = {
     "l2architpercentage": "l2_hit_percent",
 }
 
-# ---------------------------
-#   UPS netdata graphs
-# ---------------------------
 # Maps the netdata graph name (reporting.netdata_graphs) to the ds["ups"] field.
 _UPS_GRAPHS = {
     "upscharge": "battery_charge",
@@ -263,10 +241,7 @@ _UPS_GRAPHS = {
 
 
 def _netdata_mean_value(graph_data: Any) -> float | None:
-    """Extract mean value from a netdata graph response.
-
-    Defensive parsing: handles missing/malformed structure by returning None.
-    """
+    """Extract mean value from a netdata graph response, or None if malformed."""
     if not isinstance(graph_data, list) or not graph_data:
         return None
 
@@ -310,14 +285,7 @@ type TrueNASConfigEntry = ConfigEntry[TrueNASCoordinator]
 def get_truenas_coordinator(
     config_entry: ConfigEntry[Any] | None,
 ) -> TrueNASCoordinator | None:
-    """Return the coordinator stored as ``runtime_data``, or ``None`` if unset.
-
-    ``runtime_data`` is a bare annotation on ``ConfigEntry`` with no default, so
-    direct attribute access raises ``AttributeError`` before ``__init__`` has
-    assigned it (or after ``async_unload_entry`` has cleared it). Centralizing
-    the ``getattr`` fallback here keeps every call site safe without repeating
-    the same guard.
-    """
+    """Return the coordinator stored as ``runtime_data``, or ``None`` if unset."""
     return getattr(config_entry, "runtime_data", None)
 
 
@@ -333,9 +301,6 @@ def _unwrap_app_stats_message(msg: dict[str, Any]) -> dict[str, Any] | None:
     return msg if isinstance(msg.get("fields"), list) else None
 
 
-# ---------------------------
-#   TrueNASControllerData
-# ---------------------------
 class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """TrueNASCoordinator Class."""
 
@@ -355,8 +320,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         self.name = config_entry.data[CONF_NAME]
         self.host = config_entry.data[CONF_HOST]
-        # Set by entity.register_system_device() in async_setup_entry, after the
-        # first refresh and before platforms create entities.
+        # Set by entity.register_system_device() after the first refresh.
         self.system_device_id: str | None = None
 
         self.ds: dict[str, dict[str, Any]] = {
@@ -409,16 +373,10 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._app_stats_event_name: str | None = None
         self._app_stats_sub_id: str | None = None
 
-    # ---------------------------
-    #   connected
-    # ---------------------------
     def connected(self) -> bool:
         """Return connected state."""
         return self.api.connected()
 
-    # ---------------------------
-    #   _is_group_monitored
-    # ---------------------------
     def _is_group_monitored(self, group: str) -> bool:
         """Return True when the given sensor group is enabled in options."""
         config_entry = getattr(self, "config_entry", None)
@@ -429,18 +387,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         return group in monitored
 
-    # ---------------------------
-    #   set_optimistic_running
-    # ---------------------------
     def set_optimistic_running(self, data_path: str, object_id: Any) -> None:
-        """Optimistically mark a task's state as RUNNING for instant UI feedback.
-
-        Run actions/buttons often complete a task faster than the poll interval,
-        so the transient RUNNING state is gone before the next poll samples it and
-        the sensor stays on its previous value with no sign the trigger worked.
-        Setting RUNNING in-memory and notifying listeners gives that feedback; the
-        next regular poll re-syncs the state to whatever TrueNAS reports.
-        """
+        """Optimistically mark a task RUNNING in-memory; next poll re-syncs to TrueNAS."""
         group = self.ds.get(data_path)
         if isinstance(group, dict) and isinstance(group.get(object_id), dict):
             group[object_id]["state"] = "RUNNING"
@@ -452,22 +400,13 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 object_id,
             )
 
-    # ---------------------------
-    #   async_run_task
-    # ---------------------------
     async def async_run_task(self, method: str, object_id: Any, data_path: str) -> None:
         """Trigger a task's run method, then optimistically mark it RUNNING.
 
-        Shared by the run buttons (button.py) and the *_run sensor actions
-        (sensor.py) so the trigger + optimistic-state logic lives in one place.
-
         Raises:
-            HomeAssistantError: if the middleware call itself failed. ``query()``
-                swallows connection/middleware errors and returns None instead of
-                raising, recording the failure in ``api.error`` -- checking that
-                (rather than the return value, which is legitimately None on
-                success for many of these fire-and-forget methods) is what
-                distinguishes a real failure from a normal null response.
+            HomeAssistantError: if ``api.error`` is set. ``query()`` swallows
+                errors and returns None, so the return value alone can't
+                distinguish a failure from a normal null response.
         """
         await self.api.query(method, [object_id])
         if self.api.error:
@@ -481,9 +420,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             )
         self.set_optimistic_running(data_path, object_id)
 
-    # ---------------------------
-    #   _async_ensure_connected
-    # ---------------------------
     async def _async_ensure_connected(self) -> None:
         """Connect if needed, raising the appropriate coordinator error on failure."""
         if self.api.connected():
@@ -500,10 +436,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         if not connected:
             if self.api.error == ERR_INVALID_KEY:
-                # Bronze scope has no reauth flow to hand off to (see the
-                # reauthentication-flow rule in quality_scale.yaml), so this
-                # degrades to the same UpdateFailed/entity-unavailable path as
-                # any other connection failure instead of ConfigEntryAuthFailed.
+                # Bronze scope has no reauth flow (quality_scale.yaml); degrade
+                # to UpdateFailed instead of ConfigEntryAuthFailed.
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
                     translation_key="invalid_api_key",
@@ -519,9 +453,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 },
             )
 
-    # ---------------------------
-    #   _async_update_data
-    # ---------------------------
     @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update TrueNAS data."""
@@ -561,19 +492,12 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                         "Error running TrueNAS job %s", getattr(job, "__name__", job)
                     )
 
-            # get_systeminfo populates ds["interface"] and _is_virtual, which
-            # get_systemstats reads to decide whether to fetch the interface
-            # graph (and to skip cputemp on VMs). Run it before the concurrent
-            # jobs so the first cycle does not skip the interface graph, which
-            # would leave RX/TX at 0 until the next poll.
+            # Must run before the concurrent jobs: get_systemstats reads
+            # ds["interface"]/_is_virtual, which this populates.
             await _run_job(self.get_systeminfo)
 
-            # A middleware error leaves ds["system_info"] at its empty initial
-            # value (query() returns None on failure without dropping the
-            # socket). register_system_device() indexes "hostname" out of it
-            # right after the first refresh, so failing fast here -- instead of
-            # returning ds with that key missing -- is what turns this into a
-            # retried setup instead of a crash.
+            # Fail fast so setup retries instead of crashing in
+            # register_system_device(), which indexes "hostname" right after.
             if "hostname" not in self.ds["system_info"]:
                 raise UpdateFailed(
                     translation_domain=DOMAIN,
@@ -600,15 +524,10 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"host": self.host},
             )
 
-        # Withdraw a lingering rollback issue once the old integration is gone.
-        # (The issue is only ever raised on demand by the diagnostic button.)
         self._clear_stale_migration_rollback_issue()
 
         return self.ds
 
-    # ---------------------------
-    #   Community-Edition migration rollback
-    # ---------------------------
     def _migration_rollback_issue_id(self) -> str:
         """Return the per-entry Repairs issue id for the migration rollback."""
         return f"{ISSUE_MIGRATION_ROLLBACK}_{self.config_entry.entry_id}"
@@ -621,13 +540,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         return bool(legacy_id and self.hass.config_entries.async_get_entry(legacy_id))
 
     def raise_migration_rollback_issue(self) -> None:
-        """Raise the rollback confirm issue on demand (from the diagnostic button).
-
-        The issue is never shown automatically; it is only opened when the user
-        presses the rollback button. Creating it is idempotent (stable id), so
-        re-pressing after a dismiss simply re-opens it. No-op while a rollback is
-        not possible.
-        """
+        """Raise the rollback confirm issue on demand (from the diagnostic button)."""
         if not self._rollback_possible():
             return
         count = len(self.config_entry.data.get(MIGRATION_RECORDS, []))
@@ -642,12 +555,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
     def _clear_stale_migration_rollback_issue(self) -> None:
-        """Withdraw a lingering rollback issue once a rollback is no longer possible.
-
-        Runs each poll. It only ever *deletes* — the issue is raised solely by the
-        diagnostic button — so a leftover dialog is cleared after the user removes
-        the old "truenas" integration (the bridge is then permanently burned).
-        """
+        """Withdraw a lingering rollback issue once a rollback is no longer possible."""
         if DOMAIN == LEGACY_DOMAIN:
             return
         if not self._rollback_possible():
@@ -655,9 +563,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.hass, DOMAIN, self._migration_rollback_issue_id()
             )
 
-    # ---------------------------
-    #   get_systeminfo
-    # ---------------------------
     async def get_systeminfo(self) -> None:
         """Get system info from TrueNAS."""
         raw_system_info = await self.api.query("system.info")
@@ -718,9 +623,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._update_uptime()
         await self._query_interfaces()
 
-    # ---------------------------
-    #   _handle_update_job
-    # ---------------------------
     async def _handle_update_job(self) -> None:
         """Refresh progress/state for a running update job, if any."""
         if not self.ds["system_info"].get("update_jobid"):
@@ -755,20 +657,12 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.ds["system_info"]["update_jobid"] = 0
             self.ds["system_info"]["update_state"] = "unknown"
 
-    # ---------------------------
-    #   _parse_version
-    # ---------------------------
     def _parse_version(self) -> None:
-        """Parse major/minor version numbers from the reported version string.
-
-        Prevents a "0.0.0" display and avoids misrepresenting the system version
-        on malformed or missing input.
-        """
+        """Parse major/minor version numbers from the reported version string."""
         version_str = str(self.ds["system_info"].get("version", "") or "")
         clean_version = version_str.replace("TrueNAS-", "").replace("SCALE-", "")
 
-        # Bounded quantifiers ({1,9}) avoid unbounded backtracking (Sonar S5852);
-        # version components never have that many digits.
+        # Bounded quantifier avoids unbounded backtracking (Sonar S5852).
         if match := re.search(r"(\d{1,9})\.(\d{1,9})", clean_version):
             self._version_major = int(match[1])
             self._version_minor = int(match[2])
@@ -777,21 +671,10 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "Failed to parse TrueNAS version from string: %s", version_str
             )
 
-    # ---------------------------
-    #   supports_update_run
-    # ---------------------------
     def supports_update_run(self) -> bool:
-        """Return True if the "update.run" API method is available.
-
-        TrueNAS 25.10 split the legacy "update.update" method: it now only
-        writes update *settings*, while installing an update (with the
-        optional reboot) moved to the new "update.run" method.
-        """
+        """Return True if the "update.run" API method is available (TrueNAS 25.10+)."""
         return (self._version_major, self._version_minor) >= (25, 10)
 
-    # ---------------------------
-    #   _detect_virtualization
-    # ---------------------------
     def _detect_virtualization(self) -> None:
         """Detect whether TrueNAS is running virtualized."""
         self._is_virtual = self.ds["system_info"].get("system_manufacturer") in [
@@ -804,9 +687,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "Virtual Machine",
         ]
 
-    # ---------------------------
-    #   _update_uptime
-    # ---------------------------
     def _update_uptime(self) -> None:
         """Update the uptime epoch, using a tolerance to avoid sensor jitter."""
         uptime_seconds = self.ds["system_info"].get("uptime_seconds", 0)
@@ -826,9 +706,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             self.ds["system_info"]["uptimeEpoch"] = old_uptime_epoch
 
-    # ---------------------------
-    #   _query_interfaces
-    # ---------------------------
     async def _query_interfaces(self) -> None:
         """Query network interfaces from TrueNAS."""
         self.ds["interface"] = parse_api(
@@ -867,13 +744,9 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ],
         )
 
-        # Derive a boolean link state for the connectivity binary sensor.
         for interface in self.ds["interface"].values():
             interface["link_up"] = interface.get("link_state") == LINK_STATE_UP
 
-    # ---------------------------
-    #   get_updatecheck
-    # ---------------------------
     async def get_updatecheck(self) -> None:
         """Check for updates using the new 25.10/26.04 API structure."""
         update_data = await self.api.query("update.status")
@@ -889,8 +762,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "version", "up-to-date"
             )
 
-        # If API returns nothing, we already set defaults above, but we must clear
-        # any potentially stale update metadata before returning.
         if not isinstance(update_data, dict):
             _LOGGER.warning(
                 "TrueNAS update status returned malformed data: %s",
@@ -903,8 +774,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._reset_update_status()
             return
 
-        # According to your PS-test, the data is in: result -> status -> new_version
-        # Since api.py extracts 'result', we access 'status' directly
         status_obj = update_data.get("status")
 
         if isinstance(status_obj, dict):
@@ -916,11 +785,9 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             status_obj.get("new_version") if isinstance(status_obj, dict) else None
         )
 
-        # Check if new_version exists and contains a version string
         if isinstance(new_version_obj, dict) and new_version_obj.get("version"):
             self._updatecheck_process_new_version(new_version_obj)
         else:
-            # No new version in status object, keep current
             self._reset_update_status()
 
     def _updatecheck_process_new_version(self, new_version_obj: dict[str, Any]) -> None:
@@ -928,7 +795,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.ds["system_info"]["update_version"] = new_version_obj["version"]
         self.ds["system_info"]["update_available"] = True
 
-        # ADD EXTRA INFO AS ATTRIBUTES
         manifest = new_version_obj.get("manifest", {})
         self.ds["system_info"]["update_date"] = manifest.get("date")
         self.ds["system_info"]["update_profile"] = manifest.get("profile")
@@ -950,9 +816,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.ds["system_info"]["update_train"] = None
         self.ds["system_info"]["update_filename"] = None
 
-    # ---------------------------
-    #   get_systemstats
-    # ---------------------------
     async def get_systemstats(self) -> None:
         """Get system statistics."""
         report_epoch = int(dt_util.utcnow().replace(microsecond=0).timestamp())
@@ -960,9 +823,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not graph_names:
             return
 
-        # Use a window matching the poll interval so interface RX/TX values
-        # reflect current traffic rather than a fixed 60-second average.
-        # A minimum of 5 s keeps the window sane at the shortest poll setting.
+        # Window matches the poll interval (min 5s) so RX/TX reflect current traffic.
         poll = int(
             self.config_entry.options.get(CONF_POLL_INTERVAL, DEFAULT_POLL_INTERVAL)
         )
@@ -987,9 +848,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.ds["interface"]:
             graph_names.append("interface")
 
-        # 2DO: Consider making this a config option. Many hypervisors do not
-        # pass through CPU temperatures, causing API errors. However, some do,
-        # so users might want to explicitly enable 'cputemp' polling even for VMs.
+        # TODO: consider making this a config option (some hypervisors do pass
+        # through CPU temps and users may want cputemp polling on VMs anyway).
         if self._is_virtual and "cputemp" in graph_names:
             graph_names.remove("cputemp")
 
@@ -1032,9 +892,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not failed_graphs:
             return
 
-        # Only log when a graph transitions into a failed state (i.e. was not
-        # already in _systemstats_errored), to avoid spamming the log on every
-        # coordinator update while the graph remains broken.
+        # Log only newly-failed transitions to avoid spamming every update.
         newly_failed_graphs: list[str] = []
         now = dt_util.utcnow()
         for graph_name in failed_graphs:
@@ -1160,9 +1018,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             for tmp_load in tmp_arr:
                 self.ds["interface"][tmp_etc][tmp_load] = 0.0
 
-    # ---------------------------
-    #   _systemstats_process
-    # ---------------------------
     def _systemstats_process(
         self, arr: str | tuple[str, ...], graph: dict[str, Any], t: str
     ) -> None:
@@ -1207,9 +1062,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             else:
                 info[tmp_load] = 0.0
 
-    # ---------------------------
-    #   get_service
-    # ---------------------------
     async def get_service(self) -> None:
         """Get service info from TrueNAS."""
         service_names = {
@@ -1257,9 +1109,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 )
             self.ds["service"][uid]["display_name"] = name
 
-    # ---------------------------
-    #   get_pool
-    # ---------------------------
     async def get_pool(self) -> None:
         """Get pools from TrueNAS."""
         raw_pools = await self.api.query("pool.query")
@@ -1276,11 +1125,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._apply_pool_errors(raw_pools)
         await self._add_boot_pool()
 
-        # Build a lookup of datasets by their mountpoint so a pool's free/total
-        # space can be derived from its root dataset. Matching the pool "path"
-        # against the dataset "mountpoint" (e.g. "/mnt/tank") is the primary and
-        # most reliable method; the dataset id (which equals the pool name for a
-        # root dataset) is used only as a fallback.
+        # Looked up by mountpoint (primary) or dataset id (fallback) to find
+        # each pool's root dataset for capacity derivation.
         dataset_by_mountpoint: dict[str, dict[str, Any]] = {
             dataset["mountpoint"]: dataset
             for dataset in self.ds["dataset"].values()
@@ -1294,7 +1140,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             sorted(dataset_by_mountpoint),
         )
 
-        # Process pools
         for uid, vals in self.ds["pool"].items():
             root_dataset = dataset_by_mountpoint.get(vals.get("path"))
             match_source = "mountpoint"
@@ -1320,18 +1165,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             # pool.query reports fragmentation as a percentage string (e.g. "48").
             self.ds["pool"][uid]["fragmentation"] = _to_int(vals.get("fragmentation"))
 
-    # ---------------------------
-    #   _add_boot_pool
-    # ---------------------------
     async def _add_boot_pool(self) -> None:
-        """Add the boot-pool to the pool data.
-
-        ``pool.query`` does not include the boot-pool; ``boot.get_state``
-        reports it with the same top-level shape (name/status/healthy/scan/
-        size/allocated/free/fragmentation), so it is parsed with the same field
-        mapping. It has no root dataset, so the capacity falls back to the
-        pool's own free/size (handled in ``_apply_pool_capacity``).
-        """
+        """Add the boot-pool to the pool data (not included in ``pool.query``)."""
         raw_boot = await self.api.query("boot.get_state")
         if not isinstance(raw_boot, dict) or not raw_boot:
             return
@@ -1348,24 +1183,15 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
         self._apply_pool_errors([raw_boot])
 
-    # ---------------------------
-    #   _apply_pool_capacity
-    # ---------------------------
     def _apply_pool_capacity(
         self, uid: str, vals: dict[str, Any], root_dataset: dict[str, Any] | None
     ) -> None:
-        """Set available/total/usage (and size/allocated) for a single pool.
+        """Set available/total/usage for a pool from its root dataset, if any.
 
-        Prefers the root dataset's available/used values (matching the figures
-        shown in the TrueNAS UI) and falls back to the pool's own free/size
-        fields when no root dataset is available (e.g. boot-pool).
-
-        When the root dataset is used, size/allocated are overwritten with the
-        usable figures too, so they match the UI for parity layouts (raidz)
-        instead of the raw pool.query capacity that counts parity disks.
+        Prefers the root dataset's figures (matches the TrueNAS UI, including
+        for raidz parity layouts); falls back to the pool's own free/size.
         """
         if root_dataset:
-            # Use "or 0" so a null value (not just a missing key) is handled.
             available = root_dataset.get("available") or 0
             used = root_dataset.get("used") or 0
             total = available + used
@@ -1391,9 +1217,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.ds["pool"][uid]["usage"],
         )
 
-    # ---------------------------
-    #   _apply_pool_errors
-    # ---------------------------
     def _apply_pool_errors(self, raw_pools: Any) -> None:
         """Aggregate read/write/checksum errors from each pool's topology."""
         if not isinstance(raw_pools, list):
@@ -1422,9 +1245,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     checksum,
                 )
 
-    # ---------------------------
-    #   get_dataset
-    # ---------------------------
     async def get_dataset(self) -> None:
         """Get datasets from TrueNAS."""
         if not self._is_group_monitored(MONITOR_GROUP_DATASETS):
@@ -1505,43 +1325,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if len(self.ds["dataset"]) == 0:
             return
 
-        # entities_to_be_removed = []
-        # if not self.datasets_hass_device_id:
-        #     device_registry = dr.async_get(self.hass)
-        #     for device in device_registry.devices.values():
-        #         if (
-        #             self.config_entry.entry_id in device.config_entries
-        #             and device.name.endswith("Datasets")
-        #         ):
-        #             self.datasets_hass_device_id = device.id
-        #             _LOGGER.debug(f"datasets device: {device.name}")
-        #
-        #     if not self.datasets_hass_device_id:
-        #         return
-        #
-        # _LOGGER.debug(f"datasets_hass_device_id: {self.datasets_hass_device_id}")
-        # entity_registry = er.async_get(self.hass)
-        # entity_entries = async_entries_for_config_entry(
-        #     entity_registry, self.config_entry.entry_id
-        # )
-        # for entity in entity_entries:
-        #     if (
-        #         entity.device_id == self.datasets_hass_device_id
-        #         and entity.unique_id.removeprefix(f"{self.name.lower()}-dataset-")
-        #         not in map(
-        #             lambda x: str.replace(x, "/", "_"),
-        #             map(str.lower, self.ds["dataset"].keys()),
-        #         )
-        #     ):
-        #         _LOGGER.debug(f"dataset to be removed: {entity.unique_id}")
-        #         entities_to_be_removed.append(entity.entity_id)
-        #
-        # for entity_id in entities_to_be_removed:
-        #     entity_registry.async_remove(entity_id)
-
-    # ---------------------------
-    #   get_disk
-    # ---------------------------
     async def get_disk(self) -> None:
         """Get disks from TrueNAS."""
         self.ds["disk"] = parse_api(
@@ -1619,9 +1402,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self, missing_disks: list[str], has_netdata: bool
     ) -> None:
         """Fetch fallback temperatures from API and map them to missing disks."""
-        # disk.temperatures expects its first argument ("name") to be a list of
-        # disk names; an empty list returns temperatures for all disks. Passing a
-        # dict/empty mapping is rejected with a validation error on TrueNAS 25.10+.
+        # An empty list (not a dict) returns temperatures for all disks; a
+        # dict/empty mapping is rejected on TrueNAS 25.10+.
         disk_names: list[str] = []
         for uid in missing_disks:
             name = self.ds["disk"].get(uid, {}).get("name")
@@ -1645,10 +1427,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _is_valid_disk_temperature_payload(
         self, temps: Any
     ) -> TypeGuard[dict[str, Any]]:
-        """Validate the shape of the disk temperature API payload.
-
-        Delegates specific value validation to per-disk mapping.
-        """
+        """Validate the shape of the disk temperature API payload."""
         return isinstance(temps, dict)
 
     def _map_single_disk_api_temp(self, uid: str, temps: dict[str, Any]) -> None:
@@ -1733,9 +1512,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if not identifier or not isinstance(mean, dict) or not mean:
             return
 
-        # Collect numeric mean values, discarding values outside sane bounds
-        # (0-100 °C) to avoid clearly invalid readings, then use the median to
-        # reduce the impact of transient spikes/outliers.
+        # Discard readings outside sane bounds; median reduces outlier impact.
         if valid_means := [
             v
             for v in mean.values()
@@ -1743,9 +1520,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         ]:
             temps[str(identifier)] = _median(valid_means)
 
-    # ---------------------------
-    #   get_vm
-    # ---------------------------
     async def get_vm(self) -> None:
         """Get VMs from TrueNAS."""
         if not self._is_group_monitored(MONITOR_GROUP_VMS):
@@ -1771,26 +1545,16 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
         for uid, vals in self.ds["vm"].items():
-            # Only substitute 0 for a null memory value (e.g. some instance
-            # types report None), which would raise a TypeError on division;
-            # other invalid types should still surface.
+            # Only null memory is substituted with 0 (avoids a TypeError on
+            # division); other invalid types should still surface.
             memory = vals.get("memory")
             if memory is None:
                 memory = 0
             self.ds["vm"][uid]["memory"] = round(memory / 1024)
             self.ds["vm"][uid]["running"] = vals["status"] == "RUNNING"
 
-    # ---------------------------
-    #   get_container
-    # ---------------------------
     async def get_container(self) -> None:
-        """Get virt CONTAINER instances (Incus) from TrueNAS.
-
-        ``virt.instance.query`` returns both CONTAINER and VM Incus instances;
-        only CONTAINER ones are surfaced here (legacy libvirt VMs are handled by
-        ``get_vm``). Container ``cpu``/``memory`` may be ``None``, so both are
-        treated null-safely (this was the upstream crash, see #26).
-        """
+        """Get virt CONTAINER instances (Incus) from TrueNAS; VM instances go via get_vm."""
         if not self._is_group_monitored(MONITOR_GROUP_CONTAINERS):
             self.ds["container"] = {}
             return
@@ -1831,8 +1595,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         )
 
         for uid, vals in self.ds["container"].items():
-            # cpu is reported as a string (e.g. "1") and may be null; normalize to
-            # an int so the attribute is numeric like memory.
+            # cpu is a possibly-null string (e.g. "1"); normalize to int.
             self.ds["container"][uid]["cpu"] = _to_int(vals.get("cpu"))
             # Container memory is reported in bytes and may be null; show MiB.
             memory = vals.get("memory")
@@ -1842,18 +1605,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.ds["container"][uid]["running"] = vals.get("status") == "RUNNING"
             self.ds["container"][uid]["ip_address"] = _first_ipv4(vals.get("aliases"))
 
-    # ---------------------------
-    #   get_directoryservices
-    # ---------------------------
     async def get_directoryservices(self) -> None:
-        """Get Directory Services (AD/LDAP/IPA) status from TrueNAS.
-
-        Uses the unified ``directoryservices`` API (TrueNAS 25.04+): ``config``
-        carries the service type / domain / options, ``status`` carries the live
-        state (HEALTHY/FAULTED/…). The entity is only surfaced when a directory
-        service is actually configured and enabled, so non-AD systems get no
-        (perpetually disconnected) entity. Keyed by the config id (a single row).
-        """
+        """Get Directory Services (AD/LDAP/IPA) status; only surfaced when configured+enabled."""
         if not self._is_group_monitored(MONITOR_GROUP_DIRECTORY_SERVICES):
             self.ds["directoryservices"] = {}
             return
@@ -1919,9 +1672,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 vals.get("status") == "HEALTHY"
             )
 
-    # ---------------------------
-    #   get_alerts
-    # ---------------------------
     async def get_alerts(self) -> None:
         """Get alerts from TrueNAS."""
         alerts = await self.api.query("alert.list")
@@ -1962,18 +1712,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "uuids": [a.get("uuid") for a in active_alerts if a.get("uuid")],
         }
 
-    # ---------------------------
-    #   get_certificates
-    # ---------------------------
     async def get_certificates(self) -> None:
-        """Get TrueNAS certificates.
-
-        Keyed by ``name`` (DB-unique in TrueNAS) rather than the raw ``id``:
-        replacing a certificate's content (e.g. a manual renewal/reissue, as
-        opposed to TrueNAS's own in-place scheduled auto-renewal) deletes the
-        old database row and creates a new one with a fresh ``id`` but the
-        same ``name``, which otherwise made the sensor look orphaned (#61).
-        """
+        """Get TrueNAS certificates, keyed by ``name`` since renewal changes ``id`` (#61)."""
         certificates = await self.api.query("certificate.query")
         self.ds["certificate"] = parse_api(
             data={},
@@ -1990,9 +1730,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 max(0, (until - now).days) if isinstance(until, datetime) else None
             )
 
-    # ---------------------------
-    #   get_arc
-    # ---------------------------
     async def get_arc(self) -> None:
         """Get ZFS ARC hit ratio from netdata graphs."""
         self.ds["arc"] = {}
@@ -2015,9 +1752,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             value = _arc_value(graph_data)
             self.ds["arc"][field_name] = value
 
-    # ---------------------------
-    #   get_smb
-    # ---------------------------
     async def get_smb(self) -> None:
         """Get active SMB connections."""
         smb_status = await self.api.query("smb.status")
@@ -2031,9 +1765,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         else:
             self.ds["system_info"]["smb_connections"] = 0
 
-    # ---------------------------
-    #   get_ups
-    # ---------------------------
     async def get_ups(self) -> None:
         """Get UPS readings from the netdata UPS graphs, if a UPS is present."""
         if not self._is_group_monitored(MONITOR_GROUP_UPS):
@@ -2070,11 +1801,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.ds["ups"] = ups
 
     async def _discover_ups_graphs(self) -> set[str] | None:
-        """Return the set of available UPS netdata graph names.
-
-        Returns an empty set when no UPS graphs exist (no UPS configured) and
-        ``None`` when the graph list could not be fetched (so it is retried).
-        """
+        """Return available UPS netdata graph names, or None if the fetch failed (retried later)."""
         graphs = await self.api.query(_NETDATA_GRAPHS)
         if not isinstance(graphs, list):
             return None
@@ -2085,9 +1812,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if (name := str(graph.get("name", ""))) in _UPS_GRAPHS
         }
 
-    # ---------------------------
-    #   get_cloudsync
-    # ---------------------------
     async def get_cloudsync(self) -> None:
         """Get cloudsync from TrueNAS."""
         if not self._is_group_monitored(MONITOR_GROUP_CLOUDSYNC):
@@ -2109,9 +1833,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ],
         )
 
-    # ---------------------------
-    #   get_replication
-    # ---------------------------
     async def get_replication(self) -> None:
         """Get replication from TrueNAS."""
         if not self._is_group_monitored(MONITOR_GROUP_REPLICATION):
@@ -2132,28 +1853,19 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 {"name": "transport", "default": "unknown"},
                 {"name": "auto", "type": "bool", "default": False},
                 {"name": "retention_policy", "default": "unknown"},
-                # Replication state lives in its own persistent ``state`` object
-                # (what the WebUI shows), not in the last job, which is often null
-                # and otherwise leaves the sensor stuck on "unknown" (#34).
+                # WebUI-shown state; the last job is often null (#34).
                 {"name": "state", "source": "state/state", "default": "unknown"},
-                # Keep the last job's state as a fallback so an unusual API
-                # response or schema change cannot regress the sensor to unknown.
+                # Fallback only; dropped below once used.
                 {"name": "job_state", "source": "job/state", "default": "unknown"},
                 *_JOB_PROGRESS_VALS,
             ],
         )
 
-        # Prefer the persistent task state; fall back to the last job's state if
-        # state/state is missing or unknown. job_state is only a fallback source,
-        # so it is dropped afterwards rather than kept as a stray attribute.
         for vals in self.ds["replication"].values():
             if vals.get("state", "unknown") == "unknown":
                 vals["state"] = vals.get("job_state", "unknown")
             vals.pop("job_state", None)
 
-    # ---------------------------
-    #   get_rsync
-    # ---------------------------
     async def get_rsync(self) -> None:
         """Get rsync tasks from TrueNAS."""
         if not self._is_group_monitored(MONITOR_GROUP_RSYNC):
@@ -2176,9 +1888,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ],
         )
 
-    # ---------------------------
-    #   get_snapshottask
-    # ---------------------------
     async def get_snapshottask(self) -> None:
         """Get snapshot tasks from TrueNAS."""
         if not self._is_group_monitored(MONITOR_GROUP_SNAPSHOTS):
@@ -2209,9 +1918,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ],
         )
 
-    # ---------------------------
-    #   get_scrub
-    # ---------------------------
     async def get_scrub(self) -> None:
         """Get pool scrub tasks from TrueNAS."""
         self.ds["scrub"] = parse_api(
@@ -2225,9 +1931,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             ],
         )
 
-    # ---------------------------
-    #   get_app
-    # ---------------------------
     async def get_app(self) -> None:
         """Get Apps from TrueNAS."""
         self.ds["app"] = parse_api(
@@ -2266,13 +1969,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         for vals in self.ds["app"].values():
             vals["running"] = vals["state"] == "RUNNING"
-            # Catalog apps report updates via upgrade_available (the chart
-            # upgrade, matching TrueNAS' "Update available"). Custom/compose
-            # apps have no catalog upgrade, so for them an available container
-            # image update is the only update signal. Only fall back to
-            # image_updates_available for custom apps; otherwise a catalog app
-            # that is chart-up-to-date but has a newer image digest would show
-            # a phantom update (#31).
+            # image_updates_available only counts for custom apps; otherwise a
+            # chart-up-to-date catalog app could show a phantom update (#31).
             vals["update_available"] = bool(vals.get("update_available")) or (
                 bool(vals.get("custom_app"))
                 and bool(vals.get("image_updates_available"))
@@ -2281,11 +1979,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         await self._clear_finished_app_updates()
 
     async def _clear_finished_app_updates(self) -> None:
-        """Reset update_jobid once an app's upgrade job is no longer running.
-
-        Otherwise the update entity stays "in progress" after the first update
-        and the app cannot be updated again until Home Assistant restarts.
-        """
+        """Reset update_jobid once an app's upgrade job is no longer running."""
         for vals in self.ds["app"].values():
             job_id = vals.get("update_jobid")
             if not job_id:
@@ -2298,9 +1992,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if state not in ("RUNNING", "WAITING"):
                 vals["update_jobid"] = 0
 
-    # ---------------------------
-    #   app stats subscription helpers
-    # ---------------------------
     # Subscription lifecycle:
     #   UNSUBSCRIBED: _app_stats_sub_id is None.
     #   SUBSCRIBED:   _app_stats_sub_id and _app_stats_event_name are set together.
@@ -2319,19 +2010,13 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._app_stats_event_name = None
 
     def _get_app_identifier(self, app: dict[str, Any]) -> str | None:
-        """Return the canonical app identifier used for stats and group membership.
-
-        Prefers ``name``, falls back to ``app_name`` for legacy payloads.
-        """
+        """Return the app identifier: ``name``, falling back to legacy ``app_name``."""
         name = app.get("name")
         if isinstance(name, str) and name:
             return name
         app_name = app.get("app_name")
         return app_name if isinstance(app_name, str) and app_name else None
 
-    # ---------------------------
-    #   start_app_stats
-    # ---------------------------
     async def start_app_stats(self) -> None:
         """Initialize the app.stats subscription."""
         if not self._is_group_monitored(MONITOR_GROUP_CONTAINERS):
@@ -2406,9 +2091,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         except Exception:
             _LOGGER.exception("Failed to establish app.stats subscription")
 
-    # ---------------------------
-    #   get_app_stats
-    # ---------------------------
     async def get_app_stats(self) -> None:
         """Process buffered app.stats events and update state."""
         if not self._is_group_monitored(MONITOR_GROUP_CONTAINERS):
@@ -2418,7 +2100,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             if self._app_stats_sub_id:
                 await self.stop_app_stats(force=True)
             self.ds["app_stats"] = {}
-            # Containers group unmonitored; tear down and clear state.
             return
 
         if not self._app_stats_sub_id or not await self.api.is_subscribed(
@@ -2427,7 +2108,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             _LOGGER.debug(
                 "get_app_stats: no active subscription, re-entering start_app_stats"
             )
-            # Existing sub missing or inactive; re-enters start_app_stats.
             await self.start_app_stats()
             if not self._app_stats_sub_id:
                 _LOGGER.debug(
@@ -2436,11 +2116,9 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 return
 
         if not self.api.connected():
-            # Cannot fetch events while disconnected; skip this poll cycle.
             return
 
         if not self.ds.get("app"):
-            # No apps to collect stats for; skip event fetch.
             return
 
         messages = await self.api.get_subscription_events(self._app_stats_sub_id)
@@ -2448,7 +2126,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         current_app_names = self._collect_current_app_names()
         self._prune_stale_app_stats(current_app_names)
-        # Remove cached app_stats entries whose app no longer exists.
 
     def _process_app_stats_messages(self, messages: list[dict[str, Any]]) -> None:
         """Append/update app_stats entries from buffered WebSocket messages."""
@@ -2542,11 +2219,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             for app_name in stale:
                 del self.ds["app_stats"][app_name]
 
-    # ---------------------------
-    #   stop_app_stats
-    # ---------------------------
-    # force=True by default so local subscription metadata is always cleared
-    # on unload, even when the API is disconnected.
+    # force=True default: metadata clears on unload even if API is disconnected.
     async def stop_app_stats(self, force: bool = True) -> None:
         """Stop the app.stats subscription on unload."""
         if self._app_stats_sub_id and self.api.connected():
@@ -2561,14 +2234,9 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._app_stats_sub_id = None
             self._app_stats_event_name = None
         elif force:
-            # Metadata is cleared unconditionally so the coordinator does not
-            # believe it is still subscribed after a disconnect/reconnect cycle.
             self._app_stats_sub_id = None
             self._app_stats_event_name = None
 
-    # ---------------------------
-    #   get_cronjob
-    # ---------------------------
     async def get_cronjob(self) -> None:
         """Get cronjobs from TrueNAS."""
         if not self._is_group_monitored(MONITOR_GROUP_CRONJOBS):
@@ -2602,8 +2270,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.config_entry.data.get("cronjob_skip_disabled", True),
             )
 
-        # Rebuild the dict instead of mutating it while iterating, so disabled
-        # cronjobs are dropped without needing a list() copy of the items.
+        # Rebuilt (not mutated in place) to drop disabled entries while iterating.
         filtered_cronjobs: dict[str, Any] = {}
         for uid, vals in self.ds["cronjob"].items():
             if skip_disabled and not vals.get("enabled", True):

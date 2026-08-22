@@ -30,25 +30,15 @@ from .sensor_types import SENSOR_TYPES, TrueNASSensorEntityDescription
 
 _LOGGER = getLogger(__name__)
 
-# This integration is config-entry only; it has no configuration.yaml schema.
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 
-# ---------------------------
-#   _migrate_data_size_units
-# ---------------------------
 def _migrate_data_size_units(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
     coordinator: TrueNASCoordinator,
 ) -> None:
-    """Force each DATA_SIZE sensor's display unit from the base and magnitude.
-
-    The unit is derived from the configured base (GB/GiB) and the entity's
-    current value, then written directly to the entity registry on every startup
-    so the GB/GiB preference takes effect and the unit tracks the value (e.g. a
-    pool is shown in TiB once it exceeds 1 TiB).
-    """
+    """Force each DATA_SIZE sensor's display unit from the base and magnitude."""
     data_unit = config_entry.options.get(
         CONF_DATA_UNIT, config_entry.data.get(CONF_DATA_UNIT, DEFAULT_DATA_UNIT)
     )
@@ -115,9 +105,6 @@ def _force_entity_unit(
         ent_reg.async_update_entity_options(entity_id, "sensor", options)
 
 
-# ---------------------------
-#   async_setup_entry
-# ---------------------------
 async def async_setup_entry(
     hass: HomeAssistant, config_entry: TrueNASConfigEntry
 ) -> bool:
@@ -129,31 +116,21 @@ async def async_setup_entry(
         hass, config_entry, coordinator
     )
 
-    # Community-Edition rename: free the legacy "truenas" entity_ids before the
-    # platforms create the new entities (no-op until the domain is renamed).
+    # Frees legacy "truenas" entity_ids before the new platforms claim them.
     adopted = await async_adopt_legacy_entities(hass, config_entry)
 
     _migrate_data_size_units(hass, config_entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
 
-    # Re-attach the freed legacy entity_ids now that the new entities exist.
-    # pending_legacy_records() re-derives this from *all* persisted records on
-    # every setup (not just this run's freshly adopted ones), so a record left
-    # pending on an earlier setup -- its entity was disabled or its monitored
-    # group off, so it did not exist yet -- still reclaims its id once that
-    # entity is finally created, without ever re-touching an already-resolved
-    # (or since manually renamed) one.
+    # pending_legacy_records() re-derives from all persisted records each setup,
+    # so entities that didn't exist yet (disabled/group off) still reclaim their id later.
     finalize_legacy_adoption(
         hass, config_entry, pending_legacy_records(hass, config_entry)
     )
     async_notify_migration_result(hass, config_entry, adopted)
 
-    # Re-run entity discovery on every coordinator refresh so entities for newly
-    # appearing objects (e.g. a network interface coming up, a new pool/dataset)
-    # are created without requiring an integration reload. The discovery handler
-    # (entity.async_add_entities) expects the coordinator as its argument and does
-    # not request another refresh, so this does not create a refresh loop.
+    # Re-discover entities on every refresh (new interface/pool/dataset) without a reload.
     @callback
     def _handle_coordinator_refresh() -> None:
         async_dispatcher_send(hass, SIGNAL_UPDATE_SENSORS, coordinator)
@@ -165,9 +142,6 @@ async def async_setup_entry(
     return True
 
 
-# ---------------------------
-#   async_unload_entry
-# ---------------------------
 async def async_unload_entry(
     hass: HomeAssistant, config_entry: TrueNASConfigEntry
 ) -> bool:

@@ -37,14 +37,10 @@ _LOGGER = getLogger(__name__)
 _UNKNOWN_KEY = "<unknown>"
 
 
-# ---------------------------
-#   format_unique_id
-# ---------------------------
 def format_unique_id(inst: str, key: str, reference: object = None) -> str:
     """Build an entity unique_id from instance name, description key and reference.
 
-    Shared so the migration in __init__.py can resolve the same unique_id an
-    entity produces.
+    Shared with __init__.py's migration, which relies on this exact format.
     """
     base = f"{inst.lower()}-{key}"
     if reference is None:
@@ -55,8 +51,7 @@ def format_unique_id(inst: str, key: str, reference: object = None) -> str:
 def format_device_identifier(inst: str, hostname: str) -> str:
     """Build the main TrueNAS ("System") device identifier value.
 
-    Shared so other platforms (e.g. the diagnostic statistics-cleanup button)
-    associate with the existing device instead of duplicating the format.
+    Shared so other platforms (e.g. the statistics-cleanup button) reuse it.
     """
     return f"{inst}_{hostname}"
 
@@ -65,12 +60,7 @@ def format_device_identifier(inst: str, hostname: str) -> str:
 def _supports_via_device_id() -> bool:
     """Whether the running HA Core's device registry accepts via_device_id.
 
-    ``via_device_id`` was only added to ``DeviceRegistry.async_get_or_create``
-    in HA Core 2026.8 -- passing it as a kwarg on an older Core raises
-    TypeError there, so it can only be used once detected as supported.
-    ``via_device`` (the older identifiers-tuple form) keeps working
-    everywhere until it is removed in 2027.8.0, so older installs fall back
-    to it. Cached: this cannot change while the process is running.
+    Added in HA Core 2026.8; older cores raise TypeError on the kwarg.
     """
     return (
         "via_device_id"
@@ -83,12 +73,9 @@ def register_system_device(
 ) -> str:
     """Register (or fetch) the "System" device and return its registry id.
 
-    Called once from ``async_setup_entry`` after the coordinator's first
-    refresh, before platforms create entities. Every other device links to
-    it via ``coordinator.system_device_id`` (``via_device_id``) instead of
-    resolving it itself -- ``via_device`` (an identifiers tuple) is
-    deprecated as of HA Core 2027.8.0 because identifiers are no longer
-    unique across config entries.
+    Other devices link via coordinator.system_device_id, not via_device
+    (deprecated in HA Core 2027.8.0 since identifiers are no longer unique
+    across config entries).
     """
     inst = coordinator.config_entry.data[CONF_NAME]
     system_info = coordinator.data["system_info"]
@@ -106,18 +93,6 @@ def register_system_device(
     return device.id
 
 
-# ---------------------------
-#   TrueNASEntityDescription
-# ---------------------------
-# Dynamic vs static entity contract:
-#   - Static descriptions (data_dynamic_keys=False) have a fixed data_path and
-#     produce either one keyless entity or one entity per referenced object.
-#   - Dynamic descriptions (data_dynamic_keys=True) use top-level data keys as
-#     entity UIDs, allowing arbitrary objects to become entities.
-#   - Composite references (data_composite_references=(container, leaf)) add a
-#     second level of dynamism: the leaf value from each nested object becomes
-#     part of the composite UID (``uid::leaf``), used for per-subobject entities
-#     like per-NIC network sensors.
 @dataclass(frozen=True, kw_only=True)
 class TrueNASEntityDescription(EntityDescription):
     """Fields shared by the entity descriptions of every TrueNAS platform."""
@@ -135,11 +110,7 @@ class TrueNASEntityDescription(EntityDescription):
     func: str = ""
 
     def __post_init__(self) -> None:
-        """Validate combinations of dynamic flags and references.
-
-        Invalid configurations emit warnings so they fail fast in tests/CI
-        without crashing the integration at import time.
-        """
+        """Validate flag/reference combos; warns instead of raising so bad configs fail fast without crashing at import time."""
         composite = self.data_composite_references or ()
         has_composite = bool(composite)
         dynamic = self.data_dynamic_keys
@@ -176,15 +147,10 @@ def _composite_references(
     data: dict[str, Any],
     honor_exclude: bool = True,
 ) -> set[str]:
-    """Compute unique_ids for descriptions whose reference is nested inside a list.
+    """Compute unique_ids for descriptions whose reference is nested in a list.
 
-    For each top-level uid in ``data``, the leaf value at
-    ``data[uid][container_key][item][leaf_key]`` becomes a composite unique_id
-    of the form ``inst-key-uid::ref``. This supports entities like per-NIC
-    network sensors where the interface name lives inside a list of dicts.
-
-    When ``honor_exclude`` is True, items matching ``description.data_exclude``
-    are skipped.
+    Builds ``inst-key-uid::leaf`` ids from ``data[uid][container_key][*][leaf_key]``,
+    e.g. per-NIC sensors.
     """
     ids: set[str] = set()
     if len(description.data_composite_references) != 2:
@@ -224,9 +190,6 @@ def _extract_composite_ref(
     return ref if ref is not None else None
 
 
-# ---------------------------
-#   Entity discovery helpers
-# ---------------------------
 def _skip_keyless_description(
     entity_description: TrueNASEntityDescription, data: dict[str, Any]
 ) -> bool:
@@ -238,11 +201,7 @@ def _skip_keyless_description(
 
 
 def _is_uid_excluded(entity_description: TrueNASEntityDescription, vals: Any) -> bool:
-    """Return True if a referenced object is excluded from entity creation.
-
-    Honors an optional ``data_exclude`` (key, value) on the description, e.g. to
-    skip traffic sensors for a network interface whose link is down.
-    """
+    """Return True if description.data_exclude (key, value) matches, e.g. to skip sensors for a down NIC."""
     data_exclude = getattr(entity_description, "data_exclude", None)
     if not data_exclude:
         return False
@@ -278,9 +237,7 @@ def _collect_new_entities(
 ) -> list[TrueNASEntity]:
     """Return entity objects whose unique_id is not in ``seen`` yet.
 
-    ``seen`` is the set of unique_ids already registered for this config entry;
-    only genuinely new objects (e.g. a freshly attached disk) are returned, so
-    existing entities are never re-added.
+    ``seen`` holds ids already registered so existing entities are never re-added.
     """
     new_entities: list[TrueNASEntity] = []
     for entity_description in descriptions:
@@ -290,9 +247,7 @@ def _collect_new_entities(
         if data is None:
             continue
         if not isinstance(data, dict):
-            # A malformed coordinator payload for this data_path would
-            # otherwise raise AttributeError in _skip_keyless_description's
-            # or _new_referenced_entities' unconditional .get() access.
+            # Otherwise AttributeError in the .get() calls below.
             _LOGGER.debug(
                 "Skipping non-dict coordinator payload for data_path %s"
                 " (entity description key %s): %s",
@@ -329,22 +284,9 @@ async def async_add_entities(
 ) -> None:
     """Set up the platform and register dynamic entity discovery.
 
-    On every coordinator refresh only entities that are not already loaded on the
-    platform are created; existing entities refresh themselves through the
-    coordinator and are never re-added (which previously caused "Platform truenas
-    does not generate unique IDs" spam). The "already there" set is derived from
-    the platform's currently-loaded entities (``platform.entities``) on each pass:
-
-    * NOT from the entity registry — it persists across restarts, so on startup
-      every entity would look "already there" and none would be (re)created,
-      leaving them all stuck "unavailable".
-    * NOT from a platform-lifetime set — an entity removed/disabled at runtime
-      would then never be recreated until a reload.
-
-    Deriving it from the live platform entities handles all three: startup
-    (recreate everything), steady state (no re-add), and runtime removal (the
-    object is recreated once it reappears). An asyncio lock serializes overlapping
-    refreshes so an in-flight add is never duplicated.
+    Diffs against the live ``platform.entities`` (not the persistent entity
+    registry, and not a platform-lifetime set) so new/removed objects are
+    (re)added correctly across startup, steady state, and runtime removal.
     """
     platform = ep.async_get_current_platform()
     services = getattr(platform.platform, "SENSOR_SERVICES", [])
@@ -365,10 +307,8 @@ async def async_add_entities(
 
     add_lock = Lock()
 
-    # The coordinator for this config entry. __init__ stores it as runtime_data
-    # before the platforms are forwarded, so it is always present; guard
-    # explicitly so a future change to that contract fails loudly (logged)
-    # instead of with an AttributeError deep inside platform setup.
+    # Always set as runtime_data before platforms load; guard so a future
+    # contract change fails loudly instead of via AttributeError deep in setup.
     this_coordinator = get_truenas_coordinator(config_entry)
     if this_coordinator is None:
         _LOGGER.error(
@@ -380,13 +320,8 @@ async def async_add_entities(
     async def async_update_controller(coordinator: TrueNASCoordinator) -> None:
         """Add entities for newly-appeared objects on each coordinator refresh."""
 
-        # SIGNAL_UPDATE_SENSORS is a global dispatcher signal that __init__ always
-        # fires with the *same* coordinator instance object (one per config entry),
-        # so the identity check below is safe. With more than one TrueNAS config
-        # entry every platform receives every entry's refresh, so ignore refreshes
-        # from other entries — otherwise this platform would build the *other*
-        # instance's entities and try to add them here, causing "Platform truenas
-        # does not generate unique IDs … already exists" spam (#33).
+        # Ignore refreshes from other config entries (SIGNAL_UPDATE_SENSORS fans
+        # out to every platform) to avoid duplicate-entity errors (#33).
         if coordinator is not this_coordinator:
             return
 
@@ -411,9 +346,6 @@ async def async_add_entities(
     config_entry.async_on_unload(unsub)
 
 
-# ---------------------------
-#   TrueNASEntity
-# ---------------------------
 class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
     """Define entity."""
 
@@ -439,9 +371,8 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
         """Refresh cached data from the coordinator for this entity."""
         data = self.coordinator.data.get(self.entity_description.data_path or "", {})
         if not isinstance(data, dict):
-            # Every get_* coordinator job populates this via parse_api(), which
-            # always returns a dict; guard anyway so a malformed entry can't
-            # crash the entity instead of just rendering unavailable.
+            # parse_api() always returns a dict; guard anyway so malformed
+            # data can't crash the entity instead of just rendering unavailable.
             data = {}
         self._data: dict[str, Any] = data.get(self._uid, {}) if self._uid else data
         if self._uid and not self._data:
@@ -460,23 +391,17 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
     def _core_name_translation_key(self) -> str | None:
         """Return Entity._name_translation_key, degrading gracefully.
 
-        Isolates the one place this entity touches a private HA-core
-        implementation detail (the same cached_property HA core's own
-        Entity._name_internal uses to build its lookup key), so a future
-        core change that renames or removes it only needs a fix here.
+        Isolates this entity's one touch of the private attribute so a
+        future HA core rename only needs a fix here.
         """
         return getattr(self, "_name_translation_key", None)
 
     def _translated_description_name(self) -> str | None:
         """Resolve the description's name, preferring loaded translations.
 
-        This entity builds its own name (below) instead of relying on HA's
-        has_entity_name machinery, so the platform-translations lookup has
-        to be triggered manually. Most descriptions only set translation_key
-        and leave `name` at its EntityDescription default (UNDEFINED, not a
-        str), so the translation lookup must run regardless of `name` --
-        `desc_name` is only a fallback for the few statically-named/unnamed
-        descriptions that set `name` explicitly.
+        This entity builds its own name instead of using HA's has_entity_name
+        machinery, so the translation lookup is triggered manually; desc_name
+        is only a fallback for descriptions that set `name` explicitly.
         """
         platform_translations: dict[str, str] | None = getattr(
             self.platform_data, "platform_translations", None
@@ -564,16 +489,11 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
                 configuration_url=f"{http_scheme}://{self.coordinator.config_entry.data[CONF_HOST]}",
             )
 
-        # A plain dict, not DeviceInfo, so the conditional via_device/via_device_id
-        # key below doesn't depend on whichever DeviceInfo TypedDict shape mypy
-        # happens to resolve (via_device_id was only added to it upstream in HA
-        # Core 2026.8 -- see _supports_via_device_id()).
-        # HA's device-registry validation only accepts specific key
-        # combinations (see DEVICE_INFO_TYPES in device_registry.py): the
-        # default_name/default_model/default_manufacturer trio is only valid
-        # together with "connections", not "identifiers" -- so pairing
-        # identifiers with a stable identity here requires the plain
-        # name/model/manufacturer keys instead.
+        # Plain dict, not DeviceInfo: via_device_id was only added to that
+        # TypedDict in HA Core 2026.8 (see _supports_via_device_id()), and
+        # DEVICE_INFO_TYPES only allows default_name/model/manufacturer with
+        # "connections", not "identifiers" -- so plain name/model/manufacturer
+        # keys are required here instead.
         system_info = self.coordinator.data["system_info"]
         device_info: dict[str, Any] = {
             "identifiers": {(dev_connection, f"{dev_connection_value}")},
@@ -607,10 +527,8 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
     def _raise_unsupported(self, action: str) -> None:
         """Raise a clean, user-facing error for an unsupported action.
 
-        Entity services are registered for a whole platform, so an action can be
-        targeted at an entity type that does not implement it (e.g. service_restart
-        on an app). Raising ServiceValidationError surfaces a clear message instead
-        of an "Unknown error" from a bare NotImplementedError.
+        Entity services are platform-wide, so an unimplemented action (e.g.
+        restart on an app) needs a clear error instead of NotImplementedError.
         """
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -624,11 +542,9 @@ class TrueNASEntity(CoordinatorEntity[TrueNASCoordinator], Entity):
     def _raise_if_api_error(self, action: str) -> None:
         """Raise HomeAssistantError if the most recent api.query() call failed.
 
-        query() swallows connection/middleware errors and returns None instead
-        of raising, recording the failure in api.error; many middleware
-        endpoints also legitimately return null on success, so only a
-        non-empty api.error (reset at the start of every query) marks an
-        actual failure.
+        query() swallows errors and returns None (also a valid success value
+        for some endpoints), so only a non-empty api.error (reset each call)
+        signals an actual failure.
         """
         if self.coordinator.api.error:
             raise HomeAssistantError(

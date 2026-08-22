@@ -7,17 +7,12 @@ PLATFORMS = [
 ]
 
 DOMAIN = "truenas_ce"
-# Domain of the original (pre-rename) integration. While DOMAIN equals
-# LEGACY_DOMAIN the Community-Edition migration is inert; once DOMAIN is renamed
-# to "truenas_ce" the migration adopts the entities/history left behind by the
-# old "truenas" integration. See migration.py.
+# Pre-rename domain; migration stays inert until DOMAIN differs from this. See migration.py.
 LEGACY_DOMAIN = "truenas"
 DEFAULT_NAME = "root"
 ATTRIBUTION = "Data provided by TrueNAS CE integration"
 
-# Dispatcher signal used to (re)discover entities on each coordinator refresh.
-# Namespaced to avoid colliding with another integration's dispatcher signal
-# (dispatcher signals share a single hass-wide namespace).
+# Namespaced: dispatcher signals share a single hass-wide namespace.
 SIGNAL_UPDATE_SENSORS = f"{DOMAIN}_update_sensors"
 
 # TrueNAS interface link states (from interface.query -> state/link_state).
@@ -26,17 +21,13 @@ LINK_STATE_DOWN = "LINK_STATE_DOWN"
 
 DEFAULT_HOST = "truenas.local"
 
-# Conversion factor: kilobits per second to kibibytes per second
-# (1000 / 8192 = ~0.12207)
+# kbit/s to KiB/s: 1000 / 8192
 KILOBITS_TO_KIBIBYTES_FACTOR = 0.12207
 
-# Tolerance in seconds to prevent Uptime sensor fluctuations
 UPTIME_EPOCH_TOLERANCE_SECONDS = 300
 
-# Default per-query timeout in seconds
 QUERY_TIMEOUT: float = 30.0
 
-# Error constants
 ERR_CERT_VERIFY_FAILED = "certificate_verify_failed"
 ERR_HTTP_USED = "http_used"
 ERR_TLS_NOT_SUPPORTED = "tlsv1_not_supported"
@@ -94,30 +85,14 @@ TO_REDACT = {
 CONF_CRONJOB_SKIP_DISABLED = "cronjob_skip_disabled"
 CONF_DATA_UNIT = "data_unit"
 
-# Stable per-installation identifier (``system.global.id``, a 128-bit UUID),
-# recorded on every successful connection test. Lets a later zeroconf
-# rediscovery of the same physical box under a new IP be told apart from an
-# unrelated device, without needing any pre-authentication probe for it.
+# system.global.id UUID; lets zeroconf rediscovery under a new IP match this device without a pre-auth probe.
 CONF_SYSTEM_ID = "system_id"
 
-# Community-Edition migration rollback. Raises a fixable Repairs issue on
-# demand — the issue is NOT shown automatically after the migration. Dismissing
-# it just closes it.
+# Migration-rollback Repairs issues: available (shown on demand only) and failed (rollback task errored). See repairs.py.
 ISSUE_MIGRATION_ROLLBACK = "migration_rollback_available"
-# Raised if the fire-and-forget rollback task (see repairs.py) fails after the
-# issue above was already dismissed, so the failure stays visible in Repairs.
 ISSUE_MIGRATION_ROLLBACK_FAILED = "migration_rollback_failed"
 
-# Community-Edition migration state, persisted on the (new) config entry's data.
-# MIGRATION_DONE is the idempotency flag; MIGRATION_RECORDS holds the complete,
-# never-pruned reverse map (unique_id -> old entity_id + registry overrides) so
-# the adoption can always be fully rolled back; MIGRATION_RESOLVED_UNIQUE_IDS
-# tracks which of those records have already reclaimed their id, so retries of
-# the still-pending ones (see pending_legacy_records) never revisit a resolved
-# record and fight a user's later manual rename; MIGRATION_LEGACY_ENTRY_ID/
-# _CONFIG remember the disabled legacy entry and a snapshot of its data+options
-# for a clean rollback; MIGRATION_BACKUP_KEY is the .storage key of the
-# standalone safety snapshot. See migration.py.
+# Migration state persisted on the config entry; supports full rollback. See migration.py.
 MIGRATION_DONE = "ce_migration_done"
 MIGRATION_RECORDS = "ce_migration_records"
 MIGRATION_RESOLVED_UNIQUE_IDS = "ce_migration_resolved_unique_ids"
@@ -125,7 +100,6 @@ MIGRATION_LEGACY_ENTRY_ID = "ce_migration_legacy_entry_id"
 MIGRATION_LEGACY_CONFIG = "ce_migration_legacy_config"
 MIGRATION_BACKUP_KEY = "ce_migration_backup_key"
 
-# Options-Flow
 CONF_POLL_INTERVAL = "poll_interval"
 DEFAULT_POLL_INTERVAL = 60
 ALLOWED_POLL_INTERVALS = ["5", "10", "30", "60", "120", "300"]

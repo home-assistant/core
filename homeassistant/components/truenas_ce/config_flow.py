@@ -50,7 +50,6 @@ from .helper import sanitize_host
 
 _LOGGER = getLogger(__name__)
 
-# Shared selector for the API key field, reused by every schema.
 _API_KEY_SELECTOR = selector.TextSelector(
     selector.TextSelectorConfig(type=selector.TextSelectorType.PASSWORD)
 )
@@ -59,12 +58,8 @@ _API_KEY_SELECTOR = selector.TextSelector(
 def _base_schema(truenas_config: Mapping[str, Any]) -> vol.Schema:
     """Generate base schema.
 
-    The API key default is intentionally never pre-filled from
-    ``truenas_config`` (e.g. a taken-over legacy entry), even though every
-    other field is: a secret's value would otherwise be embedded in the
-    frontend's form state and re-submitted in cleartext. Leaving it blank is
-    safe because ``_async_apply_user_input`` keeps the previously known key
-    when the field comes back empty.
+    The API key default is never pre-filled, unlike every other field:
+    a secret would otherwise be embedded in the frontend's form state.
     """
     base_schema = {
         vol.Required(
@@ -90,9 +85,6 @@ def _base_schema(truenas_config: Mapping[str, Any]) -> vol.Schema:
     return vol.Schema(base_schema)
 
 
-# ---------------------------
-#   _map_error_to_ha
-# ---------------------------
 def _map_error_to_ha(errorcode: str) -> str:
     """Map TrueNAS connection error codes to Home Assistant config flow errors."""
     valid_errors = {
@@ -112,9 +104,6 @@ def _map_error_to_ha(errorcode: str) -> str:
     return errorcode if errorcode in valid_errors else "unknown"
 
 
-# ---------------------------
-#   _guess_ip
-# ---------------------------
 def _guess_ip() -> str:
     """Try to guess the TrueNAS IP from common local hostnames."""
     for domain in ("", *KNOWN_DOMAINS):
@@ -124,17 +113,10 @@ def _guess_ip() -> str:
     return DEFAULT_HOST
 
 
-# ---------------------------
-#   _async_try_connect
-# ---------------------------
 async def _async_try_connect(api: TrueNASAPI, host: str, context: str) -> bool:
     """Attempt ``api.connect()``, returning False (and logging) on any failure.
 
-    Used by the zeroconf probe, which needs to try one candidate connection
-    and move on to the next on any problem rather than raising, so an
-    unexpected exception here must not abort the whole discovery flow.
-    ``quiet=True`` keeps ``connect()``'s own failure logging at debug too,
-    since most probed candidates are expected to not be TrueNAS at all.
+    Used by the zeroconf probe so one bad candidate can't abort discovery.
     """
     try:
         return await api.connect(quiet=True)
@@ -143,62 +125,42 @@ async def _async_try_connect(api: TrueNASAPI, host: str, context: str) -> bool:
         return False
 
 
-# ---------------------------
-#   _async_safe_disconnect
-# ---------------------------
 async def _async_safe_disconnect(api: TrueNASAPI) -> None:
     """Disconnect ``api``, swallowing any error.
 
-    Mirrors :func:`_async_try_connect`/:func:`_async_get_system_id`: cleanup
-    in a probe/rediscovery ``finally`` block must never raise, or it would
-    abort the whole discovery flow for every remaining candidate.
+    Cleanup in a probe/rediscovery ``finally`` block must never raise.
     """
     with contextlib.suppress(Exception):
         await api.disconnect()
 
 
-# Ports the ``ws``/``wss`` schemes already default to; an mDNS announcement
-# naming one of them adds nothing over probing the bare host.
+# ws/wss already default to 80/443; an mDNS-advertised port matching one of
+# those adds nothing over probing the bare host.
 _DEFAULT_WS_PORTS = frozenset({80, 443})
 
 
-# ---------------------------
-#   _probe_candidates
-# ---------------------------
 def _probe_candidates(host: str, port: int | None) -> list[str]:
     """Return the host strings to probe for ``host``, most likely first.
 
-    TrueNAS only advertises the generic ``_http._tcp`` service, whose port is
-    the web UI's -- normally 80, which ``ws`` already defaults to (as ``wss``
-    does 443). Probing the bare host therefore stays first so a standard box
-    reachable over ``wss`` is not forced onto the advertised plain-HTTP port.
-    A genuinely non-default port is appended as a fallback, so an instance
-    behind a custom port or reverse proxy is no longer misread as "not
-    TrueNAS". ``aiotruenas`` builds its URL from the host verbatim, so
-    ``host:port`` is a valid host string here (see ``sanitize_host``).
+    The bare host is tried first so a standard box on ``wss`` isn't forced
+    onto the advertised plain-HTTP port; a genuinely non-default port is
+    appended as a fallback for custom ports/reverse proxies.
     """
     if port is None or port in _DEFAULT_WS_PORTS:
         return [host]
     return [host, f"{host}:{port}"]
 
 
-# ---------------------------
-#   _async_probe_candidate
-# ---------------------------
 async def _async_probe_candidate(host: str) -> bool:
     """Return True only if ``host`` rejects a bogus API key as invalid.
 
-    Only a genuine TrueNAS JSON-RPC endpoint completes the WebSocket
-    handshake and then answers ``ERR_INVALID_KEY``; every other outcome is
-    treated as "not TrueNAS".
+    Only a genuine TrueNAS JSON-RPC endpoint answers ``ERR_INVALID_KEY``.
     """
     for scheme in ("wss", "ws"):
         api = TrueNASAPI(host, "-", verify_ssl=False, scheme=scheme)
         try:
-            # A rejected bogus key surfaces as connect() returning False with
-            # api.error == ERR_INVALID_KEY, not as a truthy connect() result --
-            # so api.error must be checked regardless of the connect outcome,
-            # or every genuine TrueNAS probe is misread as "not reachable".
+            # connect() returns False either way, so api.error (not the
+            # return value) is what distinguishes a rejected key from "unreachable".
             await _async_try_connect(api, host, f"probe ({scheme}) is not reachable")
             if api.error == ERR_INVALID_KEY:
                 return True
@@ -207,14 +169,10 @@ async def _async_probe_candidate(host: str) -> bool:
     return False
 
 
-# ---------------------------
-#   _async_get_system_id
-# ---------------------------
 async def _async_get_system_id(api: TrueNASAPI, host: str) -> str | None:
     """Fetch ``system.global.id``, returning None (and logging) on failure.
 
-    A failed identity lookup must never block configuration/rediscovery, so
-    any exception here is swallowed and treated the same as "no id yet".
+    A failed lookup must never block configuration/rediscovery.
     """
     try:
         system_id = await api.query("system.global.id")
@@ -236,16 +194,10 @@ async def _async_get_system_id(api: TrueNASAPI, host: str) -> str | None:
     return None
 
 
-# ---------------------------
-#   _async_get_hostname
-# ---------------------------
 async def _async_get_hostname(api: TrueNASAPI, host: str) -> str:
     """Fetch ``system.info.hostname``, falling back to DEFAULT_DEVICE_NAME.
 
-    Used to auto-generate the config entry's name/title from the device
-    itself instead of asking the user to type one; a failed lookup must
-    never block setup, so any problem here is swallowed and treated the
-    same as "use the generic default".
+    Auto-generates the entry's name/title; a failed lookup must not block setup.
     """
     try:
         info = await api.query("system.info")
@@ -261,9 +213,6 @@ async def _async_get_hostname(api: TrueNASAPI, host: str) -> str:
     return DEFAULT_DEVICE_NAME
 
 
-# ---------------------------
-#   TrueNASConfigFlow
-# ---------------------------
 class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     """TrueNASConfigFlow class."""
 
@@ -273,9 +222,7 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.truenas_config: dict[str, Any] = {}
-        # Options of a taken-over legacy entry, applied when the entry is created.
         self._legacy_options: dict[str, Any] = {}
-        # Guard so the legacy-takeover offer is made at most once per flow.
         self._migration_checked = False
 
     async def _validate_connection(
@@ -289,10 +236,7 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
                 config[CONF_VERIFY_SSL],
             )
         except ValueError:
-            # sanitize_host already removes a scheme/path up front, so this
-            # only triggers for a genuinely malformed host that the API layer
-            # still rejects. Surface a clear error instead of an unhandled
-            # exception (which the frontend reports as a generic failure).
+            # Only triggers for a malformed host sanitize_host didn't catch.
             errors[CONF_HOST] = ERR_INVALID_HOSTNAME
             _LOGGER.error(
                 "TrueNAS host %r is not a usable hostname or IP address",
@@ -305,11 +249,8 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
             system_id = await _async_get_system_id(api, config.get(CONF_HOST, ""))
             if system_id:
                 config[CONF_SYSTEM_ID] = system_id
-            # Only auto-derive the name on a genuinely new entry. A legacy
-            # migration or an existing entry (reauth) pre-seeds this from data
-            # the user never re-enters, and legacy migration in particular
-            # requires keeping the exact original value so unique_ids still
-            # match (see async_step_migrate_import).
+            # Only auto-derive on a new entry; migration/reauth pre-seed the
+            # name and must keep it exactly (unique_ids depend on it).
             if not config.get(CONF_NAME):
                 config[CONF_NAME] = await _async_get_hostname(
                     api, config.get(CONF_HOST, "")
@@ -330,9 +271,7 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        # Offer to take over an existing legacy ``truenas`` configuration once,
-        # before the (possibly prefilled) form is shown. Inert in the legacy
-        # integration itself (see _find_legacy_config).
+        # Offer a legacy-config takeover once, before the form is shown.
         if user_input is None and not self._migration_checked:
             self._migration_checked = True
             if self._find_legacy_config() is not None:
@@ -368,33 +307,23 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         """Validate a submitted user form.
 
         Returns the created entry on success, or ``None`` to re-show the form
-        with ``errors`` populated. Split out of ``async_step_user`` to keep its
-        cognitive complexity within bounds (SonarQube S3776).
+        with ``errors`` populated. Split out to keep cognitive complexity
+        within bounds (SonarQube S3776).
         """
         if CONF_HOST in user_input:
             user_input[CONF_HOST] = sanitize_host(user_input[CONF_HOST])
-        # An empty submission keeps a previously known key (from a taken-over
-        # legacy entry) rather than blanking it out -- the field is never
-        # pre-filled (see _base_schema), so a blank resubmit means "unchanged".
+        # A blank resubmit keeps the previously known key (see _base_schema).
         if user_input.get(CONF_API_KEY, "") == "" and truenas_config.get(CONF_API_KEY):
             user_input.pop(CONF_API_KEY, None)
         truenas_config |= user_input
 
-        # The same device must not be configurable twice: abort when another
-        # entry already points at this host.
         self._async_abort_entries_match({CONF_HOST: truenas_config[CONF_HOST]})
 
         await self._validate_connection(truenas_config, errors)
 
-        # Once the box's stable identity is known, key the entry's unique_id
-        # on it rather than on the (zeroconf-set) host, so rediscovery and
-        # de-duplication survive the host/IP changing later. A match here is
-        # only ever reached after *this* flow has itself authenticated to the
-        # host with a real (user-typed or taken-over) API key -- never with
-        # another entry's stored credential -- so it is safe to fold the new
-        # host into the matched entry via ``updates`` instead of just
-        # aborting: the box's identity was confirmed through this flow's own
-        # authenticated connection, not by trusting the discovery source.
+        # Key unique_id on the stable system_id (not the host) so rediscovery
+        # survives IP changes; safe to fold the host into a matched entry
+        # here because this flow authenticated it itself.
         system_id = truenas_config.get(CONF_SYSTEM_ID)
         if not errors and isinstance(system_id, str) and system_id:
             await self.async_set_unique_id(system_id)
@@ -402,7 +331,6 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
                 updates={CONF_HOST: truenas_config[CONF_HOST]}
             )
 
-        # Save instance
         if not errors:
             return self.async_create_entry(
                 title=truenas_config[CONF_NAME],
@@ -417,41 +345,22 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle a TrueNAS instance discovered over mDNS.
 
-        TrueNAS SCALE only advertises the generic ``_http._tcp`` service
-        type shared by countless unrelated devices (printers, routers,
-        media servers, ...), so the zeroconf type match alone cannot tell
-        TrueNAS apart. Instead, probe the discovered host with a bogus API
-        key: only a genuine TrueNAS JSON-RPC endpoint answers the WebSocket
-        handshake and then rejects it specifically as an invalid key
-        (``ERR_INVALID_KEY``). Any other outcome (connection refused,
-        handshake timeout, ...) means some other device is behind that
-        _http._tcp announcement, so the flow aborts silently without ever
-        showing the user anything.
-
-        A confirmed-TrueNAS-like host is deliberately never used to silently
-        replay a stored API key from an existing entry: that endpoint is only
-        known to answer the tiny probe handshake, which a spoofed device on
-        the same network can mimic, so treating it as proof of identity would
-        leak real credentials to whatever actually answered the discovery
-        broadcast. The flow always falls through to the user-facing confirm
-        step instead; only a connection this flow itself authenticates (see
-        ``_async_apply_user_input``) can establish the box's real identity
-        and fold a rediscovered host into an existing entry.
+        The generic ``_http._tcp`` service type matches many unrelated
+        devices, so the host is probed with a bogus API key first; only a
+        genuine TrueNAS endpoint answers ``ERR_INVALID_KEY``. A confirmed
+        host is never used to silently replay a stored key from an existing
+        entry (a spoofed device could mimic the probe) -- the flow always
+        falls through to the user-facing confirm step instead.
         """
         host = discovery_info.host
         self._async_abort_entries_match({CONF_HOST: host})
-        # Provisional only, to dedupe concurrent zeroconf events for this host
-        # before the box's stable system_id is known; the shared finish step
-        # (see async_step_user's system_id handling) re-keys the unique_id to
-        # that stable id once the probe below succeeds.
+        # Provisional unique_id to dedupe concurrent events; re-keyed to the
+        # stable system_id once the probe below succeeds.
         await self.async_set_unique_id(  # pylint: disable=home-assistant-unique-id-ip-based
             host
         )
         self._abort_if_unique_id_configured()
 
-        # The probe reports back which endpoint actually answered, so a box
-        # found only on its advertised non-default port is configured with
-        # that port instead of silently falling back to the default one.
         probed_host = await self._probe_is_truenas(host, discovery_info.port)
         if probed_host is None:
             return self.async_abort(reason="not_truenas")
@@ -464,12 +373,7 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _probe_is_truenas(host: str, port: int | None = None) -> str | None:
         """Return the ``host[:port]`` that answers as TrueNAS, or None.
 
-        Any unexpected connection-level error (refused, DNS, handshake, ...)
-        is treated the same as "not TrueNAS" so a misbehaving non-TrueNAS
-        device cannot abort zeroconf discovery for the whole flow.
-
-        The returned value is what the entry must be configured with, so a
-        box found only on its advertised non-default port keeps that port.
+        Any connection-level error is treated the same as "not TrueNAS".
         """
         for candidate in _probe_candidates(host, port):
             if await _async_probe_candidate(candidate):
@@ -490,13 +394,8 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     def _find_legacy_config(self) -> ConfigEntry | None:
         """Return a legacy ``truenas`` entry to optionally take over, if any.
 
-        Only relevant in the renamed (``truenas_ce``) integration; inert while
-        ``DOMAIN == LEGACY_DOMAIN`` so the takeover never appears pre-rename.
-        With more than one legacy entry (multiple boxes set up under the old
-        integration), a host already known at this point (e.g. from zeroconf
-        discovery) picks the matching one instead of always offering the
-        first; with no host known yet and more than one legacy entry, none is
-        offered here (ambiguous -- the user can still migrate manually).
+        With multiple legacy entries and no host known yet, none is offered
+        (ambiguous -- the user can still migrate manually).
         """
         if DOMAIN == LEGACY_DOMAIN:
             return None
@@ -525,8 +424,7 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Prefill the form from the detected legacy entry, then show it.
 
-        Importing the same name is required: the entity unique_ids derive from
-        it, so the migration in __init__.py can re-attach the old entity_ids.
+        The name must carry over unchanged: entity unique_ids derive from it.
         """
         legacy = self._find_legacy_config()
         if legacy is not None:
@@ -552,10 +450,7 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Skip the takeover and configure TrueNAS CE from scratch.
 
-        Marks the entry as already migrated so ``async_adopt_legacy_entities``
-        never auto-adopts the legacy entry later -- without this, entering the
-        same host the legacy entry uses would silently override the user's
-        explicit "from scratch" choice on the first coordinator setup.
+        Marks the entry as migrated so it's never auto-adopted later.
         """
         self.truenas_config[MIGRATION_DONE] = True
         return await self.async_step_user()

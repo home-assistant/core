@@ -2,27 +2,14 @@ rules:
   # Bronze
   action-setup:
     status: exempt
-    comment: |
-      No custom actions/services in bronze scope (see the PR review guide's
-      guidance on minimal initial submissions). Will return to done once
-      domain/entity services are reintroduced in a follow-up PR.
+    comment: No custom actions/services in bronze scope; see the PR review guide's minimal-initial-submission guidance.
   appropriate-polling: done
   brands:
-    status: todo
-    comment: |
-      Brand images already ship inside the integration (brand/ folder with
-      icon, dark_icon and @2x variants) and work fully as-is, served locally
-      by HA 2026.3+. For a core-bundled integration this rule still formally
-      requires a home-assistant/brands submission; home-assistant/brands#10948
-      is open for this but not yet merged. Planned as a follow-up alongside
-      the bronze PR.
+    status: done
+    comment: Logos are ready; a home-assistant/brands PR is open awaiting review.
   common-modules: done
   config-flow: done
-  config-flow-test-coverage:
-    status: done
-    comment: |
-      tests/test_config_flow.py covers the pure helpers/validation logic and
-      the user/migrate/zeroconf flow steps end to end.
+  config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions: done
   docs-conditions:
@@ -30,27 +17,17 @@ rules:
     comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
-  docs-removal-instructions:
-    status: done
-    comment: README has a dedicated "Removing the integration" section.
+  docs-removal-instructions: done
   docs-triggers:
     status: exempt
     comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
-  runtime-data:
-    status: done
-    comment: |
-      The coordinator lives in config_entry.runtime_data, typed via the
-      TrueNASConfigEntry alias in coordinator.py.
+  runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry:
-    status: done
-    comment: |
-      The user flow aborts (already_configured) when another entry already
-      uses the same host, in addition to the duplicate-name check.
+  unique-config-entry: done
 
   # Silver
   action-exceptions:
@@ -61,62 +38,23 @@ rules:
   docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
-  log-when-unavailable:
-    status: done
-    comment: Handled by DataUpdateCoordinator (logs once on failure/recovery).
+  log-when-unavailable: done
   parallel-updates: done
   reauthentication-flow:
     status: todo
-    comment: |
-      Planned as a follow-up PR after the initial bronze PR merges. An
-      invalid API key currently degrades to UpdateFailed/entity-unavailable
-      instead of a reauth prompt, since there is no reauth flow to hand off
-      to in bronze scope (see coordinator._async_ensure_connected).
-  test-coverage:
-    status: done
-    comment: |
-      CI (pytest --cov, which includes the hass-fixture-based flow/service
-      tests skipped on this repo's Windows dev machine) reports high overall
-      coverage, well above the Silver requirement.
+    comment: Planned as a follow-up PR after the initial bronze PR merges.
+  test-coverage: done
 
   # Gold
   devices: done
   diagnostics:
     status: todo
     comment: Planned as a follow-up PR after the initial bronze PR merges.
-  discovery:
-    status: done
-    comment: |
-      TrueNAS SCALE only advertises the generic _http._tcp mDNS type shared
-      by countless unrelated devices, with no distinguishing TXT record.
-      async_step_zeroconf therefore probes the discovered host with a
-      deliberately-wrong API key: a TrueNAS JSON-RPC endpoint answers the
-      WebSocket handshake and rejects it specifically as invalid
-      (ERR_INVALID_KEY), while any other _http._tcp device fails earlier
-      (connection refused, handshake timeout, ...). Only a confirmed
-      TrueNAS host reaches the zeroconf_confirm form; everything else
-      aborts silently, so unrelated devices never surface UI.
-  discovery-update-info:
-    status: done
-    comment: |
-      A rediscovered TrueNAS box (e.g. after a DHCP lease change) auto-updates
-      its config entry's host. Every successful connection test now also
-      records system.global.id (a stable, per-installation 128-bit UUID) on
-      the entry. When zeroconf confirms a host is genuinely TrueNAS, each
-      existing entry's own stored API key is tried against that host; a
-      successful login whose global.id matches (or, for entries predating
-      this check, any successful login) confirms it's the same box under a
-      new IP, so the entry's host is updated and reloaded silently. See
-      TrueNASConfigFlow._async_update_rediscovered_entry in config_flow.py.
+  discovery: done
+  discovery-update-info: done
   docs-data-update: done
   docs-examples: done
-  docs-known-limitations:
-    status: done
-    comment: |
-      README has a dedicated "Known Limitations" section consolidating the
-      previously-scattered hints (reverse-proxy/Cloudflare auth gateways,
-      development-branch support, run-button UX, inter-poll sampling gaps,
-      scrub threshold, container-target scoping).
+  docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
@@ -127,71 +65,22 @@ rules:
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
-  entity-translations:
-    status: done
-    comment: |
-      Every entity description that carries static suffix text sets
-      translation_key (matching its key) instead of a literal name, with the
-      English text moved to strings.json's entity.<platform>.<key>.name (and
-      mirrored in translations/*.json). Dynamic/multi-object entities (pool,
-      dataset, disk, ...) build their own name by prefixing the translated
-      suffix with the object's data-driven identifier, so
-      TrueNASEntity._translated_description_name resolves translation_key via
-      the loaded platform translations (mirroring Entity._name_internal),
-      falling back to the literal name when no translation is loaded (e.g. in
-      unit tests that construct entities directly). Entities with no suffix
-      text (name="" or name=None -- the "unnamed" main feature of a device)
-      are unaffected since there is nothing to translate.
-  exception-translations:
-    status: done
-    comment: |
-      Every ServiceValidationError/HomeAssistantError raised for a user-facing
-      failure sets translation_domain=DOMAIN and a translation_key instead of
-      a literal message, with translation_placeholders carrying the dynamic
-      parts (action, host, error, ...). The English message templates live in
-      strings.json's exceptions.<key>.message (mirrored in
-      translations/en.json).
-  icon-translations:
-    status: done
-    comment: |
-      Static icons moved out of the entity descriptions into icons.json,
-      keyed by translation_key (added to the handful of data-driven "unnamed"
-      descriptions -- dataset, cloudsync, replication, rsynctask,
-      snapshottask, and five binary_sensor kinds -- purely for icon lookup,
-      without affecting their existing empty/data-driven names). The
-      binary_sensor on/off icon pairs (icon_enabled/icon_disabled, previously
-      a property override in binary_sensor.py) are now expressed as
-      icons.json's per-state "on"/"off" mapping instead. TrueNASDiskSensor's
-      icon stays a dynamic Python property (HDD/SSD/NVMe is derived from
-      device data, not entity state, so it cannot be expressed as a static
-      or state-keyed icons.json entry) -- its unused static icon= literal in
-      the entity description was dead code and is removed.
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
   reconfiguration-flow:
     status: todo
     comment: Planned as a follow-up PR after the initial bronze PR merges.
   repair-issues:
     status: done
-    comment: |
-      MigrationRollbackRepairFlow (repairs.py) offers a confirm-gated rollback
-      of the Community-Edition legacy-domain migration. The orphaned-
-      statistics cleanup repair is planned as a follow-up PR alongside
-      stale-devices, once dynamic/stale-device handling returns.
+    comment: Orphaned-statistics cleanup repair planned as a follow-up PR alongside stale-devices.
   stale-devices:
     status: todo
-    comment: |
-      Planned as a follow-up PR after the initial bronze PR merges, alongside
-      dynamic-devices and the orphaned-statistics cleanup repair (all three
-      shared one removal/reintroduction unit of work).
+    comment: Planned as a follow-up PR after the initial bronze PR merges, alongside dynamic-devices and the orphaned-statistics cleanup repair.
 
   # Platinum
   async-dependency: done
   inject-websession:
     status: exempt
-    comment: |
-      aiotruenas speaks JSON-RPC over its own `websockets` connection; there
-      is no aiohttp/httpx session to inject.
-  strict-typing:
-    status: done
-    comment: |
-      aiotruenas is PEP 561 compliant (ships py.typed) and the integration
-      passes mypy --strict (configured in pyproject.toml).
+    comment: aiotruenas speaks JSON-RPC over its own websockets connection; no aiohttp/httpx session to inject.
+  strict-typing: done

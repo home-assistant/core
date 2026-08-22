@@ -36,9 +36,6 @@ _LOGGER = getLogger(__name__)
 PARALLEL_UPDATES = 0
 
 
-# ---------------------------
-#   async_setup_entry
-# ---------------------------
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TrueNASConfigEntry,
@@ -55,13 +52,8 @@ async def async_setup_entry(
     def _discover_app_stats_sensors(
         updated_coordinator: TrueNASCoordinator | None = None,
     ) -> None:
-        # SIGNAL_UPDATE_SENSORS is a global dispatcher signal that __init__ always
-        # fires with the *same* coordinator instance object (one per config entry),
-        # so the identity check below is safe. With more than one TrueNAS config
-        # entry every platform receives every entry's refresh, so ignore refreshes
-        # from other entries — otherwise this platform would build the *other*
-        # instance's entities and try to add them here, causing "Platform truenas
-        # does not generate unique IDs … already exists" spam (#33).
+        # Ignore refreshes from other config entries, or duplicate-unique-id
+        # errors result when multiple TrueNAS entries are configured (#33).
         if updated_coordinator is not None and updated_coordinator is not coordinator:
             return
         _discover_app_stats(platform, coordinator, _async_add_entities)
@@ -94,14 +86,7 @@ def _discover_app_stats(
     coord: TrueNASCoordinator,
     add_entities: AddEntitiesCallback,
 ) -> None:
-    """Discover dynamic app stats sensors for the current coordinator state.
-
-    coord.data["app_stats"] is a dict keyed by app name. Each app-stats
-    description may yield:
-      - one standard sensor per app (e.g. cpu, memory), keyed by app_name
-      - one sensor per network interface, keyed by the composite UID
-        ``app_name::interface_name`` so apps sharing an NIC name remain unique
-    """
+    """Discover dynamic app stats sensors for the current coordinator state."""
     app_stats_data = coord.data.get("app_stats", {})
     if not isinstance(app_stats_data, dict):
         app_stats_data = {}
@@ -139,12 +124,7 @@ def _maybe_discover_app_stats_sensor(
     entities: list[TrueNASAppStatsSensor],
     coord: TrueNASCoordinator,
 ) -> None:
-    """Append a new entity if it is not already loaded.
-
-    Network descriptions branch to ``_discover_network_sensors`` (one composite
-    UID per interface). All other descriptions branch to ``_discover_standard_sensor``
-    (one entity per app).
-    """
+    """Append a new entity if it is not already loaded."""
     if not app_data:
         return
 
@@ -159,37 +139,20 @@ def _maybe_discover_app_stats_sensor(
         _discover_standard_sensor(description, uid, inst, loaded, entities, coord)
 
 
-# ---------------------------
-#   App Stats Network UID Helpers
-# ---------------------------
 # Composite UIDs for app network sensors use the format ``app_name::interface_name``.
-# These helpers centralize composition, parsing, and data resolution so discovery,
-# entity refresh, and naming all stay consistent.
 _APP_STATS_NETWORK_UID_SEPARATOR = "::"
 
 
 def _compose_app_network_uid(base_uid: str, interface_name: str) -> str:
-    """Compose a unique identifier for an app network interface sensor.
-
-    Network sensors share the same ``app_name`` base UID as other app-stats
-    sensors; the ``interface_name`` suffix differentiates per-NIC readings.
-    This helper is the canonical way to build composite UIDs so the delimiter
-    and formatting stay consistent across discovery and entity construction.
-    """
+    """Compose a unique identifier for an app network interface sensor."""
     return f"{base_uid}{_APP_STATS_NETWORK_UID_SEPARATOR}{interface_name}"
 
 
 def _parse_app_network_uid(uid: str) -> tuple[str | None, str | None]:
     """Parse an app network interface UID into base UID and interface name.
 
-    Uses ``_APP_STATS_NETWORK_UID_SEPARATOR`` to split the UID. Returns:
-        A tuple of (base_uid, interface_name). If the UID does not contain
-        the expected separator, (None, None) is returned to signal a parse
-        failure. Callers should treat a None base_uid as an unknown/malformed
-        network sensor and skip/reset the entity.
-
-        Any UID where either the base UID or interface name is empty after
-        splitting is also treated as malformed and returns (None, None).
+    Returns (None, None) if the UID is malformed (missing separator, or an
+    empty base UID/interface name).
     """
     base_uid, sep, iface = uid.rpartition(_APP_STATS_NETWORK_UID_SEPARATOR)
     return (base_uid, iface) if sep and base_uid and iface else (None, None)
@@ -198,17 +161,9 @@ def _parse_app_network_uid(uid: str) -> tuple[str | None, str | None]:
 def _resolve_app_network_data(uid: str, app_stats: Any) -> dict[str, Any] | None:
     """Resolve a composite app-network UID to its merged sensor data.
 
-    ``app_stats`` is typed ``Any`` rather than ``dict[str, Any]``: callers
-    pass it straight from ``coordinator.data.get("app_stats", {})``, which
-    can be a malformed non-dict payload on a broken API response, so this
-    function must runtime-check it rather than trust the static type.
-
-    Uses ``_APP_STATS_NETWORK_UID_SEPARATOR`` to split the UID, then looks up
-    the base app in ``app_stats`` and merges the matching network interface
-    payload. Pure helper that operates on the ``app_stats`` payload directly
-    so it can be tested without a full coordinator. Returns the app_stats
-    entry merged with the matching network interface payload, or ``None`` if
-    the UID is malformed or the interface is unknown.
+    ``app_stats`` is typed ``Any`` (not ``dict[str, Any]``) because it comes
+    straight from ``coordinator.data.get("app_stats", {})``, which can be a
+    malformed non-dict payload on a broken API response.
     """
     base_uid, interface_name = _parse_app_network_uid(uid)
     if base_uid is None or interface_name is None:
@@ -273,9 +228,6 @@ def _discover_standard_sensor(
     loaded.add(unique_id)
 
 
-# ---------------------------
-#   TrueNASSensor
-# ---------------------------
 class TrueNASSensor(TrueNASEntity, SensorEntity):
     """Define an TrueNAS sensor."""
 
@@ -318,8 +270,7 @@ class TrueNASSensor(TrueNASEntity, SensorEntity):
     def native_value(self) -> StateType | date | datetime | Decimal:
         """Return the value reported by the sensor.
 
-        Uses .get() so a transient API failure that empties the coordinator data
-        degrades the state to unknown instead of raising a KeyError mid-update.
+        Uses .get() so a missing key degrades to unknown instead of raising.
         """
         value: StateType | date | datetime | Decimal = self._data.get(
             self.entity_description.data_attribute or ""
@@ -350,9 +301,6 @@ class TrueNASSensor(TrueNASEntity, SensorEntity):
         return None
 
 
-# ---------------------------
-#   TrueNASCertExpirySensor
-# ---------------------------
 _DAYS_PER_YEAR = 365.25
 
 
@@ -382,9 +330,6 @@ class TrueNASCertExpirySensor(TrueNASSensor):
         return UnitOfTime.DAYS
 
 
-# ---------------------------
-#   TrueNASDiskSensor
-# ---------------------------
 _DISK_TYPE_ICONS = {
     "HDD": "mdi:harddisk",
     "SSD": "mdi:chip",
@@ -395,8 +340,7 @@ _DISK_TYPE_ICONS = {
 class TrueNASDiskSensor(TrueNASSensor):
     """Disk temperature sensor.
 
-    force_update ensures HA records every poll value even when the temperature
-    is stable, so the history graph never appears frozen.
+    force_update keeps the history graph from appearing frozen when stable.
     """
 
     _attr_force_update = True
@@ -406,8 +350,7 @@ class TrueNASDiskSensor(TrueNASSensor):
     def icon(self) -> str:
         """Return an icon based on the disk type (HDD / SSD / NVMe).
 
-        TrueNAS reports NVMe drives as type=SSD, so devname prefix takes
-        priority over the type field.
+        TrueNAS reports NVMe drives as type=SSD, so devname takes priority.
         """
         if (self._data.get("devname") or "").lower().startswith("nvme"):
             return "mdi:expansion-card-variant"
@@ -415,9 +358,6 @@ class TrueNASDiskSensor(TrueNASSensor):
         return _DISK_TYPE_ICONS.get(disk_type, "mdi:harddisk")
 
 
-# ---------------------------
-#   TrueNASUptimeSensor
-# ---------------------------
 class TrueNASUptimeSensor(TrueNASSensor):
     """Define an TrueNAS Uptime sensor."""
 
@@ -431,9 +371,6 @@ class TrueNASUptimeSensor(TrueNASSensor):
         return None
 
 
-# ---------------------------
-#   TrueNASAlertSensor
-# ---------------------------
 class TrueNASAlertSensor(TrueNASSensor):
     """Define a TrueNAS Alert sensor with dismiss/restore actions."""
 
@@ -456,58 +393,35 @@ class TrueNASAlertSensor(TrueNASSensor):
             )
 
 
-# ---------------------------
-#   TrueNASDatasetSensor
-# ---------------------------
 class TrueNASDatasetSensor(TrueNASSensor):
     """Define an TrueNAS Dataset sensor."""
 
 
-# ---------------------------
-#   TrueNASRsyncSensor
-# ---------------------------
 class TrueNASRsyncSensor(TrueNASSensor):
     """Define a TrueNAS Rsync task sensor."""
 
 
-# ---------------------------
-#   TrueNASReplicationSensor
-# ---------------------------
 class TrueNASReplicationSensor(TrueNASSensor):
     """Define a TrueNAS Replication task sensor."""
 
 
-# ---------------------------
-#   TrueNASSnapshotTaskSensor
-# ---------------------------
 _SNAPSHOT_SCHEMA_TOKEN_RE = re.compile(r"%[A-Za-z]")
 
-# Best-effort cadence labels guessed from TrueNAS's cron `schedule` field,
-# matching its known periodic-snapshot-task presets (dom set -> monthly, dow
-# set -> weekly, hour set -> daily, else hourly). This is unverified against
-# real daily/weekly/monthly schedules (issue #55) -- HA debug logs of
-# pool.snapshottask.query were truncated when this was written, so only an
-# hourly example was available. Only used as a fallback when naming_schema
-# carries no literal suffix of its own.
+# Cadence labels guessed from TrueNAS's cron `schedule` field presets; only
+# verified against an hourly example (issue #55). Fallback when
+# naming_schema carries no literal suffix of its own.
 _SCHEDULE_LABEL_HOURLY = "Hourly"
 _SCHEDULE_LABEL_DAILY = "Daily"
 _SCHEDULE_LABEL_WEEKLY = "Weekly"
 _SCHEDULE_LABEL_MONTHLY = "Monthly"
 
-# The cron fields read off a snapshot task's `schedule` dict, centralised
-# here so the field names are typed once rather than repeated at each call
-# site that inspects the dict.
 _SCHEDULE_FIELDS = ("minute", "dom", "dow", "hour", "month")
 
 
 def _is_pinned_schedule_field(value: Any) -> bool:
     """Return True if a cron schedule field is a single fixed number.
 
-    TrueNAS's simple Hourly/Daily/Weekly/Monthly presets only ever pin a
-    field to one plain number. The API is expected to send these as
-    digit-only strings, but plain ints are accepted too in case a future
-    or unexpected response shape uses them (bools are excluded since
-    `isinstance(True, int)` is True in Python).
+    Bools are excluded since `isinstance(True, int)` is True in Python.
     """
     if isinstance(value, bool):
         return False
@@ -529,15 +443,8 @@ class TrueNASSnapshotTaskSensor(TrueNASSensor):
     def name(self) -> str | None:
         """Disambiguate same-dataset tasks via naming_schema or schedule.
 
-        Several snapshot tasks (hourly/daily/weekly, ...) commonly share one
-        dataset, so the dataset-only name collides and HA appends
-        non-deterministic _2/_3 to the generated entity id (issue #55). When
-        naming_schema carries literal text after its last strftime token
-        (e.g. "auto-%Y-%m-%d_%H-%M_daily" -> "daily"), append it. Otherwise
-        fall back to a cadence label guessed from the task's cron `schedule`
-        (see _schedule_suffix). Tasks matching neither keep today's
-        dataset-only name, so single-task-per-dataset setups aren't
-        force-renamed.
+        Multiple tasks on one dataset otherwise collide, and HA appends a
+        non-deterministic _2/_3 to the generated entity id (issue #55).
         """
         base_name = super().name
         suffix = self._naming_schema_suffix() or self._schedule_suffix()
@@ -556,29 +463,9 @@ class TrueNASSnapshotTaskSensor(TrueNASSensor):
     def _schedule_suffix(self) -> str | None:
         """Return a best-effort Hourly/Daily/Weekly/Monthly label.
 
-        Derived from the task's cron `schedule` dict (minute/hour/dom/month/
-        dow) using TrueNAS's known periodic-snapshot-task presets, which pin
-        exactly one of dom/dow/hour to a single fixed number, pin `minute`
-        to a single fixed number too (the run time within that hour/day),
-        and leave `month` plus the remaining fields at "*". If any field is
-        neither wildcarded nor a single fixed number -- a step ("*/2" on
-        `minute` or `hour`), range ("1-5") or list ("1,15") -- or if `month`
-        is pinned (which never occurs in any of the four presets), the
-        schedule doesn't match a known preset at all, so it's left
-        unclassified rather than guessed at from whichever field happens to
-        still look pinned. `minute` itself never distinguishes between
-        presets (every preset pins it), so it's only used for this shape
-        check, not for the dom -> dow -> hour classification below, which
-        means a schedule that (contrary to any known preset) has both dom
-        and dow pinned is labeled Monthly. An empty `schedule` dict (no
-        fields at all) is rejected up front rather than falling through to
-        "every field is missing, so every field is wildcard" -> Hourly, and
-        a fully wildcard schedule (minute included) is likewise left
-        unclassified rather than labeled Hourly, since a genuine Hourly
-        preset always pins `minute` to the run time within the hour --
-        minute *also* being "*" would mean "every minute", not hourly.
-        Tasks matching no preset keep the plain dataset-only name rather
-        than risk a misleading guess.
+        Classifies via TrueNAS's known presets (pinned dom/dow/hour, `month`
+        always wildcard). Returns None for anything that doesn't match a
+        known preset shape, rather than risk a misleading guess.
         """
         schedule = self._data.get("schedule") if self._data else None
         if not isinstance(schedule, dict) or not schedule:
@@ -600,26 +487,15 @@ class TrueNASSnapshotTaskSensor(TrueNASSensor):
             return _SCHEDULE_LABEL_WEEKLY
         if _is_pinned_schedule_field(hour):
             return _SCHEDULE_LABEL_DAILY
-        # The `any(...)` guard above guarantees every field is pinned or
-        # wildcard, and hour didn't match the pinned branch above, so hour
-        # is wildcard here -- no need to re-check it. Hourly still requires
-        # `minute` to be pinned; see the docstring note on fully wildcard
-        # schedules above.
         if _is_pinned_schedule_field(minute):
             return _SCHEDULE_LABEL_HOURLY
         return None
 
 
-# ---------------------------
-#   TrueNASCloudsyncSensor
-# ---------------------------
 class TrueNASCloudsyncSensor(TrueNASSensor):
     """Define an TrueNAS Cloudsync sensor."""
 
 
-# ---------------------------
-#   TrueNASAppStatsSensor
-# ---------------------------
 class TrueNASAppStatsSensor(TrueNASEntity, SensorEntity):
     """Define a TrueNAS App Statistics sensor."""
 
@@ -726,12 +602,9 @@ class TrueNASAppStatsSensor(TrueNASEntity, SensorEntity):
             "app_stats_network_tx",
         ):
             try:
-                # Backend provides bytes/sec; convert to KiB/s to match
-                # the declared unit.
+                # Backend provides bytes/sec; convert to KiB/s.
                 return float(val) / 1024.0
             except (ValueError, TypeError):  # fmt: skip
-                # Parsing failed; avoid returning a value with incorrect units.
-                # Returning None keeps the state consistent with the declared unit.
                 return None
 
         return cast("StateType | date | datetime | Decimal", val)
