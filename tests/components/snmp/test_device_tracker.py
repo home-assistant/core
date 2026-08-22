@@ -238,14 +238,14 @@ async def test_device_tracker_device_registry_linking(
     await hass.async_block_till_done()
 
     # Verify Host Device
-    host_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, entry.entry_id)}
+    host_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry.entry_id), entry.entry_id
     )
     assert host_device is not None
 
     # Verify Client Device Linking (it should not exist because device_info was removed)
-    client_device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, mac)}
+    client_device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, mac), entry.entry_id
     )
     assert client_device is None
 

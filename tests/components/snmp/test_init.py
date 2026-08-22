@@ -351,8 +351,8 @@ async def test_host_info_populates_device_registry(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_coordinator_entry.entry_id), mock_coordinator_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Cisco"
@@ -389,8 +389,8 @@ async def test_host_info_no_space_in_descr(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_coordinator_entry.entry_id), mock_coordinator_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer is None
@@ -421,8 +421,8 @@ async def test_host_info_pysnmp_error_sets_empty_model(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_coordinator_entry.entry_id), mock_coordinator_entry.entry_id
     )
     assert device is not None
     assert device.model == ""
@@ -452,8 +452,8 @@ async def test_host_info_errstatus_sets_generic_name(
         assert await hass.config_entries.async_setup(mock_coordinator_entry.entry_id)
         await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_coordinator_entry.entry_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_coordinator_entry.entry_id), mock_coordinator_entry.entry_id
     )
     assert device is not None
     assert device.model == "SNMP Server"
