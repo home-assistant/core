@@ -48,6 +48,7 @@ from .const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
     CONF_ADDON_NETWORK_KEY,
+    CONF_ADDON_S0_LEGACY_KEY,
     CONF_ADDON_SOCKET,
     CONF_INTEGRATION_CREATED_ADDON,
     CONF_SOCKET_PATH,
@@ -89,11 +90,26 @@ class SecurityKeys:
     lr_s2_access_control_key: str | None = None
     lr_s2_authenticated_key: str | None = None
 
+    @staticmethod
+    def migrate_network_key(config: Mapping[str, Any]) -> dict[str, Any]:
+        """Migrate the legacy network key to the S0 legacy key.
+
+        The network key was renamed to the S0 legacy key when S2 was added.
+        Old add-on configs may still only carry the legacy network key.
+        """
+        migrated = dict(config)
+        if (
+            network_key := migrated.pop(CONF_ADDON_NETWORK_KEY, None)
+        ) and not migrated.get(CONF_ADDON_S0_LEGACY_KEY):
+            migrated[CONF_ADDON_S0_LEGACY_KEY] = network_key
+        return migrated
+
     @classmethod
     def from_config(
         cls, config: Mapping[str, Any], defaults: SecurityKeys | None = None
     ) -> Self:
         """Return keys from an add-on config or entry data, with defaults."""
+        config = cls.migrate_network_key(config)
         return cls(
             **{
                 field.name: config.get(
@@ -284,8 +300,7 @@ class AddonFlowManager:
         if addon_info.state is AddonState.RUNNING:
             self.restart_addon = True
         self.original_config = dict(addon_config)
-        # Remove legacy network_key
-        new_addon_config.pop(CONF_ADDON_NETWORK_KEY, None)
+        new_addon_config = SecurityKeys.migrate_network_key(new_addon_config)
         try:
             await self.addon_manager.async_set_addon_options(new_addon_config)
         except AddonError as err:
@@ -1349,11 +1364,13 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         errors: dict[str, str] = {}
 
+        default_keys = SecurityKeys.from_config(addon_config, self.security_keys)
+
         if user_input is not None:
-            # The revert helper only passes keys present in the original
-            # add-on config, which may lack some of the security keys,
-            # so treat missing keys as empty.
-            self.security_keys = SecurityKeys().updated_from_user_input(user_input)
+            # Missing keys default to the current add-on config, so
+            # existing keys are preserved. The revert helper always passes
+            # all keys, so the defaults never apply while reverting.
+            self.security_keys = default_keys.updated_from_user_input(user_input)
             self.usb_path = user_input.get(CONF_USB_PATH) or None
             self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
 
@@ -1387,8 +1404,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         usb_path = addon_config.get(CONF_ADDON_DEVICE, self.usb_path or "")
         socket_path = addon_config.get(CONF_ADDON_SOCKET, self.socket_path or "")
-        default_keys = SecurityKeys.from_config(addon_config, self.security_keys)
-
         try:
             ports = await async_get_usb_ports(self.hass)
         except OSError as err:
@@ -1705,10 +1720,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason=reason)
 
         self.revert_reason = reason
-        addon_config_input = {
+        original_config = self._addon_setup.original_config
+        addon_config_input = SecurityKeys.from_config(original_config).to_dict() | {
             ADDON_USER_INPUT_MAP[addon_key]: addon_val
-            for addon_key, addon_val in self._addon_setup.original_config.items()
-            if addon_key in ADDON_USER_INPUT_MAP
+            for addon_key, addon_val in original_config.items()
+            if addon_key in (CONF_ADDON_DEVICE, CONF_ADDON_SOCKET)
         }
         _LOGGER.debug("Reverting app options, reason: %s", reason)
         return await self.async_step_configure_addon_reconfigure(addon_config_input)
