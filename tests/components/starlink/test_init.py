@@ -2,7 +2,7 @@
 
 from copy import deepcopy
 from datetime import datetime, timedelta
-from unittest.mock import patch
+from unittest.mock import MagicMock, patch
 
 from freezegun import freeze_time
 
@@ -145,11 +145,12 @@ async def test_additional_local_sensors(
         f"{status_data[0]['id']}_gps_satellites",
         suggested_object_id="starlink_gps_satellites",
     )
+    status_data_mock = MagicMock(return_value=status_data)
 
     with (
         LOCATION_DATA_SUCCESS_PATCHER,
         SLEEP_DATA_SUCCESS_PATCHER,
-        patch(STATUS_DATA_TARGET, return_value=status_data) as status_data_mock,
+        patch(STATUS_DATA_TARGET, status_data_mock),
         HISTORY_STATS_SUCCESS_PATCHER,
     ):
         entry.add_to_hass(hass)
