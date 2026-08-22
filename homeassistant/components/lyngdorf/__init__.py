@@ -71,25 +71,26 @@ async def async_setup_entry(
         model=lyngdorf_model.model_name,
     )
 
-    # Register the main device up front so Zone B can resolve its via_device_id.
-    device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
-        config_entry_id=config_entry.entry_id, **device_info
-    )
-
-    zone_b_device_info = DeviceInfo(
-        identifiers={(DOMAIN, f"{config_entry.unique_id}_zone_b")},
-        manufacturer=lyngdorf_model.manufacturer,
-        serial_number=serial,
-        model=lyngdorf_model.model_name,
-        translation_key="zone_b",
-        translation_placeholders={"device_name": config_entry.title},
-        via_device_id=async_get_device_id_by_identifier(
-            hass,
-            (DOMAIN, config_entry.unique_id),
-            config_entry_id=config_entry.entry_id,
-        ),
-    )
+    zone_b_device_info: DeviceInfo | None = None
+    if lyngdorf_model.has_zone_b_feature():
+        # Register the main device up front so Zone B can resolve its via_device_id.
+        device_registry = dr.async_get(hass)
+        device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id, **device_info
+        )
+        zone_b_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{config_entry.unique_id}_zone_b")},
+            manufacturer=lyngdorf_model.manufacturer,
+            serial_number=serial,
+            model=lyngdorf_model.model_name,
+            translation_key="zone_b",
+            translation_placeholders={"device_name": config_entry.title},
+            via_device_id=async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, config_entry.unique_id),
+                config_entry_id=config_entry.entry_id,
+            ),
+        )
 
     config_entry.runtime_data = LyngdorfRuntimeData(
         receiver=receiver,

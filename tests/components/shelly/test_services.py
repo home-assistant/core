@@ -244,14 +244,9 @@ async def test_service_get_kvs_value_wrong_domain(
     )
     other_entry.add_to_hass(hass)
 
-    # Add the other domain's config entry to the device
+    # Move the device to the other domain's config entry
     device_registry.async_update_device(
-        device.id, add_config_entry_id=other_entry.entry_id
-    )
-
-    # Remove the original Shelly config entry
-    device_registry.async_update_device(
-        device.id, remove_config_entry_id=entry.entry_id
+        device.id, new_config_entry_id=other_entry.entry_id
     )
 
     with pytest.raises(ServiceValidationError) as exc_info:

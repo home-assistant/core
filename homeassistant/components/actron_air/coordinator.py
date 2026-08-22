@@ -8,6 +8,7 @@ from actron_neo_api import (
     ActronAirAPI,
     ActronAirAPIError,
     ActronAirAuthError,
+    ActronAirPeripheral,
     ActronAirStatus,
 )
 from actron_neo_api.models.system import ActronAirSystemInfo
@@ -61,6 +62,7 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
         self.serial_number = system.serial
         self.api = api
         self.status = self.api.state_manager.get_status(self.serial_number)
+        self.peripherals: dict[str, ActronAirPeripheral] = {}
         self.last_seen = dt_util.utcnow()
 
     @override
@@ -88,6 +90,9 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
                 translation_placeholders={"error": "Status not available"},
             )
         self.status = status
+        self.peripherals = {
+            peripheral.serial_number: peripheral for peripheral in status.peripherals
+        }
         self.last_seen = dt_util.utcnow()
         return self.status
 

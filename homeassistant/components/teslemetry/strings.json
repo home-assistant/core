@@ -311,6 +311,9 @@
       "charge_state_charge_port_door_open": {
         "name": "Charge port door"
       },
+      "tonneau": {
+        "name": "Tonneau"
+      },
       "vehicle_state_ft": {
         "name": "Frunk"
       },

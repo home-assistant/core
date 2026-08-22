@@ -397,7 +397,9 @@ ATTR_SERIAL_NUMBER: Final = "serial_number"
 ATTR_SUGGESTED_AREA: Final = "suggested_area"
 ATTR_SW_VERSION: Final = "sw_version"
 ATTR_HW_VERSION: Final = "hw_version"
-ATTR_VIA_DEVICE: Final = "via_device"
+_DEPRECATED_ATTR_VIA_DEVICE = DeprecatedConstant(
+    "via_device", "via_device_id", "2027.8"
+)
 
 ATTR_BATTERY_CHARGING: Final = "battery_charging"
 ATTR_BATTERY_LEVEL: Final = "battery_level"
