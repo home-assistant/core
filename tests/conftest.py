@@ -1978,7 +1978,6 @@ def mock_bluetooth_adapters() -> Generator[None]:
     # Late import to avoid loading bleak unless we need it
     from bleak_retry_connector import bleak_manager  # noqa: PLC0415
 
-    # Tests have no DBus, and probing for it opens a real socket
     bleak_manager.get_global_bluez_manager_with_timeout._has_dbus_socket = False
 
     with (
