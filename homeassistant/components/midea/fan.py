@@ -1,6 +1,7 @@
 """Fan for Midea."""
 
 from dataclasses import dataclass
+import math
 from typing import Any, cast, override
 
 from midealocal.const import DeviceType
@@ -16,7 +17,12 @@ from homeassistant.components.fan import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util.percentage import (
+    percentage_to_ranged_value,
+    ranged_value_to_percentage,
+)
 
+from .const import PRESET_MODE_NONE
 from .entity import MideaConfigEntry, MideaEntity, midea_api_call
 
 PARALLEL_UPDATES = 0
@@ -115,7 +121,9 @@ class MideaFan(MideaEntity, FanEntity):
         self._attr_supported_features = description.supported_features
         self._attr_speed_count = device.speed_count
         if FanEntityFeature.PRESET_MODE in description.supported_features:
-            self._attr_preset_modes = device.preset_modes
+            self._attr_preset_modes = [
+                mode for mode in device.preset_modes if mode != PRESET_MODE_NONE
+            ]
 
     @property
     @override
@@ -135,7 +143,7 @@ class MideaFan(MideaEntity, FanEntity):
         if FanEntityFeature.PRESET_MODE not in self.supported_features:
             return None
         mode = self._device.get_attribute("mode")
-        if not isinstance(mode, str) or mode == "normal":
+        if not isinstance(mode, str) or mode == PRESET_MODE_NONE:
             return None
         return mode
 
@@ -144,9 +152,11 @@ class MideaFan(MideaEntity, FanEntity):
     def percentage(self) -> int | None:
         """Midea Fan percentage."""
         fan_speed = self._device.get_attribute("fan_speed")
-        if not isinstance(fan_speed, int) or not fan_speed:
+        if not isinstance(fan_speed, int):
             return None
-        return round(fan_speed * self.percentage_step)
+        if fan_speed == 0:
+            return 0
+        return ranged_value_to_percentage((1, self.speed_count), fan_speed)
 
     @property
     @override
@@ -171,8 +181,15 @@ class MideaFan(MideaEntity, FanEntity):
         **kwargs: Any,
     ) -> None:
         """Midea Fan turn on."""
+        if percentage == 0:
+            self.turn_off()
+            return
         if self.entity_description.has_combined_turn_on:
-            fan_speed = round(percentage / self.percentage_step) if percentage else None
+            fan_speed = (
+                math.ceil(percentage_to_ranged_value((1, self.speed_count), percentage))
+                if percentage is not None
+                else None
+            )
             with midea_api_call():
                 cast("MideaCombinedTurnOnDevice", self._device).turn_on(
                     fan_speed=fan_speed, mode=preset_mode
@@ -181,8 +198,14 @@ class MideaFan(MideaEntity, FanEntity):
         if self.entity_description.is_on_attribute == "power":
             with midea_api_call():
                 self._device.set_attribute(attr="power", value=True)
+            if percentage is not None:
+                self.set_percentage(percentage)
+            if preset_mode is not None:
+                self.set_preset_mode(preset_mode)
             return
-        self.set_percentage(round(percentage or self.percentage_step))
+        self.set_percentage(
+            percentage if percentage is not None else round(self.percentage_step)
+        )
 
     @override
     def turn_off(self, **kwargs: Any) -> None:
@@ -198,7 +221,9 @@ class MideaFan(MideaEntity, FanEntity):
     @override
     def set_percentage(self, percentage: int) -> None:
         """Midea Fan set percentage."""
-        fan_speed = round(percentage / self.percentage_step)
+        fan_speed = math.ceil(
+            percentage_to_ranged_value((1, self.speed_count), percentage)
+        )
         with midea_api_call():
             self._device.set_attribute(attr="fan_speed", value=fan_speed)
 
