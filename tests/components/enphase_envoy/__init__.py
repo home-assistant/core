@@ -10,7 +10,6 @@ from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
-# PyJWT warns about HS256 keys shorter than 32 bytes
 TOKEN_SIGNING_KEY = "envoy-test-signing-key-0123456789"
 
 
