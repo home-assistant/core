@@ -38,6 +38,50 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "clean_filter": {
+        "name": "Clean filter"
+      },
+      "defrost_mode": {
+        "name": "Defrost mode"
+      }
+    },
+    "cover": {
+      "damper": {
+        "name": "Damper"
+      }
+    },
+    "sensor": {
+      "compressor_capacity": {
+        "name": "Compressor capacity"
+      },
+      "compressor_chasing_temperature": {
+        "name": "Compressor chasing temperature"
+      },
+      "compressor_live_temperature": {
+        "name": "Compressor live temperature"
+      },
+      "compressor_mode": {
+        "name": "Compressor mode",
+        "state": {
+          "cool": "Cool",
+          "heat": "Heat",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "compressor_power": {
+        "name": "Compressor power"
+      },
+      "compressor_speed": {
+        "name": "Compressor speed"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      }
+    },
     "switch": {
       "away_mode": {
         "name": "Away mode"

@@ -105,8 +105,8 @@ async def test_device_registry(
     hass: HomeAssistant, device_registry: DeviceRegistry, async_autosetup_sonos, soco
 ) -> None:
     """Test sonos device registered in the device registry."""
-    reg_device = device_registry.async_get_device(
-        identifiers={("sonos", "RINCON_test")}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("sonos", "RINCON_test"), hass.config_entries.async_entries("sonos")[0].entry_id
     )
     assert reg_device is not None
     assert reg_device.model == "Model Name"
@@ -133,8 +133,8 @@ async def test_device_registry_not_portable(
     soco.get_battery_info.return_value = {}
     await async_setup_sonos()
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("sonos", "RINCON_test")}
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("sonos", "RINCON_test"), hass.config_entries.async_entries("sonos")[0].entry_id
     )
     assert reg_device is not None
     assert reg_device.area_id == area_registry.async_get_area_by_name("Zone A").id

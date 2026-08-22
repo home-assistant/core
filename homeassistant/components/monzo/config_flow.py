@@ -8,8 +8,9 @@ from typing import Any, override
 from aiohttp import ClientError
 from monzopy import AuthorisationExpiredError, InvalidMonzoAPIResponseError
 
+from homeassistant.components.webhook import async_generate_id
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
-from homeassistant.const import CONF_TOKEN
+from homeassistant.const import CONF_TOKEN, CONF_WEBHOOK_ID
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -27,7 +28,7 @@ class MonzoFlowHandler(
 
     DOMAIN = DOMAIN
     VERSION = 1
-    MINOR_VERSION = 2
+    MINOR_VERSION = 3
 
     oauth_data: dict[str, Any]
     approval_task: asyncio.Task[None] | None = None
@@ -106,7 +107,10 @@ class MonzoFlowHandler(
     ) -> ConfigFlowResult:
         """Finish setup after in-app approval."""
         if self.source != SOURCE_REAUTH:
-            return self.async_create_entry(title=DOMAIN, data=self.oauth_data)
+            return self.async_create_entry(
+                title=DOMAIN,
+                data={**self.oauth_data, CONF_WEBHOOK_ID: async_generate_id()},
+            )
         return self.async_update_reload_and_abort(
             self._get_reauth_entry(),
             data_updates=self.oauth_data,

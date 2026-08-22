@@ -51,13 +51,19 @@ async def test_sensors(hass: HomeAssistant, device_registry: dr.DeviceRegistry) 
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("powerwall", MOCK_GATEWAY_DIN)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("powerwall", MOCK_GATEWAY_DIN), config_entry.entry_id
     )
     assert reg_device.model == "PowerWall 2 (GW1)"
     assert reg_device.sw_version == "1.50.1 c58c2df3"
     assert reg_device.manufacturer == "Tesla"
     assert reg_device.name == "MySite"
+
+    battery_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_GATEWAY_DIN}_TG0123456789AB"), config_entry.entry_id
+    )
+    assert battery_device is not None
+    assert battery_device.via_device_id == reg_device.id
 
     state = hass.states.get("sensor.mysite_load_power")
     assert state.state == "1.971"
@@ -383,11 +389,11 @@ async def test_unique_id_migrate(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("powerwall", MOCK_GATEWAY_DIN)},
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("powerwall", MOCK_GATEWAY_DIN), config_entry.entry_id
     )
-    old_reg_device = device_registry.async_get_device(
-        identifiers={("powerwall", old_unique_id)},
+    old_reg_device = device_registry.async_get_device_by_identifier(
+        ("powerwall", old_unique_id), config_entry.entry_id
     )
     assert old_reg_device is None
     assert reg_device is not None
@@ -433,8 +439,8 @@ async def test_pw3_restricted_entities(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-    reg_device = device_registry.async_get_device(
-        identifiers={("powerwall", "aa:bb:cc:dd:ee:ff")},
+    reg_device = device_registry.async_get_device_by_identifier(
+        ("powerwall", "aa:bb:cc:dd:ee:ff"), config_entry.entry_id
     )
     assert reg_device.model == "PowerWall 2"
     assert reg_device.sw_version is None

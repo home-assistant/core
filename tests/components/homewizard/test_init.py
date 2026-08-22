@@ -14,6 +14,7 @@ from homeassistant.components.homewizard.const import (
     battery_mode_cloud_issue_id,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
 
@@ -324,3 +325,35 @@ async def test_battery_cloud_issue_stale_issue_cleared_on_reload(
     await hass.config_entries.async_reload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert ir.async_get(hass).async_get_issue(DOMAIN, issue_id) is None  # pylint: disable=home-assistant-tests-registry-fixtures
+
+
+async def test_main_device_registered_before_platform_forwarding(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_homewizardenergy: MagicMock,
+) -> None:
+    """Test the main device is registered before platforms are set up.
+
+    Restricting setup to the sensor platform removes the button platform,
+    whose main-device entity would otherwise register the main device
+    before the external sensor needs it, masking a missing up-front
+    registration.
+    """
+    mock_config_entry.add_to_hass(hass)
+    with patch("homeassistant.components.homewizard.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    main_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "5c2fafabcdef"), mock_config_entry.entry_id
+    )
+    assert main_device is not None
+
+    gas_meter_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "gas_meter_G001"), mock_config_entry.entry_id
+    )
+    assert gas_meter_device is not None
+    assert gas_meter_device.via_device_id == main_device.id

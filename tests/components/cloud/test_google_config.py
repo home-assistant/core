@@ -343,6 +343,59 @@ async def test_google_device_registry_sync(
 
 
 @pytest.mark.usefixtures("mock_cloud_login")
+async def test_google_device_registry_sync_child_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    cloud_prefs: CloudPreferences,
+) -> None:
+    """Test a parent area change syncs entities on area-inheriting children."""
+    config = CloudGoogleConfig(
+        hass, GACTIONS_SCHEMA({}), "mock-user-id", cloud_prefs, hass.data[DATA_CLOUD]
+    )
+
+    # Enable exposing new entities to Google
+    expose_new(hass, True)
+
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+    parent_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    child_entry = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("test", "child")},
+        parent_device_id=parent_entry.id,
+    )
+    # Entity lives on the child device, which has no area of its own and so
+    # inherits the parent's area.
+    entity_registry.async_get_or_create(
+        "light", "hue", "1234", device_id=child_entry.id
+    )
+
+    with patch.object(config, "async_sync_entities_all"):
+        await config.async_initialize()
+        await hass.async_block_till_done()
+        await config.async_connect_agent_user("mock-user-id")
+        await hass.async_block_till_done()
+
+    with patch.object(config, "async_schedule_google_sync_all") as mock_sync:
+        # The parent area changed, changing the child entity's effective area
+        hass.bus.async_fire(
+            dr.EVENT_DEVICE_REGISTRY_UPDATED,
+            {
+                "action": "update",
+                "device_id": parent_entry.id,
+                "changes": ["area_id"],
+            },
+        )
+        await hass.async_block_till_done()
+
+        assert len(mock_sync.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("mock_cloud_login")
 async def test_sync_google_when_started(
     hass: HomeAssistant, cloud_prefs: CloudPreferences
 ) -> None:
