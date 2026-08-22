@@ -1,7 +1,7 @@
 """Config flow for Mitsubishi Comfort integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from mitsubishi_comfort import MitsubishiCloudAccount
 from mitsubishi_comfort.exceptions import AuthenticationError, DeviceConnectionError
@@ -30,6 +30,7 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -74,6 +75,7 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=USER_SCHEMA, errors=errors
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -86,14 +88,15 @@ class MitsubishiComfortConfigFlow(ConfigFlow, domain=DOMAIN):
         changed IP.
         """
         mac = dr.format_mac(discovery_info.macaddress)
-        device = dr.async_get(self.hass).async_get_device(
+        devices = dr.async_get(self.hass).async_get_devices(
             connections={(dr.CONNECTION_NETWORK_MAC, mac)}
         )
+        device_entry_ids = {device.config_entry_id for device in devices}
         entry = next(
             (
                 entry
                 for entry in self._async_current_entries(include_ignore=False)
-                if device is not None and entry.entry_id in device.config_entries
+                if entry.entry_id in device_entry_ids
             ),
             None,
         )

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -154,6 +154,7 @@ class FullySensor(FullyKioskEntity, SensorEntity):
         super().__init__(coordinator)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         extra_state_attributes: dict[str, Any] = {}
         value = self.coordinator.data.get(self.entity_description.key)

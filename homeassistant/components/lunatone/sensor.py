@@ -1,6 +1,6 @@
 """Platform for Lunatone sensor integration."""
 
-from typing import Final
+from typing import Final, override
 
 from lunatone_rest_api_client import Sensor
 from lunatone_rest_api_client.models import SensorAddressType, SensorType
@@ -12,14 +12,13 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
     LIGHT_LUX,
-    PERCENTAGE,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -32,7 +31,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     SensorType.AIR_HUMIDITY: SensorEntityDescription(
         key="air_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorType.AIR_PRESSURE: SensorEntityDescription(
@@ -49,7 +48,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     SensorType.ECO2: SensorEntityDescription(
         key="eco2",
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
     SensorType.LIGHT: SensorEntityDescription(
@@ -67,7 +66,7 @@ SENSOR_TYPES: Final[dict[str, SensorEntityDescription]] = {
     SensorType.VOC: SensorEntityDescription(
         key="voc",
         device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_BILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_BILLION,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 }
@@ -113,7 +112,7 @@ class LunatoneSensor(
         self._config_entry_unique_id = config_entry_unique_id
         self._sensor_id = sensor_id
 
-        self._attr_name = self.sensor.name
+        self._attr_name = self.sensor.data.name
         self._attr_unique_id = (
             f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
         )
@@ -137,7 +136,11 @@ class LunatoneSensor(
                     f"DALI Line {self.sensor.data.dali_sensor_address.line}"
                     f" - A{self.sensor.data.dali_sensor_address.address}\u00b2"
                 ),
-                via_device=(DOMAIN, str(self._config_entry_unique_id)),
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, str(self._config_entry_unique_id)),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                ),
             )
         self._attr_device_info = device_info
 
@@ -147,11 +150,13 @@ class LunatoneSensor(
         return self.coordinator.data[self._sensor_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available and self._sensor_id in self.coordinator.data
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the measurement value of the sensor."""
         return self.sensor.data.value

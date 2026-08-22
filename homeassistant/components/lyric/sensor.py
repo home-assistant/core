@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from aiolyric.objects.device import LyricDevice
 from aiolyric.objects.location import LyricLocation
@@ -14,7 +15,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, UnitOfTemperature
+from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -101,6 +102,13 @@ DEVICE_SENSORS: list[LyricSensorEntityDescription] = [
         ),
     ),
     LyricSensorEntityDescription(
+        key="schedule_status",
+        translation_key="schedule_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda device: device.schedule_status,
+        suitable_fn=lambda device: device.schedule_status,
+    ),
+    LyricSensorEntityDescription(
         key="setpoint_status",
         translation_key="setpoint_status",
         value_fn=lambda device: get_setpoint_status(
@@ -130,6 +138,14 @@ ACCESSORY_SENSORS: list[LyricSensorAccessoryEntityDescription] = [
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         value_fn=lambda room, _: room.room_avg_humidity,
+        suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
+    ),
+    LyricSensorAccessoryEntityDescription(
+        key="room_average_temperature",
+        translation_key="room_average_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=lambda room, _: room.room_avg_temp,
         suitable_fn=lambda _, accessory: accessory.type == "IndoorAirSensor",
     ),
 ]
@@ -216,6 +232,7 @@ class LyricSensor(LyricDeviceEntity, SensorEntity):
                 self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.device)
@@ -252,6 +269,7 @@ class LyricAccessorySensor(LyricAccessoryEntity, SensorEntity):
                 self._attr_native_unit_of_measurement = UnitOfTemperature.CELSIUS
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return the state."""
         return self.entity_description.value_fn(self.room, self.accessory)

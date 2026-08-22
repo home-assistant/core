@@ -15,4 +15,4 @@
       selector:
         duration:
 
-update_became_available: *trigger_common
+became_available: *trigger_common

@@ -6,8 +6,8 @@ from collections.abc import Callable, Iterable
 from dataclasses import dataclass, field
 from functools import partial
 import logging
-from operator import delitem
 from typing import TYPE_CHECKING, Any, Final, TypedDict, cast
+from weakref import WeakKeyDictionary
 
 from aioesphomeapi import (
     COMPONENT_TYPE_TO_INFO,
@@ -45,7 +45,7 @@ from aioesphomeapi import (
     UserService,
     ValveInfo,
     WaterHeaterInfo,
-    build_unique_id,
+    build_device_unique_id,
 )
 from aioesphomeapi.model import ButtonInfo
 from bleak_esphome.backend.device import ESPHomeBluetoothDevice
@@ -56,10 +56,11 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.helpers import discovery_flow, entity_registry as er
+from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.storage import Store
 
-from .const import DOMAIN
+from .const import CONF_NOISE_PSK, DOMAIN
 from .dashboard import async_get_dashboard
 
 type ESPHomeConfigEntry = ConfigEntry[RuntimeEntryData]
@@ -103,20 +104,26 @@ INFO_TYPE_TO_PLATFORM: dict[type[EntityInfo], Platform] = {
 }
 
 
-def build_device_unique_id(mac: str, entity_info: EntityInfo) -> str:
-    """Build unique ID for entity, appending @device_id if it belongs to a sub-device.
-
-    This wrapper around build_unique_id ensures that entities belonging to sub-devices
-    have their device_id appended to the unique_id to handle proper migration when
-    entities move between devices.
-    """
-    base_unique_id = build_unique_id(mac, entity_info)
-
-    # If entity belongs to a sub-device, append @device_id
-    if entity_info.device_id:
-        return f"{base_unique_id}@{entity_info.device_id}"
-
-    return base_unique_id
+@callback
+def async_migrate_unique_id(
+    ent_reg: er.EntityRegistry,
+    platform_domain: str,
+    old_unique_id: str,
+    new_unique_id: str,
+) -> None:
+    """Migrate a registry entry to a new unique_id unless it is claimed."""
+    if old_unique_id == new_unique_id or not (
+        entity_id := ent_reg.async_get_entity_id(platform_domain, DOMAIN, old_unique_id)
+    ):
+        return
+    if ent_reg.async_get_entity_id(platform_domain, DOMAIN, new_unique_id):
+        _LOGGER.debug(
+            "Cannot migrate unique_id %s -> %s: already claimed",
+            old_unique_id,
+            new_unique_id,
+        )
+        return
+    ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
 
 
 class StoreData(TypedDict, total=False):
@@ -179,9 +186,11 @@ class RuntimeEntryData:
         EntityInfoKey, list[Callable[[EntityInfo], None]]
     ] = field(default_factory=dict)
     original_options: dict[str, Any] = field(default_factory=dict)
-    media_player_formats: dict[str, list[MediaPlayerSupportedFormat]] = field(
-        default_factory=lambda: defaultdict(list)
-    )
+    # Keyed by the entity object so cleanup can never touch another
+    # entity's entry and never-added entities self clean via GC
+    media_player_formats: WeakKeyDictionary[
+        Entity, list[MediaPlayerSupportedFormat]
+    ] = field(default_factory=WeakKeyDictionary)
     assist_satellite_config_update_callbacks: list[
         Callable[[AssistSatelliteConfiguration], None]
     ] = field(default_factory=list)
@@ -271,6 +280,36 @@ class RuntimeEntryData:
             ):
                 callback_(static_info)
 
+    @callback
+    def async_update_entity_keys(
+        self,
+        info_type: type[EntityInfo],
+        rekeys: Iterable[tuple[EntityInfo, EntityInfo]],
+    ) -> None:
+        """Notify entities registered under their old key that the key changed."""
+        callbacks = self.entity_info_key_updated_callbacks
+        # Snapshot all old keys' callbacks first: entities re-subscribe
+        # during dispatch and a new key may be another entity's old key
+        snapshots = [
+            (
+                tuple(callbacks.get((info_type, old_info.device_id, old_info.key), ())),
+                old_info,
+                new_info,
+            )
+            for old_info, new_info in rekeys
+        ]
+        for entity_callbacks, old_info, new_info in snapshots:
+            if not entity_callbacks:
+                _LOGGER.debug(
+                    "%s: no subscriber for key change %s -> %s",
+                    new_info.name or new_info.object_id,
+                    old_info.key,
+                    new_info.key,
+                )
+                continue
+            for callback_ in entity_callbacks:
+                callback_(new_info)
+
     async def _ensure_platforms_loaded(
         self,
         hass: HomeAssistant,
@@ -310,11 +349,24 @@ class RuntimeEntryData:
         infos_by_type: defaultdict[type[EntityInfo], list[EntityInfo]] = defaultdict(
             list
         )
+        ent_reg = er.async_get(hass)
         for info in infos:
             info_type = type(info)
             if platform := info_types_to_platform.get(info_type):
                 needed_platforms.add(platform)
                 infos_by_type[info_type].append(info)
+                # Migrate legacy unique ids to the version 3 format that fixes
+                # UTF-8 collisions. Skip when a version 3 id already exists so a
+                # downgrade then upgrade keeps the original entity. When two
+                # legacy ids collided (the bug this fixes) only one registry
+                # entry exists for it, so the first iterated info claims it and
+                # the rest get fresh version 3 ids.
+                async_migrate_unique_id(
+                    ent_reg,
+                    platform,
+                    build_device_unique_id(mac, info, version=1),
+                    build_device_unique_id(mac, info, version=3),
+                )
             else:
                 _LOGGER.warning(
                     "Entity type %s is not supported in this version of Home Assistant",
@@ -359,7 +411,14 @@ class RuntimeEntryData:
         """Subscribe to state updates."""
         subscription_key = (state_type, device_id, state_key)
         self.state_subscriptions[subscription_key] = entity_callback
-        return partial(delitem, self.state_subscriptions, subscription_key)
+
+        @callback
+        def _unsubscribe() -> None:
+            # A re-keyed entity may have taken over this slot
+            if self.state_subscriptions.get(subscription_key) is entity_callback:
+                del self.state_subscriptions[subscription_key]
+
+        return _unsubscribe
 
     @callback
     def async_update_state(self, state: EntityState) -> None:
@@ -463,7 +522,9 @@ class RuntimeEntryData:
         """
         self.available = False
         if self.bluetooth_device:
-            self.bluetooth_device.available = False
+            # Fails pending BLE slot waiters and clears the dead
+            # session's allocations in addition to closing the gate.
+            self.bluetooth_device.async_set_unavailable()
         # Make a copy since calling the disconnect callbacks
         # may also try to discard/remove themselves.
         for disconnect_cb in self.disconnect_callbacks.copy():
@@ -513,6 +574,8 @@ class RuntimeEntryData:
     ) -> None:
         """Create a zwave_js config flow for a Z-Wave JS Proxy device."""
         assert self.client.connected_address is not None
+        entry = hass.config_entries.async_get_entry(self.entry_id)
+        noise_psk = entry.data.get(CONF_NOISE_PSK) if entry else None
         discovery_flow.async_create_flow(
             hass,
             "zwave_js",
@@ -522,7 +585,7 @@ class RuntimeEntryData:
                 zwave_home_id=zwave_home_id,
                 ip_address=self.client.connected_address,
                 port=self.client.port,
-                noise_psk=self.client.noise_psk,
+                noise_psk=noise_psk or None,
             ),
             discovery_key=discovery_flow.DiscoveryKey(
                 domain=DOMAIN,

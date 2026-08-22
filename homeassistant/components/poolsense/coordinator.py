@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from poolsense import PoolSense
 from poolsense.exceptions import PoolSenseError
@@ -42,6 +43,7 @@ class PoolSenseDataUpdateCoordinator(DataUpdateCoordinator[dict[str, StateType]]
         self.poolsense = poolsense
         self.email = self.config_entry.data[CONF_EMAIL]
 
+    @override
     async def _async_update_data(self) -> dict[str, StateType]:
         """Update data via library."""
         async with asyncio.timeout(10):

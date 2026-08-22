@@ -32,5 +32,10 @@
         "name": "Do not disturb until"
       }
     }
+  },
+  "exceptions": {
+    "invalid_message_data": {
+      "message": "Invalid message data: {error}"
+    }
   }
 }

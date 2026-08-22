@@ -1,6 +1,6 @@
 """Platform allowing several binary sensor to be grouped into one binary sensor."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -128,6 +128,7 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
             self.mode = all
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the binary sensor group state."""
         states = [
@@ -150,6 +151,7 @@ class BinarySensorGroup(GroupEntity, BinarySensorEntity):
             self._attr_is_on = self.mode(state == STATE_ON for state in states)
 
     @property
+    @override
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the sensor class of the binary sensor."""
         return self._device_class

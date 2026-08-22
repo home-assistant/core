@@ -1,6 +1,6 @@
 """Representation of Z-Wave locks."""
 
-from typing import Any
+from typing import Any, override
 
 from zwave_js_server.const import CommandClass
 from zwave_js_server.const.command_class.lock import (
@@ -94,6 +94,7 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
     """Representation of a Z-Wave lock."""
 
     @property
+    @override
     def is_locked(self) -> bool | None:
         """Return true if the lock is locked."""
         value = self.info.primary_value
@@ -121,10 +122,12 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
                 STATE_TO_ZWAVE_MAP[self.info.primary_value.command_class][target_state],
             )
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the lock."""
         await self._set_lock_state(LockState.LOCKED)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the lock."""
         await self._set_lock_state(LockState.UNLOCKED)
@@ -241,9 +244,10 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
         LOGGER.info("%s after setting lock configuration for %s", msg, self.entity_id)
 
     async def async_set_user(self, **kwargs: Any) -> SetUserReturn:
-        """Create or update an access-control user on the lock."""
+        """Create or update an access-control user, optionally with a credential."""
         user_type = kwargs.get(const.ATTR_USER_TYPE)
         credential_rule = kwargs.get(const.ATTR_CREDENTIAL_RULE)
+        credential_type = kwargs.get(const.ATTR_CREDENTIAL_TYPE)
         try:
             return await lock_helpers.async_set_user(
                 self.info.node,
@@ -258,6 +262,13 @@ class ZWaveLock(ZWaveBaseEntity, LockEntity):
                     else None
                 ),
                 active=kwargs.get(const.ATTR_USER_ACTIVE),
+                credential_type=(
+                    CREDENTIAL_TYPE_REVERSE_MAP[credential_type]
+                    if credential_type is not None
+                    else None
+                ),
+                credential_slot=kwargs.get(const.ATTR_CREDENTIAL_SLOT),
+                credential_data=kwargs.get(const.ATTR_CREDENTIAL_DATA),
             )
         except BaseZwaveJSServerError as err:
             raise _credential_service_error("set_user_failed", err) from err

@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 import httpx
 import prowlpy
@@ -64,6 +64,7 @@ class ProwlNotificationService(BaseNotificationService):
         self._hass = hass
         self._prowl = prowlpy.AsyncProwl(api_key, client=httpx_client)
 
+    @override
     async def async_send_message(self, message: str, **kwargs: Any) -> None:
         """Send the message to the user."""
         data = kwargs.get(ATTR_DATA, {})
@@ -114,6 +115,7 @@ class ProwlNotificationEntity(NotifyEntity):
         self._attr_name = name
         self._attr_unique_id = name
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send the message."""
         _LOGGER.debug("Sending Prowl notification from entity %s", self.name)

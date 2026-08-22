@@ -41,8 +41,8 @@
     'attributes': ReadOnlyDict({
       'bio': '',
       'display_name': 'erics273',
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=rwljod2fPqLqGP3DBV9F_yK9iuxAt3_MH6tcOnQXTc8LY1LO8JeulzCEFHaqqItKdg9oJ84qjO.VNwvUWuq_iR5iTyx1gQsqHSvWLbqIrRI-&background=0xababab&format=png',
-      'friendly_name': 'erics273',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://images-eds-ssl.xboxlive.com/image?url=rwljod2fPqLqGP3DBV9F_yK9iuxAt3_MH6tcOnQXTc8LY1LO8JeulzCEFHaqqItKdg9oJ84qjO.VNwvUWuq_iR5iTyx1gQsqHSvWLbqIrRI-&background=0xababab&format=png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273',
       'location': 'home',
       'real_name': None,
     }),
@@ -94,7 +94,7 @@
 # name: test_binary_sensors[binary_sensor.erics273_in_game-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'erics273 In game',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 In game',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.erics273_in_game',
@@ -144,7 +144,7 @@
 # name: test_binary_sensors[binary_sensor.erics273_subscribed_to_xbox_game_pass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'erics273 Subscribed to Xbox Game Pass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Subscribed to Xbox Game Pass',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.erics273_subscribed_to_xbox_game_pass',
@@ -196,8 +196,8 @@
     'attributes': ReadOnlyDict({
       'bio': 'My mind is a swirling miasma of scintillating thoughts and turgid ideas.',
       'display_name': 'GSR Ae',
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW_ES.ojiJijNBGRVUbTnZKsoCCCkjlsEJrrMqDkYqs3M0aLOK2kxE9mbLm9M2.R0stAQYoDsGCDJxqDzG9WF3oa4rOCjEK7DbZXdBmBWnMrfErA3M_Q4y_mUTEQLqSAEeYFGlGeCXYsccnQMvEecxRg-&format=png',
-      'friendly_name': 'GSR Ae',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://images-eds-ssl.xboxlive.com/image?url=wHwbXKif8cus8csoZ03RW_ES.ojiJijNBGRVUbTnZKsoCCCkjlsEJrrMqDkYqs3M0aLOK2kxE9mbLm9M2.R0stAQYoDsGCDJxqDzG9WF3oa4rOCjEK7DbZXdBmBWnMrfErA3M_Q4y_mUTEQLqSAEeYFGlGeCXYsccnQMvEecxRg-&format=png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae',
       'location': None,
       'real_name': 'Test Test',
     }),
@@ -249,7 +249,7 @@
 # name: test_binary_sensors[binary_sensor.gsr_ae_in_game-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae In game',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae In game',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gsr_ae_in_game',
@@ -299,7 +299,7 @@
 # name: test_binary_sensors[binary_sensor.gsr_ae_subscribed_to_xbox_game_pass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Subscribed to Xbox Game Pass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Subscribed to Xbox Game Pass',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.gsr_ae_subscribed_to_xbox_game_pass',
@@ -351,8 +351,8 @@
     'attributes': ReadOnlyDict({
       'bio': 'Bio',
       'display_name': 'Ikken Hissatsuu',
-      'entity_picture': 'https://images-eds-ssl.xboxlive.com/image?url=7OTVnZUMVj4OV2zUUGecWvn3U00nQQLfK7_kwpANogj9vJpb.t4ZQMMLIWOuBZBBZs5MjD7okwh5Zwnit1SAtO3OAsFXxJc1ALIbaVoRo7gsiun9FdcaTpzkM60nqzT8ip1659eQpB1SLyupscP.ec_wAGvXwkhCcTKCNHQMrxg-&format=png',
-      'friendly_name': 'Ikken Hissatsuu',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://images-eds-ssl.xboxlive.com/image?url=7OTVnZUMVj4OV2zUUGecWvn3U00nQQLfK7_kwpANogj9vJpb.t4ZQMMLIWOuBZBBZs5MjD7okwh5Zwnit1SAtO3OAsFXxJc1ALIbaVoRo7gsiun9FdcaTpzkM60nqzT8ip1659eQpB1SLyupscP.ec_wAGvXwkhCcTKCNHQMrxg-&format=png',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu',
       'location': 'Rock Hill',
       'real_name': None,
     }),
@@ -404,7 +404,7 @@
 # name: test_binary_sensors[binary_sensor.ikken_hissatsuu_in_game-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ikken Hissatsuu In game',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu In game',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ikken_hissatsuu_in_game',
@@ -454,7 +454,7 @@
 # name: test_binary_sensors[binary_sensor.ikken_hissatsuu_subscribed_to_xbox_game_pass-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ikken Hissatsuu Subscribed to Xbox Game Pass',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Subscribed to Xbox Game Pass',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.ikken_hissatsuu_subscribed_to_xbox_game_pass',

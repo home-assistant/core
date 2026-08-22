@@ -1,7 +1,7 @@
 """Class to hold all cover accessories."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyhap.const import (
     CATEGORY_DOOR,
@@ -128,6 +128,7 @@ class GarageDoorOpener(HomeAccessory):
 
     @callback
     @pyhap_callback  # type: ignore[untyped-decorator]
+    @override
     def run(self) -> None:
         """Handle accessory driver started event.
 
@@ -185,6 +186,7 @@ class GarageDoorOpener(HomeAccessory):
             self.async_call_service(COVER_DOMAIN, SERVICE_CLOSE_COVER, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update cover state after state changed."""
         hass_state: CoverState = new_state.state  # type: ignore[assignment]
@@ -263,6 +265,7 @@ class OpeningDeviceBase(HomeAccessory):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
         # update tilt
@@ -324,6 +327,7 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
         self.async_call_service(COVER_DOMAIN, SERVICE_SET_COVER_POSITION, params, value)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
         current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
@@ -426,6 +430,7 @@ class WindowCoveringBasic(OpeningDeviceBase, HomeAccessory):
         self.char_target_position.set_value(position)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update cover position after state changed."""
         position_mapping = {CoverState.OPEN: 100, CoverState.CLOSED: 0}

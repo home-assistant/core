@@ -1,7 +1,7 @@
 """Config flow to configure the Toon component."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from toonapi import Agreement, Toon, ToonError
 import voluptuous as vol
@@ -25,10 +25,12 @@ class ToonFlowHandler(AbstractOAuth2FlowHandler, domain=DOMAIN):
     migrate_entry: str | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return logging.getLogger(__name__)
 
+    @override
     async def async_oauth_create_entry(self, data: dict[str, Any]) -> ConfigFlowResult:
         """Test connection and load up agreements."""
         self.data = data
