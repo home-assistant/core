@@ -126,7 +126,9 @@ async def test_restore_cache_with_accumulation(hass: HomeAssistant) -> None:
         assert hass.states.get(entity_id).state == str(1 + 0.01572462736977)
 
 
-async def test_additional_local_sensors(hass: HomeAssistant) -> None:
+async def test_additional_local_sensors(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
     """Test additional sensors sourced from the local dish API."""
     entry = MockConfigEntry(
         domain=DOMAIN,
@@ -149,7 +151,7 @@ async def test_additional_local_sensors(hass: HomeAssistant) -> None:
 
     assert hass.states.get("sensor.starlink_obstruction").state == "0.0"
 
-    gps_satellites = er.async_get(hass).async_get("sensor.starlink_gps_satellites")
+    gps_satellites = entity_registry.async_get("sensor.starlink_gps_satellites")
     assert gps_satellites
     assert gps_satellites.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
