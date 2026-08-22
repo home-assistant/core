@@ -1,5 +1,6 @@
 """Test helpers for VoIP integration."""
 
+from collections.abc import Generator
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -22,6 +23,28 @@ from tests.components.tts.conftest import (
 async def load_homeassistant(hass: HomeAssistant) -> None:
     """Load the homeassistant integration."""
     assert await async_setup_component(hass, "homeassistant", {})
+
+
+@pytest.fixture(autouse=True)
+def reduce_satellite_delays() -> Generator[None]:
+    """Shorten the delays that the satellite always waits out.
+
+    Tests must send audio chunks more often than _HANGUP_SEC, or the satellite
+    treats the gap as the caller hanging up. Timeouts that only elapse when audio
+    never arrives are left alone: they cost nothing unless a test exercises them.
+    """
+    with (
+        patch("homeassistant.components.voip.assist_satellite._HANGUP_SEC", 0.2),
+        patch(
+            "homeassistant.components.voip.assist_satellite._ANNOUNCEMENT_BEFORE_DELAY",
+            0.1,
+        ),
+        patch(
+            "homeassistant.components.voip.assist_satellite._ANNOUNCEMENT_AFTER_DELAY",
+            0.1,
+        ),
+    ):
+        yield
 
 
 @pytest.fixture
