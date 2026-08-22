@@ -829,14 +829,13 @@ class MideaSensor(MideaEntity, SensorEntity):
         """Native value of the sensor."""
         value = self._device.get_attribute(self.entity_description.key)
         if (
-             self.entity_description.key == "indoor_humidity"
-             and isinstance(value, (int, float))
-             and value in {0, 0xFF}
+            self.entity_description.key == "indoor_humidity"
+            and isinstance(value, (int, float))
+            and value in {0, 0xFF}
         ):
             return None
-        if (
-            self.entity_description.translation_key == "error_ed"
-            and isinstance(value, int)
+        if self.entity_description.translation_key == "error_ed" and isinstance(
+            value, int
         ):
             return str(value)
         if value == "unknown":
