@@ -1,7 +1,7 @@
 """PowerShades cover platform."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -46,11 +46,13 @@ class PowerShadesCover(PowerShadesEntity, CoverEntity):
         super().__init__(coordinator, "cover")
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position of the cover."""
         return self.coordinator.data.position
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return if the cover is closed."""
         position = self.coordinator.data.position
@@ -59,6 +61,7 @@ class PowerShadesCover(PowerShadesEntity, CoverEntity):
         return position == 0
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening."""
         data = self.coordinator.data
@@ -69,6 +72,7 @@ class PowerShadesCover(PowerShadesEntity, CoverEntity):
         )
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing."""
         data = self.coordinator.data
@@ -78,18 +82,22 @@ class PowerShadesCover(PowerShadesEntity, CoverEntity):
             and data.target_position < data.position
         )
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         await self.coordinator.async_set_position(100)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         await self.coordinator.async_set_position(0)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self.coordinator.async_stop()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         await self.coordinator.async_set_position(kwargs[ATTR_POSITION])
