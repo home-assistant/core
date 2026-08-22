@@ -97,7 +97,6 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
-# PyJWT warns about HS256 keys shorter than 32 bytes
 TOKEN_SIGNING_KEY = "flume-test-token-signing-key-0123"
 
 
