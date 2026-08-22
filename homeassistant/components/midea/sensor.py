@@ -754,7 +754,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         translation_key="softwater_available",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
         key="left_salt",
@@ -779,7 +778,7 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     MideaSensorEntityDescription(
         key="water_consumption_big",
         translation_key="water_consumption",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.WATER,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         state_class=SensorStateClass.TOTAL_INCREASING,
         suggested_display_precision=2,
@@ -789,7 +788,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         translation_key="water_consumption_average",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
-        state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
         key="error",
