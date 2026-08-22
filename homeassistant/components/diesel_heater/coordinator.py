@@ -4,7 +4,7 @@ import asyncio
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from bleak import BleakClient
 from bleak.backends.characteristic import BleakGATTCharacteristic
@@ -54,6 +54,7 @@ _LOGGER = logging.getLogger(__name__)
 class _HeaterLoggerAdapter(logging.LoggerAdapter):
     """Logger adapter that prefixes messages with heater ID."""
 
+    @override
     def process(self, msg, kwargs):
         """Add heater ID prefix to log messages."""
         return f"[{self.extra['heater_id']}] {msg}", kwargs
@@ -204,6 +205,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
                     err,
                 )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data from the heater."""
         if not self._client or not self._client.is_connected:
@@ -704,6 +706,7 @@ class VevorHeaterCoordinator(DataUpdateCoordinator):
         if success:
             await self.async_request_refresh()
 
+    @override
     async def async_shutdown(self) -> None:
         """Shutdown coordinator."""
         self._logger.debug("Shutting down Diesel Heater coordinator")

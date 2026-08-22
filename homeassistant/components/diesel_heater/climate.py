@@ -1,7 +1,7 @@
 """Climate platform for Vevor Diesel Heater."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.climate import (
     PRESET_AWAY,
@@ -85,19 +85,22 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
             "manufacturer": "Diesel Heater",
             "model": "Multi-brand",
         }
-        self._attr_unique_id = f"{coordinator.address}_climate"
+        self._attr_unique_id = coordinator.address
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature (interior/cabin temperature)."""
         return self.coordinator.data.get("cab_temperature")
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return the target temperature."""
         return self.coordinator.data.get("set_temp")
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return current HVAC mode."""
         running_state = self.coordinator.data.get("running_state", 0)
@@ -106,6 +109,7 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         return HVACMode.OFF
 
     @property
+    @override
     def hvac_action(self) -> HVACAction | None:
         """Return the current HVAC action (what the heater is actually doing).
 
@@ -157,6 +161,7 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         )
 
     @property
+    @override
     def preset_mode(self) -> str | None:
         """Return the current preset mode.
 
@@ -181,6 +186,7 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         # This handles cases where heater rounds temperature
         return self._current_preset or PRESET_NONE
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new preset mode."""
         if preset_mode == PRESET_AWAY:
@@ -205,6 +211,7 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         else:
             raise ServiceValidationError(f"Unsupported preset mode: {preset_mode}")
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
@@ -226,6 +233,7 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         _LOGGER.debug("Setting target temperature to %d°C", temperature)
         await self.coordinator.async_set_temperature(temperature)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new HVAC mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -237,15 +245,18 @@ class VevorHeaterClimate(CoordinatorEntity[VevorHeaterCoordinator], ClimateEntit
         else:
             raise ServiceValidationError(f"Unsupported HVAC mode: {hvac_mode}")
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the heater."""
         await self.async_set_hvac_mode(HVACMode.HEAT)
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the heater."""
         await self.async_set_hvac_mode(HVACMode.OFF)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_write_ha_state()

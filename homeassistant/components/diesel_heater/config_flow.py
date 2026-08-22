@@ -2,7 +2,7 @@
 
 import logging
 import re
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -49,6 +49,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self._discovery_info: BluetoothServiceInfoBleak | None = None
         self._discovered_devices: dict[str, BluetoothServiceInfoBleak] = {}
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -97,6 +98,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -227,6 +229,7 @@ class VevorHeaterConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         )
 
     @staticmethod
+    @override
     def async_get_options_flow(
         config_entry: config_entries.ConfigEntry,
     ) -> config_entries.OptionsFlow:
