@@ -346,7 +346,7 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
 
                 if media_id == channel["channelNumber"]:
                     perfect_match_channel_id = channel["channelId"]
-                    break
+                    continue
 
                 if media_id.lower() in channel["channelName"].lower():
                     partial_match_channel_id = channel["channelId"]
