@@ -6,7 +6,6 @@ from typing import Any, override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
-from PyViCare.PyViCareHeatingDevice import HeatingCircuit as PyViCareHeatingCircuit
 from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.calendar import CalendarEntity, CalendarEvent
@@ -16,7 +15,6 @@ from homeassistant.util import dt as dt_util
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
-from .utils import get_circuits
 
 # Short weekday keys PyViCare uses, indexed by datetime.weekday().
 CIRCULATION_SCHEDULE_WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
@@ -32,14 +30,8 @@ def _build_entities(
     """Create ViCare DHW circulation schedule calendar entities for a device."""
 
     return [
-        ViCareCirculationScheduleCalendar(
-            device.serial,
-            device.config,
-            device.api,
-            circuit,
-        )
+        ViCareCirculationScheduleCalendar(device.serial, device.config, device.api)
         for device in device_list
-        for circuit in get_circuits(device.api)
     ]
 
 
@@ -68,13 +60,9 @@ class ViCareCirculationScheduleCalendar(ViCareEntity, CalendarEntity):
         device_serial: str | None,
         device_config: PyViCareDeviceConfig,
         device: PyViCareDevice,
-        circuit: PyViCareHeatingCircuit,
     ) -> None:
         """Initialize the circulation schedule calendar."""
-        super().__init__(
-            f"{circuit.id}-circulation_schedule", device_serial, device_config, device
-        )
-        self._circuit = circuit
+        super().__init__("circulation_schedule", device_serial, device_config, device)
         self.update()
 
     def update(self) -> None:
@@ -115,7 +103,7 @@ class ViCareCirculationScheduleCalendar(ViCareEntity, CalendarEntity):
             weekday = CIRCULATION_SCHEDULE_WEEKDAYS[date.weekday()]
             for slot in self._circulation_schedule.get(weekday, []):
                 event = self._slot_to_event(date, slot)
-                if event.end < start_date or event.start > end_date:
+                if event.end <= start_date or event.start >= end_date:
                     continue
                 events.append(event)
             date += timedelta(days=1)
