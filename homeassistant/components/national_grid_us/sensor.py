@@ -8,7 +8,6 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
-    SensorStateClass,
 )
 from homeassistant.const import UnitOfEnergy, UnitOfVolume
 from homeassistant.core import HomeAssistant
@@ -52,8 +51,6 @@ SENSOR_DESCRIPTIONS: tuple[NationalGridSensorEntityDescription, ...] = (
     NationalGridSensorEntityDescription(
         key="energy_usage",
         translation_key="energy_usage",
-        # Not TOTAL_INCREASING because it can decrease for accounts with solar
-        state_class=SensorStateClass.TOTAL,
         value_fn=lambda m: m.latest_usage,
         unit_fn=_get_energy_unit,
         device_class_fn=_get_energy_device_class,
@@ -61,7 +58,6 @@ SENSOR_DESCRIPTIONS: tuple[NationalGridSensorEntityDescription, ...] = (
     NationalGridSensorEntityDescription(
         key="energy_cost",
         translation_key="energy_cost",
-        state_class=SensorStateClass.TOTAL,
         native_unit_of_measurement="USD",
         device_class=SensorDeviceClass.MONETARY,
         value_fn=lambda m: m.latest_cost,
