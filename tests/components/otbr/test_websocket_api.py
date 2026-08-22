@@ -1,5 +1,6 @@
 """Test OTBR Websocket API."""
 
+import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 from typing import Any
@@ -1052,6 +1053,58 @@ async def test_create_ephemeral_key_twice(
     )
     # The router is only asked for another key once the first one has expired
     assert (aioclient_mock.call_count > posts) is success
+
+
+@pytest.mark.usefixtures("otbr_config_entry_multipan")
+async def test_create_ephemeral_key_concurrently(
+    aioclient_mock: AiohttpClientMocker,
+    websocket_client: MockHAClientWebSocket,
+) -> None:
+    """Test only one of two concurrent requests gets a key."""
+    aioclient_mock.put(f"{BASE_URL}/node/ba-epskc/state")
+    release = asyncio.Event()
+    requests: asyncio.Queue[None] = asyncio.Queue()
+
+    async def activate(method: str, url: URL, data: Any) -> AiohttpClientMockResponse:
+        await release.wait()
+        return AiohttpClientMockResponse(
+            "POST",
+            URL(f"{BASE_URL}/node/ba-epskc/key"),
+            json={"tap": "700855744", "port": 49154},
+        )
+
+    async def get_extended_address() -> bytes:
+        # Called by each request right before the ephemeral key lock
+        await requests.put(None)
+        return TEST_BORDER_AGENT_EXTENDED_ADDRESS
+
+    aioclient_mock.post(f"{BASE_URL}/node/ba-epskc/key", side_effect=activate)
+    create_msg = {
+        "type": "otbr/create_ephemeral_key",
+        "extended_address": TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+    }
+
+    with patch(
+        "python_otbr_api.OTBR.get_extended_address", side_effect=get_extended_address
+    ):
+        await websocket_client.send_json_auto_id(create_msg)
+        await requests.get()
+        await websocket_client.send_json_auto_id(create_msg)
+        await requests.get()
+        # Both requests are in flight: the first waits on the router, the
+        # second must be waiting for the first to finish
+        release.set()
+        msgs = [
+            await websocket_client.receive_json(),
+            await websocket_client.receive_json(),
+        ]
+
+    assert sorted(msg.get("error", {}).get("code", "success") for msg in msgs) == [
+        "ephemeral_key_in_use",
+        "success",
+    ]
+    # The router was only asked for one key
+    assert len([call for call in aioclient_mock.mock_calls if call[0] == "POST"]) == 1
 
 
 @pytest.mark.parametrize("state", ["connected", "accepted"])
