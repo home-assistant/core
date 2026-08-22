@@ -191,8 +191,6 @@ class OTBRData:
         """Get coprocessor firmware version."""
         return await self.api.get_coprocessor_version()
 
-    # The ephemeral key endpoints are called directly until a python-otbr-api
-    # release includes them (home-assistant-libs/python-otbr-api#267)
     @_handle_otbr_error
     async def get_ephemeral_key_supported(self, hass: HomeAssistant) -> bool:
         """Return whether the router supports ephemeral key mode."""
