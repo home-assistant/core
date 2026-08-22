@@ -390,9 +390,6 @@
       "auto_track_method": {
         "default": "mdi:target-account"
       },
-      "battery_mode": {
-        "default": "mdi:battery"
-      },
       "binning_mode": {
         "default": "mdi:code-block-brackets"
       },
@@ -497,6 +494,12 @@
         "state": {
           "off": "mdi:music-note-off"
         }
+      },
+      "work_mode_battery": {
+        "default": "mdi:battery"
+      },
+      "work_mode_powered": {
+        "default": "mdi:power-plug"
       }
     },
     "sensor": {

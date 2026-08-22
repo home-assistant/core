@@ -507,15 +507,6 @@
           "pantiltfirst": "Pan/tilt first"
         }
       },
-      "battery_mode": {
-        "name": "Battery mode",
-        "state": {
-          "custom": "Custom",
-          "optimalsurveillance": "Optimal surveillance",
-          "powersaving": "Power saving",
-          "smart": "Smart power"
-        }
-      },
       "binning_mode": {
         "name": "Binning mode",
         "state": {
@@ -747,6 +738,23 @@
           "originaltune": "[%key:component::reolink::entity::select::motion_tone::state::originaltune%]",
           "pianokey": "[%key:component::reolink::entity::select::motion_tone::state::pianokey%]",
           "waybackhome": "[%key:component::reolink::entity::select::motion_tone::state::waybackhome%]"
+        }
+      },
+      "work_mode_battery": {
+        "name": "Work mode battery",
+        "state": {
+          "custom": "Custom",
+          "optimalsurveillance": "Optimal surveillance",
+          "powersaving": "Power saving",
+          "smart": "Smart power"
+        }
+      },
+      "work_mode_powered": {
+        "name": "Work mode powered",
+        "state": {
+          "alarm_based": "Alarm recording",
+          "continuous": "Continuous recording",
+          "custom": "[%key:component::reolink::entity::select::work_mode_battery::state::custom%]"
         }
       }
     },
