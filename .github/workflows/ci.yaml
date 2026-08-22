@@ -895,7 +895,8 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
-            --durations=10 \
+            --durations=0 \
+            --durations-min=1 \
             --numprocesses auto \
             --snapshot-details \
             --dist=loadfile \
@@ -1038,7 +1039,8 @@ jobs:
             --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
-            --durations=10 \
+            --durations=0 \
+            --durations-min=10 \
             -p no:sugar \
             --exclude-warning-annotations \
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
