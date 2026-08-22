@@ -13,7 +13,7 @@
     },
     "step": {
       "confirm": {
-        "description": "**{name}{municipality}** (stop {number})\n\nUpcoming departures:\n{departures}\n\nIf no departures are listed above, none may be expected right now, or they could not be loaded — you can still add the stop.\n\n{links}",
+        "description": "**{name}{municipality}** (stop {number})\n\nUpcoming departures:\n{departures}\n\nIf no departures are listed above, none may be expected right now, or they could not be loaded — you can still add the stop.\n\n[Show location on a map]({map_url})\n[View this stop on delijn.be]({delijn_url})",
         "menu_options": {
           "create_entry": "Add this stop",
           "pick": "Back to search results",

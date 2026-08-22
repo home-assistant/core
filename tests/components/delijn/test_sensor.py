@@ -189,7 +189,11 @@ async def test_yaml_import_failure_creates_issue(
     mock_delijn_client: MagicMock,
     issue_registry: ir.IssueRegistry,
 ) -> None:
-    """Test a failed YAML import creates a per-stop repair issue."""
+    """Test a failed YAML import creates a stable per-stop repair issue.
+
+    The generic deprecated-YAML notice must not be shown, since telling the
+    user to remove the YAML config would prevent this stop's retry.
+    """
     mock_delijn_client.get_stop.side_effect = DeLijnNotFoundError
     unknown_stop = "999999"
 
@@ -207,11 +211,11 @@ async def test_yaml_import_failure_creates_issue(
 
     assert not hass.config_entries.async_entries(DOMAIN)
     issue = issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_yaml_import_issue_{unknown_stop}_invalid_stop"
+        DOMAIN, f"deprecated_yaml_import_issue_{unknown_stop}"
     )
     assert issue
     assert issue.translation_key == "deprecated_yaml_import_issue_invalid_stop"
-    assert issue_registry.async_get_issue(
+    assert not issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, "deprecated_yaml_delijn"
     )
 
@@ -249,7 +253,91 @@ async def test_yaml_import_failure_translation_key_per_reason(
     await hass.async_block_till_done()
 
     issue = issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_yaml_import_issue_{unknown_stop}_{expected_reason}"
+        DOMAIN, f"deprecated_yaml_import_issue_{unknown_stop}"
     )
     assert issue
     assert issue.translation_key == f"deprecated_yaml_import_issue_{expected_reason}"
+
+
+async def test_yaml_import_retry_clears_issue(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a successful re-import clears a previously reported failure issue."""
+    issue_id = f"deprecated_yaml_import_issue_{STOP_NUMBER}"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml_import_issue_cannot_connect",
+        translation_placeholders={
+            "domain": DOMAIN,
+            "integration_title": "De Lijn",
+            "stop_id": STOP_NUMBER,
+        },
+    )
+
+    config = {
+        "sensor": {
+            "platform": DOMAIN,
+            CONF_API_KEY: API_KEY,
+            CONF_NEXT_DEPARTURE: [
+                {CONF_STOP_ID: STOP_NUMBER, CONF_NUMBER_OF_DEPARTURES: 3},
+            ],
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(DOMAIN, issue_id)
+
+
+async def test_yaml_import_partial_failure_no_generic_issue(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the generic deprecated-YAML issue is withheld when a stop fails.
+
+    A previously created generic notice must also be removed.
+    """
+    ir.async_create_issue(
+        hass,
+        HOMEASSISTANT_DOMAIN,
+        "deprecated_yaml_delijn",
+        is_fixable=False,
+        issue_domain=DOMAIN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="deprecated_yaml",
+        translation_placeholders={"domain": DOMAIN, "integration_title": "De Lijn"},
+    )
+    unknown_stop = "999999"
+    mock_delijn_client.get_stop.side_effect = [
+        mock_delijn_client.get_stop.return_value,
+        DeLijnNotFoundError,
+    ]
+
+    config = {
+        "sensor": {
+            "platform": DOMAIN,
+            CONF_API_KEY: API_KEY,
+            CONF_NEXT_DEPARTURE: [
+                {CONF_STOP_ID: STOP_NUMBER, CONF_NUMBER_OF_DEPARTURES: 3},
+                {CONF_STOP_ID: unknown_stop, CONF_NUMBER_OF_DEPARTURES: 3},
+            ],
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_yaml_import_issue_{unknown_stop}"
+    )
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_delijn"
+    )

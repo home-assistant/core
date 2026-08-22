@@ -72,11 +72,12 @@ async def test_user_flow_stop_number(
     assert result["description_placeholders"]["departures"] == (
         "4 → Wondelgem (05:07)\n4 → Wondelgem (05:20)"
     )
-    assert result["description_placeholders"]["links"] == (
-        "[Show location on a map]"
-        "(https://www.openstreetmap.org/?mlat=51.070365&mlon=3.700651"
-        "#map=19/51.070365/3.700651)\n"
-        "[View this stop on delijn.be](https://www.delijn.be/nl/haltes/200112/)"
+    assert result["description_placeholders"]["map_url"] == (
+        "https://www.openstreetmap.org/?mlat=51.070365&mlon=3.700651"
+        "#map=19/51.070365/3.700651"
+    )
+    assert result["description_placeholders"]["delijn_url"] == (
+        "https://www.delijn.be/nl/haltes/200112/"
     )
 
     result = await _select_menu_option(hass, result["flow_id"], "create_entry")
@@ -87,10 +88,10 @@ async def test_user_flow_stop_number(
     assert result["result"].unique_id == STOP_NUMBER
 
 
-async def test_confirm_links_without_coordinates(
+async def test_confirm_map_url_falls_back_without_coordinates(
     hass: HomeAssistant, mock_delijn_client: MagicMock
 ) -> None:
-    """Test the confirm links placeholder omits the map link without coordinates."""
+    """Test the map_url placeholder falls back to the delijn.be page."""
     mock_delijn_client.get_stop.return_value = Stop(
         entity_number="2", number=STOP_NUMBER, name="Brugsepoort (Begijnhoflaan)"
     )
@@ -105,8 +106,12 @@ async def test_confirm_links_without_coordinates(
         result["flow_id"], {CONF_STOP: STOP_NUMBER}
     )
 
-    assert result["description_placeholders"]["links"] == (
-        "[View this stop on delijn.be](https://www.delijn.be/nl/haltes/200112/)"
+    assert result["description_placeholders"]["delijn_url"] == (
+        "https://www.delijn.be/nl/haltes/200112/"
+    )
+    assert (
+        result["description_placeholders"]["map_url"]
+        == result["description_placeholders"]["delijn_url"]
     )
 
 
@@ -164,6 +169,41 @@ async def test_confirm_back_to_pick(
             label="Brugsepoort (Begijnhoflaan), Gent (200112)",
         )
     ]
+
+
+async def test_stale_search_results_cleared_on_new_query(
+    hass: HomeAssistant, mock_delijn_client: MagicMock
+) -> None:
+    """Test a direct number entry after a search clears the prior results.
+
+    Otherwise the confirm menu would keep offering "Back to search results"
+    for a search that no longer applies.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: API_KEY}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: "Brugsepoort"}
+    )
+    assert result["step_id"] == "pick"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: STOP_NUMBER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert "pick" in result["menu_options"]
+
+    result = await _select_menu_option(hass, result["flow_id"], "stop")
+    assert result["step_id"] == "stop"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_STOP: STOP_NUMBER}
+    )
+    assert result["type"] is FlowResultType.MENU
+    assert result["menu_options"] == ["create_entry", "stop"]
 
 
 async def test_confirm_no_upcoming_departures(
@@ -674,7 +714,7 @@ async def test_import_already_configured(
     mock_delijn_client: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test importing a stop that is already configured aborts."""
+    """Test importing a stop that is already configured aborts without an API call."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -689,6 +729,7 @@ async def test_import_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    mock_delijn_client.get_stop.assert_not_called()
 
 
 @pytest.mark.parametrize(

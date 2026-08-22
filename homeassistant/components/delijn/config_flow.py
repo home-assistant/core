@@ -71,19 +71,24 @@ def _stop_label(stop: Stop) -> str:
     return label
 
 
-def _stop_links(stop: Stop) -> str:
-    """Return markdown links that help verify a stop, for the confirm step."""
-    links = [
-        f"[View this stop on delijn.be](https://www.delijn.be/nl/haltes/{stop.number}/)"
-    ]
+def _stop_delijn_url(stop: Stop) -> str:
+    """Return the delijn.be page URL for a stop."""
+    return f"https://www.delijn.be/nl/haltes/{stop.number}/"
+
+
+def _stop_map_url(stop: Stop) -> str:
+    """Return an OpenStreetMap URL for a stop.
+
+    Falls back to the delijn.be page when coordinates are unknown; every
+    real Stop has coordinates, so this is defensive only.
+    """
     if stop.latitude is not None and stop.longitude is not None:
-        links.insert(
-            0,
-            "[Show location on a map]"
-            f"(https://www.openstreetmap.org/?mlat={stop.latitude}&mlon={stop.longitude}"
-            f"#map=19/{stop.latitude}/{stop.longitude})",
+        return (
+            "https://www.openstreetmap.org/?mlat="
+            f"{stop.latitude}&mlon={stop.longitude}"
+            f"#map=19/{stop.latitude}/{stop.longitude}"
         )
-    return "\n".join(links)
+    return _stop_delijn_url(stop)
 
 
 class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -163,7 +168,8 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
                 "municipality": f", {stop.municipality}" if stop.municipality else "",
                 "number": stop.number,
                 "departures": await self._async_departure_preview(stop),
-                "links": _stop_links(stop),
+                "delijn_url": _stop_delijn_url(stop),
+                "map_url": _stop_map_url(stop),
             },
         )
 
@@ -203,6 +209,7 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
+            self._search_results = []
             query = (user_input.get(CONF_STOP) or "").strip()
             client = DeLijnClient(self._api_key, async_get_clientsession(self.hass))
 
@@ -383,6 +390,13 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle import of a stop from the legacy YAML sensor platform."""
         api_key = import_data[CONF_API_KEY]
         stop_id = import_data[CONF_STOP_ID]
+
+        # Check for a duplicate before calling the API, so an already-imported
+        # stop doesn't hit the API (and possibly abort with cannot_connect)
+        # on every restart while the YAML configuration is still present.
+        await self.async_set_unique_id(stop_id)
+        self._abort_if_unique_id_configured()
+
         client = DeLijnClient(api_key, async_get_clientsession(self.hass))
 
         try:

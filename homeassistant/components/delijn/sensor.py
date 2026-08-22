@@ -58,8 +58,10 @@ async def async_setup_platform(
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
     """Import the legacy YAML configuration into config entries."""
+    any_failure = False
     for departure in config[CONF_NEXT_DEPARTURE]:
         stop_id = departure[CONF_STOP_ID]
+        issue_id = f"deprecated_yaml_import_issue_{stop_id}"
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": SOURCE_IMPORT},
@@ -74,10 +76,11 @@ async def async_setup_platform(
             result.get("type") is FlowResultType.ABORT
             and reason != "already_configured"
         ):
+            any_failure = True
             ir.async_create_issue(
                 hass,
                 DOMAIN,
-                f"deprecated_yaml_import_issue_{stop_id}_{reason}",
+                issue_id,
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
@@ -88,17 +91,30 @@ async def async_setup_platform(
                     "stop_id": stop_id,
                 },
             )
+        else:
+            # A successful import, or one already configured in a prior
+            # restart, resolves any previously reported import failure.
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
 
-    ir.async_create_issue(
-        hass,
-        HOMEASSISTANT_DOMAIN,
-        f"deprecated_yaml_{DOMAIN}",
-        is_fixable=False,
-        issue_domain=DOMAIN,
-        severity=ir.IssueSeverity.WARNING,
-        translation_key="deprecated_yaml",
-        translation_placeholders={"domain": DOMAIN, "integration_title": "De Lijn"},
-    )
+    generic_issue_id = f"deprecated_yaml_{DOMAIN}"
+    if any_failure:
+        # Don't tell the user to remove the YAML config while a stop still
+        # needs it to retry; drop any stale notice from an earlier restart.
+        ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, generic_issue_id)
+    else:
+        ir.async_create_issue(
+            hass,
+            HOMEASSISTANT_DOMAIN,
+            generic_issue_id,
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "De Lijn",
+            },
+        )
 
 
 async def async_setup_entry(
