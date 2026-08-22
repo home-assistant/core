@@ -15,8 +15,8 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
+from .api import RedfishApi, RedfishAuthError, RedfishError
 from .const import CONF_BASE_URL, DEFAULT_VERIFY_SSL, DOMAIN
-from .coordinator import RedfishAuthError, RedfishClient, RedfishError
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -74,7 +74,7 @@ class RedfishConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(base_url)
                 self._abort_if_unique_id_configured()
                 try:
-                    client = RedfishClient(
+                    client = RedfishApi(
                         async_get_clientsession(
                             self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
                         ),
@@ -86,8 +86,9 @@ class RedfishConfigFlow(ConfigFlow, domain=DOMAIN):
                     errors["base"] = "invalid_auth"
                 else:
                     try:
+                        await client.async_login()
                         systems = await client.async_get_systems()
-                    except RedfishAuthError:
+                    except ValueError, RedfishAuthError:
                         errors["base"] = "invalid_auth"
                     except RedfishError:
                         errors["base"] = "cannot_connect"

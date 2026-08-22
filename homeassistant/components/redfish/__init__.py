@@ -11,6 +11,7 @@ PLATFORMS = [Platform.SWITCH]
 async def async_setup_entry(hass: HomeAssistant, entry: RedfishConfigEntry) -> bool:
     """Set up Redfish from a config entry."""
     coordinator = RedfishDataUpdateCoordinator(hass, entry)
+    await coordinator.client.async_login()
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
@@ -19,4 +20,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: RedfishConfigEntry) -> b
 
 async def async_unload_entry(hass: HomeAssistant, entry: RedfishConfigEntry) -> bool:
     """Unload a config entry."""
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if not await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        return False
+    await entry.runtime_data.client.async_logout()
+    return True

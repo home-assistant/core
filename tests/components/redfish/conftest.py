@@ -75,26 +75,34 @@ def redfish_data() -> RedfishData:
 @pytest.fixture
 def mock_redfish_api(
     redfish_data: RedfishData,
-) -> Generator[tuple[AsyncMock, AsyncMock]]:
+) -> Generator[tuple[AsyncMock, AsyncMock, AsyncMock, AsyncMock]]:
     """Mock Redfish network operations."""
     with (
         patch(
-            "homeassistant.components.redfish.coordinator.RedfishClient.async_discover",
+            "homeassistant.components.redfish.api.RedfishApi.async_discover",
             new=AsyncMock(return_value=redfish_data),
         ) as discover,
         patch(
-            "homeassistant.components.redfish.coordinator.RedfishClient.async_reset",
+            "homeassistant.components.redfish.api.RedfishApi.async_reset",
             new=AsyncMock(),
         ) as reset,
+        patch(
+            "homeassistant.components.redfish.api.RedfishApi.async_login",
+            new=AsyncMock(),
+        ) as login,
+        patch(
+            "homeassistant.components.redfish.api.RedfishApi.async_logout",
+            new=AsyncMock(),
+        ) as logout,
     ):
-        yield discover, reset
+        yield discover, reset, login, logout
 
 
 @pytest.fixture
 async def init_integration(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_redfish_api: tuple[AsyncMock, AsyncMock],
+    mock_redfish_api: tuple[AsyncMock, AsyncMock, AsyncMock, AsyncMock],
 ) -> MockConfigEntry:
     """Set up the Redfish integration."""
     mock_config_entry.add_to_hass(hass)

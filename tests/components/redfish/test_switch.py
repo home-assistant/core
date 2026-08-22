@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock
 
 import pytest
 
-from homeassistant.components.redfish.coordinator import RedfishError
+from homeassistant.components.redfish.api import RedfishError
 from homeassistant.components.redfish.models import RedfishData
 from homeassistant.components.switch import (
     DOMAIN as SWITCH_DOMAIN,
@@ -58,7 +58,7 @@ async def test_power_state_and_unique_ids(
 async def test_primary_power_actions(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_redfish_api: tuple[AsyncMock, AsyncMock],
+    mock_redfish_api: tuple[AsyncMock, AsyncMock, AsyncMock, AsyncMock],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test switches use only On and GracefulShutdown at the advertised target."""
@@ -95,7 +95,7 @@ async def test_primary_power_actions(
 async def test_unsupported_primary_power_action(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_redfish_api: tuple[AsyncMock, AsyncMock],
+    mock_redfish_api: tuple[AsyncMock, AsyncMock, AsyncMock, AsyncMock],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test unsupported power actions do not issue a reset request."""
@@ -117,7 +117,7 @@ async def test_unsupported_primary_power_action(
 async def test_power_action_error_is_translated(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    mock_redfish_api: tuple[AsyncMock, AsyncMock],
+    mock_redfish_api: tuple[AsyncMock, AsyncMock, AsyncMock, AsyncMock],
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test reset communication errors expose a translated message."""

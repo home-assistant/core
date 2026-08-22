@@ -9,13 +9,13 @@ from aiohttp import web
 from aiohttp.test_utils import TestServer
 import pytest
 
-from homeassistant.components.redfish.const import DOMAIN
-from homeassistant.components.redfish.coordinator import (
+from homeassistant.components.redfish.api import (
+    RedfishApi,
     RedfishAuthError,
-    RedfishClient,
-    RedfishDataUpdateCoordinator,
     RedfishError,
 )
+from homeassistant.components.redfish.const import DOMAIN
+from homeassistant.components.redfish.coordinator import RedfishDataUpdateCoordinator
 from homeassistant.components.redfish.models import RedfishSystem
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -111,7 +111,7 @@ async def test_discover_systems(
 ) -> None:
     """Test standard service-root ComputerSystem discovery."""
     server = await aiohttp_server(redfish_app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",
@@ -170,7 +170,7 @@ async def test_discover_paginated_systems(
 
     app.router.add_get("/{path:.*}", response)
     server = await aiohttp_server(app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",
@@ -211,7 +211,7 @@ async def test_discover_without_usable_system_collection(
 
     app.router.add_get("/{path:.*}", response)
     server = await aiohttp_server(app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",
@@ -242,7 +242,7 @@ async def test_reject_cyclic_system_collection_pagination(
 
     app.router.add_get("/{path:.*}", response)
     server = await aiohttp_server(app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",
@@ -257,7 +257,7 @@ async def test_reject_unbounded_unique_system_collection_pagination(
     hass: HomeAssistant,
 ) -> None:
     """Test unique pagination links cannot keep discovery running indefinitely."""
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         "https://bmc.example",
         "user",
@@ -279,7 +279,7 @@ async def test_reject_unbounded_unique_system_collection_pagination(
     with (
         patch.object(client, "_async_get", side_effect=get_resource),
         patch(
-            "homeassistant.components.redfish.coordinator.COLLECTION_TIMEOUT",
+            "homeassistant.components.redfish.api.COLLECTION_TIMEOUT",
             0.01,
         ),
         pytest.raises(RedfishError),
@@ -334,7 +334,7 @@ async def test_discover_reset_types_from_action_info(
 
     app.router.add_get("/{path:.*}", response)
     server = await aiohttp_server(app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",
@@ -353,7 +353,7 @@ async def test_post_reset_uses_advertised_target_and_type(
 ) -> None:
     """Test reset commands use the advertised action URL and payload."""
     server = await aiohttp_server(redfish_app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",
@@ -368,7 +368,7 @@ async def test_post_reset_uses_advertised_target_and_type(
             "POST",
             "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset",
             {"ResetType": "On"},
-            "Basic dXNlcjpwYXNzd29yZA==",
+            None,
         )
     ]
 
@@ -380,7 +380,7 @@ async def test_post_reset_accepts_same_origin_scheme_relative_target(
 ) -> None:
     """Test a same-origin scheme-relative action target is accepted."""
     server = await aiohttp_server(redfish_app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",
@@ -397,7 +397,7 @@ async def test_post_reset_accepts_same_origin_scheme_relative_target(
             "POST",
             "/redfish/v1/Systems/1/Actions/ComputerSystem.Reset",
             {"ResetType": "On"},
-            "Basic dXNlcjpwYXNzd29yZA==",
+            None,
         )
     ]
 
@@ -414,7 +414,7 @@ async def test_reset_authentication_error(
 
     app.router.add_post("/{path:.*}", response)
     server = await aiohttp_server(app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",
@@ -427,7 +427,7 @@ async def test_reset_authentication_error(
 
 async def test_reset_rejects_malformed_target(hass: HomeAssistant) -> None:
     """Test a malformed advertised reset target is rejected."""
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         "https://bmc.example",
         "user",
@@ -462,7 +462,7 @@ async def test_reject_cross_origin_advertised_target(
 
     malicious_app.router.add_post("/{path:.*}", capture_request)
     malicious_server = await aiohttp_server(malicious_app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",
@@ -498,7 +498,7 @@ async def test_reject_cross_origin_redirect(
 
     redirect_app.router.add_get("/{path:.*}", redirect_request)
     redirect_server = await aiohttp_server(redirect_app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(redirect_server.make_url("")),
         "user",
@@ -550,7 +550,7 @@ async def test_get_response_errors(
 
     app.router.add_get("/{path:.*}", response)
     server = await aiohttp_server(app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",
@@ -573,7 +573,7 @@ async def test_get_rejects_malformed_json(
 
     app.router.add_get("/{path:.*}", response)
     server = await aiohttp_server(app)
-    client = RedfishClient(
+    client = RedfishApi(
         async_get_clientsession(hass),
         str(server.make_url("")),
         "user",

@@ -5,8 +5,8 @@ from unittest.mock import AsyncMock, patch
 import pytest
 
 from homeassistant import config_entries
+from homeassistant.components.redfish.api import RedfishAuthError, RedfishError
 from homeassistant.components.redfish.const import CONF_BASE_URL, DOMAIN
-from homeassistant.components.redfish.coordinator import RedfishAuthError, RedfishError
 from homeassistant.components.redfish.models import RedfishSystem
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -65,7 +65,7 @@ async def test_user_flow(hass: HomeAssistant, verify_ssl: bool) -> None:
             "homeassistant.components.redfish.config_flow.async_get_clientsession"
         ) as get_clientsession,
         patch(
-            "homeassistant.components.redfish.config_flow.RedfishClient.async_get_systems",
+            "homeassistant.components.redfish.config_flow.RedfishApi.async_get_systems",
             return_value={"1": SYSTEM},
         ) as get_systems,
         patch(
@@ -109,7 +109,7 @@ async def test_user_flow_errors(
 ) -> None:
     """Test authentication, connection, and no-system errors."""
     with patch(
-        "homeassistant.components.redfish.config_flow.RedfishClient.async_get_systems",
+        "homeassistant.components.redfish.config_flow.RedfishApi.async_get_systems",
         side_effect=side_effect,
         return_value=systems,
     ):
@@ -142,7 +142,7 @@ async def test_user_flow_rejects_invalid_base_url(
 ) -> None:
     """Test setup rejects unsafe or non-base URLs before connecting."""
     with patch(
-        "homeassistant.components.redfish.config_flow.RedfishClient.async_get_systems"
+        "homeassistant.components.redfish.config_flow.RedfishApi.async_get_systems"
     ) as get_systems:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -171,7 +171,7 @@ async def test_user_flow_already_configured(hass: HomeAssistant, base_url: str) 
     ).add_to_hass(hass)
 
     with patch(
-        "homeassistant.components.redfish.config_flow.RedfishClient.async_get_systems",
+        "homeassistant.components.redfish.config_flow.RedfishApi.async_get_systems",
         return_value={"1": SYSTEM},
     ):
         result = await hass.config_entries.flow.async_init(
@@ -189,7 +189,7 @@ async def test_user_flow_rejects_invalid_basic_auth_username(
 ) -> None:
     """Test an invalid HTTP Basic username returns an authentication error."""
     with patch(
-        "homeassistant.components.redfish.config_flow.RedfishClient.async_get_systems"
+        "homeassistant.components.redfish.config_flow.RedfishApi.async_get_systems"
     ) as get_systems:
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -200,3 +200,21 @@ async def test_user_flow_rejects_invalid_basic_auth_username(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
     get_systems.assert_not_called()
+
+
+async def test_user_flow_rejects_invalid_client_configuration(
+    hass: HomeAssistant,
+) -> None:
+    """Test invalid client configuration returns an authentication error."""
+    with patch(
+        "homeassistant.components.redfish.config_flow.RedfishApi",
+        side_effect=ValueError,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "invalid_auth"}
