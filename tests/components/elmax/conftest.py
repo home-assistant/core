@@ -27,6 +27,9 @@ from . import (
 
 from tests.common import load_fixture
 
+# PyJWT warns about HS256 keys shorter than 32 bytes
+TOKEN_SIGNING_KEY = "elmax-test-token-signing-key-0123"
+
 MOCK_DIRECT_BASE_URI = (
     f"{'https' if MOCK_DIRECT_SSL else 'http'}://{MOCK_DIRECT_HOST}:{MOCK_DIRECT_PORT}"
 )
@@ -82,7 +85,7 @@ def httpx_mock_direct_fixture(base_uri: str) -> Generator[respx.MockRouter]:
         expiration = datetime.now() + timedelta(hours=1)  # pylint: disable=home-assistant-enforce-naive-now
         decoded_jwt["payload"]["exp"] = int(expiration.timestamp())
         jws_string = jwt.encode(
-            payload=decoded_jwt["payload"], algorithm="HS256", key="test"
+            payload=decoded_jwt["payload"], algorithm="HS256", key=TOKEN_SIGNING_KEY
         )
         login_json["token"] = f"JWT {jws_string}"
         login_route.return_value = Response(200, json=login_json)
