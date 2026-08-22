@@ -5,10 +5,10 @@
         "default": "mdi:alert-box"
       },
       "filter_life": {
-        "default": "mdi:toilet"
+        "default": "mdi:air-filter"
       },
       "filter_life_level": {
-        "default": "mdi:toilet"
+        "default": "mdi:air-filter"
       },
       "hcho": {
         "default": "mdi:molecule"
