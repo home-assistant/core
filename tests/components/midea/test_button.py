@@ -22,23 +22,16 @@ from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
 
-E1_MODES = {
-    0x00: "Neutral Gear",
-    0x01: "Auto Wash",
-    0x02: "Strong Wash",
-}
-
 
 def _e1_device(*, model: str = "7600024L") -> DummyDevice:
     device = DummyDevice(
         DeviceType.E1,
         attributes={
             E1Attributes.power: True,
-            E1Attributes.mode: "Auto Wash",
+            E1Attributes.mode: "auto_wash",
         },
     )
     device.model = model
-    device.modes = E1_MODES
     return device
 
 
@@ -86,8 +79,8 @@ async def test_button_press_starts_dishwasher(
 @pytest.mark.parametrize(
     ("power", "mode"),
     [
-        pytest.param(False, "Auto Wash", id="power_off"),
-        pytest.param(True, "Neutral Gear", id="neutral_gear"),
+        pytest.param(False, "auto_wash", id="power_off"),
+        pytest.param(True, "none", id="none"),
         pytest.param(True, None, id="no_mode_selected"),
     ],
 )

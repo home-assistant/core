@@ -5,7 +5,7 @@ from dataclasses import dataclass
 from typing import cast, override
 
 from midealocal.const import DeviceType
-from midealocal.devices import MideaDevice
+from midealocal.device import MideaDevice
 from midealocal.devices.e1 import MideaE1Device
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -22,7 +22,7 @@ class MideaButtonEntityDescription(ButtonEntityDescription):
     """Description for a Midea button entity."""
 
     models: list[DeviceType]
-    device_models: list[str]
+    supported_models: list[str]
     press_fn: Callable[[MideaDevice], None]
     available_fn: Callable[[MideaDevice], bool]
 
@@ -34,11 +34,10 @@ def _e1_button_press(device: MideaDevice) -> None:
 
 def _e1_button_available(device: MideaDevice) -> bool:
     """Return whether the start button is available for an E1 dishwasher."""
-    e1_device = cast(MideaE1Device, device)
-    mode = e1_device.get_attribute("mode")
-    # Mode code 0 ("Neutral Gear") means no wash program is selected, so
-    # pressing start would have nothing to run.
-    return mode is not None and mode != e1_device.modes.get(0)
+    if not device.get_attribute("power"):
+        return False
+    mode = device.get_attribute("mode")
+    return mode is not None and mode != "none"
 
 
 BUTTONS: list[MideaButtonEntityDescription] = [
@@ -46,7 +45,7 @@ BUTTONS: list[MideaButtonEntityDescription] = [
         key="start",
         translation_key="start",
         models=[DeviceType.E1],
-        device_models=["7600024L"],
+        supported_models=["7600024L"],
         press_fn=_e1_button_press,
         available_fn=_e1_button_available,
     ),
@@ -65,25 +64,20 @@ async def async_setup_entry(
         MideaButton(device, description)
         for description in BUTTONS
         if device.device_type in description.models
-        and device.model in description.device_models
+        and device.model in description.supported_models
     )
 
 
 class MideaButton(MideaEntity, ButtonEntity):
     """Represent a Midea button."""
 
-    _device: MideaDevice
     entity_description: MideaButtonEntityDescription
 
     @property
     @override
     def available(self) -> bool:
         """Return whether the device is on and the selected button function is available."""
-        return (
-            super().available
-            and bool(self._device.get_attribute("power"))
-            and self.entity_description.available_fn(self._device)
-        )
+        return super().available and self.entity_description.available_fn(self._device)
 
     @override
     def press(self) -> None:
