@@ -1,5 +1,6 @@
 """Test the BraviaTV coordinator."""
 
+from datetime import UTC, datetime
 from unittest.mock import AsyncMock
 
 from freezegun import freeze_time
@@ -9,7 +10,6 @@ from homeassistant.components.braviatv.const import CONF_USE_PSK, DOMAIN
 from homeassistant.components.braviatv.coordinator import BraviaTVCoordinator
 from homeassistant.const import CONF_HOST, CONF_MAC, CONF_PIN
 from homeassistant.core import HomeAssistant
-from homeassistant.util import dt as dt_util
 
 from tests.common import MockConfigEntry
 
@@ -17,8 +17,8 @@ from tests.common import MockConfigEntry
 @pytest.mark.parametrize(
     ("start_datetime", "expected_position"),
     [
-        ("2024-01-01T12:00:00", 3600),  # naive, treated as local time
-        ("2024-01-01T12:00:00+02:00", 7200),  # aware
+        ("2026-08-22T12:00:00", 7200),  # naive, treated as local time (CEST UTC+2)
+        ("2026-08-22T12:00:00+02:00", 7200),  # aware
     ],
 )
 async def test_async_update_playing(
@@ -41,8 +41,10 @@ async def test_async_update_playing(
     client.get_playing_info.return_value = {"startDateTime": start_datetime}
     coordinator = BraviaTVCoordinator(hass, config_entry, client)
 
-    with freeze_time("2024-01-01 12:00:00+00:00"):
+    with freeze_time("2026-08-22 12:00:00+00:00"):
         await coordinator.async_update_playing()
 
         assert coordinator.media_position == expected_position
-        assert coordinator.media_position_updated_at == dt_util.utcnow()
+        assert coordinator.media_position_updated_at == datetime(
+            2026, 8, 22, 12, 0, 0, tzinfo=UTC
+        )
