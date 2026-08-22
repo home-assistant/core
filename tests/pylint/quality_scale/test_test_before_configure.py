@@ -7,7 +7,6 @@ import astroid
 from astroid import nodes
 from pylint.testutils import MessageTest, UnittestLinter
 from pylint_home_assistant.checkers.quality_scale.test_before_configure import (
-    # Aliased so pytest does not try to collect it as a test class
     TestBeforeConfigureChecker as BeforeConfigureChecker,
 )
 from pylint_home_assistant.helpers.integration import clear_caches
