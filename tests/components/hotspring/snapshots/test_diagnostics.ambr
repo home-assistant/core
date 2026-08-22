@@ -25,7 +25,10 @@
         'power_frequency': '60',
         'pressure_switch_status': '0',
         'small_loads_power': '0',
-        'spa_failure_state': 'Spa_Ok',
+        'spa_failure_state': dict({
+          '__type': "<enum 'SpaFailureState'>",
+          'repr': "<SpaFailureState.OK: 'Spa_Ok'>",
+        }),
       }),
       'energy_savings': list([
         dict({
@@ -49,14 +52,23 @@
         'heater_current': 5.0,
         'heater_lock': False,
         'heater_on_seconds': 3600,
-        'heating_mode': 'heatSaver',
+        'heating_mode': dict({
+          '__type': "<enum 'HeatingMode'>",
+          'repr': "<HeatingMode.HEAT_SAVER: 'heatSaver'>",
+        }),
         'heatpump_installed': False,
         'is_on': True,
         'set_temperature': 104.0,
-        'temperature_unit': 'DegF',
+        'temperature_unit': dict({
+          '__type': "<enum 'TemperatureUnit'>",
+          'repr': "<TemperatureUnit.FAHRENHEIT: 'DegF'>",
+        }),
       }),
       'info': dict({
-        'brand': 'HotSpring',
+        'brand': dict({
+          '__type': "<enum 'SpaBrand'>",
+          'repr': "<SpaBrand.HOTSPRING: 'HotSpring'>",
+        }),
         'brand_id': '1',
         'brand_name': 'Hot Spring',
         'collection': 'Highlife',
@@ -73,28 +85,43 @@
           'is_enabled': True,
           'jet_id': 1,
           'on_seconds': 0,
-          'speed': 'off',
+          'speed': dict({
+            '__type': "<enum 'JetSpeed'>",
+            'repr': "<JetSpeed.OFF: 'off'>",
+          }),
         }),
         dict({
           'is_enabled': True,
           'jet_id': 2,
           'on_seconds': 0,
-          'speed': 'off',
+          'speed': dict({
+            '__type': "<enum 'JetSpeed'>",
+            'repr': "<JetSpeed.OFF: 'off'>",
+          }),
         }),
       ]),
       'light_zones': list([
         dict({
-          'color': 'WHEEL_OFF',
+          'color': dict({
+            '__type': "<enum 'LightColor'>",
+            'repr': "<LightColor.OFF: 'WHEEL_OFF'>",
+          }),
           'intensity': 0,
           'is_enabled': True,
           'is_on': False,
-          'light_wheel': 'off',
+          'light_wheel': dict({
+            '__type': "<enum 'LightWheelMode'>",
+            'repr': "<LightWheelMode.OFF: 'off'>",
+          }),
           'loop_speed': 0,
           'zone_id': 1,
         }),
       ]),
       'logo_light': dict({
-        'brightness': 'brightness_level_1',
+        'brightness': dict({
+          '__type': "<enum 'BrightnessLevel'>",
+          'repr': "<BrightnessLevel.LEVEL_1: 'brightness_level_1'>",
+        }),
       }),
       'spa_lock': dict({
         'is_locked': False,
