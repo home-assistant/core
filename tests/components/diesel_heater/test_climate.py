@@ -89,12 +89,12 @@ class TestVevorHeaterClimate:
         assert climate.target_temperature == 22
 
     def test_unique_id(self):
-        """Test unique_id format."""
+        """Test unique_id is the coordinator address (registry namespaces per platform)."""
         coordinator = create_mock_coordinator()
         config_entry = create_mock_config_entry()
         climate = VevorHeaterClimate(coordinator, config_entry)
 
-        assert "_climate" in climate.unique_id
+        assert climate.unique_id == coordinator.address
 
 
 class TestClimateHvacMode:
