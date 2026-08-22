@@ -2,9 +2,10 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import override
+from typing import cast, override
 
 from midealocal.const import DeviceType
+from midealocal.devices import MideaDevice
 from midealocal.devices.e1 import MideaE1Device
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -22,8 +23,15 @@ class MideaButtonEntityDescription(ButtonEntityDescription):
 
     models: list[DeviceType]
     device_models: list[str]
-    press_fn: Callable[[MideaE1Device], None]
-    available_fn: Callable[[MideaE1Device], bool]
+    press_action: str
+    available_fn: Callable[[MideaDevice], bool]
+
+
+def _e1_button_available(device: MideaDevice) -> bool:
+    """Return whether the start button is available for an E1 dishwasher."""
+    e1_device = cast(MideaE1Device, device)
+    mode = e1_device.get_attribute("mode")
+    return mode is not None and mode != e1_device.modes.get(0)
 
 
 BUTTONS: list[MideaButtonEntityDescription] = [
@@ -32,13 +40,10 @@ BUTTONS: list[MideaButtonEntityDescription] = [
         translation_key="start",
         models=[DeviceType.E1],
         device_models=["7600024L"],
-        press_fn=lambda device: device.start_work(),
+        press_action="start_work",
         # Mode code 0 ("Neutral Gear") means no wash program is selected, so
         # pressing start would have nothing to run.
-        available_fn=lambda device: (
-            (mode := device.get_attribute("mode")) is not None
-            and mode != device.modes.get(0)
-        ),
+        available_fn=_e1_button_available,
     ),
 ]
 
@@ -62,7 +67,7 @@ async def async_setup_entry(
 class MideaButton(MideaEntity, ButtonEntity):
     """Represent a Midea button."""
 
-    _device: MideaE1Device
+    _device: MideaDevice
     entity_description: MideaButtonEntityDescription
 
     @property
@@ -78,5 +83,6 @@ class MideaButton(MideaEntity, ButtonEntity):
     @override
     def press(self) -> None:
         """Press the button."""
+        method = getattr(self._device, self.entity_description.press_action)
         with midea_api_call():
-            self.entity_description.press_fn(self._device)
+            method()
