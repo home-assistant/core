@@ -118,6 +118,9 @@
               "reading": "Reading"
             }
           }
+        }
+      }
+    },
     "select": {
       "detect_mode": {
         "name": "Detect mode",
