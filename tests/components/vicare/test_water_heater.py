@@ -408,6 +408,60 @@ async def test_set_circulation_schedule_service_requires_every_weekday(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    ("start_time", "end_time"),
+    [
+        pytest.param("22:00", "06:00", id="end_before_start"),
+        pytest.param("07:00", "07:00", id="end_equals_start"),
+    ],
+)
+async def test_set_circulation_schedule_service_non_increasing_range(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    start_time: str,
+    end_time: str,
+) -> None:
+    """Test set_circulation_schedule rejects a non-increasing time range."""
+    with (
+        patch(
+            "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
+        ),
+        patch(
+            f"{MODULE}._setup_vicare_api",
+            return_value=MockPyViCare(_FIXTURES).as_vicare_data(),
+        ),
+        patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    with (
+        patch.object(
+            _get_water_heater_entity(hass, ENTITY_WATER_HEATER)._api,
+            "setDomesticHotWaterCirculationSchedule",
+        ) as mock_set,
+        pytest.raises(vol.Invalid),
+    ):
+        await hass.services.async_call(
+            "vicare",
+            SERVICE_SET_CIRCULATION_SCHEDULE,
+            {
+                ATTR_ENTITY_ID: ENTITY_WATER_HEATER,
+                **_EMPTY_CIRCULATION_SCHEDULE_DAYS,
+                "monday": [
+                    {
+                        "start_time": start_time,
+                        "end_time": end_time,
+                        "mode": "on",
+                        "position": 0,
+                    }
+                ],
+            },
+            blocking=True,
+        )
+    mock_set.assert_not_called()
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_set_circulation_schedule_service_midnight_end(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

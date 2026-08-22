@@ -76,6 +76,17 @@ def _validate_slot_resolution(slot: dict[str, Any]) -> dict[str, Any]:
     return slot
 
 
+def _validate_slot_time_range(slot: dict[str, Any]) -> dict[str, Any]:
+    """Validate that a slot's end time is after its start time."""
+    start, end = _slot_minutes(slot)
+    if end <= start:
+        raise vol.Invalid(
+            "end_time must be after start_time: "
+            f"{slot['start_time']}-{slot['end_time']}"
+        )
+    return slot
+
+
 CIRCULATION_SCHEDULE_SLOT_SCHEMA = vol.All(
     vol.Schema(
         {
@@ -86,6 +97,7 @@ CIRCULATION_SCHEDULE_SLOT_SCHEMA = vol.All(
         }
     ),
     _validate_slot_resolution,
+    _validate_slot_time_range,
 )
 
 CIRCULATION_SCHEDULE_SCHEMA: VolDictType = {
