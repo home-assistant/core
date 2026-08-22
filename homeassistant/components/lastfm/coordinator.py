@@ -50,6 +50,7 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             update_interval=timedelta(seconds=30),
         )
         self._client = LastFMNetwork(api_key=config_entry.options[CONF_API_KEY])
+        self._warned_hidden_users: set[str] = set()
 
     @override
     async def _async_update_data(self) -> dict[str, LastFMUserData]:
@@ -84,13 +85,16 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
                 if self.last_update_success:
                     LOGGER.error("LastFM update for %s failed: %r", username, exc)
                 return None
-            if self.last_update_success:
+            if username not in self._warned_hidden_users:
+                self._warned_hidden_users.add(username)
                 LOGGER.warning(
                     "LastFM user %s has hidden their recent listening information "
                     "(https://www.last.fm/settings/privacy); now playing and last "
                     "played track are unavailable",
                     username,
                 )
+        else:
+            self._warned_hidden_users.discard(username)
         top_track = None
         if len(top_tracks) > 0:
             top_track = format_track(top_tracks[0].item)

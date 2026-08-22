@@ -77,6 +77,12 @@ def validate_lastfm_users(
     return valid_users, errors
 
 
+def get_user_friends(api_key: str, username: str) -> list[User]:
+    """Get the friends of a Last.fm user."""
+    user, _ = get_lastfm_user(api_key, username)
+    return user.get_friends()
+
+
 class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
     """Config flow handler for LastFm."""
 
@@ -99,8 +105,8 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self.data = user_input.copy()
-            _, errors = get_lastfm_user(
-                self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
+            _, errors = await self.hass.async_add_executor_job(
+                get_lastfm_user, self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
             if not errors:
                 return await self.async_step_friends()
@@ -117,8 +123,10 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
         """Form to select other users and friends."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            users, errors = validate_lastfm_users(
-                self.data[CONF_API_KEY], user_input[CONF_USERS]
+            users, errors = await self.hass.async_add_executor_job(
+                validate_lastfm_users,
+                self.data[CONF_API_KEY],
+                user_input[CONF_USERS],
             )
             user_input[CONF_USERS] = users
             if not errors:
@@ -135,11 +143,8 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
                     },
                 )
         try:
-            main_user, _ = get_lastfm_user(
-                self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
-            )
             friends_response = await self.hass.async_add_executor_job(
-                main_user.get_friends
+                get_user_friends, self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
             )
             friends = [
                 SelectOptionDict(value=friend.name, label=friend.get_name(True))
@@ -178,8 +183,10 @@ class LastFmOptionsFlowHandler(OptionsFlowWithReload):
         errors: dict[str, str] = {}
         options = self.config_entry.options
         if user_input is not None:
-            users, errors = validate_lastfm_users(
-                options[CONF_API_KEY], user_input[CONF_USERS]
+            users, errors = await self.hass.async_add_executor_job(
+                validate_lastfm_users,
+                options[CONF_API_KEY],
+                user_input[CONF_USERS],
             )
             user_input[CONF_USERS] = users
             if not errors:
@@ -192,12 +199,10 @@ class LastFmOptionsFlowHandler(OptionsFlowWithReload):
                 )
         if options[CONF_MAIN_USER]:
             try:
-                main_user, _ = get_lastfm_user(
+                friends_response = await self.hass.async_add_executor_job(
+                    get_user_friends,
                     options[CONF_API_KEY],
                     options[CONF_MAIN_USER],
-                )
-                friends_response = await self.hass.async_add_executor_job(
-                    main_user.get_friends
                 )
                 friends = [
                     SelectOptionDict(value=friend.name, label=friend.get_name(True))
