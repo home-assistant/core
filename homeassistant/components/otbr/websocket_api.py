@@ -77,6 +77,14 @@ async def websocket_info(
             connection.send_error(msg["id"], "otbr_info_failed", str(exc))
             return
 
+        if data.ephemeral_key_supported is None:
+            try:
+                data.ephemeral_key_supported = await data.get_ephemeral_key_supported(
+                    hass
+                )
+            except HomeAssistantError:
+                _LOGGER.debug("Could not probe %s for ephemeral key support", data.url)
+
         # The border agent ID is checked when the OTBR config entry is setup,
         # we can assert it's not None
         assert border_agent_id is not None
@@ -92,7 +100,7 @@ async def websocket_info(
             "channel": dataset.channel if dataset else None,
             "extended_address": extended_address,
             "extended_pan_id": extended_pan_id,
-            "ephemeral_key_supported": data.ephemeral_key_supported,
+            "ephemeral_key_supported": bool(data.ephemeral_key_supported),
             "url": data.url,
         }
 

@@ -49,9 +49,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
         border_agent_id = await otbrdata.get_border_agent_id()
         dataset_tlvs = await otbrdata.get_active_dataset_tlvs()
         extended_address = await otbrdata.get_extended_address()
-        otbrdata.ephemeral_key_supported = await otbrdata.get_ephemeral_key_supported(
-            hass
-        )
     except GetBorderAgentIdNotSupported:
         ir.async_create_issue(
             hass,
@@ -69,6 +66,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
         TimeoutError,
     ) as err:
         raise ConfigEntryNotReady("Unable to connect") from err
+    try:
+        otbrdata.ephemeral_key_supported = await otbrdata.get_ephemeral_key_supported(
+            hass
+        )
+    except HomeAssistantError:
+        # Optional feature, it is probed again when the Thread panel asks for it
+        _LOGGER.debug("Could not probe %s for ephemeral key support", otbrdata.url)
     await update_unique_id(hass, entry, border_agent_id)
     if dataset_tlvs:
         await update_issues(hass, otbrdata, dataset_tlvs)
@@ -91,6 +95,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool
 
 async def async_unload_entry(hass: HomeAssistant, entry: OTBRConfigEntry) -> bool:
     """Unload a config entry."""
+    otbrdata = entry.runtime_data
+    # The key outlives this entry's memory of it, so revoke it rather than
+    # leaving the credential active until it expires
+    if otbrdata.active_ephemeral_key is not None:
+        try:
+            await otbrdata.deactivate_ephemeral_key(hass)
+        except HomeAssistantError:
+            _LOGGER.warning(
+                "Could not deactivate the ephemeral key on %s", otbrdata.url
+            )
     return True
 
 

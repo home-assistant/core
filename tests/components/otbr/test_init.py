@@ -271,12 +271,15 @@ async def test_config_entry_not_ready(
 
 @pytest.mark.parametrize("error", [TimeoutError, aiohttp.ClientError])
 @pytest.mark.usefixtures(
-    "get_active_dataset_tlvs", "get_border_agent_id", "get_extended_address"
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+    "multiprotocol_addon_manager_mock",
 )
-async def test_config_entry_not_ready_ephemeral_key_probe(
+async def test_ephemeral_key_probe_connection_error(
     hass: HomeAssistant, aioclient_mock: AiohttpClientMocker, error: type[Exception]
 ) -> None:
-    """Test a connection error while probing ephemeral key support retries setup."""
+    """Test a connection error while probing ephemeral key support is not fatal."""
     aioclient_mock.clear_requests()
     aioclient_mock.get(re.compile(r".*/node/ba-epskc/state$"), exc=error)
 
@@ -288,8 +291,49 @@ async def test_config_entry_not_ready_ephemeral_key_probe(
         unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
     )
     config_entry.add_to_hass(hass)
-    assert not await hass.config_entries.async_setup(config_entry.entry_id)
-    assert config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.LOADED
+    # Support stays unknown, to be probed again later
+    assert config_entry.runtime_data.ephemeral_key_supported is None
+
+
+@pytest.mark.parametrize(
+    ("delete_status", "deleted"),
+    [
+        pytest.param(HTTPStatus.OK, True, id="deleted"),
+        pytest.param(HTTPStatus.INTERNAL_SERVER_ERROR, False, id="delete_fails"),
+    ],
+)
+@pytest.mark.usefixtures(
+    "get_active_dataset_tlvs",
+    "get_border_agent_id",
+    "get_extended_address",
+    "multiprotocol_addon_manager_mock",
+)
+async def test_unload_entry_revokes_ephemeral_key(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    delete_status: HTTPStatus,
+    deleted: bool,
+) -> None:
+    """Test an active ephemeral key is revoked when the entry unloads."""
+    aioclient_mock.delete(f"{BASE_URL}/node/ba-epskc/key", status=delete_status)
+    config_entry = MockConfigEntry(
+        data=CONFIG_ENTRY_DATA_MULTIPAN,
+        domain=otbr.DOMAIN,
+        options={},
+        title="My OTBR",
+        unique_id=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    otbrdata = config_entry.runtime_data
+    otbrdata.active_ephemeral_key = "700855744"
+
+    assert await hass.config_entries.async_unload(config_entry.entry_id)
+    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    assert aioclient_mock.mock_calls[-1][0] == "DELETE"
+    assert (otbrdata.active_ephemeral_key is None) is deleted
 
 
 @pytest.mark.parametrize(

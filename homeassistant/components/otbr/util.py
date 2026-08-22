@@ -105,7 +105,8 @@ class OTBRData:
     url: str
     api: python_otbr_api.OTBR
     entry_id: str
-    ephemeral_key_supported: bool = False
+    # None until the router has been probed successfully
+    ephemeral_key_supported: bool | None = None
     active_ephemeral_key: str | None = None
     active_ephemeral_key_expires: datetime | None = None
     ephemeral_key_lock: asyncio.Lock = dataclasses.field(

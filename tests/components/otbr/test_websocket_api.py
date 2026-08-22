@@ -97,6 +97,57 @@ async def test_get_info(
     }
 
 
+@pytest.mark.parametrize(
+    ("ephemeral_key_probe_status", "ephemeral_key_supported"),
+    [
+        pytest.param(HTTPStatus.OK, True, id="supported"),
+        pytest.param(HTTPStatus.NOT_FOUND, False, id="not_supported"),
+    ],
+)
+async def test_get_info_probes_ephemeral_key_support(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    otbr_config_entry_multipan: str,
+    websocket_client: MockHAClientWebSocket,
+    ephemeral_key_supported: bool,
+) -> None:
+    """Test otbr/info probes for ephemeral key support while it is unknown."""
+    entry = hass.config_entries.async_get_entry(otbr_config_entry_multipan)
+    assert entry is not None
+    entry.runtime_data.ephemeral_key_supported = None
+    probes = len([call for call in aioclient_mock.mock_calls if call[0] == "GET"])
+
+    with (
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset",
+            return_value=python_otbr_api.ActiveDataSet(channel=16),
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_active_dataset_tlvs", return_value=DATASET_CH16
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_border_agent_id",
+            return_value=TEST_BORDER_AGENT_ID,
+        ),
+        patch(
+            "python_otbr_api.OTBR.get_extended_address",
+            return_value=TEST_BORDER_AGENT_EXTENDED_ADDRESS,
+        ),
+    ):
+        await websocket_client.send_json_auto_id({"type": "otbr/info"})
+        msg = await websocket_client.receive_json()
+        await websocket_client.send_json_auto_id({"type": "otbr/info"})
+        msg2 = await websocket_client.receive_json()
+
+    result = msg["result"][TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex()]
+    assert result["ephemeral_key_supported"] is ephemeral_key_supported
+    assert msg2["result"] == msg["result"]
+    # Probed once, then remembered
+    assert len([call for call in aioclient_mock.mock_calls if call[0] == "GET"]) == (
+        probes + 1
+    )
+
+
 async def test_get_info_no_entry(
     hass: HomeAssistant,
     aioclient_mock: AiohttpClientMocker,
