@@ -174,7 +174,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="current_energy_consumption",
@@ -183,7 +182,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="realtime_power",
@@ -192,7 +190,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="pmv",
@@ -208,7 +205,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="target_compressor_frequency",
@@ -217,7 +213,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfFrequency.HERTZ,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="compressor_current",
@@ -226,7 +221,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="compressor_voltage",
@@ -235,7 +229,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="indoor_coil_temperature",
@@ -244,7 +237,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="evaporator_temperature",
@@ -253,7 +245,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="condenser_temperature",
@@ -262,7 +253,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="outdoor_ambient_temperature",
@@ -271,7 +261,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="discharge_pipe_temperature",
@@ -280,7 +269,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="indoor_fan_speed",
@@ -288,7 +276,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="target_indoor_fan_speed",
@@ -296,7 +283,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=REVOLUTIONS_PER_MINUTE,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="compressor_power",
@@ -305,7 +291,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="tank_actual_temperature",
@@ -322,7 +307,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="temp_tw_in",
@@ -346,7 +330,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfPower.WATT,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="compressor_temperature",
@@ -355,7 +338,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="current_temperature",
@@ -541,7 +523,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
     ),
     MideaSensorEntityDescription(
         key="refrigerator_actual_temp",
