@@ -348,6 +348,7 @@ async def test_pipeline(
         ),
         patch.object(satellite, "tts_response_finished", tts_response_finished),
     ):
+        satellite._tones = Tones(0)
         satellite.connection_made(Mock())
 
         assert satellite.state == AssistSatelliteState.IDLE
@@ -399,6 +400,7 @@ async def test_stt_stream_timeout(
         "homeassistant.components.assist_satellite.entity.async_pipeline_from_audio_stream",
         new=async_pipeline_from_audio_stream,
     ):
+        satellite._tones = Tones(0)
         satellite._audio_chunk_timeout = 0.001
         transport = Mock(spec=["close"])
         satellite.connection_made(transport)
