@@ -14,6 +14,7 @@ async def test_unload_entry(hass: HomeAssistant) -> None:
     """Test unloading the aurora_abb_powerone entry."""
 
     with (
+        patch("homeassistant.components.aurora_abb_powerone.coordinator.sleep"),
         patch("aurorapy.client.AuroraSerialClient.connect", return_value=None),
         patch(
             "aurorapy.client.AuroraSerialClient.serial_number",
