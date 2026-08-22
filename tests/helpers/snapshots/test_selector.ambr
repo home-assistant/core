@@ -255,6 +255,7 @@
             }),
           }),
           'percentage': dict({
+            'default': 0,
             'selector': dict({
               'number': dict({
                 'max': 100.0,

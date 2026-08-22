@@ -1660,6 +1660,7 @@ class NumericThresholdSelector(Selector[NumericThresholdSelectorConfig]):
 class ObjectSelectorField(TypedDict, total=False):
     """Class to represent an object selector fields dict."""
 
+    default: Any
     label: str
     required: bool
     selector: Required[Selector | dict[str, Any]]
@@ -1686,6 +1687,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
             vol.Optional("fields"): {
                 str: {
                     vol.Required("selector"): vol.Any(Selector, validate_selector),
+                    vol.Optional("default"): cv.match_all,
                     vol.Optional("required"): bool,
                     vol.Optional("label"): str,
                 }
