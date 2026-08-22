@@ -1,12 +1,11 @@
 """Tests for the Hot Spring integration."""
 
+from typing import cast
 from unittest.mock import MagicMock
 
 from hotspring import HotSpringConnectionError, HotSpringError, Spa
 import pytest
 from syrupy.assertion import SnapshotAssertion
-
-from typing import cast
 
 from homeassistant.components.hotspring.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
