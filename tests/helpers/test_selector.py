@@ -1382,7 +1382,7 @@ def test_object_selector_schema(schema, valid_selections, invalid_selections) ->
 )
 def test_object_selector_field_default(default: object) -> None:
     """Test object selector field default."""
-    selector.validate_selector(
+validated = selector.validate_selector(
         {
             "object": {
                 "fields": {
@@ -1394,6 +1394,7 @@ def test_object_selector_field_default(default: object) -> None:
             }
         }
     )
+    assert validated["object"]["fields"]["field"]["default"] == default
 
 
 def test_object_selector_uses_selectors(snapshot: SnapshotAssertion) -> None:
