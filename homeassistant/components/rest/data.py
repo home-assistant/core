@@ -5,7 +5,7 @@ from typing import Any
 
 import aiohttp
 from aiohttp import hdrs
-from multidict import CIMultiDictProxy
+from multidict import CIMultiDict, CIMultiDictProxy
 import xmltodict
 
 from homeassistant.core import HomeAssistant
@@ -137,12 +137,12 @@ class RestData:
             "timeout": self._timeout,
         }
 
-        # Handle authentication. A configured Authorization header wins.
+        # Handle authentication. A configured Authorization header wins,
+        # whatever its casing, so setdefault runs on a CIMultiDict.
         if self._basic_auth is not None:
-            request_kwargs["headers"] = {
-                aiohttp.hdrs.AUTHORIZATION: self._basic_auth,
-                **(rendered_headers or {}),
-            }
+            headers = CIMultiDict(rendered_headers or {})
+            headers.setdefault(hdrs.AUTHORIZATION, self._basic_auth)
+            request_kwargs["headers"] = headers
         elif self._digest_auth is not None:
             request_kwargs["middlewares"] = (self._digest_auth,)
 
