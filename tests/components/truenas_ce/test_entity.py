@@ -577,7 +577,9 @@ def test_device_info_same_name_different_system_id_prevents_collision() -> None:
     assert entity_b.device_info["identifiers"] == {("truenas_ce", "system-bbb_tank")}
     assert entity_a.unique_id != entity_b.unique_id
     # Display name still collides -- that's cosmetic only, not an identity bug.
-    assert entity_a.device_info["name"] == entity_b.device_info["name"] == "TrueNAS tank"
+    assert (
+        entity_a.device_info["name"] == entity_b.device_info["name"] == "TrueNAS tank"
+    )
 
 
 def test_device_info_same_name_missing_system_id_falls_back_to_entry_id() -> None:
