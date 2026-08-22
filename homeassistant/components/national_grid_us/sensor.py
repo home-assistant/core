@@ -129,8 +129,5 @@ class NationalGridSensor(NationalGridEntity, SensorEntity):
     @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
-        meter_data = self.coordinator.data.meters.get(self._meter_key)
-        if meter_data is None:
-            return None
-
+        meter_data = self.coordinator.data.meters[self._meter_key]
         return self.entity_description.value_fn(meter_data)

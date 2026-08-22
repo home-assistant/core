@@ -26,15 +26,7 @@ class NationalGridEntity(CoordinatorEntity[NationalGridDataUpdateCoordinator]):
 
     def _build_device_info(self) -> DeviceInfo:
         """Build device info for this meter."""
-        meter_data = self.coordinator.data.meters.get(self._meter_key)
-
-        if meter_data is None:
-            return DeviceInfo(
-                identifiers={(DOMAIN, self._meter_key)},
-                name=f"Meter {self._meter_key}",
-                manufacturer="National Grid",
-            )
-
+        meter_data = self.coordinator.data.meters[self._meter_key]
         meter = meter_data.meter
         fuel_type = meter["fuelType"].upper()
         service_point = str(meter["servicePointNumber"])
