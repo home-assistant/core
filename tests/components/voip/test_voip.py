@@ -48,10 +48,6 @@ def satellite(
     satellite = async_get_satellite_entity(hass, voip.DOMAIN, voip_device.voip_id)
     assert isinstance(satellite, VoipAssistSatellite)
 
-    # Tones are up to 2s of audio, streamed in real time. Tests that assert on a
-    # tone enable the one they need.
-    satellite._tones = Tones(0)
-
     yield satellite
 
     if satellite.voip_device.is_active:
@@ -513,6 +509,7 @@ async def test_tts_timeout(
             await done.wait()
 
 
+@pytest.mark.usefixtures("silent_tones")
 async def test_tts_wrong_extension(
     hass: HomeAssistant,
     satellite: VoipAssistSatellite,
@@ -603,6 +600,7 @@ async def test_tts_wrong_extension(
             await done.wait()
 
 
+@pytest.mark.usefixtures("silent_tones")
 async def test_tts_wrong_wav_format(
     hass: HomeAssistant,
     satellite: VoipAssistSatellite,
@@ -693,6 +691,7 @@ async def test_tts_wrong_wav_format(
             await done.wait()
 
 
+@pytest.mark.usefixtures("silent_tones")
 async def test_empty_tts_output(
     hass: HomeAssistant,
     satellite: VoipAssistSatellite,

@@ -8,6 +8,7 @@ from voip_utils import CallInfo
 from voip_utils.sip import get_sip_endpoint
 
 from homeassistant.components.voip import DOMAIN
+from homeassistant.components.voip.assist_satellite import VoipAssistSatellite
 from homeassistant.components.voip.devices import VoIPDevice, VoIPDevices
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -44,6 +45,18 @@ def reduce_satellite_delays() -> Generator[None]:
             0.1,
         ),
     ):
+        yield
+
+
+@pytest.fixture
+def silent_tones() -> Generator[None]:
+    """Give every tone empty audio.
+
+    A real tone is up to two seconds streamed in real time, which outlasts the
+    shortened hangup window. The tone paths still run, so the processing tone
+    still gates _send_tts.
+    """
+    with patch.object(VoipAssistSatellite, "_load_pcm", return_value=b""):
         yield
 
 
