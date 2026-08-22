@@ -39,7 +39,6 @@ async def test_change_schedule_fails(
     assert "404" in placeholders["error"]
     assert data["step_id"] == "confirm"
 
-    # Finishing the flow reloads the entry, which needs the API mocked again
     with patch_doorbird_api_entry_points(doorbird_entry.api):
         data = await process_repair_fix_flow(client, flow_id)
         await hass.async_block_till_done()
