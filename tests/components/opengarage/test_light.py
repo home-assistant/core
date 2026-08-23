@@ -70,8 +70,8 @@ async def test_light_not_created_without_capability(
 @pytest.mark.parametrize(
     ("result", "message"),
     [
-        (2, "Device key is incorrect"),
-        (None, "Unable to connect or light control is unavailable"),
+        (2, "device key is incorrect"),
+        (None, "device is unavailable or does not support light control"),
         (3, "OpenGarage returned error code 3"),
     ],
 )

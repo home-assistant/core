@@ -1,6 +1,5 @@
 """Platform for OpenGarage opener lights."""
 
-import logging
 from typing import Any, cast, override
 
 from homeassistant.components.light import (
@@ -14,8 +13,6 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import OpenGarageConfigEntry, OpenGarageDataUpdateCoordinator
 from .entity import OpenGarageEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 LIGHT_DESCRIPTION = LightEntityDescription(key="light", translation_key="light")
 
@@ -83,15 +80,19 @@ class OpenGarageLight(OpenGarageEntity, LightEntity):
             return
 
         if result == 2:
-            message = "Device key is incorrect"
-        elif result is None:
-            message = "Unable to connect or light control is unavailable"
-        else:
-            message = f"OpenGarage returned error code {result}"
+            raise HomeAssistantError(
+                translation_domain="opengarage",
+                translation_key="light_control_invalid_auth",
+            )
 
-        _LOGGER.error("Unable to control %s: %s", self.name, message)
+        if result is None:
+            raise HomeAssistantError(
+                translation_domain="opengarage",
+                translation_key="light_control_unavailable",
+            )
+
         raise HomeAssistantError(
             translation_domain="opengarage",
             translation_key="light_control_failed",
-            translation_placeholders={"reason": message},
+            translation_placeholders={"result": str(result)},
         )
