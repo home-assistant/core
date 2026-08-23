@@ -2467,7 +2467,7 @@ pyotgw==2.2.3
 pyotp==2.9.0
 
 # homeassistant.components.overkiz
-pyoverkiz[nexity]==2.1.0
+pyoverkiz[nexity] @ git+https://github.com/iMicknl/python-overkiz-api@9b71d6eb2be2e1f48ba60be896013ad38c1419b5
 
 # homeassistant.components.palazzetti
 pypalazzetti==0.1.20
