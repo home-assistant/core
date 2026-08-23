@@ -20,7 +20,11 @@ from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.usb import SerialDevice, USBDevice
-from homeassistant.components.zwave_js.config_flow import TITLE, async_get_usb_ports
+from homeassistant.components.zwave_js.config_flow import (
+    TITLE,
+    SecurityKeys,
+    async_get_usb_ports,
+)
 from homeassistant.components.zwave_js.const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
@@ -1319,6 +1323,34 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert entry.unique_id == "3245146787"
 
 
+@pytest.mark.parametrize(
+    ("addon_config", "expected_s0"),
+    [
+        pytest.param({"network_key": "legacy"}, "legacy", id="legacy_only"),
+        pytest.param(
+            {"network_key": "legacy", "s0_legacy_key": "s0"}, "s0", id="s0_wins"
+        ),
+        pytest.param({"s0_legacy_key": "s0"}, "s0", id="s0_only"),
+        pytest.param({}, "", id="neither"),
+    ],
+)
+def test_migrate_legacy_network_key(
+    addon_config: dict[str, str], expected_s0: str
+) -> None:
+    """Test the legacy network key is migrated to the S0 legacy key."""
+    original = dict(addon_config)
+
+    migrated = SecurityKeys.migrate_network_key(addon_config)
+    assert "network_key" not in migrated
+    assert migrated.get("s0_legacy_key", "") == expected_s0
+
+    keys = SecurityKeys.from_config(addon_config)
+    assert keys.s0_legacy_key == expected_s0
+
+    # Neither call mutates the caller's dict.
+    assert addon_config == original
+
+
 @pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_esphome_discovery_title_placeholders(hass: HomeAssistant) -> None:
     """Test ESPHome discovery sets the name placeholder for the flow_title."""
@@ -1722,6 +1754,66 @@ async def test_esphome_discovery_no_home_id_configured_socket_no_migration(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_placeholder_then_home_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test a home ID discovery dedups against a pending placeholder prompt."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    # The same adapter now reports a home ID while its prompt is open.
+    home_id_info = ESPHomeServiceInfo(
+        name=ESPHOME_DISCOVERY_INFO_CLEAN.name,
+        zwave_home_id=1234,
+        ip_address=ESPHOME_DISCOVERY_INFO_CLEAN.ip_address,
+        port=ESPHOME_DISCOVERY_INFO_CLEAN.port,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=home_id_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_placeholder_ignored_then_home_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test a home ID discovery honors a placeholder-based ignore."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id="esphome_mock-name",
+    )
+    entry.add_to_hass(hass)
+
+    # The adapter that was ignored without a home ID now reports one.
+    home_id_info = ESPHomeServiceInfo(
+        name="mock-name",
+        zwave_home_id=1234,
+        ip_address="192.168.1.100",
+        port=6053,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=home_id_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
 async def test_esphome_discovery_same_socket_no_reload(
     hass: HomeAssistant,
@@ -1763,6 +1855,78 @@ async def test_esphome_discovery_same_socket_no_reload(
         "use_addon": True,
         "integration_created_addon": True,
     }
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.parametrize(
+    ("esphome_discovery_info", "ignored_unique_id"),
+    [
+        pytest.param(ESPHOME_DISCOVERY_INFO, "1234", id="home_id"),
+        pytest.param(
+            ESPHOME_DISCOVERY_INFO_CLEAN, "esphome_mock-name", id="no_home_id"
+        ),
+    ],
+)
+async def test_esphome_discovery_ignored(
+    hass: HomeAssistant,
+    esphome_discovery_info: ESPHomeServiceInfo,
+    ignored_unique_id: str,
+) -> None:
+    """Test ESPHome discovery aborts when the discovery was ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id=ignored_unique_id,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=esphome_discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_without_home_id_can_be_ignored(
+    hass: HomeAssistant,
+) -> None:
+    """Test a discovery without a home ID gets a unique id for ignoring."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    flows = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": config_entries.SOURCE_ESPHOME}
+    )
+    assert len(flows) == 1
+    assert flows[0]["context"]["unique_id"] == "esphome_mock-name"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": "esphome_mock-name", "title": "ZWA-2 proxy"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # The discovery prompt is gone and rediscovery aborts.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
@@ -2418,6 +2582,29 @@ async def test_usb_discovery_leaves_manual_entry_alone(
     # The add-on config now points at the discovered adapter, but the
     # manual entry stays untouched.
     assert entry.data == {"url": "ws://external-server:3000"}
+
+
+@pytest.mark.usefixtures("supervisor", "addon_info", "addon_store_info")
+async def test_usb_discovery_ignored(
+    hass: HomeAssistant,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test USB discovery aborts when the discovery was ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id="AAAA:AAAA_1234_test_zwave radio",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
@@ -4600,6 +4787,64 @@ async def test_reconfigure_addon_running_server_info_failure(
     assert set_addon_options.call_count == 0
     assert client.connect.call_count == 2
     assert client.disconnect.call_count == 1
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_reconfigure_preserves_omitted_security_keys(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+) -> None:
+    """Test a partial reconfigure keeps security keys not in the submission."""
+    addon_options.update({"device": "/test", "s0_legacy_key": "keep-me"})
+    entry = integration
+    hass.config_entries.async_update_entry(entry, unique_id="1234")
+    client.driver.controller.data["homeId"] = 1234
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    # The submission omits the security key fields and only changes the device.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"usb_path": "/new"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    # The existing S0 key is preserved, not wiped to an empty string.
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "device": "/new",
+                "s0_legacy_key": "keep-me",
+                "s2_access_control_key": "",
+                "s2_authenticated_key": "",
+                "s2_unauthenticated_key": "",
+                "lr_s2_access_control_key": "",
+                "lr_s2_authenticated_key": "",
+            }
+        ),
+    )
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data["s0_legacy_key"] == "keep-me"
 
 
 @pytest.mark.usefixtures("supervisor")
