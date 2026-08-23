@@ -1,6 +1,6 @@
 """The Flexit component, for AC units with a CI66 Modbus adapter."""
 
-from homeassistant.const import CONF_HOST, CONF_SLAVE, Platform
+from homeassistant.const import CONF_SLAVE, Platform
 from homeassistant.core import HomeAssistant
 
 from .connection import create_modbus_connection
@@ -14,10 +14,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> bo
     connection = create_modbus_connection(entry.data)
     entry.async_on_unload(connection.close)
 
-    host = entry.data.get(CONF_HOST)
-    coordinator = FlexitDataCoordinator(
-        hass, entry, connection, entry.data[CONF_SLAVE], host
-    )
+    coordinator = FlexitDataCoordinator(hass, entry, connection, entry.data[CONF_SLAVE])
 
     entry.runtime_data = coordinator
     await coordinator.async_config_entry_first_refresh()

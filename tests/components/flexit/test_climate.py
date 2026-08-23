@@ -64,6 +64,11 @@ async def test_climate_entity(
 ) -> None:
     """Test climate entity setup and state."""
     mock_config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("flexit", mock_config_entry.entry_id)},
+        configuration_url="http://1.1.1.1",
+    )
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -73,6 +78,7 @@ async def test_climate_entity(
         ("flexit", mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device_entry
+    assert device_entry.configuration_url is None
     entity_entries = er.async_entries_for_config_entry(
         entity_registry, mock_config_entry.entry_id
     )

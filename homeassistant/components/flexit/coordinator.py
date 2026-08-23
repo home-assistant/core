@@ -28,7 +28,6 @@ class FlexitDataCoordinator(DataUpdateCoordinator[None]):
         entry: FlexitConfigEntry,
         connection: ModbusConnection,
         slave: int,
-        host: str | None = None,
     ) -> None:
         """Initialize the FlexitDataCoordinator."""
         super().__init__(
@@ -44,7 +43,7 @@ class FlexitDataCoordinator(DataUpdateCoordinator[None]):
         self.device = Flexit(connection.for_unit(slave))
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            configuration_url=f"http://{host}" if host is not None else None,
+            configuration_url=None,
             name=self.name,
             model=self.device.info.model,
             manufacturer=self.device.info.manufacturer,
