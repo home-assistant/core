@@ -56,6 +56,7 @@ FANS: list[MideaFanEntityDescription] = [
         ),
         is_on_attribute="power",
         has_combined_turn_on=True,
+        translation_key="fan",
     ),
     MideaFanEntityDescription(
         key="fan",
@@ -78,6 +79,7 @@ FANS: list[MideaFanEntityDescription] = [
             | FanEntityFeature.TURN_OFF
         ),
         is_on_attribute="power",
+        translation_key="fan",
     ),
     MideaFanEntityDescription(
         key="fan",
