@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.tonewinner.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.const import CONF_MODEL
@@ -11,12 +13,15 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-def _mock_receiver(model: str | None = "AT-500") -> MagicMock:
-    """Return a mock receiver that answers info queries."""
+def _mock_receiver(model: str | Exception | None = "AT-500") -> MagicMock:
+    """Return a mock receiver; model may be a name, None, or a query failure."""
     mock_receiver = MagicMock()
     mock_receiver.connect = AsyncMock()
     mock_receiver.disconnect = AsyncMock()
-    mock_receiver.query_info = AsyncMock(return_value=MagicMock(model=model))
+    if isinstance(model, Exception):
+        mock_receiver.query_info = AsyncMock(side_effect=model)
+    else:
+        mock_receiver.query_info = AsyncMock(return_value=MagicMock(model=model))
     return mock_receiver
 
 
@@ -53,8 +58,13 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     mock_receiver.disconnect.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    ("model"),
+    [None, ConnectionError("No response for VER query within timeout")],
+    ids=["empty_response", "identity_query_timeout"],
+)
 async def test_form_unknown_model(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_setup_entry: AsyncMock, model: str | Exception | None
 ) -> None:
     """Test setup falls back to a generic title when the model is unknown."""
     result = await hass.config_entries.flow.async_init(
@@ -63,7 +73,7 @@ async def test_form_unknown_model(
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
-        return_value=_mock_receiver(model=None),
+        return_value=_mock_receiver(model=model),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],

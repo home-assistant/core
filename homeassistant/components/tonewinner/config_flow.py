@@ -1,5 +1,6 @@
 """Tonewinner configuration flow."""
 
+import logging
 from typing import Any, override
 
 from tonewinner_rs232 import ReceiverInfo, TonewinnerReceiver
@@ -10,6 +11,8 @@ from homeassistant.const import CONF_MODEL
 from homeassistant.helpers.selector import SerialPortSelector
 
 from .const import CONF_SERIAL_PORT, DOMAIN
+
+_LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
@@ -22,11 +25,16 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
     """Handle the Tonewinner config flow."""
 
     async def _async_probe_receiver(self, port: str) -> str | None:
-        """Verify a receiver answers on the port and return its model."""
+        """Verify the port opens and return the receiver's model if reported."""
         receiver = TonewinnerReceiver(port)
         try:
             await receiver.connect()
-            info: ReceiverInfo | None = await receiver.query_info()
+            try:
+                info: ReceiverInfo | None = await receiver.query_info()
+            except ConnectionError:
+                # Some firmware builds never answer the identity query.
+                _LOGGER.debug("Receiver on %s did not report a model", port)
+                return None
         finally:
             await receiver.disconnect()
         return info.model if info else None
@@ -41,7 +49,8 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
             port = user_input[CONF_SERIAL_PORT]
             try:
                 model = await self._async_probe_receiver(port)
-            except OSError:
+            except OSError as err:
+                _LOGGER.warning("Failed to probe receiver on %s: %s", port, err)
                 errors["base"] = "cannot_connect"
             else:
                 self._async_abort_entries_match({CONF_SERIAL_PORT: port})
@@ -69,7 +78,8 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
             port = user_input[CONF_SERIAL_PORT]
             try:
                 model = await self._async_probe_receiver(port)
-            except OSError:
+            except OSError as err:
+                _LOGGER.warning("Failed to probe receiver on %s: %s", port, err)
                 errors["base"] = "cannot_connect"
             else:
                 self._async_abort_entries_match({CONF_SERIAL_PORT: port})
