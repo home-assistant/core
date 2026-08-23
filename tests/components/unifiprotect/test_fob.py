@@ -307,6 +307,37 @@ async def test_fob_unavailable_on_public_ws_disconnect(
     assert hass.states.get(BATTERY_SENSOR).state == STATE_UNAVAILABLE
 
 
+async def test_fob_button_dedup_across_dispatches(
+    hass: HomeAssistant,
+    ufp_with_fob: tuple[MockUFPFixture, Mock],
+) -> None:
+    """A press fires once even though every change to its event is dispatched."""
+    ufp, fob = ufp_with_fob
+    await init_entry(hass, ufp, [])
+
+    events: list[HAEvent] = []
+
+    @callback
+    def _capture(event: HAEvent) -> None:
+        events.append(event)
+
+    unsub = async_track_state_change_event(hass, BUTTON_EVENT, _capture)
+    for change in (EventChange.STARTED, EventChange.UPDATED, EventChange.ENDED):
+        ufp.events_msg(_button_event(fob), change)
+        await hass.async_block_till_done()
+    unsub()
+
+    assert len(events) == 1
+
+    # A genuinely new press on the same button still fires.
+    unsub = async_track_state_change_event(hass, BUTTON_EVENT, _capture)
+    ufp.events_msg(_button_event(fob, event_id="evt-2"), EventChange.STARTED)
+    await hass.async_block_till_done()
+    unsub()
+
+    assert len(events) == 2
+
+
 async def test_fob_button_unavailable_on_events_ws_disconnect(
     hass: HomeAssistant,
     ufp_with_fob: tuple[MockUFPFixture, Mock],

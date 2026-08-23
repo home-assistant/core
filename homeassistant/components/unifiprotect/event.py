@@ -107,24 +107,15 @@ class ProtectDetectionEventEntityDescription(ProtectEventEntityDescription):
     ufp_public_event_types: tuple[EventType, ...]
 
 
-class ProtectDevicePublicEventEntity(
-    EventEntityMixin, ProtectDeviceEntity, EventEntity
-):
-    """Base for entities driven by the public events WS.
+class ProtectFireOnceMixin(EventEntity):
+    """Dedup mixin for entities fired from the public events WS.
 
-    A detection type can surface at the event start, on a later update, or only
-    as the event ends, and every non-eviction change is dispatched — so firing is
-    deduped per ``(event id, event type)``.
-
-    Availability follows the public API (device present and connected) plus the
-    events websocket, which is the only channel these entities fire from.
+    Every non-eviction change to an event is dispatched, so the same event can
+    reach a subscriber as it starts, updates and ends; firing is deduped per
+    ``(event id, event type)``.
     """
 
-    _ufp_uses_public = True
-    _ufp_requires_events_ws = True
-
-    entity_description: ProtectEventEntityDescription
-    # A camera can run two overlapping events of the same category whose
+    # A device can run two overlapping events of the same category whose
     # dispatches interleave, so dedup tracks fired types per recent event id
     # (bounded), not just the current one.
     _fired: dict[str, frozenset[str]] | None = None
@@ -148,6 +139,21 @@ class ProtectDevicePublicEventEntity(
             del fired[next(iter(fired))]  # evict the least-recently-seen event id
         self._trigger_event(event_type, event_data)
         self.async_write_ha_state()
+
+
+class ProtectDevicePublicEventEntity(
+    ProtectFireOnceMixin, EventEntityMixin, ProtectDeviceEntity, EventEntity
+):
+    """Base for entities driven by the public events WS.
+
+    Availability follows the public API (device present and connected) plus the
+    events websocket, which is the only channel these entities fire from.
+    """
+
+    _ufp_uses_public = True
+    _ufp_requires_events_ws = True
+
+    entity_description: ProtectEventEntityDescription
 
 
 class ProtectDeviceRingEventEntity(ProtectDevicePublicEventEntity):
@@ -560,7 +566,7 @@ _FOB_EVENT_TYPES: list[str] = [
 ]
 
 
-class ProtectFobButtonEventEntity(ProtectFobEntity, EventEntity):
+class ProtectFobButtonEventEntity(ProtectFireOnceMixin, ProtectFobEntity, EventEntity):
     """A UniFi Protect key fob button-press event entity.
 
     Each fob exposes one event entity that fires the pressed button (from a
@@ -599,8 +605,9 @@ class ProtectFobButtonEventEntity(ProtectFobEntity, EventEntity):
         # ``EventButtonType.UNKNOWN`` (not among the declared event types).
         if (button_type := button.name.lower()) not in self.event_types:
             return
-        self._trigger_event(button_type, {ATTR_EVENT_ID: event.id})
-        self.async_write_ha_state()
+        # A press is dispatched on every non-eviction change to its event, so
+        # the same press can arrive more than once.
+        self._fire_once(event, button_type, {ATTR_EVENT_ID: event.id})
 
 
 EVENT_DESCRIPTIONS: tuple[ProtectEventEntityDescription, ...] = (
