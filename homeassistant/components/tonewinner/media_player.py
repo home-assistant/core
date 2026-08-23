@@ -64,6 +64,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     def __init__(self, entry: TonewinnerConfigEntry) -> None:
         """Initialize the media player."""
+        self._entry = entry
         self._receiver = entry.runtime_data
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = DeviceInfo(
@@ -93,8 +94,15 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     def _on_state_change(self, state: ReceiverState | None) -> None:
         """Handle state changes from the receiver."""
         if state is None:
-            _LOGGER.warning("Connection to the Tonewinner receiver was lost")
-            self._attr_available = False
+            if self._attr_available:
+                _LOGGER.warning("Connection to the Tonewinner receiver was lost")
+                self._attr_available = False
+                # The library does not reconnect on its own; reloading lets HA's
+                # setup retry loop restore the connection when it comes back.
+                self._entry.async_create_task(
+                    self.hass,
+                    self.hass.config_entries.async_reload(self._entry.entry_id),
+                )
         else:
             if not self._attr_available:
                 _LOGGER.info("Connection to the Tonewinner receiver was restored")
