@@ -82,7 +82,7 @@ async def test_get_conditions(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+            entity_entry.entity_id, "attributes", {"supported_features": features_state}
         )
     await hass.async_block_till_done()
 

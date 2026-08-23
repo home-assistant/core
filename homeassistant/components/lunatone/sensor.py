@@ -112,7 +112,7 @@ class LunatoneSensor(
         self._config_entry_unique_id = config_entry_unique_id
         self._sensor_id = sensor_id
 
-        self._attr_name = self.sensor.name
+        self._attr_name = self.sensor.data.name
         self._attr_unique_id = (
             f"{config_entry_unique_id}-sensor{sensor_id}-{description.key}"
         )

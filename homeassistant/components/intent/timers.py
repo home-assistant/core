@@ -294,11 +294,10 @@ class TimerManager:
         # Fill in area/floor info
         device_registry = dr.async_get(self.hass)
         if device_id and (device := device_registry.async_get(device_id)):
-            timer.area_id = device.area_id
+            area_id = dr.async_get_effective_area_id(self.hass, device)
+            timer.area_id = area_id
             area_registry = ar.async_get(self.hass)
-            if device.area_id and (
-                area := area_registry.async_get_area(device.area_id)
-            ):
+            if area_id and (area := area_registry.async_get_area(area_id)):
                 timer.area_name = _normalize_name(area.name)
                 timer.floor_id = area.floor_id
 
@@ -622,8 +621,8 @@ def _find_timer(
         area_registry = ar.async_get(hass)
         if (
             (device := device_registry.async_get(device_id))
-            and device.area_id
-            and (area := area_registry.async_get_area(device.area_id))
+            and (area_id := dr.async_get_effective_area_id(hass, device))
+            and (area := area_registry.async_get_area(area_id))
         ):
             # Try area
             matching_area_timers = [
@@ -729,11 +728,14 @@ def _find_timers(
     # Use device id to order remaining timers
     device_registry = dr.async_get(hass)
     device = device_registry.async_get(device_id)
-    if (device is None) or (device.area_id is None):
+    if device is None:
+        return matching_timers
+    area_id = dr.async_get_effective_area_id(hass, device)
+    if area_id is None:
         return matching_timers
 
     area_registry = ar.async_get(hass)
-    area = area_registry.async_get_area(device.area_id)
+    area = area_registry.async_get_area(area_id)
     if area is None:
         return matching_timers
 

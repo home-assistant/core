@@ -10,10 +10,26 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from . import setup_integration
 
 from tests.common import MockConfigEntry
+
+
+@pytest.mark.usefixtures("mock_actron_api")
+async def test_setup_entry_uses_shared_session(
+    hass: HomeAssistant,
+    mock_actron_api_class: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the API is created with Home Assistant's shared client session."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_actron_api_class.call_args.kwargs["session"] is async_get_clientsession(
+        hass
+    )
 
 
 async def test_setup_entry_auth_error(

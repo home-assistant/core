@@ -7,6 +7,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template
 from homeassistant.components.template.const import CONF_PICTURE, DOMAIN
+from homeassistant.components.template.weather import DEFAULT_NAME
 from homeassistant.components.weather import (
     ATTR_WEATHER_APPARENT_TEMPERATURE,
     ATTR_WEATHER_CLOUD_COVERAGE,
@@ -23,6 +24,7 @@ from homeassistant.components.weather import (
     DOMAIN as WEATHER_DOMAIN,
     SERVICE_GET_FORECASTS,
     Forecast,
+    WeatherEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -40,6 +42,7 @@ from homeassistant.setup import async_setup_component
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_extra_template_attributes,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1027,3 +1030,47 @@ async def test_flow_preview(
     )
 
     assert state["state"] == "sunny"
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_WEATHER,
+        style,
+        TEST_MODERN_REQUIRED,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(WeatherEntityStateAttribute),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_WEATHER,
+        style,
+        0,
+        {
+            **TEST_MODERN_REQUIRED,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )

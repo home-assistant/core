@@ -500,12 +500,25 @@ class CloudGoogleConfig(AbstractConfig):
         if event.data["action"] != "update" or "area_id" not in event.data["changes"]:
             return
 
+        device_id = event.data["device_id"]
+        ent_reg = er.async_get(self.hass)
+
+        # Children without an area of their own inherit the parent's area, so a
+        # parent area change also changes the effective area of their entities.
+        device_ids = [device_id]
+        device_ids.extend(
+            child.id
+            for child in dr.async_entries_for_parent_device(
+                dr.async_get(self.hass), device_id
+            )
+            if child.area_id is None
+        )
+
         # Check if any exposed entity uses the device area
         if not any(
             entity_entry.area_id is None and self.should_expose(entity_entry.entity_id)
-            for entity_entry in er.async_entries_for_device(
-                er.async_get(self.hass), event.data["device_id"]
-            )
+            for check_device_id in device_ids
+            for entity_entry in er.async_entries_for_device(ent_reg, check_device_id)
         ):
             return
 

@@ -50,7 +50,7 @@ async def test_async_register_device_longpress_fails(
             },
         )
         await hass.async_block_till_done()
-    device_entries = list(device_registry.devices.values())
+    device_entries = list(device_registry.devices)
     assert len(device_entries) == 1
     device = async_get_coordinator(hass, device_entries[0].id)
     assert device.supports_long_press is False
@@ -170,7 +170,7 @@ async def test_device_info(
     hass: HomeAssistant, wemo_entity, device_registry: dr.DeviceRegistry
 ) -> None:
     """Verify the DeviceInfo data is set properly."""
-    device_entries = list(device_registry.devices.values())
+    device_entries = list(device_registry.devices)
 
     assert len(device_entries) == 1
     assert device_entries[0].connections == {
@@ -186,7 +186,7 @@ async def test_dli_device_info(
     hass: HomeAssistant, wemo_dli_entity, device_registry: dr.DeviceRegistry
 ) -> None:
     """Verify the DeviceInfo data for Digital Loggers emulated wemo device."""
-    device_entries = list(device_registry.devices.values())
+    device_entries = list(device_registry.devices)
 
     assert device_entries[0].configuration_url == "http://127.0.0.1"
     assert device_entries[0].identifiers == {(DOMAIN, "123456789")}

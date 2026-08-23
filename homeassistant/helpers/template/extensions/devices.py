@@ -84,8 +84,8 @@ class DeviceExtension(BaseTemplateExtension):
         dev_reg = dr.async_get(self.hass)
         return next(
             (
-                device_id
-                for device_id, device in dev_reg.devices.items()
+                device.id
+                for device in (*dev_reg.devices, *dev_reg.child_devices)
                 if (name := device.name_by_user or device.name)
                 and (str(entity_id_or_device_name) == name)
             ),

@@ -9,7 +9,7 @@ import operator
 import os
 import time
 import types
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from RestrictedPython import (
     compile_restricted_exec,
@@ -229,6 +229,9 @@ def execute(
         _LOGGER.warning(
             "Warning loading script %s: %s", filename, ", ".join(compiled.warnings)
         )
+
+    if TYPE_CHECKING:
+        assert compiled.code is not None
 
     def protected_getattr(obj: object, name: str, default: Any = None) -> Any:
         """Restricted method to get attributes."""

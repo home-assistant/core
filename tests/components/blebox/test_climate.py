@@ -1,7 +1,7 @@
 """BleBox climate entities tests."""
 
 import logging
-from unittest.mock import AsyncMock, PropertyMock
+from unittest.mock import AsyncMock, Mock, PropertyMock
 
 import blebox_uniapi
 import pytest
@@ -25,6 +25,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
+    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
@@ -135,6 +136,20 @@ async def test_update(saunabox, hass: HomeAssistant, config) -> None:
     assert state.attributes[ATTR_TEMPERATURE] == 64.3
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 40.9
     assert state.state == HVACMode.OFF
+
+
+async def test_update_with_safety_off_state_is_unavailable(
+    hass: HomeAssistant, thermobox: tuple[Mock, str]
+) -> None:
+    """A thermostat switched off by its safety system must become unavailable."""
+
+    feature_mock, entity_id = thermobox
+    feature_mock.is_error = True
+    feature_mock.current = None
+    await async_setup_entity(hass, entity_id)
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_set_hvac_mode_heat(saunabox, hass: HomeAssistant) -> None:

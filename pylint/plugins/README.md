@@ -132,8 +132,11 @@ Every check has a code following the
 | `W7425` | [`home-assistant-entity-unique-id-redundant-domain`](#w7425-home-assistant-entity-unique-id-redundant-domain) | Entity unique ID references the `DOMAIN` constant or includes the integration's domain as a string-literal delimited segment |
 | `W7426` | [`home-assistant-tests-direct-async-unload-entry`](#w7426-home-assistant-tests-direct-async-unload-entry) | Tests should not call an integration's `async_unload_entry` directly |
 | `W7427` | [`home-assistant-entity-unique-id-redundant-platform`](#w7427-home-assistant-entity-unique-id-redundant-platform) | Entity unique ID includes the entity platform name (e.g. `sensor`, `light`) as a delimited string-literal segment |
+| `W7428` | [`home-assistant-config-flow-field-not-translated`](#w7428-home-assistant-config-flow-field-not-translated) | Config flow form field missing translation in `strings.json` |
 | `W7429` | [`home-assistant-unnecessary-format-mac`](#w7429-home-assistant-unnecessary-format-mac) | `format_mac()` is unnecessary with `CONNECTION_NETWORK_MAC` |
 | `W7430` | [`home-assistant-serial-port-selector-usb-dependency`](#w7430-home-assistant-serial-port-selector-usb-dependency) | Config flow using `SerialPortSelector` must declare `usb` in `dependencies` |
+| `W7431` | [`home-assistant-options-flow-field-not-translated`](#w7431-home-assistant-options-flow-field-not-translated) | Options flow form field missing translation in `strings.json` |
+| `W7432` | [`home-assistant-subentry-flow-field-not-translated`](#w7432-home-assistant-subentry-flow-field-not-translated) | Subentry flow form field missing translation in `strings.json` |
 | `W7433` | [`home-assistant-missing-test-before-configure`](#w7433-home-assistant-missing-test-before-configure) | Config flow should test the connection before creating an entry |
 
 
@@ -862,6 +865,37 @@ either set at class level, set unconditionally at the top of a method, or
 supplied by an `entity_description` whose class sets `has_entity_name = True`.
 Conditional patterns are rejected.
 
+
+## `home_assistant_config_flow_translations` checker
+
+Ensures that every field in a config flow, options flow, or subentry flow
+form schema has a corresponding translation entry in `strings.json`. When
+`async_show_form` is called with a `data_schema`, each key in the schema
+dict should have a translation at the expected path. The checker also
+handles section fields (nested under `sections.<key>.data` in translations).
+
+### `W7428`: `home-assistant-config-flow-field-not-translated`
+
+A config flow form field is missing its translation in `strings.json`.
+The expected path is `config.step.<step_id>.data.<field_name>` (or
+`config.step.<step_id>.sections.<key>.data.<field_name>` for section
+fields).
+
+### `W7431`: `home-assistant-options-flow-field-not-translated`
+
+An options flow form field is missing its translation in `strings.json`.
+The expected path is `options.step.<step_id>.data.<field_name>` (or
+`options.step.<step_id>.sections.<key>.data.<field_name>` for section
+fields).
+
+### `W7432`: `home-assistant-subentry-flow-field-not-translated`
+
+A subentry flow form field is missing its translation in `strings.json`.
+The expected path is `config_subentries.<type>.step.<step_id>.data.<field_name>`
+(or `config_subentries.<type>.step.<step_id>.sections.<key>.data.<field_name>`
+for section fields). The checker resolves the subentry type by finding the
+`ConfigFlow` class's `async_get_supported_subentry_types` method and mapping
+subentry handler class names to their type keys.
 
 ## `home_assistant_test_before_configure` checker
 

@@ -268,17 +268,32 @@
       "stats_area": {
         "name": "Area cleaned"
       },
+      "stats_area_mower": {
+        "name": "Area mowed"
+      },
       "stats_time": {
         "name": "Cleaning duration"
+      },
+      "stats_time_mower": {
+        "name": "Mowing duration"
       },
       "total_stats_area": {
         "name": "Total area cleaned"
       },
+      "total_stats_area_mower": {
+        "name": "Total area mowed"
+      },
       "total_stats_cleanings": {
         "name": "Total cleanings"
       },
+      "total_stats_cleanings_mower": {
+        "name": "Total mowings"
+      },
       "total_stats_time": {
         "name": "Total cleaning duration"
+      },
+      "total_stats_time_mower": {
+        "name": "Total mowing duration"
       }
     },
     "switch": {

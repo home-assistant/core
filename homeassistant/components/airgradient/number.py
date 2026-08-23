@@ -29,7 +29,7 @@ PARALLEL_UPDATES = 1
 class AirGradientNumberEntityDescription(NumberEntityDescription):
     """Describes AirGradient number entity."""
 
-    value_fn: Callable[[Config], int]
+    value_fn: Callable[[Config], int | None]
     set_value_fn: Callable[[AirGradientClient, int], Awaitable[None]]
 
 

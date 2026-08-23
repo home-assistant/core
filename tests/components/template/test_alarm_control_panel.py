@@ -8,8 +8,10 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components import template
 from homeassistant.components.alarm_control_panel import (
     DOMAIN as ALARM_DOMAIN,
+    AlarmControlPanelEntityStateAttribute,
     AlarmControlPanelState,
 )
+from homeassistant.components.template.alarm_control_panel import DEFAULT_NAME
 from homeassistant.const import STATE_OFF, STATE_ON, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant, ServiceCall
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -21,6 +23,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_extra_template_attributes,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -639,7 +642,9 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("alarm_control_panel.my_template")
+    template_entity = entity_registry.async_get(
+        "alarm_control_panel.mock_title_my_template"
+    )
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -790,3 +795,41 @@ async def test_invalid_availability_template_keeps_component_available(
     assert hass.states.get(TEST_PANEL.entity_id).state != STATE_UNAVAILABLE
     error = "UndefinedError: 'x' is undefined"
     assert error in caplog_setup_text or error in caplog.text
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_PANEL, style, {"state": "{{ 'disarmed' }}"}
+    )
+
+
+@pytest.mark.parametrize("attribute", list(AlarmControlPanelEntityStateAttribute))
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: AlarmControlPanelEntityStateAttribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_PANEL,
+        style,
+        0,
+        {
+            "state": "{{ 'disarmed' }}",
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )

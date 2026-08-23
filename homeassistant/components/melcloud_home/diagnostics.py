@@ -27,6 +27,10 @@ async def async_get_config_entry_diagnostics(
     return {
         "config_entry": async_redact_data(config_entry.as_dict(), TO_REDACT),
         "coordinator": async_redact_data(
-            config_entry.runtime_data.data.model_dump(mode="json"), TO_REDACT
+            config_entry.runtime_data.coordinator.data.model_dump(mode="json"),
+            TO_REDACT,
+        ),
+        "energy_coordinator": async_redact_data(
+            config_entry.runtime_data.energy_coordinator.data, TO_REDACT
         ),
     }

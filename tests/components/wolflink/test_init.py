@@ -81,7 +81,7 @@ async def test_migration_v1_to_v2(
     # validates it against the config entry's disabled state; write it
     # directly to simulate existing storage.
     device = attr.evolve(device, disabled_by=dr.DeviceEntryDisabler.CONFIG_ENTRY)
-    device_registry.devices[device.id] = device
+    device_registry._devices[device.id] = device
     entity = entity_registry.async_get_or_create(
         domain="sensor",
         platform=DOMAIN,

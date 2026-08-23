@@ -147,7 +147,7 @@
     'state': 'auto',
   })
 # ---
-# name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.yutaki_dhw-entry]
+# name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.somfy_tahoma_switch_yutaki_dhw-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -169,7 +169,7 @@
     'disabled_by': None,
     'domain': 'water_heater',
     'entity_category': None,
-    'entity_id': 'water_heater.yutaki_dhw',
+    'entity_id': 'water_heater.somfy_tahoma_switch_yutaki_dhw',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -192,11 +192,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.yutaki_dhw-state]
+# name: test_water_heater_entities_snapshot[cloud_atlantic_cozytouch.json][water_heater.somfy_tahoma_switch_yutaki_dhw-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <WaterHeaterStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 46,
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Yutaki DHW',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Somfy TaHoma Switch Yutaki DHW',
       <WaterHeaterCapabilityAttribute.MAX_TEMP: 'max_temp'>: 70,
       <WaterHeaterCapabilityAttribute.MIN_TEMP: 'min_temp'>: 30,
       <WaterHeaterCapabilityAttribute.OPERATION_LIST: 'operation_list'>: list([
@@ -211,7 +211,7 @@
       <WaterHeaterStateAttribute.TEMPERATURE: 'temperature'>: 54,
     }),
     'context': <ANY>,
-    'entity_id': 'water_heater.yutaki_dhw',
+    'entity_id': 'water_heater.somfy_tahoma_switch_yutaki_dhw',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

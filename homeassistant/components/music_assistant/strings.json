@@ -261,7 +261,7 @@
   },
   "exceptions": {
     "invalid_username": {
-      "message": "The username {username} does not exist. Available usernames are {available_usernames}."
+      "message": "The username {username} does not exist on the Music Assistant server."
     }
   },
   "issues": {

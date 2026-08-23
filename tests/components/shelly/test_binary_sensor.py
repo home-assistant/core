@@ -924,3 +924,31 @@ async def test_rpc_cb_binary_sensors(
 
     assert (state := hass.states.get(safety_entity_id))
     assert state.state == STATE_OFF
+
+
+async def test_rpc_camera_motion(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC motion binary sensor for Shelly Camera."""
+    status = {
+        "camera:0": {
+            "id": 0,
+            "motion": False,
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 3)
+
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_motion"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    status["camera:0"]["motion"] = True
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON

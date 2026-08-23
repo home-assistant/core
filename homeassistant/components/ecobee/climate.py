@@ -494,7 +494,7 @@ class Thermostat(ClimateEntity):
                 "id": device.id,
                 "name_by_user": device.name_by_user or device.name,
             }
-            for device in device_registry.devices.values()
+            for device in device_registry.devices
             for sensor_info in sensors_info
             if device.name == sensor_info["name"]
             and any(identifier[0] == DOMAIN for identifier in device.identifiers)
@@ -830,7 +830,7 @@ class Thermostat(ClimateEntity):
         return sorted(
             [
                 device.name_by_user or device.name
-                for device in device_registry.devices.values()
+                for device in device_registry.devices
                 for sensor_name in sensor_names
                 if device.name == sensor_name
                 and any(identifier[0] == DOMAIN for identifier in device.identifiers)

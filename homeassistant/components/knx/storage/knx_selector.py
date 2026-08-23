@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_PAYLOAD
 
-from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE
+from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE, SelectConf
 from ..dpt import HaDptClass, get_supported_dpts
 from ..validation import ga_validator, maybe_ga_validator, sync_state_validator
 from .const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
@@ -371,3 +371,45 @@ class KnxPayloadSelector(KNXSelectorBase):
                     )
         # CONF_VALUE branch needs subvalidator as we don't have the DPT available here
         return validated
+
+
+class KnxSelectOptionsSelector(KNXSelectorBase):
+    """Selector for a list of select options mapping names to payloads.
+
+    Each option pairs a name with a payload following the `KnxPayloadSelector`
+    contract (a typed `value` or a raw `payload` + `payload_length`), resolved
+    against the linked group address's DPT via `ga_path`.
+    """
+
+    selector_type = "knx_select_options"
+
+    def __init__(self, ga_path: str) -> None:
+        """Initialize the options selector."""
+        self.ga_path = ga_path
+        self._payload_selector = KnxPayloadSelector(ga_path=ga_path)
+        self.schema = vol.Schema([self._validate_option])
+
+    @override
+    def serialize(self) -> dict[str, Any]:
+        """Serialize the selector to a dictionary."""
+        return {
+            "type": self.selector_type,
+            "ga_path": self.ga_path,
+        }
+
+    def _validate_option(self, data: Any) -> dict[str, Any]:
+        """Validate a single option entry.
+
+        The typed `value` branch needs the DPT and is validated by the platform
+        sub-validator.
+        """
+        if not isinstance(data, dict):
+            raise vol.Invalid("Each option must be a dictionary")
+        option = data.get(SelectConf.OPTION)
+        if not isinstance(option, str) or not option:
+            raise vol.Invalid("Option name is required", path=[SelectConf.OPTION])
+        payload = {
+            key: value for key, value in data.items() if key != SelectConf.OPTION
+        }
+        validated = self._payload_selector(payload)
+        return {SelectConf.OPTION: option, **validated}

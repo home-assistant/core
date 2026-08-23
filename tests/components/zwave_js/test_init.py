@@ -62,6 +62,74 @@ def connect_timeout_fixture() -> Generator[int]:
         yield timeout
 
 
+@pytest.mark.parametrize(
+    ("unique_id", "data", "expected_unique_id", "expected_data"),
+    [
+        pytest.param(
+            3245146787,
+            {"url": "ws://test.org"},
+            "3245146787",
+            {"url": "ws://test.org"},
+            id="int_unique_id",
+        ),
+        pytest.param(
+            "3245146787",
+            {"url": "ws://test.org", "network_key": "abc123"},
+            "3245146787",
+            {"url": "ws://test.org", "s0_legacy_key": "abc123"},
+            id="network_key_only",
+        ),
+        pytest.param(
+            "3245146787",
+            {
+                "url": "ws://test.org",
+                "network_key": "abc123",
+                "s0_legacy_key": "def456",
+            },
+            "3245146787",
+            {"url": "ws://test.org", "s0_legacy_key": "def456"},
+            id="existing_s0_legacy_key_wins",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("client")
+async def test_migrate_entry(
+    hass: HomeAssistant,
+    unique_id: int | str,
+    data: dict[str, Any],
+    expected_unique_id: str,
+    expected_data: dict[str, Any],
+) -> None:
+    """Test migration of a version 1.1 config entry."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data=data, unique_id=unique_id, minor_version=1
+    )
+    entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.zwave_js.PLATFORMS", []):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.LOADED
+    assert entry.version == 1
+    assert entry.minor_version == 2
+    assert entry.unique_id == expected_unique_id
+    assert dict(entry.data) == expected_data
+
+
+async def test_migrate_entry_from_future_version(hass: HomeAssistant) -> None:
+    """Test migration of a config entry from a future version fails."""
+    entry = MockConfigEntry(
+        domain=DOMAIN, data={"url": "ws://test.org"}, unique_id="3245146787", version=2
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
+
+
 async def test_entry_setup_unload(
     hass: HomeAssistant,
     client: MagicMock,

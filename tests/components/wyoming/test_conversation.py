@@ -5,6 +5,7 @@ from unittest.mock import patch
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from wyoming.asr import Transcript
+from wyoming.error import Error
 from wyoming.handle import Handled, NotHandled
 from wyoming.info import Info
 from wyoming.intent import Entity, Intent, IntentsStart, IntentsStop, NotRecognized
@@ -401,6 +402,76 @@ async def test_not_handled(
     assert result.response.error_code == intent.IntentResponseErrorCode.FAILED_TO_HANDLE
     assert result.response.speech, "No speech"
     assert result.response.speech.get("plain", {}).get("speech") == "failure"
+
+
+@pytest.mark.usefixtures("init_wyoming_intent")
+@pytest.mark.parametrize(
+    ("error_code", "expected_message"),
+    [
+        pytest.param(None, "Error from Wyoming service: Boom!", id="without_code"),
+        pytest.param(
+            "IntentError",
+            "Error from Wyoming service: Boom! (code: IntentError)",
+            id="with_code",
+        ),
+    ],
+)
+async def test_error_event(
+    hass: HomeAssistant, error_code: str | None, expected_message: str
+) -> None:
+    """Test that an error event from the service is reported."""
+    agent_id = "conversation.test_intent"
+
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        MockAsyncTcpClient([Error(text="Boom!", code=error_code).event()]),
+    ):
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
+    assert result.response.speech, "No speech"
+    assert result.response.speech.get("plain", {}).get("speech") == expected_message
+
+
+@pytest.mark.usefixtures("init_wyoming_intent")
+async def test_error_event_discards_received_intents(hass: HomeAssistant) -> None:
+    """Test that intents received before an error event are not handled."""
+    agent_id = "conversation.test_intent"
+
+    with patch(
+        "homeassistant.components.wyoming.conversation.AsyncTcpClient",
+        MockAsyncTcpClient(
+            [
+                IntentsStart().event(),
+                Intent(name="TestIntent").event(),
+                Error(text="Boom!").event(),
+            ]
+        ),
+    ):
+        result = await conversation.async_converse(
+            hass=hass,
+            text="test text",
+            conversation_id=None,
+            context=Context(),
+            language=hass.config.language,
+            agent_id=agent_id,
+        )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert result.response.error_code == intent.IntentResponseErrorCode.UNKNOWN
+    assert result.response.speech, "No speech"
+    assert (
+        result.response.speech.get("plain", {}).get("speech")
+        == "Error from Wyoming service: Boom!"
+    )
 
 
 async def test_connection_lost(

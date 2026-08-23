@@ -455,7 +455,11 @@ def async_register_network_storage_services(
         """Handle service calls for Hass.io."""
         coordinator: HassioMainDataUpdateCoordinator | None = None
 
-        if (device := dev_reg.async_get(service.data[ATTR_DEVICE_ID])) is None:
+        if (
+            device := dev_reg.async_get(
+                service.data[ATTR_DEVICE_ID], include_child_devices=False
+            )
+        ) is None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="mount_reload_unknown_device_id",

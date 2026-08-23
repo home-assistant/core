@@ -35,9 +35,12 @@ from roborock.data import (
     ZeoError,
     ZeoState,
 )
+from roborock.data.v1.v1_containers import StatusV2
+from roborock.device_features import RoborockDockFeatures
 from roborock.devices.device import RoborockDevice
 from roborock.devices.device_manager import DeviceManager
 from roborock.devices.traits.b01.q10.status import StatusTrait as Q10StatusTrait
+from roborock.devices.traits.common import DpsDataConverter
 from roborock.devices.traits.v1 import PropertiesApi
 from roborock.devices.traits.v1.clean_summary import CleanSummaryTrait
 from roborock.devices.traits.v1.command import CommandTrait
@@ -59,7 +62,11 @@ from roborock.devices.traits.v1.valley_electricity_timer import (
 from roborock.devices.traits.v1.volume import SoundVolumeTrait
 from roborock.devices.traits.v1.wash_towel_mode import WashTowelModeTrait
 from roborock.map.b01_q10_map_parser import Q10Room
-from roborock.roborock_message import RoborockDyadDataProtocol, RoborockZeoProtocol
+from roborock.roborock_message import (
+    RoborockDataProtocol,
+    RoborockDyadDataProtocol,
+    RoborockZeoProtocol,
+)
 
 from homeassistant.components.roborock.const import (
     CONF_BASE_URL,
@@ -324,6 +331,20 @@ def make_mock_trait(
     return trait
 
 
+def make_mock_status_trait() -> AsyncMock:
+    """Create a mock status trait that also accepts pushed DPS updates."""
+    trait = make_mock_trait(trait_spec=StatusTrait, dataclass_template=STATUS)
+    notify = attach_update_listeners(trait)
+    converter = DpsDataConverter.from_dataclass(StatusV2)
+
+    def update_from_dps(decoded_dps: dict[RoborockDataProtocol, Any]) -> None:
+        if converter.update_from_dps(trait, decoded_dps):
+            notify()
+
+    trait.update_from_dps = Mock(side_effect=update_from_dps)
+    return trait
+
+
 def make_mock_switch(
     trait_spec: type[V1TraitMixin] | None = None,
     dataclass_template: RoborockBase | None = None,
@@ -430,16 +451,16 @@ def make_device_features() -> Mock:
     device_features.is_support_clean_estimate = True
     device_features.is_clean_route_setting_supported = True
     device_features.is_field_supported.return_value = True
+    device_features.dock_features = RoborockDockFeatures.from_dock_type(
+        STATUS.dock_type
+    )
     return device_features
 
 
 def create_v1_properties(network_info: NetworkInfo) -> AsyncMock:
     """Create v1 properties for each fake device."""
     v1_properties = AsyncMock(spec=PropertiesApi)
-    v1_properties.status = make_mock_trait(
-        trait_spec=StatusTrait,
-        dataclass_template=STATUS,
-    )
+    v1_properties.status = make_mock_status_trait()
     v1_properties.device_features = make_device_features()
     _fan_speed_mapping = {m.code: m.value for m in VacuumModes}
     _water_mode_mapping = {m.code: m.value for m in WaterModes}

@@ -51,6 +51,7 @@ from zwave_js_server.model.node.firmware import (
     NodeFirmwareUpdateProgress,
     NodeFirmwareUpdateResult,
 )
+from zwave_js_server.model.statistics import RouteStatistics
 from zwave_js_server.model.utils import (
     async_parse_qr_code_string,
     async_try_parse_dsk_from_qr_code_string,
@@ -2835,10 +2836,30 @@ def _get_node_statistics_dict(
         device = dev_reg.async_get_device_by_identifier(
             get_device_id(driver, node), entry.entry_id
         )
-        assert device
+        if device is None:
+            raise ValueError(f"Device for node {node.node_id} not found")
         return device.id
 
-    data: dict = {
+    def _get_route_statistics_dict(
+        route_statistics: RouteStatistics | None,
+    ) -> dict[str, Any] | None:
+        """Get dictionary of route statistics."""
+        if route_statistics is None:
+            return None
+        try:
+            data: dict[str, Any] = dict(route_statistics.as_dict())
+            for key in ("repeaters", "route_failed_between"):
+                if data[key]:
+                    data[key] = [_convert_node_to_device_id(node) for node in data[key]]
+        except KeyError, StopIteration, ValueError:
+            # The route may reference nodes that have been removed from the
+            # network (KeyError) or that don't have a device entry (ValueError),
+            # and async_get_config_entry_from_node raises StopIteration when
+            # the config entry is no longer loaded
+            return None
+        return data
+
+    return {
         "commands_tx": statistics.commands_tx,
         "commands_rx": statistics.commands_rx,
         "commands_dropped_tx": statistics.commands_dropped_tx,
@@ -2846,20 +2867,9 @@ def _get_node_statistics_dict(
         "timeout_response": statistics.timeout_response,
         "rtt": statistics.rtt,
         "rssi": statistics.rssi,
-        "lwr": statistics.lwr.as_dict() if statistics.lwr else None,
-        "nlwr": statistics.nlwr.as_dict() if statistics.nlwr else None,
+        "lwr": _get_route_statistics_dict(statistics.lwr),
+        "nlwr": _get_route_statistics_dict(statistics.nlwr),
     }
-    for key in ("lwr", "nlwr"):
-        if not data[key]:
-            continue
-        for key_2 in ("repeaters", "route_failed_between"):
-            if not data[key][key_2]:
-                continue
-            data[key][key_2] = [
-                _convert_node_to_device_id(node) for node in data[key][key_2]
-            ]
-
-    return data
 
 
 @websocket_api.require_admin
@@ -2910,7 +2920,7 @@ async def websocket_subscribe_node_statistics(
             {
                 "event": "statistics updated",
                 "source": "node",
-                "nodeId": node.node_id,
+                "node_id": node.node_id,
                 **_get_node_statistics_dict(hass, node.statistics),
             },
         )

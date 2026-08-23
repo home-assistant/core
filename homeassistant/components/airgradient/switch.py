@@ -29,7 +29,7 @@ PARALLEL_UPDATES = 1
 class AirGradientSwitchEntityDescription(SwitchEntityDescription):
     """Describes AirGradient switch entity."""
 
-    value_fn: Callable[[Config], bool]
+    value_fn: Callable[[Config], bool | None]
     set_value_fn: Callable[[AirGradientClient, bool], Awaitable[None]]
 
 
@@ -98,7 +98,7 @@ class AirGradientSwitch(AirGradientEntity, SwitchEntity):
 
     @property
     @override
-    def is_on(self) -> bool:
+    def is_on(self) -> bool | None:
         """Return the state of the switch."""
         return self.entity_description.value_fn(self.coordinator.data.config)
 

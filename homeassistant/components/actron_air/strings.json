@@ -46,6 +46,11 @@
         "name": "Defrost mode"
       }
     },
+    "cover": {
+      "damper": {
+        "name": "Damper"
+      }
+    },
     "sensor": {
       "compressor_capacity": {
         "name": "Compressor capacity"

@@ -248,7 +248,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: IsyConfigEntry) -> bool
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: IsyConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove ISY config entry from a device."""
     return not device_entry.identifiers.intersection(

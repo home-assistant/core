@@ -146,13 +146,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_service_generate_data(call: ServiceCall) -> ServiceResponse:
     """Run the data task service."""
-    result = await async_generate_data(hass=call.hass, **call.data)
+    result = await async_generate_data(
+        hass=call.hass, context=call.context, **call.data
+    )
     return result.as_dict()
 
 
 async def async_service_generate_image(call: ServiceCall) -> ServiceResponse:
     """Run the image task service."""
-    return await async_generate_image(hass=call.hass, **call.data)
+    return await async_generate_image(hass=call.hass, context=call.context, **call.data)
 
 
 class AITaskPreferences:

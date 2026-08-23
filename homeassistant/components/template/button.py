@@ -25,7 +25,7 @@ from .const import CONF_PRESS, DOMAIN
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 
@@ -41,7 +41,11 @@ BUTTON_YAML_SCHEMA = vol.Schema(
         vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
-).extend(make_template_entity_common_modern_schema(BUTTON_DOMAIN, DEFAULT_NAME).schema)
+).extend(
+    make_template_entity_common_schema(
+        BUTTON_DOMAIN, DEFAULT_NAME, block_device_class=True
+    ).schema
+)
 
 BUTTON_CONFIG_ENTRY_SCHEMA = vol.Schema(
     {

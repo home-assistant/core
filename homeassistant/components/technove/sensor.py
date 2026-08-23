@@ -26,7 +26,9 @@ from homeassistant.helpers.typing import StateType
 from .coordinator import TechnoVEConfigEntry, TechnoVEDataUpdateCoordinator
 from .entity import TechnoVEEntity
 
-STATUS_TYPE = [s.value for s in Status if s != Status.UNKNOWN]
+PARALLEL_UPDATES = 0
+
+STATUS_TYPE = [s.value for s in Status if s is not Status.UNKNOWN]
 
 
 @dataclass(frozen=True, kw_only=True)

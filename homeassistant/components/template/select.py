@@ -10,6 +10,7 @@ from homeassistant.components.select import (
     DOMAIN as SELECT_DOMAIN,
     ENTITY_ID_FORMAT,
     SelectEntity,
+    SelectEntityCapabilityAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_OPTIONS, CONF_STATE
@@ -33,7 +34,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -56,7 +57,11 @@ SELECT_COMMON_SCHEMA = vol.Schema(
 
 SELECT_YAML_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(make_template_entity_common_modern_schema(SELECT_DOMAIN, DEFAULT_NAME).schema)
+).extend(
+    make_template_entity_common_schema(
+        SELECT_DOMAIN, DEFAULT_NAME, SelectEntityCapabilityAttribute
+    ).schema
+)
 
 SELECT_CONFIG_ENTRY_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema

@@ -6,6 +6,8 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aiolyric import Lyric
 from aiolyric.objects.location import LyricLocation
 from aiolyric.objects.priority import LyricRoom
+import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.lyric.api import LyricLocalOAuth2Implementation
 from homeassistant.components.lyric.const import DOMAIN
@@ -13,9 +15,11 @@ from homeassistant.components.lyric.sensor import get_datetime_from_future_time
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry
+from . import setup_integration
+
+from tests.common import MockConfigEntry, snapshot_platform
 
 _MAC = "AABBCCDDEEFF"
 
@@ -34,6 +38,20 @@ def test_get_datetime_from_future_time_valid() -> None:
     """Test that a valid time string returns a datetime."""
     result = get_datetime_from_future_time("13:30:00")
     assert isinstance(result, datetime)
+
+
+@pytest.mark.usefixtures("setup_credentials", "mock_lyric_api")
+async def test_sensor(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Test the Lyric sensor platform via a real config entry setup."""
+    with patch("homeassistant.components.lyric.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, mock_config_entry)
+
+    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
 def _mock_lyric() -> MagicMock:

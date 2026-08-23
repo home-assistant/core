@@ -91,8 +91,8 @@ def _remove_old_devices(
 ) -> None:
     device_registry = dr.async_get(hass)
 
-    for registered_device in device_registry.devices.get_devices_for_config_entry_id(
-        entry.entry_id
+    for registered_device in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
     ):
         mac = next(
             (i[1] for i in registered_device.identifiers if i[0] == DOMAIN), None

@@ -73,8 +73,8 @@ async def test_stale_device(
     await hass.async_block_till_done()
     if mock_roborock_entry._background_tasks:
         await asyncio.gather(*mock_roborock_entry._background_tasks)
-    existing_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
+    existing_devices = dr.async_entries_for_config_entry(
+        device_registry, mock_roborock_entry.entry_id
     )
     assert {device.name for device in existing_devices} == {
         "Roborock S7 MaxV",
@@ -95,8 +95,8 @@ async def test_stale_device(
     await hass.async_block_till_done()
     if mock_roborock_entry._background_tasks:
         await asyncio.gather(*mock_roborock_entry._background_tasks)
-    new_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
+    new_devices = dr.async_entries_for_config_entry(
+        device_registry, mock_roborock_entry.entry_id
     )
     assert {device.name for device in new_devices} == {
         "Roborock S7 2",
@@ -120,8 +120,8 @@ async def test_no_stale_device(
     await hass.async_block_till_done()
     if mock_roborock_entry._background_tasks:
         await asyncio.gather(*mock_roborock_entry._background_tasks)
-    existing_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
+    existing_devices = dr.async_entries_for_config_entry(
+        device_registry, mock_roborock_entry.entry_id
     )
     assert {device.name for device in existing_devices} == {
         "Roborock S7 MaxV",
@@ -138,8 +138,8 @@ async def test_no_stale_device(
     await hass.async_block_till_done()
     if mock_roborock_entry._background_tasks:
         await asyncio.gather(*mock_roborock_entry._background_tasks)
-    new_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
+    new_devices = dr.async_entries_for_config_entry(
+        device_registry, mock_roborock_entry.entry_id
     )
     assert {device.name for device in new_devices} == {
         "Roborock S7 MaxV",
@@ -700,8 +700,8 @@ async def test_disabled_device_no_coordinator(
     assert all(coord.duid != first_device.duid for coord in coordinators.v1)
 
     # Other devices should still be set up
-    found_devices = device_registry.devices.get_devices_for_config_entry_id(
-        mock_roborock_entry.entry_id
+    found_devices = dr.async_entries_for_config_entry(
+        device_registry, mock_roborock_entry.entry_id
     )
     enabled_device_names = {
         device.name for device in found_devices if not device.disabled

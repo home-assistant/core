@@ -1,6 +1,6 @@
 """Config flow for Sensoterra integration."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import Any, override
 
 from jwt import DecodeError, decode
@@ -18,6 +18,7 @@ from homeassistant.helpers.selector import (
     TextSelectorConfig,
     TextSelectorType,
 )
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER, TOKEN_EXPIRATION_DAYS
 
@@ -47,7 +48,7 @@ class SensoterraConfigFlow(ConfigFlow, domain=DOMAIN):
             api = CustomerApi(user_input[CONF_EMAIL], user_input[CONF_PASSWORD])
             # We need a unique tag per HA instance
             uuid = self.hass.data["core.uuid"]
-            expiration = datetime.now() + timedelta(TOKEN_EXPIRATION_DAYS)  # pylint: disable=home-assistant-enforce-naive-now
+            expiration = dt_util.utcnow() + timedelta(TOKEN_EXPIRATION_DAYS)
 
             try:
                 token: str = await api.get_token(

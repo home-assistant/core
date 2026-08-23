@@ -34,7 +34,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -76,7 +76,12 @@ UPDATE_COMMON_SCHEMA = vol.Schema(
 )
 
 UPDATE_YAML_SCHEMA = UPDATE_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_schema(UPDATE_DOMAIN, DEFAULT_NAME).schema
+    make_template_entity_common_schema(
+        UPDATE_DOMAIN,
+        DEFAULT_NAME,
+        UpdateEntityStateAttribute,
+        block_device_class=True,
+    ).schema
 )
 
 UPDATE_CONFIG_ENTRY_SCHEMA = UPDATE_COMMON_SCHEMA.extend(

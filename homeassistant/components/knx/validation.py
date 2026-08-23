@@ -121,6 +121,13 @@ sync_state_validator = vol.Any(
     cv.matches_regex(r"^(init|expire|every)( \d*)?$"),
 )
 
+# entities having a writable group address can omit the state address
+# instead of disabling state updates entirely
+sync_state_no_false_validator = vol.All(
+    sync_state_validator,
+    vol.IsTrue("Sync state can not be disabled for this platform"),
+)
+
 
 def backwards_compatible_xknx_climate_enum_member(enumClass: type[Enum]) -> vol.All:
     """Transform a string to an enum member.

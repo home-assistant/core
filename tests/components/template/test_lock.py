@@ -7,7 +7,12 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant import setup
 from homeassistant.components import lock, template
-from homeassistant.components.lock import LockEntityFeature, LockState
+from homeassistant.components.lock import (
+    LockEntityFeature,
+    LockEntityStateAttribute,
+    LockState,
+)
+from homeassistant.components.template.lock import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
@@ -24,6 +29,7 @@ from homeassistant.helpers.typing import ConfigType
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_extra_template_attributes,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1154,4 +1160,50 @@ async def test_restore_state(
     # The first trigger should replace the restored code_format attribute
     assert_state_and_attributes(
         hass, TEST_LOCK, LockState.UNLOCKED, {"code_format": "\\\\d+"}
+    )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass,
+        TEST_LOCK,
+        style,
+        {"state": "{{ 'locked' }}", **LOCK_ACTION, **UNLOCK_ACTION},
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(LockEntityStateAttribute),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_LOCK,
+        style,
+        0,
+        {
+            "state": "{{ 'locked' }}",
+            **LOCK_ACTION,
+            **UNLOCK_ACTION,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
     )

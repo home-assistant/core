@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from datetime import datetime, timedelta
 from typing import override
 
+from propcache.api import cached_property
 from pygeosphere_warnings import (
     GeoSphereApiError,
     GeoSphereConnectionError,
@@ -21,7 +22,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, WARNINGS_URL
 
 # Warnings are event driven and updated by GeoSphere Austria as needed.
 # The cheap HEAD precheck keeps the cost of a poll low, so a relatively
@@ -55,6 +56,17 @@ class GeoSphereUpdateCoordinator(DataUpdateCoordinator[GeoSphereData]):
         )
         self.client = GeoSphereWarningsClient(async_get_clientsession(hass))
         self._last_modified: datetime | None = None
+
+    @cached_property
+    def warnings_portal_url(self) -> str:
+        """Returns the URL to the configured municipality's details page on the warnings portal."""
+        longitude = self.config_entry.data[CONF_LONGITUDE]
+        latitude = self.config_entry.data[CONF_LATITUDE]
+        return (
+            WARNINGS_URL
+            # codespell:ignore-next-line alle
+            + f"wsapp/de/alle/gesamterzeitraum/0/{longitude:.5f},{latitude:.5f}"
+        )
 
     @override
     async def _async_update_data(self) -> GeoSphereData:

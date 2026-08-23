@@ -55,6 +55,7 @@ class NtfyCommonBaseEntity(CoordinatorEntity[BaseDataUpdateCoordinator]):
     """Base entity for common entities."""
 
     _attr_has_entity_name = True
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(
         self,

@@ -53,7 +53,10 @@ IZONE_SERVICE_AIRFLOW_MAX = "airflow_max"
 
 IZONE_SERVICE_AIRFLOW_SCHEMA: VolDictType = {
     vol.Required(ATTR_AIRFLOW): vol.All(
-        vol.Coerce(int), vol.Range(min=0, max=100), msg="invalid airflow"
+        vol.Coerce(float),
+        vol.In(range(0, 101, 5)),
+        vol.Coerce(int),
+        msg="invalid airflow",
     ),
 }
 

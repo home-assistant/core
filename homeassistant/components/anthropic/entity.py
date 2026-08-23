@@ -887,7 +887,7 @@ class AnthropicDeltaStream:
         cached_input_tokens = 0
         if input_usage:
             input_tokens = input_usage.input_tokens
-            cached_input_tokens = input_usage.cache_creation_input_tokens or 0
+            cached_input_tokens = input_usage.cache_read_input_tokens or 0
         output_tokens = response_usage.output_tokens
         return {
             "stats": {

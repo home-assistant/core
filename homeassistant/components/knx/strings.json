@@ -924,6 +924,37 @@
             }
           }
         },
+        "select": {
+          "description": "The KNX select platform lets you present a list of named options and map each to a value sent to and read from the KNX bus.",
+          "knx": {
+            "options_source": {
+              "custom_options": {
+                "description": "Define the selectable options and the value each one sends.",
+                "label": "Options"
+              },
+              "description": "Choose how the selectable options are defined.",
+              "ga_custom": {
+                "description": "Group address the selected value is sent to and read from.",
+                "label": "[%key:component::knx::config_panel::common::group_address%]"
+              },
+              "ga_enum": {
+                "description": "[%key:component::knx::config_panel::entities::create::select::knx::options_source::ga_custom::description%]",
+                "label": "[%key:component::knx::config_panel::common::group_address%]"
+              },
+              "options": {
+                "custom": {
+                  "description": "Define the options and the value each one sends manually.",
+                  "label": "Custom options"
+                },
+                "from_dpt": {
+                  "description": "The options are derived from the values of an enum data point type.",
+                  "label": "Options from data point type"
+                }
+              },
+              "title": "Options"
+            }
+          }
+        },
         "sensor": {
           "description": "Read-only entity for numeric or string datapoints. Temperature, percent etc.",
           "knx": {
@@ -995,6 +1026,79 @@
         "title": "Create KNX entity",
         "type_selection": {
           "header": "Select entity type"
+        },
+        "weather": {
+          "description": "The KNX weather platform is used as an interface to KNX weather stations.",
+          "knx": {
+            "ga_air_pressure": {
+              "description": "Group address for reading the current air pressure.",
+              "label": "Air pressure"
+            },
+            "ga_brightness_east": {
+              "description": "Group address for reading the current brightness to the east.",
+              "label": "Brightness east"
+            },
+            "ga_brightness_north": {
+              "description": "Group address for reading the current brightness to the north.",
+              "label": "Brightness north"
+            },
+            "ga_brightness_south": {
+              "description": "Group address for reading the current brightness to the south.",
+              "label": "Brightness south"
+            },
+            "ga_brightness_west": {
+              "description": "Group address for reading the current brightness to the west.",
+              "label": "Brightness west"
+            },
+            "ga_day_night": {
+              "description": "Group address for reading whether it is day or night.",
+              "label": "Day/Night"
+            },
+            "ga_frost_alarm": {
+              "description": "Group address for reading whether the frost alarm is active.",
+              "label": "Frost alarm"
+            },
+            "ga_humidity": {
+              "description": "Group address for reading the current humidity.",
+              "label": "Humidity"
+            },
+            "ga_rain_alarm": {
+              "description": "Group address for reading whether the rain alarm is active.",
+              "label": "Rain alarm"
+            },
+            "ga_temperature": {
+              "description": "Group address for reading the current outside temperature.",
+              "label": "Temperature"
+            },
+            "ga_wind_alarm": {
+              "description": "Group address for reading whether the wind alarm is active.",
+              "label": "Wind alarm"
+            },
+            "ga_wind_bearing": {
+              "description": "Group address for reading the current wind bearing.",
+              "label": "Wind bearing"
+            },
+            "ga_wind_speed": {
+              "description": "Group address for reading the current wind speed.",
+              "label": "Wind speed"
+            },
+            "invert_day_night": {
+              "description": "By default `0` is interpreted as day and `1` as night (DPT 1.024). Enable to invert this.",
+              "label": "Invert day/night"
+            },
+            "section_alarms": {
+              "description": "Binary states used to determine the weather condition.",
+              "title": "Alarms"
+            },
+            "section_brightness": {
+              "description": "Brightness readings used to determine the weather condition.",
+              "title": "Brightness"
+            },
+            "section_day_night": {
+              "description": "Day and night state used to determine the weather condition.",
+              "title": "Day/Night"
+            }
+          }
         },
         "yaml": {
           "mode_hint": "This is an internal representation of the entity configuration and may change in future Home Assistant versions. YAML mode is intended for debugging, and for sharing or copying configurations — prefer the visual editor for everyday use.",
@@ -1089,6 +1193,10 @@
         "raw_length": "Payload length",
         "raw_length_description": "Length of the raw payload in bytes. For DPT 1, 2 and 3 use `0`.",
         "raw_payload": "Raw payload"
+      },
+      "knx-select-options-selector": {
+        "add_option": "Add option",
+        "option": "Option name"
       }
     }
   },

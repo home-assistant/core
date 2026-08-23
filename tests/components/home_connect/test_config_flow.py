@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from http import HTTPStatus
 from unittest.mock import MagicMock, patch
+from urllib.parse import parse_qsl, urlsplit
 
 from aiohomeconnect.const import OAUTH2_AUTHORIZE, OAUTH2_TOKEN
 from aiohomeconnect.model import HomeAppliance
@@ -24,6 +25,23 @@ from tests.typing import ClientSessionGenerator
 
 CLIENT_ID = "1234"
 CLIENT_SECRET = "5678"
+
+
+def assert_authorize_url(url: str, state: str, images_scope: bool | None) -> None:
+    """Assert the generated OAuth authorize URL."""
+    split_url = urlsplit(url)
+
+    assert (
+        f"{split_url.scheme}://{split_url.netloc}{split_url.path}" == OAUTH2_AUTHORIZE
+    )
+    assert dict(parse_qsl(split_url.query)) == {
+        "response_type": "code",
+        "client_id": CLIENT_ID,
+        "redirect_uri": "https://example.com/auth/external/callback",
+        "state": state,
+        "scope": f"Control Monitor Settings IdentifyAppliance{' Images' if images_scope else ''}",
+    }
+
 
 DHCP_DISCOVERY = (
     DhcpServiceInfo(
@@ -95,16 +113,27 @@ DHCP_DISCOVERY = (
 
 
 @pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    "images_scope", [True, False], ids=["images_scope", "no_images_scope"]
+)
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,
     aioclient_mock: AiohttpClientMocker,
+    images_scope: bool,
 ) -> None:
     """Check full flow."""
     assert await setup.async_setup_component(hass, "home_connect", {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_USER)
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scopes"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"images_scope": images_scope}
     )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
@@ -115,11 +144,7 @@ async def test_full_flow(
     )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-    )
+    assert_authorize_url(result["url"], state, images_scope)
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -161,6 +186,13 @@ async def test_prevent_reconfiguring_same_account(
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context=ConfigFlowContext(source=config_entries.SOURCE_USER)
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scopes"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"images_scope": True}
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -170,11 +202,7 @@ async def test_prevent_reconfiguring_same_account(
     )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-    )
+    assert_authorize_url(result["url"], state, True)
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -214,6 +242,13 @@ async def test_reauth_flow(
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scopes"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"images_scope": False}
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -268,6 +303,13 @@ async def test_reauth_flow_with_different_account(
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scopes"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"images_scope": True}
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -323,6 +365,13 @@ async def test_zeroconf_flow(
         result["flow_id"],
         {},
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scopes"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"images_scope": True}
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -332,11 +381,7 @@ async def test_zeroconf_flow(
     )
 
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-    )
+    assert_authorize_url(result["url"], state, True)
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
@@ -406,6 +451,13 @@ async def test_dhcp_flow(
         result["flow_id"],
         {},
     )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "scopes"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={"images_scope": True}
+    )
     state = config_entry_oauth2_flow._encode_jwt(
         hass,
         {
@@ -414,11 +466,7 @@ async def test_dhcp_flow(
         },
     )
     assert result["type"] is FlowResultType.EXTERNAL_STEP
-    assert result["url"] == (
-        f"{OAUTH2_AUTHORIZE}?response_type=code&client_id={CLIENT_ID}"
-        "&redirect_uri=https://example.com/auth/external/callback"
-        f"&state={state}"
-    )
+    assert_authorize_url(result["url"], state, True)
 
     client = await hass_client_no_auth()
     resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")

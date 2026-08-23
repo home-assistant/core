@@ -261,6 +261,7 @@ class KnxYamlCover(_KnxCover, KnxYamlEntity):
             invert_updown=config[CoverConf.INVERT_UPDOWN],
             invert_position=config[CoverConf.INVERT_POSITION],
             invert_angle=config[CoverConf.INVERT_ANGLE],
+            sync_state=config[CONF_SYNC_STATE],
         )
         super().__init__(
             knx_module=knx_module,

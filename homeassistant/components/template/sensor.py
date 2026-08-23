@@ -39,7 +39,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -77,11 +77,7 @@ SENSOR_YAML_SCHEMA = vol.All(
         }
     )
     .extend(SENSOR_COMMON_SCHEMA.schema)
-    .extend(
-        make_template_entity_common_modern_attributes_schema(
-            SENSOR_DOMAIN, DEFAULT_NAME
-        ).schema
-    ),
+    .extend(make_template_entity_common_schema(SENSOR_DOMAIN, DEFAULT_NAME).schema),
     validate_last_reset,
 )
 

@@ -10,6 +10,7 @@ from homeassistant.components.lock import (
     ENTITY_ID_FORMAT,
     LockEntity,
     LockEntityFeature,
+    LockEntityStateAttribute,
     LockState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -36,7 +37,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -67,7 +68,9 @@ LOCK_COMMON_SCHEMA = vol.Schema(
 )
 
 LOCK_YAML_SCHEMA = LOCK_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
-    make_template_entity_common_modern_schema(LOCK_DOMAIN, DEFAULT_NAME).schema
+    make_template_entity_common_schema(
+        LOCK_DOMAIN, DEFAULT_NAME, LockEntityStateAttribute
+    ).schema
 )
 
 LOCK_CONFIG_ENTRY_SCHEMA = LOCK_COMMON_SCHEMA.extend(

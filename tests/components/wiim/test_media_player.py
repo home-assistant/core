@@ -19,6 +19,7 @@ from wiim.models import (
 from wiim.wiim_device import WiimDevice
 
 from homeassistant.components.media_player import (
+    ATTR_ENTITY_PICTURE_LOCAL,
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
     ATTR_MEDIA_ALBUM_NAME,
@@ -57,13 +58,20 @@ from homeassistant.components.media_player import (
 )
 import homeassistant.components.wiim as wiim_component
 from homeassistant.components.wiim.const import DOMAIN
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    ATTR_ENTITY_PICTURE,
+    CONF_HOST,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import fire_general_update, fire_transport_update, setup_integration
 
 from tests.common import MockConfigEntry
+from tests.test_util.aiohttp import AiohttpClientMocker
+from tests.typing import ClientSessionGenerator
 
 MEDIA_PLAYER_ENTITY_ID = "media_player.test_wiim_device"
 
@@ -1313,3 +1321,68 @@ async def test_join_service_invalid_member_uses_translation(
     assert exc_info.value.translation_key == "invalid_grouping_entity"
     assert exc_info.value.translation_placeholders == {"entity_id": invalid_entity_id}
     mock_wiim_controller.async_join_group.assert_not_awaited()
+
+
+@pytest.mark.usefixtures("mock_wiim_controller")
+async def test_media_image_hash_changes_for_same_local_artwork_url(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_wiim_device: MagicMock,
+    aioclient_mock: AiohttpClientMocker,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test the media proxy returns new artwork when its URL is reused."""
+    await setup_integration(hass, mock_config_entry)
+    image_url = "https://192.168.1.100/changing-album-art.jpg"
+
+    client = await hass_client()
+
+    mock_wiim_device.current_media = WiimMediaMetadata(
+        title="First Song",
+        artist="Artist",
+        album="Album",
+        uri="http://example.com/first.flac",
+        image_url=image_url,
+    )
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+    assert state.attributes[ATTR_ENTITY_PICTURE] == image_url
+    first_local_image = state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
+
+    aioclient_mock.get(
+        image_url,
+        content=b"first-image",
+        headers={"Content-Type": "image/jpeg"},
+    )
+    media_response = await client.get(first_local_image)
+    assert media_response.status == 200
+    first_image = await media_response.read()
+    assert first_image == b"first-image"
+
+    mock_wiim_device.current_media = WiimMediaMetadata(
+        title="Second Song",
+        artist="Artist",
+        album="Album",
+        uri="http://example.com/second.flac",
+        image_url=image_url,
+    )
+    await fire_general_update(hass, mock_wiim_device)
+    state = hass.states.get(MEDIA_PLAYER_ENTITY_ID)
+    assert state is not None
+
+    assert state.attributes[ATTR_ENTITY_PICTURE] == image_url
+    second_local_image = state.attributes[ATTR_ENTITY_PICTURE_LOCAL]
+    assert second_local_image != first_local_image
+
+    aioclient_mock.clear_requests()
+    aioclient_mock.get(
+        image_url,
+        content=b"second-image",
+        headers={"Content-Type": "image/jpeg"},
+    )
+    media_response = await client.get(second_local_image)
+    assert media_response.status == 200
+    second_image = await media_response.read()
+    assert second_image == b"second-image"
+    assert second_image != first_image

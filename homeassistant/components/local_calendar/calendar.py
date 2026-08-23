@@ -10,6 +10,7 @@ from ical.calendar_stream import IcsCalendarStream
 from ical.event import Event
 from ical.exceptions import CalendarParseError
 from ical.store import EventStore, EventStoreError
+from ical.timeline import Timeline, materialize_timeline
 from ical.types import Range, Recur
 import voluptuous as vol
 
@@ -33,6 +34,12 @@ from .store import LocalCalendarStore
 _LOGGER = logging.getLogger(__name__)
 
 PRODID = "-//homeassistant.io//local_calendar 1.0//EN"
+
+# Materialize a bounded timeline of upcoming events on every update so the
+# state can be recomputed synchronously, without walking recurrence rules in
+# the event loop. Mirrors what remote_calendar does.
+MAX_LOOKAHEAD_EVENTS = 20
+MAX_LOOKAHEAD_TIME = timedelta(days=365)
 
 
 async def async_setup_entry(
@@ -74,7 +81,7 @@ class LocalCalendarEntity(CalendarEntity):
         self._store = store
         self._calendar = calendar
         self._calendar_lock = asyncio.Lock()
-        self._event: CalendarEvent | None = None
+        self._timeline: Timeline | None = None
         self._attr_name = name
         self._attr_unique_id = unique_id
 
@@ -82,7 +89,12 @@ class LocalCalendarEntity(CalendarEntity):
     @override
     def event(self) -> CalendarEvent | None:
         """Return the next upcoming event."""
-        return self._event
+        if self._timeline is None:
+            return None
+        events = self._timeline.active_after(dt_util.now())
+        if event := next(events, None):
+            return _get_calendar_event(event)
+        return None
 
     @override
     async def async_get_events(
@@ -102,14 +114,16 @@ class LocalCalendarEntity(CalendarEntity):
     async def async_update(self) -> None:
         """Update entity state with the next upcoming event."""
 
-        def next_event() -> CalendarEvent | None:
+        def _get_timeline() -> Timeline:
             now = dt_util.now()
-            events = self._calendar.timeline_tz(now.tzinfo).active_after(now)
-            if event := next(events, None):
-                return _get_calendar_event(event)
-            return None
+            return materialize_timeline(
+                self._calendar.timeline_tz(now.tzinfo),
+                start=now,
+                stop=now + MAX_LOOKAHEAD_TIME,
+                max_number_of_events=MAX_LOOKAHEAD_EVENTS,
+            )
 
-        self._event = await self.hass.async_add_executor_job(next_event)
+        self._timeline = await self.hass.async_add_executor_job(_get_timeline)
 
     async def _async_store(self) -> None:
         """Persist the calendar to disk."""

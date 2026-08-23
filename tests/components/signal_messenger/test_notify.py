@@ -452,6 +452,7 @@ def assert_sending_requests(
     assert body_request["message"] == MESSAGE
     assert body_request["number"] == NUMBER_FROM
     assert body_request["recipients"] == (recipients or NUMBERS_TO)
+    assert body_request["notify_self"] is True
     assert len(body_request.get("base64_attachments", [])) == attachments_num
 
     for attachment in body_request.get("base64_attachments", []):

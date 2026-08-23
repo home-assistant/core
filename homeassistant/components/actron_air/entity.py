@@ -98,6 +98,11 @@ class ActronAirZoneEntity(ActronAirEntity):
             ),
         )
 
+    @property
+    def _zone(self) -> ActronAirZone:
+        """Get the current zone data from the coordinator."""
+        return self.coordinator.data.zones[self._zone_id]
+
 
 class ActronAirPeripheralEntity(ActronAirEntity):
     """Base class for Actron Air peripheral entities."""

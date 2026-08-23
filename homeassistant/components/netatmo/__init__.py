@@ -22,7 +22,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_started
@@ -147,7 +147,7 @@ async def async_remove_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: NetatmoConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: NetatmoConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
     homes = config_entry.runtime_data.account.homes.values()

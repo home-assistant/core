@@ -50,8 +50,9 @@ async def test_state(
         entity_entry = entity_registry.async_get(entity_id)
         assert entity_entry == snapshot
         sub_device_entry = device_registry.async_get(entity_entry.device_id)
+        assert isinstance(sub_device_entry, dr.ChildDeviceEntry)
         assert sub_device_entry == snapshot
-        main_device_entry = device_registry.async_get(sub_device_entry.via_device_id)
+        main_device_entry = device_registry.async_get(sub_device_entry.parent_device_id)
         assert main_device_entry == snapshot
 
 

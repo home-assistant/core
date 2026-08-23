@@ -79,6 +79,10 @@ _CLOUD_ERRORS: dict[
         HTTPStatus.BAD_GATEWAY,
         "Unable to reach the Home Assistant Cloud.",
     ),
+    auth.AuthTimeoutError: (
+        HTTPStatus.GATEWAY_TIMEOUT,
+        "Authentication timed out.",
+    ),
     aiohttp.ClientError: (
         HTTPStatus.INTERNAL_SERVER_ERROR,
         "Error making internal request",

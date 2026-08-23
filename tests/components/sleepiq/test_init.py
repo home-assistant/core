@@ -1,14 +1,25 @@
 """Tests for the SleepIQ integration."""
 
+from collections.abc import Callable
+from datetime import timedelta
+from http import HTTPStatus
+from unittest.mock import MagicMock
+
 from asyncsleepiq import (
     SleepIQAPIException,
     SleepIQLoginException,
     SleepIQTimeoutException,
 )
+from freezegun.api import FrozenDateTimeFactory
+import pytest
 
 from homeassistant.components.sleepiq.const import DOMAIN, IS_IN_BED, SLEEP_NUMBER
-from homeassistant.components.sleepiq.coordinator import UPDATE_INTERVAL
-from homeassistant.config_entries import ConfigEntryState
+from homeassistant.components.sleepiq.coordinator import (
+    LONGER_UPDATE_INTERVAL,
+    SLEEP_DATA_UPDATE_INTERVAL,
+    UPDATE_INTERVAL,
+)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.const import CONF_USERNAME, PRESSURE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -87,6 +98,73 @@ async def test_api_timeout(hass: HomeAssistant, mock_asyncsleepiq) -> None:
     mock_asyncsleepiq.init_beds.side_effect = SleepIQTimeoutException
     entry = await setup_platform(hass, None)
     assert not await hass.config_entries.async_setup(entry.entry_id)
+
+
+@pytest.mark.parametrize(
+    ("get_fetch_mock", "platform", "interval"),
+    [
+        pytest.param(
+            lambda client, bed: client.fetch_bed_statuses,
+            "sensor",
+            UPDATE_INTERVAL,
+            id="bed_status",
+        ),
+        pytest.param(
+            lambda client, bed: bed.fetch_pause_mode,
+            "switch",
+            LONGER_UPDATE_INTERVAL,
+            id="pause_mode",
+        ),
+        pytest.param(
+            lambda client, bed: bed.sleepers[0].fetch_sleep_data,
+            "sensor",
+            SLEEP_DATA_UPDATE_INTERVAL,
+            id="sleep_data",
+        ),
+    ],
+)
+async def test_update_auth_error_starts_reauth_flow(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_asyncsleepiq: MagicMock,
+    mock_bed: MagicMock,
+    get_fetch_mock: Callable[[MagicMock, MagicMock], MagicMock],
+    platform: str,
+    interval: timedelta,
+) -> None:
+    """Test an authentication failure during an update starts the reauth flow."""
+    entry = await setup_platform(hass, platform)
+
+    get_fetch_mock(mock_asyncsleepiq, mock_bed).side_effect = SleepIQAPIException(
+        HTTPStatus.UNAUTHORIZED, "unauthorized"
+    )
+    freezer.tick(interval)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    flows = hass.config_entries.flow.async_progress_by_handler(DOMAIN)
+    assert len(flows) == 1
+    assert flows[0]["context"]["source"] == SOURCE_REAUTH
+    assert flows[0]["context"]["entry_id"] == entry.entry_id
+
+
+async def test_update_api_error_does_not_start_reauth_flow(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_asyncsleepiq: MagicMock,
+) -> None:
+    """Test a non-authentication API error during an update does not start reauth."""
+    await setup_platform(hass, "sensor")
+
+    mock_asyncsleepiq.fetch_bed_statuses.side_effect = SleepIQAPIException(
+        HTTPStatus.INTERNAL_SERVER_ERROR, "server error"
+    )
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert mock_asyncsleepiq.fetch_bed_statuses.call_count == 2
+    assert not hass.config_entries.flow.async_progress_by_handler(DOMAIN)
 
 
 async def test_unique_id_migration(hass: HomeAssistant, mock_asyncsleepiq) -> None:

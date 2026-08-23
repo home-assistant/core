@@ -1,5 +1,6 @@
 """Http views to control the config manager."""
 
+from asyncio import shield
 from collections.abc import Callable
 from http import HTTPStatus
 import logging
@@ -110,8 +111,18 @@ class ConfigManagerEntryResourceView(HomeAssistantView):
 
         hass = request.app[KEY_HASS]
 
+        # Shield the removal from cancellation on connection drop, otherwise the
+        # entry is dropped from memory but never saved or cleaned up. The task is
+        # created through hass so a strong reference is held for its lifetime,
+        # which keeps it from being garbage collected once the request handler
+        # has gone away.
+        remove_task = hass.async_create_task(
+            hass.config_entries.async_remove(entry_id),
+            f"config entry remove {entry_id}",
+        )
+
         try:
-            result = await hass.config_entries.async_remove(entry_id)
+            result = await shield(remove_task)
         except config_entries.UnknownEntry:
             return self.json_message("Invalid entry specified", HTTPStatus.NOT_FOUND)
 

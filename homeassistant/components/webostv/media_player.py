@@ -340,11 +340,14 @@ class LgWebOSMediaPlayerEntity(WebOsTvEntity, RestoreEntity, MediaPlayerEntity):
             perfect_match_channel_id = None
 
             for channel in self._client.tv_state.channels:
-                if media_id == channel["channelNumber"]:
-                    perfect_match_channel_id = channel["channelId"]
-                    continue
-
                 if media_id.lower() == channel["channelName"].lower():
+                    perfect_match_channel_id = channel["channelId"]
+                    break
+
+                if (
+                    media_id == channel["channelNumber"]
+                    and perfect_match_channel_id is None
+                ):
                     perfect_match_channel_id = channel["channelId"]
                     continue
 

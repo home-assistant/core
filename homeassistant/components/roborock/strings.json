@@ -623,6 +623,15 @@
       "dust_collection": {
         "name": "Dust collection"
       },
+      "dust_emptying": {
+        "name": "Dust emptying"
+      },
+      "mop_drying": {
+        "name": "Mop drying"
+      },
+      "mop_washing": {
+        "name": "Mop washing"
+      },
       "off_peak_switch": {
         "name": "Off-peak charging"
       },
@@ -729,6 +738,14 @@
     "cloud_api_used": {
       "description": "The Roborock integration is unable to connect directly to {device_name} and falling back to the cloud API. This is not recommended as it can lead to rate limiting. Please make your vacuum accessible on the local network by your Home Assistant instance.",
       "title": "Cloud API used"
+    },
+    "deprecated_mop_drying": {
+      "description": "The `{entity_id}` ({entity_name}) binary sensor is deprecated and has been replaced by the **Mop drying** switch, which reports the same state and can also start and stop drying.\n\nUpdate any dashboards, templates, automations or scripts to use the new switch entity, then disable `{entity_id}` to have it removed.",
+      "title": "The Roborock mop drying binary sensor is deprecated"
+    },
+    "deprecated_mop_drying_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) binary sensor is deprecated and has been replaced by the **Mop drying** switch, which reports the same state and can also start and stop drying.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the new switch entity, then disable `{entity_id}` to have it removed.",
+      "title": "[%key:component::roborock::issues::deprecated_mop_drying::title%]"
     }
   },
   "options": {
