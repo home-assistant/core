@@ -78,8 +78,8 @@ async def test_get_tools(hass: HomeAssistant, llm_context: llm.LLMContext) -> No
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    # The llm integration also exposes its own GetDateTime tool (domain "llm").
-    assert [tool.name for tool in result.tools] == ["GetDateTime", "my_tool"]
+    # The llm integration also exposes its own llm.GetDateTime tool (domain "llm").
+    assert [tool.name for tool in result.tools] == ["llm.GetDateTime", "my_tool"]
     assert result.prompt == "use my_tool wisely"
     platform_get_tools.assert_called_once_with(hass, llm_context, "assist")
 
@@ -91,7 +91,7 @@ async def test_get_tools_empty(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["GetDateTime"]
+    assert [tool.name for tool in result.tools] == ["llm.GetDateTime"]
     assert result.prompt is None
 
 
@@ -108,7 +108,11 @@ async def test_get_tools_merges_sorted(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["GetDateTime", "tool_a", "tool_b"]
+    assert [tool.name for tool in result.tools] == [
+        "llm.GetDateTime",
+        "tool_a",
+        "tool_b",
+    ]
     assert result.prompt == "prompt a\nprompt b"
 
 
@@ -123,7 +127,7 @@ async def test_get_tools_skips_none_platform(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["GetDateTime", "good_tool"]
+    assert [tool.name for tool in result.tools] == ["llm.GetDateTime", "good_tool"]
     assert result.prompt is None
 
 
@@ -140,7 +144,7 @@ async def test_get_tools_isolates_failing_platform(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["GetDateTime", "good_tool"]
+    assert [tool.name for tool in result.tools] == ["llm.GetDateTime", "good_tool"]
     assert result.prompt == "prompt"
     assert "Error getting tools from LLM platform test_bad" in caplog.text
 
@@ -169,7 +173,7 @@ async def test_get_tools_reports_unprefixed_tool_names(
 
     # The tools are still returned until the requirement starts to fail.
     assert [tool.name for tool in result.tools] == [
-        "GetDateTime",
+        "llm.GetDateTime",
         "test.prefixed",
         "unprefixed",
     ]

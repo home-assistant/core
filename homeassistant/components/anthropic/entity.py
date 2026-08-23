@@ -933,9 +933,9 @@ class AnthropicBaseLLMEntity(CoordinatorEntity[AnthropicCoordinator]):
         options: dict[str, Any] = DEFAULT | self.subentry.data
 
         preloaded_tools = [
-            "HassTurnOn",
-            "HassTurnOff",
-            "GetLiveContext",
+            "intent.HassTurnOn",
+            "intent.HassTurnOff",
+            "homeassistant.GetLiveContext",
             "code_execution",
             "web_search",
             "web_fetch",
