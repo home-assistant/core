@@ -66,7 +66,7 @@ def _async_acquire(
 
     shared.consumers += 1
 
-    async def _release() -> None:
+    async def release() -> None:
         """Give up this hold, closing behind the last one."""
         shared.consumers -= 1
         if shared.consumers or connections.get(endpoint) is not shared:
@@ -75,7 +75,7 @@ def _async_acquire(
         _LOGGER.debug("Closing the Modbus connection to %s", endpoint)
         await shared.connection.close()
 
-    return shared, _release
+    return shared, release
 
 
 @callback
