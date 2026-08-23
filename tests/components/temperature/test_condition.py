@@ -13,7 +13,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     assert_numerical_condition_unit_conversion,
     parametrize_numerical_attribute_condition_above_below_all,
@@ -51,17 +50,6 @@ async def target_weathers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "weather")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    ["temperature.is_value"],
-)
-async def test_temperature_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the temperature conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
 _CELSIUS_THRESHOLD = {
     "threshold": {
         "type": "above",
@@ -70,11 +58,10 @@ _CELSIUS_THRESHOLD = {
 }
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("temperature.is_value", _CELSIUS_THRESHOLD, True, False),
+        ("temperature.is_value", _CELSIUS_THRESHOLD, True, True),
     ],
 )
 async def test_temperature_condition_options_validation(
@@ -94,7 +81,6 @@ async def test_temperature_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -131,7 +117,6 @@ async def test_temperature_sensor_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -168,7 +153,6 @@ async def test_temperature_sensor_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -180,6 +164,7 @@ async def test_temperature_sensor_condition_behavior_all(
         HVACMode.AUTO,
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        attribute_required=True,
     ),
 )
 async def test_temperature_climate_condition_behavior_any(
@@ -205,7 +190,6 @@ async def test_temperature_climate_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -217,6 +201,7 @@ async def test_temperature_climate_condition_behavior_any(
         HVACMode.AUTO,
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        attribute_required=True,
     ),
 )
 async def test_temperature_climate_condition_behavior_all(
@@ -242,7 +227,6 @@ async def test_temperature_climate_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -254,6 +238,7 @@ async def test_temperature_climate_condition_behavior_all(
         "eco",
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        attribute_required=True,
     ),
 )
 async def test_temperature_water_heater_condition_behavior_any(
@@ -279,7 +264,6 @@ async def test_temperature_water_heater_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("water_heater"),
@@ -291,6 +275,7 @@ async def test_temperature_water_heater_condition_behavior_any(
         "eco",
         "current_temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
+        attribute_required=True,
     ),
 )
 async def test_temperature_water_heater_condition_behavior_all(
@@ -316,7 +301,6 @@ async def test_temperature_water_heater_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -329,6 +313,7 @@ async def test_temperature_water_heater_condition_behavior_all(
         "temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
         unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+        attribute_required=True,
     ),
 )
 async def test_temperature_weather_condition_behavior_any(
@@ -354,7 +339,6 @@ async def test_temperature_weather_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -367,6 +351,7 @@ async def test_temperature_weather_condition_behavior_any(
         "temperature",
         threshold_unit=UnitOfTemperature.CELSIUS,
         unit_attributes=_WEATHER_UNIT_ATTRIBUTES,
+        attribute_required=True,
     ),
 )
 async def test_temperature_weather_condition_behavior_all(
@@ -392,7 +377,6 @@ async def test_temperature_weather_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_temperature_condition_unit_conversion_sensor(
     hass: HomeAssistant,
 ) -> None:
@@ -482,7 +466,6 @@ async def test_temperature_condition_unit_conversion_sensor(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 async def test_temperature_condition_unit_conversion_climate(
     hass: HomeAssistant,
 ) -> None:

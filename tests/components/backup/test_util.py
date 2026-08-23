@@ -1,7 +1,5 @@
 """Tests for the Backup integration's utility functions."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator
 import dataclasses
@@ -16,6 +14,7 @@ import pytest
 import securetar
 
 from homeassistant.components.backup import DOMAIN, AddonInfo, AgentBackup, Folder
+from homeassistant.components.backup.models import InvalidBackupFilename
 from homeassistant.components.backup.util import (
     DecryptedBackupStreamer,
     EncryptedBackupStreamer,
@@ -154,9 +153,41 @@ def test_read_backup(backup_json_content: bytes, expected_backup: AgentBackup) -
     mock_path.stat.return_value.st_size = 1234
 
     with patch("homeassistant.components.backup.util.tarfile.open") as mock_open_tar:
-        mock_open_tar.return_value.__enter__.return_value.extractfile.return_value.read.return_value = backup_json_content
+        tar_ctx = mock_open_tar.return_value.__enter__.return_value
+        tar_ctx.extractfile.return_value.read.return_value = backup_json_content
         backup = read_backup(mock_path)
         assert backup == expected_backup
+
+
+@pytest.mark.parametrize(
+    "name",
+    [
+        "/absolute/path",
+        "../parent",
+        "with/slash",
+        "with\\backslash",
+        "C:\\drive\\path",
+        "",
+        ".",
+        "..",
+    ],
+)
+def test_read_backup_rejects_unsafe_name(name: str) -> None:
+    """Test that read_backup rejects names that could escape the backup directory."""
+    backup_json_content = (
+        b'{"compressed":true,"date":"2024-12-02T07:23:58.261875-05:00","homeassistant":'
+        b'{"exclude_database":true,"version":"2024.12.0.dev0"},"name":"'
+        + name.encode().replace(b"\\", b"\\\\")
+        + b'","protected":true,"slug":"455645fe","type":"partial","version":2}'
+    )
+    mock_path = Mock()
+    mock_path.stat.return_value.st_size = 1234
+
+    with patch("homeassistant.components.backup.util.tarfile.open") as mock_open_tar:
+        tar_ctx = mock_open_tar.return_value.__enter__.return_value
+        tar_ctx.extractfile.return_value.read.return_value = backup_json_content
+        with pytest.raises(InvalidBackupFilename):
+            read_backup(mock_path)
 
 
 @pytest.mark.parametrize(

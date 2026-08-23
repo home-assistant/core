@@ -1,10 +1,9 @@
 """AI Task integration for Home Assistant Cloud."""
 
-from __future__ import annotations
-
 import io
 from json import JSONDecodeError
 import logging
+from typing import override
 
 from hass_nabucasa.llm import (
     LLMAuthenticationError,
@@ -111,10 +110,12 @@ class CloudAITaskEntity(BaseCloudLLMEntity, ai_task.AITaskEntity):
     _attr_unique_id = AI_TASK_ENTITY_UNIQUE_ID
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return self._cloud.is_logged_in and self._cloud.valid_subscription
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,
@@ -152,6 +153,7 @@ class CloudAITaskEntity(BaseCloudLLMEntity, ai_task.AITaskEntity):
             data=data,
         )
 
+    @override
     async def _async_generate_image(
         self,
         task: ai_task.GenImageTask,

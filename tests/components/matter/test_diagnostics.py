@@ -1,7 +1,5 @@
 """Test the Matter diagnostics platform."""
 
-from __future__ import annotations
-
 import json
 from typing import Any
 from unittest.mock import MagicMock
@@ -11,8 +9,12 @@ from matter_server.common.helpers.util import dataclass_from_dict
 from matter_server.common.models import ServerDiagnostics
 import pytest
 
+from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.components.matter.const import DOMAIN
-from homeassistant.components.matter.diagnostics import redact_matter_attributes
+from homeassistant.components.matter.diagnostics import (
+    SERVER_INFO_TO_REDACT,
+    redact_matter_attributes,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
@@ -87,7 +89,7 @@ async def test_device_diagnostics(
     """Test the device diagnostics."""
     system_info_dict = config_entry_diagnostics["info"]
     device_diagnostics_redacted = {
-        "server_info": system_info_dict,
+        "server_info": async_redact_data(system_info_dict, SERVER_INFO_TO_REDACT),
         "node": redact_matter_attributes(device_diagnostics),
     }
     server_diagnostics_response = {

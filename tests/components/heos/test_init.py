@@ -52,7 +52,7 @@ async def test_async_setup_entry_with_options_loads_platforms(
     controller: MockHeos,
     new_mock: Mock,
 ) -> None:
-    """Test load connects to heos with options, retrieves players, and loads platforms."""
+    """Test load connects to heos with options, retrieves players, and loads."""
     config_entry_options.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry_options.entry_id)
 
@@ -115,8 +115,9 @@ async def test_async_setup_entry_not_signed_in_loads_platforms(
     assert controller.get_input_sources.call_count == 1
     controller.disconnect.assert_not_called()
     assert (
-        "The HEOS System is not logged in: Enter credentials in the integration options to access favorites and streaming services"
-        in caplog.text
+        "The HEOS System is not logged in: Enter credentials in"
+        " the integration options to access favorites and"
+        " streaming services" in caplog.text
     )
 
 
@@ -182,17 +183,53 @@ async def test_device_info(
     """Test device information populates correctly."""
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
-    device = device_registry.async_get_device({(DOMAIN, "1")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1"), config_entry.entry_id
+    )
     assert device is not None
     assert device.manufacturer == "HEOS"
     assert device.model == "Drive HS2"
     assert device.name == "Test Player"
     assert device.serial_number == "123456"
     assert device.sw_version == "1.0.0"
-    device = device_registry.async_get_device({(DOMAIN, "2")})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "2"), config_entry.entry_id
+    )
     assert device is not None
     assert device.manufacturer == "HEOS"
     assert device.model == "Speaker"
+
+
+async def test_remove_config_entry_device_rejects_child_device(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    controller: MockHeos,
+) -> None:
+    """Test removing an unexpected child device is rejected."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    assert await async_setup_component(hass, "config", {})
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1"), config_entry.entry_id
+    )
+    assert parent_device is not None
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "test_child_device")},
+        parent_device_id=parent_device.id,
+    )
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert not response["success"]
+    assert (
+        response["error"]["message"]
+        == "Failed to remove device entry, rejected by integration"
+    )
+    assert device_registry.async_get(child_device.id)
 
 
 async def test_device_id_migration(
@@ -213,10 +250,32 @@ async def test_device_id_migration(
     )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert device_registry.async_get_device({("Other", 1)}) is not None  # type: ignore[arg-type]
-    assert device_registry.async_get_device({(DOMAIN, 1)}) is None  # type: ignore[arg-type]
-    assert device_registry.async_get_device({(DOMAIN, "1")}) is not None
-    assert device_registry.async_get_device({("Other", "1")}) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            ("Other", 1),  # type: ignore[arg-type]
+            config_entry.entry_id,
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, 1),  # type: ignore[arg-type]
+            config_entry.entry_id,
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "1"), config_entry.entry_id
+        )
+        is not None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            ("Other", "1"), config_entry.entry_id
+        )
+        is not None
+    )
 
 
 async def test_device_id_migration_both_present(
@@ -236,8 +295,19 @@ async def test_device_id_migration_both_present(
     )
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
-    assert device_registry.async_get_device({(DOMAIN, 1)}) is None  # type: ignore[arg-type]
-    assert device_registry.async_get_device({(DOMAIN, "1")}) is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, 1),  # type: ignore[arg-type]
+            config_entry.entry_id,
+        )
+        is None
+    )
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, "1"), config_entry.entry_id
+        )
+        is not None
+    )
 
 
 @pytest.mark.parametrize(
@@ -263,7 +333,7 @@ async def test_remove_config_entry_device(
     )
 
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"] == expected_result
 
 

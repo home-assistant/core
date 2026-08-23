@@ -1,10 +1,8 @@
 """Support for SleepIQ SleepNumber firmness number entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, cast
+from typing import Any, cast, override
 
 from asyncsleepiq import (
     CoreTemps,
@@ -61,7 +59,9 @@ def _get_actuator_name(bed: SleepIQBed, actuator: SleepIQActuator) -> str:
     if actuator.side:
         return (
             "SleepNumber"
-            f" {bed.name} {actuator.side_full} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
+            f" {bed.name} {actuator.side_full}"
+            f" {actuator.actuator_full}"
+            f" {ENTITY_TYPES[ACTUATOR]}"
         )
 
     return f"SleepNumber {bed.name} {actuator.actuator_full} {ENTITY_TYPES[ACTUATOR]}"
@@ -158,6 +158,8 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
         set_value_fn=_async_set_foot_warmer_time,
         get_name_fn=_get_foot_warming_name,
         get_unique_id_fn=_get_foot_warming_unique_id,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
+        device_class=NumberDeviceClass.DURATION,
     ),
     CORE_CLIMATE_TIMER: SleepIQNumberEntityDescription(
         key=CORE_CLIMATE_TIMER,
@@ -170,7 +172,7 @@ NUMBER_DESCRIPTIONS: dict[str, SleepIQNumberEntityDescription] = {
         set_value_fn=_async_set_core_climate_time,
         get_name_fn=_get_core_climate_name,
         get_unique_id_fn=_get_core_climate_unique_id,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
+        native_unit_of_measurement=UnitOfTime.MINUTES,
         device_class=NumberDeviceClass.DURATION,
     ),
 }
@@ -251,10 +253,12 @@ class SleepIQNumberEntity(SleepIQBedEntity[SleepIQDataUpdateCoordinator], Number
         super().__init__(coordinator, bed)
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update number attributes."""
         self._attr_native_value = float(self.entity_description.value_fn(self.device))
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the number value."""
         await self.entity_description.set_value_fn(self.device, int(value))

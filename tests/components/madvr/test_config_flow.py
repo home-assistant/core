@@ -23,11 +23,8 @@ async def avoid_wait() -> AsyncGenerator[None]:
         yield
 
 
-async def test_full_flow(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant, mock_madvr_client: AsyncMock) -> None:
     """Test full config flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -51,11 +48,8 @@ async def test_full_flow(
     mock_madvr_client.async_cancel_tasks.assert_called_once()
 
 
-async def test_flow_errors(
-    hass: HomeAssistant,
-    mock_madvr_client: AsyncMock,
-    mock_setup_entry: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_flow_errors(hass: HomeAssistant, mock_madvr_client: AsyncMock) -> None:
     """Test error handling in config flow."""
     mock_madvr_client.open_connection.side_effect = TimeoutError
 

@@ -1,6 +1,6 @@
 """Base entity for the Snoo integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
@@ -32,6 +32,7 @@ class SnooDescriptionEntity(CoordinatorEntity[SnooCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.data is not None and super().available

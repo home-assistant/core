@@ -1,14 +1,18 @@
 """Remote control support for LG Netcast TV."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
-from typing import TYPE_CHECKING, Any
+import time
+from typing import TYPE_CHECKING, Any, override
 
 from pylgnetcast import LG_COMMAND, LgNetCastClient, LgNetCastError
 from requests import RequestException
 
-from homeassistant.components.remote import ATTR_NUM_REPEATS, RemoteEntity
+from homeassistant.components.remote import (
+    ATTR_DELAY_SECS,
+    ATTR_NUM_REPEATS,
+    DEFAULT_DELAY_SECS,
+    RemoteEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -53,31 +57,39 @@ class LgNetCastRemote(RemoteEntity):
             manufacturer=ATTR_MANUFACTURER,
         )
 
+    @override
     def send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send commands to the TV."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]
+        delay_secs = kwargs.get(ATTR_DELAY_SECS, DEFAULT_DELAY_SECS)
 
         commands: list[int] = []
         for cmd in command:
             if cmd not in VALID_COMMANDS:
                 raise ServiceValidationError(f"Unknown command: {cmd!r}")
             commands.append(getattr(LG_COMMAND, cmd))
-        for _ in range(num_repeats):
+        for i in range(num_repeats):
             try:
                 with self._client as client:
-                    for lg_command in commands:
+                    if i > 0:
+                        time.sleep(delay_secs)
+                    for j, lg_command in enumerate(commands):
+                        if j > 0:
+                            time.sleep(delay_secs)
                         client.send_command(lg_command)
             except LgNetCastError, RequestException:
                 self._attr_is_on = False
                 self.schedule_update_ha_state()
                 return
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn on is handled via a separate turn_on trigger."""
         raise NotImplementedError(
             "Turning on the TV is not supported by the LG Netcast remote entity"
         )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn off the TV."""
         self.send_command(["POWER"], **{ATTR_NUM_REPEATS: 1})

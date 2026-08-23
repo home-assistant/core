@@ -1,17 +1,27 @@
 # serializer version: 1
 # name: test_diagnostics
   dict({
+    'api_info': dict({
+      'public_api_version': '2.5',
+      'reported_api_version': '2.5.1',
+    }),
     'board_info': dict({
       'box_name': 'SILENT_CONNECT',
       'box_sub_type_name': 'Eu',
+      'public_api_version': '2.5',
+      'raw_payload': dict({
+      }),
       'serial_board_box': '**REDACTED**',
       'serial_board_comm': '**REDACTED**',
       'serial_duco_box': '**REDACTED**',
       'serial_duco_comm': '**REDACTED**',
+      'software_version': '1.2.3',
     }),
     'duco_diagnostics': list([
       dict({
         'component': 'Ventilation',
+        'raw_payload': dict({
+        }),
         'status': 'Ok',
       }),
     ]),
@@ -26,6 +36,8 @@
       'mac': '**REDACTED**',
       'mode': 'WIFI_CLIENT',
       'net_mask': '255.255.255.0',
+      'raw_payload': dict({
+      }),
       'rssi_wifi': -60,
     }),
     'nodes': dict({
@@ -37,19 +49,28 @@
           'network_type': 'VIRT',
           'node_type': 'BOX',
           'parent': 0,
+          'raw_payload': dict({
+          }),
           'sub_type': 1,
         }),
+        'motor_state': None,
         'node_id': 1,
+        'raw_payload': dict({
+        }),
         'sensor': dict({
           'co2': None,
           'iaq_co2': None,
           'iaq_rh': None,
+          'raw_payload': dict({
+          }),
           'rh': None,
           'temp': 27.9,
         }),
         'ventilation': dict({
           'flow_lvl_tgt': 0,
           'mode': 'AUTO',
+          'raw_payload': dict({
+          }),
           'state': 'AUTO',
           'time_state_end': 0,
           'time_state_remain': 0,
@@ -63,19 +84,28 @@
           'network_type': 'RF',
           'node_type': 'BSRH',
           'parent': 1,
+          'raw_payload': dict({
+          }),
           'sub_type': 0,
         }),
+        'motor_state': None,
         'node_id': 113,
+        'raw_payload': dict({
+        }),
         'sensor': dict({
           'co2': None,
           'iaq_co2': None,
           'iaq_rh': 85,
+          'raw_payload': dict({
+          }),
           'rh': 42.0,
           'temp': 27.9,
         }),
         'ventilation': dict({
           'flow_lvl_tgt': None,
           'mode': '-',
+          'raw_payload': dict({
+          }),
           'state': 'AUTO',
           'time_state_end': 0,
           'time_state_remain': 0,
@@ -89,19 +119,28 @@
           'network_type': 'RF',
           'node_type': 'UCCO2',
           'parent': 1,
+          'raw_payload': dict({
+          }),
           'sub_type': 0,
         }),
+        'motor_state': None,
         'node_id': 2,
+        'raw_payload': dict({
+        }),
         'sensor': dict({
           'co2': 405,
           'iaq_co2': 80,
           'iaq_rh': None,
+          'raw_payload': dict({
+          }),
           'rh': None,
           'temp': 19.8,
         }),
         'ventilation': dict({
           'flow_lvl_tgt': None,
           'mode': '-',
+          'raw_payload': dict({
+          }),
           'state': 'AUTO',
           'time_state_end': 0,
           'time_state_remain': 0,
@@ -115,19 +154,28 @@
           'network_type': 'RF',
           'node_type': 'UCRH',
           'parent': 1,
+          'raw_payload': dict({
+          }),
           'sub_type': 0,
         }),
+        'motor_state': None,
         'node_id': 50,
+        'raw_payload': dict({
+        }),
         'sensor': dict({
           'co2': None,
           'iaq_co2': None,
           'iaq_rh': 90,
+          'raw_payload': dict({
+          }),
           'rh': 61.0,
           'temp': 22.5,
         }),
         'ventilation': dict({
           'flow_lvl_tgt': None,
           'mode': '-',
+          'raw_payload': dict({
+          }),
           'state': 'AUTO',
           'time_state_end': 0,
           'time_state_remain': 0,

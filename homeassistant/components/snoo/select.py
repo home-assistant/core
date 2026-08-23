@@ -1,9 +1,8 @@
 """Support for Snoo Select."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from python_snoo.containers import SnooData, SnooDevice, SnooLevels
 from python_snoo.exceptions import SnooCommandException
@@ -60,10 +59,12 @@ class SnooSelect(SnooDescriptionEntity, SelectEntity):
     entity_description: SnooSelectEntityDescription
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self.entity_description.value_fn(self.coordinator.data)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         try:

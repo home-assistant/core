@@ -1,7 +1,7 @@
 """Config flow for Antifurto365 iAlarm integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyialarm import IAlarm
 import voluptuous as vol
@@ -32,6 +32,7 @@ class IAlarmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

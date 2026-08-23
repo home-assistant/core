@@ -3,7 +3,7 @@
 import pytest
 
 from homeassistant.components.climate import HVACMode
-from homeassistant.components.knx.const import ClimateConf
+from homeassistant.components.knx.const import CONF_SYNC_STATE, ClimateConf
 from homeassistant.components.knx.schema import ClimateSchema
 from homeassistant.const import CONF_NAME, STATE_IDLE, Platform
 from homeassistant.core import HomeAssistant
@@ -32,6 +32,7 @@ async def test_climate_basic_temperature_set(
                 ClimateSchema.CONF_TEMPERATURE_ADDRESS: "1/2/3",
                 ClimateSchema.CONF_TARGET_TEMPERATURE_ADDRESS: "1/2/4",
                 ClimateSchema.CONF_TARGET_TEMPERATURE_STATE_ADDRESS: "1/2/5",
+                CONF_SYNC_STATE: "init",
             }
         }
     )
@@ -182,7 +183,8 @@ async def test_climate_hvac_mode(
     await knx.assert_read("1/2/7")
     await knx.receive_response("1/2/7", (0x01,))
 
-    # turn hvac mode to off - set_hvac_mode() doesn't send to on_off if dedicated hvac mode is available
+    # turn hvac mode to off - set_hvac_mode() doesn't send to
+    # on_off if dedicated hvac mode is available
     await hass.services.async_call(
         "climate",
         "set_hvac_mode",

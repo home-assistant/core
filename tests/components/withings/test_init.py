@@ -185,7 +185,9 @@ async def test_triggering_reauth(
                 "token": {"userid": 123},
                 "profile": "henk",
                 "use_webhook": False,
-                "webhook_id": "3290798afaebd28519c4883d3d411c7197572e0cc9b8d507471f59a700a61a55",
+                "webhook_id": (
+                    "3290798afaebd28519c4883d3d411c7197572e0cc9b8d507471f59a700a61a55"
+                ),
             },
         ),
         MockConfigEntry(
@@ -708,9 +710,34 @@ async def test_devices(
     await hass.async_block_till_done()
 
     for device_id in ("12345", "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"):
-        device = device_registry.async_get_device({(DOMAIN, device_id)})
+        device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, device_id), webhook_config_entry.entry_id
+        )
         assert device is not None
         assert device == snapshot(name=device_id)
+
+
+@pytest.mark.usefixtures("withings")
+async def test_device_via_device_id(
+    hass: HomeAssistant,
+    webhook_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the physical device is linked to the account device via via_device_id."""
+    await setup_integration(hass, webhook_config_entry)
+    await hass.async_block_till_done()
+
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(webhook_config_entry.unique_id)), webhook_config_entry.entry_id
+    )
+    assert account_device is not None
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "f998be4b9ccc9e136fd8cd8e8e344c31ec3b271d"),
+        webhook_config_entry.entry_id,
+    )
+    assert device is not None
+    assert device.via_device_id == account_device.id
 
 
 async def test_oauth_implementation_not_available(

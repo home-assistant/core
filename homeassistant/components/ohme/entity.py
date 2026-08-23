@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from ohme import OhmeApiClient
 
@@ -51,6 +52,7 @@ class OhmeEntity(CoordinatorEntity[OhmeBaseCoordinator]):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if charger reporting as online."""
         return (

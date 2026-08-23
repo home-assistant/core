@@ -1,7 +1,5 @@
 """Common fixtures for the Honeywell String Lights tests."""
 
-from __future__ import annotations
-
 import pytest
 
 from homeassistant.components.honeywell_string_lights.const import (

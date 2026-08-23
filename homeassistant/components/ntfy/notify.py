@@ -1,10 +1,8 @@
 """ntfy notification entity."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiontfy import Message
 from aiontfy.exceptions import (
@@ -64,6 +62,7 @@ class NtfyNotifyEntity(NtfyBaseEntity, NotifyEntity):
     )
     _attr_supported_features = NotifyEntityFeature.TITLE
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Publish a message to a topic via notify.send_message action."""
         await self._publish(message=message, title=title)

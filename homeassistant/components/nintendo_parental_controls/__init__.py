@@ -1,7 +1,5 @@
 """The Nintendo Switch parental controls integration."""
 
-from __future__ import annotations
-
 from pynintendoauth.exceptions import (
     InvalidOAuthConfigurationException,
     InvalidSessionTokenException,

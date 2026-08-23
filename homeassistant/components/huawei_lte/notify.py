@@ -1,9 +1,7 @@
 """Support for Huawei LTE router notifications."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from huawei_lte_api.exceptions import ResponseErrorException
 
@@ -44,6 +42,7 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
         self.router = router
         self.default_targets = default_targets
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to target numbers."""
 
@@ -62,5 +61,6 @@ class HuaweiLteSmsNotificationService(BaseNotificationService):
                 phone_numbers=targets, message=message
             )
             _LOGGER.debug("Sent to %s: %s", targets, resp)
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except ResponseErrorException as ex:
             _LOGGER.error("Could not send to %s: %s", targets, ex)

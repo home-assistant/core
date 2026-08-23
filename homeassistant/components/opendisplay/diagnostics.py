@@ -1,7 +1,5 @@
 """Diagnostics support for OpenDisplay."""
 
-from __future__ import annotations
-
 import dataclasses
 from typing import Any
 
@@ -10,7 +8,19 @@ from homeassistant.core import HomeAssistant
 
 from . import OpenDisplayConfigEntry
 
-TO_REDACT = {"ssid", "password", "server_url"}
+TO_REDACT = {
+    "ssid",
+    "password",
+    "server_url",
+    "serial_number",
+    "friendly_name",
+    "device_location",
+    "device_id",
+    "custom_string_1",
+    "custom_string_2",
+    "custom_string_3",
+    "encryption_key",
+}
 
 
 def _asdict(obj: Any) -> Any:
@@ -35,6 +45,7 @@ async def async_get_config_entry_diagnostics(
         "firmware": {
             "major": fw["major"],
             "minor": fw["minor"],
+            "patch": fw["patch"],
             "sha": fw["sha"],
         },
         "is_flex": runtime.is_flex,

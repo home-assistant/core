@@ -1,13 +1,10 @@
 """Tests for vacuum platform."""
 
-from __future__ import annotations
-
 from kasa import Device, Module
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.vacuum import (
-    ATTR_BATTERY_LEVEL,
     ATTR_FAN_SPEED,
     DOMAIN as VACUUM_DOMAIN,
     SERVICE_LOCATE,
@@ -64,7 +61,6 @@ async def test_vacuum(
     assert state.state == VacuumActivity.DOCKED
 
     assert state.attributes[ATTR_FAN_SPEED] == "max"
-    assert state.attributes[ATTR_BATTERY_LEVEL] == 100
     result = translation.async_translate_state(
         hass, "max", "vacuum", "tplink", "vacuum.state_attributes.fan_speed", None
     )

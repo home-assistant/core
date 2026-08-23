@@ -19,7 +19,6 @@ from tests.components.common import (
     ConditionStateDescription,
     assert_condition_behavior_all,
     assert_condition_behavior_any,
-    assert_condition_gated_by_labs_flag,
     assert_condition_options_supported,
     parametrize_numerical_attribute_condition_above_below_all,
     parametrize_numerical_attribute_condition_above_below_any,
@@ -56,27 +55,13 @@ async def target_weathers(hass: HomeAssistant) -> dict[str, list[str]]:
     return await target_entities(hass, "weather")
 
 
-@pytest.mark.parametrize(
-    "condition",
-    [
-        "humidity.is_value",
-    ],
-)
-async def test_humidity_conditions_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, condition: str
-) -> None:
-    """Test the humidity conditions are gated by the labs flag."""
-    await assert_condition_gated_by_labs_flag(hass, caplog, condition)
-
-
 _PLAIN_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        ("humidity.is_value", _PLAIN_THRESHOLD, True, False),
+        ("humidity.is_value", _PLAIN_THRESHOLD, True, True),
     ],
 )
 async def test_humidity_condition_options_validation(
@@ -96,7 +81,6 @@ async def test_humidity_condition_options_validation(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -132,7 +116,6 @@ async def test_humidity_sensor_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -168,7 +151,6 @@ async def test_humidity_sensor_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -179,6 +161,7 @@ async def test_humidity_sensor_condition_behavior_all(
         "humidity.is_value",
         HVACMode.AUTO,
         CLIMATE_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_climate_condition_behavior_any(
@@ -204,7 +187,6 @@ async def test_humidity_climate_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("climate"),
@@ -215,6 +197,7 @@ async def test_humidity_climate_condition_behavior_any(
         "humidity.is_value",
         HVACMode.AUTO,
         CLIMATE_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_climate_condition_behavior_all(
@@ -240,7 +223,6 @@ async def test_humidity_climate_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -251,6 +233,7 @@ async def test_humidity_climate_condition_behavior_all(
         "humidity.is_value",
         STATE_ON,
         HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_humidifier_condition_behavior_any(
@@ -276,7 +259,6 @@ async def test_humidity_humidifier_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -287,6 +269,7 @@ async def test_humidity_humidifier_condition_behavior_any(
         "humidity.is_value",
         STATE_ON,
         HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_humidifier_condition_behavior_all(
@@ -312,7 +295,6 @@ async def test_humidity_humidifier_condition_behavior_all(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -323,6 +305,7 @@ async def test_humidity_humidifier_condition_behavior_all(
         "humidity.is_value",
         "sunny",
         ATTR_WEATHER_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_weather_condition_behavior_any(
@@ -348,7 +331,6 @@ async def test_humidity_weather_condition_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("condition_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("weather"),
@@ -359,6 +341,7 @@ async def test_humidity_weather_condition_behavior_any(
         "humidity.is_value",
         "sunny",
         ATTR_WEATHER_HUMIDITY,
+        attribute_required=True,
     ),
 )
 async def test_humidity_weather_condition_behavior_all(

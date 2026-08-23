@@ -117,7 +117,9 @@ MISCALE_V1_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-60,
     manufacturer_data={},
     service_data={
-        "0000181d-0000-1000-8000-00805f9b34fb": b"\x22\x9e\x43\xe5\x07\x04\x0b\x10\x13\x01"
+        "0000181d-0000-1000-8000-00805f9b34fb": (
+            b"\x22\x9e\x43\xe5\x07\x04\x0b\x10\x13\x01"
+        )
     },
     service_uuids=["0000181d-0000-1000-8000-00805f9b34fb"],
     source="local",
@@ -134,7 +136,9 @@ MISCALE_V2_SERVICE_INFO = BluetoothServiceInfoBleak(
     rssi=-60,
     manufacturer_data={},
     service_data={
-        "0000181b-0000-1000-8000-00805f9b34fb": b"\x02&\xb2\x07\x05\x04\x0f\x02\x01\xac\x01\x86B"
+        "0000181b-0000-1000-8000-00805f9b34fb": (
+            b"\x02&\xb2\x07\x05\x04\x0f\x02\x01\xac\x01\x86B"
+        )
     },
     service_uuids=["0000181b-0000-1000-8000-00805f9b34fb"],
     source="local",

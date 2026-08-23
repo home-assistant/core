@@ -1,9 +1,7 @@
 """Support for climates."""
 
-from __future__ import annotations
-
 from enum import StrEnum
-from typing import Any, TypedDict, cast
+from typing import Any, TypedDict, cast, override
 
 from aiocomelit import ComelitSerialBridgeObject
 from aiocomelit.const import CLIMATE
@@ -162,12 +160,14 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         self._attr_target_temperature = values[4] / 10
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._update_attributes()
         super()._handle_coordinator_update()
 
     @bridge_api_call
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if (
@@ -184,6 +184,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         self.async_write_ha_state()
 
     @bridge_api_call
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
 
@@ -197,6 +198,7 @@ class ComelitClimateEntity(ComelitBridgeBaseEntity, ClimateEntity):
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new target preset mode."""
 

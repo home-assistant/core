@@ -1,15 +1,13 @@
 """Config Flow for Tesla Fleet integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
 import re
-from typing import Any, cast
+from typing import Any, cast, override
 
 import jwt
 from tesla_fleet_api import TeslaFleetApi
-from tesla_fleet_api.const import SERVERS, Scope
+from tesla_fleet_api.const import Scope
 from tesla_fleet_api.exceptions import (
     InvalidToken,
     LoginRequired,
@@ -20,15 +18,19 @@ from tesla_fleet_api.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.const import CONF_DOMAIN, CONF_REGION
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     QrCodeSelector,
     QrCodeSelectorConfig,
     QrErrorCorrectionLevel,
+    SelectSelector,
+    SelectSelectorConfig,
+    SelectSelectorMode,
 )
 
-from .const import CONF_DOMAIN, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER, REGION_SERVERS, REGIONS
 from .oauth import TeslaUserImplementation
 
 
@@ -45,18 +47,21 @@ class OAuth2FlowHandler(
         self.domain: str | None = None
         self.data: dict[str, Any] = {}
         self.uid: str | None = None
-        self.apis: list[TeslaFleetApi] = []
+        self.region: str = REGIONS[0]
+        self.api: TeslaFleetApi | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
 
+    @override
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],
     ) -> ConfigFlowResult:
-        """Handle OAuth completion and proceed to domain registration."""
+        """Handle OAuth completion and proceed to region selection."""
         token = jwt.decode(
             data["token"]["access_token"], options={"verify_signature": False}
         )
@@ -72,18 +77,28 @@ class OAuth2FlowHandler(
             )
         self._abort_if_unique_id_configured()
 
-        # OAuth done, setup Partner API connections for all regions
-        implementation = cast(TeslaUserImplementation, self.flow_impl)
-        session = async_get_clientsession(self.hass)
-        failed_regions: list[str] = []
+        # Default the region to the one detected from the OAuth token
+        detected = token.get("ou_code", "").lower()
+        self.region = detected if detected in REGIONS else REGIONS[0]
 
-        for region, server_url in SERVERS.items():
-            if region == "cn":
-                continue
+        return await self.async_step_region()
+
+    async def async_step_region(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle region selection and partner login."""
+
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            self.region = user_input[CONF_REGION]
+
+            implementation = cast(TeslaUserImplementation, self.flow_impl)
+            session = async_get_clientsession(self.hass)
             api = TeslaFleetApi(
                 session=session,
                 access_token="",
-                server=server_url,
+                server=REGION_SERVERS[self.region],
                 partner_scope=True,
                 charging_scope=False,
                 energy_scope=False,
@@ -100,29 +115,32 @@ class OAuth2FlowHandler(
             except (InvalidToken, OAuthExpired, LoginRequired) as err:
                 LOGGER.warning(
                     "Partner login failed for %s due to an authentication error: %s",
-                    server_url,
+                    api.server,
                     err,
                 )
                 return self.async_abort(reason="oauth_error")
             except TeslaFleetError as err:
-                LOGGER.warning("Partner login failed for %s: %s", server_url, err)
-                failed_regions.append(server_url)
-                continue
-            self.apis.append(api)
+                LOGGER.warning("Partner login failed for %s: %s", api.server, err)
+                errors["base"] = "cannot_connect"
+            else:
+                self.api = api
+                return await self.async_step_domain_input()
 
-        if not self.apis:
-            LOGGER.warning(
-                "Partner login failed for all regions: %s", ", ".join(failed_regions)
-            )
-            return self.async_abort(reason="oauth_error")
-
-        if failed_regions:
-            LOGGER.warning(
-                "Partner login succeeded on some regions but failed on: %s",
-                ", ".join(failed_regions),
-            )
-
-        return await self.async_step_domain_input()
+        return self.async_show_form(
+            step_id="region",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_REGION, default=self.region): SelectSelector(
+                        SelectSelectorConfig(
+                            options=REGIONS,
+                            translation_key="region",
+                            mode=SelectSelectorMode.LIST,
+                        )
+                    )
+                }
+            ),
+            errors=errors,
+        )
 
     async def async_step_domain_input(
         self,
@@ -159,40 +177,28 @@ class OAuth2FlowHandler(
     async def async_step_domain_registration(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle domain registration for all regions."""
+        """Handle domain registration for the selected region."""
 
-        assert self.apis
-        assert self.apis[0].private_key
+        assert self.api
+        assert self.api.private_key
         assert self.domain
 
         errors: dict[str, str] = {}
         description_placeholders = {
             "public_key_url": f"https://{self.domain}/.well-known/appspecific/com.tesla.3p.public-key.pem",
-            "pem": self.apis[0].public_pem,
+            "pem": self.api.public_pem,
         }
 
-        successful_response: dict[str, Any] | None = None
-        failed_regions: list[str] = []
-
-        for api in self.apis:
-            try:
-                register_response = await api.partner.register(self.domain)
-            except PreconditionFailed:
-                return await self.async_step_domain_input(
-                    errors={CONF_DOMAIN: "precondition_failed"}
-                )
-            except TeslaFleetError as e:
-                LOGGER.warning(
-                    "Partner registration failed for %s: %s",
-                    api.server,
-                    e.message,
-                )
-                failed_regions.append(api.server or "unknown")
-            else:
-                if successful_response is None:
-                    successful_response = register_response
-
-        if successful_response is None:
+        try:
+            register_response = await self.api.partner.register(self.domain)
+        except PreconditionFailed:
+            return await self.async_step_domain_input(
+                errors={CONF_DOMAIN: "precondition_failed"}
+            )
+        except TeslaFleetError as e:
+            LOGGER.warning(
+                "Partner registration failed for %s: %s", self.api.server, e.message
+            )
             errors["base"] = "invalid_response"
             return self.async_show_form(
                 step_id="domain_registration",
@@ -200,22 +206,12 @@ class OAuth2FlowHandler(
                 errors=errors,
             )
 
-        if failed_regions:
-            LOGGER.warning(
-                "Partner registration succeeded on some regions but failed on: %s",
-                ", ".join(failed_regions),
-            )
-
-        # Verify public key from the successful response
-        registered_public_key = successful_response.get("response", {}).get(
-            "public_key"
-        )
+        registered_public_key = register_response.get("response", {}).get("public_key")
 
         if not registered_public_key:
             errors["base"] = "public_key_not_found"
         elif (
-            registered_public_key.lower()
-            != self.apis[0].public_uncompressed_point.lower()
+            registered_public_key.lower() != self.api.public_uncompressed_point.lower()
         ):
             errors["base"] = "public_key_mismatch"
         else:

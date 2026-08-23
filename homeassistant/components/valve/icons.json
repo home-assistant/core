@@ -11,7 +11,9 @@
     "_": {
       "default": "mdi:valve-open",
       "state": {
-        "closed": "mdi:valve-closed"
+        "closed": "mdi:valve-closed",
+        "closing": "mdi:valve",
+        "opening": "mdi:valve"
       }
     },
     "gas": {
@@ -20,7 +22,9 @@
     "water": {
       "default": "mdi:valve-open",
       "state": {
-        "closed": "mdi:valve-closed"
+        "closed": "mdi:valve-closed",
+        "closing": "mdi:valve",
+        "opening": "mdi:valve"
       }
     }
   },

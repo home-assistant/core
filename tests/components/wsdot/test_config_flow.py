@@ -57,10 +57,10 @@ async def test_create_user_entry(
         (404, {"base": "cannot_connect"}),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_errors(
     hass: HomeAssistant,
     mock_travel_time: AsyncMock,
-    mock_setup_entry: AsyncMock,
     failed_travel_time_status: int,
     errors: dict[str, str],
 ) -> None:
@@ -114,12 +114,12 @@ async def test_create_travel_time_subentry(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
+    assert result["errors"] == {}
 
     # User data; the user made a choice and hit submit
-    result = await hass.config_entries.subentries.async_init(
-        (init_integration.entry_id, SUBENTRY_TRAVEL_TIMES),
-        context={"source": SOURCE_USER},
-        data=VALID_USER_TRAVEL_TIME_CONFIG,
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        VALID_USER_TRAVEL_TIME_CONFIG,
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -211,10 +211,10 @@ async def test_incorrect_import_entry(
     assert result["reason"] == "invalid_travel_time_id"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_import_integration_already_exists(
     hass: HomeAssistant,
     mock_travel_time: AsyncMock,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     init_integration: MockConfigEntry,
 ) -> None:

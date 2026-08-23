@@ -1,7 +1,5 @@
 """Validate integration translation files."""
 
-from __future__ import annotations
-
 from functools import partial
 import json
 import re

@@ -1,10 +1,8 @@
 """Config flow for Husqvarna Bluetooth integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import random
-from typing import Any
+from typing import Any, override
 
 from automower_ble.mower import Mower
 from automower_ble.protocol import ResponseResult
@@ -71,7 +69,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             await async_get_manufacturer_data({discovery_info.address})
         )[discovery_info.address]
 
-        if manufacturer_data.product_type != ProductType.MOWER:
+        if manufacturer_data.product_type is not ProductType.MOWER:
             LOGGER.debug(
                 "Unsupported device: %s (%s)", manufacturer_data, discovery_info
             )
@@ -82,6 +80,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         LOGGER.debug("Supported device: %s", manufacturer_data)
         return True
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -130,6 +129,7 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -157,6 +157,10 @@ class HusqvarnaAutomowerBleConfigFlow(ConfigFlow, domain=DOMAIN):
         channel_id = random.randint(1, 0xFFFFFFFF)
 
         assert self.address
+
+        if device is None:
+            LOGGER.debug("Could not find device with address '%s'", self.address)
+            return None
 
         try:
             (manufacturer, device_type, _model) = await Mower(

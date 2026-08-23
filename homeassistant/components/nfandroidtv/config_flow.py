@@ -1,9 +1,7 @@
 """Config flow for NFAndroidTV integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from notifications_android_tv.notifications import ConnectError, Notifications
 import voluptuous as vol
@@ -19,6 +17,7 @@ _LOGGER = logging.getLogger(__name__)
 class NFAndroidTVFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NFAndroidTV."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

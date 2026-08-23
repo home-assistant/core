@@ -1,7 +1,5 @@
 """Config validation helper for the script integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from contextlib import suppress
 from enum import StrEnum

@@ -1,7 +1,5 @@
 """The ukraine_alarm component."""
 
-from __future__ import annotations
-
 import logging
 from typing import TYPE_CHECKING
 
@@ -57,7 +55,8 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
             regions_data = await Client(websession).get_regions()
         except (aiohttp.ClientError, TimeoutError) as err:
             _LOGGER.warning(
-                "Could not migrate config entry %s: failed to fetch current regions: %s",
+                "Could not migrate config entry %s:"
+                " failed to fetch current regions: %s",
                 config_entry.entry_id,
                 err,
             )

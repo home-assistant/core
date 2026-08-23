@@ -1,7 +1,5 @@
 """Models for Recorder."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 from functools import lru_cache
 import logging

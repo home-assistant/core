@@ -1,6 +1,6 @@
 """System Bridge Media Source Implementation."""
 
-from __future__ import annotations
+from typing import override
 
 from systembridgeconnector.models.media_directories import MediaDirectory
 from systembridgeconnector.models.media_files import MediaFile, MediaFiles
@@ -50,6 +50,7 @@ class SystemBridgeSource(MediaSource):
         self.name = "System Bridge"
         self.hass: HomeAssistant = hass
 
+    @override
     async def async_resolve_media(
         self,
         item: MediaSourceItem,
@@ -63,6 +64,7 @@ class SystemBridgeSource(MediaSource):
             mime_type,
         )
 
+    @override
     async def async_browse_media(
         self,
         item: MediaSourceItem,

@@ -1,7 +1,5 @@
 """The awair component."""
 
-from __future__ import annotations
-
 from homeassistant.const import CONF_HOST, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.aiohttp_client import async_get_clientsession

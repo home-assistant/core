@@ -49,11 +49,13 @@ class KNXExposeDataModel(TypedDict):
 
 
 def validate_expose_template_no_coerce(value: str) -> str:
-    """Validate a value is a valid expose template without coercing it to a Template object."""
+    """Validate an expose template without coercing to Template."""
     temp = cv.template(value)  # validate template
     if temp.is_static:
         raise vol.Invalid(
-            "Static templates are not supported. Template should start with '{{' and end with '}}'"
+            "Static templates are not supported."
+            " Template should start with '{{'"
+            " and end with '}}'"
         )
     return value  # return original string for storage and later template creation
 

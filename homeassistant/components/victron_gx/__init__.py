@@ -1,7 +1,5 @@
 """The victron_gx integration."""
 
-from __future__ import annotations
-
 import logging
 
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, Platform
@@ -14,6 +12,7 @@ _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
+    Platform.BUTTON,
     Platform.DEVICE_TRACKER,
     Platform.NUMBER,
     Platform.SELECT,
@@ -71,7 +70,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: VictronGxConfigEntry) -
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: VictronGxConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a device from the config entry if the device is no longer known."""
     hub: Hub = config_entry.runtime_data

@@ -1,11 +1,10 @@
 """Support for LG ThinQ Connect device."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, field
 import logging
 
+from aiohttp import ClientError
 from thinqconnect import ThinQApi, ThinQAPIException
 from thinqconnect.integration import async_get_ha_bridge_list
 
@@ -95,6 +94,11 @@ async def async_setup_coordinators(
         bridge_list = await async_get_ha_bridge_list(thinq_api)
     except ThinQAPIException as exc:
         raise ConfigEntryNotReady(exc.message) from exc
+    except (ClientError, TimeoutError) as exc:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
+        ) from exc
 
     if not bridge_list:
         _LOGGER.warning("No devices registered with the correct profile")
@@ -145,6 +149,11 @@ async def async_setup_mqtt(
             translation_domain=DOMAIN,
             translation_key="failed_to_connect_mqtt",
             translation_placeholders={"error": str(exc)},
+        ) from exc
+    except (ClientError, TimeoutError) as exc:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="connection_error",
         ) from exc
 
     if not result:

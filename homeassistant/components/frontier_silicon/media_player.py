@@ -1,11 +1,9 @@
 """Support for Frontier Silicon Devices (Medion, Hama, Auna,...)."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from afsapi import (
     AFSAPI,
@@ -133,6 +131,7 @@ class AFSAPIDevice(MediaPlayerEntity):
     )
 
     @property
+    @override
     def supported_features(self) -> MediaPlayerEntityFeature:
         """Return the currently supported features for this device."""
         features = self._BASE_SUPPORTED_FEATURES
@@ -198,7 +197,9 @@ class AFSAPIDevice(MediaPlayerEntity):
 
         if not self._attr_source_list:
             self.__modes_by_label = {
-                (mode.label or mode.id): mode.key for mode in await afsapi.get_modes()
+                (mode.label or mode.id): mode.key
+                for mode in await afsapi.get_modes()
+                if mode.selectable
             }
             self._attr_source_list = list(self.__modes_by_label)
 
@@ -308,19 +309,22 @@ class AFSAPIDevice(MediaPlayerEntity):
     # Management actions
     # power control
     @fs_command_exception_wrap
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the device."""
         await self.fs_device.set_power(True)
 
     @fs_command_exception_wrap
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the device."""
         await self.fs_device.set_power(False)
 
     @fs_command_exception_wrap
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
-        if (await self.fs_device.get_play_state()) == PlayState.STOPPED:
+        if (await self.fs_device.get_play_status()) == PlayState.STOPPED:
             # The 'play' command only seems to work when the current stream is paused.
             # We need to send a 'stop' command instead to resume a stopped stream.
             await self.fs_device.stop()
@@ -328,32 +332,38 @@ class AFSAPIDevice(MediaPlayerEntity):
             await self.fs_device.play()
 
     @fs_command_exception_wrap
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.fs_device.pause()
 
     @fs_command_exception_wrap
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self.fs_device.stop()
 
     @fs_command_exception_wrap
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command (results in rewind)."""
         await self.fs_device.rewind()
 
     @fs_command_exception_wrap
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command (results in fast-forward)."""
         await self.fs_device.forward()
 
     @fs_command_exception_wrap
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self.fs_device.set_mute(mute)
 
     # volume
     @fs_command_exception_wrap
+    @override
     async def async_volume_up(self) -> None:
         """Send volume up command."""
         volume = await self.fs_device.get_volume()
@@ -361,6 +371,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         await self.fs_device.set_volume(min(volume, self._max_volume or 1))
 
     @fs_command_exception_wrap
+    @override
     async def async_volume_down(self) -> None:
         """Send volume down command."""
         volume = await self.fs_device.get_volume()
@@ -368,6 +379,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         await self.fs_device.set_volume(max(volume, 0))
 
     @fs_command_exception_wrap
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume command."""
         if self._max_volume:  # Can't do anything sensible if not set
@@ -375,6 +387,7 @@ class AFSAPIDevice(MediaPlayerEntity):
             await self.fs_device.set_volume(volume)
 
     @fs_command_exception_wrap
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         await self.fs_device.set_power(True)
@@ -385,6 +398,7 @@ class AFSAPIDevice(MediaPlayerEntity):
             await self.fs_device.set_mode(mode)
 
     @fs_command_exception_wrap
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select EQ Preset."""
         if (
@@ -394,6 +408,7 @@ class AFSAPIDevice(MediaPlayerEntity):
             await self.fs_device.set_eq_preset(mode)
 
     @fs_command_exception_wrap
+    @override
     async def async_set_repeat(self, repeat: RepeatMode) -> None:
         """Set repeat mode."""
         await self.fs_device.play_repeat(
@@ -405,15 +420,18 @@ class AFSAPIDevice(MediaPlayerEntity):
         )
 
     @fs_command_exception_wrap
+    @override
     async def async_set_shuffle(self, shuffle: bool) -> None:
         """Set shuffle mode."""
         await self.fs_device.set_play_shuffle(shuffle)
 
     @fs_command_exception_wrap
+    @override
     async def async_media_seek(self, position: float) -> None:
         """Seek to a position in seconds."""
         await self.fs_device.set_play_position(int(position * 1000))
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -426,6 +444,7 @@ class AFSAPIDevice(MediaPlayerEntity):
         return await browse_node(self.fs_device, media_content_type, media_content_id)
 
     @fs_command_exception_wrap
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
@@ -445,7 +464,8 @@ class AFSAPIDevice(MediaPlayerEntity):
             if len(keys) != 1:
                 raise BrowseError("Presets can only have 1 level")
 
-            # Keys of presets are 0-based, while the list shown on the device starts from 1
+            # Keys of presets are 0-based, while the list shown
+            # on the device starts from 1
             preset = int(keys[0]) - 1
 
             await self.fs_device.select_preset(preset)

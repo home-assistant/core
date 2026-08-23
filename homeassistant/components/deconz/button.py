@@ -1,8 +1,7 @@
 """Support for deCONZ buttons."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
+from typing import override
 
 from pydeconz.models.event import EventType
 from pydeconz.models.scene import Scene as PydeconzScene
@@ -97,6 +96,7 @@ class DeconzSceneButton(DeconzSceneMixin, ButtonEntity):
 
         self._attr_name = f"{self._attr_name} {description.suffix}"
 
+    @override
     async def async_press(self) -> None:
         """Store light states into scene."""
         async_button_fn = getattr(
@@ -105,6 +105,7 @@ class DeconzSceneButton(DeconzSceneMixin, ButtonEntity):
         )
         await async_button_fn(self._device.group_id, self._device.id)
 
+    @override
     def get_device_identifier(self) -> str:
         """Return a unique identifier for this scene."""
         return f"{super().get_device_identifier()}-{self.entity_description.key}"
@@ -121,6 +122,7 @@ class DeconzPresenceResetButton(DeconzDevice[Presence], ButtonEntity):
 
     TYPE = BUTTON_DOMAIN
 
+    @override
     async def async_press(self) -> None:
         """Store reset presence state."""
         await self.hub.api.sensors.presence.set_config(

@@ -109,8 +109,8 @@ async def test_on_software_update_state(
 
     assert mock_config_entry.unique_id
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_config_entry.unique_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
         )
     )
     assert device.sw_version == "1.0.0"
@@ -124,14 +124,16 @@ async def test_on_remote_control_already_added(
     mock_mozart_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test that the integration does nothing when a remote that already has a device triggers a check."""
+    """Test that a remote with existing device triggers no action."""
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     # Check device and API call count
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_REMOTE_SERIAL_PAIRED), mock_config_entry.entry_id
+    )
 
     # Check number of entities (remote and button events and media_player)
     assert list(entity_registry.entities.keys()) == unordered(
@@ -150,7 +152,9 @@ async def test_on_remote_control_already_added(
 
     # Check device and API call count (triggered once by the WebSocket notification)
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 5
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_REMOTE_SERIAL_PAIRED), mock_config_entry.entry_id
+    )
 
     # Check number of entities (remote and button events and media_player)
     entity_ids_available = list(entity_registry.entities.keys())
@@ -177,7 +181,9 @@ async def test_on_remote_control_paired(
 
     # Check device and API call count
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_REMOTE_SERIAL_PAIRED), mock_config_entry.entry_id
+    )
 
     # Check number of entities (button and remote events and media_player)
     assert list(entity_registry.entities.keys()) == unordered(
@@ -218,15 +224,18 @@ async def test_on_remote_control_paired(
 
     # Check device and API call count
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 10
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
-    assert device_registry.async_get_device(
-        {(DOMAIN, f"66666666_{TEST_SERIAL_NUMBER}")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_REMOTE_SERIAL_PAIRED), mock_config_entry.entry_id
+    )
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"66666666_{TEST_SERIAL_NUMBER}"), mock_config_entry.entry_id
     )
 
     # Check logger
     assert (
-        f"A Beoremote One has been paired or unpaired to {mock_config_entry.title}. Reloading config entry to add device and entities"
-        in caplog.text
+        f"A Beoremote One has been paired or unpaired to"
+        f" {mock_config_entry.title}. Reloading config entry"
+        " to add device and entities" in caplog.text
     )
 
     # Check number of entities (remote and button events and media_player)
@@ -258,7 +267,9 @@ async def test_on_remote_control_unpaired(
 
     # Check device and API call count
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 4
-    assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_REMOTE_SERIAL_PAIRED), mock_config_entry.entry_id
+    )
 
     # Check number of entities (button and remote events and media_player)
     assert list(entity_registry.entities.keys()) == unordered(
@@ -282,13 +293,17 @@ async def test_on_remote_control_unpaired(
     # Check device and API call count
     assert mock_mozart_client.get_bluetooth_remotes.call_count == 8
     assert (
-        device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)}) is None
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, TEST_REMOTE_SERIAL_PAIRED), mock_config_entry.entry_id
+        )
+        is None
     )
 
     # Check logger
     assert (
-        f"A Beoremote One has been paired or unpaired to {mock_config_entry.title}. Reloading config entry to add device and entities"
-        in caplog.text
+        f"A Beoremote One has been paired or unpaired to"
+        f" {mock_config_entry.title}. Reloading config entry"
+        " to add device and entities" in caplog.text
     )
 
     # Check number of entities (button events and media_player)
@@ -305,13 +320,15 @@ async def test_on_remote_control_unpaired(
 #     mock_config_entry: MockConfigEntry,
 #     mock_mozart_client: AsyncMock,
 # ) -> None:
-#     """Test async_setup_entry where a remote has been unpaired and should be removed."""
+#     """Test async_setup_entry for unpaired remote removal."""
 
 #     # Load entry
 #     mock_config_entry.add_to_hass(hass)
 #     await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-#     # Check device and API call count (called once during init and once in async_setup_entry in event.py)
+#     # Check device and API call count
+#     # (called once during init and once in
+#     # async_setup_entry in event.py)
 #     assert mock_mozart_client.get_bluetooth_remotes.call_count == 2
 #     assert device_registry.async_get_device({(DOMAIN, TEST_REMOTE_SERIAL_PAIRED)})
 
@@ -357,11 +374,12 @@ async def test_on_all_notifications_raw(
         "eventType": "WebSocketEventVolume",
     }
 
-    # Get device ID for the modified notification that is sent as an event and in the log
+    # Get device ID for the modified notification that is
+    # sent as an event and in the log
     assert mock_config_entry.unique_id
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, mock_config_entry.unique_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, mock_config_entry.unique_id), mock_config_entry.entry_id
         )
     )
     raw_notification_full = {

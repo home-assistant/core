@@ -1,8 +1,6 @@
 """Number entities for Wyoming integration."""
 
-from __future__ import annotations
-
-from typing import Final
+from typing import Final, override
 
 from homeassistant.components.number import NumberEntityDescription, RestoreNumber
 from homeassistant.const import EntityCategory
@@ -49,6 +47,7 @@ class WyomingSatelliteAutoGainNumber(WyomingSatelliteEntity, RestoreNumber):
     _attr_native_max_value = _MAX_AUTO_GAIN
     _attr_native_value = 0
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
@@ -57,6 +56,7 @@ class WyomingSatelliteAutoGainNumber(WyomingSatelliteEntity, RestoreNumber):
         if state is not None:
             await self.async_set_native_value(float(state.state))
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         auto_gain = int(max(0, min(_MAX_AUTO_GAIN, value)))
@@ -79,6 +79,7 @@ class WyomingSatelliteVolumeMultiplierNumber(WyomingSatelliteEntity, RestoreNumb
     _attr_native_step = 0.1
     _attr_native_value = 1.0
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to Home Assistant."""
         await super().async_added_to_hass()
@@ -88,6 +89,7 @@ class WyomingSatelliteVolumeMultiplierNumber(WyomingSatelliteEntity, RestoreNumb
         ):
             await self.async_set_native_value(last_number_data.native_value)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         self._attr_native_value = float(

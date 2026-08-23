@@ -1,12 +1,10 @@
 """DataUpdateCoordinator for the nina integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 from datetime import datetime
 import re
-from typing import Any
+from typing import Any, override
 
 from pynina import ApiError, Nina
 
@@ -16,12 +14,12 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    _LOGGER,
     CONF_AREA_FILTER,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
     CONF_REGIONS,
     DOMAIN,
+    LOGGER,
     SCAN_INTERVAL,
 )
 
@@ -72,12 +70,13 @@ class NINADataUpdateCoordinator(
 
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=config_entry,
             name=DOMAIN,
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, list[NinaWarningData]]:
         """Update data."""
         async with asyncio.timeout(10):
@@ -124,8 +123,11 @@ class NINADataUpdateCoordinator(
                 if re.search(
                     self.headline_filter, raw_warn.headline, flags=re.IGNORECASE
                 ):
-                    _LOGGER.debug(
-                        f"Ignore warning ({raw_warn.id}) by headline filter ({self.headline_filter}) with headline: {raw_warn.headline}"
+                    LOGGER.debug(
+                        "Ignore warning (%s) by headline filter (%s) with headline: %s",
+                        raw_warn.id,
+                        self.headline_filter,
+                        raw_warn.headline,
                     )
                     continue
 
@@ -136,8 +138,11 @@ class NINADataUpdateCoordinator(
                 if not re.search(
                     self.area_filter, affected_areas_string, flags=re.IGNORECASE
                 ):
-                    _LOGGER.debug(
-                        f"Ignore warning ({raw_warn.id}) by area filter ({self.area_filter}) with area: {affected_areas_string}"
+                    LOGGER.debug(
+                        "Ignore warning (%s) by area filter (%s) with area: %s",
+                        raw_warn.id,
+                        self.area_filter,
+                        affected_areas_string,
                     )
                     continue
 

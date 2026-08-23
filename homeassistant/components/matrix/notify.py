@@ -1,8 +1,6 @@
 """Support for Matrix notifications."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -43,6 +41,7 @@ class MatrixNotificationService(BaseNotificationService):
         """Set up the Matrix notification service."""
         self._default_room = default_room
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send the message to the Matrix server."""
         target_rooms: list[RoomID] = kwargs.get(ATTR_TARGET) or [self._default_room]

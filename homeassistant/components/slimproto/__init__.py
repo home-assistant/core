@@ -1,7 +1,5 @@
 """SlimProto Player integration."""
 
-from __future__ import annotations
-
 from aioslimproto.server import SlimServer
 
 from homeassistant.config_entries import ConfigEntry
@@ -39,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SlimProtoConfigEntry) ->
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: SlimProtoConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     return True

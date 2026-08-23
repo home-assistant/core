@@ -64,8 +64,9 @@ async def test_alarm_control_panel(
 
     await snapshot_platform(hass, entity_registry, snapshot, MOCK_ENTRY_ID)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_alarm_panel_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_alarm_panel_1"),
+        mock_config_entry_with_subentries.entry_id,
     )
 
     assert device_entry == snapshot(name="device")
@@ -108,7 +109,7 @@ async def test_alarm_status_callback(
     source_state: AlarmState,
     resulting_state: AlarmControlPanelState,
 ) -> None:
-    """Test alarm control panel correctly changes state after a callback from the panel."""
+    """Test alarm panel state changes after a panel callback."""
     await setup_integration(hass, mock_config_entry_with_subentries)
 
     assert (

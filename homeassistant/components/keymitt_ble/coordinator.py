@@ -1,9 +1,7 @@
 """Integration to integrate Keymitt BLE devices with Home Assistant."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from microbot import MicroBotApiClient, parse_advertisement_data
 
@@ -43,6 +41,7 @@ class MicroBotDataUpdateCoordinator(PassiveBluetoothDataUpdateCoordinator):
         )
 
     @callback
+    @override
     def _async_handle_bluetooth_event(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,

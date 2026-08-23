@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.satel_integra.const import (
     CONF_ARM_HOME_MODE,
+    CONF_ENABLE_TEMPERATURE_SENSOR,
     CONF_ENCRYPTION_KEY,
     CONF_OUTPUT_NUMBER,
     CONF_PARTITION_NUMBER,
@@ -54,6 +55,20 @@ MOCK_ZONE_SUBENTRY = ConfigSubentry(
     unique_id="zone_1",
     title="Zone (1)",
     data={
+        CONF_ENABLE_TEMPERATURE_SENSOR: False,
+        CONF_NAME: "Zone",
+        CONF_ZONE_TYPE: BinarySensorDeviceClass.MOTION,
+        CONF_ZONE_NUMBER: 1,
+    },
+)
+
+MOCK_ZONE_TEMPERATURE_SUBENTRY = ConfigSubentry(
+    subentry_type=SUBENTRY_TYPE_ZONE,
+    subentry_id="ID_ZONE",
+    unique_id="zone_1",
+    title="Zone (1)",
+    data={
+        CONF_ENABLE_TEMPERATURE_SENSOR: True,
         CONF_NAME: "Zone",
         CONF_ZONE_TYPE: BinarySensorDeviceClass.MOTION,
         CONF_ZONE_NUMBER: 1,

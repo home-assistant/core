@@ -1,9 +1,7 @@
 """Demo platform for the vacuum component."""
 
-from __future__ import annotations
-
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.vacuum import (
     ATTR_CLEANED_AREA,
@@ -107,20 +105,24 @@ class StateDemoVacuum(StateVacuumEntity):
         self._cleaned_area: float = 0
 
     @property
+    @override
     def fan_speed(self) -> str:
         """Return the current fan speed of the vacuum."""
         return self._fan_speed
 
     @property
+    @override
     def fan_speed_list(self) -> list[str]:
         """Return the list of supported fan speeds."""
         return FAN_SPEEDS
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device state attributes."""
         return {ATTR_CLEANED_AREA: round(self._cleaned_area, 2)}
 
+    @override
     def start(self) -> None:
         """Start or resume the cleaning task."""
         if self._attr_activity != VacuumActivity.CLEANING:
@@ -128,17 +130,20 @@ class StateDemoVacuum(StateVacuumEntity):
             self._cleaned_area += 1.32
             self.schedule_update_ha_state()
 
+    @override
     def pause(self) -> None:
         """Pause the cleaning task."""
         if self._attr_activity == VacuumActivity.CLEANING:
             self._attr_activity = VacuumActivity.PAUSED
             self.schedule_update_ha_state()
 
+    @override
     def stop(self, **kwargs: Any) -> None:
         """Stop the cleaning task, do not return to dock."""
         self._attr_activity = VacuumActivity.IDLE
         self.schedule_update_ha_state()
 
+    @override
     def return_to_base(self, **kwargs: Any) -> None:
         """Return dock to charging base."""
         self._attr_activity = VacuumActivity.RETURNING
@@ -146,18 +151,21 @@ class StateDemoVacuum(StateVacuumEntity):
 
         event.call_later(self.hass, 30, self.__set_state_to_dock)
 
+    @override
     def clean_spot(self, **kwargs: Any) -> None:
         """Perform a spot clean-up."""
         self._attr_activity = VacuumActivity.CLEANING
         self._cleaned_area += 1.32
         self.schedule_update_ha_state()
 
+    @override
     def set_fan_speed(self, fan_speed: str, **kwargs: Any) -> None:
         """Set the vacuum's fan speed."""
         if fan_speed in self.fan_speed_list:
             self._fan_speed = fan_speed
             self.schedule_update_ha_state()
 
+    @override
     async def async_locate(self, **kwargs: Any) -> None:
         """Locate the vacuum's position."""
         await self.hass.services.async_call(
@@ -168,11 +176,13 @@ class StateDemoVacuum(StateVacuumEntity):
         self._attr_activity = VacuumActivity.IDLE
         self.async_write_ha_state()
 
+    @override
     async def async_clean_spot(self, **kwargs: Any) -> None:
         """Locate the vacuum's position."""
         self._attr_activity = VacuumActivity.CLEANING
         self.async_write_ha_state()
 
+    @override
     async def async_send_command(
         self,
         command: str,
@@ -183,10 +193,12 @@ class StateDemoVacuum(StateVacuumEntity):
         self._attr_activity = VacuumActivity.IDLE
         self.async_write_ha_state()
 
+    @override
     async def async_get_segments(self) -> list[Segment]:
         """Get the list of segments."""
         return DEMO_SEGMENTS
 
+    @override
     async def async_clean_segments(self, segment_ids: list[str], **kwargs: Any) -> None:
         """Clean the specified segments."""
         self._attr_activity = VacuumActivity.CLEANING

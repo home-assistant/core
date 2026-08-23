@@ -99,7 +99,9 @@ async def test_create_entity_error(
     await client.send_json_auto_id(
         {
             "type": "knx/create_entity",
-            "platform": Platform.TTS,  # "tts" is not a supported platform (and is unlikely to ever be)
+            # "tts" is not a supported platform
+            # (and is unlikely to ever be)
+            "platform": Platform.TTS,
             "data": {
                 "entity": {"name": "Test invalid platform"},
                 "knx": {"ga_switch": {"write": "1/2/3"}},
@@ -220,8 +222,9 @@ async def test_update_entity_error(
         {
             "type": "knx/update_entity",
             "platform": Platform.SWITCH,
-            # `sensor` isn't yet supported, but we only have sensor entities automatically
-            # created with no configuration - it doesn't ,atter for the test though
+            # `sensor` isn't yet supported, but we only have sensor
+            # entities automatically created with no configuration -
+            # it doesn't matter for the test though
             "entity_id": "sensor.knx_interface_individual_address",
             "data": {
                 "entity": {"name": new_name},
@@ -415,7 +418,8 @@ async def test_validate_entity(
     assert res["success"], res
     assert res["result"]["success"] is False
     assert res["result"]["errors"][0]["path"] == ["data", "knx", "ga_switch", "write"]
-    assert res["result"]["errors"][0]["error_message"] == "required key not provided"
+    assert res["result"]["errors"][0]["message"] == "required key not provided"
+    assert res["result"]["errors"][0]["code"] == "RequiredFieldInvalid"
     assert res["result"]["error_base"].startswith("required key not provided")
 
     # invalid group_select data
@@ -446,7 +450,8 @@ async def test_validate_entity(
         "color",
         "ga_blue_brightness",
     ]
-    assert res["result"]["errors"][0]["error_message"] == "required key not provided"
+    assert res["result"]["errors"][0]["message"] == "required key not provided"
+    assert res["result"]["errors"][0]["code"] == "RequiredFieldInvalid"
     assert res["result"]["error_base"].startswith("required key not provided")
 
 
@@ -475,7 +480,8 @@ async def test_update_expose_error(
     assert res["success"], res
     assert res["result"]["success"] is False
     assert res["result"]["errors"][0]["path"] == ["data", "options", "0", "ga", "write"]
-    assert res["result"]["errors"][0]["error_message"] == "required key not provided"
+    assert res["result"]["errors"][0]["message"] == "required key not provided"
+    assert res["result"]["errors"][0]["code"] == "RequiredFieldInvalid"
 
 
 async def test_validate_expose(

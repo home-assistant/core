@@ -1,7 +1,5 @@
 """Blebox helpers."""
 
-from __future__ import annotations
-
 import aiohttp
 
 from homeassistant.core import HomeAssistant
@@ -16,7 +14,9 @@ def get_maybe_authenticated_session(
 ) -> aiohttp.ClientSession:
     """Return proper session object."""
     if username and password:
-        auth = aiohttp.BasicAuth(login=username, password=password)
-        return async_create_clientsession(hass, auth=auth)
+        return async_create_clientsession(
+            hass,
+            headers={"Authorization": aiohttp.encode_basic_auth(username, password)},
+        )
 
     return async_get_clientsession(hass)

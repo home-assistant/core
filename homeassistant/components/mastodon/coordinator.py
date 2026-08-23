@@ -1,9 +1,8 @@
 """Define an object to manage fetching Mastodon data."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from mastodon import Mastodon
 from mastodon.Mastodon import (
@@ -53,6 +52,7 @@ class MastodonCoordinator(DataUpdateCoordinator[Account]):
         )
         self.client = client
 
+    @override
     async def _async_update_data(self) -> Account:
         try:
             account: Account = await self.hass.async_add_executor_job(
@@ -64,6 +64,9 @@ class MastodonCoordinator(DataUpdateCoordinator[Account]):
                 translation_key="auth_failed",
             ) from error
         except MastodonError as ex:
-            raise UpdateFailed(ex) from ex
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+            ) from ex
 
         return account

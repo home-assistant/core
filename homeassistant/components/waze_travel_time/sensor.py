@@ -1,8 +1,6 @@
 """Support for Waze travel time sensor."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -62,6 +60,7 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
         self._attr_name = name
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the sensor."""
         if self.coordinator.data is not None:
@@ -69,6 +68,7 @@ class WazeTravelTimeSensor(CoordinatorEntity[WazeTravelTimeCoordinator], SensorE
         return None
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the last update."""
         if self.coordinator.data is None:

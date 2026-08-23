@@ -1,13 +1,11 @@
 """Support for interfacing with Russound via RNET Protocol."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
 import contextlib
 import logging
 import math
-from typing import Any
+from typing import Any, override
 
 from aiorussound import RussoundTcpConnectionHandler
 from aiorussound.exceptions import CommandError
@@ -187,6 +185,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
         if self.source_list and 0 <= index < len(self.source_list):
             self._attr_source = self.source_list[index]
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level. Volume has a range (0..1)."""
         device_volume = max(0, min(_MAX_VOLUME, int(volume * _MAX_VOLUME)))
@@ -196,6 +195,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
             )
         )
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._async_run_with_retry(
@@ -204,6 +204,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
             )
         )
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn off media player."""
         await self._async_run_with_retry(
@@ -212,6 +213,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
             )
         )
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
 
@@ -221,6 +223,7 @@ class RussoundRNETDevice(MediaPlayerEntity):
 
         await self._async_run_with_retry(_mute_if_needed)
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Set the input source."""
         if self.source_list and source in self.source_list:

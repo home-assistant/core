@@ -1,8 +1,6 @@
 """Support for HomematicIP Cloud switches."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homematicip.base.enums import DeviceType, FunctionalChannelType
 from homematicip.device import (
@@ -117,16 +115,19 @@ class HomematicipMultiSwitch(HomematicipGenericEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         channel = self.get_channel_or_raise()
         return channel.on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         channel = self.get_channel_or_raise()
         await channel.async_turn_on()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         channel = self.get_channel_or_raise()
@@ -144,17 +145,21 @@ class HomematicipSwitch(HomematicipMultiSwitch, SwitchEntity):
 class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
     """Representation of the HomematicIP switching group."""
 
+    _attr_has_entity_name = False
+
     def __init__(self, hap: HomematicipHAP, device, post: str = "Group") -> None:
         """Initialize switching group."""
         device.modelType = f"HmIP-{post}"
         super().__init__(hap, device, post, feature_id="switch")
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if group is on."""
         return self._device.on
 
     @property
+    @override
     def available(self) -> bool:
         """Switch-Group available."""
         # A switch-group must be available, and should not be affected by the
@@ -164,6 +169,7 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
         return True
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the switch-group."""
         state_attr = super().extra_state_attributes
@@ -173,10 +179,12 @@ class HomematicipGroupSwitch(HomematicipGenericEntity, SwitchEntity):
 
         return state_attr
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the group on."""
         await self._device.turn_on_async()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the group off."""
         await self._device.turn_off_async()

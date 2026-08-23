@@ -600,7 +600,8 @@ async def test_fallback_show_image(
     assert state
     assert (
         state.attributes[ATTR_ENTITY_PICTURE]
-        == "/api/media_player_proxy/media_player.spotify_spotify_1?token=mock-token&cache=16ff384dbae94fea"
+        == "/api/media_player_proxy/media_player.spotify_spotify_1"
+        "?token=mock-token&cache=16ff384dbae94fea"
     )
 
 

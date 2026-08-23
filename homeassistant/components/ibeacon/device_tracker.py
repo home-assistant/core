@@ -1,12 +1,10 @@
 """Support for tracking iBeacon devices."""
 
-from __future__ import annotations
+from typing import override
 
 from ibeacon_ble import iBeaconAdvertisement
 
-from homeassistant.components.device_tracker import SourceType
-from homeassistant.components.device_tracker.config_entry import BaseTrackerEntity
-from homeassistant.const import STATE_HOME, STATE_NOT_HOME
+from homeassistant.components.device_tracker import BaseScannerEntity, SourceType
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -48,10 +46,11 @@ async def async_setup_entry(
     )
 
 
-class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
+class IBeaconTrackerEntity(IBeaconEntity, BaseScannerEntity):
     """An iBeacon Tracker entity."""
 
     _attr_name = None
+    _attr_source_type: SourceType = SourceType.BLUETOOTH_LE
     _attr_translation_key = "device_tracker"
 
     def __init__(
@@ -69,16 +68,13 @@ class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
         self._active = True
 
     @property
-    def state(self) -> str:
-        """Return the state of the device."""
-        return STATE_HOME if self._active else STATE_NOT_HOME
-
-    @property
-    def source_type(self) -> SourceType:
-        """Return tracker source type."""
-        return SourceType.BLUETOOTH_LE
+    @override
+    def is_connected(self) -> bool:
+        """Return true if the device is connected."""
+        return self._active
 
     @callback
+    @override
     def _async_seen(
         self,
         ibeacon_advertisement: iBeaconAdvertisement,
@@ -89,6 +85,7 @@ class IBeaconTrackerEntity(IBeaconEntity, BaseTrackerEntity):
         self.async_write_ha_state()
 
     @callback
+    @override
     def _async_unavailable(self) -> None:
         """Set unavailable."""
         self._active = False

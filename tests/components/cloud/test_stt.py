@@ -9,7 +9,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from hass_nabucasa.voice import STTResponse, VoiceError
 import pytest
 
-from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.assist_pipeline.pipeline import (  # pylint: disable=home-assistant-component-root-import
     STORAGE_KEY,
 )
 from homeassistant.components.cloud.const import DOMAIN

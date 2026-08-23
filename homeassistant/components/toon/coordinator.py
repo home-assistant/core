@@ -1,9 +1,8 @@
 """Provides the Toon DataUpdateCoordinator."""
 
-from __future__ import annotations
-
 import logging
 import secrets
+from typing import override
 
 from aiohttp import web
 from toonapi import Status, Toon, ToonError
@@ -149,6 +148,7 @@ class ToonDataUpdateCoordinator(DataUpdateCoordinator[Status]):
 
         webhook_unregister(self.hass, self.config_entry.data[CONF_WEBHOOK_ID])
 
+    @override
     async def _async_update_data(self) -> Status:
         """Fetch data from Toon."""
         try:

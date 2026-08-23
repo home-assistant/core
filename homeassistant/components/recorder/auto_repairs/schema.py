@@ -1,7 +1,5 @@
 """Schema repairs."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable, Mapping
 import logging
 from typing import TYPE_CHECKING
@@ -87,7 +85,10 @@ def _validate_table_schema_has_correct_collation(
     instance: Recorder,
     table_object: type[DeclarativeBase],
 ) -> set[str]:
-    """Ensure the table has the correct collation to avoid union errors with mixed collations."""
+    """Ensure the table has the correct collation.
+
+    This avoids union errors with mixed collations.
+    """
     schema_errors: set[str] = set()
     # Mark the session as read_only to ensure that the test data is not committed
     # to the database and we always rollback when the scope is exited
@@ -225,7 +226,8 @@ def _check_columns(
             continue
         schema_errors.add(f"{table_name}.{supports}")
         _LOGGER.error(
-            "Column %s in database table %s does not support %s (stored=%s != expected=%s)",
+            "Column %s in database table %s does not support"
+            " %s (stored=%s != expected=%s)",
             column,
             table_name,
             supports,

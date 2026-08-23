@@ -1,7 +1,5 @@
 """Test the Honeywell String Lights config flow."""
 
-from __future__ import annotations
-
 from homeassistant.components.honeywell_string_lights.const import (
     CONF_TRANSMITTER,
     DOMAIN,

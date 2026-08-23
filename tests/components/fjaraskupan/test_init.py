@@ -15,6 +15,17 @@ from tests.components.bluetooth import (
 )
 from tests.typing import WebSocketGenerator
 
+MOCK_SERVICE_INFO_DISCOVERY = BluetoothServiceInfo(
+    address="11:11:11:11:11:11",
+    name=DEVICE_NAME,
+    service_uuids=["77a2bd49-1e5a-4961-bba1-21f34fa4bc7b"],
+    rssi=-60,
+    manufacturer_data={},
+    service_data={},
+    source="local",
+)
+
+
 MOCK_SERVICE_INFO = BluetoothServiceInfo(
     address="11:11:11:11:11:11",
     name=DEVICE_NAME,
@@ -40,16 +51,54 @@ async def test_setup(
 
     inject_bluetooth_service_info(
         hass,
-        MOCK_SERVICE_INFO,
+        MOCK_SERVICE_INFO_DISCOVERY,
     )
 
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERVICE_INFO.address)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address), config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.manufacturer == "Fjäråskupan"
     assert device_entry.name == "Fjäråskupan"
+
+    state = hass.states.get("fan.fjaraskupan")
+    assert state
+    assert state.state == "off"
+
+    inject_bluetooth_service_info(
+        hass,
+        MOCK_SERVICE_INFO,
+    )
+
+    await hass.async_block_till_done()
+    state = hass.states.get("fan.fjaraskupan")
+    assert state
+    assert state.state == "on"
+
+
+async def test_setup_ignore_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setup does not create a device before we see service."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={},
+    )
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id) is True
+
+    inject_bluetooth_service_info(
+        hass,
+        MOCK_SERVICE_INFO,
+    )
+
+    await hass.async_block_till_done()
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address), config_entry.entry_id
+    )
+    assert device_entry is None
 
 
 async def test_remove_device(
@@ -67,23 +116,23 @@ async def test_remove_device(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id) is True
 
-    inject_bluetooth_service_info(hass, MOCK_SERVICE_INFO)
+    inject_bluetooth_service_info(hass, MOCK_SERVICE_INFO_DISCOVERY)
 
     await hass.async_block_till_done()
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERVICE_INFO.address)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERVICE_INFO_DISCOVERY.address), config_entry.entry_id
     )
     assert device_entry
 
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     await hass.async_block_till_done()
     assert device_registry.async_get(device_entry.id)
 
     with patch_discovered_devices([]):
-        response = await client.remove_device(device_entry.id, config_entry.entry_id)
+        response = await client.remove_device(device_entry.id)
         assert response["success"]
 
         await hass.async_block_till_done()

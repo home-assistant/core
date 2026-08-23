@@ -1,8 +1,6 @@
 """Configflow for the emoncms integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from pyemoncms import EmoncmsClient
 import voluptuous as vol
@@ -71,12 +69,14 @@ class EmoncmsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> EmoncmsOptionsFlow:
         """Get the options flow for this handler."""
         return EmoncmsOptionsFlow(config_entry)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

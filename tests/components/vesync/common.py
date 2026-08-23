@@ -14,6 +14,7 @@ ENTITY_HUMIDIFIER_HUMIDITY = "sensor.humidifier_200s_humidity"
 ENTITY_HUMIDIFIER_300S_NIGHT_LIGHT_SELECT = "select.humidifier_300s_night_light_level"
 
 ENTITY_FAN = "fan.SmartTowerFan"
+ENTITY_PEDESTAL_FAN = "fan.corebreeze_432s"
 
 ENTITY_SWITCH_DISPLAY = "switch.humidifier_200s_display"
 
@@ -56,7 +57,7 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
         ("post", "/cloud/v2/deviceManaged/bypassV2", "air-purifier-detail.json")
     ],
     "Dimmable Light": [
-        ("post", "/cloud/v1/deviceManaged/deviceDetail", "device-detail.json")
+        ("post", "/cloud/v1/deviceManaged/deviceDetail", "dimmable-light-detail.json")
     ],
     "Temperature Light": [
         ("post", "/cloud/v1/deviceManaged/bypass", "light-detail.json")
@@ -74,6 +75,9 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
         ("post", "/cloud/v1/deviceManaged/deviceDetail", "dimmer-detail.json")
     ],
     "SmartTowerFan": [("post", "/cloud/v2/deviceManaged/bypassV2", "fan-detail.json")],
+    "CoreBreeze 432S": [
+        ("post", "/cloud/v2/deviceManaged/bypassV2", "pedestal-fan-detail.json")
+    ],
     "Humidifier 6000s": [
         ("post", "/cloud/v2/deviceManaged/bypassV2", "humidifier-6000s-detail.json")
     ],
@@ -95,9 +99,15 @@ DEVICE_FIXTURES: dict[str, list[tuple[str, str, str]]] = {
 
 
 def mock_devices_response(
-    aioclient_mock: AiohttpClientMocker, device_name: str
+    aioclient_mock: AiohttpClientMocker,
+    device_name: str,
+    details_override: dict[str, Any] | None = None,
 ) -> None:
-    """Build a response for the Helpers.call_api method."""
+    """Build a response for the Helpers.call_api method.
+
+    ``details_override`` is merged into the nested ``result`` payload of the
+    device detail response, allowing tests to simulate specific device states.
+    """
     device_list = [
         device
         for device in ALL_DEVICES["result"]["list"]
@@ -122,9 +132,16 @@ def mock_devices_response(
     )
 
     for fixture in DEVICE_FIXTURES[device_name]:
+        detail = load_json_object_fixture(fixture[2], DOMAIN)
+        if details_override:
+            assert "result" in detail.get("result", {}), (
+                f"Fixture {fixture[2]} does not have the expected "
+                "result.result payload to apply details_override"
+            )
+            detail["result"]["result"].update(details_override)
         getattr(aioclient_mock, fixture[0])(
             f"https://smartapi.vesync.com{fixture[1]}",
-            json=load_json_object_fixture(fixture[2], DOMAIN),
+            json=detail,
         )
     mock_firmware(aioclient_mock)
 

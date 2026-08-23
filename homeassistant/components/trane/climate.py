@@ -1,8 +1,6 @@
 """Climate platform for the Trane Local integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from steamloop import FanMode, HoldType, ThermostatConnection, ZoneMode
 
@@ -57,7 +55,7 @@ async def async_setup_entry(
     """Set up Trane Local climate entities."""
     conn = config_entry.runtime_data
     async_add_entities(
-        TraneClimateEntity(conn, config_entry.entry_id, zone_id)
+        TraneClimateEntity(hass, conn, config_entry.entry_id, zone_id)
         for zone_id in conn.state.zones
     )
 
@@ -78,9 +76,15 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
     _attr_temperature_unit = UnitOfTemperature.FAHRENHEIT
     _attr_target_temperature_step = 1.0
 
-    def __init__(self, conn: ThermostatConnection, entry_id: str, zone_id: str) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        conn: ThermostatConnection,
+        entry_id: str,
+        zone_id: str,
+    ) -> None:
         """Initialize the climate entity."""
-        super().__init__(conn, entry_id, zone_id, "zone")
+        super().__init__(hass, conn, entry_id, zone_id, "zone")
         modes: list[HVACMode] = []
         for zone_mode in conn.state.supported_modes:
             ha_mode = ZONE_MODE_TO_HA.get(zone_mode)
@@ -93,6 +97,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         self._attr_hvac_modes = modes
 
     @property
+    @override
     def current_temperature(self) -> float | None:
         """Return the current temperature."""
         # indoor_temperature is a string from the protocol (e.g. "72.00")
@@ -102,6 +107,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def current_humidity(self) -> int | None:
         """Return the current humidity."""
         # relative_humidity is a string from the protocol (e.g. "45")
@@ -111,6 +117,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return the current HVAC mode."""
         zone = self._zone
@@ -119,6 +126,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         return ZONE_MODE_TO_HA.get(zone.mode, HVACMode.OFF)
 
     @property
+    @override
     def hvac_action(self) -> HVACAction:
         """Return the current HVAC action."""
         # heating_active and cooling_active are system-level strings from the
@@ -135,6 +143,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         return HVACAction.IDLE
 
     @property
+    @override
     def target_temperature(self) -> float | None:
         """Return target temperature for single-setpoint modes."""
         # Setpoints are strings from the protocol or empty string if not yet received
@@ -146,6 +155,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         return None
 
     @property
+    @override
     def target_temperature_high(self) -> float | None:
         """Return the upper bound target temperature."""
         zone = self._zone
@@ -154,6 +164,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         return float(zone.cool_setpoint) if zone.cool_setpoint else None
 
     @property
+    @override
     def target_temperature_low(self) -> float | None:
         """Return the lower bound target temperature."""
         zone = self._zone
@@ -162,10 +173,12 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
         return float(zone.heat_setpoint) if zone.heat_setpoint else None
 
     @property
+    @override
     def fan_mode(self) -> str:
         """Return the current fan mode."""
         return FAN_MODE_TO_HA.get(self._conn.state.fan_mode, "auto")
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         if hvac_mode == HVACMode.OFF:
@@ -177,6 +190,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
 
         self._conn.set_zone_mode(self._zone_id, HA_TO_ZONE_MODE[hvac_mode])
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set target temperature."""
         heat_temp = kwargs.get(ATTR_TARGET_TEMP_LOW)
@@ -195,6 +209,7 @@ class TraneClimateEntity(TraneZoneEntity, ClimateEntity):
             cool_setpoint=str(round(cool_temp)) if cool_temp is not None else None,
         )
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         self._conn.set_fan_mode(HA_TO_FAN_MODE[fan_mode])

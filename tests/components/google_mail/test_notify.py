@@ -59,7 +59,8 @@ async def test_notify(
             blocking=True,
         )
     assert ex.match(
-        "Missing 'from' email when setting an alias to show. You have to provide a 'from' email"
+        "Missing 'from' email when setting an alias to show."
+        " You have to provide a 'from' email"
     )
 
     with patch(BUILD) as mock_client:

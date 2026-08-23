@@ -1,12 +1,10 @@
 """DataUpdateCoordinator for System Bridge."""
 
-from __future__ import annotations
-
 from asyncio import Task
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from systembridgeconnector.exceptions import (
     AuthenticationException,
@@ -170,6 +168,7 @@ class SystemBridgeDataUpdateCoordinator(DataUpdateCoordinator[SystemBridgeData])
             )
             await self.clean_disconnect()
 
+    @override
     async def _async_update_data(self) -> SystemBridgeData:
         """Update System Bridge data from WebSocket."""
         if self.listen_task is None or not self.websocket_client.connected:

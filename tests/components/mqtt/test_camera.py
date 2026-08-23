@@ -7,8 +7,9 @@ from unittest.mock import patch
 
 import pytest
 
-from homeassistant.components import camera, mqtt
+from homeassistant.components import camera
 from homeassistant.components.mqtt.camera import MQTT_CAMERA_ATTRIBUTES_BLOCKED
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from .common import (
@@ -45,12 +46,12 @@ from tests.typing import (
     MqttMockPahoClient,
 )
 
-DEFAULT_CONFIG = {mqtt.DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
+DEFAULT_CONFIG = {DOMAIN: {camera.DOMAIN: {"name": "test", "topic": "test_topic"}}}
 
 
 @pytest.mark.parametrize(
     "hass_config",
-    [{mqtt.DOMAIN: {camera.DOMAIN: {"topic": "test/camera", "name": "Test Camera"}}}],
+    [{DOMAIN: {camera.DOMAIN: {"topic": "test/camera", "name": "Test Camera"}}}],
 )
 async def test_run_camera_setup(
     hass: HomeAssistant,
@@ -76,7 +77,7 @@ async def test_run_camera_setup(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 camera.DOMAIN: {
                     "topic": "test/camera",
                     "name": "Test Camera",
@@ -110,7 +111,7 @@ async def test_run_camera_b64_encoded(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 "camera": {
                     "topic": "test/camera",
                     "name": "Test Camera",
@@ -250,7 +251,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 camera.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -278,7 +279,7 @@ async def test_discovery_removal_camera(
     hass: HomeAssistant, mqtt_mock_entry: MqttMockHAClientGenerator
 ) -> None:
     """Test removal of discovered camera."""
-    data = json.dumps(DEFAULT_CONFIG[mqtt.DOMAIN][camera.DOMAIN])
+    data = json.dumps(DEFAULT_CONFIG[DOMAIN][camera.DOMAIN])
     await help_test_discovery_removal(hass, mqtt_mock_entry, camera.DOMAIN, data)
 
 

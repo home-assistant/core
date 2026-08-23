@@ -1,8 +1,7 @@
 """Support for Xeoma Cameras."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from pyxeoma.xeoma import Xeoma, XeomaError
 import voluptuous as vol
@@ -123,6 +122,7 @@ class XeomaCamera(Camera):
         self._password = password
         self._last_image = None
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -133,12 +133,14 @@ class XeomaCamera(Camera):
                 self._image, self._username, self._password
             )
             self._last_image = image
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except XeomaError as err:
             _LOGGER.error("Error fetching image: %s", err.message)
 
         return self._last_image
 
     @property
+    @override
     def name(self):
         """Return the name of this device."""
         return self._name

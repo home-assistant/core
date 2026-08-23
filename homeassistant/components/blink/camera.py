@@ -1,10 +1,8 @@
 """Support for Blink system camera."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from blinkpy.auth import UnauthorizedError
 from blinkpy.camera import BlinkCamera as BlinkCameraAPI
@@ -58,7 +56,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         super().__init__(coordinator)
         Camera.__init__(self)
         self._camera = camera
-        self._attr_unique_id = f"{camera.serial}-camera"
+        self._attr_unique_id = f"{camera.serial}-camera"  # pylint: disable=home-assistant-entity-unique-id-redundant-platform
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, camera.serial)},
             serial_number=camera.serial,
@@ -70,10 +68,12 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         _LOGGER.debug("Initialized blink camera %s", self._camera.name)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the camera attributes."""
         return self._camera.attributes
 
+    @override
     async def async_enable_motion_detection(self) -> None:
         """Enable motion detection for the camera."""
         try:
@@ -90,6 +90,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         self._camera.motion_enabled = True
         await self.coordinator.async_refresh()
 
+    @override
     async def async_disable_motion_detection(self) -> None:
         """Disable motion detection for the camera."""
         try:
@@ -107,11 +108,13 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
         await self.coordinator.async_refresh()
 
     @property
+    @override
     def motion_detection_enabled(self) -> bool:
         """Return the state of the camera."""
         return self._camera.arm
 
     @property
+    @override
     def brand(self) -> str | None:
         """Return the camera brand."""
         return DEFAULT_BRAND
@@ -146,6 +149,7 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
 
         self.async_write_ha_state()
 
+    @override
     def camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -172,7 +176,6 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
             await self._camera.save_recent_clips(output_dir=file_path)
         except OSError as err:
             raise ServiceValidationError(
-                str(err),
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
             ) from err
@@ -193,7 +196,6 @@ class BlinkCamera(CoordinatorEntity[BlinkUpdateCoordinator], Camera):
             await self._camera.video_to_file(filename)
         except OSError as err:
             raise ServiceValidationError(
-                str(err),
                 translation_domain=DOMAIN,
                 translation_key="cant_write",
             ) from err

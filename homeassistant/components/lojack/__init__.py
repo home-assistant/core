@@ -1,7 +1,5 @@
 """The LoJack integration for Home Assistant."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass, field
 
 from lojack_api import ApiError, AuthenticationError, LoJackClient, Vehicle

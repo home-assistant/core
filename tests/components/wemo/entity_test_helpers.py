@@ -97,12 +97,15 @@ async def _async_multiple_call_helper(
 
 
 async def test_async_update_locked_callback_and_update(
-    hass: HomeAssistant, pywemo_device: pywemo.WeMoDevice, wemo_entity: er.RegistryEntry
+    hass: HomeAssistant,
+    pywemo_device: pywemo.WeMoDevice,
+    wemo_entity: er.RegistryEntry,
 ) -> None:
-    """Test that a callback and a state update request can't both happen at the same time.
+    """Test callback and state update can't both happen at once.
 
-    When a state update is received via a callback from the device at the same time
-    as hass is calling `async_update`, verify that only one of the updates proceeds.
+    When a state update is received via a callback from the device
+    at the same time as hass is calling `async_update`, verify that
+    only one of the updates proceeds.
     """
     coordinator = async_get_coordinator(hass, wemo_entity.device_id)
     await async_setup_component(hass, HA_DOMAIN, {})
@@ -174,7 +177,7 @@ class EntityTestHelpers:
         pywemo_device: pywemo.WeMoDevice,
         wemo_entity: er.RegistryEntry,
     ) -> None:
-        """Test that two hass async_update state updates do not proceed at the same time."""
+        """Test two async_update state updates don't proceed simultaneously."""
         await test_async_update_locked_multiple_updates(
             hass, pywemo_device, wemo_entity
         )
@@ -185,7 +188,7 @@ class EntityTestHelpers:
         pywemo_device: pywemo.WeMoDevice,
         wemo_entity: er.RegistryEntry,
     ) -> None:
-        """Test that two device callback state updates do not proceed at the same time."""
+        """Test two device callback state updates don't proceed simultaneously."""
         await test_async_update_locked_multiple_callbacks(
             hass, pywemo_device, wemo_entity
         )
@@ -196,10 +199,11 @@ class EntityTestHelpers:
         pywemo_device: pywemo.WeMoDevice,
         wemo_entity: er.RegistryEntry,
     ) -> None:
-        """Test that a callback and a state update request can't both happen at the same time.
+        """Test callback and state update can't both happen at once.
 
-        When a state update is received via a callback from the device at the same time
-        as hass is calling `async_update`, verify that only one of the updates proceeds.
+        When a state update is received via a callback from the
+        device at the same time as hass is calling `async_update`,
+        verify that only one of the updates proceeds.
         """
         await test_async_update_locked_callback_and_update(
             hass, pywemo_device, wemo_entity

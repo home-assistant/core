@@ -1,9 +1,7 @@
 """Config flow for WattTime integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiowatttime import Client
 from aiowatttime.errors import CoordinatesNotFoundError, InvalidCredentialsError
@@ -122,6 +120,7 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: WattTimeConfigEntry,
     ) -> WattTimeOptionsFlowHandler:
@@ -219,6 +218,7 @@ class WattTimeConfigFlow(ConfigFlow, domain=DOMAIN):
             STEP_REAUTH_CONFIRM_DATA_SCHEMA,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

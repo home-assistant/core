@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from ohme import ApiException, OhmeApiClient
 
@@ -28,6 +28,18 @@ class OhmeNumberDescription(OhmeEntityDescription, NumberEntityDescription):
 
 
 NUMBER_DESCRIPTION = [
+    OhmeNumberDescription(
+        key="state_of_charge_input",
+        translation_key="state_of_charge_input",
+        value_fn=lambda client: client.battery,
+        set_fn=lambda client, value: client.async_set_state_of_charge(int(value)),
+        native_min_value=0,
+        native_max_value=100,
+        native_step=1,
+        native_unit_of_measurement=PERCENTAGE,
+        entity_registry_enabled_default=False,
+        available_fn=lambda client: client.status.value != "unplugged",
+    ),
     OhmeNumberDescription(
         key="target_percentage",
         translation_key="target_percentage",
@@ -75,10 +87,12 @@ class OhmeNumber(OhmeEntity, NumberEntity):
     entity_description: OhmeNumberDescription
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the current value of the number."""
         return self.entity_description.value_fn(self.coordinator.client)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the number value."""
         try:

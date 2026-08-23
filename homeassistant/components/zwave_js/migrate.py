@@ -1,7 +1,5 @@
 """Functions used to migrate unique IDs for Z-Wave JS entities."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 

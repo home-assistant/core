@@ -5,20 +5,22 @@ Support for controlling network access of clients selected in option flow.
 Support for controlling deep packet inspection (DPI) restriction groups.
 Support for controlling WLAN availability.
 Support for controlling zone based traffic rules.
+Support for controlling Policy Engine rules.
 """
-
-from __future__ import annotations
 
 import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import APIHandler, ItemEvent
 from aiounifi.interfaces.clients import Clients
 from aiounifi.interfaces.dpi_restriction_groups import DPIRestrictionGroups
 from aiounifi.interfaces.firewall_policies import FirewallPolicies
+from aiounifi.interfaces.object_oriented_network_configs import (
+    ObjectOrientedNetworkConfigs,
+)
 from aiounifi.interfaces.outlets import Outlets
 from aiounifi.interfaces.port_forwarding import PortForwarding
 from aiounifi.interfaces.ports import Ports
@@ -35,6 +37,10 @@ from aiounifi.models.dpi_restriction_app import DPIRestrictionAppEnableRequest
 from aiounifi.models.dpi_restriction_group import DPIRestrictionGroup
 from aiounifi.models.event import Event, EventKey
 from aiounifi.models.firewall_policy import FirewallPolicy, FirewallPolicyUpdateRequest
+from aiounifi.models.object_oriented_network_config import (
+    ObjectOrientedNetworkConfig,
+    ObjectOrientedNetworkInternetMode,
+)
 from aiounifi.models.outlet import Outlet
 from aiounifi.models.port import Port
 from aiounifi.models.port_forward import PortForward, PortForwardEnableRequest
@@ -51,7 +57,6 @@ from homeassistant.components.switch import (
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -150,16 +155,38 @@ async def async_firewall_policy_control_fn(
 
 @callback
 def async_firewall_policy_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
-    """Check if firewall policy is able to be controlled. Predefined policies are unable to be turned off."""
+    """Check if firewall policy can be controlled."""
     policy = hub.api.firewall_policies[obj_id]
     return not policy.predefined
+
+
+async def async_object_oriented_network_config_control_fn(
+    hub: UnifiHub, obj_id: str, target: bool
+) -> None:
+    """Control Policy Engine rule state."""
+    config = hub.api.object_oriented_network_configs[obj_id]
+    await hub.api.object_oriented_network_configs.save(config, target)
+
+
+@callback
+def async_object_oriented_network_config_supported_fn(
+    hub: UnifiHub, obj_id: str
+) -> bool:
+    """Check if Policy Engine rule can be controlled as a switch."""
+    config = hub.api.object_oriented_network_configs[obj_id]
+    secure = config.secure
+    return (
+        secure.available
+        and secure.enabled
+        and secure.internet is not None
+        and secure.internet.mode is ObjectOrientedNetworkInternetMode.TURN_OFF_INTERNET
+    )
 
 
 @callback
 def async_outlet_switching_supported_fn(hub: UnifiHub, obj_id: str) -> bool:
     """Determine if an outlet supports switching."""
-    outlet = hub.api.outlets[obj_id]
-    return outlet.has_relay or outlet.caps in (1, 3)
+    return hub.api.outlets[obj_id].has_relay is True
 
 
 @callback
@@ -286,6 +313,21 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
         unique_id_fn=lambda hub, obj_id: f"firewall_policy-{obj_id}",
         supported_fn=async_firewall_policy_supported_fn,
     ),
+    UnifiSwitchEntityDescription[
+        ObjectOrientedNetworkConfigs, ObjectOrientedNetworkConfig
+    ](
+        key="Policy Engine rule control",
+        device_class=SwitchDeviceClass.SWITCH,
+        entity_category=EntityCategory.CONFIG,
+        api_handler_fn=lambda api: api.object_oriented_network_configs,
+        control_fn=async_object_oriented_network_config_control_fn,
+        device_info_fn=async_unifi_network_device_info_fn,
+        is_on_fn=lambda hub, config: config.enabled,
+        name_fn=lambda config: config.name,
+        object_fn=lambda api, obj_id: api.object_oriented_network_configs[obj_id],
+        supported_fn=async_object_oriented_network_config_supported_fn,
+        unique_id_fn=lambda hub, obj_id: f"object_oriented_network_config-{obj_id}",
+    ),
     UnifiSwitchEntityDescription[Outlets, Outlet](
         key="Outlet control",
         device_class=SwitchDeviceClass.OUTLET,
@@ -381,41 +423,12 @@ ENTITY_DESCRIPTIONS: tuple[UnifiSwitchEntityDescription, ...] = (
 )
 
 
-@callback
-def async_update_unique_id(hass: HomeAssistant, config_entry: UnifiConfigEntry) -> None:
-    """Normalize switch unique ID to have a prefix rather than midfix.
-
-    Introduced with release 2023.12.
-    """
-    hub = config_entry.runtime_data
-    ent_reg = er.async_get(hass)
-
-    @callback
-    def update_unique_id(obj_id: str, type_name: str) -> None:
-        """Rework unique ID."""
-        new_unique_id = f"{type_name}-{obj_id}"
-        if ent_reg.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, new_unique_id):
-            return
-
-        prefix, _, suffix = obj_id.partition("_")
-        unique_id = f"{prefix}-{type_name}-{suffix}"
-        if entity_id := ent_reg.async_get_entity_id(SWITCH_DOMAIN, DOMAIN, unique_id):
-            ent_reg.async_update_entity(entity_id, new_unique_id=new_unique_id)
-
-    for obj_id in hub.api.outlets:
-        update_unique_id(obj_id, "outlet")
-
-    for obj_id in hub.api.ports:
-        update_unique_id(obj_id, "poe")
-
-
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: UnifiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up switches for UniFi Network integration."""
-    async_update_unique_id(hass, config_entry)
     config_entry.runtime_data.entity_loader.register_platform(
         async_add_entities,
         UnifiSwitchEntity,
@@ -432,10 +445,12 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
     entity_description: UnifiSwitchEntityDescription[HandlerT, ApiItemT]
 
     @callback
+    @override
     def async_initiate_state(self) -> None:
         """Initiate entity state."""
         self.async_update_state(ItemEvent.ADDED, self._obj_id, first_update=True)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on switch."""
         try:
@@ -450,6 +465,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         ):
             await coordinator.async_request_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off switch."""
         try:
@@ -465,6 +481,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             await coordinator.async_request_refresh()
 
     @callback
+    @override
     def async_update_state(
         self, event: ItemEvent, obj_id: str, first_update: bool = False
     ) -> None:
@@ -481,6 +498,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
             self._attr_is_on = is_on
 
     @callback
+    @override
     def async_event_callback(self, event: Event) -> None:
         """Event subscription callback."""
         if event.mac != self._obj_id:
@@ -496,6 +514,7 @@ class UnifiSwitchEntity[HandlerT: APIHandler, ApiItemT: ApiItem](
         self._attr_available = description.available_fn(self.hub, self._obj_id)
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         await super().async_added_to_hass()

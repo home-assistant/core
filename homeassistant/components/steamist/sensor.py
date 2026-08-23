@@ -1,9 +1,8 @@
 """Support for Steamist sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from aiosteamist import SteamistStatus
 
@@ -62,7 +61,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up sensors."""
     # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=hass-use-runtime-data
+    # pylint: disable-next=home-assistant-use-runtime-data
     coordinator: SteamistDataUpdateCoordinator = hass.data[DOMAIN][
         config_entry.entry_id
     ]
@@ -93,6 +92,7 @@ class SteamistSensorEntity(SteamistEntity, SensorEntity):
             ]
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Return the native value of the sensor."""
         return self.entity_description.value_fn(self._status)

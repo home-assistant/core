@@ -1,10 +1,8 @@
 """Support for the Airzone sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioairzone.common import GrilleAngle, OperationMode, QAdapt, SleepTimeout
 from aioairzone.const import (
@@ -215,6 +213,7 @@ class AirzoneBaseSelect(AirzoneEntity, SelectEntity):
     values_dict: dict[int, str]
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()
@@ -255,6 +254,7 @@ class AirzoneSystemSelect(AirzoneSystemEntity, AirzoneBaseSelect):
 
         self._async_update_attrs()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         param = self.entity_description.api_param
@@ -289,6 +289,7 @@ class AirzoneZoneSelect(AirzoneZoneEntity, AirzoneBaseSelect):
 
         self._async_update_attrs()
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         param = self.entity_description.api_param

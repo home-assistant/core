@@ -69,10 +69,10 @@ async def test_full_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_exceptions(
     hass: HomeAssistant,
     mock_airthings_token: AsyncMock,
-    mock_setup_entry: AsyncMock,
     exception: Exception,
     error: str,
 ) -> None:

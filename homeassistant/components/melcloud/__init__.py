@@ -1,7 +1,5 @@
 """The MELCloud Climate integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
@@ -22,6 +20,8 @@ from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
 PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
+    Platform.NUMBER,
+    Platform.SELECT,
     Platform.SENSOR,
     Platform.WATER_HEATER,
 ]

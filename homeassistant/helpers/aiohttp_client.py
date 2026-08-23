@@ -1,7 +1,5 @@
 """Helper for aiohttp webclient stuff."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Sequence
 from contextlib import suppress
@@ -11,13 +9,14 @@ import socket
 from ssl import SSLContext
 import sys
 from types import MappingProxyType
-from typing import TYPE_CHECKING, Any, Self
+from typing import TYPE_CHECKING, Any, Self, override
 
 import aiohttp
 from aiohttp import ClientMiddlewareType, hdrs, web
 from aiohttp.hdrs import CONTENT_TYPE, USER_AGENT
 from aiohttp.web_exceptions import HTTPBadGateway, HTTPGatewayTimeout
 from aiohttp_asyncmdnsresolver.api import AsyncDualMDNSResolver
+from multidict import CIMultiDict
 from yarl import URL
 
 from homeassistant import config_entries
@@ -170,6 +169,7 @@ class HassAsyncDNSResolver(AsyncDualMDNSResolver):
         """Close the resolver."""
         await super().close()
 
+    @override
     async def close(self) -> None:
         """Close the resolver."""
 
@@ -177,6 +177,7 @@ class HassAsyncDNSResolver(AsyncDualMDNSResolver):
 class HassClientResponse(aiohttp.ClientResponse):
     """aiohttp.ClientResponse with a json method that uses json_loads by default."""
 
+    @override
     async def json(
         self,
         *args: Any,
@@ -300,8 +301,10 @@ def _async_create_clientsession(
     # It's important that we identify as Home Assistant
     # If a package requires a different user agent, override it by passing a headers
     # dictionary to the request method.
+    default_headers = CIMultiDict(clientsession.headers)
+    default_headers[USER_AGENT] = SERVER_SOFTWARE
     clientsession._default_headers = MappingProxyType(  # type: ignore[assignment]  # noqa: SLF001
-        {USER_AGENT: SERVER_SOFTWARE},
+        default_headers
     )
 
     clientsession.close = warn_use(  # type: ignore[method-assign]

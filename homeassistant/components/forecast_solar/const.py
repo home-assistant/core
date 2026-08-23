@@ -1,7 +1,5 @@
 """Constants for the Forecast.Solar integration."""
 
-from __future__ import annotations
-
 import logging
 
 DOMAIN = "forecast_solar"

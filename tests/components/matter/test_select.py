@@ -127,7 +127,7 @@ async def test_list_select_entities(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test ListSelect entities are discovered and working from a laundrywasher fixture."""
+    """Test ListSelect entities from a laundrywasher fixture."""
     state = hass.states.get("select.laundrywasher_temperature_level")
     assert state
     assert state.state == "Colors"
@@ -203,7 +203,7 @@ async def test_map_select_entities(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test MatterMapSelectEntity entities are discovered and working from a laundrywasher fixture."""
+    """Test MatterMapSelectEntity entities from a laundrywasher fixture."""
     # NumberOfRinses
     state = hass.states.get("select.laundrywasher_number_of_rinses")
     assert state
@@ -221,7 +221,7 @@ async def test_pump(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test MatterAttributeSelectEntity entities are discovered and working from a pump fixture."""
+    """Test MatterAttributeSelectEntity entities from a pump fixture."""
     # OperationMode
     state = hass.states.get("select.mock_pump_mode")
     assert state
@@ -240,7 +240,7 @@ async def test_microwave_oven(
     matter_client: MagicMock,
     matter_node: MatterNode,
 ) -> None:
-    """Test ListSelect entity is discovered and working from a microwave oven fixture."""
+    """Test ListSelect entity from a microwave oven fixture."""
 
     # SupportedWatts    from MicrowaveOvenControl cluster (1/96/6)
     # SelectedWattIndex from MicrowaveOvenControl cluster (1/96/7)
@@ -346,7 +346,8 @@ async def test_door_lock_operating_mode_select(
     state = hass.states.get(entity_id)
     assert state.state == "privacy"
 
-    # Select another supported option (NoRemoteLockUnlock) via service to validate mapping
+    # Select another supported option (NoRemoteLockUnlock) via service
+    # to validate mapping
     matter_client.write_attribute.reset_mock()
     await hass.services.async_call(
         "select",
@@ -362,4 +363,44 @@ async def test_door_lock_operating_mode_select(
             attribute=clusters.DoorLock.Attributes.OperatingMode,
         ),
         value=clusters.DoorLock.Enums.OperatingModeEnum.kNoRemoteLockUnlock,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_chime"])
+async def test_chime_select(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test select entity for the Chime cluster's SelectedChime attribute."""
+    entity_id = "select.mock_chime_chime_sound"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == "Classic Ding Dong"
+    assert state.attributes["options"] == [
+        "Classic Ding Dong",
+        "Merry Melodies",
+        "Digital Alert",
+    ]
+
+    set_node_attribute(matter_node, 1, 1366, 1, 2)
+    await trigger_subscription_callback(hass, matter_client)
+    state = hass.states.get(entity_id)
+    assert state.state == "Merry Melodies"
+
+    matter_client.write_attribute.reset_mock()
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "Classic Ding Dong"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=1,
+            attribute=clusters.Chime.Attributes.SelectedChime,
+        ),
+        value=1,
     )

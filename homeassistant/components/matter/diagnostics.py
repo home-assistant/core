@@ -1,20 +1,19 @@
 """Provide diagnostics for Matter."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 
 from chip.clusters import Objects
 from matter_server.common.helpers.util import dataclass_to_dict, parse_attribute_path
 
-from homeassistant.components.diagnostics import REDACTED
+from homeassistant.components.diagnostics import REDACTED, async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from .helpers import MatterConfigEntry, get_matter, get_node_from_device_entry
 
 ATTRIBUTES_TO_REDACT = {Objects.BasicInformation.Attributes.Location}
+SERVER_INFO_TO_REDACT = {"wifi_ssid"}
 
 
 def redact_matter_attributes(node_data: dict[str, Any]) -> dict[str, Any]:
@@ -46,6 +45,7 @@ async def async_get_config_entry_diagnostics(
     matter = get_matter(hass)
     server_diagnostics = await matter.matter_client.get_diagnostics()
     data = dataclass_to_dict(server_diagnostics)
+    data["info"] = async_redact_data(data["info"], SERVER_INFO_TO_REDACT)
     nodes = [redact_matter_attributes(node_data) for node_data in data["nodes"]]
     data["nodes"] = nodes
 
@@ -61,7 +61,9 @@ async def async_get_device_diagnostics(
     node = get_node_from_device_entry(hass, device)
 
     return {
-        "server_info": dataclass_to_dict(server_diagnostics.info),
+        "server_info": async_redact_data(
+            dataclass_to_dict(server_diagnostics.info), SERVER_INFO_TO_REDACT
+        ),
         "node": redact_matter_attributes(
             remove_serialization_type(dataclass_to_dict(node.node_data) if node else {})
         ),

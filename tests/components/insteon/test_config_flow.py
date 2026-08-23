@@ -15,7 +15,7 @@ from homeassistant.components.insteon.config_flow import (
     STEP_PLM_MANUALLY,
 )
 from homeassistant.components.insteon.const import CONF_HUB_VERSION, DOMAIN
-from homeassistant.config_entries import ConfigEntryState, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -108,19 +108,10 @@ async def test_form_select_modem(hass: HomeAssistant) -> None:
 
 async def test_fail_on_existing(hass: HomeAssistant) -> None:
     """Test we fail if the integration is already configured."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        entry_id="abcde12345",
-        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
-        options={},
-    )
-    config_entry.add_to_hass(hass)
-    assert config_entry.state is ConfigEntryState.NOT_LOADED
+    MockConfigEntry(domain=DOMAIN).add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        data={**MOCK_USER_INPUT_HUB_V2, CONF_HUB_VERSION: 2},
-        context={"source": config_entries.SOURCE_USER},
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
@@ -280,7 +271,7 @@ async def test_discovery_via_usb(hass: HomeAssistant) -> None:
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
     assert result["type"] is FlowResultType.FORM
@@ -312,7 +303,7 @@ async def test_discovery_via_usb_already_setup(hass: HomeAssistant) -> None:
         manufacturer="test",
     )
     result = await hass.config_entries.flow.async_init(
-        "insteon", context={"source": config_entries.SOURCE_USB}, data=discovery_info
+        DOMAIN, context={"source": config_entries.SOURCE_USB}, data=discovery_info
     )
     await hass.async_block_till_done()
 

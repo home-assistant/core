@@ -39,11 +39,11 @@
 # name: test_cover[light_payload0][cover.window_covering_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 0,
-      'device_class': 'shade',
-      'friendly_name': 'Window covering device',
-      'is_closed': True,
-      'supported_features': <CoverEntityFeature: 15>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shade',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Window covering device',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: True,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 15>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.window_covering_device',
@@ -93,12 +93,12 @@
 # name: test_level_controllable_output_cover[light_payload0][cover.vent-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 5,
-      'current_tilt_position': 97,
-      'device_class': 'damper',
-      'friendly_name': 'Vent',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 5,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 97,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'damper',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Vent',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.vent',
@@ -148,12 +148,12 @@
 # name: test_tilt_cover[light_payload0][cover.covering_device-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'current_position': 100,
-      'current_tilt_position': 100,
-      'device_class': 'shade',
-      'friendly_name': 'Covering device',
-      'is_closed': False,
-      'supported_features': <CoverEntityFeature: 255>,
+      <CoverEntityStateAttribute.CURRENT_POSITION: 'current_position'>: 100,
+      <CoverEntityStateAttribute.CURRENT_TILT_POSITION: 'current_tilt_position'>: 100,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'shade',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Covering device',
+      <CoverEntityStateAttribute.IS_CLOSED: 'is_closed'>: False,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <CoverEntityFeature: 255>,
     }),
     'context': <ANY>,
     'entity_id': 'cover.covering_device',

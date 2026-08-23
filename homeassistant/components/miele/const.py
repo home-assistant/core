@@ -20,7 +20,8 @@ LIGHT_ON = 1
 LIGHT_OFF = 2
 
 # API "no reading" sentinels. Most temperatures use centidegrees (-32768 -> -327.68 °C).
-# Some devices report the int16 minimum already in degrees after scaling (-3276800 raw -> -32768 °C).
+# Some devices report the int16 minimum already in degrees
+# after scaling (-3276800 raw -> -32768 C).
 DISABLED_TEMP_ENTITIES = (
     -32768 / 100,
     -32766 / 100,
@@ -174,6 +175,8 @@ class ProgramPhaseWashingMachine(MieleEnum, missing_to_none=True):
     disinfecting = 285
     flex_load_active = 11047
     automatic_start = 11044
+    paused = 11052
+    cancelled = 11053
 
 
 class ProgramPhaseTumbleDryer(MieleEnum, missing_to_none=True):
@@ -479,6 +482,7 @@ class WashingMachineProgramId(MieleEnum, missing_to_none=True):
     down_filled_items = 129
     cottons_eco = 133
     quick_power_wash = 146, 10031
+    quick_intense = 177
     eco_40_60 = 190, 10007
     bed_linen = 10047
     easy_care = 10016
@@ -504,17 +508,20 @@ class DishWasherProgramId(MieleEnum, missing_to_none=True):
     solar_save = 9, 34
     gentle = 10, 35, 210
     extra_quiet = 11, 36, 207
-    hygiene = 12, 37
-    quick_power_wash = 13, 38
+    hygiene = 12, 37, 206
+    quick_power_wash = 13, 38, 216
     pasta_paela = 14
     tall_items = 17, 42
     glasses_warm = 19
     quick_intense = 21
-    normal = 30
+    normal = 23, 30, 217
+    pre_wash = 24
+    pot_rests_and_filters = 25
     power_wash = 44, 204
     comfort_wash = 203
     comfort_wash_plus = 209
     rinse_salt = 215
+    rinse_and_hold = 219
 
 
 class TumbleDryerProgramId(MieleEnum, missing_to_none=True):

@@ -46,10 +46,6 @@ async def test_switch_entities(
 
     assert TEST_WEBHOOK_ID in hass.data["webhook"], "Webhook was not registered"
 
-    # Verify the webhook handler
-    webhook_info = hass.data["webhook"][TEST_WEBHOOK_ID]
-    assert webhook_info["handler"], "Webhook handler is not set"
-
     client = await hass_client_no_auth()
     resp = await client.post(f"/api/webhook/{TEST_WEBHOOK_ID}", json=UPDATE_DATA)
 

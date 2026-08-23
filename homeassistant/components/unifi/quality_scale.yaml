@@ -8,9 +8,15 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup: done
   entity-unique-id: done
   has-entity-name: done
@@ -35,7 +41,9 @@ rules:
   devices: done
   diagnostics: done
   discovery-update-info: done
-  discovery: done
+  discovery:
+    status: exempt
+    comment: Discovery is handled via unifi_discovery dependency using SOURCE_INTEGRATION_DISCOVERY.
   docs-data-update: done
   docs-examples: done
   docs-known-limitations: done

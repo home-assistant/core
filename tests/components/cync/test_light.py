@@ -52,9 +52,9 @@ async def test_turn_on(
 
     await setup_integration(hass, mock_config_entry)
 
-    assert hass.states.get("light.lamp_bulb_1").state == "off"
+    assert hass.states.get("light.office_lamp_bulb_1").state == "off"
 
-    entity_id_parameter = {"entity_id": "light.lamp_bulb_1"}
+    entity_id_parameter = {"entity_id": "light.office_lamp_bulb_1"}
     action_parameters = entity_id_parameter | input_parameters
 
     test_device = mock_config_entry.runtime_data.data.get(1111)
