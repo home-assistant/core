@@ -7,7 +7,7 @@ from contextlib import suppress
 from dataclasses import asdict, dataclass, fields
 import logging
 from pathlib import Path
-from typing import Any, Self, override
+from typing import Any, Self, cast, override
 
 from awesomeversion import AwesomeVersion
 from propcache.api import cached_property
@@ -159,6 +159,13 @@ CONF_ADDON_RF_REGION = "rf_region"
 EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
+
+# Context flag of the flow that owns the shared add-on config. A flow's
+# published step only updates when its step handler returns, but the
+# flow context is shared into in-progress flow results immediately, so
+# the flag is set without awaits between check and set. It dies with
+# the flow when the flow is removed from progress.
+_ADDON_OWNER_CONTEXT = "zwave_js_addon_owner"
 
 # Steps at which another flow has not yet changed any shared state,
 # e.g. the add-on config, and can be aborted safely when a config entry
@@ -478,11 +485,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="addon_already_configured")
 
         if config_updates := self._addon_config_updates:
-            if self._reconfigure_config_entry is None and any(
-                flow
-                for flow in self._async_in_progress()
-                if flow.get("step_id") not in ABORT_SAFE_STEPS
-            ):
+            if not self._async_acquire_addon_ownership():
                 # Another flow, e.g. a second discovered adapter being set
                 # up, is already changing the shared add-on config.
                 return self.async_abort(reason="already_in_progress")
@@ -984,6 +987,28 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
     @callback
+    def _async_acquire_addon_ownership(self) -> bool:
+        """Try to make this flow the owner of the shared add-on config.
+
+        Return False if another flow in progress owns it. Ownership ends
+        with the flow, when the flow is removed from progress.
+        """
+        # The context holds flow specific keys not in the typed dict.
+        context = cast(dict[str, Any], self.context)
+        if context.get(_ADDON_OWNER_CONTEXT):
+            return True
+        if any(
+            cast(dict[str, Any], flow["context"]).get(_ADDON_OWNER_CONTEXT)
+            # Include uninitialized flows: a discovery flow may change the
+            # add-on config in its first step, before it has a published
+            # step.
+            for flow in self._async_in_progress(include_uninitialized=True)
+        ):
+            return False
+        context[_ADDON_OWNER_CONTEXT] = True
+        return True
+
+    @callback
     def _addon_owned_by_other_entry(self) -> bool:
         """Return if another config entry uses the add-on."""
         return any(
@@ -1263,13 +1288,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 },
             )
 
-        if any(
-            flow
-            for flow in self._async_in_progress()
-            if flow.get("step_id") not in ABORT_SAFE_STEPS
-        ):
+        if not self._async_acquire_addon_ownership():
             # Another flow, e.g. a competing migration confirmed earlier,
-            # has progressed beyond a prompt. Don't start a second migration.
+            # is already changing the shared add-on config. Don't start a
+            # second migration.
             return self.async_abort(reason="already_in_progress")
 
         # Remaining prompts, e.g. for other discovered adapters,
@@ -1476,6 +1498,11 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     CONF_ADDON_SOCKET: self.socket_path,
                     **self.security_keys.to_dict(),
                 }
+
+                if not self._async_acquire_addon_ownership():
+                    # Another flow is already changing the shared add-on
+                    # config.
+                    return self.async_abort(reason="already_in_progress")
 
                 addon_config_updates = self._addon_config_updates | addon_config_updates
                 self._addon_config_updates = {}
@@ -1721,6 +1748,10 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                     if existing_socket_path == discovery_info.socket_path:
                         # Config entry already has correct config
                         return self.async_abort(reason="already_configured")
+                    if not self._async_acquire_addon_ownership():
+                        # Another flow is already changing the shared
+                        # add-on config. The discovery is retried later.
+                        return self.async_abort(reason="already_in_progress")
                     await self._addon_setup.async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
                     )

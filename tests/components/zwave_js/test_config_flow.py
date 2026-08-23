@@ -2707,6 +2707,104 @@ async def test_concurrent_usb_setup_flows(
     hass.config_entries.flow.async_abort(result_a["flow_id"])
     await hass.async_block_till_done()
 
+    # The aborted first flow is no longer in progress, so its ownership
+    # of the add-on config is gone and a new flow can change it.
+    result_c = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=second_stick,
+    )
+
+    assert result_c["step_id"] == "installation_type"
+
+    result_c = await hass.config_entries.flow.async_configure(
+        result_c["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result_c["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_c["step_id"] == "start_addon"
+    set_addon_options.assert_called_once()
+
+    hass.config_entries.flow.async_abort(result_c["flow_id"])
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_concurrent_flow_during_addon_config_write(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test a second flow aborts while the first is inside the start add-on step.
+
+    A flow's published step only updates when its step handler returns,
+    so while the first flow is applying the add-on config inside the
+    start add-on step, its published step is still the prompt it was
+    submitted from. A second flow submitted at that moment must still
+    abort.
+    """
+    options_write_started = asyncio.Event()
+    resume_options_write = asyncio.Event()
+
+    async def blocking_set_addon_options(slug: str, options: AddonsOptions) -> None:
+        options_write_started.set()
+        await resume_options_write.wait()
+
+    set_addon_options.side_effect = blocking_set_addon_options
+
+    second_stick = UsbServiceInfo(
+        device="/dev/zwave2",
+        pid="BBBB",
+        vid="BBBB",
+        serial_number="5678",
+        description="zwave radio",
+        manufacturer="test",
+    )
+    result_a = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    result_b = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=second_stick,
+    )
+
+    assert result_a["step_id"] == "installation_type"
+    assert result_b["step_id"] == "installation_type"
+
+    task_a = hass.async_create_task(
+        hass.config_entries.flow.async_configure(
+            result_a["flow_id"], {"next_step_id": "intent_recommended"}
+        )
+    )
+    await options_write_started.wait()
+
+    # The first flow is changing the add-on config, but its published
+    # step is still the safe prompt it was submitted from.
+    flows_in_progress = {
+        flow["flow_id"]: flow for flow in hass.config_entries.flow.async_progress()
+    }
+    assert flows_in_progress[result_a["flow_id"]]["step_id"] == "installation_type"
+
+    result_b = await hass.config_entries.flow.async_configure(
+        result_b["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result_b["type"] is FlowResultType.ABORT
+    assert result_b["reason"] == "already_in_progress"
+
+    resume_options_write.set()
+    result_a = await task_a
+
+    assert result_a["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_a["step_id"] == "start_addon"
+    set_addon_options.assert_called_once()
+
+    hass.config_entries.flow.async_abort(result_a["flow_id"])
+    await hass.async_block_till_done()
+
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
