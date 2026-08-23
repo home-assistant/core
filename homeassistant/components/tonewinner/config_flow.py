@@ -25,16 +25,11 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
     """Handle the Tonewinner config flow."""
 
     async def _async_probe_receiver(self, port: str) -> str | None:
-        """Verify the port opens and return the receiver's model if reported."""
+        """Verify a receiver answers on the port and return its model."""
         receiver = TonewinnerReceiver(port)
         try:
             await receiver.connect()
-            try:
-                info: ReceiverInfo | None = await receiver.query_info()
-            except ConnectionError:
-                # Some firmware builds never answer the identity query.
-                _LOGGER.debug("Receiver on %s did not report a model", port)
-                return None
+            info: ReceiverInfo | None = await receiver.query_info()
         finally:
             await receiver.disconnect()
         return info.model if info else None
