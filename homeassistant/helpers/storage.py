@@ -46,22 +46,30 @@ STORAGE_MANAGER: HassKey[_StoreManager] = HassKey("storage_manager")
 
 MANAGER_CLEANUP_DELAY = 60
 
+COMPRESSED_SUFFIX = ".zst"
 
-def _load_json_file(path: str | Path) -> json_util.JsonValueType:
+# Distinguishes "no file on disk" from a file whose content is an empty dict.
+_NOT_FOUND = object()
+
+
+def _load_json_file(
+    path: str | Path,
+    default: json_util.JsonValueType = _NOT_FOUND,  # type: ignore[assignment]
+) -> json_util.JsonValueType:
     """Load JSON from a file, transparently decompressing .zst files.
 
-    Returns ``{}`` (the same sentinel as :func:`json_util.load_json`) when
-    the file does not exist.  Raises :class:`HomeAssistantError` wrapping the
-    original exception when the file is corrupt or cannot be read.
+    Returns ``default`` when the file does not exist, mirroring
+    :func:`json_util.load_json`.  Raises :class:`HomeAssistantError` wrapping
+    the original exception when the file is corrupt or cannot be read.
     """
-    if not str(path).endswith(".zst"):
-        return json_util.load_json(path)
+    if Path(path).suffix != COMPRESSED_SUFFIX:
+        return json_util.load_json(path, default=default)
     try:
         with open(path, "rb") as fh:
             raw = zstd.decompress(fh.read())
     except FileNotFoundError:
         _LOGGER.debug("JSON file not found: %s", path)
-        return {}
+        return default
     except zstd.ZstdError as err:
         _LOGGER.exception("Could not decompress storage file: %s", path)
         raise HomeAssistantError(f"Error decompressing {path}: {err}") from err
@@ -230,7 +238,14 @@ class _StoreManager:
     async def async_preload(self, keys: Iterable[str]) -> None:
         """Cache the keys."""
         # If async_initialize has not been called yet, we can't preload
-        if self._files is not None and (existing := self._files.intersection(keys)):
+        if self._files is None:
+            return
+        # Callers pass plain keys; a compressed store is on disk as key + ".zst"
+        # and is cached under that name, so look for both spellings.
+        candidates = {
+            spelling for key in keys for spelling in (key, f"{key}{COMPRESSED_SUFFIX}")
+        }
+        if existing := self._files.intersection(candidates):
             await self._hass.async_add_executor_job(self._preload, existing)
 
     def _preload(self, keys: Iterable[str]) -> None:
@@ -241,7 +256,7 @@ class _StoreManager:
             storage_file: Path = storage_path.joinpath(key)
             try:
                 if storage_file.is_file():
-                    data_preload[key] = _load_json_file(storage_file)
+                    data_preload[key] = _load_json_file(storage_file, default={})
             except Exception as ex:  # noqa: BLE001
                 _LOGGER.debug("Error loading %s: %s", key, ex)
 
@@ -275,6 +290,17 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             max_readable_version: Maximum major version that can be read. Defaults
             to version. Set higher than version to support forward compatibility,
             allowing reading data written by newer versions (e.g., after downgrade).
+
+            compress: Whether to store the data zstd compressed, under the key
+            with a ".zst" suffix appended. No migration is needed to turn this
+            on or off: an already existing uncompressed file is read as a
+            fallback and removed once the compressed file has been written, so
+            a user can decompress, edit and save a file by hand at any time.
+
+            Compression trades CPU for I/O and disk space. It is paid on every
+            write, while it is only earned back once per load, so it is meant
+            for stores which grow large rather than for ones which are written
+            frequently.
 
             serialize_in_event_loop: Whether to serialize data in the event loop.
             Set to True (default) if data passed to async_save and data produced by
@@ -316,7 +342,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     def path(self):
         """Return the config path."""
         if self._compress:
-            return self.hass.config.path(STORAGE_DIR, self.key + ".zst")
+            return self.hass.config.path(STORAGE_DIR, self._cache_key)
         return self.hass.config.path(STORAGE_DIR, self.key)
 
     @cached_property
@@ -329,7 +355,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         suffix here to match the real filename.
         """
         if self._compress:
-            return self.key + ".zst"
+            return f"{self.key}{COMPRESSED_SUFFIX}"
         return self.key
 
     @cached_property
@@ -394,6 +420,36 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         async with self.hass.data[STORAGE_SEMAPHORE]:
             return await self._async_load_data()
 
+    @callback
+    def _async_invalidate_cache(self) -> None:
+        """Invalidate every filename this store may be cached under."""
+        self._manager.async_invalidate(self._cache_key)
+        if self._compress:
+            # Writing and removing both drop the uncompressed predecessor.
+            self._manager.async_invalidate(self.key)
+
+    @callback
+    def _async_fetch_cached(
+        self,
+    ) -> tuple[bool, json_util.JsonValueType | None] | None:
+        """Fetch preloaded data, accounting for the uncompressed fallback.
+
+        Returns None when the manager cannot answer and the file has to be
+        read from disk. A compressed store has two candidate filenames, so
+        only report "does not exist" when neither of them is on disk.
+        """
+        primary = self._manager.async_fetch(self._cache_key)
+        if not self._compress:
+            return primary
+        if primary is not None and primary[0]:
+            return primary
+        fallback = self._manager.async_fetch(self.key)
+        if fallback is not None and fallback[0]:
+            return fallback
+        if primary is not None and fallback is not None:
+            return (False, None)
+        return None
+
     async def _async_load_data(self):
         """Load the data."""
         # When load_empty is set, skip loading storage files and use empty
@@ -413,7 +469,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             # We make a copy because code might assume it's safe to mutate loaded data
             # and we don't want that to mess with what we're trying to store.
             data = deepcopy(data)
-        elif cache := self._manager.async_fetch(self._cache_key):
+        elif cache := self._async_fetch_cached():
             exists, data = cache
             if not exists:
                 return None
@@ -577,7 +633,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
     async def _async_handle_write_data(self, *_args):
         """Handle writing the config."""
         async with self._write_lock:
-            self._manager.async_invalidate(self._cache_key)
+            self._async_invalidate_cache()
             self._async_cleanup_delay_listener()
             self._async_cleanup_final_write_listener()
 
@@ -625,10 +681,9 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
         neither file exists.
         """
         data = _load_json_file(self.path)
-        if data == {} and self._compress:
-            # .zst not found - fall back to the plain file.
+        if data is _NOT_FOUND and self._compress:
             data = _load_json_file(self._uncompressed_path)
-        return data
+        return {} if data is _NOT_FOUND else data
 
     def _write_prepared_data(self, mode: str, json_data: str | bytes) -> None:
         """Write the data."""
@@ -658,8 +713,18 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
         isotime = dt_util.utcnow().isoformat()
         corrupt_postfix = f".corrupt.{isotime}"
-        corrupt_path = f"{self.path}{corrupt_postfix}"
-        await self.hass.async_add_executor_job(os.rename, self.path, corrupt_path)
+
+        def _rename_corrupt_file() -> tuple[str, str]:
+            # The compressed path is read first, so when it is absent the file
+            # we failed to read is the uncompressed fallback.
+            path = self.path if os.path.isfile(self.path) else self._uncompressed_path
+            corrupt_path = f"{path}{corrupt_postfix}"
+            os.rename(path, corrupt_path)
+            return path, corrupt_path
+
+        path, corrupt_path = await self.hass.async_add_executor_job(
+            _rename_corrupt_file
+        )
         storage_key = self.key
         _LOGGER.error(
             "Unrecoverable error decoding storage %s at %s; "
@@ -668,7 +733,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             "The corrupt file has been saved as %s; "
             "It is recommended to restore from backup: %s",
             storage_key,
-            self.path,
+            path,
             corrupt_path,
             err,
         )
@@ -690,7 +755,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
             severity=IssueSeverity.CRITICAL,
             translation_placeholders={
                 "storage_key": storage_key,
-                "original_path": self.path,
+                "original_path": path,
                 "corrupt_path": corrupt_path,
                 "error": str(err),
             },
@@ -702,7 +767,7 @@ class Store[_T: Mapping[str, Any] | Sequence[Any]]:
 
     async def async_remove(self) -> None:
         """Remove all data."""
-        self._manager.async_invalidate(self._cache_key)
+        self._async_invalidate_cache()
         self._async_cleanup_delay_listener()
         self._async_cleanup_final_write_listener()
 
