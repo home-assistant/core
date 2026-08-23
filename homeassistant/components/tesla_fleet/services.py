@@ -20,7 +20,6 @@ from .const import DOMAIN
 from .helpers import handle_command
 from .models import TeslaFleetEnergyData
 
-# Attributes
 ATTR_BUY_RATE = "buy_rate"
 ATTR_CURRENCY = "currency"
 ATTR_DAILY_CHARGE = "daily_charge"
@@ -36,7 +35,6 @@ ATTR_START_MONTH = "start_month"
 ATTR_START_TIME = "start_time"
 ATTR_UTILITY = "utility"
 
-# Services
 SERVICE_TIME_OF_USE = "time_of_use"
 
 DAY_TO_TESLA = {
@@ -121,7 +119,7 @@ def _non_empty_string(value: Any) -> str:
 
 def _currency(value: Any) -> str:
     """Validate an ISO 4217 currency code."""
-    return vol.Match(r"^[A-Z]{3}$")(_non_empty_string(value).upper())
+    return cv.currency(_non_empty_string(value).upper())
 
 
 def _whole_minute(value: Any) -> time:
