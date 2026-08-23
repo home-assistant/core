@@ -222,8 +222,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
                 raise HomeAssistantError(msg) from err
         await self._receiver.send_command(command)
 
-    # --- Media player controls ---
-
     @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
