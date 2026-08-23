@@ -99,9 +99,8 @@ async def test_form_duplicate_serial_port(hass: HomeAssistant) -> None:
     )
 
     with patch(
-        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
-        return_value=_mock_receiver(),
-    ):
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver"
+    ) as mock_receiver_cls:
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_SERIAL_PORT: "/dev/ttyUSB0"},
@@ -110,6 +109,8 @@ async def test_form_duplicate_serial_port(hass: HomeAssistant) -> None:
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+    # The port is held by the existing entry; probing it would just fail.
+    mock_receiver_cls.assert_not_called()
 
 
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
@@ -184,6 +185,44 @@ async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
     assert mock_config_entry.data[CONF_SERIAL_PORT] == "/dev/ttyUSB1"
     assert mock_config_entry.data[CONF_MODEL] == "AT-300"
     assert mock_config_entry.title == "AT-300"
+
+
+async def test_reconfigure_same_port(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test reconfiguring with an unchanged port reloads without probing."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SERIAL_PORT: "/dev/ttyUSB0", CONF_MODEL: "AT-500"},
+        entry_id="test_entry_id",
+        title="AT-500",
+    )
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = _mock_receiver(model=None)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver"
+    ) as mock_receiver_cls:
+        # Probing would fail while this entry holds the port.
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SERIAL_PORT: "/dev/ttyUSB0"},
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    mock_receiver_cls.assert_not_called()
+    assert mock_config_entry.data[CONF_SERIAL_PORT] == "/dev/ttyUSB0"
+    assert mock_config_entry.title == "AT-500"
 
 
 async def test_reconfigure_port_used_by_other_entry(hass: HomeAssistant) -> None:

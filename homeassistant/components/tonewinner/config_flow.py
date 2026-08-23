@@ -47,13 +47,15 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
         errors = {}
         if user_input is not None:
             port = user_input[CONF_SERIAL_PORT]
+            # Check before probing: an entry already holding the port would
+            # make the probe fail even though the receiver is reachable.
+            self._async_abort_entries_match({CONF_SERIAL_PORT: port})
             try:
                 model = await self._async_probe_receiver(port)
             except OSError as err:
                 _LOGGER.warning("Failed to probe receiver on %s: %s", port, err)
                 errors["base"] = "cannot_connect"
             else:
-                self._async_abort_entries_match({CONF_SERIAL_PORT: port})
                 data: dict[str, Any] = {CONF_SERIAL_PORT: port}
                 title = "Tonewinner"
                 if model:
@@ -76,13 +78,19 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
 
         if user_input is not None:
             port = user_input[CONF_SERIAL_PORT]
+            if port == entry.data.get(CONF_SERIAL_PORT):
+                # Unchanged port: the live connection is proof enough. The
+                # probe could not run anyway while this entry holds the port.
+                _LOGGER.debug("Serial port unchanged, reloading %s", entry.title)
+                return self.async_update_reload_and_abort(entry)
+
+            self._async_abort_entries_match({CONF_SERIAL_PORT: port})
             try:
                 model = await self._async_probe_receiver(port)
             except OSError as err:
                 _LOGGER.warning("Failed to probe receiver on %s: %s", port, err)
                 errors["base"] = "cannot_connect"
             else:
-                self._async_abort_entries_match({CONF_SERIAL_PORT: port})
                 data: dict[str, Any] = {CONF_SERIAL_PORT: port}
                 title = "Tonewinner"
                 if model:
