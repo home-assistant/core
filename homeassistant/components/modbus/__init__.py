@@ -9,10 +9,20 @@ from homeassistant.helpers.reload import async_integration_yaml_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 
-from .connection import async_get_unit  # noqa: F401
+from .connection import async_get_unit
 from .const import DOMAIN
 from .modbus import DATA_MODBUS_HUBS, ModbusHub, async_modbus_setup
-from .schemas import CONFIG_SCHEMA  # noqa: F401
+from .schemas import CONFIG_SCHEMA
+
+# What other integrations may rely on. `async_get_unit` hands out a unit over a
+# connection shared with whoever else asked for the same device; `get_hub` and
+# `ModbusHub` reach a hub the user configured in YAML.
+__all__ = [
+    "CONFIG_SCHEMA",
+    "ModbusHub",
+    "async_get_unit",
+    "get_hub",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
