@@ -79,7 +79,7 @@ class HausbusGateway(IBusDataListener):
     def newDeviceDetected(
         self,
         device_id: int,
-        model_type: str,
+        model_type: str | None,
         module_id: ModuleId,
         configuration: Configuration,
         channels: list[ABusFeature],
@@ -98,8 +98,11 @@ class HausbusGateway(IBusDataListener):
             manufacturer="HausBus",
             model=model_type,
             name=f"{model_type} {device_id}",
-            sw_version=f"{module_id.getFirmwareId().getTemplateId()} "
-            f"{module_id.getMajorRelease()} {module_id.getMinorRelease()}",
+            sw_version=module_id.getFirmwareId().getTemplateId()
+            + " "
+            + str(module_id.getMajorRelease())
+            + " "
+            + str(module_id.getMinorRelease()),
             hw_version=module_id.getName(),
         )
 
