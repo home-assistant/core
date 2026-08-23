@@ -103,7 +103,7 @@ def _async_report_unprefixed_tools(
     hass: HomeAssistant, domain: str, tools: list[Tool]
 ) -> None:
     """Report tools that are not prefixed with the domain offering them."""
-    prefix = f"{domain}."
+    prefix = f"{domain}__"
     unprefixed = [tool.name for tool in tools if not tool.name.startswith(prefix)]
     if not unprefixed:
         return

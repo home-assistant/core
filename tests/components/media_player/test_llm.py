@@ -11,15 +11,15 @@ from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "media_player.test"
 TOOL_NAMES = {
-    "media_player.HassMediaNext",
-    "media_player.HassMediaPause",
-    "media_player.HassMediaPlayerMute",
-    "media_player.HassMediaPlayerUnmute",
-    "media_player.HassMediaPrevious",
-    "media_player.HassMediaSearchAndPlay",
-    "media_player.HassMediaUnpause",
-    "media_player.HassSetVolume",
-    "media_player.HassSetVolumeRelative",
+    "media_player__HassMediaNext",
+    "media_player__HassMediaPause",
+    "media_player__HassMediaPlayerMute",
+    "media_player__HassMediaPlayerUnmute",
+    "media_player__HassMediaPrevious",
+    "media_player__HassMediaSearchAndPlay",
+    "media_player__HassMediaUnpause",
+    "media_player__HassSetVolume",
+    "media_player__HassSetVolumeRelative",
 }
 
 

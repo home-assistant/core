@@ -10,7 +10,7 @@ from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "humidifier.test"
-TOOL_NAMES = {"humidifier.HassHumidifierMode", "humidifier.HassHumidifierSetpoint"}
+TOOL_NAMES = {"humidifier__HassHumidifierMode", "humidifier__HassHumidifierSetpoint"}
 
 
 @pytest.fixture(autouse=True)

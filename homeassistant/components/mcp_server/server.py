@@ -30,7 +30,7 @@ _LOGGER = logging.getLogger(__name__)
 SNAPSHOT_RESOURCE_URI = "homeassistant://assist/context-snapshot"
 SNAPSHOT_RESOURCE_URL = AnyUrl(SNAPSHOT_RESOURCE_URI)
 SNAPSHOT_RESOURCE_MIME_TYPE = "text/plain"
-LIVE_CONTEXT_TOOL_NAME = "homeassistant.GetLiveContext"
+LIVE_CONTEXT_TOOL_NAME = "homeassistant__GetLiveContext"
 
 
 def _has_live_context_tool(llm_api: llm.APIInstance) -> bool:
@@ -115,7 +115,7 @@ async def create_server(
                 title="Assist context snapshot",
                 description=(
                     "A snapshot of the current Assist context, matching the"
-                    " existing homeassistant.GetLiveContext tool output."
+                    " existing homeassistant__GetLiveContext tool output."
                 ),
                 mimeType=SNAPSHOT_RESOURCE_MIME_TYPE,
             )

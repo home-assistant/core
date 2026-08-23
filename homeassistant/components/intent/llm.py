@@ -41,7 +41,7 @@ TIMER_INTENTS = (
 
 DEVICE_CONTROL_TOOL_USAGE_PROMPT = (
     "When controlling Home Assistant always call the intent tools. "
-    "Use intent.HassTurnOn to lock and intent.HassTurnOff to unlock a lock. "
+    "Use intent__HassTurnOn to lock and intent__HassTurnOff to unlock a lock. "
     "When controlling a device, prefer passing just name and domain. "
     "When controlling an area, prefer passing just area name and domain."
 )
@@ -76,7 +76,7 @@ def async_get_tools(
     ]
 
     tools: list[Tool] = [
-        IntentTool(f"{DOMAIN}.{handler.intent_type}", handler) for handler in handlers
+        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler) for handler in handlers
     ]
     if not tools:
         return None

@@ -11,9 +11,9 @@ from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "vacuum.test"
 TOOL_NAMES = {
-    "vacuum.HassVacuumCleanArea",
-    "vacuum.HassVacuumReturnToBase",
-    "vacuum.HassVacuumStart",
+    "vacuum__HassVacuumCleanArea",
+    "vacuum__HassVacuumReturnToBase",
+    "vacuum__HassVacuumStart",
 }
 
 

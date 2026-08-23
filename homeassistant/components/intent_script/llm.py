@@ -43,7 +43,7 @@ def async_get_tools(
     # valid tool names.
     tools: list[Tool] = [
         IntentTool(
-            f"{DOMAIN}."
+            f"{DOMAIN}__"
             + unicode_slug.slugify(handler.intent_type, separator="_", lowercase=False),
             handler,
         )

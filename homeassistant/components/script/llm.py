@@ -30,7 +30,7 @@ class ScriptTool(ActionTool):
 
         super().__init__(hass, DOMAIN, action)
 
-        self.name = f"{DOMAIN}.{script_name}"
+        self.name = f"{DOMAIN}__{script_name}"
 
         if entity_entry and (
             aliases := er.async_get_entity_aliases(hass, entity_entry)

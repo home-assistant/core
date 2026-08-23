@@ -19,7 +19,7 @@ def async_get_tools(
     # assist_satellite registers the broadcast intent when it is set up, and
     # this platform is only queried once that has happened.
     tools: list[Tool] = [
-        IntentTool(f"{DOMAIN}.{handler.intent_type}", handler)
+        IntentTool(f"{DOMAIN}__{handler.intent_type}", handler)
         for handler in intent.async_get(hass)
         if handler.intent_type == intent.INTENT_BROADCAST
     ]

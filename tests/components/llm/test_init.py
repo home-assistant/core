@@ -78,8 +78,8 @@ async def test_get_tools(hass: HomeAssistant, llm_context: llm.LLMContext) -> No
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    # The llm integration also exposes its own llm.GetDateTime tool (domain "llm").
-    assert [tool.name for tool in result.tools] == ["llm.GetDateTime", "my_tool"]
+    # The llm integration also exposes its own llm__GetDateTime tool (domain "llm").
+    assert [tool.name for tool in result.tools] == ["llm__GetDateTime", "my_tool"]
     assert result.prompt == "use my_tool wisely"
     platform_get_tools.assert_called_once_with(hass, llm_context, "assist")
 
@@ -91,7 +91,7 @@ async def test_get_tools_empty(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["llm.GetDateTime"]
+    assert [tool.name for tool in result.tools] == ["llm__GetDateTime"]
     assert result.prompt is None
 
 
@@ -109,7 +109,7 @@ async def test_get_tools_merges_sorted(
 
     result = await async_get_tools(hass, llm_context, "assist")
     assert [tool.name for tool in result.tools] == [
-        "llm.GetDateTime",
+        "llm__GetDateTime",
         "tool_a",
         "tool_b",
     ]
@@ -127,7 +127,7 @@ async def test_get_tools_skips_none_platform(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["llm.GetDateTime", "good_tool"]
+    assert [tool.name for tool in result.tools] == ["llm__GetDateTime", "good_tool"]
     assert result.prompt is None
 
 
@@ -144,7 +144,7 @@ async def test_get_tools_isolates_failing_platform(
     assert await async_setup_component(hass, "llm", {})
 
     result = await async_get_tools(hass, llm_context, "assist")
-    assert [tool.name for tool in result.tools] == ["llm.GetDateTime", "good_tool"]
+    assert [tool.name for tool in result.tools] == ["llm__GetDateTime", "good_tool"]
     assert result.prompt == "prompt"
     assert "Error getting tools from LLM platform test_bad" in caplog.text
 
@@ -163,7 +163,7 @@ async def test_get_tools_reports_unprefixed_tool_names(
     expected_type: str,
 ) -> None:
     """Test tools not prefixed with the offering domain are reported."""
-    tools = [_StubTool("test.prefixed"), _StubTool("unprefixed")]
+    tools = [_StubTool("test__prefixed"), _StubTool("unprefixed")]
     _mock_tools_platform(hass, "test", LLMTools(tools=tools), built_in=built_in)
 
     assert await async_setup_component(hass, "llm", {})
@@ -173,13 +173,13 @@ async def test_get_tools_reports_unprefixed_tool_names(
 
     # The tools are still returned until the requirement starts to fail.
     assert [tool.name for tool in result.tools] == [
-        "llm.GetDateTime",
-        "test.prefixed",
+        "llm__GetDateTime",
+        "test__prefixed",
         "unprefixed",
     ]
     expected_message = (
         f"Detected that {expected_type}integration 'test' provides LLM tools that are "
-        "not prefixed with 'test.': unprefixed. This will stop working in Home "
+        "not prefixed with 'test__': unprefixed. This will stop working in Home "
         "Assistant 2027.3"
     )
     record = next(
@@ -194,11 +194,11 @@ async def test_get_tools_prefixed_tool_names_not_reported(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test a platform prefixing all its tools is not reported."""
-    _mock_tools_platform(hass, "test", LLMTools(tools=[_StubTool("test.tool")]))
+    _mock_tools_platform(hass, "test", LLMTools(tools=[_StubTool("test__tool")]))
 
     assert await async_setup_component(hass, "llm", {})
 
     with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
         await async_get_tools(hass, llm_context, "assist")
 
-    assert "not prefixed with 'test.'" not in caplog.text
+    assert "not prefixed with 'test__'" not in caplog.text

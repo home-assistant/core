@@ -10,7 +10,7 @@ from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "lawn_mower.test"
-TOOL_NAMES = {"lawn_mower.HassLawnMowerDock", "lawn_mower.HassLawnMowerStartMowing"}
+TOOL_NAMES = {"lawn_mower__HassLawnMowerDock", "lawn_mower__HassLawnMowerStartMowing"}
 
 
 @pytest.fixture(autouse=True)
