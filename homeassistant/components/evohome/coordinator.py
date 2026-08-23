@@ -20,7 +20,7 @@ from evohomeasync2.const import (
     SZ_USE_DAYLIGHT_SAVE_SWITCHING,
     SZ_ZONES,
 )
-from evohomeasync2.typedefs import EvoLocStatusResponseT, EvoTcsConfigResponseT
+from evohomeasync2.typedefs import EvoLocStatusT, EvoTcsConfigResponseT
 
 from homeassistant.const import CONF_SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
@@ -60,7 +60,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
 
         self.loc_idx = location_idx
 
-        self.data: EvoLocStatusResponseT = None  # type: ignore[assignment]
+        self.data: EvoLocStatusT = None  # type: ignore[assignment]
         self.temps: dict[str, float | None] = {}
 
         self._first_refresh_done = False  # get schedules only after first refresh
@@ -114,8 +114,10 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                     SZ_USE_DAYLIGHT_SAVE_SWITCHING
                 ],
             }
-            tcs_info: EvoTcsConfigResponseT = self.tcs.config  # type: ignore[assignment]
-            tcs_info[SZ_ZONES] = [zone.config for zone in self.tcs.zones]
+            tcs_info: EvoTcsConfigResponseT = {
+                **self.tcs.config,
+                SZ_ZONES: [zone.config for zone in self.tcs.zones],
+            }
             if self.tcs.hotwater:
                 tcs_info[SZ_DHW] = self.tcs.hotwater.config
             gwy_info = {
@@ -223,7 +225,7 @@ class EvoDataUpdateCoordinator(DataUpdateCoordinator):
                 self.logger.warning("DHW has an invalid/missing schedule: %r", err)
 
     @override
-    async def _async_update_data(self) -> EvoLocStatusResponseT:  # type: ignore[override]
+    async def _async_update_data(self) -> EvoLocStatusT:  # type: ignore[override]
         """Fetch the latest state of an entire TCC Location.
 
         This includes state data for a Controller and all its child devices, such as the

@@ -4,7 +4,7 @@ import logging
 
 from homeassistant.const import CONF_TOKEN, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .const import (
     AUTH_OTHER,
@@ -14,7 +14,7 @@ from .const import (
     CONF_REALM,
     DEFAULT_REALM,
 )
-from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator
+from .coordinator import ProxmoxConfigEntry, ProxmoxCoordinator, node_device_info
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -32,6 +32,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: ProxmoxConfigEntry) -> b
     await coordinator.async_config_entry_first_refresh()
 
     entry.runtime_data = coordinator
+
+    # Register node devices before forwarding platforms so that child devices
+    # (VMs, containers, storages) can deterministically resolve their via_device.
+    device_registry = dr.async_get(hass)
+    for node_data in coordinator.data.values():
+        device_registry.async_get_or_create(
+            config_entry_id=entry.entry_id,
+            **node_device_info(coordinator, node_data),
+        )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
