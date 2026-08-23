@@ -87,3 +87,46 @@ async def test_sensor_missing_usage_data(
     state = hass.states.get(ENTITY_ELECTRIC_COST)
     assert state is not None
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("method", "entity_id"),
+    [
+        ("get_energy_usages", ENTITY_ELECTRIC_USAGE),
+        ("get_energy_usage_costs", ENTITY_ELECTRIC_COST),
+    ],
+)
+async def test_sensor_api_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    method: str,
+    entity_id: str,
+) -> None:
+    """Test sensors handle usage and cost API errors gracefully."""
+    api = make_api_mock()
+    getattr(api, method).side_effect = CannotConnectError("Timeout")
+
+    with patch(PATCH_CLIENT, return_value=api):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "unknown"
+
+
+async def test_sensor_without_region_skips_cost_fetch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test cost retrieval is skipped when the billing account has no region."""
+    api = make_api_mock()
+    api.get_billing_account.return_value["region"] = ""
+
+    with patch(PATCH_CLIENT, return_value=api):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    api.get_energy_usage_costs.assert_not_awaited()

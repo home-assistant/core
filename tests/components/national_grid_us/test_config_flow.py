@@ -70,6 +70,25 @@ async def test_user_step_single_account(hass: HomeAssistant) -> None:
     assert result["result"].unique_id == MOCK_ACCOUNT_ID
 
 
+async def test_user_step_single_account_without_service_address(
+    hass: HomeAssistant,
+) -> None:
+    """Test a single account uses the account ID without a service address."""
+    client = _mock_client(
+        [{"billingAccountId": MOCK_ACCOUNT_ID}],
+        service_address="",
+    )
+    with patch(PATCH_CLIENT, return_value=client):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={CONF_USERNAME: MOCK_USERNAME, CONF_PASSWORD: MOCK_PASSWORD},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == MOCK_ACCOUNT_ID
+
+
 async def test_user_step_multiple_accounts(hass: HomeAssistant) -> None:
     """Test user step with multiple accounts moves to select_account."""
     client = _mock_client(
