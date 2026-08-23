@@ -95,7 +95,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         """Handle state changes from the receiver."""
         if state is None:
             if self._attr_available:
-                _LOGGER.warning("Connection to the Tonewinner receiver was lost")
+                _LOGGER.info("Connection to the Tonewinner receiver was lost")
                 self._attr_available = False
                 # The library never reconnects on its own; reload instead so
                 # HA's retry loop restores the connection. Schedule through
@@ -164,7 +164,11 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             for _attempt in range(5):
                 if self._attr_state != MediaPlayerState.ON or self._attr_source:
                     return
-                await self._receiver.query_source()
+                try:
+                    await self._receiver.query_source()
+                except OSError:
+                    # The receiver ignores queries while booting; keep trying.
+                    _LOGGER.debug("Source query attempt %d failed", _attempt + 1)
                 await asyncio.sleep(3)
         finally:
             self._source_check_task = None

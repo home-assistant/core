@@ -1,5 +1,7 @@
 """Set up Tonewinner from a config entry."""
 
+import logging
+
 from tonewinner_rs232 import TonewinnerReceiver
 
 from homeassistant.config_entries import ConfigEntry
@@ -16,6 +18,8 @@ CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
 type TonewinnerConfigEntry = ConfigEntry[TonewinnerReceiver]
 
+_LOGGER = logging.getLogger(__name__)
+
 
 async def async_setup_entry(hass: HomeAssistant, entry: TonewinnerConfigEntry) -> bool:
     """Set up Tonewinner from a config entry."""
@@ -28,6 +32,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TonewinnerConfigEntry) -
     except OSError as err:
         await receiver.disconnect()
         raise ConfigEntryNotReady(f"Unable to connect to {port}") from err
+
+    _LOGGER.info("Connected to Tonewinner receiver on %s", port)
 
     entry.runtime_data = receiver
 
