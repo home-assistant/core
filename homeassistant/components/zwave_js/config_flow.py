@@ -390,6 +390,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return AddonFlowManager(self.hass)
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     def __init__(self) -> None:
         """Set up flow instance."""
