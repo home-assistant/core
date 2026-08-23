@@ -1,7 +1,5 @@
 """Tonewinner media player."""
 
-import asyncio
-import contextlib
 import logging
 from typing import override
 
@@ -59,8 +57,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     )
     _attr_has_entity_name = True
     _attr_name = None
-
-    _source_check_task: asyncio.Task[None] | None = None
 
     def __init__(self, entry: TonewinnerConfigEntry) -> None:
         """Initialize the media player."""
@@ -133,17 +129,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if state.sound_mode_label is not None:
             self._attr_sound_mode = state.sound_mode_label
 
-        if (
-            self._attr_state == MediaPlayerState.ON
-            and not self._attr_source
-            and not self._source_check_task
-        ):
-            task = self.hass.async_create_task(self._periodic_source_check())
-            # With the eager task factory the coroutine may already have run to
-            # completion (and cleared itself) by the time the task is returned.
-            if not task.done():
-                self._source_check_task = task
-
     def _resolve_source(self, source_name: str, audio_source: str | None) -> str | None:
         """Resolve a device-reported source name to a display name."""
         if source_name == "eARC/ARC":
@@ -157,29 +142,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             return INPUT_SOURCE_NAMES[audio_source]
 
         return source_name
-
-    async def _periodic_source_check(self) -> None:
-        """Poll for the input source until it is known or retries are exhausted."""
-        try:
-            for _attempt in range(5):
-                if self._attr_state != MediaPlayerState.ON or self._attr_source:
-                    return
-                try:
-                    await self._receiver.query_source()
-                except OSError:
-                    # The receiver ignores queries while booting; keep trying.
-                    _LOGGER.debug("Source query attempt %d failed", _attempt + 1)
-                await asyncio.sleep(3)
-        finally:
-            self._source_check_task = None
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Clean up when entity is removed."""
-        if self._source_check_task:
-            self._source_check_task.cancel()
-            with contextlib.suppress(asyncio.CancelledError):
-                await self._source_check_task
 
     @override
     async def async_turn_on(self) -> None:

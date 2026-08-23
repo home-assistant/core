@@ -3220,7 +3220,7 @@ togrill-bluetooth==0.9.0
 tololib==1.2.2
 
 # homeassistant.components.tonewinner
-tonewinner-rs232==1.0.6
+tonewinner-rs232==1.1.0
 
 # homeassistant.components.toon
 toonapi==0.3.0

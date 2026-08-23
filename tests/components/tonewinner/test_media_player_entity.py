@@ -1,8 +1,7 @@
 """Test the Tonewinner media player entity."""
 
-import asyncio
 from collections.abc import Callable
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock, patch
 
 import pytest
 
@@ -396,80 +395,6 @@ async def test_media_player_unavailable_on_disconnect_and_recovery(
     assert state is not None
     assert state.state == MediaPlayerState.OFF
     assert "Connection to the Tonewinner receiver was restored" in caplog.text
-    assert "Connection to the Tonewinner receiver was restored" in caplog.text
-
-
-async def test_media_player_periodic_source_check(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test the bounded retry loop when the source is unknown."""
-    mock_config_entry.add_to_hass(hass)
-    await _setup_integration(hass, mock_config_entry, mock_receiver)
-
-    mock_receiver.state.power = True
-    mock_receiver.state.source_name = None
-
-    with patch(
-        "homeassistant.components.tonewinner.media_player.asyncio.sleep",
-        new_callable=AsyncMock,
-    ):
-        _state_callback(mock_receiver)(mock_receiver.state)
-        await hass.async_block_till_done()
-
-    assert mock_receiver.query_source.call_count == 5
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == MediaPlayerState.ON
-
-
-async def test_media_player_periodic_source_check_survives_query_timeout(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test ignored source queries do not end the retry loop early."""
-    mock_config_entry.add_to_hass(hass)
-    await _setup_integration(hass, mock_config_entry, mock_receiver)
-
-    mock_receiver.state.power = True
-    mock_receiver.state.source_name = None
-    mock_receiver.query_source = AsyncMock(
-        side_effect=[ConnectionError("no response")] * 4 + [MagicMock()]
-    )
-
-    with patch(
-        "homeassistant.components.tonewinner.media_player.asyncio.sleep",
-        new_callable=AsyncMock,
-    ):
-        _state_callback(mock_receiver)(mock_receiver.state)
-        await hass.async_block_till_done()
-
-    assert mock_receiver.query_source.call_count == 5
-    state = hass.states.get(ENTITY_ID)
-    assert state is not None
-    assert state.state == MediaPlayerState.ON
-
-
-async def test_media_player_cleanup_on_removal(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test cleanup when entity is removed."""
-    mock_config_entry.runtime_data = mock_receiver
-
-    entity = TonewinnerMediaPlayer(mock_config_entry)
-
-    async def dummy_task() -> None:
-        await asyncio.sleep(10)
-
-    entity._source_check_task = asyncio.create_task(dummy_task())
-
-    await entity.async_will_remove_from_hass()
-
-    assert entity._source_check_task.cancelled()
 
 
 @pytest.mark.parametrize(
