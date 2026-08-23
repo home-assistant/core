@@ -978,7 +978,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'normal',
         'heavy',
@@ -1021,8 +1021,8 @@
 # name: test_all_entities[da_wm_dw_000001][select.theater_dishwasher_cycle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher Cycle',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher Cycle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'normal',
         'heavy',
@@ -1228,7 +1228,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'eco',
         'intensive',
@@ -1275,8 +1275,8 @@
 # name: test_all_entities[da_wm_dw_01011][select.dishwasher_1_cycle-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Dishwasher 1 Cycle',
-      'options': list([
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dishwasher 1 Cycle',
+      <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'eco',
         'intensive',
