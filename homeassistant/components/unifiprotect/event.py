@@ -570,6 +570,9 @@ class ProtectFobButtonEventEntity(ProtectFobEntity, EventEntity):
 
     _attr_translation_key = "keyfob"
     _attr_event_types = _FOB_EVENT_TYPES
+    # Presses arrive only on the events websocket, so its health gates
+    # availability on top of the devices websocket.
+    _ufp_requires_events_ws = True
 
     def __init__(self, data: ProtectData, fob: Fob) -> None:
         """Initialize the key fob button event entity."""

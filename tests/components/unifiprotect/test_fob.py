@@ -307,6 +307,34 @@ async def test_fob_unavailable_on_public_ws_disconnect(
     assert hass.states.get(BATTERY_SENSOR).state == STATE_UNAVAILABLE
 
 
+async def test_fob_button_unavailable_on_events_ws_disconnect(
+    hass: HomeAssistant,
+    ufp_with_fob: tuple[MockUFPFixture, Mock],
+) -> None:
+    """Only the button entity follows the events websocket.
+
+    Presses arrive solely on the events stream, so the event entity must not
+    stay available while it is down; the sensors are fed by the devices
+    stream and are unaffected.
+    """
+    ufp, _fob = ufp_with_fob
+    await init_entry(hass, ufp, [])
+
+    assert hass.states.get(BUTTON_EVENT).state != STATE_UNAVAILABLE
+
+    assert ufp.events_ws_state_subscription is not None
+    ufp.events_ws_state_subscription(WebsocketState.DISCONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BUTTON_EVENT).state == STATE_UNAVAILABLE
+    assert hass.states.get(BATTERY_SENSOR).state == "80"
+
+    ufp.events_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BUTTON_EVENT).state != STATE_UNAVAILABLE
+
+
 async def test_fob_battery_none_is_unknown(
     hass: HomeAssistant,
     ufp: MockUFPFixture,

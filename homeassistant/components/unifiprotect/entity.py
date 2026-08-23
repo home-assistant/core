@@ -452,11 +452,14 @@ class ProtectFobEntity(Entity):
     devices websocket, so it does not use the private-device machinery in
     :class:`BaseProtectEntity`. Availability follows the public websocket health
     and the fob's presence in the bootstrap, mirroring the relay switch.
+    Subclasses fed by the events websocket set ``_ufp_requires_events_ws`` so
+    they also go unavailable when that stream drops.
     """
 
     _attr_should_poll = False
     _attr_attribution = DEFAULT_ATTRIBUTION
     _attr_has_entity_name = True
+    _ufp_requires_events_ws: bool = False
     _fob_state_attrs: tuple[str, ...] = ("_attr_available",)
 
     def __init__(self, data: ProtectData, fob: Fob) -> None:
@@ -474,7 +477,7 @@ class ProtectFobEntity(Entity):
             model="Key Fob",
             via_device_id=data.nvr_device_id,
         )
-        self._attr_available = data.last_public_update_success
+        self._attr_available = self._async_public_available()
         self._async_update_from_fob(fob)
 
     @property
@@ -484,6 +487,14 @@ class ProtectFobEntity(Entity):
         if not api.has_public_bootstrap:
             return None
         return api.public_bootstrap.fobs.get(self._fob_id)
+
+    @callback
+    def _async_public_available(self) -> bool:
+        """Return whether the streams backing this entity are healthy."""
+        data = self.data
+        return data.last_public_update_success and (
+            not self._ufp_requires_events_ws or data.last_events_update_success
+        )
 
     @callback
     def _async_update_from_fob(self, fob: Fob) -> None:
@@ -501,7 +512,7 @@ class ProtectFobEntity(Entity):
         if (fob := self._fob) is None:
             self._attr_available = False
         else:
-            self._attr_available = self.data.last_public_update_success
+            self._attr_available = self._async_public_available()
             self._async_update_from_fob(fob)
         if [getattr(self, attr, None) for attr in self._fob_state_attrs] != prev:
             self.async_write_ha_state()
