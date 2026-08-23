@@ -16,7 +16,6 @@ from sofar_modbus.modern.device import SofarInverter, identify
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -65,11 +64,8 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         """Set up the coordinator before the first refresh."""
         serial = self.config_entry.unique_id
         assert serial is not None
+        # async_setup_entry already checked identify(serial) is recognized.
         inverter_type, model = identify(serial)
-        if not inverter_type:
-            raise ConfigEntryError(
-                f"Unrecognized Sofar inverter model for {self.config_entry.title}"
-            )
         self.device = SofarInverter(
             self.connection.for_unit(self.config_entry.data[CONF_UNIT_ID]),
             serial_number=serial,
