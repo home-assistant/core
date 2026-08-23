@@ -4,7 +4,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from switchbot_api import Device, Remote, SwitchBotAPI
+from switchbot_api import Device, Remote, SwitchBotAPI, SwitchbotCloudDeviceLockState
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -25,7 +25,7 @@ from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import SwitchbotCloudConfigEntry
-from .const import DOMAIN, SwitchbotCloudDeviceLockState
+from .const import DOMAIN
 from .coordinator import SwitchBotCoordinator
 from .entity import SwitchBotCloudEntity
 

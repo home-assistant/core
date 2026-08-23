@@ -15,6 +15,16 @@ PLATFORMS = [Platform.SWITCH]
 type EnergenieConfigEntry = ConfigEntry[PowerStripUSB]
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: EnergenieConfigEntry) -> bool:
+    """Migrate old config entry."""
+    if entry.version == 1:
+        new_data = {**entry.data}
+        new_data[CONF_DEVICE_API_ID] = new_data.pop("api-device-id")
+        hass.config_entries.async_update_entry(entry, data=new_data, version=2)
+
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: EnergenieConfigEntry) -> bool:
     """Set up Energenie Power Sockets."""
     try:

@@ -11,6 +11,7 @@ from homeassistant.components.valve import (
     DEVICE_CLASSES_SCHEMA,
     ValveEntity,
     ValveEntityFeature,
+    ValveEntityStateAttribute,
     ValveState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -68,7 +69,7 @@ DEFAULT_NAME = "MQTT Valve"
 
 MQTT_VALVE_ATTRIBUTES_BLOCKED = frozenset(
     {
-        valve.ATTR_CURRENT_POSITION,
+        ValveEntityStateAttribute.CURRENT_POSITION,
     }
 )
 

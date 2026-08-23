@@ -12,6 +12,7 @@ from homeassistant.components.number import (
     DEFAULT_MIN_VALUE,
     DEFAULT_STEP,
     NumberDeviceClass,
+    NumberEntityCapabilityAttribute,
     NumberMode,
     RestoreNumber,
 )
@@ -60,9 +61,9 @@ DEFAULT_NAME = "MQTT Number"
 
 MQTT_NUMBER_ATTRIBUTES_BLOCKED = frozenset(
     {
-        number.ATTR_MAX,
-        number.ATTR_MIN,
-        number.ATTR_STEP,
+        NumberEntityCapabilityAttribute.MAX,
+        NumberEntityCapabilityAttribute.MIN,
+        NumberEntityCapabilityAttribute.STEP,
     }
 )
 

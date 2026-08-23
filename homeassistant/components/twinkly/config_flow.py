@@ -12,7 +12,7 @@ from homeassistant.const import CONF_HOST, CONF_ID, CONF_MODEL, CONF_NAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
-from .const import DEV_ID, DEV_MODEL, DEV_NAME, DOMAIN
+from .const import DEV_ID, DEV_MODEL, DEV_NAME, DEVICE_TIMEOUT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -40,7 +40,7 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
         if host is not None:
             try:
                 device_info = await Twinkly(
-                    host, async_get_clientsession(self.hass)
+                    host, async_get_clientsession(self.hass), timeout=DEVICE_TIMEOUT
                 ).get_details()
             except TimeoutError, ClientError:
                 errors[CONF_HOST] = "cannot_connect"
@@ -62,9 +62,14 @@ class TwinklyConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle dhcp discovery for twinkly."""
         self._async_abort_entries_match({CONF_HOST: discovery_info.ip})
-        device_info = await Twinkly(
-            discovery_info.ip, async_get_clientsession(self.hass)
-        ).get_details()
+        try:
+            device_info = await Twinkly(
+                discovery_info.ip,
+                async_get_clientsession(self.hass),
+                timeout=DEVICE_TIMEOUT,
+            ).get_details()
+        except TimeoutError, ClientError:
+            return self.async_abort(reason="cannot_connect")
         await self.async_set_unique_id(device_info["mac"])
         self._abort_if_unique_id_configured(updates={CONF_HOST: discovery_info.ip})
 
