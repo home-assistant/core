@@ -3,7 +3,7 @@
 from collections import deque
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, Any, TypeVar, cast, override
+from typing import TYPE_CHECKING, override
 
 from modbus_connection import (
     ModbusConnection,
@@ -35,8 +35,6 @@ _HEALTH_WINDOW = 60  # ~5min at the 5s base scan interval
 
 type SofarConfigEntry = ConfigEntry[SofarDataUpdateCoordinator]
 
-_T = TypeVar("_T")
-
 
 class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     """Polls one Sofar inverter's components, tiered by how often they change."""
@@ -66,7 +64,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self.last_error_time: datetime | None = None
         self._cycle = 0
         self._force_slow_tier = True
-        self.pending: dict[str, Any] = {}
 
     @override
     async def _async_setup(self) -> None:
@@ -108,10 +105,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         if self.data is not None:
             return frozenset(self.data.updated | set(self.data.failed))
         return frozenset()
-
-    def pending_or_live(self, key: str, live_value: _T) -> _T:
-        """Staged value this session, else live read; volatile, so in-memory only."""
-        return cast("_T", self.pending.get(key, live_value))
 
     @override
     async def async_request_refresh(self) -> None:
