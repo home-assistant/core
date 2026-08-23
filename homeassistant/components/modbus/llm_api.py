@@ -10,7 +10,7 @@ Read-only on purpose. A write to the wrong register on a heat pump or an
 inverter is not a mistake a model should be able to make on a user's behalf.
 """
 
-from typing import Any, Final
+from typing import Any, Final, cast, override
 
 import voluptuous as vol
 
@@ -23,8 +23,23 @@ from .connection import DATA_MODBUS_CONNECTIONS, async_get_connection_info
 
 API_ID: Final = "modbus"
 
-# One request may not span more than the protocol allows.
+# What the protocol allows: a unit is addressed 1-247 (0 is a broadcast, which
+# has no reply to read), a register address is 16-bit, and one request may not
+# span more than 125 registers.
+MIN_UNIT_ID: Final = 1
+MAX_UNIT_ID: Final = 247
+MAX_ADDRESS: Final = 0xFFFF
 MAX_REGISTER_COUNT: Final = 125
+
+
+def _fits_in_the_address_space(block: dict[str, Any]) -> dict[str, Any]:
+    """Reject a block running past the last register rather than sending it."""
+    if block["address"] + block["count"] - 1 > MAX_ADDRESS:
+        raise vol.Invalid(
+            f"a block of {block['count']} from {block['address']} runs past "
+            f"the last register ({MAX_ADDRESS})"
+        )
+    return block
 
 
 @callback
@@ -36,6 +51,7 @@ def async_setup(hass: HomeAssistant) -> None:
 class ModbusAPI(llm.API):
     """Read the registers of the devices Home Assistant has connections to."""
 
+    @override
     async def async_get_api_instance(
         self, llm_context: llm.LLMContext
     ) -> llm.APIInstance:
@@ -65,6 +81,7 @@ class ListModbusDevicesTool(llm.Tool):
         "and the unit ids in use on it, keyed by the config entry using them."
     )
 
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,
@@ -77,7 +94,9 @@ class ListModbusDevicesTool(llm.Tool):
                 {
                     "endpoint": list(info.endpoint),
                     "connected": info.connected,
-                    "units": info.units,
+                    # A mapping of JSON scalars, which the type cannot express
+                    # because dict and list are invariant in their contents.
+                    "units": cast(JsonObjectType, info.units),
                 }
                 for info in async_get_connection_info(hass)
             ]
@@ -94,19 +113,27 @@ class ReadModbusRegistersTool(llm.Tool):
         "the first address and how many registers to read."
     )
     parameters = vol.Schema(
-        {
-            vol.Required("endpoint"): [vol.Any(str, int)],
-            vol.Required("unit_id"): int,
-            vol.Required("address"): int,
-            vol.Required("count"): vol.All(
-                int, vol.Range(min=1, max=MAX_REGISTER_COUNT)
-            ),
-            vol.Optional("register_type", default="holding"): vol.In(
-                ["holding", "input"]
-            ),
-        }
+        vol.All(
+            {
+                vol.Required("endpoint"): [vol.Any(str, int)],
+                vol.Required("unit_id"): vol.All(
+                    int, vol.Range(min=MIN_UNIT_ID, max=MAX_UNIT_ID)
+                ),
+                vol.Required("address"): vol.All(
+                    int, vol.Range(min=0, max=MAX_ADDRESS)
+                ),
+                vol.Required("count"): vol.All(
+                    int, vol.Range(min=1, max=MAX_REGISTER_COUNT)
+                ),
+                vol.Optional("register_type", default="holding"): vol.In(
+                    ["holding", "input"]
+                ),
+            },
+            _fits_in_the_address_space,
+        )
     )
 
+    @override
     async def async_call(
         self,
         hass: HomeAssistant,
@@ -114,7 +141,9 @@ class ReadModbusRegistersTool(llm.Tool):
         llm_context: llm.LLMContext,
     ) -> JsonObjectType:
         """Read the block, over the connection that is already open."""
-        args: dict[str, Any] = tool_input.tool_args
+        # The caller is not required to have validated against `parameters`,
+        # and this reaches real hardware, so check the block here as well.
+        args: dict[str, Any] = self.parameters(tool_input.tool_args)
         endpoint = tuple(args["endpoint"])
 
         shared = hass.data.get(DATA_MODBUS_CONNECTIONS, {}).get(endpoint)

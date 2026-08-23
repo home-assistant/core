@@ -5,6 +5,7 @@ from unittest.mock import AsyncMock, patch
 
 from modbus_connection import ModbusTcpParams
 import pytest
+import voluptuous as vol
 
 from homeassistant.components.modbus import async_get_unit
 from homeassistant.components.modbus.llm_api import API_ID
@@ -152,4 +153,39 @@ async def test_reading_an_unknown_device_is_refused(
                     "count": 1,
                 },
             )
+        )
+
+
+@pytest.mark.parametrize(
+    ("args", "why"),
+    [
+        ({"unit_id": 0}, "0 is a broadcast, which has no reply to read"),
+        ({"unit_id": 248}, "past the last addressable unit"),
+        ({"address": -1}, "before the first register"),
+        ({"address": 70000}, "past the last register"),
+        ({"count": 0}, "a block of nothing"),
+        ({"count": 126}, "more than one request may carry"),
+        ({"address": 65500, "count": 100}, "a block running off the end"),
+    ],
+)
+async def test_a_block_outside_the_protocol_is_refused(
+    hass: HomeAssistant,
+    consumer: ConsumerFactory,
+    args: dict[str, int],
+    why: str,
+) -> None:
+    """The schema rejects it here, rather than the transport rejecting it later."""
+    assert await async_setup_component(hass, "modbus", {})
+    await _hold_a_unit(hass, consumer)
+
+    tool_args = {
+        "endpoint": ["tcp", "device.local", 502],
+        "unit_id": 1,
+        "address": 0,
+        "count": 1,
+    } | args
+
+    with pytest.raises(vol.Invalid):
+        await (await _instance(hass)).async_call_tool(
+            llm.ToolInput(tool_name="read_modbus_registers", tool_args=tool_args)
         )
