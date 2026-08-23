@@ -41,7 +41,6 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
-from homeassistant.util.hass_dict import HassKey
 
 from . import helpers
 from .addon import get_addon_manager
@@ -161,18 +160,9 @@ EXAMPLE_SERVER_URL = "ws://localhost:3000"
 ON_SUPERVISOR_SCHEMA = vol.Schema({vol.Optional(CONF_USE_ADDON, default=True): bool})
 MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 
-# Context flag of the flow that owns the shared add-on config. A flow's
-# published step only updates when its step handler returns, but the
-# flow context is shared into in-progress flow results immediately, so
-# the flag is set without awaits between check and set. It dies with
-# the flow when the flow is removed from progress.
+# Flags the flow that owns the shared add-on config. Kept in the flow
+# context, which is published immediately, unlike the flow's step.
 _ADDON_OWNER_CONTEXT = "zwave_js_addon_owner"
-
-# Serializes writes to the add-on config. The context flag above is
-# intent-level exclusion between flows; this lock guarantees that a
-# write still in flight from an aborted flow and a new owner's write
-# can't interleave.
-_ADDON_WRITE_LOCK: HassKey[asyncio.Lock] = HassKey(f"{DOMAIN}_addon_write_lock")
 
 # Steps at which another flow has not yet changed any shared state,
 # e.g. the add-on config, and can be aborted safely when a config entry
@@ -283,10 +273,11 @@ class AddonFlowManager:
     and tracks the original add-on config for reverts.
     """
 
-    def __init__(self, hass: HomeAssistant) -> None:
+    def __init__(self, hass: HomeAssistant, flow_id: str) -> None:
         """Set up the add-on flow manager."""
         self.hass = hass
         self.addon_manager = get_addon_manager(hass)
+        self._flow_id = flow_id
         # Set to True if the add-on was running when its config was changed,
         # meaning a restart instead of a start is needed.
         self.restart_addon = False
@@ -329,9 +320,17 @@ class AddonFlowManager:
             # step sets the region.
             self.original_config = dict(addon_config)
         new_addon_config = SecurityKeys.migrate_network_key(new_addon_config)
+        if not any(
+            flow["flow_id"] == self._flow_id
+            for flow in self.hass.config_entries.flow.async_progress(
+                include_uninitialized=True
+            )
+        ):
+            # An abort doesn't cancel a step handler already running here,
+            # so don't write for a removed flow.
+            raise AbortFlow("already_in_progress")
         try:
-            async with self.hass.data.setdefault(_ADDON_WRITE_LOCK, asyncio.Lock()):
-                await self.addon_manager.async_set_addon_options(new_addon_config)
+            await self.addon_manager.async_set_addon_options(new_addon_config)
         except AddonError as err:
             _LOGGER.error(err)
             raise AbortFlow("addon_set_config_failed") from err
@@ -402,7 +401,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @cached_property
     def _addon_setup(self) -> AddonFlowManager:
         """Return the add-on flow manager."""
-        return AddonFlowManager(self.hass)
+        return AddonFlowManager(self.hass, self.flow_id)
 
     VERSION = 1
     MINOR_VERSION = 2
@@ -483,19 +482,8 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             if rf_region is None or rf_region == "Automatic":
                 # If the RF region is not set, we need to ask the user to select it.
                 return await self.async_step_rf_region()
-        if (
-            self._reconfigure_config_entry is None
-            and self._addon_owned_by_other_entry()
-        ):
-            # An add-on based entry was created while this flow was open,
-            # e.g. by a concurrent discovery flow. Abort before this flow
-            # overwrites the add-on config of that entry.
-            return self.async_abort(reason="addon_already_configured")
-
         if config_updates := self._addon_config_updates:
             if not self._async_acquire_addon_ownership():
-                # Another flow, e.g. a second discovered adapter being set
-                # up, is already changing the shared add-on config.
                 return self.async_abort(reason="already_in_progress")
             # If we have updates to the add-on config,
             # set them before starting the add-on.
@@ -994,9 +982,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             if progress.get("step_id") not in ABORT_SAFE_STEPS:
                 continue
             if cast(dict[str, Any], progress["context"]).get(_ADDON_OWNER_CONTEXT):
-                # The published step lags behind a running step handler,
-                # so an owner of the add-on config may be mid-write while
-                # its step still shows a safe prompt.
+                # An owner may be mid-write while still showing a prompt.
                 continue
             self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
@@ -1004,18 +990,15 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     def _async_acquire_addon_ownership(self) -> bool:
         """Try to make this flow the owner of the shared add-on config.
 
-        Return False if another flow in progress owns it. Ownership ends
-        with the flow, when the flow is removed from progress.
+        Return False if another flow in progress owns it.
+        Ownership ends when the flow is removed from progress.
         """
-        # The context holds flow specific keys not in the typed dict.
         context = cast(dict[str, Any], self.context)
         if context.get(_ADDON_OWNER_CONTEXT):
             return True
         if any(
             cast(dict[str, Any], flow["context"]).get(_ADDON_OWNER_CONTEXT)
-            # Include uninitialized flows: a discovery flow may change the
-            # add-on config in its first step, before it has a published
-            # step.
+            # A discovery flow may write the config in its first step.
             for flow in self._async_in_progress(include_uninitialized=True)
         ):
             return False
@@ -1234,32 +1217,35 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, original_config: dict[str, Any]
     ) -> None:
         """Restore the add-on config and reload the config entry."""
+        if any(
+            cast(dict[str, Any], flow["context"]).get(_ADDON_OWNER_CONTEXT)
+            for flow in self._async_in_progress(include_uninitialized=True)
+        ):
+            # A new owner is writing its own add-on config and now owns
+            # the entry's recovery; don't restore the snapshot under it.
+            return
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
         addon_manager = self._addon_setup.addon_manager
         # Migrate the legacy network key, like async_set_addon_config does,
         # so restoring doesn't drop the S0 key on older add-on configurations.
         restored_config = SecurityKeys.migrate_network_key(original_config)
-        # This task outlives the flow and its ownership flag, so hold the
-        # write lock to not interleave with a new owner's write.
-        async with self.hass.data.setdefault(_ADDON_WRITE_LOCK, asyncio.Lock()):
+        try:
+            await addon_manager.async_set_addon_options(restored_config)
+        except AddonError as err:
+            # Don't reload the entry if the options were not restored, so the
+            # reload doesn't adopt the unconfirmed options still on the add-on.
+            _LOGGER.error("Failed to restore add-on options: %s", err)
+            return
+        if self._addon_setup.restart_addon or self._addon_setup.addon_started:
+            # The add-on is running with the unconfirmed options this flow
+            # set. Restart it before the reload, so the entry doesn't
+            # reconnect to the unconfirmed adapter.
             try:
-                await addon_manager.async_set_addon_options(restored_config)
+                await addon_manager.async_restart_addon()
             except AddonError as err:
-                # Don't reload the entry if the options were not restored,
-                # so the reload doesn't adopt the unconfirmed options still
-                # on the add-on.
-                _LOGGER.error("Failed to restore add-on options: %s", err)
+                _LOGGER.error("Failed to restart add-on: %s", err)
                 return
-            if self._addon_setup.restart_addon or self._addon_setup.addon_started:
-                # The add-on is running with the unconfirmed options this
-                # flow set. Restart it before the reload, so the entry
-                # doesn't reconnect to the unconfirmed adapter.
-                try:
-                    await addon_manager.async_restart_addon()
-                except AddonError as err:
-                    _LOGGER.error("Failed to restart add-on: %s", err)
-                    return
         self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(
@@ -1307,9 +1293,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             )
 
         if not self._async_acquire_addon_ownership():
-            # Another flow, e.g. a competing migration confirmed earlier,
-            # is already changing the shared add-on config. Don't start a
-            # second migration.
             return self.async_abort(reason="already_in_progress")
 
         # Remaining prompts, e.g. for other discovered adapters,
@@ -1518,8 +1501,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                 }
 
                 if not self._async_acquire_addon_ownership():
-                    # Another flow is already changing the shared add-on
-                    # config.
                     return self.async_abort(reason="already_in_progress")
 
                 addon_config_updates = self._addon_config_updates | addon_config_updates
@@ -1767,8 +1748,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
                         # Config entry already has correct config
                         return self.async_abort(reason="already_configured")
                     if not self._async_acquire_addon_ownership():
-                        # Another flow is already changing the shared
-                        # add-on config. The discovery is retried later.
                         return self.async_abort(reason="already_in_progress")
                     await self._addon_setup.async_set_addon_config(
                         {CONF_ADDON_SOCKET: discovery_info.socket_path}
