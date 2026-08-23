@@ -1,14 +1,13 @@
 """Test the ToneWinner AT-500 services."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.tonewinner.media_player import (
-    SERVICE_SEND_RAW_SCHEMA,
-    TonewinnerMediaPlayer,
-)
+from homeassistant.components.tonewinner.const import DOMAIN
+from homeassistant.components.tonewinner.media_player import TonewinnerMediaPlayer
+from homeassistant.components.tonewinner.services import SERVICE_SEND_RAW_FIELDS
 from homeassistant.core import HomeAssistant
 
 
@@ -16,14 +15,44 @@ async def test_send_raw_service_schema_validation(
     hass: HomeAssistant,
 ) -> None:
     """Test the send_raw service schema validation."""
+    schema = vol.Schema(SERVICE_SEND_RAW_FIELDS)
     valid_data = {"command": "TEST COMMAND"}
-    assert SERVICE_SEND_RAW_SCHEMA(valid_data) is not None
+    assert schema(valid_data) is not None
 
     with pytest.raises(vol.Invalid):
-        SERVICE_SEND_RAW_SCHEMA({})
+        schema({})
 
     with pytest.raises(vol.Invalid):
-        SERVICE_SEND_RAW_SCHEMA({"command": None})
+        schema({"command": None})
+
+
+async def test_send_raw_service_call(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test calling the send_raw service routes to the entity."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.tonewinner.TonewinnerReceiver",
+        return_value=mock_receiver,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    state = hass.states.get("media_player.tonewinner_at_500")
+    assert state is not None
+
+    await hass.services.async_call(
+        DOMAIN,
+        "send_raw",
+        {"command": "PWR01"},
+        target={"entity_id": "media_player.tonewinner_at_500"},
+        blocking=True,
+    )
+
+    mock_receiver.send_command.assert_called_once_with("PWR01")
 
 
 async def test_send_raw_service_empty_command(

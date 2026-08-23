@@ -1,6 +1,7 @@
 """Tonewinner AT-500 configuration flow."""
 
 import logging
+from typing import Any, override
 
 from tonewinner_rs232 import TonewinnerReceiver
 import voluptuous as vol
@@ -30,7 +31,10 @@ _LOGGER = logging.getLogger(__name__)
 class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
     """Handle the initial step of the configuration flow."""
 
-    async def async_step_user(self, user_input=None) -> ConfigFlowResult:
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Handle initial step of configuration flow."""
         errors = {}
         if user_input is not None:
@@ -44,6 +48,8 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
             except OSError:
                 errors["base"] = "cannot_connect"
             if not errors:
+                await self.async_set_unique_id(user_input[CONF_SERIAL_PORT])
+                self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title="Tonewinner AT-500", data=user_input, options={}
                 )
@@ -63,6 +69,7 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
         """Get the options flow for this handler."""
         return TonewinnerOptionsFlow(config_entry)
@@ -77,7 +84,9 @@ class TonewinnerOptionsFlow(OptionsFlow):
         """Initialize options flow."""
         self._config_entry = config_entry
 
-    async def async_step_init(self, user_input=None) -> ConfigFlowResult:
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
             new_data = dict(self._config_entry.data)
@@ -110,15 +119,11 @@ class TonewinnerOptionsFlow(OptionsFlow):
         schema = {
             vol.Optional(
                 CONF_SERIAL_PORT,
-                default=self._config_entry.data.get(
-                    CONF_SERIAL_PORT, "/dev/ttyUSB0"
-                ),
+                default=self._config_entry.data.get(CONF_SERIAL_PORT, "/dev/ttyUSB0"),
             ): cv.string,
             vol.Optional(
                 CONF_BAUD_RATE,
-                default=self._config_entry.data.get(
-                    CONF_BAUD_RATE, DEFAULT_BAUD_RATE
-                ),
+                default=self._config_entry.data.get(CONF_BAUD_RATE, DEFAULT_BAUD_RATE),
             ): cv.positive_int,
         }
 

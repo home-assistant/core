@@ -3,13 +3,9 @@
 import asyncio
 import contextlib
 import logging
+from typing import override
 
-import voluptuous as vol
-from tonewinner_rs232 import (
-    INPUT_SOURCE_NAMES,
-    SOUND_MODE_LABELS,
-    TonewinnerReceiver,
-)
+from tonewinner_rs232 import SOUND_MODE_LABELS, ReceiverState, TonewinnerReceiver
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -17,14 +13,13 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant, ServiceCall, callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONF_BAUD_RATE, CONF_SERIAL_PORT, CONF_SOURCE_MAPPINGS, DOMAIN
 from . import TonewinnerConfigEntry
+from .const import CONF_SOURCE_MAPPINGS, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,31 +50,16 @@ INPUT_SOURCES = {
 
 SOUND_MODES = {label: code for code, label in SOUND_MODE_LABELS.items()}
 
-SERVICE_SEND_RAW = "send_raw"
-SERVICE_SEND_RAW_SCHEMA = vol.Schema(
-    {
-        vol.Required("command"): cv.string,
-    }
-)
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
     config_entry: TonewinnerConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up media player and register service."""
+    """Set up the media player entity."""
     receiver = config_entry.runtime_data
     entity = TonewinnerMediaPlayer(hass, config_entry, receiver)
     async_add_entities([entity])
-
-    async def handle_send_raw(call: ServiceCall) -> None:
-        command = call.data["command"]
-        await entity.send_raw_command(command)
-
-    hass.services.async_register(
-        DOMAIN, SERVICE_SEND_RAW, handle_send_raw, schema=SERVICE_SEND_RAW_SCHEMA
-    )
 
 
 class TonewinnerMediaPlayer(MediaPlayerEntity):
@@ -139,15 +119,15 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
         self._attr_sound_mode_list = list(SOUND_MODES.keys())
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to state changes when entity is added."""
         await super().async_added_to_hass()
-        self._receiver.subscribe(self._on_state_change)
         self.async_on_remove(self._receiver.subscribe(self._on_state_change))
         self._apply_state(self._receiver.state)
 
     @callback
-    def _on_state_change(self, state) -> None:
+    def _on_state_change(self, state: ReceiverState | None) -> None:
         """Handle state changes from the receiver."""
         if state is None:
             self._attr_available = False
@@ -156,7 +136,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._apply_state(state)
 
     @callback
-    def _apply_state(self, state) -> None:
+    def _apply_state(self, state: ReceiverState) -> None:
         """Apply receiver state to HA entity attributes."""
         self._attr_available = True
 
@@ -191,9 +171,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
         self.async_write_ha_state()
 
-    def _resolve_source(
-        self, source_name: str, audio_source: str | None
-    ) -> str | None:
+    def _resolve_source(self, source_name: str, audio_source: str | None) -> str | None:
         """Resolve a device source name to the configured display name."""
         if source_name == "eARC/ARC":
             source_name = "ARC"
@@ -225,13 +203,14 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def _periodic_source_check(self) -> None:
         """Periodically check for input source when device is ON but source unknown."""
         max_attempts = 5
-        for attempt in range(max_attempts):
+        for _attempt in range(max_attempts):
             if self._attr_source:
                 break
             await self._query_input_source()
             await asyncio.sleep(3)
         self._source_check_task = None
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Clean up when entity is removed."""
         if self._source_check_task:
@@ -245,19 +224,25 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             raise TonewinnerError("Not connected")
 
         if command.startswith("0x"):
-            data = bytes([int(x, 16) for x in command.split()])
-            from tonewinner_rs232.protocol import build_command
-
-            await self._receiver.send_command(data.decode("ascii"))
-        else:
-            await self._receiver.send_command(command)
+            try:
+                data = bytes(int(token, 16) for token in command.split())
+            except ValueError as err:
+                raise HomeAssistantError(f"Invalid hex command: {command}") from err
+            try:
+                command = data.decode("ascii")
+            except UnicodeDecodeError as err:
+                msg = f"Hex command contains non-ASCII bytes: {command}"
+                raise HomeAssistantError(msg) from err
+        await self._receiver.send_command(command)
 
     # --- Media player controls ---
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
         await self._receiver.power_on()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
         await self._receiver.power_off()
@@ -265,20 +250,24 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._attr_source = None
         self.async_write_ha_state()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level (HA 0.0-1.0, device 0-80)."""
         vol_device = min(volume * 100.0, 80)
         await self._receiver.set_volume(vol_device)
         self.async_write_ha_state()
 
+    @override
     async def async_volume_up(self) -> None:
         """Volume up."""
         await self._receiver.volume_up()
 
+    @override
     async def async_volume_down(self) -> None:
         """Volume down."""
         await self._receiver.volume_down()
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""
         if mute:
@@ -286,6 +275,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         else:
             await self._receiver.mute_off()
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
         if (
@@ -297,6 +287,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         source_code = self._custom_name_to_source_code[source]
         await self._receiver.select_source(source_code)
 
+    @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         if sound_mode not in SOUND_MODES:

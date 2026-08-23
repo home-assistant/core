@@ -81,6 +81,47 @@ async def test_form_with_custom_baudrate(
     }
 
 
+async def test_form_duplicate_serial_port(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that configuring the same serial port twice aborts."""
+    mock_receiver = MagicMock()
+    mock_receiver.connect = AsyncMock()
+    mock_receiver.disconnect = AsyncMock()
+
+    with patch(
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+        return_value=mock_receiver,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERIAL_PORT: "/dev/ttyUSB0",
+                CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERIAL_PORT: "/dev/ttyUSB0",
+                CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
@@ -133,9 +174,7 @@ async def test_form_os_error(hass: HomeAssistant) -> None:
     )
 
     mock_receiver = MagicMock()
-    mock_receiver.connect = AsyncMock(
-        side_effect=OSError("Port not found")
-    )
+    mock_receiver.connect = AsyncMock(side_effect=OSError("Port not found"))
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",

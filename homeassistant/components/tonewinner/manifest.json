@@ -3,9 +3,11 @@
   "name": "Tonewinner",
   "codeowners": ["@emma-sg"],
   "config_flow": true,
+  "dependencies": ["usb"],
   "documentation": "https://www.home-assistant.io/integrations/tonewinner",
+  "integration_type": "hub",
   "iot_class": "local_push",
-  "loggers": ["custom_components.tonewinner"],
-  "requirements": ["tonewinner-rs232==0.1.0"],
-  "version": "0.1.0"
+  "loggers": ["tonewinner_rs232"],
+  "quality_scale": "bronze",
+  "requirements": ["tonewinner-rs232==1.0.4"]
 }

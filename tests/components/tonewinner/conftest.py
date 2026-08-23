@@ -10,11 +10,12 @@ from homeassistant.components.tonewinner.const import (
     CONF_SERIAL_PORT,
     DOMAIN,
 )
+
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -29,7 +30,7 @@ def mock_config_entry():
 
 
 @pytest.fixture
-def mock_receiver():
+def mock_receiver() -> MagicMock:
     """Return a mock TonewinnerReceiver."""
     receiver = MagicMock()
     receiver.connected = True
@@ -39,9 +40,7 @@ def mock_receiver():
     receiver.state.source_name = None
     receiver.state.audio_source = None
     receiver.state.sound_mode_label = None
-    type(receiver).state = PropertyMock(
-        return_value=receiver.state
-    )
+    type(receiver).state = PropertyMock(return_value=receiver.state)
     receiver.connect = AsyncMock()
     receiver.disconnect = AsyncMock()
     receiver.query_state = AsyncMock()

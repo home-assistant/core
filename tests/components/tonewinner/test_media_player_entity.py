@@ -1,7 +1,7 @@
 """Test the ToneWinner AT-500 media player entity."""
 
 import asyncio
-from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
+from unittest.mock import MagicMock, patch
 
 from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.components.tonewinner.const import (
