@@ -2634,7 +2634,7 @@ async def test_usb_discovery_leaves_manual_entry_alone(
     assert entry.data == {"url": "ws://external-server:3000"}
 
 
-@pytest.mark.usefixtures("supervisor", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_info", "addon_store_info")
 async def test_usb_discovery_ignored(
     hass: HomeAssistant,
     mock_usb_serial_by_id: MagicMock,
