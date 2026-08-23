@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 
 from homeassistant import config_entries
 from homeassistant.components.tonewinner.const import CONF_SERIAL_PORT, DOMAIN
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -180,7 +181,7 @@ async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> 
 async def test_reconfigure_same_port(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test reconfiguring with an unchanged port reloads without probing."""
+    """Test reconfiguring with an unchanged port releases and re-probes it."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_SERIAL_PORT: "/dev/ttyUSB0", CONF_MODEL: "AT-500"},
@@ -188,6 +189,7 @@ async def test_reconfigure_same_port(
         title="AT-500",
     )
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_config_entry.runtime_data = _mock_receiver(model=None)
 
     result = await hass.config_entries.flow.async_init(
@@ -198,10 +200,17 @@ async def test_reconfigure_same_port(
         },
     )
 
-    with patch(
-        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver"
-    ) as mock_receiver_cls:
-        # Probing would fail while this entry holds the port.
+    with (
+        patch(
+            "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+            return_value=_mock_receiver(model="AT-300"),
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_unload",
+            new_callable=AsyncMock,
+            return_value=True,
+        ) as mock_unload,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {CONF_SERIAL_PORT: "/dev/ttyUSB0"},
@@ -210,9 +219,13 @@ async def test_reconfigure_same_port(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    mock_receiver_cls.assert_not_called()
-    assert mock_config_entry.data[CONF_SERIAL_PORT] == "/dev/ttyUSB0"
-    assert mock_config_entry.title == "AT-500"
+    # The port was released so a swapped-in device could be identified.
+    mock_unload.assert_awaited_once_with(mock_config_entry.entry_id)
+    assert mock_config_entry.data == {
+        CONF_SERIAL_PORT: "/dev/ttyUSB0",
+        CONF_MODEL: "AT-300",
+    }
+    assert mock_config_entry.title == "AT-300"
 
 
 async def test_reconfigure_port_used_by_other_entry(hass: HomeAssistant) -> None:
@@ -255,7 +268,7 @@ async def test_reconfigure_port_used_by_other_entry(hass: HomeAssistant) -> None
 async def test_reconfigure_cannot_connect(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test reconfigure shows an error and recovers once the port is reachable."""
+    """Test reconfigure shows an error, restores service and recovers after."""
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={CONF_SERIAL_PORT: "/dev/ttyUSB0", CONF_MODEL: "AT-500"},
@@ -263,6 +276,7 @@ async def test_reconfigure_cannot_connect(
         title="AT-500",
     )
     mock_config_entry.add_to_hass(hass)
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
     mock_config_entry.runtime_data = _mock_receiver(model=None)
 
     result = await hass.config_entries.flow.async_init(
@@ -277,9 +291,20 @@ async def test_reconfigure_cannot_connect(
     mock_receiver.connect = AsyncMock(side_effect=OSError("Permission denied"))
     mock_receiver.disconnect = AsyncMock()
 
-    with patch(
-        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
-        return_value=mock_receiver,
+    with (
+        patch(
+            "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+            return_value=mock_receiver,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_unload",
+            new_callable=AsyncMock,
+            return_value=True,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_setup",
+            new_callable=AsyncMock,
+        ) as mock_setup,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -289,6 +314,8 @@ async def test_reconfigure_cannot_connect(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reconfigure"
     assert result["errors"] == {"base": "cannot_connect"}
+    # The previous configuration is set up again so the receiver keeps working.
+    mock_setup.assert_awaited_once_with(mock_config_entry.entry_id)
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",

@@ -6,7 +6,11 @@ from typing import Any, override
 from tonewinner_rs232 import ReceiverInfo, TonewinnerReceiver
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow as ConfigEntryFlow, ConfigFlowResult
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigFlow as ConfigEntryFlow,
+    ConfigFlowResult,
+)
 from homeassistant.const import CONF_MODEL
 from homeassistant.helpers.selector import SerialPortSelector
 
@@ -73,18 +77,23 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
 
         if user_input is not None:
             port = user_input[CONF_SERIAL_PORT]
-            if port == entry.data.get(CONF_SERIAL_PORT):
-                # Unchanged port: the live connection is proof enough. The
-                # probe could not run anyway while this entry holds the port.
-                _LOGGER.debug("Serial port unchanged, reloading %s", entry.title)
-                return self.async_update_reload_and_abort(entry)
-
             self._async_abort_entries_match({CONF_SERIAL_PORT: port})
+
+            # Free the port before probing: a held port would race the probe,
+            # and an unchanged port deserves a fresh model check (device swap).
+            if entry.state is ConfigEntryState.LOADED:
+                await self.hass.config_entries.async_unload(entry.entry_id)
+            else:
+                entry.async_cancel_retry_setup()
+
             try:
                 model = await self._async_probe_receiver(port)
             except OSError as err:
                 _LOGGER.warning("Failed to probe receiver on %s: %s", port, err)
                 errors["base"] = "cannot_connect"
+                # Bring the previous configuration back up so the receiver
+                # keeps working while the user retries.
+                await self.hass.config_entries.async_setup(entry.entry_id)
             else:
                 data: dict[str, Any] = {CONF_SERIAL_PORT: port}
                 title = "Tonewinner"
