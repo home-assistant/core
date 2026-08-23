@@ -2,13 +2,13 @@
 
 from yarl import URL
 
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from homeassistant.util import slugify
 
 from .const import DOMAIN
-from .coordinator import MikrotikDataUpdateCoordinator
+from .coordinator import MikrotikConfigEntry, MikrotikDataUpdateCoordinator
 
 
 class MikrotikBaseEntity(CoordinatorEntity[MikrotikDataUpdateCoordinator]):
@@ -27,10 +27,10 @@ class MikrotikBaseEntity(CoordinatorEntity[MikrotikDataUpdateCoordinator]):
 
         self._serial = coordinator.api.serial_number
 
-    def _base_device_info(self) -> DeviceInfo:
+    def _base_device_info(self) -> dr.DeviceInfo:
         """Return the device info fields shared by all Mikrotik devices."""
         coordinator = self.coordinator
-        return DeviceInfo(
+        return dr.DeviceInfo(
             configuration_url=URL.build(
                 scheme="http",
                 host=coordinator.host,
@@ -52,7 +52,7 @@ class MikrotikEntity(MikrotikBaseEntity):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator, description)
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             **self._base_device_info(),
             identifiers={(DOMAIN, self._serial)},
             name=coordinator.hostname,
@@ -65,6 +65,7 @@ class MikrotikDeviceEntity(MikrotikBaseEntity):
 
     def __init__(
         self,
+        config_entry: MikrotikConfigEntry,
         coordinator: MikrotikDataUpdateCoordinator,
         description: EntityDescription,
         interface: dict,
@@ -75,12 +76,15 @@ class MikrotikDeviceEntity(MikrotikBaseEntity):
         name = interface.get("name")
         ident = f"{slugify(interface.get('mac-address'))}_{name}"
 
-        self._attr_device_info = DeviceInfo(
+        self._attr_device_info = dr.DeviceInfo(
             **self._base_device_info(),
             identifiers={(DOMAIN, ident)},
             name=name,
-            via_device=(DOMAIN, coordinator.api.serial_number),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                config_entry.runtime_data.hass,
+                (DOMAIN, coordinator.api.serial_number),
+                config_entry_id=config_entry.entry_id,
+            ),
         )
         self._attr_unique_id = ident
-        self._attr_name = name
         self._interface = interface
