@@ -7,6 +7,7 @@ provide credentials from yaml for backwards compatibility.
 """
 
 from dataclasses import dataclass
+from enum import StrEnum
 import logging
 from typing import Any, Protocol, override
 
@@ -39,7 +40,12 @@ from homeassistant.loader import (
 from homeassistant.util import slugify
 from homeassistant.util.hass_dict import HassKey
 
-__all__ = ["AuthorizationServer", "ClientCredential", "async_import_client_credential"]
+__all__ = [
+    "AuthorizationServer",
+    "AuthorizationTypes",
+    "ClientCredential",
+    "async_import_client_credential",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -63,18 +69,33 @@ UPDATE_FIELDS: VolDictType = {}  # Not supported
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
 
+class AuthorizationTypes(StrEnum):
+    """Supported authorization types."""
+
+    AUTHORIZATION_CODE = "authorization_code"
+    DEVICE_FLOW = "device_flow"
+
+
 @dataclass
 class ClientCredential:
     """Represent an OAuth client credential."""
 
     client_id: str
-    client_secret: str
+    client_secret: str | None = None
     name: str | None = None
 
 
 @dataclass
 class AuthorizationServer:
     """Represent an OAuth2 Authorization Server."""
+
+    authorize_url: str
+    token_url: str
+
+
+@dataclass
+class DeviceFlowAuthorizationServer:
+    """Represent an OAuth2 Authorization Server that supports Device Flow."""
 
     authorize_url: str
     token_url: str
@@ -184,10 +205,10 @@ async def async_import_client_credential(
     """Import an existing credential from configuration.yaml."""
     if DOMAIN not in hass.data:
         raise ValueError("Integration 'application_credentials' not setup")
-    item = {
+    item: dict[str, str] = {
         CONF_DOMAIN: domain,
         CONF_CLIENT_ID: credential.client_id,
-        CONF_CLIENT_SECRET: credential.client_secret,
+        CONF_CLIENT_SECRET: credential.client_secret or "",
         CONF_AUTH_DOMAIN: auth_domain or domain,
     }
     item[CONF_NAME] = credential.name or DEFAULT_IMPORT_NAME
@@ -209,7 +230,34 @@ class AuthImplementation(config_entry_oauth2_flow.LocalOAuth2Implementation):
             hass,
             auth_domain,
             credential.client_id,
-            credential.client_secret,
+            credential.client_secret or "",
+            authorization_server.authorize_url,
+            authorization_server.token_url,
+        )
+        self._name = credential.name
+
+    @property
+    @override
+    def name(self) -> str:
+        """Name of the implementation."""
+        return self._name or self.client_id
+
+
+class DeviceFlowImplementation(config_entry_oauth2_flow.DeviceFlowImplementation):
+    """Device flow implementation."""
+
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        auth_domain: str,
+        credential: ClientCredential,
+        authorization_server: DeviceFlowAuthorizationServer,
+    ) -> None:
+        """Initialize DeviceImplementation."""
+        super().__init__(
+            hass,
+            auth_domain,
+            credential.client_id,
             authorization_server.authorize_url,
             authorization_server.token_url,
         )
@@ -237,7 +285,18 @@ async def _async_provide_implementation(
             await platform.async_get_auth_implementation(hass, auth_domain, credential)
             for auth_domain, credential in credentials.items()
         ]
+
+    if hasattr(platform, "async_get_device_flow_authorization_server"):
+        device_flow_server = await platform.async_get_device_flow_authorization_server(
+            hass
+        )
+        return [
+            DeviceFlowImplementation(hass, auth_domain, credential, device_flow_server)
+            for auth_domain, credential in credentials.items()
+        ]
+
     authorization_server = await platform.async_get_authorization_server(hass)
+
     return [
         AuthImplementation(hass, auth_domain, credential, authorization_server)
         for auth_domain, credential in credentials.items()
@@ -278,6 +337,11 @@ class ApplicationCredentialsProtocol(Protocol):
     ) -> AuthorizationServer:
         """Return authorization server, for the default auth implementation."""
 
+    async def async_get_device_flow_authorization_server(
+        self, hass: HomeAssistant
+    ) -> DeviceFlowAuthorizationServer:
+        """Return authorization server, for device flow auth implementation."""
+
     async def async_get_auth_implementation(
         self, hass: HomeAssistant, auth_domain: str, credential: ClientCredential
     ) -> config_entry_oauth2_flow.AbstractOAuth2Implementation:
@@ -307,22 +371,38 @@ async def _get_platform(
             err,
         )
         return None
-    if not hasattr(platform, "async_get_authorization_server") and not hasattr(
-        platform, "async_get_auth_implementation"
-    ):
+    if not (
+        hasattr(platform, "async_get_authorization_server")
+        or hasattr(platform, "async_get_device_flow_authorization_server")
+    ) and not hasattr(platform, "async_get_auth_implementation"):
         raise ValueError(
             f"Integration '{integration_domain}' platform {DOMAIN} did not implement"
-            " 'async_get_authorization_server' or 'async_get_auth_implementation'"
+            " 'async_get_authorization_server', "
+            "'async_get_device_flow_authorization_server', "
+            "or 'async_get_auth_implementation'"
         )
     return platform
 
 
 async def _async_integration_config(hass: HomeAssistant, domain: str) -> dict[str, Any]:
+    """Return application_credentials integration config."""
     platform = await _get_platform(hass, domain)
-    if platform and hasattr(platform, "async_get_description_placeholders"):
-        placeholders = await platform.async_get_description_placeholders(hass)
-        return {"description_placeholders": placeholders}
-    return {}
+
+    if not platform:
+        return {}
+
+    result: dict[str, Any] = {}
+    if hasattr(platform, "async_get_authorization_server"):
+        result["auth_type"] = AuthorizationTypes.AUTHORIZATION_CODE
+    elif hasattr(platform, "async_get_device_flow_authorization_server"):
+        result["auth_type"] = AuthorizationTypes.DEVICE_FLOW
+
+    if hasattr(platform, "async_get_description_placeholders"):
+        result[
+            "description_placeholders"
+        ] = await platform.async_get_description_placeholders(hass)
+
+    return result
 
 
 @websocket_api.websocket_command(
