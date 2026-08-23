@@ -5,7 +5,12 @@ import contextlib
 import logging
 from typing import override
 
-from tonewinner_rs232 import SOUND_MODE_LABELS, ReceiverState, TonewinnerReceiver
+from tonewinner_rs232 import (
+    INPUT_SOURCE_NAMES,
+    SOUND_MODE_LABELS,
+    ReceiverState,
+    TonewinnerReceiver,
+)
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -24,25 +29,7 @@ from .const import CONF_SOURCE_MAPPINGS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-INPUT_SOURCES = {
-    "HDMI 1": "HD1",
-    "HDMI 2": "HD2",
-    "HDMI 3": "HD3",
-    "HDMI 4": "HD4",
-    "HDMI 5": "HD5",
-    "HDMI 6": "HD6",
-    "Optical 1": "OP1",
-    "Optical 2": "OP2",
-    "Coaxial 1": "CO1",
-    "Coaxial 2": "CO2",
-    "Analog 1": "AN1",
-    "Analog 2": "AN2",
-    "Analog 3": "AN3",
-    "Bluetooth": "BT",
-    "USB": "USB",
-    "PC": "PC",
-    "HDMI eARC": "ARC",
-}
+INPUT_SOURCES = {name: code for code, name in INPUT_SOURCE_NAMES.items()}
 
 SOUND_MODES = {label: code for code, label in SOUND_MODE_LABELS.items()}
 
