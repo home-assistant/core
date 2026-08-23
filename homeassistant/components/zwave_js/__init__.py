@@ -169,10 +169,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
     """Migrate old config entry."""
-    if entry.version > 1:
-        # Downgrade from a future version.
-        return False
-
     if entry.version == 1 and entry.minor_version < 2:
         unique_id = entry.unique_id
         if not isinstance(unique_id, str):
