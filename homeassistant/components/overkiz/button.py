@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
-from .const import ALIAS_TYPE_FAVORITE1, IGNORED_OVERKIZ_DEVICES, LOGGER
+from .const import IGNORED_OVERKIZ_DEVICES, LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity
 
@@ -108,7 +108,7 @@ SUPPORTED_COMMANDS = {
 }
 
 ALIAS_TYPES_WITH_TRANSLATION: set[str] = {
-    ALIAS_TYPE_FAVORITE1,
+    "favorite1",
     "ventilation",
     "partial",
     "pedestrian",

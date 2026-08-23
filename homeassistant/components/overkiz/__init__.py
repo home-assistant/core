@@ -63,7 +63,6 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    ALIAS_TYPE_FAVORITE1,
     CONF_API_TYPE,
     CONF_GATEWAY_ID,
     CONF_HUB,
@@ -291,10 +290,7 @@ def _async_migrate_go_to_alias_button_unique_ids(
     devices_with_favorite = {
         device.device_url
         for device in devices
-        if any(
-            alias.type == ALIAS_TYPE_FAVORITE1
-            for alias in device.get_supported_aliases()
-        )
+        if any(alias.type == "favorite1" for alias in device.get_supported_aliases())
     }
 
     for entry in er.async_entries_for_config_entry(
@@ -306,7 +302,7 @@ def _async_migrate_go_to_alias_button_unique_ids(
             continue
 
         if entry.unique_id.removesuffix(legacy_suffix) in devices_with_favorite:
-            new_unique_id = f"{entry.unique_id}_{ALIAS_TYPE_FAVORITE1}"
+            new_unique_id = f"{entry.unique_id}_favorite1"
             LOGGER.debug(
                 "Migrating entity '%s' unique_id from '%s' to '%s'",
                 entry.entity_id,
