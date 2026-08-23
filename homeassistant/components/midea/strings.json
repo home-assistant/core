@@ -129,6 +129,32 @@
         }
       }
     },
+    "number": {
+      "dry_level": {
+        "name": "Dry level"
+      },
+      "flushing_days": {
+        "name": "Flushing days"
+      },
+      "heating_level": {
+        "name": "Heating level"
+      },
+      "leak_water_protection_value": {
+        "name": "Leak water protection value"
+      },
+      "seat_temp_level": {
+        "name": "Seat temperature level"
+      },
+      "vacation_days": {
+        "name": "Vacation days"
+      },
+      "water_hardness": {
+        "name": "Water hardness"
+      },
+      "water_temp_level": {
+        "name": "Water temperature level"
+      }
+    },
     "select": {
       "detect_mode": {
         "name": "Detect mode",
