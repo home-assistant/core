@@ -24,9 +24,18 @@
     }
   },
   "entity": {
-    "switch": {
-      "active_power_control_enabled": {
-        "name": "Active power control"
+    "sensor": {
+      "communication_health": {
+        "name": "Communication health"
+      },
+      "communication_health_last_error": {
+        "name": "Last error"
+      },
+      "communication_health_last_error_time": {
+        "name": "Last error time"
+      },
+      "communication_health_success_rate": {
+        "name": "Success rate"
       }
     }
   }

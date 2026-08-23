@@ -52,10 +52,8 @@ async def test_setup_entry_unrecognized_inverter_raises_setup_error(
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
 
-async def test_switch_platform_is_forwarded(
+async def test_sensor_platform_is_forwarded(
     hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """Test the switch platform is set up as part of config entry setup."""
-    coordinator: SofarDataUpdateCoordinator = init_integration.runtime_data
-    assert "active_power_control" in coordinator.served_components
-    assert hass.states.async_entity_ids("switch")
+    """Test the sensor platform is set up as part of config entry setup."""
+    assert hass.states.async_entity_ids("sensor")

@@ -9,6 +9,20 @@ from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import SofarDataUpdateCoordinator
 
 
+def build_device_info(coordinator: SofarDataUpdateCoordinator) -> DeviceInfo:
+    """The one physical inverter every entity on this config entry belongs to."""
+    device = coordinator.device
+    serial = device.serial_number
+    if TYPE_CHECKING:
+        assert serial is not None
+    return DeviceInfo(
+        identifiers={(DOMAIN, serial)},
+        manufacturer=ATTR_MANUFACTURER,
+        model=device.model or None,
+        serial_number=serial,
+    )
+
+
 class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
     """Base for every Sofar entity — one physical inverter per config entry."""
 
@@ -22,18 +36,12 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
     ) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        device = coordinator.device
-        serial = device.serial_number
+        serial = coordinator.device.serial_number
         if TYPE_CHECKING:
             assert serial is not None
         self._component = component
         self._attr_unique_id = f"{serial}_{unique_id_suffix}"
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, serial)},
-            manufacturer=ATTR_MANUFACTURER,
-            model=device.model or None,
-            serial_number=serial,
-        )
+        self._attr_device_info = build_device_info(coordinator)
 
     @property
     def _link_available(self) -> bool:

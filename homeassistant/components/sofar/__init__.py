@@ -13,7 +13,7 @@ from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS: list[Platform] = [Platform.SWITCH]
+PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> bool:
