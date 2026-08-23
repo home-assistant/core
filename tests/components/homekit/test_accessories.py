@@ -41,6 +41,7 @@ from homeassistant.const import (
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SERVICE,
+    ATTR_SUPPORTED_FEATURES,
     ATTR_SW_VERSION,
     STATE_OFF,
     STATE_ON,
@@ -66,6 +67,85 @@ async def test_accessory_cancels_track_state_change_on_stop(
         "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
     ):
         acc.run()
+    await acc.stop()
+
+
+async def test_reload_on_attr_change_after_unavailable_at_creation(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test reload when a reload attr changes across an unavailable transition.
+
+    The accessory is created while the entity is unavailable and the
+    attribute change arrives in the same state change that makes the
+    entity available again.
+    """
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, STATE_UNAVAILABLE, {ATTR_SUPPORTED_FEATURES: 1})
+    await hass.async_block_till_done()
+    acc = HomeAccessory(
+        hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
+    )
+    with (
+        patch(
+            "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+        ),
+        patch.object(acc, "async_reload") as mock_reload,
+    ):
+        acc.run()
+        await hass.async_block_till_done()
+        hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 3})
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once()
+    await acc.stop()
+
+
+async def test_reload_on_attr_change_between_creation_and_run(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test catch-up reload when attrs change before the accessory runs."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 1})
+    await hass.async_block_till_done()
+    acc = HomeAccessory(
+        hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
+    )
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 3})
+    await hass.async_block_till_done()
+    with (
+        patch(
+            "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+        ),
+        patch.object(acc, "async_reload") as mock_reload,
+    ):
+        acc.run()
+        await hass.async_block_till_done()
+        mock_reload.assert_called_once()
+    await acc.stop()
+
+
+async def test_no_reload_on_unavailable_flap_with_unchanged_attrs(
+    hass: HomeAssistant, hk_driver: HomeDriver
+) -> None:
+    """Test no reload when the entity flaps unavailable and recovers unchanged."""
+    entity_id = "sensor.accessory"
+    hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 1})
+    await hass.async_block_till_done()
+    acc = HomeAccessory(
+        hass, hk_driver, "Home Accessory", entity_id, 2, {"platform": "isy994"}
+    )
+    with (
+        patch(
+            "homeassistant.components.homekit.accessories.HomeAccessory.async_update_state"
+        ),
+        patch.object(acc, "async_reload") as mock_reload,
+    ):
+        acc.run()
+        await hass.async_block_till_done()
+        hass.states.async_set(entity_id, STATE_UNAVAILABLE)
+        await hass.async_block_till_done()
+        hass.states.async_set(entity_id, STATE_ON, {ATTR_SUPPORTED_FEATURES: 1})
+        await hass.async_block_till_done()
+        mock_reload.assert_not_called()
     await acc.stop()
 
 

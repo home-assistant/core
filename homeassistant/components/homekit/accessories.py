@@ -1,5 +1,6 @@
 """Extend the basic Accessory and Bridge functions."""
 
+import asyncio
 import logging
 from typing import Any, cast
 from uuid import UUID
@@ -449,6 +450,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             **kwargs,
         )
         self._reload_on_change_attrs = list(RELOAD_ON_CHANGE_ATTRS)
+        self._reload_attr_baseline: dict[str, Any] | None = None
+        self._creation_state: State | None = None
+        self._pending_reload: asyncio.Handle | None = None
         self.config = config or {}
         if device_id:
             self.device_id: str | None = device_id
@@ -522,6 +526,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         state = self.hass.states.get(self.entity_id)
         self._update_available_from_state(state)
         assert state is not None
+        self._creation_state = state
         entity_attributes = state.attributes
         battery_found = entity_attributes.get(ATTR_BATTERY_LEVEL)
 
@@ -579,6 +584,25 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
         if state := self.hass.states.get(self.entity_id):
             self.async_update_state_callback(state)
         self._update_available_from_state(state)
+        baseline_state = self._creation_state or state
+        self._creation_state = None
+        if self._reload_attr_baseline is None and baseline_state is not None:
+            # Materialized here, not in __init__: subclasses extend
+            # _reload_on_change_attrs after HomeAccessory.__init__.
+            self._reload_attr_baseline = {
+                attr: baseline_state.attributes.get(attr)
+                for attr in self._reload_on_change_attrs
+            }
+        if (
+            state is not None
+            and state is not baseline_state
+            and self._async_reload_attrs_diverged(state)
+        ):
+            # Catch up on changes between construction and run. The reload
+            # is deferred: dispatcher targets start eagerly, so an inline
+            # reload would stop and replace this accessory before it
+            # finished starting.
+            self._pending_reload = self.hass.loop.call_soon(self.async_reload)
         self._subscriptions.append(
             async_track_state_change_event(
                 self.hass,
@@ -627,32 +651,51 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             self.async_update_battery(battery_state, battery_charging_state)
 
     @ha_callback
+    def _async_reload_attrs_diverged(self, new_state: State) -> bool:
+        """Check if any reload attr diverged from the baseline.
+
+        The baseline holds the attribute values the accessory structure
+        was built from. Comparing against it instead of the previous
+        event's state also detects changes that land where pairwise
+        comparison cannot see them: transitions involving unavailable
+        states, entity remove/re-add (no old state), and the window
+        between accessory construction and driver start. On divergence
+        the baseline advances so a reload is only requested once; the
+        recreated accessory captures a fresh baseline.
+        """
+        if (
+            new_state.state == STATE_UNAVAILABLE
+            or (baseline := self._reload_attr_baseline) is None
+        ):
+            return False
+        new_attributes = new_state.attributes
+        for attr, baseline_value in baseline.items():
+            if baseline_value != new_attributes.get(attr):
+                _LOGGER.debug(
+                    "%s: Reloading HomeKit accessory since"
+                    " %s has changed from %s -> %s",
+                    self.entity_id,
+                    attr,
+                    baseline_value,
+                    new_attributes.get(attr),
+                )
+                self._reload_attr_baseline = {
+                    reload_attr: new_attributes.get(reload_attr)
+                    for reload_attr in baseline
+                }
+                return True
+        return False
+
+    @ha_callback
     def async_update_event_state_callback(
         self, event: Event[EventStateChangedData]
     ) -> None:
         """Handle state change event listener callback."""
         new_state = event.data["new_state"]
-        old_state = event.data["old_state"]
         self._update_available_from_state(new_state)
-        if (
-            new_state
-            and old_state
-            and STATE_UNAVAILABLE not in (old_state.state, new_state.state)
-        ):
-            old_attributes = old_state.attributes
-            new_attributes = new_state.attributes
-            for attr in self._reload_on_change_attrs:
-                if old_attributes.get(attr) != new_attributes.get(attr):
-                    _LOGGER.debug(
-                        "%s: Reloading HomeKit accessory since"
-                        " %s has changed from %s -> %s",
-                        self.entity_id,
-                        attr,
-                        old_attributes.get(attr),
-                        new_attributes.get(attr),
-                    )
-                    self.async_reload()
-                    return
+        if new_state and self._async_reload_attrs_diverged(new_state):
+            self.async_reload()
+            return
         self.async_update_state_callback(new_state)
 
     @ha_callback
@@ -829,6 +872,9 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
     @ha_callback
     def async_stop(self) -> None:
         """Cancel any subscriptions when the bridge is stopped."""
+        if self._pending_reload is not None:
+            self._pending_reload.cancel()
+            self._pending_reload = None
         while self._subscriptions:
             self._subscriptions.pop(0)()
 
