@@ -114,9 +114,7 @@ async def test_remove_config_entry_device(
     )
 
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(
-        device_entry.id, mock_config_entry.entry_id
-    )
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"] == expected_result
 
 
@@ -150,7 +148,7 @@ async def test_migration_v3_to_v5(
     container_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, original_container_identifier)},
-        via_device=(DOMAIN, f"{entry.entry_id}_endpoint_1"),
+        via_device_id=endpoint_device.id,
         name="Test Container",
     )
 

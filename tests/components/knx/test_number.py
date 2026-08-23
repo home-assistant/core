@@ -8,6 +8,7 @@ import pytest
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
+    CONF_SYNC_STATE,
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import NumberSchema
@@ -139,6 +140,7 @@ async def test_number_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> Non
                 KNX_ADDRESS: test_address,
                 CONF_STATE_ADDRESS: test_state_address,
                 CONF_TYPE: "illuminance",
+                CONF_SYNC_STATE: "init",
             }
         }
     )

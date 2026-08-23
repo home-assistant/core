@@ -60,7 +60,10 @@ def async_get_device_for_service_call(
     """Get the device entry related to a service call."""
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
-    if (device_entry := device_registry.async_get(device_id)) is None:
+    # An energy site is a full device entry; a child device cannot be a target.
+    if not isinstance(
+        device_entry := device_registry.async_get(device_id), dr.DeviceEntry
+    ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_device",
