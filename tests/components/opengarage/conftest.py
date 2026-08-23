@@ -41,6 +41,7 @@ def mock_opengarage() -> Generator[MagicMock]:
             "name": "abcdef",
             "mac": "aa:bb:cc:dd:ee:ff",
             "fwv": 120,
+            "light": 0,
         }
         yield client
 

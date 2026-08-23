@@ -22,10 +22,20 @@
       }
     }
   },
+  "exceptions": {
+    "light_control_failed": {
+      "message": "Unable to control the opener light: {reason}"
+    }
+  },
   "entity": {
     "binary_sensor": {
       "vehicle": {
         "name": "Vehicle"
+      }
+    },
+    "light": {
+      "light": {
+        "name": "Light"
       }
     }
   }
