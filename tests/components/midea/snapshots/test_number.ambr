@@ -206,7 +206,7 @@
     'object_id_base': 'Vacation days',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Vacation days',
     'platform': 'midea',
@@ -215,17 +215,19 @@
     'supported_features': 0,
     'translation_key': 'vacation_days',
     'unique_id': '12345678_vacation_days',
-    'unit_of_measurement': None,
+    'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
   })
 # ---
 # name: test_number_state_snapshot[cd][number.bedroom_ac_vacation_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Vacation days',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 360,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.bedroom_ac_vacation_days',
@@ -265,7 +267,7 @@
     'object_id_base': 'Flushing days',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.DURATION: 'duration'>,
     'original_icon': None,
     'original_name': 'Flushing days',
     'platform': 'midea',
@@ -280,6 +282,7 @@
 # name: test_number_state_snapshot[ed][number.bedroom_ac_flushing_days-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Flushing days',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 99,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
@@ -325,7 +328,7 @@
     'object_id_base': 'Leak water protection value',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <NumberDeviceClass.VOLUME: 'volume'>,
     'original_icon': None,
     'original_name': 'Leak water protection value',
     'platform': 'midea',
@@ -340,6 +343,7 @@
 # name: test_number_state_snapshot[ed][number.bedroom_ac_leak_water_protection_value-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Leak water protection value',
       <NumberEntityCapabilityAttribute.MAX: 'max'>: 2550,
       <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
