@@ -102,13 +102,15 @@ class MideaLight(MideaEntity, LightEntity):
     @override
     def brightness(self) -> int | None:
         """Midea light brightness."""
-        return cast("int", self._device.get_attribute("brightness"))
+        value = self._device.get_attribute("brightness")
+        return value if isinstance(value, int) else None
 
     @property
     @override
     def color_temp_kelvin(self) -> int | None:
         """Midea light color temperature."""
-        return cast("int", self._device.get_attribute("color_temperature"))
+        value = self._device.get_attribute("color_temperature")
+        return value if isinstance(value, int) else None
 
     @property
     @override
@@ -126,14 +128,16 @@ class MideaLight(MideaEntity, LightEntity):
     @override
     def effect_list(self) -> list[str]:
         """Midea light effect list."""
-        return [effect for effect in self._device.effects if effect != "none"]
+        return [EFFECT_OFF if e == "none" else e for e in self._device.effects]
 
     @property
     @override
     def effect(self) -> str | None:
         """Midea light current effect."""
-        effect = cast("str", self._device.get_attribute("effect"))
-        return EFFECT_OFF if effect == "none" else effect
+        value = self._device.get_attribute("effect")
+        if not isinstance(value, str):
+            return None
+        return EFFECT_OFF if value == "none" else value
 
     @override
     def turn_on(self, **kwargs: Any) -> None:

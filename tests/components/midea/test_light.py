@@ -1,6 +1,7 @@
 """Tests for midea light.py."""
 
 from collections.abc import Callable
+from typing import Any
 from unittest.mock import patch
 
 from midealocal.const import DeviceType
@@ -94,7 +95,8 @@ async def test_light_state_and_services(
     assert state.attributes[ATTR_MAX_COLOR_TEMP_KELVIN] == 6500
     assert state.attributes[ATTR_EFFECT] == EFFECT_OFF
     assert state.attributes[ATTR_EFFECT_LIST] == [
-        effect for effect in X13_EFFECTS if effect != "none"
+        EFFECT_OFF,
+        *(effect for effect in X13_EFFECTS if effect != "none"),
     ]
     assert state.attributes[ATTR_COLOR_MODE] == ColorMode.COLOR_TEMP
     assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.COLOR_TEMP]
@@ -136,12 +138,33 @@ async def test_light_state_and_services(
     assert device.calls == [("set_attribute", "power", False)]
 
 
-async def test_light_turn_on_does_not_repower_when_already_on(
+@pytest.mark.parametrize(
+    ("initial_power", "service_data", "expected_calls"),
+    [
+        pytest.param(
+            True,
+            {ATTR_BRIGHTNESS: 50},
+            [("set_attribute", "brightness", 50)],
+            id="already_on_skips_repower",
+        ),
+        pytest.param(
+            False,
+            {},
+            [("set_attribute", "power", True)],
+            id="off_powers_on",
+        ),
+    ],
+)
+async def test_light_turn_on_power_handling(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    initial_power: bool,
+    service_data: dict[str, Any],
+    expected_calls: list[tuple],
 ) -> None:
-    """Test turn_on with extra params does not resend power when already on."""
+    """Test turn_on only resends power when the device is currently off."""
     device = _x13_device()
+    device.attributes[X13Attributes.power] = initial_power
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.LIGHT]):
         await setup_integration(hass, config_entry, device)
@@ -152,50 +175,71 @@ async def test_light_turn_on_does_not_repower_when_already_on(
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_entry.entity_id, ATTR_BRIGHTNESS: 50},
+        {ATTR_ENTITY_ID: entity_entry.entity_id, **service_data},
         blocking=True,
     )
-    assert device.calls == [("set_attribute", "brightness", 50)]
+    assert device.calls == expected_calls
 
 
-async def test_light_turn_on_powers_on_when_off(
+@pytest.mark.parametrize(
+    (
+        "attributes",
+        "expected_state",
+        "expected_color_mode",
+        "expected_supported_color_modes",
+        "expected_has_effect",
+    ),
+    [
+        pytest.param(
+            {},
+            "unknown",
+            # HA only reports a color_mode while is_on is True.
+            None,
+            [ColorMode.ONOFF],
+            False,
+            id="before_first_status",
+        ),
+        pytest.param(
+            {
+                X13Attributes.power: True,
+                X13Attributes.brightness: None,
+                X13Attributes.color_temperature: None,
+                X13Attributes.effect: None,
+                X13Attributes.rgb_color: None,
+            },
+            "on",
+            ColorMode.ONOFF,
+            [ColorMode.ONOFF],
+            False,
+            id="onoff_only",
+        ),
+        pytest.param(
+            {
+                X13Attributes.power: True,
+                X13Attributes.brightness: 50,
+                X13Attributes.color_temperature: None,
+                X13Attributes.effect: None,
+                X13Attributes.rgb_color: None,
+            },
+            "on",
+            ColorMode.BRIGHTNESS,
+            [ColorMode.BRIGHTNESS],
+            False,
+            id="brightness_only",
+        ),
+    ],
+)
+async def test_light_color_mode_fallbacks(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
+    attributes: dict[X13Attributes, Any],
+    expected_state: str,
+    expected_color_mode: ColorMode | None,
+    expected_supported_color_modes: list[ColorMode],
+    expected_has_effect: bool,
 ) -> None:
-    """Test turn_on powers the device on when currently off."""
-    device = _x13_device()
-    device.attributes[X13Attributes.power] = False
-    config_entry = mock_config_entry(device)
-    with patch("homeassistant.components.midea._PLATFORMS", [Platform.LIGHT]):
-        await setup_integration(hass, config_entry, device)
-
-    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_light"]
-
-    device.calls.clear()
-    await hass.services.async_call(
-        LIGHT_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: entity_entry.entity_id},
-        blocking=True,
-    )
-    assert device.calls == [("set_attribute", "power", True)]
-
-
-async def test_light_brightness_only_color_mode(
-    hass: HomeAssistant,
-    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-) -> None:
-    """Test the light falls back to brightness-only mode without color_temperature."""
-    device = DummyDevice(
-        DeviceType.X13,
-        attributes={
-            X13Attributes.power: True,
-            X13Attributes.brightness: 50,
-            X13Attributes.color_temperature: None,
-            X13Attributes.effect: None,
-            X13Attributes.rgb_color: None,
-        },
-    )
+    """Test the light falls back to the correct color mode based on reported capability."""
+    device = DummyDevice(DeviceType.X13, attributes=attributes)
     device.color_temp_range = [2700, 6500]
     device.effects = X13_EFFECTS
     config_entry = mock_config_entry(device)
@@ -204,59 +248,12 @@ async def test_light_brightness_only_color_mode(
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_light"]
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.BRIGHTNESS
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.BRIGHTNESS]
-    assert ATTR_EFFECT not in state.attributes
-
-
-async def test_light_onoff_only_before_first_status(
-    hass: HomeAssistant,
-    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-) -> None:
-    """Test the light reports onoff-only and unknown state before any attribute is known."""
-    device = DummyDevice(DeviceType.X13, attributes={})
-    device.color_temp_range = [2700, 6500]
-    device.effects = X13_EFFECTS
-    config_entry = mock_config_entry(device)
-    with patch("homeassistant.components.midea._PLATFORMS", [Platform.LIGHT]):
-        await setup_integration(hass, config_entry, device)
-
-    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_light"]
-    assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "unknown"
-    # Home Assistant only reports a color_mode while is_on is true;
-    # with power unknown it reports None here even though a power-on onoff-only light
-    # reports ColorMode.ONOFF.
-    assert state.attributes[ATTR_COLOR_MODE] is None
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
-
-
-async def test_light_onoff_only_color_mode(
-    hass: HomeAssistant,
-    mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-) -> None:
-    """Test a powered-on light with no brightness/color_temperature reports ONOFF."""
-    device = DummyDevice(
-        DeviceType.X13,
-        attributes={
-            X13Attributes.power: True,
-            X13Attributes.brightness: None,
-            X13Attributes.color_temperature: None,
-            X13Attributes.effect: None,
-            X13Attributes.rgb_color: None,
-        },
+    assert state.state == expected_state
+    assert state.attributes[ATTR_COLOR_MODE] == expected_color_mode
+    assert (
+        state.attributes[ATTR_SUPPORTED_COLOR_MODES] == expected_supported_color_modes
     )
-    device.color_temp_range = [2700, 6500]
-    device.effects = X13_EFFECTS
-    config_entry = mock_config_entry(device)
-    with patch("homeassistant.components.midea._PLATFORMS", [Platform.LIGHT]):
-        await setup_integration(hass, config_entry, device)
-
-    entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_light"]
-    assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "on"
-    assert state.attributes[ATTR_COLOR_MODE] == ColorMode.ONOFF
-    assert state.attributes[ATTR_SUPPORTED_COLOR_MODES] == [ColorMode.ONOFF]
+    assert (ATTR_EFFECT in state.attributes) == expected_has_effect
 
 
 async def test_light_not_created_for_other_device_type(

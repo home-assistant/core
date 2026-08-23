@@ -7,6 +7,7 @@
     'area_id': None,
     'capabilities': dict({
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
+        'off',
         'living',
         'reading',
         'mildly',
@@ -57,6 +58,7 @@
       <LightEntityStateAttribute.COLOR_TEMP_KELVIN: 'color_temp_kelvin'>: 4000,
       <LightEntityStateAttribute.EFFECT: 'effect'>: 'off',
       <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
+        'off',
         'living',
         'reading',
         'mildly',
