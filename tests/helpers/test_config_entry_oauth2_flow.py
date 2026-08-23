@@ -7,6 +7,7 @@ import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
+from aiohttp import ClientError
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -1049,6 +1050,124 @@ async def test_oauth_session_refresh_failure_exceptions(
 
     assert err.value.status == status_code
     assert f"Token request for {TEST_DOMAIN} failed" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "entry_state",
+    [
+        pytest.param(
+            config_entries.ConfigEntryState.SETUP_IN_PROGRESS, id="during_setup"
+        ),
+        pytest.param(config_entries.ConfigEntryState.LOADED, id="after_setup"),
+    ],
+)
+async def test_oauth_session_reauth_error_starts_reauth(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+    entry_state: config_entries.ConfigEntryState,
+) -> None:
+    """Test a token refresh reauth error starts reauthentication."""
+    aioclient_mock.post(TOKEN_URL, status=HTTPStatus.BAD_REQUEST, json={})
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, entry_state)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with (
+        patch.object(config_entry, "async_start_reauth_if_available") as start_reauth,
+        pytest.raises(OAuth2TokenRequestReauthError),
+    ):
+        await session.async_ensure_token_valid()
+
+    start_reauth.assert_called_once_with(hass)
+
+
+async def test_oauth_session_reauth_error_starts_reauth_when_caller_recovers(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test reauth starts even when the caller treats the error as recoverable.
+
+    The token request errors subclass ClientResponseError, so a caller catching
+    ClientError would otherwise retry a revoked refresh token indefinitely.
+    """
+    aioclient_mock.post(TOKEN_URL, status=HTTPStatus.BAD_REQUEST, json={})
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with (
+        patch.object(config_entry, "async_start_reauth_if_available") as start_reauth,
+        pytest.raises(ClientError),
+    ):
+        await session.async_ensure_token_valid()
+
+    start_reauth.assert_called_once_with(hass)
+
+
+@pytest.mark.parametrize(
+    "status_code",
+    [
+        pytest.param(HTTPStatus.TOO_MANY_REQUESTS, id="transient"),
+        pytest.param(600, id="generic"),
+    ],
+)
+async def test_oauth_session_recoverable_error_does_not_start_reauth(
+    hass: HomeAssistant,
+    local_impl: config_entry_oauth2_flow.LocalOAuth2Implementation,
+    aioclient_mock: AiohttpClientMocker,
+    status_code: int,
+) -> None:
+    """Test a recoverable token refresh error does not start reauthentication."""
+    aioclient_mock.post(TOKEN_URL, status=status_code, json={})
+
+    config_entry = MockConfigEntry(
+        domain=TEST_DOMAIN,
+        data={
+            "auth_implementation": TEST_DOMAIN,
+            "token": {
+                "refresh_token": REFRESH_TOKEN,
+                "access_token": ACCESS_TOKEN_1,
+                "expires_at": 0,
+            },
+        },
+    )
+    config_entry.add_to_hass(hass)
+    config_entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+
+    session = config_entry_oauth2_flow.OAuth2Session(hass, config_entry, local_impl)
+    with (
+        patch.object(config_entry, "async_start_reauth_if_available") as start_reauth,
+        pytest.raises(OAuth2TokenRequestError),
+    ):
+        await session.async_ensure_token_valid()
+
+    start_reauth.assert_not_called()
 
 
 async def test_oauth2_without_secret_init(

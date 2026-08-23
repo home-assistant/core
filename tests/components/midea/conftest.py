@@ -16,8 +16,10 @@ from .const import (
     BASE_DATA,
     TEST_DEVICE_ID,
     TEST_KEY,
+    TEST_MAC_ADDRESS,
     TEST_MODEL,
     TEST_NAME,
+    TEST_SERIAL_NUMBER,
     TEST_SUBTYPE,
     TEST_TOKEN,
 )
@@ -30,7 +32,7 @@ class DummyDevice:
 
     def __init__(
         self,
-        device_type: int,
+        device_type: DeviceType,
         *,
         attributes: dict | None = None,
     ) -> None:
@@ -57,6 +59,8 @@ class DummyDevice:
             "Fast-heating",
             "Standby",
         ]
+        self.mac = TEST_MAC_ADDRESS
+        self.serial_number = TEST_SERIAL_NUMBER
 
     def register_update(self, callback: Callable) -> None:
         """Record update callback registration."""

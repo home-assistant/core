@@ -1,7 +1,7 @@
 """AI tasks to be handled by agents."""
 
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import io
 import mimetypes
 from pathlib import Path
@@ -16,7 +16,7 @@ from homeassistant.core import HomeAssistant, ServiceResponse, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import llm
 from homeassistant.helpers.chat_session import ChatSession, async_get_chat_session
-from homeassistant.util import RE_SANITIZE_FILENAME, slugify
+from homeassistant.util import RE_SANITIZE_FILENAME, dt as dt_util, slugify
 
 from .const import (
     DATA_COMPONENT,
@@ -210,7 +210,7 @@ async def async_generate_image(
 
     source = hass.data[DATA_MEDIA_SOURCE]
 
-    current_time = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
+    current_time = dt_util.now()
     ext = mimetypes.guess_extension(task_result.mime_type, False) or ".png"
     sanitized_task_name = RE_SANITIZE_FILENAME.sub("", slugify(task_name))
 

@@ -1,22 +1,31 @@
 """The vizio component."""
 
-from vizaio import Vizio
+from vizaio import Vizio, VizioError, async_resolve_host
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.const import (
     CONF_ACCESS_TOKEN,
     CONF_DEVICE_CLASS,
+    CONF_EXCLUDE,
     CONF_HOST,
+    CONF_INCLUDE,
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
 
-from .const import DEFAULT_TIMEOUT, DOMAIN, VIZIO_DEVICE_CLASSES
+from .const import (
+    CONF_APPS,
+    CONF_VOLUME_STEP,
+    DEFAULT_TIMEOUT,
+    DOMAIN,
+    VIZIO_DEVICE_CLASSES,
+)
 from .coordinator import (
     VizioAppsDataUpdateCoordinator,
     VizioConfigEntry,
@@ -37,11 +46,56 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
+async def async_migrate_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> bool:
+    """Migrate old config entries."""
+    if entry.version == 1 and entry.minor_version == 1:
+        # Settings imported from YAML were stored in data; they belong in options
+        data = dict(entry.data)
+        options = dict(entry.options)
+        if (volume_step := data.pop(CONF_VOLUME_STEP, None)) is not None:
+            options.setdefault(CONF_VOLUME_STEP, volume_step)
+        if apps := dict(data.pop(CONF_APPS, {})):
+            include_or_exclude = {
+                key: apps.pop(key)
+                for key in (CONF_INCLUDE, CONF_EXCLUDE)
+                if key in apps
+            }
+            if include_or_exclude:
+                options.setdefault(CONF_APPS, include_or_exclude)
+            if apps:
+                data[CONF_APPS] = apps
+        hass.config_entries.async_update_entry(
+            entry, data=data, options=options, minor_version=2
+        )
+    return True
+
+
 async def async_setup_entry(hass: HomeAssistant, entry: VizioConfigEntry) -> bool:
     """Load the saved entities."""
     host = entry.data[CONF_HOST]
     token = entry.data.get(CONF_ACCESS_TOKEN)
     device_class = entry.data[CONF_DEVICE_CLASS]
+
+    # Entries created before the host was stored with a port need one probed
+    # and persisted, otherwise every request targets port 443. Resolving is a
+    # no-op for a host that already has one.
+    try:
+        resolved_host = await async_resolve_host(
+            host,
+            session=async_get_clientsession(hass, False),
+            timeout=DEFAULT_TIMEOUT,
+        )
+    except VizioError as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="cannot_determine_port",
+            translation_placeholders={"host": host},
+        ) from err
+    if resolved_host != host:
+        host = resolved_host
+        hass.config_entries.async_update_entry(
+            entry, data={**entry.data, CONF_HOST: host}
+        )
 
     # Create device
     device = Vizio(

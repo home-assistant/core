@@ -45,9 +45,13 @@ async def test_entry_setup_unload(
 
     assert config_entry.state is ConfigEntryState.LOADED
 
+    assert hass.services.has_service(NOTIFY_DOMAIN, "home_assistant")
+
     assert await hass.config_entries.async_unload(config_entry.entry_id)
 
     assert config_entry.state is ConfigEntryState.NOT_LOADED
+
+    assert not hass.services.has_service(NOTIFY_DOMAIN, "home_assistant")
 
 
 @pytest.mark.parametrize(

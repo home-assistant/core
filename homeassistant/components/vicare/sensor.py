@@ -57,7 +57,6 @@ from .utils import (
     get_circuits,
     get_compressors,
     get_condensers,
-    get_device_serial,
     get_evaporators,
     get_inverters,
     is_supported,
@@ -1545,7 +1544,7 @@ def _build_entities(
         entities.extend(
             ViCareSensor(
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
             )
@@ -1557,7 +1556,7 @@ def _build_entities(
             entities.extend(
                 ViCareSensor(
                     description,
-                    get_device_serial(device.api),
+                    device.serial,
                     device.config,
                     device.api,
                 )
@@ -1576,7 +1575,7 @@ def _build_entities(
             entities.extend(
                 ViCareSensor(
                     description,
-                    get_device_serial(device.api),
+                    device.serial,
                     device.config,
                     device.api,
                     component,

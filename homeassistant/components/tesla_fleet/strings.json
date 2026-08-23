@@ -18,6 +18,7 @@
       "default": "Successfully authenticated with Tesla."
     },
     "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_domain": "Invalid domain format. Please enter a valid domain name.",
       "invalid_response": "The registration was rejected by Tesla",
       "precondition_failed": "The domain does not match the application's allowed origins.",
@@ -52,6 +53,15 @@
       "reauth_confirm": {
         "description": "The {name} integration needs to re-authenticate your account. Reauthentication refreshes the Tesla API permissions granted to Home Assistant, including any newly enabled scopes.",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "region": {
+        "data": {
+          "region": "Region"
+        },
+        "data_description": {
+          "region": "The region to register your application in. This defaults to the region detected from your Tesla account and only needs changing if your vehicles or energy sites are in a different region."
+        },
+        "title": "Select region"
       },
       "registration_complete": {
         "data": {
@@ -644,6 +654,14 @@
     },
     "wake_up_timeout": {
       "message": "Could not wake up vehicle"
+    }
+  },
+  "selector": {
+    "region": {
+      "options": {
+        "eu": "Europe, Middle East & Africa",
+        "na": "North America & Asia-Pacific"
+      }
     }
   }
 }

@@ -94,7 +94,6 @@ from .const import (
     CONF_ADDON_SOCKET,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
-    CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
     CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_NETWORK_KEY,
@@ -391,11 +390,12 @@ class DriverEvents:
             controller.on("identify", self.controller_events.async_on_identify)
         )
 
-        if (
+        unknown_controller = (
             old_unique_id := self.config_entry.unique_id
         ) is not None and old_unique_id != (
             new_unique_id := str(driver.controller.home_id)
-        ):
+        )
+        if unknown_controller:
             device_registry = dr.async_get(self.hass)
             controller_model = "Unknown model"
             if (
@@ -411,9 +411,6 @@ class DriverEvents:
             ):
                 controller_model = model
 
-            # Do not clean up old stale devices if an unknown controller is connected.
-            data = {**self.config_entry.data, CONF_KEEP_OLD_DEVICES: True}
-            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
             async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -430,9 +427,6 @@ class DriverEvents:
                 translation_key="migrate_unique_id",
             )
         else:
-            data = self.config_entry.data.copy()
-            data.pop(CONF_KEEP_OLD_DEVICES, None)
-            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
             async_delete_issue(
                 self.hass, DOMAIN, f"migrate_unique_id.{self.config_entry.entry_id}"
             )
@@ -455,8 +449,8 @@ class DriverEvents:
         ]
 
         # Devices that are in the device registry that are not known by the controller
-        # can be removed
-        if not self.config_entry.data.get(CONF_KEEP_OLD_DEVICES):
+        # can be removed, but not while an unknown controller is connected.
+        if not unknown_controller:
             for device in stored_devices:
                 if device not in known_devices and device not in provisioned_devices:
                     self.dev_reg.async_remove_device(device.id)
@@ -676,10 +670,7 @@ class ControllerEvents:
             ):
                 # If a device entry is registered with the node ID based identifiers,
                 # just remove the device entry with the DSK identifier.
-                self.dev_reg.async_update_device(
-                    pre_provisioned_device.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                self.dev_reg.async_remove_device(pre_provisioned_device.id)
             else:
                 # Add the node ID based identifiers to the device entry
                 # with the DSK identifier and remove the DSK identifier.
@@ -696,11 +687,15 @@ class ControllerEvents:
         node_id_device = self.dev_reg.async_get_device_by_identifier(
             device_id, self.config_entry.entry_id
         )
-        via_identifier = None
+        via_device_id: str | None = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
-            via_identifier = get_device_id(driver, controller.own_node)
+            via_device_id = dr.async_get_device_id_by_identifier(
+                self.hass,
+                get_device_id(driver, controller.own_node),
+                config_entry_id=self.config_entry.entry_id,
+            )
 
         if device_id_ext:
             # If there is a device with this node ID but with a different hardware
@@ -747,7 +742,7 @@ class ControllerEvents:
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
             suggested_area=node.location or UNDEFINED,
-            via_device=via_identifier,
+            via_device_id=via_device_id,
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)

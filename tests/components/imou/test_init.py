@@ -3,12 +3,13 @@
 from unittest.mock import AsyncMock, MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pyimouapi.const import PARAM_STATE, PARAM_STATUS
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
 
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
-from homeassistant.components.imou.const import DOMAIN, PARAM_STATE, PARAM_STATUS
+from homeassistant.components.imou.const import DOMAIN
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
