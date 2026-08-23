@@ -532,6 +532,11 @@
       "config_flow": false,
       "iot_class": "local_polling"
     },
+    "ariston": {
+      "name": "Ariston",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "arris_tg2492lg": {
       "name": "Arris TG2492LG",
       "integration_type": "hub",
@@ -2065,6 +2070,12 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "fireavert": {
+      "name": "FireAvert",
+      "iot_standards": [
+        "zwave"
+      ]
+    },
     "firefly_iii": {
       "name": "Firefly III",
       "integration_type": "service",
@@ -2164,6 +2175,12 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "cloud_push"
+    },
+    "flow_it": {
+      "name": "Flow-it",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
     },
     "flume": {
       "name": "Flume",
@@ -3056,6 +3073,18 @@
       "name": "Unitymedia Horizon HD Recorder",
       "integration_type": "hub",
       "config_flow": false,
+      "iot_class": "local_polling"
+    },
+    "hortimax": {
+      "name": "Ridder HortiMaX Pro",
+      "integration_type": "hub",
+      "config_flow": true,
+      "iot_class": "cloud_polling"
+    },
+    "hotspring": {
+      "name": "Hot Spring",
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "hp_ilo": {
@@ -4388,7 +4417,7 @@
       "supported_by": "energyzero"
     },
     "mikrotik": {
-      "name": "Mikrotik",
+      "name": "MikroTik",
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
@@ -5544,11 +5573,6 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
-    "portlandgeneral": {
-      "name": "Portland General Electric (PGE)",
-      "integration_type": "virtual",
-      "supported_by": "opower"
-    },
     "powerfox": {
       "name": "Powerfox",
       "integrations": {
@@ -5953,8 +5977,8 @@
     },
     "remember_the_milk": {
       "name": "Remember The Milk",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "cloud_push"
     },
     "remote_calendar": {
@@ -8021,7 +8045,7 @@
     },
     "wiim": {
       "name": "WiiM",
-      "integration_type": "hub",
+      "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
     },

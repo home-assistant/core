@@ -1036,7 +1036,7 @@ async def _test_friendly_name(
         (False, None, "Device Bla", "Device Bla"),
         (True, "Entity Blu", "Device Bla", "Device Bla Entity Blu"),
         (True, None, "Device Bla", "Device Bla"),
-        (True, "Entity Blu", UNDEFINED, "Entity Blu"),
+        (True, "Entity Blu", UNDEFINED, "Mock Title Entity Blu"),
         (True, "Entity Blu", None, "Mock Title Entity Blu"),
     ],
 )
@@ -1630,7 +1630,9 @@ async def test_friendly_name_updated(
     state = hass.states.async_all()[0]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name1
 
-    device = device_registry.async_get_device(identifiers={("hue", "1234")})
+    device = device_registry.async_get_device_by_identifier(
+        ("hue", "1234"), config_entry.entry_id
+    )
     device_registry.async_update_device(device.id, name_by_user="Device Bla2")
     await hass.async_block_till_done()
 

@@ -47,7 +47,7 @@ async def device_fixture(
 
     await init_entry(hass, ufp, [])
 
-    return list(device_registry.devices.values())[0]
+    return list(device_registry.devices)[0]
 
 
 @pytest.fixture(name="subdevice")
@@ -61,7 +61,7 @@ async def subdevice_fixture(
 
     await init_entry(hass, ufp, [light])
 
-    return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
+    return [d for d in device_registry.devices if d.name != "UnifiProtect"][0]
 
 
 async def test_global_service_bad_device(
