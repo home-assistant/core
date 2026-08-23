@@ -18,7 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -697,20 +697,22 @@ async def async_setup_entry(
         if match := HEATING_CIRCUIT_REGEX.match(description.key):
             circuit = int(match.group(1))
             identifiers = {(DOMAIN, f"{serial}_hc{circuit}")}
-            device_registry.async_get_or_create(
+            device_registry.async_get_or_create_child(
                 config_entry_id=entry.entry_id,
                 identifiers=identifiers,
-                via_device_id=main_device.id,
+                parent_device_id=main_device.id,
                 name=f"Heating circuit {circuit}",
-                manufacturer="Guntamatic",
             )
         else:
             identifiers = {(DOMAIN, serial)}
-        entities.append(
-            GuntamaticSensor(
-                coordinator, description, DeviceInfo(identifiers=identifiers)
+        if match:
+            device_info: DeviceInfo | ChildDeviceInfo = ChildDeviceInfo(
+                identifiers=identifiers,
+                parent_device_id=main_device.id,
             )
-        )
+        else:
+            device_info = DeviceInfo(identifiers=identifiers)
+        entities.append(GuntamaticSensor(coordinator, description, device_info))
 
     async_add_entities(entities)
 
@@ -724,7 +726,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
         self,
         coordinator: GuntamaticCoordinator,
         entity_description: SensorEntityDescription,
-        device_info: DeviceInfo,
+        device_info: DeviceInfo | ChildDeviceInfo,
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)

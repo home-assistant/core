@@ -184,12 +184,12 @@ async def test_heating_circuit_devices(
     main = device_registry.async_get_device_by_identifier(
         (DOMAIN, _SERIAL), mock_config_entry.entry_id
     )
-    circuit = device_registry.async_get_device_by_identifier(
+    circuit = device_registry.async_get_child_device_by_identifier(
         (DOMAIN, f"{_SERIAL}_hc1"), mock_config_entry.entry_id
     )
     assert main is not None
     assert circuit is not None
-    assert circuit.via_device_id == main.id
+    assert circuit.parent_device_id == main.id
     assert (
         device_registry.async_get_device_by_identifier(
             (DOMAIN, f"{_SERIAL}_hc2"), mock_config_entry.entry_id
