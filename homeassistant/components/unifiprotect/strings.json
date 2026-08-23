@@ -219,6 +219,9 @@
       "person_detected": {
         "name": "Person detected"
       },
+      "relay_input": {
+        "name": "Input {input_name}"
+      },
       "siren_detected": {
         "name": "Siren detected"
       },

@@ -20,6 +20,7 @@ from uiprotect.data import (
     ProtectAdoptableDeviceModel,
     PTZPatrol,
     PublicDeviceModel,
+    Relay,
     WSAction,
     WSSubscriptionMessage,
 )
@@ -46,6 +47,7 @@ from .const import (
     DISPATCH_ADD,
     DISPATCH_ADOPT,
     DISPATCH_CHANNELS,
+    DISPATCH_RELAYS,
     DOMAIN,
 )
 from .utils import async_get_devices_by_type
@@ -106,6 +108,7 @@ class ProtectData:
         self.adopt_signal = _async_dispatch_id(entry, DISPATCH_ADOPT)
         self.add_signal = _async_dispatch_id(entry, DISPATCH_ADD)
         self.channels_signal = _async_dispatch_id(entry, DISPATCH_CHANNELS)
+        self.relay_signal = _async_dispatch_id(entry, DISPATCH_RELAYS)
         # PTZ patrol cache: camera_id -> list of patrols
         self.ptz_patrols: dict[str, list[PTZPatrol]] = {}
 
@@ -280,6 +283,12 @@ class ProtectData:
             if new_obj.model is ModelType.CAMERA:
                 self._async_reenumerate_camera_on_public_change(new_obj, message)
             self._async_signal_public_update(new_obj.mac, new_obj)
+            if (
+                isinstance(new_obj, Relay)
+                and self.api.has_public_bootstrap
+                and new_obj.id in self.api.public_bootstrap.relays
+            ):
+                async_dispatcher_send(self._hass, self.relay_signal, new_obj)
 
     @callback
     def _async_reenumerate_camera_on_public_change(
@@ -372,12 +381,14 @@ class ProtectData:
             _LOGGER.debug("Public refresh after reconnect failed: %s", err)
             return
         self._async_process_public_updates()
-        # Existing subscriptions are refreshed above, but a camera that
-        # appeared (or gained streams) during the gap still needs its
-        # entities; the platform adds only the missing ones.
+        # Existing subscriptions are refreshed above, but cameras or relays
+        # that appeared or gained channels during the gap still need entities;
+        # the platforms add only the missing ones.
         if self.api.has_public_bootstrap:
             for public in list(self.api.public_bootstrap.cameras.values()):
                 async_dispatcher_send(self._hass, self.channels_signal, public)
+            for relay in list(self.api.public_bootstrap.relays.values()):
+                async_dispatcher_send(self._hass, self.relay_signal, relay)
 
     @callback
     def _async_events_ws_state_changed(self, state: WebsocketState) -> None:

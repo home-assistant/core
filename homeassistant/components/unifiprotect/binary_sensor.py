@@ -7,9 +7,13 @@ from typing import cast, override
 
 from uiprotect.data import (
     NVR,
+    DeviceState,
     ModelType,
     MountType,
     ProtectAdoptableDeviceModel,
+    PublicRelayInput,
+    Relay,
+    RelayInputState,
     Sensor,
 )
 from uiprotect.data.nvr import UOSDisk
@@ -26,8 +30,15 @@ from homeassistant.components.binary_sensor import (
 )
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
+from homeassistant.helpers.entity_platform import (
+    AddConfigEntryEntitiesCallback,
+    async_get_current_platform,
+)
 
+from .const import DEFAULT_ATTRIBUTION, DEFAULT_BRAND, DOMAIN
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
 from .entity import (
     BaseProtectEntity,
@@ -44,6 +55,11 @@ from .entity import (
 
 _KEY_DOOR = "door"
 PARALLEL_UPDATES = 0
+
+_RELAY_INPUT_STATE_MAP: dict[RelayInputState, bool] = {
+    RelayInputState.ON: True,
+    RelayInputState.OFF: False,
+}
 
 
 def _async_motion_sensor_enabled_public(obj: PublicDeviceModel) -> bool:
@@ -691,6 +707,93 @@ class ProtectEventBinarySensor(EventEntityMixin, BinarySensorEntity):
             self._async_event_with_immediate_end()
 
 
+class ProtectRelayInputBinarySensor(BinarySensorEntity):
+    """Binary sensor for a single relay input channel (Public API)."""
+
+    _attr_has_entity_name = True
+    _attr_attribution = DEFAULT_ATTRIBUTION
+    _attr_should_poll = False
+    _attr_translation_key = "relay_input"
+
+    def __init__(
+        self,
+        data: ProtectData,
+        relay: Relay,
+        relay_input: PublicRelayInput,
+    ) -> None:
+        """Initialize the relay input binary sensor."""
+        self.data = data
+        self._relay_id = relay.id
+        self._relay_mac = relay.mac
+        self._input_id = relay_input.id
+        self._attr_unique_id = f"{relay.mac}_relay_input_{relay_input.id}"
+        self._attr_translation_placeholders = {
+            "input_name": relay_input.name or str(relay_input.id),
+        }
+        self._attr_device_info = DeviceInfo(
+            connections={(dr.CONNECTION_NETWORK_MAC, relay.mac)},
+            identifiers={(DOMAIN, relay.mac)},
+            manufacturer=DEFAULT_BRAND,
+            name=relay.name,
+            model="Relay",
+            via_device_id=data.nvr_device_id,
+        )
+        self._update_from_relay(relay)
+
+    @property
+    def _relay(self) -> Relay | None:
+        api = self.data.api
+        if not api.has_public_bootstrap:
+            return None
+        return api.public_bootstrap.relays.get(self._relay_id)
+
+    @callback
+    def _update_from_relay(self, relay: Relay) -> None:
+        relay_input = next(
+            (
+                relay_input
+                for relay_input in relay.inputs
+                if relay_input.id == self._input_id
+            ),
+            None,
+        )
+        if (
+            relay_input is None
+            or relay.state is not DeviceState.CONNECTED
+            or not self.data.last_public_update_success
+        ):
+            self._attr_available = False
+            self._attr_is_on = None
+            return
+        self._attr_available = True
+        self._attr_is_on = (
+            _RELAY_INPUT_STATE_MAP.get(relay_input.state)
+            if relay_input.state is not None
+            else None
+        )
+
+    @callback
+    def _async_updated(self, _obj: PublicDeviceModel | None) -> None:
+        """Refresh state from the public bootstrap cache."""
+        prev_state = (self._attr_available, self._attr_is_on)
+        if (relay := self._relay) is None:
+            self._attr_available = False
+            self._attr_is_on = None
+        else:
+            self._update_from_relay(relay)
+        if (self._attr_available, self._attr_is_on) != prev_state:
+            self.async_write_ha_state()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Subscribe to public relay updates."""
+        await super().async_added_to_hass()
+        self.async_on_remove(
+            self.data.async_subscribe_public(self._relay_mac, self._async_updated)
+        )
+        self._async_updated(None)
+
+
 MODEL_DESCRIPTIONS_WITH_CLASS = (
     (_MODEL_DESCRIPTIONS, ProtectDeviceBinarySensor),
     (_MOUNTABLE_MODEL_DESCRIPTIONS, MountableProtectDeviceBinarySensor),
@@ -734,6 +837,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up binary sensors for UniFi Protect integration."""
     data = entry.runtime_data
+    platform = async_get_current_platform()
     async_remove_unsupported_sense_entities(
         hass, Platform.BINARY_SENSOR, data, (*SENSE_SENSORS, *MOUNTABLE_SENSE_SENSORS)
     )
@@ -759,3 +863,22 @@ async def async_setup_entry(
     entities += _async_event_entities(data)
     entities += _async_nvr_entities(data)
     async_add_entities(entities)
+
+    @callback
+    def _add_relay_inputs(relay: Relay) -> None:
+        live_unique_ids = {entity.unique_id for entity in platform.entities.values()}
+        async_add_entities(
+            [
+                ProtectRelayInputBinarySensor(data, relay, relay_input)
+                for relay_input in relay.inputs
+                if f"{relay.mac}_relay_input_{relay_input.id}" not in live_unique_ids
+            ]
+        )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.relay_signal, _add_relay_inputs)
+    )
+    api = data.api
+    if api.has_public_bootstrap:
+        for relay in api.public_bootstrap.relays.values():
+            _add_relay_inputs(relay)
