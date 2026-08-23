@@ -11,4 +11,3 @@ CONF_SOURCE_MAPPINGS = "source_mappings"
 
 # Serial communication constants
 DEFAULT_BAUD_RATE = 9600
-DEFAULT_TIMEOUT = 1.0

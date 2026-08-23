@@ -645,6 +645,33 @@ async def test_media_player_power_on_queries_source(
     mock_receiver.query_source.assert_called_once()
 
 
+async def test_turn_off_then_power_on_queries_source(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test powering on after a service turn_off triggers a source query."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+    entity.entity_id = "media_player.test"
+
+    # Device was on (acknowledged via state), then turned off via the service.
+    entity._was_off = False
+    await entity.async_turn_off()
+    assert entity._was_off is True
+
+    mock_receiver.state.power = True
+    mock_receiver.state.source_name = "HDMI 1"
+    with patch.object(entity, "schedule_update_ha_state"):
+        entity._apply_state(mock_receiver.state)
+        await hass.async_block_till_done()
+
+    assert entity.state == MediaPlayerState.ON
+    assert entity.source == "HDMI 1"
+    mock_receiver.query_source.assert_called_once()
+
+
 async def test_media_player_periodic_source_check(
     hass: HomeAssistant,
     mock_config_entry: MagicMock,
@@ -759,6 +786,22 @@ async def test_media_player_select_source_unknown(
 
     with pytest.raises(HomeAssistantError, match="Unknown source"):
         await entity.async_select_source("Nope")
+
+    mock_receiver.select_source.assert_not_called()
+
+
+async def test_media_player_select_source_code_raises(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test that passing a raw source code raises instead of KeyError."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+
+    with pytest.raises(HomeAssistantError, match="Unknown source"):
+        await entity.async_select_source("HD1")
 
     mock_receiver.select_source.assert_not_called()
 

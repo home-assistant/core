@@ -59,8 +59,9 @@ async def async_unload_entry(hass: HomeAssistant, entry: TonewinnerConfigEntry) 
 
     await hass.config_entries.async_forward_entry_unload(entry, "media_player")
 
-    if entry.runtime_data:
-        await entry.runtime_data.disconnect()
+    receiver = getattr(entry, "runtime_data", None)
+    if receiver is not None:
+        await receiver.disconnect()
 
     _LOGGER.info("Tonewinner integration unloaded")
     return True

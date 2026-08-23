@@ -1,6 +1,5 @@
 """Tonewinner AT-500 configuration flow."""
 
-import logging
 from typing import Any, override
 
 from tonewinner_rs232 import TonewinnerReceiver
@@ -25,7 +24,12 @@ from .const import (
 )
 from .media_player import INPUT_SOURCES
 
-_LOGGER = logging.getLogger(__name__)
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_SERIAL_PORT): SerialPortSelector(),
+        vol.Required(CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE): cv.positive_int,
+    }
+)
 
 
 class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
@@ -56,13 +60,36 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_SERIAL_PORT): SerialPortSelector(),
-                    vol.Required(
-                        CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE
-                    ): cv.positive_int,
-                }
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the serial port connection."""
+        errors = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            try:
+                receiver = TonewinnerReceiver(
+                    user_input[CONF_SERIAL_PORT],
+                    baudrate=user_input[CONF_BAUD_RATE],
+                )
+                await receiver.connect()
+                await receiver.disconnect()
+            except OSError:
+                errors["base"] = "cannot_connect"
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    entry, data_updates=user_input
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA, self._get_reconfigure_entry().data
             ),
             errors=errors,
         )
@@ -89,16 +116,6 @@ class TonewinnerOptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            new_data = dict(self._config_entry.data)
-            if CONF_SERIAL_PORT in user_input:
-                new_data[CONF_SERIAL_PORT] = user_input[CONF_SERIAL_PORT]
-            if CONF_BAUD_RATE in user_input:
-                new_data[CONF_BAUD_RATE] = user_input[CONF_BAUD_RATE]
-
-            self.hass.config_entries.async_update_entry(
-                self._config_entry, data=new_data
-            )
-
             source_mappings = {}
             for source_name, source_code in INPUT_SOURCES.items():
                 enabled_key = f"{source_code}_enabled"
@@ -116,17 +133,7 @@ class TonewinnerOptionsFlow(OptionsFlow):
 
         current_mappings = self._config_entry.options.get(CONF_SOURCE_MAPPINGS, {})
 
-        schema = {
-            vol.Optional(
-                CONF_SERIAL_PORT,
-                default=self._config_entry.data.get(CONF_SERIAL_PORT, "/dev/ttyUSB0"),
-            ): cv.string,
-            vol.Optional(
-                CONF_BAUD_RATE,
-                default=self._config_entry.data.get(CONF_BAUD_RATE, DEFAULT_BAUD_RATE),
-            ): cv.positive_int,
-        }
-
+        schema: dict[vol.Marker, Any] = {}
         for source_name, source_code in INPUT_SOURCES.items():
             current_mapping = current_mappings.get(source_code, {})
             enabled = current_mapping.get("enabled", True)

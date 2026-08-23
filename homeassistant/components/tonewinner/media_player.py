@@ -24,10 +24,6 @@ from .const import CONF_SOURCE_MAPPINGS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class TonewinnerError(HomeAssistantError):
-    """Exception for Tonewinner errors."""
-
-
 INPUT_SOURCES = {
     "HDMI 1": "HD1",
     "HDMI 2": "HD2",
@@ -229,7 +225,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def send_raw_command(self, command: str) -> None:
         """Send a raw command to the receiver."""
         if not self._receiver.connected:
-            raise TonewinnerError("Not connected")
+            raise HomeAssistantError("Not connected")
 
         if command.startswith("0x"):
             try:
@@ -256,6 +252,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         await self._receiver.power_off()
         self._attr_state = MediaPlayerState.OFF
         self._attr_source = None
+        self._was_off = True
         self.async_write_ha_state()
 
     @override
@@ -286,10 +283,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if (
-            source not in self._custom_name_to_source_code
-            and source not in self._source_code_to_custom_name
-        ):
+        if source not in self._custom_name_to_source_code:
             raise HomeAssistantError(f"Unknown source: {source}")
 
         source_code = self._custom_name_to_source_code[source]

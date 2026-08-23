@@ -12,6 +12,8 @@ from homeassistant.components.tonewinner.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from tests.common import MockConfigEntry
+
 
 async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     """Test we get the form and can successfully set up."""
@@ -201,3 +203,95 @@ async def test_form_default_values(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.FORM
     data_schema = result["data_schema"]
     assert data_schema is not None
+
+
+async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+    """Test reconfiguring the serial port connection updates the entry."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
+        },
+        options={},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = MagicMock()
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    mock_receiver = MagicMock()
+    mock_receiver.connect = AsyncMock()
+    mock_receiver.disconnect = AsyncMock()
+
+    with patch(
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+        return_value=mock_receiver,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERIAL_PORT: "/dev/ttyUSB1",
+                CONF_BAUD_RATE: 115200,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_SERIAL_PORT] == "/dev/ttyUSB1"
+    assert mock_config_entry.data[CONF_BAUD_RATE] == 115200
+
+
+async def test_reconfigure_cannot_connect(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test reconfigure shows an error when the port cannot be reached."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SERIAL_PORT: "/dev/ttyUSB0",
+            CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
+        },
+        options={},
+        entry_id="test_entry_id",
+        title="Tonewinner AT-500",
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+
+    mock_receiver = MagicMock()
+    mock_receiver.connect = AsyncMock(side_effect=OSError("Permission denied"))
+
+    with patch(
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+        return_value=mock_receiver,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERIAL_PORT: "/dev/ttyUSB1",
+                CONF_BAUD_RATE: 115200,
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+    assert result["errors"] == {"base": "cannot_connect"}
