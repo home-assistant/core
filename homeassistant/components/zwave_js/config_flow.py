@@ -149,11 +149,6 @@ class SecurityKeys:
         }
 
 
-ADDON_USER_INPUT_MAP = {
-    CONF_ADDON_DEVICE: CONF_USB_PATH,
-    CONF_ADDON_SOCKET: CONF_SOCKET_PATH,
-} | {field.name: field.name for field in fields(SecurityKeys)}
-
 CONF_ADDON_RF_REGION = "rf_region"
 
 EXAMPLE_SERVER_URL = "ws://localhost:3000"
@@ -402,7 +397,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self.install_task: asyncio.Task | None = None
         self.start_task: asyncio.Task | None = None
         self.version_info: VersionInfo | None = None
-        self.revert_reason: str | None = None
         self.backup_task: asyncio.Task | None = None
         self.restore_backup_task: asyncio.Task | None = None
         self.backup_data: bytes | None = None
@@ -1461,8 +1455,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             # Missing keys default to the current add-on config, so
-            # existing keys are preserved. The revert helper always passes
-            # all keys, so the defaults never apply while reverting.
+            # existing keys are preserved.
             self.security_keys = default_keys.updated_from_user_input(user_input)
             self.usb_path = user_input.get(CONF_USB_PATH) or None
             self.socket_path = user_input.get(CONF_SOCKET_PATH) or None
@@ -1645,11 +1638,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         """
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
-        if self.revert_reason:
-            self._addon_setup.original_config = None
-            reason = self.revert_reason
-            self.revert_reason = None
-            return await self.async_revert_addon_config(reason=reason)
 
         if not self.ws_address:
             discovery_info = await self._addon_setup.async_get_addon_discovery_info()
@@ -1800,32 +1788,20 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         return await self.async_step_installation_type()
 
     async def async_revert_addon_config(self, reason: str) -> ConfigFlowResult:
-        """Abort the options flow.
+        """Abort the flow.
 
         If the add-on options have been changed, revert those and restart add-on.
         """
-        # If reverting the add-on options failed, abort immediately.
-        if self.revert_reason:
-            _LOGGER.error(
-                "Failed to revert add-on options before aborting flow, reason: %s",
-                reason,
-            )
-
-        if self.revert_reason or not self._addon_setup.original_config:
-            config_entry = self._reconfigure_config_entry
-            assert config_entry is not None
+        _LOGGER.debug("Reverting add-on options, reason: %s", reason)
+        if (original_config := self._addon_setup.original_config) is None:
             self._async_schedule_entry_reload()
-            return self.async_abort(reason=reason)
-
-        self.revert_reason = reason
-        original_config = self._addon_setup.original_config
-        addon_config_input = SecurityKeys.from_config(original_config).to_dict() | {
-            ADDON_USER_INPUT_MAP[addon_key]: addon_val
-            for addon_key, addon_val in original_config.items()
-            if addon_key in (CONF_ADDON_DEVICE, CONF_ADDON_SOCKET)
-        }
-        _LOGGER.debug("Reverting app options, reason: %s", reason)
-        return await self.async_step_configure_addon_reconfigure(addon_config_input)
+        else:
+            # Clear the abandoned-flow recovery state, so async_remove
+            # doesn't restore the add-on config a second time.
+            self._addon_setup.original_config = None
+            self._entry_unloaded_by_flow = False
+            await self._async_restore_addon_config_and_reload(original_config)
+        return self.async_abort(reason=reason)
 
     async def _async_backup_network(self) -> None:
         """Backup the current network."""
