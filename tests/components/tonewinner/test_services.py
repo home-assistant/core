@@ -18,7 +18,7 @@ async def test_send_raw_service_schema_validation(
     """Test the send_raw service schema validation."""
     schema = vol.Schema(SERVICE_SEND_RAW_FIELDS)
     valid_data = {"command": "TEST COMMAND"}
-    assert schema(valid_data) is not None
+    assert schema(valid_data) == valid_data
 
     with pytest.raises(vol.Invalid):
         schema({})
@@ -56,36 +56,6 @@ async def test_send_raw_service_call(
     mock_receiver.send_command.assert_called_once_with("PWR01")
 
 
-async def test_send_raw_service_empty_command(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test send_raw service with empty command."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    await entity.send_raw_command("")
-
-    mock_receiver.send_command.assert_called()
-
-
-async def test_send_raw_service_with_special_chars(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test send_raw service with special characters."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    await entity.send_raw_command("CMD\x01\x02\x03")
-
-    mock_receiver.send_command.assert_called()
-
-
 async def test_send_raw_service_multiple_commands(
     hass: HomeAssistant,
     mock_config_entry: MagicMock,
@@ -101,22 +71,8 @@ async def test_send_raw_service_multiple_commands(
     for cmd in commands:
         await entity.send_raw_command(cmd)
 
-    assert mock_receiver.send_command.call_count == len(commands)
-
-
-async def test_send_raw_service_long_command(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test send_raw service with very long command."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    await entity.send_raw_command("A" * 1000)
-
-    mock_receiver.send_command.assert_called()
+    actual = [call.args[0] for call in mock_receiver.send_command.call_args_list]
+    assert actual == commands
 
 
 async def test_send_raw_not_connected(

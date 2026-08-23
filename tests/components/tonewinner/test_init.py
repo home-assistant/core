@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import pytest
-
 from homeassistant.components.tonewinner import async_update_options
 from homeassistant.components.tonewinner.const import (
     CONF_BAUD_RATE,
@@ -14,17 +12,6 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
-
-
-@pytest.fixture
-def mock_receiver():
-    """Return a mock TonewinnerReceiver for init tests."""
-    receiver = MagicMock()
-    receiver.connect = AsyncMock()
-    receiver.disconnect = AsyncMock()
-    receiver.query_state = AsyncMock()
-    receiver.state = MagicMock()
-    return receiver
 
 
 async def test_setup_entry(
@@ -126,23 +113,6 @@ async def test_unload_entry(
         ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
-        return_value=True,
-    ):
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-
-    mock_receiver.disconnect.assert_called_once()
-
-
-async def test_unload_entry_disconnects_receiver(
-    hass: HomeAssistant, mock_config_entry: MagicMock, mock_receiver: MagicMock
-) -> None:
-    """Test unloading disconnects the receiver."""
-    mock_config_entry.add_to_hass(hass)
-    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    mock_config_entry.runtime_data = mock_receiver
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",

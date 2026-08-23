@@ -169,40 +169,16 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-async def test_form_os_error(hass: HomeAssistant) -> None:
-    """Test we handle OS error (e.g., port doesn't exist)."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-
-    mock_receiver = MagicMock()
-    mock_receiver.connect = AsyncMock(side_effect=OSError("Port not found"))
-
-    with patch(
-        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
-        return_value=mock_receiver,
-    ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            {
-                CONF_SERIAL_PORT: "/dev/nonexistent",
-                CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
-            },
-        )
-
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-
 async def test_form_default_values(hass: HomeAssistant) -> None:
-    """Test that form shows correct default values."""
+    """Test that the form shows the default baud rate."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     assert result["type"] is FlowResultType.FORM
-    data_schema = result["data_schema"]
-    assert data_schema is not None
+    schema = result["data_schema"].schema
+    baud_rate = next(k for k in schema if k.schema == CONF_BAUD_RATE)
+    assert baud_rate.default() == DEFAULT_BAUD_RATE
 
 
 async def test_reconfigure(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
