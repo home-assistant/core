@@ -119,14 +119,12 @@ def async_get_exposed_entities(
                 area_names.append(area_entry.name)
                 area_names.extend(sorted(area_entry.aliases))
             elif device_entry is not None:
-                # Check device area
+                # Check the device's effective area
                 if (
-                    device_entry.area_id is not None
-                    and (
-                        area_entry := area_registry.async_get_area(device_entry.area_id)
-                    )
-                    is not None
-                ):
+                    device_area_id := dr.async_get_effective_area_id(hass, device_entry)
+                ) is not None and (
+                    area_entry := area_registry.async_get_area(device_area_id)
+                ) is not None:
                     area_names.append(area_entry.name)
                     area_names.extend(sorted(area_entry.aliases))
 

@@ -1144,7 +1144,7 @@ async def test_mqtt_ws_remove_discovered_device(
 
     client = await hass_ws_client(hass)
     mqtt_config_entry = hass.config_entries.async_entries(DOMAIN)[0]
-    response = await client.remove_device(device_entry.id, mqtt_config_entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert response["success"]
 
     # Verify device entry is cleared
@@ -1200,7 +1200,7 @@ async def test_mqtt_ws_get_device_debug_info(
     expected_result = {
         "entities": [
             {
-                "entity_id": "sensor.mqtt_sensor",
+                "entity_id": "sensor.mqtt_mqtt_sensor",
                 "subscriptions": [{"topic": "foobar/sensor", "messages": []}],
                 "discovery_data": {
                     "payload": config_sensor,
@@ -1263,7 +1263,7 @@ async def test_mqtt_ws_get_device_debug_info_binary(
     expected_result = {
         "entities": [
             {
-                "entity_id": "camera.mqtt_camera",
+                "entity_id": "camera.mqtt_mqtt_camera",
                 "subscriptions": [
                     {
                         "topic": "foobar/image",

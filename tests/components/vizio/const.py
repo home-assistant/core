@@ -2,7 +2,14 @@
 
 from ipaddress import ip_address
 
-from vizaio import AppConfig, AppRecord, PairChallenge, SettingInfo, SettingType
+from vizaio import (
+    AppConfig,
+    AppRecord,
+    PairChallenge,
+    SettingInfo,
+    SettingType,
+    StateExtended,
+)
 from vizaio.profiles import SOUNDBAR_PROFILE, TV_PROFILE
 
 from homeassistant.components.media_player import (
@@ -35,6 +42,7 @@ NAME = "Vizio"
 NAME2 = "Vizio2"
 HOST = "192.168.1.1:9000"
 HOST2 = "192.168.1.2:9000"
+PORTLESS_HOST = "192.168.1.1"
 ACCESS_TOKEN = "deadbeef"
 VOLUME_STEP = 2
 UNIQUE_ID = "testid"
@@ -62,6 +70,26 @@ def audio_setting(
         hashval=0,
         type=SettingType.SLIDER if isinstance(value, int) else SettingType.LIST,
         options=options,
+    )
+
+
+def state_extended(
+    *,
+    power_on: bool = True,
+    current_input: str = "HDMI",
+    current_app: AppConfig | None = None,
+) -> StateExtended:
+    """Build a StateExtended payload for mock device responses."""
+    return StateExtended(
+        power_on=power_on,
+        power_mode="Eco Mode" if not power_on else "Quick Start",
+        current_input=current_input,
+        current_input_hashval=None,
+        current_app=current_app,
+        screen_mode="Full screen",
+        media_state="MediaState::Stopped",
+        device_name=NAME,
+        raw={},
     )
 
 
