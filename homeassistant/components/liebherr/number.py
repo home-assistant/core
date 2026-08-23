@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from itertools import pairwise
 from typing import TYPE_CHECKING, override
 
 from pyliebherrhomeapi import TemperatureControl, TemperatureUnit
@@ -15,6 +16,7 @@ from homeassistant.components.number import (
 )
 from homeassistant.const import UnitOfTemperature
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -51,6 +53,20 @@ NUMBER_TYPES: tuple[LiebherrNumberEntityDescription, ...] = (
         ),
     ),
 )
+
+
+def _temperature_step(control: TemperatureControl) -> float:
+    """Return the temperature increment for a control."""
+    steps = control.set_temperature_steps
+    if not control.set_temperature_steps_enabled or len(steps) < 2:
+        return 1
+
+    step = steps[1] - steps[0]
+    if step > 0 and all(
+        next_step - current_step == step for current_step, next_step in pairwise(steps)
+    ):
+        return step
+    return 1
 
 
 def _create_number_entities(
@@ -150,6 +166,14 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
 
     @property
     @override
+    def native_step(self) -> float:
+        """Return the increment/decrement step."""
+        if (temp_control := self.temperature_control) is None:
+            return 1
+        return _temperature_step(temp_control)
+
+    @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.temperature_control is not None
@@ -161,6 +185,22 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
             assert self.temperature_control is not None
         temp_control = self.temperature_control
 
+        target = round(value)
+        if (
+            self.unit_of_measurement == self.native_unit_of_measurement
+            and value != target
+        ) or not temp_control.validate_temperature(target):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_temperature",
+                translation_placeholders={
+                    "temperature": str(value),
+                    "allowed_values": ", ".join(
+                        str(step) for step in temp_control.set_temperature_steps
+                    ),
+                },
+            )
+
         unit = (
             TemperatureUnit.FAHRENHEIT
             if temp_control.unit == TemperatureUnit.FAHRENHEIT
@@ -171,7 +211,7 @@ class LiebherrNumber(LiebherrZoneEntity, NumberEntity):
             self.coordinator.client.set_temperature(
                 device_id=self.coordinator.device_id,
                 zone_id=self._zone_id,
-                target=int(value),
+                target=target,
                 unit=unit,
             ),
         )

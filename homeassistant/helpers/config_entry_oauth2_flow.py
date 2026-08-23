@@ -19,9 +19,10 @@ import secrets
 import time
 from typing import Any, cast, override
 
-from aiohttp import ClientError, ClientResponseError, client, web
+from aiohttp import ClientError, ClientResponseError, client, hdrs, web
 from habluetooth import BluetoothServiceInfoBleak
 import jwt
+from multidict import CIMultiDict
 import voluptuous as vol
 from yarl import URL
 
@@ -761,7 +762,13 @@ class OAuth2Session:
             if self.valid_token:
                 return
 
-            new_token = await self.implementation.async_refresh_token(self.token)
+            try:
+                new_token = await self.implementation.async_refresh_token(self.token)
+            except OAuth2TokenRequestReauthError:
+                # Start reauth here so it also happens for callers that map the
+                # error onto a recoverable one, which would retry indefinitely.
+                self.config_entry.async_start_reauth_if_available(self.hass)
+                raise
 
             self.hass.config_entries.async_update_entry(
                 self.config_entry, data={**self.config_entry.data, "token": new_token}
@@ -785,16 +792,9 @@ async def async_oauth2_request(
     This method will not refresh tokens. Use OAuth2 session for that.
     """
     session = async_get_clientsession(hass)
-    headers = kwargs.pop("headers", {})
-    return await session.request(
-        method,
-        url,
-        **kwargs,
-        headers={
-            **headers,
-            "authorization": f"Bearer {token['access_token']}",
-        },
-    )
+    headers = CIMultiDict(kwargs.pop("headers", {}))
+    headers[hdrs.AUTHORIZATION] = f"Bearer {token['access_token']}"
+    return await session.request(method, url, **kwargs, headers=headers)
 
 
 @callback
