@@ -1,7 +1,5 @@
 """Test the Nina sensor."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from pynina import Warning
@@ -77,7 +75,7 @@ async def test_sensors_with_area_filter(
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
 ) -> None:
-    """Test the creation and values of the NINA sensors with a restrictive area filter."""
+    """Test NINA sensors with a restrictive area filter."""
     await setup_single_platform(
         hass,
         mock_config_entry_area_filter,

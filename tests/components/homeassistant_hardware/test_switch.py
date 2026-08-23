@@ -1,7 +1,5 @@
 """Test Home Assistant Hardware beta firmware switch entity."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
 from unittest.mock import Mock, call, patch
 
@@ -206,7 +204,7 @@ async def test_switch_restore_state(
     ]
 
     # Verify entity registry attributes
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
     entity_entry = entity_registry.async_get(TEST_SWITCH_ENTITY_ID)
     assert entity_entry is not None
     assert entity_entry.entity_category == EntityCategory.CONFIG

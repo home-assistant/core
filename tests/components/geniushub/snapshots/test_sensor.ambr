@@ -41,7 +41,7 @@
     'attributes': ReadOnlyDict({
       'error_list': list([
       ]),
-      'friendly_name': 'GeniusHub Errors',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GeniusHub Errors',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.geniushub_errors',
@@ -91,7 +91,7 @@
 # name: test_cloud_all_sensors[sensor.geniushub_information-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GeniusHub Information',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GeniusHub Information',
       'information_list': list([
       ]),
     }),
@@ -143,7 +143,7 @@
 # name: test_cloud_all_sensors[sensor.geniushub_warnings-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GeniusHub Warnings',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GeniusHub Warnings',
       'warning_list': list([
       ]),
     }),
@@ -196,13 +196,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Lounge',
-      'device_class': 'battery',
-      'friendly_name': 'Radiator Valve 11',
-      'icon': 'mdi:battery-40',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Radiator Valve 11',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-40',
       'state': dict({
         'set_temperature': 4,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.radiator_valve_11',
@@ -253,13 +253,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Kitchen',
-      'device_class': 'battery',
-      'friendly_name': 'Radiator Valve 56',
-      'icon': 'mdi:battery-50',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Radiator Valve 56',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-50',
       'state': dict({
         'set_temperature': 4,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.radiator_valve_56',
@@ -310,13 +310,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Hall',
-      'device_class': 'battery',
-      'friendly_name': 'Radiator Valve 68',
-      'icon': 'mdi:battery-90',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Radiator Valve 68',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-90',
       'state': dict({
         'set_temperature': 4,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.radiator_valve_68',
@@ -367,13 +367,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Bedroom',
-      'device_class': 'battery',
-      'friendly_name': 'Radiator Valve 78',
-      'icon': 'mdi:battery-40',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Radiator Valve 78',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-40',
       'state': dict({
         'set_temperature': 4,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.radiator_valve_78',
@@ -424,13 +424,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Study',
-      'device_class': 'battery',
-      'friendly_name': 'Radiator Valve 85',
-      'icon': 'mdi:battery-60',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Radiator Valve 85',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-60',
       'state': dict({
         'set_temperature': 4,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.radiator_valve_85',
@@ -481,13 +481,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Ensuite',
-      'device_class': 'battery',
-      'friendly_name': 'Radiator Valve 88',
-      'icon': 'mdi:battery-50',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Radiator Valve 88',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-50',
       'state': dict({
         'set_temperature': 4,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.radiator_valve_88',
@@ -538,13 +538,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Kitchen',
-      'device_class': 'battery',
-      'friendly_name': 'Radiator Valve 89',
-      'icon': 'mdi:battery-50',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Radiator Valve 89',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-50',
       'state': dict({
         'set_temperature': 4,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.radiator_valve_89',
@@ -595,13 +595,13 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Guest room',
-      'device_class': 'battery',
-      'friendly_name': 'Radiator Valve 90',
-      'icon': 'mdi:battery-90',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Radiator Valve 90',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-90',
       'state': dict({
         'set_temperature': 4,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.radiator_valve_90',
@@ -652,15 +652,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Guest room',
-      'device_class': 'battery',
-      'friendly_name': 'Room Sensor 16',
-      'icon': 'mdi:battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Sensor 16',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
       'state': dict({
         'luminance': 29,
         'measured_temperature': 21,
         'occupancy_trigger': 255,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.room_sensor_16',
@@ -711,15 +711,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Ensuite',
-      'device_class': 'battery',
-      'friendly_name': 'Room Sensor 17',
-      'icon': 'mdi:battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Sensor 17',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
       'state': dict({
         'luminance': 32,
         'measured_temperature': 21,
         'occupancy_trigger': 0,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.room_sensor_17',
@@ -770,15 +770,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Bedroom',
-      'device_class': 'battery',
-      'friendly_name': 'Room Sensor 18',
-      'icon': 'mdi:battery-alert',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Sensor 18',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-alert',
       'state': dict({
         'luminance': 1,
         'measured_temperature': 21.5,
         'occupancy_trigger': 0,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.room_sensor_18',
@@ -829,15 +829,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Kitchen',
-      'device_class': 'battery',
-      'friendly_name': 'Room Sensor 20',
-      'icon': 'mdi:battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Sensor 20',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
       'state': dict({
         'luminance': 1,
         'measured_temperature': 21.5,
         'occupancy_trigger': 0,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.room_sensor_20',
@@ -888,15 +888,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Hall',
-      'device_class': 'battery',
-      'friendly_name': 'Room Sensor 21',
-      'icon': 'mdi:battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Sensor 21',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
       'state': dict({
         'luminance': 33,
         'measured_temperature': 21,
         'occupancy_trigger': 0,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.room_sensor_21',
@@ -947,15 +947,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Study',
-      'device_class': 'battery',
-      'friendly_name': 'Room Sensor 50',
-      'icon': 'mdi:battery',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Sensor 50',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery',
       'state': dict({
         'luminance': 34,
         'measured_temperature': 22,
         'occupancy_trigger': 0,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.room_sensor_50',
@@ -1006,15 +1006,15 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       'assigned_zone': 'Lounge',
-      'device_class': 'battery',
-      'friendly_name': 'Room Sensor 53',
-      'icon': 'mdi:battery-alert',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Sensor 53',
+      <EntityStateAttribute.ICON: 'icon'>: 'mdi:battery-alert',
       'state': dict({
         'luminance': 0,
         'measured_temperature': 0,
         'occupancy_trigger': 0,
       }),
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.room_sensor_53',

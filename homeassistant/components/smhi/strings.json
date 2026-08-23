@@ -5,20 +5,24 @@
       "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "wrong_location": "Location Sweden only"
+      "wrong_location": "Only locations in Sweden are supported"
     },
     "step": {
       "reconfigure": {
         "data": {
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "Choose a location in Sweden."
         },
         "title": "Reconfigure your location in Sweden"
       },
       "user": {
         "data": {
-          "latitude": "[%key:common::config_flow::data::latitude%]",
-          "longitude": "[%key:common::config_flow::data::longitude%]"
+          "location": "[%key:common::config_flow::data::location%]"
+        },
+        "data_description": {
+          "location": "[%key:component::smhi::config::step::reconfigure::data_description::location%]"
         },
         "title": "Location in Sweden"
       }

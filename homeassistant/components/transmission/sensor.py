@@ -1,11 +1,9 @@
 """Support for monitoring the Transmission BitTorrent client API."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -80,6 +78,16 @@ SENSOR_TYPES: tuple[TransmissionSensorEntityDescription, ...] = (
         val_func=lambda coordinator: get_state(
             coordinator.data.upload_speed, coordinator.data.download_speed
         ),
+    ),
+    TransmissionSensorEntityDescription(
+        key="download_dir_free_space",
+        translation_key="download_dir_free_space",
+        device_class=SensorDeviceClass.DATA_SIZE,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=3,
+        val_func=lambda coordinator: coordinator.download_dir_free_space,
     ),
     TransmissionSensorEntityDescription(
         key="active_torrents",
@@ -207,11 +215,13 @@ class TransmissionSensor(TransmissionEntity, SensorEntity):
     entity_description: TransmissionSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value of the sensor."""
         return self.entity_description.val_func(self.coordinator)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes, if any."""
         if attr_func := self.entity_description.extra_state_attr_func:

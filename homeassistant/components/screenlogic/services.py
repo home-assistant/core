@@ -74,7 +74,7 @@ async def _get_coordinators(
                 f"Failed to call service '{service_call.service}'. Config entry "
                 f"'{entry_id}' is not a {DOMAIN} config"
             )
-        if not config_entry.state == ConfigEntryState.LOADED:
+        if config_entry.state is not ConfigEntryState.LOADED:
             raise ServiceValidationError(
                 f"Failed to call service '{service_call.service}'. Config entry "
                 f"'{entry_id}' not loaded"

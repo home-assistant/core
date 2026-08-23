@@ -299,8 +299,7 @@ async def test_unavailable(hass: HomeAssistant) -> None:
 
     entry = MockConfigEntry(
         domain=DOMAIN,
-        unique_id="A4:C1:38:66:E5:67",
-        data={"bindkey": "0fdcc30fe9289254876b5ef7c11ef1f0"},
+        unique_id="58:2D:34:35:93:21",
     )
     entry.add_to_hass(hass)
 
@@ -311,16 +310,16 @@ async def test_unavailable(hass: HomeAssistant) -> None:
     inject_bluetooth_service_info_bleak(
         hass,
         make_advertisement(
-            "A4:C1:38:66:E5:67",
-            b"XY\x89\x18\x9ag\xe5f8\xc1\xa4\x9d\xd9z\xf3&\x00\x00\xc8\xa6\x0b\xd5",
+            "58:2D:34:35:93:21",
+            b"P \xf6\x07\xda!\x9354-X\x0f\x00\x03\x01\x00\x00",
         ),
     )
     await hass.async_block_till_done()
-    assert len(hass.states.async_all()) == 1
+    assert len(hass.states.async_all()) == 2
 
-    opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
+    motion_sensor = hass.states.get("binary_sensor.nightlight_9321_motion")
 
-    assert opening_sensor.state == STATE_ON
+    assert motion_sensor.state == STATE_ON
 
     # Fastforward time without BLE advertisements
     monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
@@ -338,10 +337,10 @@ async def test_unavailable(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
-    opening_sensor = hass.states.get("binary_sensor.door_window_sensor_e567_opening")
+    motion_sensor = hass.states.get("binary_sensor.nightlight_9321_motion")
 
     # Normal devices should go to unavailable
-    assert opening_sensor.state == STATE_UNAVAILABLE
+    assert motion_sensor.state == STATE_UNAVAILABLE
 
     assert await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
@@ -405,7 +404,7 @@ async def test_sleepy_device(hass: HomeAssistant) -> None:
 
 
 async def test_sleepy_device_restore_state(hass: HomeAssistant) -> None:
-    """Test sleepy device does not go to unavailable after 60 minutes and restores state."""
+    """Test sleepy device doesn't go unavailable and restores state."""
     start_monotonic = time.monotonic()
 
     entry = MockConfigEntry(

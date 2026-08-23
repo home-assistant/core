@@ -28,6 +28,7 @@ from homeassistant.components.analytics.const import (
     ATTR_USAGE,
     BASIC_ENDPOINT_URL,
     BASIC_ENDPOINT_URL_DEV,
+    DOMAIN,
     SNAPSHOT_DEFAULT_URL,
     SNAPSHOT_URL_PATH,
 )
@@ -274,6 +275,10 @@ async def test_send_base_with_supervisor(
         ),
         patch(
             "homeassistant.components.hassio.get_host_info",
+            side_effect=Mock(return_value={}),
+        ),
+        patch(
+            "homeassistant.components.hassio.get_addons_info",
             side_effect=Mock(return_value={}),
         ),
         patch(
@@ -1029,7 +1034,7 @@ async def test_devices_payload_no_entities(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test devices payload with no entities."""
-    assert await async_setup_component(hass, "analytics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
     assert await async_devices_payload(hass) == {
         "version": "home-assistant:1",
         "home_assistant": MOCK_VERSION,
@@ -1040,7 +1045,7 @@ async def test_devices_payload_no_entities(
     mock_config_entry.add_to_hass(hass)
 
     # Normal device with all fields
-    device_registry.async_get_or_create(
+    device_1 = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={("device", "1")},
         sw_version="test-sw-version",
@@ -1082,7 +1087,7 @@ async def test_devices_payload_no_entities(
         identifiers={("device", "6")},
         manufacturer="test-manufacturer6",
         model_id="test-model-id6",
-        via_device=("device", "1"),
+        via_device_id=device_1.id,
     )
 
     # Device from custom integration
@@ -1172,7 +1177,7 @@ async def test_devices_payload_with_entities(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test devices payload with entities."""
-    assert await async_setup_component(hass, "analytics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     mock_config_entry = MockConfigEntry(domain="hue")
     mock_config_entry.add_to_hass(hass)
@@ -1359,6 +1364,87 @@ async def test_devices_payload_with_entities(
     }
 
 
+async def test_devices_payload_with_child_device(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test devices payload reports child devices and attributes their entities."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    mock_config_entry = MockConfigEntry(domain="hue")
+    mock_config_entry.add_to_hass(hass)
+
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "parent")},
+        manufacturer="test-manufacturer",
+        model_id="test-model-id",
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("device", "child")},
+        parent_device_id=parent.id,
+        name="Child device",
+    )
+
+    # Entity attached to the child device
+    entity_registry.async_get_or_create(
+        domain="light",
+        platform="hue",
+        unique_id="child-1",
+        device_id=child.id,
+        has_entity_name=True,
+    )
+
+    client = await hass_client()
+    response = await client.get("/api/analytics/devices")
+    assert response.status == HTTPStatus.OK
+    assert await response.json() == {
+        "version": "home-assistant:1",
+        "home_assistant": MOCK_VERSION,
+        "integrations": {
+            "hue": {
+                "devices": [
+                    {
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": "test-manufacturer",
+                        "model": None,
+                        "model_id": "test-model-id",
+                        "sw_version": None,
+                        "via_device": None,
+                        "entities": [],
+                    },
+                    {
+                        "entry_type": None,
+                        "has_configuration_url": False,
+                        "hw_version": None,
+                        "manufacturer": None,
+                        "model": None,
+                        "model_id": None,
+                        "sw_version": None,
+                        "via_device": ["hue", 0],
+                        "entities": [
+                            {
+                                "assumed_state": None,
+                                "domain": "light",
+                                "entity_category": None,
+                                "has_entity_name": True,
+                                "original_device_class": None,
+                                "unit_of_measurement": None,
+                            },
+                        ],
+                    },
+                ],
+                "entities": [],
+            },
+        },
+    }
+
+
 async def test_analytics_platforms(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -1366,7 +1452,7 @@ async def test_analytics_platforms(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test analytics platforms."""
-    assert await async_setup_component(hass, "analytics", {})
+    assert await async_setup_component(hass, DOMAIN, {})
 
     mock_config_entry = MockConfigEntry(domain="test")
     mock_config_entry.add_to_hass(hass)

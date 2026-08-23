@@ -1,0 +1,19 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "no_compatible_transmitters": "[%key:common::config_flow::abort::no_compatible_radio_frequency_transmitters%]",
+      "no_transmitters": "[%key:common::config_flow::abort::no_radio_frequency_transmitters%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "transmitter": "[%key:common::config_flow::data::radio_frequency_transmitter%]"
+        },
+        "data_description": {
+          "transmitter": "[%key:common::config_flow::data_description::radio_frequency_transmitter%]"
+        }
+      }
+    }
+  }
+}

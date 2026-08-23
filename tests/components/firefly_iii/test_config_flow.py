@@ -32,10 +32,9 @@ USER_INPUT_RECONFIGURE = {
 }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_and_flow(
-    hass: HomeAssistant,
-    mock_firefly_client: MagicMock,
-    mock_setup_entry: MagicMock,
+    hass: HomeAssistant, mock_firefly_client: MagicMock
 ) -> None:
     """Test we get the form and can complete the flow."""
     result = await hass.config_entries.flow.async_init(
@@ -75,10 +74,10 @@ async def test_form_and_flow(
         ),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_exceptions(
     hass: HomeAssistant,
     mock_firefly_client: AsyncMock,
-    mock_setup_entry: MagicMock,
     exception: Exception,
     reason: str,
 ) -> None:
@@ -259,10 +258,10 @@ async def test_full_flow_reconfigure(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_full_flow_reconfigure_unique_id(
     hass: HomeAssistant,
     mock_firefly_client: AsyncMock,
-    mock_setup_entry: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test the full flow of the config flow, this time with a known unique ID."""

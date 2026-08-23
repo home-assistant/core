@@ -1,10 +1,8 @@
 """Support for getting status from a Pi-hole system."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from hole import Hole
 
@@ -12,7 +10,6 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
-from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -43,7 +40,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pi-hole binary sensor."""
-    name = entry.data[CONF_NAME]
+    name = entry.title
     hole_data = entry.runtime_data
 
     binary_sensors = [
@@ -80,12 +77,14 @@ class PiHoleBinarySensor(PiHoleEntity, BinarySensorEntity):
         self._attr_unique_id = f"{self._server_unique_id}/{description.key}"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the service is on."""
 
         return self.entity_description.state_value(self.api)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the Pi-hole."""
         return self.entity_description.extra_value(self.api)

@@ -4,8 +4,6 @@ Provides DoorLock cluster endpoint resolution, feature detection, and
 business logic for lock user/credential management.
 """
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters
@@ -71,6 +69,8 @@ class LockUserData(TypedDict):
     user_type: str
     credential_rule: str
     credentials: list[LockUserCredentialData]
+    creator_fabric_index: int | None
+    last_modified_fabric_index: int | None
     next_user_index: int | None
 
 
@@ -115,6 +115,8 @@ class GetLockCredentialStatusResult(TypedDict):
 
     credential_exists: bool
     user_index: int | None
+    creator_fabric_index: int | None
+    last_modified_fabric_index: int | None
     next_credential_index: int | None
 
 
@@ -214,6 +216,8 @@ def _format_user_response(user_data: Any) -> LockUserData | None:
             _get_attr(user_data, "credentialRule"), "unknown"
         ),
         credentials=credentials,
+        creator_fabric_index=_get_attr(user_data, "creatorFabricIndex"),
+        last_modified_fabric_index=_get_attr(user_data, "lastModifiedFabricIndex"),
         next_user_index=_get_attr(user_data, "nextUserIndex"),
     )
 
@@ -817,7 +821,8 @@ async def get_lock_credential_status(
 ) -> GetLockCredentialStatusResult:
     """Get the status of a credential slot on the lock.
 
-    Returns typed dict with credential_exists, user_index, next_credential_index.
+    Returns typed dict with credential_exists, user_index, creator_fabric_index,
+    last_modified_fabric_index, and next_credential_index.
     Raises HomeAssistantError on failure.
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
@@ -839,5 +844,7 @@ async def get_lock_credential_status(
     return GetLockCredentialStatusResult(
         credential_exists=bool(_get_attr(response, "credentialExists")),
         user_index=_get_attr(response, "userIndex"),
+        creator_fabric_index=_get_attr(response, "creatorFabricIndex"),
+        last_modified_fabric_index=_get_attr(response, "lastModifiedFabricIndex"),
         next_credential_index=_get_attr(response, "nextCredentialIndex"),
     )

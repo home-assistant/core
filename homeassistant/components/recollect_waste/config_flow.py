@@ -1,8 +1,6 @@
 """Config flow for ReCollect Waste integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiorecollect.client import Client
 from aiorecollect.errors import RecollectError
@@ -28,12 +26,14 @@ class RecollectWasteConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: RecollectWasteConfigEntry,
     ) -> RecollectWasteOptionsFlowHandler:
         """Define the config flow to handle options."""
         return RecollectWasteOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

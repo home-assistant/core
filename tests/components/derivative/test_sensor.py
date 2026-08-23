@@ -213,6 +213,7 @@ async def setup_tests(
     assert state is not None
 
     assert round(float(state.state), config["sensor"]["round"]) == expected_state
+    assert state.attributes.get(ATTR_STATE_CLASS) is SensorStateClass.MEASUREMENT
 
     return state
 
@@ -404,9 +405,11 @@ async def test_data_moving_average_for_irregular_times(hass: HomeAssistant) -> N
     """Test derivative sensor state."""
     # We simulate the following situation:
     # The temperature rises 1 °C per minute for 30 minutes long.
-    # There is 60 random datapoints (and the start and end) and the signal is normally distributed
-    # around the expected value with ±0.1°C
-    # We use a time window of 1 minute and expect an error of less than the standard deviation. (0.01)
+    # There is 60 random datapoints (and the start and end) and
+    # the signal is normally distributed around the expected
+    # value with ±0.1°C
+    # We use a time window of 1 minute and expect an error of
+    # less than the standard deviation. (0.01)
 
     time_window = 60
     random.seed(0)
@@ -446,12 +449,15 @@ async def test_data_moving_average_for_irregular_times(hass: HomeAssistant) -> N
 
 async def test_double_signal_after_delay(hass: HomeAssistant) -> None:
     """Test derivative sensor state."""
-    # The old algorithm would produce extreme values if, after a delay longer than the time window
-    # there would be two signals, a large spike would be produced. Check explicitly for this situation
+    # The old algorithm would produce extreme values if, after
+    # a delay longer than the time window there would be two
+    # signals, a large spike would be produced. Check
+    # explicitly for this situation
     time_window = 60
     times = [*range(time_window * 10), time_window * 20, time_window * 20 + 0.01]
 
-    # just apply sine as some sort of temperature change and make sure the change after the delay is very small
+    # just apply sine as some sort of temperature change and
+    # make sure the change after the delay is very small
     temperature_values = [sin(x) for x in times]
     temperature_values[-2] = temperature_values[-3] + 0.01
     temperature_values[-1] = temperature_values[-2] + 0.01
@@ -855,7 +861,7 @@ async def test_suffix(hass: HomeAssistant) -> None:
 
 
 async def test_total_increasing_reset(hass: HomeAssistant) -> None:
-    """Test derivative sensor state with total_increasing sensor input where it should ignore the reset value."""
+    """Test derivative with total_increasing input where it should ignore the reset."""
     times = [0, 20, 30, 35, 40, 50, 60]
     values = [0, 10, 30, 40, 0, 10, 40]
     expected_times = [0, 20, 30, 35, 50, 60]
@@ -888,6 +894,58 @@ async def test_total_increasing_reset(hass: HomeAssistant) -> None:
     assert actual_values == expected_values
 
 
+@pytest.mark.parametrize("bad_state", [STATE_UNAVAILABLE, STATE_UNKNOWN])
+@pytest.mark.parametrize(
+    ("extra_config", "active_value", "recovered_value"),
+    [
+        pytest.param({}, "5.00", "1.00", id="no_time_window"),
+        pytest.param(
+            {"time_window": {"seconds": 60}}, "0.83", "0.17", id="time_window"
+        ),
+    ],
+)
+async def test_total_increasing_reset_while_unavailable(
+    hass: HomeAssistant,
+    bad_state: str,
+    extra_config: dict[str, Any],
+    active_value: str,
+    recovered_value: str,
+) -> None:
+    """Test derivative recovers when a total_increasing source resets while unavailable.
+
+    Regression test for a total_increasing source (e.g. a daily energy sensor)
+    that briefly goes unavailable/unknown around midnight and returns with its
+    value reset to 0. The derivative must report a zero rate of change on the
+    reset sample and must not stay stuck in the unavailable/unknown state until
+    the next state change is received, regardless of the configured time window.
+    The first normal sample after the reset must produce a sensible positive
+    rate again, proving the source value was re-baselined to the post-reset
+    value rather than the stale pre-reset one.
+    """
+    times = [0, 10, 20, 30, 40]
+    values = [0, 50, bad_state, 0, 10]
+    expected_states = ["0.00", active_value, bad_state, "0.00", recovered_value]
+
+    _config, entity_id = await _setup_sensor(
+        hass, {"unit_time": UnitOfTime.SECONDS} | extra_config
+    )
+
+    base_time = dt_util.utcnow()
+    with freeze_time(base_time) as freezer:
+        for time, value, expected in zip(times, values, expected_states, strict=True):
+            freezer.move_to(base_time + timedelta(seconds=time))
+            hass.states.async_set(
+                entity_id,
+                value,
+                {ATTR_STATE_CLASS: SensorStateClass.TOTAL_INCREASING},
+            )
+            await hass.async_block_till_done()
+
+            state = hass.states.get("sensor.power")
+            assert state is not None
+            assert state.state == expected
+
+
 async def test_device_id(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
@@ -909,7 +967,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     derivative_config_entry = MockConfigEntry(
         data={},
@@ -917,7 +975,7 @@ async def test_device_id(
         options={
             "name": "Derivative",
             "round": 1.0,
-            "source": "sensor.test_source",
+            "source": source_entity.entity_id,
             "time_window": {"seconds": 0.0},
             "unit_prefix": "k",
             "unit_time": "min",
@@ -930,9 +988,52 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(derivative_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    derivative_entity = entity_registry.async_get("sensor.derivative")
+    derivative_entity = entity_registry.async_get("sensor.mock_title_derivative")
     assert derivative_entity is not None
     assert derivative_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured Derivative."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "sensor",
+        {
+            "sensor": {
+                "platform": "derivative",
+                "name": "Derivative",
+                "source": "sensor.test_source",
+                "unique_id": "derivative_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    derivative_entity = entity_registry.async_get("sensor.derivative")
+    assert derivative_entity is not None
+    assert derivative_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
 
 
 @pytest.mark.parametrize("bad_state", [STATE_UNAVAILABLE, STATE_UNKNOWN, "foo"])
@@ -1083,7 +1184,8 @@ async def test_unavailable_boot(
 
         state = hass.states.get("sensor.power")
         assert state is not None
-        # Now that the source sensor has two valid datapoints, we can calculate derivative
+        # Now that the source sensor has two valid datapoints,
+        # we can calculate derivative
         assert state.state == "5.00"
         assert state.attributes.get("unit_of_measurement") == "kW"
 

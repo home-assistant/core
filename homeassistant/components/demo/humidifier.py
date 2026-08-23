@@ -1,8 +1,6 @@
 """Demo platform that offers a fake humidifier device."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.humidifier import (
     HumidifierAction,
@@ -83,21 +81,25 @@ class DemoHumidifier(HumidifierEntity):
         self._attr_device_class = device_class
         self._attr_target_humidity_step = target_humidity_step
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set new humidity level."""
         self._attr_target_humidity = humidity
         self.async_write_ha_state()
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Update mode."""
         self._attr_mode = mode

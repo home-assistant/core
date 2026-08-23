@@ -4,11 +4,11 @@ from unittest.mock import AsyncMock, patch
 
 from switchbot_api import Device
 
-from homeassistant.components.switchbot_cloud import DOMAIN
 from homeassistant.components.switchbot_cloud.image import SwitchBotCloudImage
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
+from homeassistant.util import dt as dt_util
 
 from . import configure_integration
 
@@ -63,7 +63,7 @@ async def test_async_image(
     entry = await configure_integration(hass)
     assert entry.state is ConfigEntryState.LOADED
 
-    cloud_data = hass.data[DOMAIN][entry.entry_id]
+    cloud_data = entry.runtime_data
     device, coordinator = cloud_data.devices.images[0]
     image_entity = SwitchBotCloudImage(cloud_data.api, device, coordinator)
 
@@ -82,3 +82,39 @@ async def test_async_image(
         )
         await image_entity.async_image()
         assert image_entity._image_content == mock_get.return_value
+
+
+async def test_image_state_is_timezone_aware(
+    hass: HomeAssistant, mock_list_devices, mock_get_status
+) -> None:
+    """Test the image state carries a timezone.
+
+    The state is image_last_updated serialized, so a naive value would leave
+    consumers of the state without an offset.
+    """
+    mock_list_devices.return_value = [
+        Device(
+            version="V1.0",
+            deviceId="ai-art-frame-id-1",
+            deviceName="ai-art-frame-1",
+            deviceType="AI Art Frame",
+            hubDeviceId="test-hub-id",
+        ),
+    ]
+    mock_get_status.side_effect = [
+        {
+            "deviceId": "B0E9FEA5D7F0",
+            "deviceType": "AI Art Frame",
+            "hubDeviceId": "B0E9FEA5D7F0",
+            "battery": 0,
+            "displayMode": 1,
+            "imageUrl": "https://example.com/image.jpeg",
+            "version": "V0.0-0.5",
+        }
+    ]
+    entry = await configure_integration(hass)
+    assert entry.state is ConfigEntryState.LOADED
+
+    state = hass.states.get("image.ai_art_frame_1_display")
+    assert state.state != STATE_UNKNOWN
+    assert dt_util.parse_datetime(state.state).tzinfo is not None

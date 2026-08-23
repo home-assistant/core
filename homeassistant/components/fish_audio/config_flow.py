@@ -1,9 +1,7 @@
 """Config flow for the Fish Audio integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from fishaudio import AsyncFishAudio
 from fishaudio.exceptions import AuthenticationError, FishAudioError
@@ -18,10 +16,14 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
+from homeassistant.const import CONF_API_KEY, CONF_LANGUAGE, CONF_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.selector import (
     LanguageSelector,
     LanguageSelectorConfig,
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
@@ -31,20 +33,22 @@ from homeassistant.helpers.selector import (
 from .const import (
     API_KEYS_URL,
     BACKEND_MODELS,
-    CONF_API_KEY,
     CONF_BACKEND,
-    CONF_LANGUAGE,
     CONF_LATENCY,
-    CONF_NAME,
     CONF_SELF_ONLY,
     CONF_SORT_BY,
+    CONF_SPEED,
     CONF_TITLE,
     CONF_USER_ID,
     CONF_VOICE_ID,
+    DEFAULT_SPEED,
     DOMAIN,
     LATENCY_OPTIONS,
+    MAX_SPEED,
+    MIN_SPEED,
     SIGNUP_URL,
     SORT_BY_OPTIONS,
+    SPEED_STEP,
     TTS_SUPPORTED_LANGUAGES,
 )
 from .error import (
@@ -132,6 +136,19 @@ def get_model_selection_schema(
                     mode=SelectSelectorMode.DROPDOWN,
                 )
             ),
+            vol.Optional(
+                CONF_SPEED,
+                default=options.get(CONF_SPEED, DEFAULT_SPEED),
+            ): NumberSelector(
+                NumberSelectorConfig(
+                    min=MIN_SPEED,
+                    max=MAX_SPEED,
+                    step=SPEED_STEP,
+                    mode=NumberSelectorMode.SLIDER,
+                )
+            ),
+            # Name field is no longer allowed in config flow schemas
+            # pylint: disable-next=home-assistant-config-flow-name-field
             vol.Required(
                 CONF_NAME,
                 default=options.get(CONF_NAME) or vol.UNDEFINED,
@@ -170,6 +187,7 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self.client = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -220,6 +238,7 @@ class FishAudioConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type]:
@@ -284,7 +303,7 @@ class FishAudioSubentryFlowHandler(ConfigSubentryFlow):
     ) -> SubentryFlowResult:
         """Manage initial options."""
         entry = self._get_entry()
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="entry_not_loaded")
 
         self.client = entry.runtime_data

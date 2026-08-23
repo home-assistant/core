@@ -1,7 +1,5 @@
 """Percentage util functions."""
 
-from __future__ import annotations
-
 from .scaling import (  # noqa: F401
     int_states_in_range,
     scale_ranged_value_to_int_range,

@@ -1,9 +1,7 @@
 """Adds config flow for GIOS."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp.client_exceptions import ClientConnectorError
 from gios import ApiError, Gios, InvalidSensorsDataError, NoStationError
@@ -27,6 +25,7 @@ class GiosFlowHandler(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

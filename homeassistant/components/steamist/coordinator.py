@@ -1,9 +1,8 @@
 """DataUpdateCoordinator for steamist."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiosteamist import Steamist, SteamistStatus
 
@@ -38,6 +37,7 @@ class SteamistDataUpdateCoordinator(DataUpdateCoordinator[SteamistStatus]):
             always_update=False,
         )
 
+    @override
     async def _async_update_data(self) -> SteamistStatus:
         """Fetch data from steamist."""
         return await self.client.async_get_status()

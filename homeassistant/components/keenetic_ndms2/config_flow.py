@@ -1,8 +1,6 @@
 """Config flow for Keenetic NDMS2."""
 
-from __future__ import annotations
-
-from typing import Any, cast
+from typing import Any, cast, override
 from urllib.parse import urlparse
 
 from ndms2_client import Client, ConnectionException, InterfaceInfo, TelnetConnection
@@ -54,12 +52,14 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: KeeneticConfigEntry,
     ) -> KeeneticOptionsFlowHandler:
         """Get the options flow for this handler."""
         return KeeneticOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -122,6 +122,7 @@ class KeeneticFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user(user_input)
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -198,6 +199,8 @@ class KeeneticOptionsFlowHandler(OptionsFlowWithReload):
 
         options = vol.Schema(
             {
+                # Polling interval is user-configurable, which is no longer allowed
+                # pylint: disable-next=home-assistant-config-flow-polling-field
                 vol.Required(
                     CONF_SCAN_INTERVAL,
                     default=self.config_entry.options.get(

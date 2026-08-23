@@ -39,8 +39,8 @@
 # name: test_switch[switch.energy_site_allow_charging_from_grid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Energy Site Allow charging from grid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Allow charging from grid',
     }),
     'context': <ANY>,
     'entity_id': 'switch.energy_site_allow_charging_from_grid',
@@ -90,8 +90,8 @@
 # name: test_switch[switch.energy_site_storm_watch-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Energy Site Storm watch',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Storm watch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.energy_site_storm_watch',
@@ -141,8 +141,8 @@
 # name: test_switch[switch.test_auto_seat_climate_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Auto seat climate left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Auto seat climate left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_auto_seat_climate_left',
@@ -192,8 +192,8 @@
 # name: test_switch[switch.test_auto_seat_climate_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Auto seat climate right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Auto seat climate right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_auto_seat_climate_right',
@@ -243,8 +243,8 @@
 # name: test_switch[switch.test_auto_steering_wheel_heater-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Auto steering wheel heater',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Auto steering wheel heater',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_auto_steering_wheel_heater',
@@ -294,8 +294,8 @@
 # name: test_switch[switch.test_charge-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_charge',
@@ -345,8 +345,8 @@
 # name: test_switch[switch.test_defrost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Defrost',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Defrost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_defrost',
@@ -396,8 +396,8 @@
 # name: test_switch[switch.test_sentry_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Sentry mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sentry mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_sentry_mode',
@@ -447,8 +447,8 @@
 # name: test_switch[switch.test_valet_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Valet mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Valet mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_valet_mode',
@@ -461,8 +461,8 @@
 # name: test_switch_alt[switch.energy_site_allow_charging_from_grid-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Energy Site Allow charging from grid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Allow charging from grid',
     }),
     'context': <ANY>,
     'entity_id': 'switch.energy_site_allow_charging_from_grid',
@@ -475,8 +475,8 @@
 # name: test_switch_alt[switch.energy_site_storm_watch-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Energy Site Storm watch',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Energy Site Storm watch',
     }),
     'context': <ANY>,
     'entity_id': 'switch.energy_site_storm_watch',
@@ -489,8 +489,8 @@
 # name: test_switch_alt[switch.test_auto_seat_climate_left-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Auto seat climate left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Auto seat climate left',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_auto_seat_climate_left',
@@ -503,8 +503,8 @@
 # name: test_switch_alt[switch.test_auto_seat_climate_right-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Auto seat climate right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Auto seat climate right',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_auto_seat_climate_right',
@@ -517,8 +517,8 @@
 # name: test_switch_alt[switch.test_auto_steering_wheel_heater-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Auto steering wheel heater',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Auto steering wheel heater',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_auto_steering_wheel_heater',
@@ -531,8 +531,8 @@
 # name: test_switch_alt[switch.test_charge-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Charge',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Charge',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_charge',
@@ -545,8 +545,8 @@
 # name: test_switch_alt[switch.test_defrost-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Defrost',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Defrost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_defrost',
@@ -559,8 +559,8 @@
 # name: test_switch_alt[switch.test_sentry_mode-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Sentry mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Sentry mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_sentry_mode',
@@ -573,8 +573,8 @@
 # name: test_switch_alt[switch.test_valet_mode-statealt]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'switch',
-      'friendly_name': 'Test Valet mode',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'switch',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test Valet mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_valet_mode',

@@ -1,13 +1,11 @@
 """Xbox Remote support."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable
 from functools import wraps
 from http import HTTPStatus
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from httpx import HTTPStatusError, RequestError, TimeoutException
 from pythonxbox.api.provider.smartglass import SmartglassProvider
@@ -113,11 +111,13 @@ class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
     """Representation of an Xbox remote."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if device is on."""
         return self.data.status.power_state == PowerState.On
 
     @exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the Xbox on."""
         try:
@@ -131,11 +131,13 @@ class XboxRemote(XboxConsoleBaseEntity, RemoteEntity):
             raise
 
     @exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the Xbox off."""
         await self.client.smartglass.turn_off(self._console.id)
 
     @exception_handler
+    @override
     async def async_send_command(self, command: Iterable[str], **kwargs: Any) -> None:
         """Send controller or text input to the Xbox."""
         num_repeats = kwargs[ATTR_NUM_REPEATS]

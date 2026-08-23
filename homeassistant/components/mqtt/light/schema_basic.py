@@ -1,10 +1,8 @@
 """Support for MQTT lights."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 import voluptuous as vol
 
@@ -13,14 +11,10 @@ from homeassistant.components.light import (
     ATTR_COLOR_MODE,
     ATTR_COLOR_TEMP_KELVIN,
     ATTR_EFFECT,
-    ATTR_EFFECT_LIST,
     ATTR_HS_COLOR,
-    ATTR_MAX_COLOR_TEMP_KELVIN,
-    ATTR_MIN_COLOR_TEMP_KELVIN,
     ATTR_RGB_COLOR,
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
-    ATTR_SUPPORTED_COLOR_MODES,
     ATTR_WHITE,
     ATTR_XY_COLOR,
     DEFAULT_MAX_KELVIN,
@@ -28,7 +22,9 @@ from homeassistant.components.light import (
     ENTITY_ID_FORMAT,
     ColorMode,
     LightEntity,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
+    LightEntityStateAttribute,
     valid_supported_color_modes,
 )
 from homeassistant.const import (
@@ -122,19 +118,19 @@ DEFAULT_NAME = "MQTT LightEntity"
 
 MQTT_LIGHT_ATTRIBUTES_BLOCKED = frozenset(
     {
-        ATTR_COLOR_MODE,
-        ATTR_BRIGHTNESS,
-        ATTR_COLOR_TEMP_KELVIN,
-        ATTR_EFFECT,
-        ATTR_EFFECT_LIST,
-        ATTR_HS_COLOR,
-        ATTR_MAX_COLOR_TEMP_KELVIN,
-        ATTR_MIN_COLOR_TEMP_KELVIN,
-        ATTR_RGB_COLOR,
-        ATTR_RGBW_COLOR,
-        ATTR_RGBWW_COLOR,
-        ATTR_SUPPORTED_COLOR_MODES,
-        ATTR_XY_COLOR,
+        LightEntityCapabilityAttribute.EFFECT_LIST,
+        LightEntityCapabilityAttribute.MAX_COLOR_TEMP_KELVIN,
+        LightEntityCapabilityAttribute.MIN_COLOR_TEMP_KELVIN,
+        LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES,
+        LightEntityStateAttribute.BRIGHTNESS,
+        LightEntityStateAttribute.COLOR_MODE,
+        LightEntityStateAttribute.COLOR_TEMP_KELVIN,
+        LightEntityStateAttribute.EFFECT,
+        LightEntityStateAttribute.HS_COLOR,
+        LightEntityStateAttribute.RGB_COLOR,
+        LightEntityStateAttribute.RGBW_COLOR,
+        LightEntityStateAttribute.RGBWW_COLOR,
+        LightEntityStateAttribute.XY_COLOR,
     }
 )
 
@@ -256,10 +252,12 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
     _optimistic_xy_color: bool
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_BASIC
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
@@ -579,6 +577,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         self._attr_xy_color = cast(tuple[float, float], xy_color)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(CONF_STATE_TOPIC, self._state_received, {"_attr_is_on"})
@@ -622,6 +621,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
             {"_attr_color_mode", "_attr_xy_color"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -651,6 +651,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         restore_state(ATTR_XY_COLOR)
         restore_state(ATTR_HS_COLOR, ATTR_XY_COLOR)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:  # noqa: C901
         """Turn the device on.
 
@@ -870,6 +871,7 @@ class MqttLight(MqttEntity, LightEntity, RestoreEntity):
         if should_update:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off.
 

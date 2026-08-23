@@ -14,23 +14,19 @@ from homeassistant.components.group import (
 )
 from homeassistant.const import ATTR_ICON, ATTR_NAME, SERVICE_RELOAD
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.loader import bind_hass
 
 
-@bind_hass
 def reload(hass: HomeAssistant) -> None:
     """Reload the automation from config."""
     hass.add_job(async_reload, hass)
 
 
 @callback
-@bind_hass
 def async_reload(hass: HomeAssistant) -> None:
     """Reload the automation from config."""
     hass.async_create_task(hass.services.async_call(DOMAIN, SERVICE_RELOAD))
 
 
-@bind_hass
 def set_group(
     hass: HomeAssistant,
     object_id: str,
@@ -52,7 +48,6 @@ def set_group(
 
 
 @callback
-@bind_hass
 def async_set_group(
     hass: HomeAssistant,
     object_id: str,
@@ -78,7 +73,6 @@ def async_set_group(
 
 
 @callback
-@bind_hass
 def async_remove(hass: HomeAssistant, object_id: str) -> None:
     """Remove a user group."""
     data = {ATTR_OBJECT_ID: object_id}

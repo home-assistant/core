@@ -9,7 +9,7 @@ import zigpy.backups
 from zigpy.exceptions import NetworkSettingsInconsistent
 
 from homeassistant.components.homeassistant_hardware.util import ApplicationType
-from homeassistant.components.homeassistant_sky_connect.const import (  # pylint: disable=hass-component-root-import
+from homeassistant.components.homeassistant_sky_connect.const import (  # pylint: disable=home-assistant-component-root-import
     DOMAIN as SKYCONNECT_DOMAIN,
 )
 from homeassistant.components.repairs import DOMAIN as REPAIRS_DOMAIN
@@ -32,18 +32,24 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry
 from tests.typing import ClientSessionGenerator
 
-SKYCONNECT_DEVICE = "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
-CONNECT_ZBT1_DEVICE = "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+SKYCONNECT_DEVICE = (
+    "/dev/serial/by-id/usb-Nabu_Casa_SkyConnect_v1.0"
+    "_9e2adbd75b8beb119fe564a0f320645d-if00-port0"
+)
+CONNECT_ZBT1_DEVICE = (
+    "/dev/serial/by-id/usb-Nabu_Casa_Home_Assistant_Connect_ZBT-1"
+    "_3c0ed67c628beb11b1cd64a0f320645d-if00-port0"
+)
 
 
-def test_detect_radio_hardware(hass: HomeAssistant) -> None:
+async def test_detect_radio_hardware(hass: HomeAssistant) -> None:
     """Test logic to detect radio hardware."""
     skyconnect_config_entry = MockConfigEntry(
         data={
             "device": SKYCONNECT_DEVICE,
             "vid": "10C4",
             "pid": "EA60",
-            "serial_number": "3c0ed67c628beb11b1cd64a0f320645d",
+            "serial_number": "9e2adbd75b8beb119fe564a0f320645d",
             "manufacturer": "Nabu Casa",
             "product": "SkyConnect v1.0",
             "firmware": "ezsp",
@@ -73,6 +79,9 @@ def test_detect_radio_hardware(hass: HomeAssistant) -> None:
         title="Home Assistant Connect ZBT-1",
     )
     connect_zbt1_config_entry.add_to_hass(hass)
+
+    await async_setup_component(hass, SKYCONNECT_DOMAIN, {})
+    await hass.async_block_till_done()
 
     assert _detect_radio_hardware(hass, CONNECT_ZBT1_DEVICE) == HardwareType.SKYCONNECT
     assert _detect_radio_hardware(hass, SKYCONNECT_DEVICE) == HardwareType.SKYCONNECT

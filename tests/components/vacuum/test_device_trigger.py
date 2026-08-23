@@ -213,8 +213,9 @@ async def test_if_fires_on_state_change(
                         "data_template": {
                             "some": (
                                 "cleaning - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}}"
+                                "{{ trigger.entity_id}}"
+                                " - {{ trigger.from_state.state}}"
+                                " - {{ trigger.to_state.state}}"
                             )
                         },
                     },
@@ -232,8 +233,9 @@ async def test_if_fires_on_state_change(
                         "data_template": {
                             "some": (
                                 "docked - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}}"
+                                "{{ trigger.entity_id}}"
+                                " - {{ trigger.from_state.state}}"
+                                " - {{ trigger.to_state.state}}"
                             )
                         },
                     },
@@ -298,8 +300,9 @@ async def test_if_fires_on_state_change_legacy(
                         "data_template": {
                             "some": (
                                 "cleaning - {{ trigger.platform}} - "
-                                "{{ trigger.entity_id}} - {{ trigger.from_state.state}} - "
-                                "{{ trigger.to_state.state}}"
+                                "{{ trigger.entity_id}}"
+                                " - {{ trigger.from_state.state}}"
+                                " - {{ trigger.to_state.state}}"
                             )
                         },
                     },

@@ -1,7 +1,5 @@
 """ISY Services and Commands."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from pyisy.constants import COMMAND_FRIENDLY_NAME
@@ -9,6 +7,7 @@ import voluptuous as vol
 
 from homeassistant.const import (
     CONF_ADDRESS,
+    CONF_CODE,
     CONF_COMMAND,
     CONF_NAME,
     CONF_UNIT_OF_MEASUREMENT,
@@ -20,7 +19,7 @@ from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.service import entity_service_call
 from homeassistant.helpers.typing import VolDictType
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 from .models import IsyConfigEntry
 
 # Common Services for All Platforms:
@@ -40,7 +39,6 @@ SERVICE_DELETE_ZWAVE_LOCK_USER_CODE = "delete_zwave_lock_user_code"
 CONF_PARAMETER = "parameter"
 CONF_PARAMETERS = "parameters"
 CONF_USER_NUM = "user_num"
-CONF_CODE = "code"
 CONF_VALUE = "value"
 CONF_INIT = "init"
 CONF_ISY = "isy"
@@ -158,7 +156,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             if program is not None:
                 await getattr(program, command)()
                 return
-        _LOGGER.error("Could not send program command; not found or enabled on the ISY")
+        LOGGER.error("Could not send program command; not found or enabled on the ISY")
 
     hass.services.async_register(
         domain=DOMAIN,

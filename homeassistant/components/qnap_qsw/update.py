@@ -1,8 +1,6 @@
 """Support for the QNAP QSW update."""
 
-from __future__ import annotations
-
-from typing import Any, Final
+from typing import Any, Final, override
 
 from aioqsw.const import (
     QSD_DESCRIPTION,
@@ -69,6 +67,7 @@ class QswUpdate(QswFirmwareEntity, UpdateEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()
@@ -84,6 +83,7 @@ class QswUpdate(QswFirmwareEntity, UpdateEntity):
             QSD_FIRMWARE_CHECK, QSD_DESCRIPTION
         )
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:

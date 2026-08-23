@@ -1,7 +1,5 @@
 """Support for Bond services."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN

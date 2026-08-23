@@ -1,10 +1,8 @@
 """Adds config flow for Tibber integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 import tibber
@@ -34,11 +32,13 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
         self._oauth_data: dict[str, Any] | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return the logger."""
         return _LOGGER
 
     @property
+    @override
     def extra_authorize_data(self) -> dict[str, Any]:
         """Extra data appended to the authorize URL."""
         return {
@@ -60,6 +60,7 @@ class TibberConfigFlow(AbstractOAuth2FlowHandler, domain=DOMAIN):
             return self.async_show_form(step_id="reauth_confirm")
         return await self.async_step_user()
 
+    @override
     async def async_oauth_create_entry(self, data: dict) -> ConfigFlowResult:
         """Finalize the OAuth flow and create the config entry."""
         self._oauth_data = data

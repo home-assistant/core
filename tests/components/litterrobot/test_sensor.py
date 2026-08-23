@@ -154,3 +154,36 @@ async def test_litterhopper_sensor(
     await setup_integration(hass, mock_account_with_litterhopper, SENSOR_DOMAIN)
     sensor = hass.states.get("sensor.test_hopper_status")
     assert sensor.state == "enabled"
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_litter_robot_5_sensor(
+    hass: HomeAssistant, mock_account_with_litterrobot_5: MagicMock
+) -> None:
+    """Tests Litter-Robot 5 sensors."""
+    await setup_integration(hass, mock_account_with_litterrobot_5, SENSOR_DOMAIN)
+
+    sensor = hass.states.get("sensor.test_litter_level")
+    assert sensor
+    assert sensor.state == "70.0"
+    assert sensor.attributes["unit_of_measurement"] == PERCENTAGE
+
+    sensor = hass.states.get("sensor.test_pet_weight")
+    assert sensor
+    assert sensor.state == "12.0"
+    assert sensor.attributes["unit_of_measurement"] == UnitOfMass.POUNDS
+
+    sensor = hass.states.get("sensor.test_scoops_saved")
+    assert sensor
+    assert sensor.state == "3769"
+    assert sensor.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING
+
+    sensor = hass.states.get("sensor.test_next_filter_replacement")
+    assert sensor
+    assert sensor.state == "2023-02-28T17:01:12+00:00"
+    assert sensor.attributes["device_class"] == SensorDeviceClass.TIMESTAMP
+
+    sensor = hass.states.get("sensor.test_total_cycles")
+    assert sensor
+    assert sensor.state == "158"
+    assert sensor.attributes["state_class"] == SensorStateClass.TOTAL_INCREASING

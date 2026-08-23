@@ -1,11 +1,9 @@
 """Support for representing current time of the day as binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from datetime import datetime, time, timedelta
 import logging
-from typing import Any, Literal, TypeGuard
+from typing import Any, Literal, TypeGuard, override
 
 import voluptuous as vol
 
@@ -135,6 +133,7 @@ class TodSensor(BinarySensorEntity):
         self._unsub_update: Callable[[], None] | None = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True is sensor is on."""
         if self._time_after < self._time_before:
@@ -142,6 +141,7 @@ class TodSensor(BinarySensorEntity):
         return False
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes of the sensor."""
         if time_zone := dt_util.get_default_time_zone():
@@ -262,6 +262,7 @@ class TodSensor(BinarySensorEntity):
                 self._time_before, self._before
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity about to be added to Home Assistant."""
         self._calculate_boundary_time()

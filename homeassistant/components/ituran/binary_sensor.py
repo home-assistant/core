@@ -1,9 +1,8 @@
 """Binary sensors for Ituran vehicles."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyituran import Vehicle
 
@@ -69,6 +68,7 @@ class IturanBinarySensor(IturanBaseEntity, BinarySensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.entity_description.value_fn(self.vehicle)

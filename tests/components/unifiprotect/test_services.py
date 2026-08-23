@@ -1,7 +1,5 @@
 """Test the UniFi Protect global services."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -46,7 +44,7 @@ async def device_fixture(
 
     await init_entry(hass, ufp, [])
 
-    return list(device_registry.devices.values())[0]
+    return list(device_registry.devices)[0]
 
 
 @pytest.fixture(name="subdevice")
@@ -60,7 +58,7 @@ async def subdevice_fixture(
 
     await init_entry(hass, ufp, [light])
 
-    return [d for d in device_registry.devices.values() if d.name != "UnifiProtect"][0]
+    return [d for d in device_registry.devices if d.name != "UnifiProtect"][0]
 
 
 async def test_global_service_bad_device(
@@ -527,7 +525,7 @@ async def test_ptz_goto_home_preset_client_error(
     ufp: MockUFPFixture,
     ptz_camera: Camera,
 ) -> None:
-    """Test ptz_goto_preset service with home preset when ptz_goto_preset_public raises ClientError."""
+    """Test ptz_goto_preset with home preset when it raises ClientError."""
     ptz_camera.get_ptz_patrols.return_value = []
     await init_entry(hass, ufp, [ptz_camera])
 

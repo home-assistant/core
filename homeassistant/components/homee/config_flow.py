@@ -2,7 +2,7 @@
 
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyHomee import (
     Homee,
@@ -81,6 +81,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return errors
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -107,6 +108,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -122,7 +124,7 @@ class HomeeConfigFlow(ConfigFlow, domain=DOMAIN):
         existing_entry = await self.async_set_unique_id(self._name)
         if (
             existing_entry
-            and existing_entry.state == ConfigEntryState.LOADED
+            and existing_entry.state is ConfigEntryState.LOADED
             and existing_entry.runtime_data.connected
             and existing_entry.data[CONF_HOST] != self._host
         ):

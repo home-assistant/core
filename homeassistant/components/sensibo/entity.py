@@ -1,19 +1,34 @@
 """Base entity for Sensibo integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from pysensibo.model import MotionSensor, SensiboDevice
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, LOGGER, SENSIBO_ERRORS, TIMEOUT
 from .coordinator import SensiboDataUpdateCoordinator
+
+
+def get_device_info(device: SensiboDevice) -> DeviceInfo:
+    """Return device info for a Sensibo device."""
+    return DeviceInfo(
+        identifiers={(DOMAIN, device.id)},
+        name=device.name,
+        connections={(CONNECTION_NETWORK_MAC, device.mac)},
+        manufacturer="Sensibo",
+        configuration_url="https://home.sensibo.com/",
+        model=device.model,
+        sw_version=device.fw_ver,
+        hw_version=device.fw_type,
+        suggested_area=device.name,
+        serial_number=device.serial,
+    )
 
 
 def async_handle_api_call[_T: SensiboDeviceBaseEntity, **_P](
@@ -76,6 +91,7 @@ class SensiboBaseEntity(CoordinatorEntity[SensiboDataUpdateCoordinator]):
         return self.coordinator.data.parsed[self._device_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self.device_data.available and super().available
@@ -91,18 +107,7 @@ class SensiboDeviceBaseEntity(SensiboBaseEntity):
     ) -> None:
         """Initiate Sensibo Device."""
         super().__init__(coordinator, device_id)
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self.device_data.id)},
-            name=self.device_data.name,
-            connections={(CONNECTION_NETWORK_MAC, self.device_data.mac)},
-            manufacturer="Sensibo",
-            configuration_url="https://home.sensibo.com/",
-            model=self.device_data.model,
-            sw_version=self.device_data.fw_ver,
-            hw_version=self.device_data.fw_type,
-            suggested_area=self.device_data.name,
-            serial_number=self.device_data.serial,
-        )
+        self._attr_device_info = get_device_info(self.device_data)
 
 
 class SensiboMotionBaseEntity(SensiboBaseEntity):
@@ -121,7 +126,11 @@ class SensiboMotionBaseEntity(SensiboBaseEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, sensor_id)},
             name=f"{self.device_data.name} Motion Sensor",
-            via_device=(DOMAIN, device_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, device_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
             manufacturer="Sensibo",
             configuration_url="https://home.sensibo.com/",
             model=sensor_data.model,
@@ -137,6 +146,7 @@ class SensiboMotionBaseEntity(SensiboBaseEntity):
         return self.device_data.motion_sensors[self._sensor_id]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return bool(self.sensor_data.alive) and super().available

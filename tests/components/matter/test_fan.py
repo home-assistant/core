@@ -16,6 +16,7 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     SERVICE_OSCILLATE,
     SERVICE_SET_DIRECTION,
+    SERVICE_SET_PERCENTAGE,
     FanEntityFeature,
 )
 from homeassistant.const import (
@@ -441,3 +442,34 @@ async def test_fan_features(
     state = hass.states.get(entity_id)
     assert state
     assert state.attributes["preset_modes"] == preset_modes
+
+
+@pytest.mark.parametrize("node_fixture", ["silabs_range_hood"])
+async def test_fan_set_percentage_without_multispeed(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test percentage control on a fan without the MultiSpeed feature.
+
+    PercentSetting is mandatory in the FanControl cluster regardless of features,
+    so SET_SPEED must be available and write to PercentSetting (attribute 0x0002).
+    """
+    entity_id = "fan.sl_rangehood"
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["supported_features"] & FanEntityFeature.SET_SPEED
+    assert state.attributes["percentage_step"] == 1.0
+
+    await hass.services.async_call(
+        FAN_DOMAIN,
+        SERVICE_SET_PERCENTAGE,
+        {ATTR_ENTITY_ID: entity_id, ATTR_PERCENTAGE: 75},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 1
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path="1/514/2",
+        value=75,
+    )

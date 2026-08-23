@@ -1,10 +1,8 @@
 """DataUpdateCoordinator for the Trafikverket Weather integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from pytrafikverket.exceptions import (
     InvalidAuthentication,
@@ -48,6 +46,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[WeatherStationInfoModel]):
         )
         self._station = config_entry.data[CONF_STATION]
 
+    @override
     async def _async_update_data(self) -> WeatherStationInfoModel:
         """Fetch data from Trafikverket."""
         try:

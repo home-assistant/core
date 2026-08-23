@@ -1,7 +1,5 @@
 """Define SignalTypes for dispatcher."""
 
-from __future__ import annotations
-
 
 class _SignalTypeBase[*_Ts](str):
     """Generic base class for SignalType."""

@@ -14,7 +14,7 @@
     "step": {
       "user": {
         "data": {
-          "api_token": "Setup token"
+          "access_url": "Setup token"
         },
         "description": "Please enter a SimpleFIN setup token."
       }

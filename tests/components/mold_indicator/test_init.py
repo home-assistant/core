@@ -1,7 +1,5 @@
 """Test Mold indicator component setup process."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 import pytest
@@ -198,9 +196,9 @@ async def test_unload_entry(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
 @pytest.mark.parametrize(
     ("source_entity_id", "expected_helper_device_id", "expected_events"),
     [
-        ("sensor.test_unique_indoor_humidity", None, ["update"]),
-        ("sensor.test_unique_indoor_temperature", "humidity_device_id", []),
-        ("sensor.test_unique_outdoor_temperature", "humidity_device_id", []),
+        ("sensor.mock_title", None, ["update"]),
+        ("sensor.mock_title_2", "humidity_device_id", []),
+        ("sensor.mock_title_3", "humidity_device_id", []),
     ],
     indirect=["expected_helper_device_id"],
 )
@@ -214,13 +212,15 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
     expected_helper_device_id: str | None,
     expected_events: list[str],
 ) -> None:
-    """Test the mold_indicator config entry is removed when the source entity is removed."""
+    """Test config entry removed when the source entity is removed."""
     source_entity_entry = entity_registry.async_get(source_entity_id)
 
     assert await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -230,21 +230,20 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
 
     events = track_entity_registry_actions(hass, mold_indicator_entity_entry.entity_id)
 
-    # Remove the source entity's config entry from the device, this removes the
-    # source entity
+    # Remove the source device, this removes the source entity
     with patch(
         "homeassistant.components.mold_indicator.async_unload_entry",
         wraps=mold_indicator.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            source_device.id, remove_config_entry_id=source_entity_entry.config_entry_id
-        )
+        device_registry.async_remove_device(source_device.id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()
 
     # Check that the helper entity is linked to the expected source device
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert mold_indicator_entity_entry.device_id == expected_helper_device_id
 
     # Check that the device is removed
@@ -260,9 +259,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed(
 @pytest.mark.parametrize(
     ("source_entity_id", "expected_helper_device_id", "expected_events"),
     [
-        ("sensor.test_unique_indoor_humidity", None, ["update"]),
-        ("sensor.test_unique_indoor_temperature", "humidity_device_id", []),
-        ("sensor.test_unique_outdoor_temperature", "humidity_device_id", []),
+        ("sensor.mock_title", None, ["update"]),
+        ("sensor.mock_title_2", "humidity_device_id", []),
+        ("sensor.mock_title_3", "humidity_device_id", []),
     ],
     indirect=["expected_helper_device_id"],
 )
@@ -276,20 +275,15 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
     expected_helper_device_id: str | None,
     expected_events: list[str],
 ) -> None:
-    """Test the mold_indicator config entry is removed when the source entity is removed."""
+    """Test the source entity is removed but the source device is not removed."""
     source_entity_entry = entity_registry.async_get(source_entity_id)
-
-    # Add another config entry to the source device
-    other_config_entry = MockConfigEntry()
-    other_config_entry.add_to_hass(hass)
-    device_registry.async_update_device(
-        source_entity_entry.device_id, add_config_entry_id=other_config_entry.entry_id
-    )
 
     assert await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -299,22 +293,24 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
 
     events = track_entity_registry_actions(hass, mold_indicator_entity_entry.entity_id)
 
-    # Remove the source entity's config entry from the device, this removes the
-    # source entity
+    # Remove the source entity, this does not remove the source device
     with patch(
         "homeassistant.components.mold_indicator.async_unload_entry",
         wraps=mold_indicator.async_unload_entry,
     ) as mock_unload_entry:
-        device_registry.async_update_device(
-            source_device.id, remove_config_entry_id=source_entity_entry.config_entry_id
-        )
+        entity_registry.async_remove(source_entity_entry.entity_id)
         await hass.async_block_till_done()
         await hass.async_block_till_done()
     mock_unload_entry.assert_not_called()
 
     # Check that the helper entity is linked to the expected source device
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert mold_indicator_entity_entry.device_id == expected_helper_device_id
+
+    # Check that the source device is not removed
+    assert device_registry.async_get(source_device.id) is not None
 
     # Check if the mold_indicator config entry is not in the device
     source_device = device_registry.async_get(source_device.id)
@@ -335,9 +331,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_shared_d
         "expected_events",
     ),
     [
-        ("sensor.test_unique_indoor_humidity", 1, None, ["update"]),
-        ("sensor.test_unique_indoor_temperature", 0, "humidity_device_id", []),
-        ("sensor.test_unique_outdoor_temperature", 0, "humidity_device_id", []),
+        ("sensor.mock_title", 1, None, ["update"]),
+        ("sensor.mock_title_2", 0, "humidity_device_id", []),
+        ("sensor.mock_title_3", 0, "humidity_device_id", []),
     ],
     indirect=["expected_helper_device_id"],
 )
@@ -358,7 +354,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -380,7 +378,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
     assert len(mock_unload_entry.mock_calls) == unload_entry_calls
 
     # Check that the helper entity is linked to the expected source device
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert mold_indicator_entity_entry.device_id == expected_helper_device_id
 
     # Check that the mold_indicator config entry is not in the device
@@ -397,9 +397,9 @@ async def test_async_handle_source_entity_changes_source_entity_removed_from_dev
 @pytest.mark.parametrize(
     ("source_entity_id", "unload_entry_calls", "expected_events"),
     [
-        ("sensor.test_unique_indoor_humidity", 1, ["update"]),
-        ("sensor.test_unique_indoor_temperature", 0, []),
-        ("sensor.test_unique_outdoor_temperature", 0, []),
+        ("sensor.mock_title", 1, ["update"]),
+        ("sensor.mock_title_2", 0, []),
+        ("sensor.mock_title_3", 0, []),
     ],
 )
 async def test_async_handle_source_entity_changes_source_entity_moved_other_device(
@@ -423,7 +423,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     assert await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -450,7 +452,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
     indoor_humidity_entity_entry = entity_registry.async_get(
         indoor_humidity_entity_entry.entity_id
     )
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -471,9 +475,9 @@ async def test_async_handle_source_entity_changes_source_entity_moved_other_devi
 @pytest.mark.parametrize(
     ("source_entity_id", "config_key"),
     [
-        ("sensor.test_unique_indoor_humidity", CONF_INDOOR_HUMIDITY),
-        ("sensor.test_unique_indoor_temperature", CONF_INDOOR_TEMP),
-        ("sensor.test_unique_outdoor_temperature", CONF_OUTDOOR_TEMP),
+        ("sensor.mock_title", CONF_INDOOR_HUMIDITY),
+        ("sensor.mock_title_2", CONF_INDOOR_TEMP),
+        ("sensor.mock_title_3", CONF_OUTDOOR_TEMP),
     ],
 )
 async def test_async_handle_source_entity_new_entity_id(
@@ -491,7 +495,9 @@ async def test_async_handle_source_entity_new_entity_id(
     assert await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )
@@ -535,7 +541,7 @@ async def test_migration_1_1(
     indoor_temperature_entity_entry: er.RegistryEntry,
     outdoor_temperature_entity_entry: er.RegistryEntry,
 ) -> None:
-    """Test migration from v1.1 removes mold_indicator config entry from device."""
+    """Test migration from v1.1 keeps the helper entity linked to the source device."""
 
     mold_indicator_config_entry = MockConfigEntry(
         data={},
@@ -553,26 +559,18 @@ async def test_migration_1_1(
     )
     mold_indicator_config_entry.add_to_hass(hass)
 
-    # Add the helper config entry to the device
-    device_registry.async_update_device(
-        indoor_humidity_device.id,
-        add_config_entry_id=mold_indicator_config_entry.entry_id,
-    )
-
-    # Check preconditions
-    switch_device = device_registry.async_get(indoor_humidity_device.id)
-    assert mold_indicator_config_entry.entry_id in switch_device.config_entries
-
     await hass.config_entries.async_setup(mold_indicator_config_entry.entry_id)
     await hass.async_block_till_done()
 
     assert mold_indicator_config_entry.state is ConfigEntryState.LOADED
 
-    # Check that the helper config entry is removed from the device and the helper
-    # entity is linked to the source device
-    switch_device = device_registry.async_get(switch_device.id)
-    assert mold_indicator_config_entry.entry_id not in switch_device.config_entries
-    mold_indicator_entity_entry = entity_registry.async_get("sensor.my_mold_indicator")
+    # Check that the helper config entry is not in the device and the helper entity
+    # is linked to the source device
+    source_device = device_registry.async_get(indoor_humidity_device.id)
+    assert mold_indicator_config_entry.entry_id not in source_device.config_entries
+    mold_indicator_entity_entry = entity_registry.async_get(
+        "sensor.mock_title_my_mold_indicator"
+    )
     assert (
         mold_indicator_entity_entry.device_id == indoor_humidity_entity_entry.device_id
     )

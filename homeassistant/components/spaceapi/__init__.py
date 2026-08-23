@@ -15,7 +15,6 @@ from homeassistant.const import (
     ATTR_LOCATION,
     ATTR_NAME,
     ATTR_STATE,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_ADDRESS,
     CONF_EMAIL,
     CONF_ENTITY_ID,
@@ -23,6 +22,7 @@ from homeassistant.const import (
     CONF_SENSORS,
     CONF_STATE,
     CONF_URL,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -252,6 +252,11 @@ class APISpaceApiView(HomeAssistantView):
     url = URL_API_SPACEAPI
     name = "api:spaceapi"
 
+    def __init__(self) -> None:
+        """Initialize SpaceAPI view."""
+        self.requires_auth = False
+        self.cors_allowed = True
+
     @staticmethod
     def get_sensor_data(
         hass: HomeAssistant, spaceapi: dict[str, Any], entity_id: str
@@ -275,8 +280,10 @@ class APISpaceApiView(HomeAssistantView):
         else:
             sensor_data[ATTR_LOCATION] = spaceapi[CONF_SPACE]
         # Some sensors don't have a unit of measurement
-        if ATTR_UNIT_OF_MEASUREMENT in sensor_state.attributes:
-            sensor_data[ATTR_UNIT] = sensor_state.attributes[ATTR_UNIT_OF_MEASUREMENT]
+        if EntityStateAttribute.UNIT_OF_MEASUREMENT in sensor_state.attributes:
+            sensor_data[ATTR_UNIT] = sensor_state.attributes[
+                EntityStateAttribute.UNIT_OF_MEASUREMENT
+            ]
 
         return sensor_data
 

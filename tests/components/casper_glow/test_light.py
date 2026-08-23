@@ -174,7 +174,10 @@ async def test_command_error(
     service: str,
     mock_method: str,
 ) -> None:
-    """Test that a device error raises HomeAssistantError without marking entity unavailable."""
+    """Test device error raises HomeAssistantError.
+
+    The entity should not be marked as unavailable.
+    """
     getattr(mock_casper_glow, mock_method).side_effect = CasperGlowError(
         "Connection failed"
     )
@@ -198,7 +201,7 @@ async def test_state_update_via_callback_after_command_failure(
     mock_casper_glow: MagicMock,
     fire_callbacks: Callable[[GlowState], Awaitable[None]],
 ) -> None:
-    """Test that device callbacks correctly update state even after a command failure."""
+    """Test callbacks update state after a command failure."""
     mock_casper_glow.turn_on.side_effect = CasperGlowError("Connection failed")
 
     # Fail a command — entity remains in last known state (unknown), not unavailable

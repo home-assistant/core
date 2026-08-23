@@ -8,13 +8,13 @@ from victron_mqtt import AuthenticationError, CannotConnectError
 from homeassistant.components.victron_gx.config_flow import DEFAULT_PORT
 from homeassistant.components.victron_gx.const import (
     CONF_INSTALLATION_ID,
-    CONF_MODEL,
     CONF_SERIAL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
+    CONF_MODEL,
     CONF_PASSWORD,
     CONF_PORT,
     CONF_SSL,
@@ -695,3 +695,231 @@ async def test_reauth_flow_error_and_recover(
     assert mock_config_entry.data[CONF_USERNAME] == "new-user"
     assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
     assert mock_config_entry.data[CONF_SSL] is True
+
+
+@pytest.mark.usefixtures("mock_victron_hub")
+async def test_reconfigure_flow_success(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test successful reconfiguration updates data and title."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_PORT: 8883,
+            CONF_USERNAME: "new-user",
+            CONF_PASSWORD: "new-password",
+            CONF_SSL: True,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_HOST] == "192.168.1.200"
+    assert mock_config_entry.data[CONF_PORT] == 8883
+    assert mock_config_entry.data[CONF_USERNAME] == "new-user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"
+    assert mock_config_entry.data[CONF_SSL] is True
+    assert mock_config_entry.data[CONF_INSTALLATION_ID] == MOCK_INSTALLATION_ID
+    assert mock_config_entry.data[CONF_SERIAL] == MOCK_SERIAL
+    assert mock_config_entry.data[CONF_MODEL] == MOCK_MODEL
+    assert mock_config_entry.title == "Victron OS 123 (192.168.1.200:8883)"
+
+
+@pytest.mark.usefixtures("mock_victron_hub")
+async def test_reconfigure_flow_clears_credentials(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test reconfigure clears credentials when submitted empty."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_USERNAME: "",
+            CONF_PASSWORD: "",
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_USERNAME] is None
+    assert mock_config_entry.data[CONF_PASSWORD] is None
+
+
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AuthenticationError("Invalid credentials"), "invalid_auth"),
+        (CannotConnectError("Cannot connect"), "cannot_connect"),
+        (Exception("Unexpected error"), "unknown"),
+    ],
+)
+async def test_reconfigure_flow_error_and_recover(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_victron_hub: MagicMock,
+    exception: Exception,
+    error: str,
+) -> None:
+    """Test reconfigure handles errors and allows recovery."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    mock_victron_hub.return_value.connect.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+
+    # Recover from error
+    mock_victron_hub.return_value.connect.side_effect = None
+    mock_victron_hub.return_value.installation_id = MOCK_INSTALLATION_ID
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: MOCK_HOST,
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+
+async def test_reconfigure_flow_different_device(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_victron_hub: MagicMock,
+) -> None:
+    """Test reconfigure aborts when device identity changes."""
+    mock_config_entry.add_to_hass(hass)
+
+    mock_victron_hub.return_value.installation_id = "different_installation_id"
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            CONF_HOST: "192.168.1.200",
+            CONF_PORT: DEFAULT_PORT,
+            CONF_SSL: False,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "different_device"
+    # Entry should be unchanged
+    assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+
+
+@pytest.mark.parametrize(
+    ("entry_source", "host_data", "expected_host", "title_changed"),
+    [
+        pytest.param(
+            SOURCE_USER,
+            {CONF_HOST: MOCK_HOST},
+            "10.0.0.50",
+            True,
+            id="changed-host",
+        ),
+        pytest.param(SOURCE_IGNORE, {}, None, False, id="ignored-entry"),
+    ],
+)
+@pytest.mark.usefixtures("mock_victron_hub")
+async def test_ssdp_flow_updates_host_on_rediscovery(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entry_source: str,
+    host_data: dict[str, str],
+    expected_host: str | None,
+    title_changed: bool,
+) -> None:
+    """Test SSDP rediscovery of configured and ignored entries."""
+    mock_config_entry.source = entry_source
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            key: value
+            for key, value in mock_config_entry.data.items()
+            if key != CONF_HOST
+        }
+        | host_data,
+    )
+    original_title = mock_config_entry.title
+
+    discovery_info = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="upnp:rootdevice",
+        ssdp_location="http://10.0.0.50:80/",
+        upnp={
+            "serialNumber": MOCK_SERIAL,
+            "X_VrmPortalId": MOCK_INSTALLATION_ID,
+            "modelName": MOCK_MODEL,
+            "friendlyName": MOCK_FRIENDLY_NAME,
+            "X_MqttOnLan": "1",
+            "manufacturer": "Victron Energy",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.data.get(CONF_HOST) == expected_host
+    assert (mock_config_entry.title != original_title) is title_changed
+    assert ("10.0.0.50" in mock_config_entry.title) is title_changed
+
+
+@pytest.mark.usefixtures("mock_victron_hub")
+async def test_ssdp_flow_abort_on_invalid_hostname(
+    hass: HomeAssistant,
+) -> None:
+    """Test SSDP discovery aborts when hostname is invalid."""
+    discovery_info = SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="upnp:rootdevice",
+        ssdp_location="http://:80/",  # No hostname in URL
+        upnp={
+            "serialNumber": MOCK_SERIAL,
+            "X_VrmPortalId": MOCK_INSTALLATION_ID,
+            "modelName": MOCK_MODEL,
+            "friendlyName": MOCK_FRIENDLY_NAME,
+            "X_MqttOnLan": "1",
+            "manufacturer": "Victron Energy",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_SSDP},
+        data=discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

@@ -11,11 +11,11 @@ from homeassistant.components.humidifier.const import (
     HumidifierAction,
     HumidifierEntityFeature,
 )
-from homeassistant.components.humidifier.trigger import CONF_MODE
 from homeassistant.const import (
     ATTR_MODE,
     ATTR_SUPPORTED_FEATURES,
     CONF_ENTITY_ID,
+    CONF_MODE,
     CONF_OPTIONS,
     CONF_TARGET,
     STATE_OFF,
@@ -26,10 +26,10 @@ from homeassistant.helpers.trigger import async_validate_trigger_config
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_target_entities,
     parametrize_trigger_states,
     target_entities,
@@ -43,23 +43,32 @@ async def target_humidifiers(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.mark.parametrize(
-    "trigger_key",
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "humidifier.mode_changed",
-        "humidifier.started_drying",
-        "humidifier.started_humidifying",
-        "humidifier.turned_off",
-        "humidifier.turned_on",
+        ("humidifier.started_drying", {}, True, True),
+        ("humidifier.started_humidifying", {}, True, True),
+        ("humidifier.turned_on", {}, True, True),
+        ("humidifier.turned_off", {}, True, True),
+        ("humidifier.mode_changed", {"mode": ["normal"]}, True, True),
     ],
 )
-async def test_humidifier_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+async def test_humidifier_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the humidifier triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    """Test that humidifier triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -79,7 +88,7 @@ async def test_humidifier_triggers_gated_by_labs_flag(
         ),
     ],
 )
-async def test_humidifier_state_trigger_behavior_any(
+async def test_humidifier_state_trigger_behavior_each(
     hass: HomeAssistant,
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -89,8 +98,8 @@ async def test_humidifier_state_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the humidifier state trigger fires when any humidifier state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test humidifier state trigger fires on any state change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
@@ -102,7 +111,6 @@ async def test_humidifier_state_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -137,7 +145,7 @@ async def test_humidifier_state_trigger_behavior_any(
         ),
     ],
 )
-async def test_humidifier_state_attribute_trigger_behavior_any(
+async def test_humidifier_state_attribute_trigger_behavior_each(
     hass: HomeAssistant,
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -147,8 +155,8 @@ async def test_humidifier_state_attribute_trigger_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the humidifier state trigger fires when any humidifier state changes to a specific state."""
-    await assert_trigger_behavior_any(
+    """Test humidifier attribute trigger fires on any state change."""
+    await assert_trigger_behavior_each(
         hass,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
@@ -160,7 +168,6 @@ async def test_humidifier_state_attribute_trigger_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -190,7 +197,7 @@ async def test_humidifier_state_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the humidifier state trigger fires when the first humidifier changes to a specific state."""
+    """Test humidifier trigger fires on first entity state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_humidifiers,
@@ -203,7 +210,6 @@ async def test_humidifier_state_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -248,7 +254,7 @@ async def test_humidifier_state_attribute_trigger_behavior_first(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the humidifier state trigger fires when the first humidifier state changes to a specific state."""
+    """Test humidifier attribute trigger fires on first state change."""
     await assert_trigger_behavior_first(
         hass,
         target_entities=target_humidifiers,
@@ -261,7 +267,6 @@ async def test_humidifier_state_attribute_trigger_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -281,7 +286,7 @@ async def test_humidifier_state_attribute_trigger_behavior_first(
         ),
     ],
 )
-async def test_humidifier_state_trigger_behavior_last(
+async def test_humidifier_state_trigger_behavior_all(
     hass: HomeAssistant,
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -291,8 +296,8 @@ async def test_humidifier_state_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test that the humidifier state trigger fires when the last humidifier changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test humidifier trigger fires when all entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
@@ -304,7 +309,6 @@ async def test_humidifier_state_trigger_behavior_last(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("humidifier"),
@@ -339,7 +343,7 @@ async def test_humidifier_state_trigger_behavior_last(
         ),
     ],
 )
-async def test_humidifier_state_attribute_trigger_behavior_last(
+async def test_humidifier_state_attribute_trigger_behavior_all(
     hass: HomeAssistant,
     target_humidifiers: dict[str, list[str]],
     trigger_target_config: dict,
@@ -349,8 +353,8 @@ async def test_humidifier_state_attribute_trigger_behavior_last(
     trigger_options: dict[str, Any],
     states: list[tuple[tuple[str, dict], int]],
 ) -> None:
-    """Test that the humidifier state trigger fires when the last humidifier state changes to a specific state."""
-    await assert_trigger_behavior_last(
+    """Test humidifier attribute trigger fires when all entities have changed state."""
+    await assert_trigger_behavior_all(
         hass,
         target_entities=target_humidifiers,
         trigger_target_config=trigger_target_config,
@@ -362,7 +366,6 @@ async def test_humidifier_state_attribute_trigger_behavior_last(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger", "trigger_options", "expected_result"),
     [

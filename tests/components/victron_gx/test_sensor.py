@@ -1,7 +1,6 @@
 """Tests for Victron GX MQTT sensors."""
 
-from __future__ import annotations
-
+import pytest
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -24,6 +23,22 @@ async def test_victron_battery_sensor(
     """Test SENSOR MetricKind - battery current sensor is created and updated."""
     victron_hub, mock_config_entry = init_integration
 
+    # Inject a system metric first so the gateway device (system_0) is registered
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/system/0/SystemState/State",
+        '{"value": 1}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    # Verify system device has no via_device (it IS the gateway)
+    system_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0"), mock_config_entry.entry_id
+    )
+    assert system_device is not None
+    assert system_device.via_device_id is None
+
     # Inject a sensor metric (battery current)
     await inject_message(
         victron_hub,
@@ -38,10 +53,9 @@ async def test_victron_battery_sensor(
         entity_registry, mock_config_entry.entry_id
     )
 
-    # Exactly one entity is expected for this injected metric.
-    assert len(entities) == 1
-    entity = entities[0]
-    assert entity.entity_id == "sensor.battery_dc_bus_current"
+    # Exactly two entities are expected: system state + battery current
+    assert len(entities) == 2
+    entity = next(e for e in entities if e.entity_id == "sensor.battery_dc_bus_current")
     assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_battery_0_battery_current"
     assert entity.original_device_class is SensorDeviceClass.CURRENT
     assert entity.unit_of_measurement == "A"
@@ -55,12 +69,14 @@ async def test_victron_battery_sensor(
     assert state.attributes["unit_of_measurement"] == "A"
 
     # Verify device info was registered correctly
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_battery_0"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Victron Energy"
     assert device.name == "Battery"
+    # Verify battery device has via_device pointing to system_0 (gateway)
+    assert device.via_device_id == system_device.id
 
     # Update the same metric to exercise the entity update callback path.
     await inject_message(
@@ -98,20 +114,21 @@ async def test_victron_enum_sensor(
     assert state.state == "low_power"
 
     # Verify system device has no via_device (it IS the gateway)
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0"), _mock_config_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Victron Energy"
     assert device.via_device_id is None
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_victron_main_topic_sensor(
     hass: HomeAssistant,
     init_integration: tuple[VictronVenusHub, MockConfigEntry],
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test sensor whose metric has main_topic=True uses name instead of translation key."""
+    """Test sensor with main_topic=True keeps translation key and device name."""
     victron_hub, mock_config_entry = init_integration
 
     # Multi RS MPPT MppOperationMode is a main_topic metric
@@ -130,11 +147,73 @@ async def test_victron_main_topic_sensor(
     assert len(entities) == 1
     entity = entities[0]
     assert entity.unique_id == f"{MOCK_INSTALLATION_ID}_multi_0_multi_mppt_1_state"
-    # main_topic entities get their name from the device, not a translation key
-    assert entity.translation_key is None
+    assert entity.translation_key == "multi_mppt_mpptnumber_state"
 
     state = hass.states.get(entity.entity_id)
     assert state is not None
     assert state.state == "mppt_active"
     # Entity uses device name only (no separate entity name)
     assert state.attributes["friendly_name"] == "Multi RS Solar"
+
+
+async def test_native_unit_of_measurement_cost_metric(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test native_unit_of_measurement returns currency for COST metric type."""
+    victron_hub, _mock_config_entry = init_integration
+
+    hass.config.currency = "USD"
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/evcharger/0/Session/Cost",
+        '{"value": 12.34}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.ev_charging_station_last_session_cost")
+    assert state is not None
+    assert state.attributes["unit_of_measurement"] == "USD"
+    assert state.state == "12.34"
+
+
+async def test_native_unit_of_measurement_with_device_class(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test native_unit_of_measurement returns unit for metrics with device class."""
+    victron_hub, _mock_config_entry = init_integration
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/battery/0/Dc/0/Current",
+        '{"value": 10.5}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.battery_dc_bus_current")
+    assert state is not None
+    assert state.attributes["unit_of_measurement"] == "A"
+
+
+async def test_native_unit_of_measurement_special_unit(
+    hass: HomeAssistant,
+    init_integration: tuple[VictronVenusHub, MockConfigEntry],
+) -> None:
+    """Test native_unit_of_measurement returns special units like %."""
+    victron_hub, _mock_config_entry = init_integration
+
+    await inject_message(
+        victron_hub,
+        f"N/{MOCK_INSTALLATION_ID}/battery/0/Soc",
+        '{"value": 85}',
+    )
+    await finalize_injection(victron_hub)
+    await hass.async_block_till_done()
+
+    state = hass.states.get("sensor.battery_charge")
+    assert state is not None
+    assert state.attributes["unit_of_measurement"] == "%"

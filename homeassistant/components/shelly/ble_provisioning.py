@@ -1,16 +1,13 @@
 """BLE provisioning helpers for Shelly integration."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass, field
-import logging
 
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.util.hass_dict import HassKey
 
-_LOGGER = logging.getLogger(__name__)
+from .const import LOGGER
 
 
 @dataclass
@@ -64,7 +61,7 @@ def async_register_zeroconf_discovery(
 
     state = registry.get(normalized_mac)
     if not state:
-        _LOGGER.debug(
+        LOGGER.debug(
             "No BLE provisioning state found for %s (host %s, port %s)",
             normalized_mac,
             host,
@@ -72,7 +69,7 @@ def async_register_zeroconf_discovery(
         )
         return
 
-    _LOGGER.debug(
+    LOGGER.debug(
         "Registering zeroconf discovery for %s at %s:%s (replacing previous)",
         normalized_mac,
         host,

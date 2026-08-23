@@ -1,11 +1,9 @@
 """Support for the QNAP QSW sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass, replace
 from datetime import datetime
-from typing import Final
+from typing import Final, override
 
 from aioqsw.const import (
     QSD_FAN1_SPEED,
@@ -359,7 +357,7 @@ class QswSensor(QswSensorEntity, SensorEntity):
         """Initialize."""
         super().__init__(coordinator, entry, type_id)
 
-        if description.name == UNDEFINED:
+        if description.name is UNDEFINED:
             self._attr_has_entity_name = True
         else:
             self._attr_name = f"{self.product} {description.name}"
@@ -371,6 +369,7 @@ class QswSensor(QswSensorEntity, SensorEntity):
         self._async_update_attrs()
 
     @callback
+    @override
     def _async_update_attrs(self) -> None:
         """Update sensor attributes."""
         value = self.get_device_value(

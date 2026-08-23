@@ -1,7 +1,5 @@
 """Generate ssdp file."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 
 from .model import Config, Integration

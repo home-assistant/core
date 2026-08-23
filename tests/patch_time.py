@@ -1,7 +1,5 @@
 """Patch time related functions."""
 
-from __future__ import annotations
-
 import datetime
 import time
 
@@ -76,7 +74,7 @@ datetime.HAFakeDatetime = HAFakeDatetime
 
 def _utcnow() -> datetime.datetime:
     """Make utcnow patchable by freezegun."""
-    return datetime.datetime.now(datetime.UTC)
+    return datetime.datetime.now(datetime.UTC)  # pylint: disable=home-assistant-enforce-utcnow
 
 
 def _monotonic() -> float:

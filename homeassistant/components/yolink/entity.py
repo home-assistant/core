@@ -1,19 +1,16 @@
 """Support for YoLink Device."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
 from yolink.client_request import ClientRequest
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN, MANUFACTURER
-from .coordinator import YoLinkCoordinator
+from .coordinator import YoLinkConfigEntry, YoLinkCoordinator
 
 
 class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
@@ -23,7 +20,7 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
 
     def __init__(
         self,
-        config_entry: ConfigEntry,
+        config_entry: YoLinkConfigEntry,
         coordinator: YoLinkCoordinator,
     ) -> None:
         """Init YoLink Entity."""
@@ -35,12 +32,14 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
         """Return the device id of the YoLink device."""
         return self.coordinator.device.device_id
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Update state."""
         await super().async_added_to_hass()
         return self._handle_coordinator_update()
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update state."""
         data = self.coordinator.data
@@ -48,6 +47,7 @@ class YoLinkEntity(CoordinatorEntity[YoLinkCoordinator]):
             self.update_entity_state(data)
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return the device info for HA."""
         return DeviceInfo(

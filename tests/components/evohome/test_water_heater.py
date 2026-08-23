@@ -3,8 +3,6 @@
 Not all evohome systems will have a DHW zone.
 """
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -42,7 +40,10 @@ async def test_setup_platform(
     async for _ in setup_evohome(hass, config, install=install):
         pass
 
-    for x in hass.states.async_all(WATER_HEATER_DOMAIN):
+    water_heater_states = hass.states.async_all(WATER_HEATER_DOMAIN)
+    assert water_heater_states
+
+    for x in water_heater_states:
         assert x == snapshot(name=f"{x.entity_id}-state")
 
 

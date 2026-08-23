@@ -1,7 +1,9 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Unable to connect to the Google Weather API:\n\n{error_message}",
@@ -38,7 +40,8 @@
     "location": {
       "abort": {
         "already_configured": "[%key:common::config_flow::abort::already_configured_location%]",
-        "entry_not_loaded": "Cannot add things while the configuration is disabled."
+        "entry_not_loaded": "Cannot add things while the configuration is disabled.",
+        "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
       },
       "entry_type": "Location",
       "error": {
@@ -46,6 +49,7 @@
         "unknown": "[%key:common::config_flow::error::unknown%]"
       },
       "initiate_flow": {
+        "reconfigure": "Reconfigure location",
         "user": "Add location"
       },
       "step": {
@@ -100,6 +104,9 @@
     }
   },
   "exceptions": {
+    "auth_error": {
+      "message": "Authentication failed: {error}"
+    },
     "update_error": {
       "message": "Error fetching weather data: {error}"
     }

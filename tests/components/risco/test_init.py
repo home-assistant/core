@@ -1,30 +1,139 @@
 """Tests for the Risco integration."""
 
-from unittest.mock import patch
+import logging
+from typing import Any, cast
+from unittest.mock import AsyncMock, MagicMock, patch
 
+from pyrisco import OperationError
 import pytest
 
+from homeassistant.components.risco.const import (
+    CONF_COMMUNICATION_DELAY,
+    DEFAULT_CONCURRENCY,
+    DOMAIN,
+    TYPE_LOCAL,
+)
+from homeassistant.const import CONF_HOST, CONF_PIN, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_error_handler():
+def mock_error_handler() -> MagicMock:
     """Create a mock for add_error_handler."""
     with patch("homeassistant.components.risco.RiscoLocal.add_error_handler") as mock:
         yield mock
 
 
 async def test_connection_reset(
-    hass: HomeAssistant, two_zone_local, mock_error_handler, setup_risco_local
+    hass: HomeAssistant,
+    two_zone_local: dict[int, Any],
+    mock_error_handler: MagicMock,
+    setup_risco_local: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test config entry reload on connection reset."""
-
+    """Test that ConnectionResetError triggers a reload but generic errors do not."""
     callback = mock_error_handler.call_args.args[0]
     assert callback is not None
 
-    with patch.object(hass.config_entries, "async_reload") as reload_mock:
-        await callback(Exception())
-        reload_mock.assert_not_awaited()
+    local_data = setup_risco_local.runtime_data.local_data
+    disconnect_mock = cast(AsyncMock, local_data.system.disconnect)
+    connect_mock = cast(AsyncMock, local_data.system.connect)
 
-        await callback(ConnectionResetError())
-        reload_mock.assert_awaited_once()
+    caplog.set_level(logging.DEBUG, logger="homeassistant.components.risco")
+
+    # Generic error should not trigger reload — unload/setup not invoked again
+    await callback(Exception())
+    await hass.async_block_till_done()
+    disconnect_mock.assert_not_called()
+    assert connect_mock.call_count == 1
+
+    # ConnectionResetError should trigger a reload
+    await callback(ConnectionResetError())
+    await hass.async_block_till_done()
+    disconnect_mock.assert_awaited_once()
+    assert connect_mock.call_count == 2
+    assert "Disconnected from panel. Reloading integration" in caplog.text
+
+
+async def test_unload_handles_disconnect_error(
+    hass: HomeAssistant,
+    two_zone_local: dict[int, Any],
+    setup_risco_local: MockConfigEntry,
+) -> None:
+    """Test unload succeeds when local disconnect errors out."""
+    with patch(
+        "homeassistant.components.risco.RiscoLocal.disconnect",
+        side_effect=RuntimeError("disconnect failed"),
+    ) as disconnect_mock:
+        assert await hass.config_entries.async_unload(setup_risco_local.entry_id)
+        disconnect_mock.assert_awaited_once()
+
+
+async def test_local_setup_uses_stored_communication_delay(
+    hass: HomeAssistant,
+) -> None:
+    """Test local setup passes stored communication delay to the client."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_TYPE: TYPE_LOCAL,
+            CONF_HOST: "test-host",
+            CONF_PORT: 5004,
+            CONF_PIN: "1234",
+            CONF_COMMUNICATION_DELAY: 2,
+        },
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.risco.RiscoLocal", autospec=True
+        ) as risco_local,
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            AsyncMock(return_value=True),
+        ),
+    ):
+        risco_local.return_value.connect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        risco_local.assert_called_once_with(
+            "test-host",
+            5004,
+            "1234",
+            communication_delay=2,
+            concurrency=DEFAULT_CONCURRENCY,
+        )
+
+
+async def test_clock_operation_error_is_downgraded(
+    hass: HomeAssistant,
+    two_zone_local: dict[int, Any],
+    mock_error_handler: MagicMock,
+    setup_risco_local: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test CLOCK keep-alive operation errors warn without triggering reload."""
+    callback = mock_error_handler.call_args.args[0]
+    assert callback is not None
+
+    local_data = setup_risco_local.runtime_data.local_data
+    disconnect_mock = cast(AsyncMock, local_data.system.disconnect)
+
+    caplog.set_level(logging.WARNING, logger="homeassistant.components.risco")
+    await callback(OperationError("Timeout in command: CLOCK"))
+
+    disconnect_mock.assert_not_awaited()
+    assert "Error in Risco library" not in caplog.text
+
+    expected_warning = (
+        "Risco keep-alive timeout for entry "
+        f"{setup_risco_local.title} (host: "
+        f"{setup_risco_local.data.get(CONF_HOST, 'unknown')})"
+    )
+    assert expected_warning in caplog.text

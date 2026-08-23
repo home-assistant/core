@@ -1,16 +1,17 @@
 """Support for LiteJet switch."""
 
-from typing import Any
+from typing import Any, override
 
 from pylitejet import LiteJet, LiteJetError
 
 from homeassistant.components.switch import SwitchDeviceClass, SwitchEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import LiteJetConfigEntry
 from .const import DOMAIN
 
 ATTR_NUMBER = "number"
@@ -18,17 +19,17 @@ ATTR_NUMBER = "number"
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: LiteJetConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up entry."""
 
-    system: LiteJet = hass.data[DOMAIN]
+    system = config_entry.runtime_data
 
     entities = []
     for i in system.button_switches():
         name = await system.get_switch_name(i)
-        entities.append(LiteJetSwitch(config_entry.entry_id, system, i, name))
+        entities.append(LiteJetSwitch(hass, config_entry.entry_id, system, i, name))
 
     async_add_entities(entities, True)
 
@@ -41,7 +42,9 @@ class LiteJetSwitch(SwitchEntity):
     _attr_entity_registry_enabled_default = False
     _attr_device_class = SwitchDeviceClass.SWITCH
 
-    def __init__(self, entry_id: str, system: LiteJet, i: int, name: str) -> None:
+    def __init__(
+        self, hass: HomeAssistant, entry_id: str, system: LiteJet, i: int, name: str
+    ) -> None:
         """Initialize a LiteJet switch."""
         self._lj = system
         self._index = i
@@ -55,15 +58,19 @@ class LiteJetSwitch(SwitchEntity):
             identifiers={(DOMAIN, f"{entry_id}_keypad_{keypad_number}")},
             name=system.get_switch_keypad_name(i),
             manufacturer="Centralite",
-            via_device=(DOMAIN, f"{entry_id}_mcp"),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, f"{entry_id}_mcp"), config_entry_id=entry_id
+            ),
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when this Entity has been added to HA."""
         self._lj.on_switch_pressed(self._index, self._on_switch_pressed)
         self._lj.on_switch_released(self._index, self._on_switch_released)
         self._lj.on_connected_changed(self._on_connected_changed)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Entity being removed from hass."""
         self._lj.unsubscribe(self._on_switch_pressed)
@@ -83,10 +90,12 @@ class LiteJetSwitch(SwitchEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device-specific state attributes."""
         return {ATTR_NUMBER: self._index}
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Press the switch."""
         try:
@@ -94,6 +103,7 @@ class LiteJetSwitch(SwitchEntity):
         except LiteJetError as exc:
             raise HomeAssistantError from exc
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Release the switch."""
         try:

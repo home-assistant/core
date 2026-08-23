@@ -520,6 +520,11 @@ ZEROCONF = {
             "domain": "freebox",
         },
     ],
+    "_gasleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast",
@@ -584,6 +589,10 @@ ZEROCONF = {
             "name": "bsb-lan*",
         },
         {
+            "domain": "duco",
+            "name": "duco [[][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][0-9a-f][]].*",
+        },
+        {
             "domain": "eheimdigital",
             "name": "eheimdigital._http._tcp.local.",
         },
@@ -602,6 +611,10 @@ ZEROCONF = {
         {
             "domain": "homevolt",
             "name": "homevolt*",
+        },
+        {
+            "domain": "indevolt",
+            "name": "igen_fw*",
         },
         {
             "domain": "lektrico",
@@ -701,6 +714,11 @@ ZEROCONF = {
     "_ipps._tcp.local.": [
         {
             "domain": "ipp",
+        },
+    ],
+    "_kiosker._tcp.local.": [
+        {
+            "domain": "kiosker",
         },
     ],
     "_kizbox._tcp.local.": [
@@ -978,6 +996,11 @@ ZEROCONF = {
             "domain": "cambridge_audio",
         },
     ],
+    "_stromleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_system-bridge._tcp.local.": [
         {
             "domain": "system_bridge",
@@ -986,6 +1009,11 @@ ZEROCONF = {
     "_systemnexa2._tcp.local.": [
         {
             "domain": "systemnexa2",
+        },
+    ],
+    "_tbk_vmc._tcp.local.": [
+        {
+            "domain": "flow_it",
         },
     ],
     "_technove-stations._tcp.local.": [
@@ -1019,9 +1047,30 @@ ZEROCONF = {
             "domain": "vizio",
         },
     ],
+    "_waermeleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
+    "_wasserleser._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
+    "_wattwaechter._tcp.local.": [
+        {
+            "domain": "wattwaechter",
+        },
+    ],
     "_wled._tcp.local.": [
         {
             "domain": "wled",
+        },
+    ],
+    "_ws._tcp.local.": [
+        {
+            "domain": "hotspring",
+            "name": "watkins_spa*",
         },
     ],
     "_wyoming._tcp.local.": [

@@ -6,4 +6,4 @@ ATTR_URL = "color_extract_url"
 DOMAIN = "color_extractor"
 DEFAULT_NAME = "Color extractor"
 
-SERVICE_TURN_ON = "turn_on"
+SERVICE_GET_COLOR = "get_color"

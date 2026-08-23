@@ -7,9 +7,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.music_assistant.const import DOMAIN
-from homeassistant.components.music_assistant.number import (
-    PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER,
-)
+from homeassistant.components.music_assistant.number import PLAYER_OPTIONS_NUMBER
 from homeassistant.components.number import (
     ATTR_VALUE,
     DOMAIN as NUMBER_DOMAIN,
@@ -141,13 +139,13 @@ async def test_ignored(
 async def test_name_translation_availability(
     hass: HomeAssistant,
 ) -> None:
-    """Verify, that the list of available translation keys is reflected in strings.json."""
+    """Verify available translation keys are in strings.json."""
     # verify, that PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER matches strings.json
     translations = await async_get_translations(
         hass, language=LOCALE_EN, category="entity", integrations=[DOMAIN]
     )
     prefix = f"component.{DOMAIN}.entity.{Platform.NUMBER.value}."
-    for translation_key in PLAYER_OPTIONS_TRANSLATION_KEYS_NUMBER:
+    for translation_key in PLAYER_OPTIONS_NUMBER:
         assert translations.get(f"{prefix}{translation_key}.name") is not None, (
             f"{translation_key} is missing in strings.json for platform number"
         )

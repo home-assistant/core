@@ -1,7 +1,5 @@
 """Test the Electric Kiwi config flow."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 from unittest.mock import AsyncMock
 
@@ -26,7 +24,7 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
 
-@pytest.mark.usefixtures("current_request_with_host", "electrickiwi_api")
+@pytest.mark.usefixtures("current_request_with_host")
 async def test_full_flow(
     hass: HomeAssistant,
     hass_client_no_auth: ClientSessionGenerator,

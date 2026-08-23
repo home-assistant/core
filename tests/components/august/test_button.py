@@ -13,7 +13,7 @@ async def test_wake_lock(hass: HomeAssistant) -> None:
         hass, "get_lock.online_with_doorsense.json"
     )
     _, api_instance, _ = await _create_august_api_with_devices(hass, [lock_one])
-    entity_id = "button.online_with_doorsense_name_wake"
+    entity_id = "button.online_with_doorsense_name_online_with_doorsense_name_wake"
     binary_sensor_online_with_doorsense_name = hass.states.get(entity_id)
     assert binary_sensor_online_with_doorsense_name is not None
     api_instance.async_status_async.reset_mock()

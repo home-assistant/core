@@ -1,9 +1,8 @@
 """Support for w800rf32 binary sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 import voluptuous as vol
 import W800rf32 as w800
@@ -132,6 +131,7 @@ class W800rf32BinarySensor(BinarySensorEntity):
         self._attr_is_on = state
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register update callback."""
         async_dispatcher_connect(self.hass, self._signal, self.binary_sensor_update)

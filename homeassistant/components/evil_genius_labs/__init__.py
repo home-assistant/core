@@ -1,7 +1,5 @@
 """The Evil Genius Labs integration."""
 
-from __future__ import annotations
-
 import pyevilgenius
 
 from homeassistant.const import Platform

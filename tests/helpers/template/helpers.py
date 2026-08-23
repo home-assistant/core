@@ -1,7 +1,5 @@
 """Helpers for tests around template rendering."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 from typing import Any
 

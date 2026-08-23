@@ -103,7 +103,13 @@ async def init_integration(hass: HomeAssistant):
     # Zone Default Overlay
     zone_def_overlay = "zone_default_overlay.json"
 
-    with requests_mock.mock() as m:
+    with (
+        requests_mock.mock() as m,
+        patch(
+            "PyTado.interface.Tado.rate_limit_info",
+            return_value={"per-day": 1000, "remaining": 100},
+        ),
+    ):
         m.post(
             "https://auth.tado.com/oauth/token",
             text=await async_load_fixture(hass, token_fixture, DOMAIN),
@@ -147,6 +153,14 @@ async def init_integration(hass: HomeAssistant):
         m.get(
             "https://my.tado.com/api/v2/devices/WR4/temperatureOffset",
             text=await async_load_fixture(hass, device_temp_offset, DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/heatingCircuits",
+            text=await async_load_fixture(hass, "heating_circuits.json", DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/1/control",
+            text=await async_load_fixture(hass, "zone_control.json", DOMAIN),
         )
         m.get(
             "https://my.tado.com/api/v2/homes/1/zones",
@@ -232,6 +246,7 @@ async def init_integration(hass: HomeAssistant):
             "https://login.tado.com/oauth2/token",
             text=await async_load_fixture(hass, token_fixture, DOMAIN),
         )
+
         entry = MockConfigEntry(
             domain=DOMAIN,
             version=2,

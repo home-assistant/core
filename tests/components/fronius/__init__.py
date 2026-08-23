@@ -1,7 +1,5 @@
 """Tests for the Fronius integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import json
 from typing import Any
@@ -41,7 +39,7 @@ async def setup_fronius_integration(
 def _load_and_patch_fixture(
     override_data: dict[str, list[tuple[list[str], Any]]],
 ) -> Callable[[str, str | None], str]:
-    """Return a fixture loader that patches values at nested keys for a given filename."""
+    """Return a fixture loader that patches nested key values."""
 
     def load_and_patch(filename: str, integration: str):
         """Load a fixture and patch given values."""

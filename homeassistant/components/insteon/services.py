@@ -1,7 +1,5 @@
 """Utilities used by insteon component."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
@@ -35,6 +33,7 @@ from homeassistant.helpers.dispatcher import (
     async_dispatcher_send,
     dispatcher_send,
 )
+from homeassistant.helpers.service import async_register_admin_service
 
 from .const import (
     CONF_CAT,
@@ -218,7 +217,10 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         signal = f"{address.id}_{SIGNAL_REMOVE_ENTITY}"
         async_dispatcher_send(hass, signal)
         dev_registry = dr.async_get(hass)
-        device = dev_registry.async_get_device(identifiers={(DOMAIN, str(address))})
+        config_entry = hass.config_entries.async_entries(DOMAIN)[0]
+        device = dev_registry.async_get_device_by_identifier(
+            (DOMAIN, str(address)), config_entry.entry_id
+        )
         if device:
             dev_registry.async_remove_device(device.id)
 
@@ -231,11 +233,19 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         )
         await async_srv_save_devices()
 
-    hass.services.async_register(
-        DOMAIN, SRV_ADD_ALL_LINK, async_srv_add_all_link, schema=ADD_ALL_LINK_SCHEMA
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SRV_ADD_ALL_LINK,
+        async_srv_add_all_link,
+        schema=ADD_ALL_LINK_SCHEMA,
     )
-    hass.services.async_register(
-        DOMAIN, SRV_DEL_ALL_LINK, async_srv_del_all_link, schema=DEL_ALL_LINK_SCHEMA
+    async_register_admin_service(
+        hass,
+        DOMAIN,
+        SRV_DEL_ALL_LINK,
+        async_srv_del_all_link,
+        schema=DEL_ALL_LINK_SCHEMA,
     )
     hass.services.async_register(
         DOMAIN, SRV_LOAD_ALDB, async_srv_load_aldb, schema=LOAD_ALDB_SCHEMA
@@ -269,7 +279,8 @@ def async_setup_services(hass: HomeAssistant) -> None:  # noqa: C901
         DOMAIN, SRV_SCENE_OFF, async_srv_scene_off, schema=TRIGGER_SCENE_SCHEMA
     )
 
-    hass.services.async_register(
+    async_register_admin_service(
+        hass,
         DOMAIN,
         SRV_ADD_DEFAULT_LINKS,
         async_add_default_links,

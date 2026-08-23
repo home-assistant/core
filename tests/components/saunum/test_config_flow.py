@@ -1,9 +1,5 @@
 """Test the Saunum config flow."""
 
-from __future__ import annotations
-
-from unittest.mock import AsyncMock
-
 from pysaunum import SaunumConnectionError, SaunumException
 import pytest
 
@@ -24,8 +20,8 @@ TEST_USER_INPUT = {CONF_HOST: "192.168.1.100"}
 TEST_RECONFIGURE_INPUT = {CONF_HOST: "192.168.1.200"}
 
 
-@pytest.mark.usefixtures("mock_saunum_client")
-async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_saunum_client", "mock_setup_entry")
+async def test_full_flow(hass: HomeAssistant) -> None:
     """Test full flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -52,12 +48,12 @@ async def test_full_flow(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> No
         (Exception("Unexpected error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form_errors(
     hass: HomeAssistant,
     mock_saunum_client_class,
     side_effect: Exception,
     error_base: str,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test error handling and recovery."""
     mock_saunum_client_class.create.side_effect = side_effect
@@ -106,13 +102,10 @@ async def test_form_duplicate(
     assert result["reason"] == "already_configured"
 
 
-@pytest.mark.usefixtures("mock_saunum_client")
+@pytest.mark.usefixtures("mock_saunum_client", "mock_setup_entry")
 @pytest.mark.parametrize("user_input", [TEST_RECONFIGURE_INPUT, TEST_USER_INPUT])
 async def test_reconfigure_flow(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    user_input: dict[str, str],
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry, user_input: dict[str, str]
 ) -> None:
     """Test reconfigure flow."""
     mock_config_entry.add_to_hass(hass)
@@ -140,13 +133,13 @@ async def test_reconfigure_flow(
         (Exception("Unexpected error"), "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_reconfigure_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_saunum_client_class,
     side_effect: Exception,
     error_base: str,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test reconfigure flow error handling."""
     mock_config_entry.add_to_hass(hass)
@@ -178,9 +171,9 @@ async def test_reconfigure_errors(
     assert mock_config_entry.data == TEST_RECONFIGURE_INPUT
 
 
-@pytest.mark.usefixtures("mock_saunum_client")
+@pytest.mark.usefixtures("mock_saunum_client", "mock_setup_entry")
 async def test_reconfigure_to_existing_host(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry, mock_setup_entry: AsyncMock
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test reconfigure flow aborts when changing to a host used by another entry."""
     mock_config_entry.add_to_hass(hass)
@@ -208,11 +201,9 @@ async def test_reconfigure_to_existing_host(
     assert mock_config_entry.data == TEST_USER_INPUT
 
 
-@pytest.mark.usefixtures("mock_saunum_client")
+@pytest.mark.usefixtures("mock_saunum_client", "mock_setup_entry")
 async def test_options_flow(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow for configuring preset names."""
     mock_config_entry.add_to_hass(hass)
@@ -241,11 +232,9 @@ async def test_options_flow(
     assert mock_config_entry.options == custom_options
 
 
-@pytest.mark.usefixtures("mock_saunum_client")
+@pytest.mark.usefixtures("mock_saunum_client", "mock_setup_entry")
 async def test_options_flow_with_existing_options(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_setup_entry: AsyncMock,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test options flow with existing custom preset names."""
     existing_options = {

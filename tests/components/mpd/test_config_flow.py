@@ -53,12 +53,9 @@ async def test_full_flow(
         (Exception, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_errors(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_mpd_client: AsyncMock,
-    exception: Exception,
-    error: str,
+    hass: HomeAssistant, mock_mpd_client: AsyncMock, exception: Exception, error: str
 ) -> None:
     """Test we handle errors correctly."""
     result = await hass.config_entries.flow.async_init(

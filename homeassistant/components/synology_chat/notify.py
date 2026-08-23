@@ -1,11 +1,9 @@
 """SynologyChat platform for notify component."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -52,6 +50,7 @@ class SynologyChatNotificationService(BaseNotificationService):
         self._resource = resource
         self._verify_ssl = verify_ssl
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         data = {"text": message}

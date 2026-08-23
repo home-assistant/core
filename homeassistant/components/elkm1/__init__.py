@@ -1,7 +1,5 @@
 """Support the ElkM1 Gold and ElkM1 EZ8 alarm/integration panels."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 import re
@@ -28,7 +26,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.network import is_ip_address
@@ -60,6 +58,7 @@ from .discovery import (
     async_trigger_discovery,
     async_update_entry_from_discovery,
 )
+from .entity import create_elk_system_device_info
 from .models import ELKM1Data
 from .services import async_setup_services
 
@@ -74,9 +73,11 @@ PLATFORMS = [
     Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.LIGHT,
+    Platform.NUMBER,
     Platform.SCENE,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.TIME,
 ]
 
 
@@ -306,6 +307,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ElkM1ConfigEntry) -> boo
         auto_configure=auto_configure,
         config=config,
         keypads={},
+    )
+
+    # Register the ElkM1 system device before forwarding platforms so entities
+    # on any platform can deterministically resolve it as their via_device.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        **create_elk_system_device_info(elk, prefix, entry.unique_id),
     )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)

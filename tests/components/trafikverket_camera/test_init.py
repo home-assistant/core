@@ -1,14 +1,11 @@
 """Test for Trafikverket Ferry component Init."""
 
-from __future__ import annotations
-
 from datetime import datetime
 from unittest.mock import patch
 
 import pytest
 from pytrafikverket import CameraInfoModel, UnknownError
 
-from homeassistant.components.trafikverket_camera import async_migrate_entry
 from homeassistant.components.trafikverket_camera.const import DOMAIN
 from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -231,31 +228,3 @@ async def test_migrate_entry_fails_no_id(
     assert entry.version == version
     assert entry.unique_id == unique_id
     assert len(mock_tvt_camera.mock_calls) == 1
-
-
-async def test_no_migration_needed(
-    hass: HomeAssistant,
-    get_camera: CameraInfoModel,
-    aioclient_mock: AiohttpClientMocker,
-) -> None:
-    """Test migrate entry fails, camera returns no id."""
-    aioclient_mock.get(
-        "https://www.testurl.com/test_photo.jpg?type=fullsize", content=b"0123456789"
-    )
-
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        source=SOURCE_USER,
-        data=ENTRY_CONFIG,
-        version=3,
-        entry_id="1234",
-        unique_id="trafikverket_camera-1234",
-        title="Test location",
-    )
-    entry.add_to_hass(hass)
-
-    with patch(
-        "homeassistant.components.trafikverket_camera.coordinator.TrafikverketCamera.async_get_camera",
-        return_value=get_camera,
-    ):
-        assert await async_migrate_entry(hass, entry) is True

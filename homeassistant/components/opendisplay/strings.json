@@ -51,6 +51,19 @@
     }
   },
   "entity": {
+    "event": {
+      "button": {
+        "name": "Button {number}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "button_down": "Button down",
+              "button_up": "Button up"
+            }
+          }
+        }
+      }
+    },
     "sensor": {
       "battery_voltage": {
         "name": "Battery voltage"
@@ -61,14 +74,20 @@
     "authentication_error": {
       "message": "Authentication failed. Please update the encryption key."
     },
+    "config_entry_not_found": {
+      "message": "Config entry not found: `{address}`"
+    },
     "device_not_found": {
-      "message": "Could not find Bluetooth device with address `{address}`."
+      "message": "Could not find Bluetooth device with address `{address}`. Reason: {reason}"
     },
     "invalid_device_id": {
       "message": "Device `{device_id}` is not a valid OpenDisplay device."
     },
     "media_download_error": {
       "message": "Failed to download media: {error}"
+    },
+    "setup_connection_error": {
+      "message": "Failed to connect to OpenDisplay device."
     },
     "upload_error": {
       "message": "Failed to upload image to the display."
@@ -138,8 +157,8 @@
       },
       "name": "Upload image",
       "sections": {
-        "advanced_options": {
-          "name": "Advanced options"
+        "additional_fields": {
+          "name": "Additional options"
         }
       }
     }

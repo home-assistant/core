@@ -1,8 +1,7 @@
 """Define an object to manage fetching TRMNL data."""
 
-from __future__ import annotations
-
 from datetime import timedelta
+from typing import override
 
 from trmnl import TRMNLClient
 from trmnl.exceptions import TRMNLAuthenticationError, TRMNLError
@@ -40,6 +39,7 @@ class TRMNLCoordinator(DataUpdateCoordinator[dict[int, Device]]):
             session=async_get_clientsession(hass),
         )
 
+    @override
     async def _async_update_data(self) -> dict[int, Device]:
         """Fetch data from TRMNL."""
         try:
@@ -59,11 +59,8 @@ class TRMNLCoordinator(DataUpdateCoordinator[dict[int, Device]]):
         if self.data is not None:
             device_registry = dr.async_get(self.hass)
             for device_id in set(self.data) - set(new_data):
-                if entry := device_registry.async_get_device(
-                    identifiers={(DOMAIN, str(device_id))}
+                if entry := device_registry.async_get_device_by_identifier(
+                    (DOMAIN, str(device_id)), self.config_entry.entry_id
                 ):
-                    device_registry.async_update_device(
-                        device_id=entry.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(entry.id)
         return new_data
