@@ -26,7 +26,11 @@ _LOGGER = logging.getLogger(__name__)
 
 INPUT_SOURCES = {name: code for code, name in INPUT_SOURCE_NAMES.items()}
 
-SOUND_MODES = {label: code for code, label in SOUND_MODE_LABELS.items()}
+SOUND_MODES: dict[str, str] = {}
+for _code, _label in SOUND_MODE_LABELS.items():
+    # First wins so firmware misspellings (DITECT, ALLSTREO) never shadow
+    # the canonical codes.
+    SOUND_MODES.setdefault(_label, _code)
 
 PARALLEL_UPDATES = 1
 
@@ -92,6 +96,8 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             _LOGGER.warning("Connection to the Tonewinner receiver was lost")
             self._attr_available = False
         else:
+            if not self._attr_available:
+                _LOGGER.info("Connection to the Tonewinner receiver was restored")
             self._apply_state(state)
         self.async_write_ha_state()
 

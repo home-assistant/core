@@ -386,6 +386,7 @@ async def test_media_player_unavailable_on_disconnect_and_recovery(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == MediaPlayerState.OFF
+    assert "Connection to the Tonewinner receiver was restored" in caplog.text
 
 
 async def test_media_player_periodic_source_check(
@@ -431,6 +432,12 @@ async def test_media_player_cleanup_on_removal(
     await entity.async_will_remove_from_hass()
 
     assert entity._source_check_task.cancelled()
+
+
+def test_sound_mode_codes_prefer_canonical() -> None:
+    """Test duplicate labels keep the canonical code over firmware misspellings."""
+    assert SOUND_MODES["Direct"] == "DIRECT"
+    assert SOUND_MODES["All Stereo"] == "ALLSTEREO"
 
 
 @pytest.mark.parametrize(

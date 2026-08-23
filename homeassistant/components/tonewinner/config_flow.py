@@ -73,13 +73,15 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
             else:
                 self._async_abort_entries_match({CONF_SERIAL_PORT: port})
-                data_updates: dict[str, Any] = {CONF_SERIAL_PORT: port}
+                data: dict[str, Any] = {CONF_SERIAL_PORT: port}
+                title = "Tonewinner"
                 if model:
-                    data_updates[CONF_MODEL] = model
+                    data[CONF_MODEL] = model
+                    title = model
                 return self.async_update_reload_and_abort(
                     entry,
-                    data_updates=data_updates,
-                    title=model or entry.title,
+                    data=data,
+                    title=title,
                 )
 
         return self.async_show_form(
