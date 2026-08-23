@@ -201,7 +201,7 @@ async def test_config_flow_get_identity_error(
     mock_google_health_client: AsyncMock,
 ) -> None:
     """Test config flow aborts if get_identity raises an API error."""
-    mock_google_health_client.get_identity.side_effect = GoogleHealthApiError
+    mock_google_health_client.get_identity.side_effect = GoogleHealthApiError("Error")
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -243,7 +243,9 @@ async def test_config_flow_api_not_enabled(
     mock_google_health_client: AsyncMock,
 ) -> None:
     """Test config flow aborts if the Google Health API is not enabled."""
-    mock_google_health_client.get_identity.side_effect = HealthApiForbiddenException
+    mock_google_health_client.get_identity.side_effect = HealthApiForbiddenException(
+        "Forbidden"
+    )
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
