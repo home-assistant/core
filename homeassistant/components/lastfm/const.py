@@ -15,6 +15,9 @@ CONF_MAIN_USER = "main_user"
 CONF_SESSION_KEY = "session_key"
 CONF_USERS = "users"
 
+POLLING_INTERVAL = 2
+MAX_POLLING_ATTEMPTS = 60
+
 # Last.fm API error returned when a user hides their recent listening information
 ERROR_CODE_LOGIN_REQUIRED = "17"
 

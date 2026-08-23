@@ -5,7 +5,6 @@ from unittest.mock import patch
 from pylast import WSError
 import pytest
 
-from homeassistant.components.lastfm.config_flow import CONF_REDIRECT_URL
 from homeassistant.components.lastfm.const import (
     CONF_API_SECRET,
     CONF_MAIN_USER,
@@ -26,7 +25,6 @@ from . import (
     CONF_FRIENDS_DATA,
     CONF_USER_DATA,
     CONF_USER_DATA_WITH_SECRET,
-    REDIRECT_URL,
     USERNAME_1,
     MockSessionKeyGenerator,
     MockUser,
@@ -36,9 +34,9 @@ from .conftest import ComponentSetup
 
 from tests.common import MockConfigEntry
 
-SESSION_KEY_GENERATOR_PATH = (
-    "homeassistant.components.lastfm.config_flow.SessionKeyGenerator"
-)
+FLOW_MODULE = "homeassistant.components.lastfm.config_flow"
+SESSION_KEY_GENERATOR_PATH = f"{FLOW_MODULE}.SessionKeyGenerator"
+POLLING_INTERVAL_PATH = f"{FLOW_MODULE}.POLLING_INTERVAL"
 
 
 @pytest.mark.parametrize(
@@ -84,6 +82,7 @@ async def test_full_user_flow_with_session_key(
             SESSION_KEY_GENERATOR_PATH,
             return_value=MockSessionKeyGenerator(),
         ),
+        patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
         result = await hass.config_entries.flow.async_init(
@@ -95,17 +94,16 @@ async def test_full_user_flow_with_session_key(
             result["flow_id"],
             user_input=CONF_USER_DATA_WITH_SECRET,
         )
-        assert result["type"] is FlowResultType.FORM
-        assert not result["errors"]
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth_url"
-        assert result["description_placeholders"]["auth_url"] == AUTH_URL
+        assert result["url"] == AUTH_URL
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_REDIRECT_URL: REDIRECT_URL},
-        )
+        # The user authorizes in the browser and the flow is resumed
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
-        assert not result["errors"]
         assert result["step_id"] == "friends"
 
         result = await hass.config_entries.flow.async_configure(
@@ -154,94 +152,71 @@ async def test_flow_web_auth_fails(
             SESSION_KEY_GENERATOR_PATH,
             return_value=MockSessionKeyGenerator(),
         ),
+        patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input=CONF_USER_DATA_WITH_SECRET,
         )
-        assert result["type"] is FlowResultType.FORM
-        assert not result["errors"]
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth_url"
 
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
 
-async def test_flow_invalid_redirect_url(
-    hass: HomeAssistant, default_user: MockUser
-) -> None:
-    """Test web auth step rejects a redirect URL without a token."""
-    with (
-        patch("pylast.User", return_value=default_user),
-        patch(
-            SESSION_KEY_GENERATOR_PATH,
-            return_value=MockSessionKeyGenerator(),
-        ),
-        patch_setup_entry(),
-    ):
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "auth_url"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_REDIRECT_URL: "https://www.example.com/callback"},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "auth_url"
-        assert result["errors"]["base"] == "invalid_url"
-
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_REDIRECT_URL: REDIRECT_URL},
-        )
-        assert result["type"] is FlowResultType.FORM
-        assert not result["errors"]
         assert result["step_id"] == "friends"
 
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_FRIENDS_DATA
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["title"] == DEFAULT_NAME
 
-@pytest.mark.parametrize(
-    ("error", "message"),
-    [
-        (WSError("network", "17", "Unauthorized Token"), "invalid_auth"),
-        (Exception(), "unknown"),
-    ],
-)
-async def test_flow_token_exchange_fails(
-    hass: HomeAssistant, error: Exception, message: str, default_user: MockUser
+
+async def test_flow_waits_for_authorization(
+    hass: HomeAssistant, default_user: MockUser
 ) -> None:
-    """Test web auth step when exchanging the token for a session key fails."""
-    mock_session_key_generator = MockSessionKeyGenerator(session_key_error=error)
+    """Test the flow waits until the Last.fm authorization is granted."""
+    mock_session_key_generator = MockSessionKeyGenerator(
+        session_key_error=WSError("network", "17", "Unauthorized Token")
+    )
     with (
         patch("pylast.User", return_value=default_user),
         patch(
             SESSION_KEY_GENERATOR_PATH,
             return_value=mock_session_key_generator,
         ),
+        patch(POLLING_INTERVAL_PATH, 60),
+        patch_setup_entry(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
-        assert result["type"] is FlowResultType.FORM
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth_url"
 
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_REDIRECT_URL: REDIRECT_URL},
-        )
-        assert result["type"] is FlowResultType.FORM
+        # Not yet authorized: the flow stays on the external step
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth_url"
-        assert result["errors"]["base"] == message
 
-    mock_session_key_generator.session_key_error = None
-    with patch("pylast.User", return_value=default_user), patch_setup_entry():
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"],
-            user_input={CONF_REDIRECT_URL: REDIRECT_URL},
-        )
+        # The user authorizes the application
+        mock_session_key_generator.session_key_error = None
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
         assert result["type"] is FlowResultType.FORM
-        assert not result["errors"]
         assert result["step_id"] == "friends"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=CONF_FRIENDS_DATA
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["options"] == CONF_DATA_WITH_SESSION_KEY
 
 
 @pytest.mark.parametrize(
@@ -333,14 +308,30 @@ async def test_flow_hidden_user_with_secret(hass: HomeAssistant) -> None:
             SESSION_KEY_GENERATOR_PATH,
             return_value=MockSessionKeyGenerator(),
         ),
+        patch(POLLING_INTERVAL_PATH, 60),
         patch_setup_entry(),
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
         )
-        assert result["type"] is FlowResultType.FORM
-        assert not result["errors"]
+        assert result["type"] is FlowResultType.EXTERNAL_STEP
         assert result["step_id"] == "auth_url"
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.EXTERNAL_STEP_DONE
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "friends"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input={CONF_USERS: []}
+        )
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+        assert result["options"] == {
+            **CONF_DATA_WITH_SESSION_KEY,
+            CONF_USERS: [USERNAME_1],
+        }
 
 
 async def test_flow_friends_invalid_username(

@@ -19,7 +19,6 @@ API_SECRET = "testapisecret"
 SESSION_KEY = "testsessionkey"
 AUTH_TOKEN = "testauthtoken"
 AUTH_URL = f"https://www.last.fm/api/auth/?api_key={API_KEY}&token={AUTH_TOKEN}"
-REDIRECT_URL = f"https://www.example.com/callback?token={AUTH_TOKEN}"
 USERNAME_1 = "testaccount1"
 USERNAME_2 = "testaccount2"
 
@@ -152,6 +151,11 @@ class MockSessionKeyGenerator:
         if self.session_key_error:
             raise self.session_key_error
         return SESSION_KEY, USERNAME_1
+
+    def get_web_auth_session_key(self, url: str, token: str = "") -> str:
+        """Get mock session key."""
+        session_key, _username = self.get_web_auth_session_key_username(url, token)
+        return session_key
 
 
 def patch_user(user: MockUser) -> MockUser:

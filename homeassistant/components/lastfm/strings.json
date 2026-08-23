@@ -4,18 +4,12 @@
       "hidden_recent_tracks": "User has hidden their recent listening information. Disable \"Hide recent listening information\" at {privacy_settings_url}",
       "invalid_account": "Invalid username",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "invalid_url": "Invalid redirect URL",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
       "auth_url": {
-        "data": {
-          "redirect_url": "Redirect URL"
-        },
-        "data_description": {
-          "redirect_url": "URL of the page Last.fm redirected you to after authorizing"
-        },
-        "description": "Open [{auth_url}]({auth_url}) to authorize Home Assistant with your Last.fm account, then paste the URL you were redirected to."
+        "description": "Select the link below to open Last.fm and authorize Home Assistant with your account, then return here. Setup continues automatically once the authorization is detected.",
+        "title": "Authorize Home Assistant with Last.fm"
       },
       "friends": {
         "data": {
