@@ -135,8 +135,13 @@ async def test_media_player_source_and_sound_mode_lists(
 
 @pytest.mark.parametrize(
     ("volume", "expected"),
-    [(0.5, 50.0), (1.0, 80.0)],
-    ids=["half", "max_clamped"],
+    [
+        (0.5, 40.0),
+        (1.0, 80.0),
+        (0.0, 0.0),
+        (0.33, 26.5),
+    ],
+    ids=["half", "max", "zero", "off_grid_snapped"],
 )
 async def test_media_player_set_volume_level(
     hass: HomeAssistant,
@@ -145,7 +150,7 @@ async def test_media_player_set_volume_level(
     volume: float,
     expected: float,
 ) -> None:
-    """Test setting volume level maps HA scale onto the receiver's 0-80 range."""
+    """Test setting volume level maps onto the receiver's half-step grid."""
     mock_config_entry.add_to_hass(hass)
     await _setup_integration(hass, mock_config_entry, mock_receiver)
 
@@ -297,7 +302,7 @@ async def test_media_player_invalid_selections(
         (
             {"power": True, "volume": 40.0, "source_name": "HDMI 1"},
             "volume_level",
-            0.4,
+            0.5,
         ),
         (
             {"power": True, "mute": True, "source_name": "HDMI 1"},

@@ -108,7 +108,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
                 self._attr_source = None
 
         if state.volume is not None:
-            self._attr_volume_level = state.volume / 100.0
+            self._attr_volume_level = state.volume / 80
 
         if state.mute is not None:
             self._attr_is_volume_muted = state.mute
@@ -180,9 +180,13 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     @override
     async def async_set_volume_level(self, volume: float) -> None:
-        """Set volume level (HA 0.0-1.0, device 0-80)."""
-        vol_device = min(volume * 100.0, 80)
-        await self._receiver.set_volume(vol_device)
+        """Set volume level (HA 0.0-1.0, device 0-80 in half steps).
+
+        Snapping to the half-step grid keeps the device echo equal to what we
+        sent, so the slider does not jump after an off-grid value is rounded
+        by the firmware.
+        """
+        await self._receiver.set_volume(round(volume * 160) / 2)
         self.async_write_ha_state()
 
     @override
