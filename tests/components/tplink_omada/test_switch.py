@@ -17,7 +17,7 @@ from tplink_omada_client.devices import (
     OmadaSwitch,
     OmadaSwitchPortDetails,
 )
-from tplink_omada_client.exceptions import InvalidDevice
+from tplink_omada_client.exceptions import InvalidDevice, OmadaClientException
 
 from homeassistant.components import switch
 from homeassistant.components.tplink_omada.const import DOMAIN
@@ -79,6 +79,29 @@ async def test_switch_port_setup_does_not_depend_on_debounced_refresh(
     )
     assert entity_id is not None
     assert hass.states.get(entity_id) is not None
+
+
+@pytest.mark.usefixtures("mock_omada_client")
+async def test_switch_port_refresh_failure_skips_port_entities(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test switch port setup does not crash when the port refresh fails."""
+    mock_omada_site_client.get_switch_ports.side_effect = OmadaClientException(
+        "mock failure"
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # Gateway switch entities are still set up
+    assert hass.states.get("switch.test_router_port_4_internet_connected") is not None
+    # Port entities are skipped while port data is unavailable
+    assert hass.states.get("switch.test_poe_switch_port_1_poe") is None
+    assert "Error while setting up tplink_omada platform for switch" not in caplog.text
 
 
 async def test_poe_switches(

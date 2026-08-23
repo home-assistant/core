@@ -8,6 +8,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitchPortDetails
+from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.tplink_omada.const import DOMAIN
 from homeassistant.components.tplink_omada.coordinator import (
@@ -42,6 +43,28 @@ async def init_integration(
         await hass.async_block_till_done()
 
     return mock_config_entry
+
+
+@pytest.mark.usefixtures("mock_omada_client")
+async def test_switch_port_refresh_failure_skips_port_sensors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test switch port sensor setup does not crash when the port refresh fails."""
+    mock_omada_site_client.get_switch_ports.side_effect = OmadaClientException(
+        "mock failure"
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", ["sensor"]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Device sensors are still set up
+    assert hass.states.get("sensor.test_poe_switch_device_status") is not None
+    assert "Error while setting up tplink_omada platform for sensor" not in caplog.text
 
 
 async def test_entities(

@@ -94,6 +94,8 @@ async def async_setup_entry(
         switch = await controller.omada_client.get_switch(device)
         coordinator = controller.get_switch_port_coordinator(switch)
         await coordinator.async_refresh()
+        if not coordinator.data:
+            return
 
         entities: list[Entity] = [
             OmadaSwitchPortSensor(
