@@ -155,6 +155,14 @@ async def init_integration(hass: HomeAssistant):
             text=await async_load_fixture(hass, device_temp_offset, DOMAIN),
         )
         m.get(
+            "https://my.tado.com/api/v2/homes/1/heatingCircuits",
+            text=await async_load_fixture(hass, "heating_circuits.json", DOMAIN),
+        )
+        m.get(
+            "https://my.tado.com/api/v2/homes/1/zones/1/control",
+            text=await async_load_fixture(hass, "zone_control.json", DOMAIN),
+        )
+        m.get(
             "https://my.tado.com/api/v2/homes/1/zones",
             text=await async_load_fixture(hass, zones_fixture, DOMAIN),
         )
