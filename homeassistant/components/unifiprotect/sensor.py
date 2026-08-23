@@ -44,6 +44,7 @@ from homeassistant.const import (
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .data import ProtectData, ProtectDeviceType, UFPConfigEntry
@@ -717,6 +718,18 @@ async def async_setup_entry(
     entities += _async_nvr_entities(data)
 
     async_add_entities(entities)
+
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        if isinstance(device, Fob):
+            async_add_entities(
+                ProtectFobSensor(data, device, description)
+                for description in FOB_SENSORS
+            )
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
 
     # The public bootstrap is primed only with an API key and supported NVR
     # firmware; without it there are no fobs to expose.

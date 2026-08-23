@@ -1,7 +1,7 @@
 """Tests for the UniFi Protect key fob (Public API) entities."""
 
 from datetime import datetime
-from unittest.mock import Mock
+from unittest.mock import AsyncMock, Mock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -15,6 +15,7 @@ from uiprotect.data import (
     ModelType,
     PublicBootstrap,
     PublicFobFeatureFlags,
+    WSAction,
 )
 from uiprotect.data.public_devices import (
     PublicSignalState,
@@ -31,7 +32,7 @@ from homeassistant.core import Event as HAEvent, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.event import async_track_state_change_event
 
-from .utils import MockUFPFixture, enable_entity, init_entry
+from .utils import MockUFPFixture, enable_entity, init_entry, public_device_ws_message
 
 FOB_ID = "fob-id-1"
 FOB_MAC = "AA:BB:CC:DD:EE:F0"
@@ -79,6 +80,8 @@ def _make_public_bootstrap(fob: Mock | None) -> Mock:
     """Build a public bootstrap mock holding the given fob."""
     pb = Mock(spec=PublicBootstrap)
     pb.fobs = {fob.id: fob} if fob is not None else {}
+    pb.cameras = {}
+    pb.lights = {}
     pb.relays = {}
     pb.sirens = {}
     pb.arm_mode = None
@@ -142,8 +145,8 @@ async def test_fob_entities_created(
     ufp, _fob = ufp_with_fob
     await init_entry(hass, ufp, [])
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, FOB_MAC)}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, FOB_MAC), ufp.entry.entry_id
     )
     assert device is not None
     assert device.name == FOB_NAME
@@ -469,3 +472,52 @@ async def test_fob_entity_counts(
     # battery sensor, signal sensor, status sensor, battery-low binary, button event
     assert len(fob_entities) == 5
     assert sum(not entry.disabled for entry in fob_entities) == 4
+
+
+async def test_fob_added_at_runtime(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A fob paired after setup is discovered from its public add frame."""
+    ufp.api.is_public_only = True
+    ufp.api.has_public_bootstrap = True
+    pb = _make_public_bootstrap(None)
+    pb.all_devices = lambda: list(pb.fobs.values())
+    ufp.api.public_bootstrap = pb
+    ufp.api.update_public = AsyncMock(return_value=pb)
+
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(BATTERY_SENSOR) is None
+
+    fob = _make_fob()
+    pb.fobs = {fob.id: fob}
+    msg = public_device_ws_message(fob)
+    msg.action = WSAction.ADD
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(BATTERY_SENSOR).state == "80"
+    assert hass.states.get(BATTERY_LOW_BINARY).state == "off"
+    assert hass.states.get(BUTTON_EVENT) is not None
+
+    # A re-delivered add frame is deduped before the platforms see it, so no
+    # duplicate unique_id error is logged.
+    msg = public_device_ws_message(fob)
+    msg.action = WSAction.ADD
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert "already exists" not in caplog.text
+    assert (
+        len(
+            [
+                entry
+                for entry in entity_registry.entities.values()
+                if entry.unique_id.startswith(FOB_MAC)
+            ]
+        )
+        == 5
+    )

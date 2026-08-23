@@ -5,7 +5,7 @@ import re
 from typing import Any, override
 
 from uiprotect import ProtectEvent
-from uiprotect.data import Fob, ModelType, SmartDetectObjectType
+from uiprotect.data import Fob, ModelType, PublicDeviceModel, SmartDetectObjectType
 from uiprotect.data.nvr import Event, EventDetectedThumbnail
 from uiprotect.data.types import EventButtonType
 
@@ -16,6 +16,7 @@ from homeassistant.components.event import (
     EventEntityDescription,
 )
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_call_at
 
@@ -699,6 +700,15 @@ async def async_setup_entry(
 
     data.async_subscribe_adopt(_add_new_device)
     async_add_entities(_async_event_entities(data))
+
+    @callback
+    def _add_new_public_device(device: PublicDeviceModel) -> None:
+        if isinstance(device, Fob):
+            async_add_entities([ProtectFobButtonEventEntity(data, device)])
+
+    entry.async_on_unload(
+        async_dispatcher_connect(hass, data.public_add_signal, _add_new_public_device)
+    )
 
     # The public bootstrap is primed only with an API key and supported NVR
     # firmware; without it there are no fobs to expose.

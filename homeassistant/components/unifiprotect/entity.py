@@ -464,7 +464,6 @@ class ProtectFobEntity(Entity):
         self.data = data
         self._fob_id = fob.id
         self._fob_mac = fob.mac
-        nvr = data.api.bootstrap.nvr
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, fob.mac)},
             identifiers={(DOMAIN, fob.mac)},
@@ -473,7 +472,7 @@ class ProtectFobEntity(Entity):
             # stable default so the device is never registered nameless.
             name=fob.name or f"Key Fob {fob.mac}",
             model="Key Fob",
-            via_device=(DOMAIN, nvr.mac),
+            via_device_id=data.nvr_device_id,
         )
         self._attr_available = data.last_public_update_success
         self._async_update_from_fob(fob)
