@@ -2,16 +2,17 @@
 
 from typing import override
 
+from sofar_modbus.modern.device import SofarInverter
+
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import ATTR_MANUFACTURER, DOMAIN
-from .coordinator import SofarDataUpdateCoordinator
+from .coordinator import SofarDataUpdateCoordinator, SofarRuntimeData
 
 
-def build_device_info(coordinator: SofarDataUpdateCoordinator) -> DeviceInfo:
+def build_device_info(device: SofarInverter) -> DeviceInfo:
     """The one physical inverter every entity on this config entry belongs to."""
-    device = coordinator.device
     serial = device.serial_number
     assert serial is not None
     return DeviceInfo(
@@ -29,17 +30,17 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
 
     def __init__(
         self,
-        coordinator: SofarDataUpdateCoordinator,
+        runtime_data: SofarRuntimeData,
         unique_id_suffix: str,
         component: str,
     ) -> None:
-        """Initialize the entity."""
-        super().__init__(coordinator)
-        serial = coordinator.device.serial_number
+        """Initialize the entity, bound to whichever coordinator serves it."""
+        super().__init__(runtime_data.coordinator_for(component))
+        serial = self.coordinator.device.serial_number
         assert serial is not None
         self._component = component
         self._attr_unique_id = f"{serial}_{unique_id_suffix}"
-        self._attr_device_info = build_device_info(coordinator)
+        self._attr_device_info = build_device_info(self.coordinator.device)
 
     @property
     @override

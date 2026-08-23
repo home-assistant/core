@@ -1,6 +1,8 @@
-"""Wraps SofarInverter's polls: retry-before-fail, tiered cadence."""
+"""Runs one of SofarInverter's update methods on its own interval."""
 
 from collections import deque
+from collections.abc import Awaitable, Callable
+from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
 from typing import override
@@ -12,26 +14,21 @@ from modbus_connection import (
     ModbusTimeoutError,
 )
 from sofar_modbus.model import UpdateReport
-from sofar_modbus.modern.device import SofarInverter, identify
+from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_READ_EPS, CONF_UNIT_ID, DEFAULT_SCAN_INTERVAL
-
 _LOGGER = logging.getLogger(__name__)
 
 _TIMEOUT_DISCONNECT_THRESHOLD = 3
-_SLOW_TIER_EVERY_N_CYCLES = 12  # ~60s at the 5s base scan interval
-_HEALTH_WINDOW = 60  # ~5min at the 5s base scan interval
-
-type SofarConfigEntry = ConfigEntry[SofarDataUpdateCoordinator]
+_HEALTH_WINDOW = 60  # ~5min at the 5s readings interval
 
 
 class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
-    """Polls one Sofar inverter's components, tiered by how often they change."""
+    """Runs one of SofarInverter's update methods on its own interval."""
 
     config_entry: SofarConfigEntry
     device: SofarInverter
@@ -41,6 +38,11 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         hass: HomeAssistant,
         entry: SofarConfigEntry,
         connection: ModbusConnection,
+        device: SofarInverter,
+        poll: Callable[[], Awaitable[UpdateReport]],
+        interval: timedelta,
+        *,
+        recycle_stuck_link: bool = False,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -48,31 +50,19 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             _LOGGER,
             config_entry=entry,
             name=entry.title,
-            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
+            update_interval=interval,
         )
         self.connection = connection
+        self.device = device
+        self._poll = poll
+        # Only the fastest-interval coordinator may recycle the shared link,
+        # so a stuck poll on the other one doesn't drop it mid-request.
+        self._recycle_stuck_link = recycle_stuck_link
         self._consecutive_timeouts = 0
         self._consecutive_failures: dict[str, int] = {}
         self._poll_outcomes: deque[bool] = deque(maxlen=_HEALTH_WINDOW)
         self.last_error: str | None = None
         self.last_error_time: datetime | None = None
-        self._cycle = 0
-        self._force_slow_tier = True
-
-    @override
-    async def _async_setup(self) -> None:
-        """Set up the coordinator before the first refresh."""
-        serial = self.config_entry.unique_id
-        assert serial is not None
-        # async_setup_entry already checked identify(serial) is recognized.
-        inverter_type, model = identify(serial)
-        self.device = SofarInverter(
-            self.connection.for_unit(self.config_entry.data[CONF_UNIT_ID]),
-            serial_number=serial,
-            model=model,
-            inverter_type=inverter_type,
-            read_eps=self.config_entry.data.get(CONF_READ_EPS, False),
-        )
 
     @property
     def success_rate(self) -> float | None:
@@ -89,37 +79,15 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @property
     def served_components(self) -> frozenset[str]:
-        """Component names this inverter type serves; empty before first refresh."""
+        """Component names this poll serves; empty before first refresh."""
         if self.data is not None:
             return frozenset(self.data.updated | set(self.data.failed))
         return frozenset()
 
     @override
-    async def async_request_refresh(self) -> None:
-        """Request a refresh, polling the slow tier too regardless of cadence."""
-        self._force_slow_tier = True
-        await super().async_request_refresh()
-
-    @override
-    async def async_refresh(self) -> None:
-        """Refresh immediately, polling the slow tier regardless of cadence."""
-        self._force_slow_tier = True
-        await super().async_refresh()
-
-    @override
     async def _async_update_data(self) -> UpdateReport:
         try:
-            report = await self.device.async_update_readings()
-            self._cycle += 1
-            if self._force_slow_tier or (
-                self._cycle > 0 and self._cycle % _SLOW_TIER_EVERY_N_CYCLES == 0
-            ):
-                self._force_slow_tier = False
-                settings_report = await self.device.async_update_settings()
-                report = UpdateReport(
-                    report.updated | settings_report.updated,
-                    {**report.failed, **settings_report.failed},
-                )
+            report = await self._poll()
             report = await self._retry_failed(report)
             if not report.updated:
                 errors = list(report.failed.values())
@@ -131,7 +99,10 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                 ) from ExceptionGroup("all components failed to refresh", errors)
         except ModbusTimeoutError as err:
             self._consecutive_timeouts += 1
-            if self._consecutive_timeouts >= _TIMEOUT_DISCONNECT_THRESHOLD:
+            if (
+                self._recycle_stuck_link
+                and self._consecutive_timeouts >= _TIMEOUT_DISCONNECT_THRESHOLD
+            ):
                 _LOGGER.debug(
                     "%s: %d consecutive timed-out polls, recycling the connection",
                     self.name,
@@ -183,3 +154,25 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             self._consecutive_failures.pop(name, None)
 
         return report
+
+
+@dataclass
+class SofarRuntimeData:
+    """Both coordinators, tiered by how often their components change."""
+
+    readings: SofarDataUpdateCoordinator
+    settings: SofarDataUpdateCoordinator
+
+    @property
+    def served_components(self) -> frozenset[str]:
+        """Component names either poll serves; empty before first refresh."""
+        return self.readings.served_components | self.settings.served_components
+
+    def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
+        """Which coordinator owns a given component's data."""
+        if component in self.readings.served_components:
+            return self.readings
+        return self.settings
+
+
+type SofarConfigEntry = ConfigEntry[SofarRuntimeData]

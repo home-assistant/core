@@ -18,7 +18,7 @@ async def test_disconnects_after_repeated_timeouts(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the coordinator recycles the connection after consecutive timeouts."""
-    coordinator = init_integration.runtime_data
+    coordinator = init_integration.runtime_data.readings
     unit = coordinator.connection.for_unit(1)
     unit.fail_requests(ModbusTimeoutError("stuck"))
 
@@ -40,7 +40,7 @@ async def test_consecutive_timeouts_resets_on_recovery(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test a successful poll resets the timeout counter before disconnect."""
-    coordinator = init_integration.runtime_data
+    coordinator = init_integration.runtime_data.readings
     unit = coordinator.connection.for_unit(1)
 
     with patch.object(
@@ -69,3 +69,20 @@ async def test_consecutive_timeouts_resets_on_recovery(
             await hass.async_block_till_done()
             assert not coordinator.last_update_success
         assert mock_disconnect.await_count == 0
+
+
+async def test_runtime_data_routes_components_to_their_own_coordinator(
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test served_components/coordinator_for span both coordinators."""
+    runtime_data = init_integration.runtime_data
+
+    assert "grid" in runtime_data.readings.served_components
+    assert "active_power_control" in runtime_data.settings.served_components
+    assert runtime_data.served_components == (
+        runtime_data.readings.served_components
+        | runtime_data.settings.served_components
+    )
+
+    assert runtime_data.coordinator_for("grid") is runtime_data.readings
+    assert runtime_data.coordinator_for("active_power_control") is runtime_data.settings

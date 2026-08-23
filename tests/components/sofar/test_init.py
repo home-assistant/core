@@ -5,7 +5,7 @@ from unittest.mock import patch
 from modbus_connection.mock import MockModbusConnection
 
 from homeassistant.components.sofar.const import DOMAIN
-from homeassistant.components.sofar.coordinator import SofarDataUpdateCoordinator
+from homeassistant.components.sofar.coordinator import SofarRuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -20,7 +20,7 @@ async def test_setup_and_unload_entry(
     """Test a config entry sets up and unloads with runtime_data populated."""
     entry = init_integration
     assert entry.state is ConfigEntryState.LOADED
-    assert isinstance(entry.runtime_data, SofarDataUpdateCoordinator)
+    assert isinstance(entry.runtime_data, SofarRuntimeData)
 
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()

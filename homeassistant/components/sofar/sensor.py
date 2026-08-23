@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator
+from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 from .entity import SofarEntity, build_device_info
 
 
@@ -37,8 +37,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sofar Inverter Modbus sensor platform."""
-    coordinator = entry.runtime_data
-    served = coordinator.served_components
+    runtime_data = entry.runtime_data
+    served = runtime_data.served_components
 
     entities: list[SensorEntity] = [
         (
@@ -46,14 +46,15 @@ async def async_setup_entry(
             if description.state_class
             in (SensorStateClass.TOTAL, SensorStateClass.TOTAL_INCREASING)
             else SofarSensor
-        )(coordinator, description)
+        )(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
         if description.component in served
     ]
-    entities.append(SofarCommunicationHealthSensor(coordinator))
-    entities.append(SofarCommunicationHealthSuccessRateSensor(coordinator))
-    entities.append(SofarCommunicationHealthLastErrorSensor(coordinator))
-    entities.append(SofarCommunicationHealthLastErrorTimeSensor(coordinator))
+    readings = runtime_data.readings
+    entities.append(SofarCommunicationHealthSensor(readings))
+    entities.append(SofarCommunicationHealthSuccessRateSensor(readings))
+    entities.append(SofarCommunicationHealthLastErrorSensor(readings))
+    entities.append(SofarCommunicationHealthLastErrorTimeSensor(readings))
     async_add_entities(entities)
 
 
@@ -72,7 +73,7 @@ class _SofarCommunicationHealthEntity(
         super().__init__(coordinator)
         serial = coordinator.device.serial_number
         self._attr_unique_id = f"{serial}_{unique_id_suffix}"
-        self._attr_device_info = build_device_info(coordinator)
+        self._attr_device_info = build_device_info(coordinator.device)
 
     @property
     @override
@@ -161,11 +162,11 @@ class SofarSensor(SofarEntity, SensorEntity):
 
     def __init__(
         self,
-        coordinator: SofarDataUpdateCoordinator,
+        runtime_data: SofarRuntimeData,
         description: SofarSensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, description.key, description.component)
+        super().__init__(runtime_data, description.key, description.component)
         self.entity_description = description
 
     @property
@@ -187,11 +188,11 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
 
     def __init__(
         self,
-        coordinator: SofarDataUpdateCoordinator,
+        runtime_data: SofarRuntimeData,
         description: SofarSensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, description.key, description.component)
+        super().__init__(runtime_data, description.key, description.component)
         self.entity_description = description
         self._total_increasing_high_water: float | None = None
 
