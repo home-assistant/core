@@ -41,6 +41,7 @@ from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from homeassistant.util import dt as dt_util
+from homeassistant.util.hass_dict import HassKey
 
 from . import helpers
 from .addon import get_addon_manager
@@ -166,6 +167,12 @@ MIN_MIGRATION_SDK_VERSION = AwesomeVersion("6.61")
 # the flag is set without awaits between check and set. It dies with
 # the flow when the flow is removed from progress.
 _ADDON_OWNER_CONTEXT = "zwave_js_addon_owner"
+
+# Serializes writes to the add-on config. The context flag above is
+# intent-level exclusion between flows; this lock guarantees that a
+# write still in flight from an aborted flow and a new owner's write
+# can't interleave.
+_ADDON_WRITE_LOCK: HassKey[asyncio.Lock] = HassKey(f"{DOMAIN}_addon_write_lock")
 
 # Steps at which another flow has not yet changed any shared state,
 # e.g. the add-on config, and can be aborted safely when a config entry
@@ -323,7 +330,8 @@ class AddonFlowManager:
             self.original_config = dict(addon_config)
         new_addon_config = SecurityKeys.migrate_network_key(new_addon_config)
         try:
-            await self.addon_manager.async_set_addon_options(new_addon_config)
+            async with self.hass.data.setdefault(_ADDON_WRITE_LOCK, asyncio.Lock()):
+                await self.addon_manager.async_set_addon_options(new_addon_config)
         except AddonError as err:
             _LOGGER.error(err)
             raise AbortFlow("addon_set_config_failed") from err
@@ -983,8 +991,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         backed up the network, must not be interrupted.
         """
         for progress in self._async_in_progress():
-            if progress.get("step_id") in ABORT_SAFE_STEPS:
-                self.hass.config_entries.flow.async_abort(progress["flow_id"])
+            if progress.get("step_id") not in ABORT_SAFE_STEPS:
+                continue
+            if cast(dict[str, Any], progress["context"]).get(_ADDON_OWNER_CONTEXT):
+                # The published step lags behind a running step handler,
+                # so an owner of the add-on config may be mid-write while
+                # its step still shows a safe prompt.
+                continue
+            self.hass.config_entries.flow.async_abort(progress["flow_id"])
 
     @callback
     def _async_acquire_addon_ownership(self) -> bool:
@@ -1226,22 +1240,26 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         # Migrate the legacy network key, like async_set_addon_config does,
         # so restoring doesn't drop the S0 key on older add-on configurations.
         restored_config = SecurityKeys.migrate_network_key(original_config)
-        try:
-            await addon_manager.async_set_addon_options(restored_config)
-        except AddonError as err:
-            # Don't reload the entry if the options were not restored, so the
-            # reload doesn't adopt the unconfirmed options still on the add-on.
-            _LOGGER.error("Failed to restore add-on options: %s", err)
-            return
-        if self._addon_setup.restart_addon or self._addon_setup.addon_started:
-            # The add-on is running with the unconfirmed options this flow
-            # set. Restart it before the reload, so the entry doesn't
-            # reconnect to the unconfirmed adapter.
+        # This task outlives the flow and its ownership flag, so hold the
+        # write lock to not interleave with a new owner's write.
+        async with self.hass.data.setdefault(_ADDON_WRITE_LOCK, asyncio.Lock()):
             try:
-                await addon_manager.async_restart_addon()
+                await addon_manager.async_set_addon_options(restored_config)
             except AddonError as err:
-                _LOGGER.error("Failed to restart add-on: %s", err)
+                # Don't reload the entry if the options were not restored,
+                # so the reload doesn't adopt the unconfirmed options still
+                # on the add-on.
+                _LOGGER.error("Failed to restore add-on options: %s", err)
                 return
+            if self._addon_setup.restart_addon or self._addon_setup.addon_started:
+                # The add-on is running with the unconfirmed options this
+                # flow set. Restart it before the reload, so the entry
+                # doesn't reconnect to the unconfirmed adapter.
+                try:
+                    await addon_manager.async_restart_addon()
+                except AddonError as err:
+                    _LOGGER.error("Failed to restart add-on: %s", err)
+                    return
         self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(

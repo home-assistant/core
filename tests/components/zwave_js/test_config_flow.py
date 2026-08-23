@@ -2741,7 +2741,8 @@ async def test_concurrent_flow_during_addon_config_write(
     so while the first flow is applying the add-on config inside the
     start add-on step, its published step is still the prompt it was
     submitted from. A second flow submitted at that moment must still
-    abort.
+    abort, and an entry created by another flow at that moment must not
+    abort the first flow as a redundant prompt.
     """
     options_write_started = asyncio.Event()
     resume_options_write = asyncio.Event()
@@ -2779,23 +2780,69 @@ async def test_concurrent_flow_during_addon_config_write(
             result_a["flow_id"], {"next_step_id": "intent_recommended"}
         )
     )
-    await options_write_started.wait()
+    # Release the blocked first flow also when an assertion fails,
+    # so a regression fails the test instead of hanging it.
+    try:
+        async with asyncio.timeout(5):
+            await options_write_started.wait()
 
-    # The first flow is changing the add-on config, but its published
-    # step is still the safe prompt it was submitted from.
-    flows_in_progress = {
-        flow["flow_id"]: flow for flow in hass.config_entries.flow.async_progress()
-    }
-    assert flows_in_progress[result_a["flow_id"]]["step_id"] == "installation_type"
+        # The first flow is changing the add-on config, but its published
+        # step is still the safe prompt it was submitted from.
+        flows_in_progress = {
+            flow["flow_id"]: flow for flow in hass.config_entries.flow.async_progress()
+        }
+        assert flows_in_progress[result_a["flow_id"]]["step_id"] == "installation_type"
 
-    result_b = await hass.config_entries.flow.async_configure(
-        result_b["flow_id"], {"next_step_id": "intent_recommended"}
-    )
+        result_b = await hass.config_entries.flow.async_configure(
+            result_b["flow_id"], {"next_step_id": "intent_recommended"}
+        )
 
-    assert result_b["type"] is FlowResultType.ABORT
-    assert result_b["reason"] == "already_in_progress"
+        assert result_b["type"] is FlowResultType.ABORT
+        assert result_b["reason"] == "already_in_progress"
 
-    resume_options_write.set()
+        # A manual flow that creates an entry supersedes prompt flows,
+        # but must not abort the flow that owns the add-on config, even
+        # though its published step still shows a safe prompt.
+        result_manual = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result_manual["type"] is FlowResultType.MENU
+        assert result_manual["step_id"] == "installation_type"
+
+        result_manual = await hass.config_entries.flow.async_configure(
+            result_manual["flow_id"], {"next_step_id": "intent_custom"}
+        )
+
+        assert result_manual["type"] is FlowResultType.FORM
+        assert result_manual["step_id"] == "on_supervisor"
+
+        result_manual = await hass.config_entries.flow.async_configure(
+            result_manual["flow_id"], {"use_addon": False}
+        )
+
+        assert result_manual["type"] is FlowResultType.FORM
+        assert result_manual["step_id"] == "manual"
+
+        with (
+            patch("homeassistant.components.zwave_js.async_setup", return_value=True),
+            patch(
+                "homeassistant.components.zwave_js.async_setup_entry",
+                return_value=True,
+            ),
+        ):
+            result_manual = await hass.config_entries.flow.async_configure(
+                result_manual["flow_id"], {"url": "ws://localhost:3000"}
+            )
+
+        assert result_manual["type"] is FlowResultType.CREATE_ENTRY
+        assert any(
+            flow["flow_id"] == result_a["flow_id"]
+            for flow in hass.config_entries.flow.async_progress()
+        )
+    finally:
+        resume_options_write.set()
+
     result_a = await task_a
 
     assert result_a["type"] is FlowResultType.SHOW_PROGRESS
