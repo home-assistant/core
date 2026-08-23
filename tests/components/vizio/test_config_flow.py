@@ -1,8 +1,10 @@
 """Tests for Vizio config flow."""
 
 import dataclasses
+from unittest.mock import AsyncMock, patch
 
 import pytest
+from vizaio import VizioConnectionError
 
 from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.components.vizio import DATA_APPS
@@ -38,8 +40,10 @@ from .const import (
     MOCK_ZEROCONF_SERVICE_INFO,
     NAME,
     NAME2,
+    PORTLESS_HOST,
     UNIQUE_ID,
     VOLUME_STEP,
+    ZEROCONF_HOST,
 )
 
 from tests.common import MockConfigEntry
@@ -612,3 +616,71 @@ async def test_zeroconf_flow_already_configured_hostname(hass: HomeAssistant) ->
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert entry.data[CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
+async def test_user_flow_resolves_host_without_port(hass: HomeAssistant) -> None:
+    """Test a host entered without a port is resolved before validation."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.async_resolve_host",
+        AsyncMock(return_value=HOST),
+    ) as mock_resolve:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={**MOCK_SPEAKER_CONFIG, CONF_HOST: PORTLESS_HOST},
+        )
+
+    assert mock_resolve.call_args[0][0] == PORTLESS_HOST
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == HOST
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
+async def test_user_flow_unresolvable_host_errors(hass: HomeAssistant) -> None:
+    """Test an unresolvable host surfaces as a cannot_determine_port error."""
+    with patch(
+        "homeassistant.components.vizio.config_flow.async_resolve_host",
+        AsyncMock(side_effect=VizioConnectionError("no SmartCast API")),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_USER},
+            data={**MOCK_SPEAKER_CONFIG, CONF_HOST: PORTLESS_HOST},
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_HOST: "cannot_determine_port"}
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
+async def test_zeroconf_flow_without_port_resolves(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery that advertises no port probes for one."""
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO, port=None)
+    with patch(
+        "homeassistant.components.vizio.config_flow.async_resolve_host",
+        AsyncMock(return_value=HOST),
+    ) as mock_resolve:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+        )
+
+    assert mock_resolve.call_args_list[0][0][0] == ZEROCONF_HOST
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+
+@pytest.mark.usefixtures("vizio_connect", "vizio_bypass_setup")
+async def test_zeroconf_flow_unresolvable_host_aborts(hass: HomeAssistant) -> None:
+    """Test zeroconf discovery aborts when no SmartCast port responds."""
+    discovery_info = dataclasses.replace(MOCK_ZEROCONF_SERVICE_INFO, port=None)
+    with patch(
+        "homeassistant.components.vizio.config_flow.async_resolve_host",
+        AsyncMock(side_effect=VizioConnectionError("no SmartCast API")),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_ZEROCONF}, data=discovery_info
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "cannot_connect"

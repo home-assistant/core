@@ -977,7 +977,7 @@
     'supported_features': 0,
     'translation_key': 'wifi_rssi',
     'unique_id': 'HWE-P1_5c2fafabcdef_wifi_rssi',
-    'unit_of_measurement': 'dB',
+    'unit_of_measurement': 'dBm',
   })
 # ---
 # name: test_sensors[HWE-BAT-entity_ids11][sensor.device_wi_fi_rssi:state]
@@ -985,7 +985,7 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Device Wi-Fi RSSI',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dBm',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.device_wi_fi_rssi',

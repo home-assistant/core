@@ -99,6 +99,9 @@ def _pair_public_private[
 class ProtectData:
     """Coordinate updates."""
 
+    # Resolved once in _async_setup_entry, before any entity is created.
+    nvr_device_id: str
+
     def __init__(
         self,
         hass: HomeAssistant,

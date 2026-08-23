@@ -101,17 +101,20 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         },
         async_install,
         [UpdateEntityFeature.INSTALL],
+        admin_only=True,
     )
 
     component.async_register_entity_service(
         SERVICE_SKIP,
         None,
         async_skip,
+        admin_only=True,
     )
     component.async_register_entity_service(
         "clear_skipped",
         None,
         async_clear_skipped,
+        admin_only=True,
     )
 
     websocket_api.async_register_command(hass, websocket_release_notes)

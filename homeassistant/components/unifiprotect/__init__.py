@@ -192,7 +192,7 @@ async def _async_setup_entry(
     # This ensures via_device references work for all device entities
     nvr = bootstrap.nvr
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    nvr_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
         identifiers={(DOMAIN, nvr.mac)},
@@ -202,6 +202,7 @@ async def _async_setup_entry(
         sw_version=str(nvr.version),
         configuration_url=nvr.api.base_url,
     )
+    data_service.nvr_device_id = nvr_device.id
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.http.register_view(ThumbnailProxyView(hass))
@@ -236,9 +237,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: UFPConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: UFPConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove ufp config entry from a device."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     unifi_macs = {
         _async_unifi_mac_from_hass(connection[1])
         for connection in device_entry.connections
