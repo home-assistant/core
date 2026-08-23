@@ -174,12 +174,18 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
-        await self._receiver.power_on()
+        try:
+            await self._receiver.power_on()
+        except OSError as err:
+            raise HomeAssistantError(f"Failed to turn on: {err}") from err
 
     @override
     async def async_turn_off(self) -> None:
         """Turn the media player off."""
-        await self._receiver.power_off()
+        try:
+            await self._receiver.power_off()
+        except OSError as err:
+            raise HomeAssistantError(f"Failed to turn off: {err}") from err
         self._attr_state = MediaPlayerState.OFF
         self._attr_source = None
         self.async_write_ha_state()
@@ -192,26 +198,37 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         sent, so the slider does not jump after an off-grid value is rounded
         by the firmware.
         """
-        await self._receiver.set_volume(round(volume * 160) / 2)
+        try:
+            await self._receiver.set_volume(round(volume * 160) / 2)
+        except OSError as err:
+            raise HomeAssistantError(f"Failed to set volume: {err}") from err
         self.async_write_ha_state()
 
     @override
     async def async_volume_up(self) -> None:
         """Volume up."""
-        await self._receiver.volume_up()
+        try:
+            await self._receiver.volume_up()
+        except OSError as err:
+            raise HomeAssistantError(f"Failed to step volume up: {err}") from err
 
     @override
     async def async_volume_down(self) -> None:
         """Volume down."""
-        await self._receiver.volume_down()
+        try:
+            await self._receiver.volume_down()
+        except OSError as err:
+            raise HomeAssistantError(f"Failed to step volume down: {err}") from err
 
     @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute or unmute."""
-        if mute:
-            await self._receiver.mute_on()
-        else:
-            await self._receiver.mute_off()
+        command = self._receiver.mute_on if mute else self._receiver.mute_off
+        try:
+            await command()
+        except OSError as err:
+            action = "mute" if mute else "unmute"
+            raise HomeAssistantError(f"Failed to {action}: {err}") from err
 
     @override
     async def async_select_source(self, source: str) -> None:
@@ -219,11 +236,21 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if source not in INPUT_SOURCES:
             raise HomeAssistantError(f"Unknown source: {source}")
 
-        await self._receiver.select_source(INPUT_SOURCES[source])
+        try:
+            await self._receiver.select_source(INPUT_SOURCES[source])
+        except OSError as err:
+            raise HomeAssistantError(
+                f"Failed to select source {source}: {err}"
+            ) from err
 
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         if sound_mode not in SOUND_MODES:
             raise HomeAssistantError(f"Unknown sound mode: {sound_mode}")
-        await self._receiver.select_sound_mode(SOUND_MODES[sound_mode])
+        try:
+            await self._receiver.select_sound_mode(SOUND_MODES[sound_mode])
+        except OSError as err:
+            raise HomeAssistantError(
+                f"Failed to select sound mode {sound_mode}: {err}"
+            ) from err

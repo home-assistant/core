@@ -434,6 +434,47 @@ async def test_media_player_cleanup_on_removal(
     assert entity._source_check_task.cancelled()
 
 
+@pytest.mark.parametrize(
+    ("service", "method", "payload"),
+    [
+        ("turn_on", "power_on", {}),
+        ("turn_off", "power_off", {}),
+        ("volume_set", "set_volume", {"volume_level": 0.5}),
+        ("volume_up", "volume_up", {}),
+        ("volume_down", "volume_down", {}),
+        ("volume_mute", "mute_on", {"is_volume_muted": True}),
+        ("select_source", "select_source", {"source": "HDMI 1"}),
+        ("select_sound_mode", "select_sound_mode", {"sound_mode": "Stereo"}),
+    ],
+    ids=[
+        "on",
+        "off",
+        "volume",
+        "up",
+        "down",
+        "mute",
+        "source",
+        "sound_mode",
+    ],
+)
+async def test_media_player_command_failure_raises_ha_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+    service: str,
+    method: str,
+    payload: dict[str, float | bool | str],
+) -> None:
+    """Test receiver I/O failures surface as Home Assistant errors."""
+    mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
+
+    getattr(mock_receiver, method).side_effect = ConnectionError("link down")
+
+    with pytest.raises(HomeAssistantError, match="link down"):
+        await _call_media_player_service(hass, service, **payload)
+
+
 def test_sound_mode_codes_prefer_canonical() -> None:
     """Test duplicate labels keep the canonical code over firmware misspellings."""
     assert SOUND_MODES["Direct"] == "DIRECT"
