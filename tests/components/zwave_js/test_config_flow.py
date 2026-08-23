@@ -2657,6 +2657,57 @@ async def test_usb_discovery_ignored(
     assert result["reason"] == "already_configured"
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_concurrent_usb_setup_flows(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test a second setup flow can't change the add-on config concurrently."""
+    second_stick = UsbServiceInfo(
+        device="/dev/zwave2",
+        pid="BBBB",
+        vid="BBBB",
+        serial_number="5678",
+        description="zwave radio",
+        manufacturer="test",
+    )
+    result_a = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    result_b = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=second_stick,
+    )
+
+    assert result_a["step_id"] == "installation_type"
+    assert result_b["step_id"] == "installation_type"
+
+    result_a = await hass.config_entries.flow.async_configure(
+        result_a["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result_a["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_a["step_id"] == "start_addon"
+    set_addon_options.reset_mock()
+
+    # The second flow may not change the add-on config while the first
+    # flow is applying its own.
+    result_b = await hass.config_entries.flow.async_configure(
+        result_b["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result_b["type"] is FlowResultType.ABORT
+    assert result_b["reason"] == "already_in_progress"
+    set_addon_options.assert_not_called()
+
+    hass.config_entries.flow.async_abort(result_a["flow_id"])
+    await hass.async_block_till_done()
+
+
 @pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
     """Test usb discovery aborted when existing entry not using add-on."""

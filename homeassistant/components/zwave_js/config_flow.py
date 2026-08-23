@@ -477,6 +477,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_abort(reason="addon_already_configured")
 
         if config_updates := self._addon_config_updates:
+            if self._reconfigure_config_entry is None and any(
+                flow
+                for flow in self._async_in_progress()
+                if flow.get("step_id") not in ABORT_SAFE_STEPS
+            ):
+                # Another flow, e.g. a second discovered adapter being set
+                # up, is already changing the shared add-on config.
+                return self.async_abort(reason="already_in_progress")
             # If we have updates to the add-on config,
             # set them before starting the add-on.
             self._addon_config_updates = {}
@@ -1200,10 +1208,14 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             _LOGGER.error("Failed to restore add-on options: %s", err)
             return
         if self._addon_setup.restart_addon or self._addon_setup.addon_started:
-            # The add-on is running with the unconfirmed options this flow set.
-            # Schedule a restart to apply the restored options. Don't await it,
-            # to avoid re-raising the cancellation of the flow's own start task.
-            addon_manager.async_schedule_restart_addon(catch_error=True)
+            # The add-on is running with the unconfirmed options this flow
+            # set. Restart it before the reload, so the entry doesn't
+            # reconnect to the unconfirmed adapter.
+            try:
+                await addon_manager.async_restart_addon()
+            except AddonError as err:
+                _LOGGER.error("Failed to restart add-on: %s", err)
+                return
         self.hass.config_entries.async_schedule_reload(config_entry.entry_id)
 
     async def async_step_intent_reconfigure(
