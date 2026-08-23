@@ -13,7 +13,7 @@ async def test_climate_zones(hass: HomeAssistant, patch_nexia_home: NexiaHome) -
 
     await setup_integration(hass, patch_nexia_home)
 
-    state = hass.states.get("climate.nick_office_nick_office")
+    state = hass.states.get("climate.nick_office")
     assert state is not None
     assert state.state == HVACMode.HEAT_COOL
     expected_attributes = {
@@ -44,7 +44,7 @@ async def test_climate_zones(hass: HomeAssistant, patch_nexia_home: NexiaHome) -
     for key, value in expected_attributes.items():
         assert state.attributes[key] == value, f"key = {key}"
 
-    state = hass.states.get("climate.kitchen_kitchen")
+    state = hass.states.get("climate.kitchen")
     assert state is not None
     assert state.state == HVACMode.HEAT_COOL
 

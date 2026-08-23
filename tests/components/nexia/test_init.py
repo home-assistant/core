@@ -40,7 +40,7 @@ async def test_device_remove_devices(
     await async_setup_component(hass, "config", {})
     config_entry = await setup_integration(hass, patch_nexia_home)
 
-    entity = entity_registry.entities["sensor.nick_office_nick_office_temperature"]
+    entity = entity_registry.entities["sensor.nick_office_temperature"]
 
     live_zone_device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)

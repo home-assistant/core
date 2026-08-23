@@ -70,6 +70,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: NexiaConfigEntry) -> boo
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, thermostat_id)},  # type: ignore[arg-type] # until fix issue #139773
         )
+        # Register zone devices before forwarding platforms so remote RoomIQ sensor
+        # sub-devices can resolve their via_device_id regardless of platform setup order.
+        for zone_id in nexia_home.get_thermostat_by_id(thermostat_id).get_zone_ids():
+            device_registry.async_get_or_create(
+                config_entry_id=entry.entry_id,
+                identifiers={(DOMAIN, zone_id)},  # type: ignore[arg-type] # until fix issue #139773
+            )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
