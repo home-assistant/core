@@ -792,8 +792,6 @@ async def async_oauth2_request(
     This method will not refresh tokens. Use OAuth2 session for that.
     """
     session = async_get_clientsession(hass)
-    # A CIMultiDict so the token replaces a caller supplied Authorization
-    # header whatever its casing, instead of being sent alongside it.
     headers = CIMultiDict(kwargs.pop("headers", {}))
     headers[hdrs.AUTHORIZATION] = f"Bearer {token['access_token']}"
     return await session.request(method, url, **kwargs, headers=headers)
