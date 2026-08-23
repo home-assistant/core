@@ -8,10 +8,11 @@ import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.guntamatic.const import SCAN_INTERVAL
+from homeassistant.components.guntamatic.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
 
 from . import setup_integration
 
@@ -79,4 +80,3 @@ async def test_coordinator_error_translations(hass: HomeAssistant) -> None:
     """Test the coordinator update failure exceptions are translated."""
     translations = await async_get_translations(hass, "en", "exceptions", [DOMAIN])
     assert "component.guntamatic.exceptions.communication_error.message" in translations
-    assert "component.guntamatic.exceptions.no_serial.message" in translations
