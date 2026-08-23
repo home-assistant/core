@@ -148,7 +148,7 @@ async def test_get_tools_deduplicates_by_name(
     first_tool = _StubTool("shared_tool")
     second_tool = _StubTool("shared_tool")
     _mock_tools_platform(hass, "test_a", LLMTools(tools=[first_tool]))
-    _mock_tools_platform(hass, "test_b", LLMTools(tools=[second_tool]))
+    platform_b = _mock_tools_platform(hass, "test_b", LLMTools(tools=[second_tool]))
 
     assert await async_setup_component(hass, "llm", {})
 
@@ -166,3 +166,15 @@ async def test_get_tools_deduplicates_by_name(
     result = await async_get_tools(hass, llm_context, "assist")
     assert [tool.name for tool in result.tools] == ["GetDateTime", "shared_tool"]
     assert "shared_tool" not in caplog.text
+
+    # Once the collision goes away (e.g. the integration was disabled) and
+    # comes back, the warning is logged again.
+    platform_b.return_value = LLMTools(tools=[])
+    result = await async_get_tools(hass, llm_context, "assist")
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "shared_tool"]
+    assert "shared_tool" not in caplog.text
+
+    platform_b.return_value = LLMTools(tools=[second_tool])
+    result = await async_get_tools(hass, llm_context, "assist")
+    assert result.tools[1] is first_tool
+    assert "Ignoring LLM tool shared_tool from platform test_b" in caplog.text

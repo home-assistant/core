@@ -83,6 +83,7 @@ async def async_get_tools(
     # LLM APIs reject duplicate tool names, so the first platform to contribute
     # a name wins. Remember the source so the warning can name both platforms.
     tool_sources: dict[str, str] = {}
+    collided: set[str] = set()
     warned = hass.data[DATA_WARNED_DUPLICATE_TOOLS]
     # Sort by domain so the tool and prompt order is independent of load order.
     for domain, platform in sorted(platforms.items()):
@@ -95,6 +96,7 @@ async def async_get_tools(
             continue
         for tool in result.tools:
             if (source := tool_sources.get(tool.name)) is not None:
+                collided.add(tool.name)
                 # This runs on every conversation turn, so only warn once per name.
                 if tool.name not in warned:
                     warned.add(tool.name)
@@ -110,6 +112,8 @@ async def async_get_tools(
             tools.append(tool)
         if result.prompt:
             prompts.append(result.prompt)
+    # Forget names that no longer collide so the warning returns if they do again.
+    warned.difference_update(tool_sources.keys() - collided)
     return LLMTools(tools=tools, prompt="\n".join(prompts) if prompts else None)
 
 
