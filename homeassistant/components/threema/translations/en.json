@@ -38,7 +38,7 @@
                 "title": "Re-authenticate Threema"
             },
             "setup_new": {
-                "description": "Your keys have been generated. Save them now before continuing!\n\nPublic key: `{public_key}`\nPrivate key: `{private_key}`\n\nWhen registering at gateway.threema.ch, paste the public key as shown above. Store the private key securely — it cannot be recovered.",
+                "description": "Your keys have been generated. Save them now before continuing!\n\nPublic key: `{public_key}`\nPrivate key: `{private_key}`\n\nWhen registering at gateway.threema.ch, paste the public key as shown above. Store the private key securely \u2014 it cannot be recovered.",
                 "title": "Keys generated"
             },
             "user": {
