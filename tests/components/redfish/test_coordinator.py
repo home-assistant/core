@@ -18,6 +18,7 @@ from homeassistant.components.redfish.const import DOMAIN
 from homeassistant.components.redfish.coordinator import RedfishDataUpdateCoordinator
 from homeassistant.components.redfish.models import RedfishSystem
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import UpdateFailed
 
@@ -524,6 +525,23 @@ async def test_coordinator_update_error_is_translated(
 
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == "update_failed"
+
+
+async def test_coordinator_authentication_error_requests_reauthentication(
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test polling authentication errors request reauthentication."""
+    coordinator = init_integration.runtime_data
+    with (
+        patch.object(
+            coordinator.client, "async_discover", side_effect=RedfishAuthError
+        ),
+        pytest.raises(ConfigEntryAuthFailed) as exc_info,
+    ):
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "authentication_failed"
 
 
 @pytest.mark.parametrize(

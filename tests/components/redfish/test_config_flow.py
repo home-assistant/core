@@ -230,3 +230,89 @@ async def test_user_flow_rejects_invalid_client_configuration(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "invalid_auth"}
+
+
+@pytest.mark.usefixtures("mock_redfish_api")
+async def test_reauthentication_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test successful credential reauthentication."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.redfish.config_flow.RedfishApi.async_get_systems",
+        return_value={"1": SYSTEM},
+    ):
+        result = await mock_config_entry.start_reauth_flow(hass)
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "new-user",
+                CONF_PASSWORD: "new-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        **USER_INPUT,
+        CONF_BASE_URL: "https://bmc.example",
+        CONF_USERNAME: "new-user",
+        CONF_PASSWORD: "new-password",
+    }
+
+
+@pytest.mark.parametrize(
+    ("first_result", "expected_error"),
+    [
+        pytest.param(RedfishAuthError(), "invalid_auth", id="invalid-auth"),
+        pytest.param(RedfishError(), "cannot_connect", id="cannot-connect"),
+        pytest.param(RuntimeError(), "unknown", id="unknown"),
+        pytest.param({}, "no_systems", id="no-systems"),
+    ],
+)
+@pytest.mark.usefixtures("mock_redfish_api")
+async def test_reauthentication_flow_errors(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    first_result: Exception | dict[str, RedfishSystem],
+    expected_error: str,
+) -> None:
+    """Test credential reauthentication errors can be corrected."""
+    mock_config_entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.redfish.config_flow.RedfishApi.async_get_systems",
+        side_effect=[first_result, {"1": SYSTEM}],
+    ):
+        result = await mock_config_entry.start_reauth_flow(hass)
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "new-user",
+                CONF_PASSWORD: "new-password",
+            },
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "reauth_confirm"
+        assert result["errors"] == {"base": expected_error}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={
+                CONF_USERNAME: "new-user",
+                CONF_PASSWORD: "new-password",
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data[CONF_USERNAME] == "new-user"
+    assert mock_config_entry.data[CONF_PASSWORD] == "new-password"

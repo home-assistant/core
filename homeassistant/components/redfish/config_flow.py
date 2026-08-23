@@ -1,5 +1,6 @@
 """Config flow for Redfish."""
 
+from collections.abc import Mapping
 import logging
 from typing import Any, override
 
@@ -17,6 +18,7 @@ from homeassistant.helpers.selector import (
 
 from .api import RedfishApi, RedfishAuthError, RedfishError
 from .const import CONF_BASE_URL, DEFAULT_VERIFY_SSL, DOMAIN
+from .models import RedfishSystem
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -30,6 +32,15 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
             TextSelectorConfig(type=TextSelectorType.PASSWORD)
         ),
         vol.Required(CONF_VERIFY_SSL, default=DEFAULT_VERIFY_SSL): bool,
+    }
+)
+
+STEP_REAUTH_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): str,
+        vol.Required(CONF_PASSWORD): TextSelector(
+            TextSelectorConfig(type=TextSelectorType.PASSWORD)
+        ),
     }
 )
 
@@ -58,6 +69,19 @@ class RedfishConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    async def _async_get_systems(
+        self, data: Mapping[str, Any]
+    ) -> dict[str, RedfishSystem]:
+        """Authenticate and discover Redfish systems."""
+        client = RedfishApi(
+            async_get_clientsession(self.hass, verify_ssl=data[CONF_VERIFY_SSL]),
+            data[CONF_BASE_URL],
+            data[CONF_USERNAME],
+            data[CONF_PASSWORD],
+        )
+        await client.async_login()
+        return await client.async_get_systems()
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -74,42 +98,72 @@ class RedfishConfigFlow(ConfigFlow, domain=DOMAIN):
                 await self.async_set_unique_id(base_url)
                 self._abort_if_unique_id_configured()
                 try:
-                    client = RedfishApi(
-                        async_get_clientsession(
-                            self.hass, verify_ssl=user_input[CONF_VERIFY_SSL]
-                        ),
-                        base_url,
-                        user_input[CONF_USERNAME],
-                        user_input[CONF_PASSWORD],
-                    )
-                except ValueError:
+                    systems = await self._async_get_systems(normalized_input)
+                except ValueError, RedfishAuthError:
                     errors["base"] = "invalid_auth"
+                except RedfishError:
+                    errors["base"] = "cannot_connect"
+                except Exception:
+                    _LOGGER.exception("Unexpected exception validating Redfish service")
+                    errors["base"] = "unknown"
                 else:
-                    try:
-                        await client.async_login()
-                        systems = await client.async_get_systems()
-                    except ValueError, RedfishAuthError:
-                        errors["base"] = "invalid_auth"
-                    except RedfishError:
-                        errors["base"] = "cannot_connect"
-                    except Exception:
-                        _LOGGER.exception(
-                            "Unexpected exception validating Redfish service"
-                        )
-                        errors["base"] = "unknown"
+                    if not systems:
+                        errors["base"] = "no_systems"
                     else:
-                        if not systems:
-                            errors["base"] = "no_systems"
-                        else:
-                            first_system = next(iter(systems.values()))
-                            return self.async_create_entry(
-                                title=first_system.name or base_url,
-                                data=normalized_input,
-                            )
+                        first_system = next(iter(systems.values()))
+                        return self.async_create_entry(
+                            title=first_system.name or base_url,
+                            data=normalized_input,
+                        )
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
                 STEP_USER_DATA_SCHEMA, user_input
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Validate updated credentials."""
+        errors: dict[str, str] = {}
+        reauth_entry = self._get_reauth_entry()
+        if user_input is not None:
+            try:
+                systems = await self._async_get_systems(reauth_entry.data | user_input)
+            except ValueError, RedfishAuthError:
+                errors["base"] = "invalid_auth"
+            except RedfishError:
+                errors["base"] = "cannot_connect"
+            except Exception:
+                _LOGGER.exception("Unexpected exception validating Redfish service")
+                errors["base"] = "unknown"
+            else:
+                if not systems:
+                    errors["base"] = "no_systems"
+                else:
+                    return self.async_update_reload_and_abort(
+                        reauth_entry, data_updates=user_input
+                    )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_REAUTH_DATA_SCHEMA,
+                {
+                    CONF_USERNAME: (
+                        user_input[CONF_USERNAME]
+                        if user_input is not None
+                        else reauth_entry.data[CONF_USERNAME]
+                    )
+                },
             ),
             errors=errors,
         )
