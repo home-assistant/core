@@ -137,3 +137,32 @@ async def test_get_tools_isolates_failing_platform(
     assert [tool.name for tool in result.tools] == ["GetDateTime", "good_tool"]
     assert result.prompt == "prompt"
     assert "Error getting tools from LLM platform test_bad" in caplog.text
+
+
+async def test_get_tools_deduplicates_by_name(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a tool name contributed by two platforms is only returned once."""
+    first_tool = _StubTool("shared_tool")
+    second_tool = _StubTool("shared_tool")
+    _mock_tools_platform(hass, "test_a", LLMTools(tools=[first_tool]))
+    _mock_tools_platform(hass, "test_b", LLMTools(tools=[second_tool]))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    result = await async_get_tools(hass, llm_context, "assist")
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "shared_tool"]
+    # Sorted by domain, so the tool from "test_a" wins.
+    assert result.tools[1] is first_tool
+    assert (
+        "Ignoring LLM tool shared_tool from platform test_b; platform test_a already"
+        " provides a tool with that name"
+    ) in caplog.text
+
+    # The collision is logged once, not on every call.
+    caplog.clear()
+    result = await async_get_tools(hass, llm_context, "assist")
+    assert [tool.name for tool in result.tools] == ["GetDateTime", "shared_tool"]
+    assert "shared_tool" not in caplog.text

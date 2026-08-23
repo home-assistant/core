@@ -29,6 +29,7 @@ CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 DATA_PLATFORMS: HassKey[LazyIntegrationPlatforms[LLMToolsPlatformProtocol]] = HassKey(
     "llm_platforms"
 )
+DATA_WARNED_DUPLICATE_TOOLS: HassKey[set[str]] = HassKey("llm_warned_duplicate_tools")
 
 
 @dataclass(slots=True)
@@ -57,6 +58,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_PLATFORMS] = LazyIntegrationPlatforms(
         hass, DOMAIN, _process_llm_tools_platform
     )
+    hass.data[DATA_WARNED_DUPLICATE_TOOLS] = set()
     async_register_api(hass, AssistAPI(hass))
     async_setup_ws_api(hass)
     return True
@@ -78,6 +80,10 @@ async def async_get_tools(
 
     tools: list[Tool] = []
     prompts: list[str] = []
+    # LLM APIs reject duplicate tool names, so the first platform to contribute
+    # a name wins. Remember the source so the warning can name both platforms.
+    tool_sources: dict[str, str] = {}
+    warned = hass.data[DATA_WARNED_DUPLICATE_TOOLS]
     # Sort by domain so the tool and prompt order is independent of load order.
     for domain, platform in sorted(platforms.items()):
         try:
@@ -87,7 +93,21 @@ async def async_get_tools(
             continue
         if result is None:
             continue
-        tools.extend(result.tools)
+        for tool in result.tools:
+            if (source := tool_sources.get(tool.name)) is not None:
+                # This runs on every conversation turn, so only warn once per name.
+                if tool.name not in warned:
+                    warned.add(tool.name)
+                    _LOGGER.warning(
+                        "Ignoring LLM tool %s from platform %s; platform %s already"
+                        " provides a tool with that name",
+                        tool.name,
+                        domain,
+                        source,
+                    )
+                continue
+            tool_sources[tool.name] = domain
+            tools.append(tool)
         if result.prompt:
             prompts.append(result.prompt)
     return LLMTools(tools=tools, prompt="\n".join(prompts) if prompts else None)
