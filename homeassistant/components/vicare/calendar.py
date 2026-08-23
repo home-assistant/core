@@ -15,6 +15,7 @@ from homeassistant.util import dt as dt_util
 
 from .entity import ViCareEntity
 from .types import ViCareConfigEntry, ViCareDevice
+from .utils import is_supported
 
 # Short weekday keys PyViCare uses, indexed by datetime.weekday().
 CIRCULATION_SCHEDULE_WEEKDAYS = ("mon", "tue", "wed", "thu", "fri", "sat", "sun")
@@ -32,6 +33,11 @@ def _build_entities(
     return [
         ViCareCirculationScheduleCalendar(device.serial, device.config, device.api)
         for device in device_list
+        if is_supported(
+            "circulation_schedule",
+            lambda api: api.getDomesticHotWaterCirculationSchedule(),
+            device.api,
+        )
     ]
 
 

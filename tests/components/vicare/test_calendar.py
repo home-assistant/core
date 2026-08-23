@@ -5,7 +5,6 @@ from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
-from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.calendar import (
     DOMAIN as CALENDAR_DOMAIN,
@@ -26,7 +25,7 @@ from tests.common import MockConfigEntry
 
 ENTITY_CIRCULATION_SCHEDULE = "calendar.model0_circulation_schedule"
 
-_FIXTURES: list[Fixture] = [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+_FIXTURES: list[Fixture] = [Fixture(set(), "vicare/Vitocal222G_Vitovent300W.json")]
 
 
 def _get_calendar_entity(
@@ -168,30 +167,23 @@ async def test_circulation_schedule_inactive_has_no_events(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
-async def test_circulation_schedule_not_supported(
+async def test_no_calendar_for_unsupported_device(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test the calendar has no events when the device reports no schedule."""
+    """Test no calendar entity is created for a device without the feature."""
     with (
         patch(
             "homeassistant.helpers.config_entry_oauth2_flow.OAuth2Session.async_ensure_token_valid",
         ),
         patch(
             f"{MODULE}._setup_vicare_api",
-            return_value=MockPyViCare(_FIXTURES).as_vicare_data(),
+            return_value=MockPyViCare(
+                [Fixture({"type:boiler"}, "vicare/Vitodens300W.json")]
+            ).as_vicare_data(),
         ),
         patch(f"{MODULE}.PLATFORMS", [Platform.CALENDAR]),
     ):
         await setup_integration(hass, mock_config_entry)
 
-    entity = _get_calendar_entity(hass, ENTITY_CIRCULATION_SCHEDULE)
-    with patch.object(
-        entity._api,
-        "getDomesticHotWaterCirculationSchedule",
-        side_effect=PyViCareNotSupportedFeatureError("not supported"),
-    ):
-        await entity.async_update_ha_state(force_refresh=True)
-
-    state = hass.states.get(ENTITY_CIRCULATION_SCHEDULE)
-    assert state.state == "off"
+    assert hass.states.get(ENTITY_CIRCULATION_SCHEDULE) is None
