@@ -46,7 +46,7 @@ class _SharedConnection:
 @callback
 def _async_acquire(
     hass: HomeAssistant, params: ModbusParams
-) -> tuple[_SharedConnection, Callable[[], Coroutine[Any, Any, None]]]:
+) -> tuple[ModbusConnection, Callable[[], Coroutine[Any, Any, None]]]:
     """Take a hold on the connection these credentials describe.
 
     Raises `HomeAssistantError` if the device is already in use over different
@@ -75,7 +75,7 @@ def _async_acquire(
         _LOGGER.debug("Closing the Modbus connection to %s", endpoint)
         await shared.connection.close()
 
-    return shared, release
+    return shared.connection, release
 
 
 @callback
@@ -94,9 +94,9 @@ def async_get_unit(
     Raises `HomeAssistantError` if the device is already in use over different
     link settings, which cannot both be honoured on one connection.
     """
-    shared, release = _async_acquire(hass, params)
+    connection, release = _async_acquire(hass, params)
     entry.async_on_unload(release)
-    return shared.connection.for_unit(unit_id)
+    return connection.for_unit(unit_id)
 
 
 @asynccontextmanager
@@ -114,8 +114,8 @@ async def async_get_temporary_unit(
     Raises `HomeAssistantError` if the device is already in use over different
     link settings, which cannot both be honoured on one connection.
     """
-    shared, release = _async_acquire(hass, params)
+    connection, release = _async_acquire(hass, params)
     try:
-        yield shared.connection.for_unit(unit_id)
+        yield connection.for_unit(unit_id)
     finally:
         await release()
