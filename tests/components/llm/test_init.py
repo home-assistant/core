@@ -1,12 +1,13 @@
 """Tests for the LLM integration."""
 
-from unittest.mock import Mock
+import logging
+from unittest.mock import Mock, patch
 
 import pytest
 
 from homeassistant.components.llm import DATA_PLATFORMS, LLMTools, async_get_tools
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import llm
+from homeassistant.helpers import frame, llm
 from homeassistant.setup import async_setup_component
 from homeassistant.util.json import JsonObjectType
 
@@ -44,7 +45,10 @@ def llm_context() -> llm.LLMContext:
 
 
 def _mock_tools_platform(
-    hass: HomeAssistant, domain: str, tools: LLMTools | Exception | None
+    hass: HomeAssistant,
+    domain: str,
+    tools: LLMTools | Exception | None,
+    built_in: bool = True,
 ) -> Mock:
     """Register a mock <integration>/llm.py platform returning the given tools."""
     if isinstance(tools, Exception):
@@ -52,7 +56,9 @@ def _mock_tools_platform(
     else:
         async_get_tools = Mock(return_value=tools)
     hass.config.components.add(domain)
-    mock_platform(hass, f"{domain}.llm", Mock(async_get_tools=async_get_tools))
+    mock_platform(
+        hass, f"{domain}.llm", Mock(async_get_tools=async_get_tools), built_in=built_in
+    )
     return async_get_tools
 
 
@@ -137,3 +143,58 @@ async def test_get_tools_isolates_failing_platform(
     assert [tool.name for tool in result.tools] == ["GetDateTime", "good_tool"]
     assert result.prompt == "prompt"
     assert "Error getting tools from LLM platform test_bad" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("built_in", "expected_level", "expected_type"),
+    [(True, logging.ERROR, ""), (False, logging.WARNING, "custom ")],
+    ids=["core", "custom"],
+)
+async def test_get_tools_reports_unprefixed_tool_names(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+    built_in: bool,
+    expected_level: int,
+    expected_type: str,
+) -> None:
+    """Test tools not prefixed with the offering domain are reported."""
+    tools = [_StubTool("test.prefixed"), _StubTool("unprefixed")]
+    _mock_tools_platform(hass, "test", LLMTools(tools=tools), built_in=built_in)
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        result = await async_get_tools(hass, llm_context, "assist")
+
+    # The tools are still returned until the requirement starts to fail.
+    assert [tool.name for tool in result.tools] == [
+        "GetDateTime",
+        "test.prefixed",
+        "unprefixed",
+    ]
+    expected_message = (
+        f"Detected that {expected_type}integration 'test' provides LLM tools that are "
+        "not prefixed with 'test.': unprefixed. This will stop working in Home "
+        "Assistant 2027.3"
+    )
+    record = next(
+        record for record in caplog.records if expected_message in record.getMessage()
+    )
+    assert record.levelno == expected_level
+
+
+async def test_get_tools_prefixed_tool_names_not_reported(
+    hass: HomeAssistant,
+    llm_context: llm.LLMContext,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test a platform prefixing all its tools is not reported."""
+    _mock_tools_platform(hass, "test", LLMTools(tools=[_StubTool("test.tool")]))
+
+    assert await async_setup_component(hass, "llm", {})
+
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        await async_get_tools(hass, llm_context, "assist")
+
+    assert "not prefixed with 'test.'" not in caplog.text
