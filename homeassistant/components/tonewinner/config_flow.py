@@ -82,7 +82,12 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
             # Free the port before probing: a held port would race the probe,
             # and an unchanged port deserves a fresh model check (device swap).
             if entry.state is ConfigEntryState.LOADED:
-                await self.hass.config_entries.async_unload(entry.entry_id)
+                if not await self.hass.config_entries.async_unload(entry.entry_id):
+                    # The receiver is still connected; probing would race it.
+                    _LOGGER.warning(
+                        "Failed to unload %s before reconfiguring", entry.title
+                    )
+                    return self.async_abort(reason="reconfigure_unload_failed")
             else:
                 entry.async_cancel_retry_setup()
 

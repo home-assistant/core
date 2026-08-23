@@ -228,6 +228,46 @@ async def test_reconfigure_same_port(
     assert mock_config_entry.title == "AT-300"
 
 
+async def test_reconfigure_unload_fails(hass: HomeAssistant) -> None:
+    """Test reconfigure aborts when the loaded entry cannot be unloaded."""
+    mock_config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={CONF_SERIAL_PORT: "/dev/ttyUSB0", CONF_MODEL: "AT-500"},
+        entry_id="test_entry_id",
+        title="AT-500",
+    )
+    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
+    mock_config_entry.runtime_data = _mock_receiver(model=None)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_RECONFIGURE,
+            "entry_id": mock_config_entry.entry_id,
+        },
+    )
+    with (
+        patch(
+            "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver"
+        ) as mock_receiver_cls,
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_unload",
+            new_callable=AsyncMock,
+            return_value=False,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_SERIAL_PORT: "/dev/ttyUSB0"},
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_unload_failed"
+    # Probing must not race a serial client that is still connected.
+    mock_receiver_cls.assert_not_called()
+
+
 async def test_reconfigure_port_used_by_other_entry(hass: HomeAssistant) -> None:
     """Test reconfiguring onto a port owned by another entry aborts."""
     other_entry = MockConfigEntry(
