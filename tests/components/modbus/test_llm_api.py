@@ -117,20 +117,20 @@ async def test_reading_goes_over_the_open_connection(
         for_unit.return_value.read_holding_registers = AsyncMock(return_value=[1, 2, 3])
         result = await (await _instance(hass)).async_call_tool(
             llm.ToolInput(
-                tool_name="read_modbus_registers",
+                tool_name="read_modbus_block",
                 tool_args={
                     "endpoint": ["tcp", "device.local", 502],
                     "unit_id": 1,
                     "address": 40000,
                     "count": 3,
-                    "register_type": "holding",
+                    "table": "holding",
                 },
             )
         )
 
     assert result == {
         "address": 40000,
-        "register_type": "holding",
+        "table": "holding",
         "values": [1, 2, 3],
     }
 
@@ -145,7 +145,7 @@ async def test_reading_an_unknown_device_is_refused(
     with pytest.raises(HomeAssistantError, match="No Modbus connection"):
         await (await _instance(hass)).async_call_tool(
             llm.ToolInput(
-                tool_name="read_modbus_registers",
+                tool_name="read_modbus_block",
                 tool_args={
                     "endpoint": ["tcp", "elsewhere.local", 502],
                     "unit_id": 1,
@@ -164,7 +164,7 @@ async def test_reading_an_unknown_device_is_refused(
         ({"address": -1}, "before the first register"),
         ({"address": 70000}, "past the last register"),
         ({"count": 0}, "a block of nothing"),
-        ({"count": 126}, "more than one request may carry"),
+        ({"count": 126}, "more registers than one request may carry"),
         ({"address": 65500, "count": 100}, "a block running off the end"),
     ],
 )
@@ -187,5 +187,105 @@ async def test_a_block_outside_the_protocol_is_refused(
 
     with pytest.raises(vol.Invalid):
         await (await _instance(hass)).async_call_tool(
-            llm.ToolInput(tool_name="read_modbus_registers", tool_args=tool_args)
+            llm.ToolInput(tool_name="read_modbus_block", tool_args=tool_args)
+        )
+
+
+@pytest.mark.parametrize(
+    ("table", "reader", "answer"),
+    [
+        ("holding", "read_holding_registers", [1, 2]),
+        ("input", "read_input_registers", [3, 4]),
+        ("coil", "read_coils", [True, False]),
+        ("discrete_input", "read_discrete_inputs", [False, True]),
+    ],
+)
+async def test_each_table_is_read_from_its_own_space(
+    hass: HomeAssistant,
+    consumer: ConsumerFactory,
+    table: str,
+    reader: str,
+    answer: list[int] | list[bool],
+) -> None:
+    """The four tables are separate, so each goes out on its own function."""
+    assert await async_setup_component(hass, "modbus", {})
+    await _hold_a_unit(hass, consumer)
+
+    with patch("modbus_connection.tmodbus.ModbusConnection.for_unit") as for_unit:
+        setattr(for_unit.return_value, reader, AsyncMock(return_value=answer))
+        result = await (await _instance(hass)).async_call_tool(
+            llm.ToolInput(
+                tool_name="read_modbus_block",
+                tool_args={
+                    "endpoint": ["tcp", "device.local", 502],
+                    "unit_id": 1,
+                    "address": 0,
+                    "count": 2,
+                    "table": table,
+                },
+            )
+        )
+
+    assert result == {"address": 0, "table": table, "values": answer}
+
+
+@pytest.mark.parametrize(
+    ("table", "count"),
+    [
+        ("holding", 126),
+        ("input", 126),
+        ("coil", 2001),
+        ("discrete_input", 2001),
+    ],
+)
+async def test_a_table_refuses_more_than_one_request_carries(
+    hass: HomeAssistant, consumer: ConsumerFactory, table: str, count: int
+) -> None:
+    """Registers cap at 125 and single-bit tables at 2000."""
+    assert await async_setup_component(hass, "modbus", {})
+    await _hold_a_unit(hass, consumer)
+
+    with pytest.raises(vol.Invalid):
+        await (await _instance(hass)).async_call_tool(
+            llm.ToolInput(
+                tool_name="read_modbus_block",
+                tool_args={
+                    "endpoint": ["tcp", "device.local", 502],
+                    "unit_id": 1,
+                    "address": 0,
+                    "count": count,
+                    "table": table,
+                },
+            )
+        )
+
+
+async def test_a_bit_table_may_read_more_than_a_register_table(
+    hass: HomeAssistant, consumer: ConsumerFactory
+) -> None:
+    """1000 coils is one request; 1000 registers is not."""
+    assert await async_setup_component(hass, "modbus", {})
+    await _hold_a_unit(hass, consumer)
+
+    args = {
+        "endpoint": ["tcp", "device.local", 502],
+        "unit_id": 1,
+        "address": 0,
+        "count": 1000,
+    }
+
+    with patch("modbus_connection.tmodbus.ModbusConnection.for_unit") as for_unit:
+        for_unit.return_value.read_coils = AsyncMock(return_value=[True] * 1000)
+        result = await (await _instance(hass)).async_call_tool(
+            llm.ToolInput(
+                tool_name="read_modbus_block", tool_args=args | {"table": "coil"}
+            )
+        )
+    assert len(result["values"]) == 1000
+
+    with pytest.raises(vol.Invalid):
+        await (await _instance(hass)).async_call_tool(
+            llm.ToolInput(
+                tool_name="read_modbus_block", tool_args=args | {"table": "holding"}
+            )
         )

@@ -29,15 +29,32 @@ API_ID: Final = "modbus"
 MIN_UNIT_ID: Final = 1
 MAX_UNIT_ID: Final = 247
 MAX_ADDRESS: Final = 0xFFFF
+
+# The four tables a device serves, and how many of each one request may carry:
+# registers are 16 bits and capped at 125, single-bit tables at 2000. Each is
+# its own address space, so address 0 means a different thing in each.
 MAX_REGISTER_COUNT: Final = 125
+MAX_BIT_COUNT: Final = 2000
+TABLE_LIMITS: Final[dict[str, int]] = {
+    "holding": MAX_REGISTER_COUNT,
+    "input": MAX_REGISTER_COUNT,
+    "coil": MAX_BIT_COUNT,
+    "discrete_input": MAX_BIT_COUNT,
+}
 
 
-def _fits_in_the_address_space(block: dict[str, Any]) -> dict[str, Any]:
-    """Reject a block running past the last register rather than sending it."""
+def _fits_the_table(block: dict[str, Any]) -> dict[str, Any]:
+    """Reject a block the table cannot answer, rather than sending it."""
+    limit = TABLE_LIMITS[block["table"]]
+    if block["count"] > limit:
+        raise vol.Invalid(
+            f"one request may carry {limit} of the {block['table']} table, "
+            f"not {block['count']}"
+        )
     if block["address"] + block["count"] - 1 > MAX_ADDRESS:
         raise vol.Invalid(
             f"a block of {block['count']} from {block['address']} runs past "
-            f"the last register ({MAX_ADDRESS})"
+            f"the last address ({MAX_ADDRESS})"
         )
     return block
 
@@ -61,13 +78,13 @@ class ModbusAPI(llm.API):
             api_prompt=(
                 "Read Modbus registers from the devices Home Assistant is "
                 "connected to. Call list_modbus_devices first: it names the "
-                "endpoints you may read from, and read_modbus_registers only "
-                "accepts one of those. Registers are read-only here. A device "
+                "endpoints you may read from, and read_modbus_block only "
+                "accepts one of those. Everything is read-only here. A device "
                 "answers one request at a time, so read the block you need "
                 "rather than one register at a time."
             ),
             llm_context=llm_context,
-            tools=[ListModbusDevicesTool(), ReadModbusRegistersTool()],
+            tools=[ListModbusDevicesTool(), ReadModbusBlockTool()],
         )
 
 
@@ -77,7 +94,7 @@ class ListModbusDevicesTool(llm.Tool):
     name = "list_modbus_devices"
     description = (
         "List the Modbus devices Home Assistant holds a connection to. "
-        "Returns each device's endpoint, which read_modbus_registers takes, "
+        "Returns each device's endpoint, which read_modbus_block takes, "
         "and the unit ids in use on it, keyed by the config entry using them."
     )
 
@@ -103,14 +120,16 @@ class ListModbusDevicesTool(llm.Tool):
         }
 
 
-class ReadModbusRegistersTool(llm.Tool):
-    """Read a block of registers from one device."""
+class ReadModbusBlockTool(llm.Tool):
+    """Read a block from one of a device's four tables."""
 
-    name = "read_modbus_registers"
+    name = "read_modbus_block"
     description = (
-        "Read a block of registers from a Modbus device, to compare against a "
-        "datasheet. Give the endpoint from list_modbus_devices, the unit id, "
-        "the first address and how many registers to read."
+        "Read a block from a Modbus device, to compare against a datasheet. "
+        "Give the endpoint from list_modbus_devices, the unit id, which table "
+        "to read, the first address and how many to read. The four tables are "
+        "separate address spaces: holding and input hold 16-bit registers, "
+        "coil and discrete_input hold single bits."
     )
     parameters = vol.Schema(
         vol.All(
@@ -123,13 +142,11 @@ class ReadModbusRegistersTool(llm.Tool):
                     int, vol.Range(min=0, max=MAX_ADDRESS)
                 ),
                 vol.Required("count"): vol.All(
-                    int, vol.Range(min=1, max=MAX_REGISTER_COUNT)
+                    int, vol.Range(min=1, max=MAX_BIT_COUNT)
                 ),
-                vol.Optional("register_type", default="holding"): vol.In(
-                    ["holding", "input"]
-                ),
+                vol.Optional("table", default="holding"): vol.In(TABLE_LIMITS),
             },
-            _fits_in_the_address_space,
+            _fits_the_table,
         )
     )
 
@@ -154,15 +171,25 @@ class ReadModbusRegistersTool(llm.Tool):
             )
 
         unit = shared.connection.for_unit(args["unit_id"])
-        read = (
-            unit.read_input_registers
-            if args["register_type"] == "input"
-            else unit.read_holding_registers
-        )
-        values = await read(args["address"], args["count"])
+        address: int = args["address"]
+        count: int = args["count"]
+
+        # Spelled out rather than dispatched through a mapping: the register
+        # tables answer with ints and the bit tables with bools, which no one
+        # callable type covers.
+        values: list[int] | list[bool]
+        match args["table"]:
+            case "input":
+                values = await unit.read_input_registers(address, count)
+            case "coil":
+                values = await unit.read_coils(address, count)
+            case "discrete_input":
+                values = await unit.read_discrete_inputs(address, count)
+            case _:
+                values = await unit.read_holding_registers(address, count)
 
         return {
-            "address": args["address"],
-            "register_type": args["register_type"],
+            "address": address,
+            "table": args["table"],
             "values": list(values),
         }
