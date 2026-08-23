@@ -29,7 +29,7 @@ from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import DOMAIN, PLATFORMS
+from .const import CONF_DISABLED_HOMES, DOMAIN, PLATFORMS
 from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
 from .services import async_setup_services
 from .webhook import async_register_webhook, async_unregister_webhook
@@ -118,6 +118,14 @@ async def async_config_entry_updated(
     hass: HomeAssistant, entry: NetatmoConfigEntry
 ) -> None:
     """Handle signals of config entry being updated."""
+    disabled_homes = set(entry.options.get(CONF_DISABLED_HOMES, []))
+    if disabled_homes != entry.runtime_data.disabled_homes:
+        # A reload rebuilds the public weather entities from the new options, so it
+        # supersedes the update signal instead of racing the in-flight one
+        _LOGGER.debug("Reloading entry to apply new home selection")
+        await hass.config_entries.async_reload(entry.entry_id)
+        return
+
     async_dispatcher_send(hass, f"signal-{DOMAIN}-public-update-{entry.entry_id}")
 
 
