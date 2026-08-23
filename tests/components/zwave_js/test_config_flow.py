@@ -4595,8 +4595,6 @@ async def different_device_server_version(*args):
                 "s2_access_control_key": "old456",
                 "s2_authenticated_key": "old789",
                 "s2_unauthenticated_key": "old987",
-                "lr_s2_access_control_key": "",
-                "lr_s2_authenticated_key": "",
             },
             0,
             different_device_server_version,
@@ -4673,17 +4671,8 @@ async def test_reconfigure_different_device(
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config=revert_addon_options)
     )
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "start_addon"
-
-    await hass.async_block_till_done()
-
     assert restart_addon.call_count == 2
     assert restart_addon.call_args == call("core_zwave_js")
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "different_device"
     assert entry.data == data
@@ -4700,9 +4689,11 @@ async def test_reconfigure_different_device(
         "new_addon_options",
         "disconnect_calls",
         "restart_addon_side_effect",
+        "final_connect_calls",
+        "final_disconnect_calls",
     ),
     [
-        (
+        pytest.param(
             {},
             {
                 "device": "/test",
@@ -4734,8 +4725,11 @@ async def test_reconfigure_different_device(
             },
             0,
             [SupervisorError(), None],
+            2,
+            1,
+            id="revert_restart_success",
         ),
-        (
+        pytest.param(
             {},
             {
                 "device": "/test",
@@ -4770,6 +4764,9 @@ async def test_reconfigure_different_device(
                 SupervisorError(),
                 SupervisorError(),
             ],
+            1,
+            0,
+            id="revert_restart_failed",
         ),
     ],
 )
@@ -4785,6 +4782,8 @@ async def test_reconfigure_addon_restart_failed(
     form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
+    final_connect_calls: int,
+    final_disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and add-on restart failure."""
     addon_options.update(old_addon_options)
@@ -4843,22 +4842,13 @@ async def test_reconfigure_addon_restart_failed(
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config=old_addon_options)
     )
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "start_addon"
-
-    await hass.async_block_till_done()
-
     assert restart_addon.call_count == 2
     assert restart_addon.call_args == call("core_zwave_js")
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
     assert entry.data == data
-    assert client.connect.call_count == 2
-    assert client.disconnect.call_count == 1
+    assert client.connect.call_count == final_connect_calls
+    assert client.disconnect.call_count == final_disconnect_calls
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
