@@ -8,7 +8,11 @@ from midealocal.const import DeviceType
 from midealocal.device import MideaDevice
 from midealocal.devices.c2 import MideaC2Device
 
-from homeassistant.components.number import NumberEntity, NumberEntityDescription
+from homeassistant.components.number import (
+    NumberDeviceClass,
+    NumberEntity,
+    NumberEntityDescription,
+)
 from homeassistant.const import UnitOfTime, UnitOfVolume
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -55,9 +59,11 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         key="vacation_days",
         translation_key="vacation_days",
         models=[DeviceType.CD],
+        device_class=NumberDeviceClass.DURATION,
         native_min_value=1,
         native_max_value=360,
         native_step=1,
+        native_unit_of_measurement=UnitOfTime.DAYS,
     ),
     MideaNumberEntityDescription(
         key="water_hardness",
@@ -71,6 +77,7 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         key="flushing_days",
         translation_key="flushing_days",
         models=[DeviceType.ED],
+        device_class=NumberDeviceClass.DURATION,
         native_min_value=0,
         native_max_value=99,
         native_step=1,
@@ -80,6 +87,7 @@ NUMBERS: list[MideaNumberEntityDescription] = [
         key="leak_water_protection_value",
         translation_key="leak_water_protection_value",
         models=[DeviceType.ED],
+        device_class=NumberDeviceClass.VOLUME,
         native_min_value=0,
         native_max_value=2550,
         native_step=50,
@@ -108,6 +116,8 @@ async def async_setup_entry(
         MideaNumber(device, description)
         for description in NUMBERS
         if device.device_type in description.models
+        # None means the model doesn't support this attribute at all,
+        # unlike select.py's key-presence check.
         and device.attributes.get(description.key) is not None
     )
 
@@ -139,6 +149,8 @@ class MideaNumber(MideaEntity, NumberEntity):
     @override
     def set_native_value(self, value: float) -> None:
         """Set the value."""
+        step = self.step
+        value = round(value / step) * step
         with midea_api_call():
             self._device.set_attribute(
                 attr=self.entity_description.key, value=round(value)
