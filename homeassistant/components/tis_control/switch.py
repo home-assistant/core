@@ -9,6 +9,7 @@ from homeassistant.components.switch import SwitchEntity
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TISConfigEntry
@@ -171,6 +172,18 @@ class TISSwitch(SwitchEntity):
         # Register the HASS update method as the callback and store the unsubscribe hook.
         # Home Assistant will automatically call `unsubscribe()` when the entity is removed.
         self.async_on_remove(self.device_api.register_callback(self._handle_update))
+
+        # Listen for events from the TIS API via the dispatcher
+        self.async_on_remove(
+            async_dispatcher_connect(self.hass, f"{DOMAIN}_event", self._handle_event)
+        )
+
+    @callback
+    def _handle_event(self, event_data: dict[str, Any]) -> None:
+        """Handle incoming events from the dispatcher."""
+        # Check if the event is for this device
+        if event_data.get("device_id") == self.device_api.device_id:
+            self.device_api.process_update(event_data)
 
     async def async_update(self) -> None:
         """Update the entity state."""

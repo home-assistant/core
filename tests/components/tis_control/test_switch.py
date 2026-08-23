@@ -17,6 +17,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry
 
@@ -411,3 +412,24 @@ async def test_invalid_appliance_data(
     entity_ids = hass.states.async_entity_ids(SWITCH_DOMAIN)
     assert len(entity_ids) == 1
     assert hass.states.get(entity_ids[0]).name == "TIS Device 1_2_3 Valid Switch"
+
+
+async def test_dispatcher_event_routing(
+    hass: HomeAssistant, tis_switch: MagicMock
+) -> None:
+    """Test that the switch processes events matching its device ID."""
+    # Emit an event for a DIFFERENT device.
+    event_data_other = {"device_id": [9, 9, 9], "feedback_type": "update_response"}
+    async_dispatcher_send(hass, f"{DOMAIN}_event", event_data_other)
+    await hass.async_block_till_done()
+
+    # process_update should not be called since the device ID doesn't match
+    tis_switch.process_update.assert_not_called()
+
+    # Emit an event for THIS device.
+    event_data_match = {"device_id": [1, 2, 3], "feedback_type": "update_response"}
+    async_dispatcher_send(hass, f"{DOMAIN}_event", event_data_match)
+    await hass.async_block_till_done()
+
+    # process_update should be called with the matching event
+    tis_switch.process_update.assert_called_once_with(event_data_match)

@@ -11,6 +11,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from .const import DEVICES_DICT, DOMAIN
 
@@ -61,6 +62,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TISConfigEntry) -> bool:
                     async for event in tis_api.consume_events():
                         try:
                             hass.bus.async_fire(f"{DOMAIN}_event", event)
+                            async_dispatcher_send(hass, f"{DOMAIN}_event", event)
                         except Exception:
                             _LOGGER.exception(
                                 "Unexpected error while processing TIS event"
