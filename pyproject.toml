@@ -47,7 +47,7 @@ dependencies = [
   "fnv-hash-fast==2.0.3",
   # hass-nabucasa is imported by helpers which don't depend on the cloud
   # integration
-  "hass-nabucasa==2.2.0",
+  "hass-nabucasa==2.3.0",
   # When bumping httpx, please check the version pins of
   # httpcore, anyio, and h11 in gen_requirements_all
   "httpx==0.28.1",
@@ -457,11 +457,6 @@ filterwarnings = [
   "ignore:Setting custom ClientSession.close attribute is discouraged:DeprecationWarning:homeassistant.helpers.aiohttp_client",
   # Modify app state for testing
   "ignore:Changing state of started or joined application is deprecated:DeprecationWarning:tests.components.http.test_ban",
-
-  # -- Tests
-  # Ignore custom pytest marks
-  "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
-  "ignore:Unknown pytest.mark.dataset:pytest.PytestUnknownMarkWarning:tests.components.screenlogic",
 
   # -- DeprecationWarning already fixed in our codebase
   # https://github.com/kurtmckee/feedparser/ - 6.0.12
