@@ -512,21 +512,6 @@ async def test_media_player_volume_down(
     mock_receiver.volume_down.assert_called_once()
 
 
-async def test_media_player_send_raw_command(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test sending raw command."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    await entity.send_raw_command("CUSTOM COMMAND")
-
-    mock_receiver.send_command.assert_called_once_with("CUSTOM COMMAND")
-
-
 async def test_media_player_cleanup_on_removal(
     hass: HomeAssistant,
     mock_config_entry: MagicMock,

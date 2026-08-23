@@ -55,7 +55,6 @@ def mock_receiver() -> MagicMock:
     receiver.mute_off = AsyncMock()
     receiver.select_source = AsyncMock()
     receiver.select_sound_mode = AsyncMock()
-    receiver.send_command = AsyncMock()
     receiver.subscribe = MagicMock(return_value=lambda: None)
     return receiver
 

@@ -129,17 +129,5 @@
         "title": "Configure Device"
       }
     }
-  },
-  "services": {
-    "send_raw": {
-      "description": "Send a raw ASCII or hex command to the receiver.",
-      "fields": {
-        "command": {
-          "description": "Command string (e.g., \"PWR01\" or \"0x21 0x50\").",
-          "name": "Command"
-        }
-      },
-      "name": "Send raw command"
-    }
   }
 }

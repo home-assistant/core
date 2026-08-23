@@ -205,23 +205,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             with contextlib.suppress(asyncio.CancelledError):
                 await self._source_check_task
 
-    async def send_raw_command(self, command: str) -> None:
-        """Send a raw command to the receiver."""
-        if not self._receiver.connected:
-            raise HomeAssistantError("Not connected")
-
-        if command.startswith("0x"):
-            try:
-                data = bytes(int(token, 16) for token in command.split())
-            except ValueError as err:
-                raise HomeAssistantError(f"Invalid hex command: {command}") from err
-            try:
-                command = data.decode("ascii")
-            except UnicodeDecodeError as err:
-                msg = f"Hex command contains non-ASCII bytes: {command}"
-                raise HomeAssistantError(msg) from err
-        await self._receiver.send_command(command)
-
     @override
     async def async_turn_on(self) -> None:
         """Turn the media player on."""
