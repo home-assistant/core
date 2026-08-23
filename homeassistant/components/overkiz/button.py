@@ -1,9 +1,10 @@
 """Support for Overkiz (virtual) buttons."""
 
 from dataclasses import dataclass
-from typing import cast, override
+from typing import override
 
-from pyoverkiz.enums import OverkizAttribute, OverkizCommand, OverkizCommandParam
+from pyoverkiz.enums import OverkizCommand, OverkizCommandParam
+from pyoverkiz.models import SupportedAlias
 from pyoverkiz.types import StateType as OverkizStateType
 
 from homeassistant.components.button import (
@@ -16,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OverkizDataConfigEntry
-from .const import IGNORED_OVERKIZ_DEVICES, LOGGER
+from .const import ALIAS_TYPE_FAVORITE1, IGNORED_OVERKIZ_DEVICES, LOGGER
 from .coordinator import OverkizDataUpdateCoordinator
 from .entity import OverkizDescriptiveEntity, OverkizEntity
 
@@ -107,7 +108,7 @@ SUPPORTED_COMMANDS = {
 }
 
 ALIAS_TYPES_WITH_TRANSLATION: set[str] = {
-    "favorite1",
+    ALIAS_TYPE_FAVORITE1,
     "ventilation",
     "partial",
     "pedestrian",
@@ -134,20 +135,12 @@ async def async_setup_entry(
             continue
 
         for command in device.definition.commands:
-            # goToAlias takes an alias id, so create one button per supported alias
-            if command == OverkizCommand.GO_TO_ALIAS and (
-                attribute := device.attributes.get(
-                    OverkizAttribute.CORE_SUPPORTED_ALIASES
-                )
-            ):
+            # A device can advertise several alias ids of the same type, so let
+            # pyoverkiz resolve the single one the official app would target.
+            if command == OverkizCommand.GO_TO_ALIAS:
                 entities.extend(
-                    OverkizAliasButton(
-                        device.device_url,
-                        data.coordinator,
-                        alias_id=str(alias["id"]),
-                        alias_type=alias["type"],
-                    )
-                    for alias in cast(list, attribute.value)
+                    OverkizAliasButton(device.device_url, data.coordinator, alias)
+                    for alias in device.get_most_featured_aliases().values()
                 )
             elif description := SUPPORTED_COMMANDS.get(command):
                 entities.append(
@@ -181,31 +174,32 @@ class OverkizAliasButton(OverkizEntity, ButtonEntity):
         self,
         device_url: str,
         coordinator: OverkizDataUpdateCoordinator,
-        alias_id: str,
-        alias_type: str,
+        alias: SupportedAlias,
     ) -> None:
         """Initialize the alias button."""
         super().__init__(device_url, coordinator)
-        self._alias_id = alias_id
+        self._alias = alias
+        # Keyed on the type rather than the id, since the resolved id can change
+        # when the device changes the features it advertises per alias.
         self._attr_unique_id = (
-            f"{self.device_url}-{OverkizCommand.GO_TO_ALIAS}_{alias_id}"
+            f"{self.device_url}-{OverkizCommand.GO_TO_ALIAS}_{alias.type}"
         )
 
-        if alias_type in ALIAS_TYPES_WITH_TRANSLATION:
-            self._attr_translation_key = f"go_to_alias_{alias_type}"
+        if alias.type in ALIAS_TYPES_WITH_TRANSLATION:
+            self._attr_translation_key = f"go_to_alias_{alias.type}"
         else:
             LOGGER.warning(
                 "Unsupported goToAlias type %s (%s) has been returned for %s",
-                alias_type,
-                alias_id,
+                alias.type,
+                alias.id,
                 device_url,
             )
-            self._attr_name = f"{alias_type.capitalize()} position"
+            self._attr_name = f"{alias.type.capitalize()} position"
             self._attr_icon = "mdi:star"
 
     @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.executor.async_execute_command(
-            OverkizCommand.GO_TO_ALIAS, self._alias_id
+            OverkizCommand.GO_TO_ALIAS, self._alias.id
         )

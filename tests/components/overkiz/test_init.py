@@ -151,8 +151,9 @@ async def test_go_to_alias_button_unique_id_migration(
 ) -> None:
     """Test migration of the legacy goToAlias button unique_id.
 
-    Devices without core:SupportedAliases lose their legacy button; devices
-    with an alias keep it, renamed to the per-alias unique_id.
+    The legacy button hardcoded alias id 1, the favorite1 slot. Only devices
+    advertising a favorite1 alias have a counterpart to be renamed to; the
+    others never had a working button and are removed.
     """
     mock_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -162,10 +163,18 @@ async def test_go_to_alias_button_unique_id_migration(
     )
     mock_entry.add_to_hass(hass)
 
+    # This pergola has no core:SupportedAliases attribute at all.
     pergola_button = entity_registry.async_get_or_create(
         Platform.BUTTON,
         DOMAIN,
         "ogp://1234-1234-6233/10943109-goToAlias",
+        config_entry=mock_entry,
+    )
+    # This garage door only advertises a partial alias, never favorite1.
+    garage_door_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "io://1234-1234-6233/16730050-goToAlias",
         config_entry=mock_entry,
     )
     venetian_blind_button = entity_registry.async_get_or_create(
@@ -185,11 +194,50 @@ async def test_go_to_alias_button_unique_id_migration(
         await hass.async_block_till_done()
 
     assert entity_registry.async_get(pergola_button.entity_id) is None
+    assert entity_registry.async_get(garage_door_button.entity_id) is None
     assert (
         entry := entity_registry.async_get(venetian_blind_button.entity_id)
     ) is not None
-    assert entry.unique_id == "ogp://1234-1234-6233/16730100-goToAlias_1"
+    assert entry.unique_id == "ogp://1234-1234-6233/16730100-goToAlias_favorite1"
     assert mock_entry.minor_version == 3
+
+
+async def test_go_to_alias_button_migration_api_failure(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: MockOverkizClient,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the entry stays on minor version 2 when the migration cannot reach the API."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=TEST_GATEWAY_ID,
+        data={"username": TEST_EMAIL, "password": TEST_PASSWORD, "hub": TEST_SERVER},
+        minor_version=2,
+    )
+    mock_entry.add_to_hass(hass)
+
+    legacy_button = entity_registry.async_get_or_create(
+        Platform.BUTTON,
+        DOMAIN,
+        "ogp://1234-1234-6233/16730100-goToAlias",
+        config_entry=mock_entry,
+    )
+
+    mock_client.get_setup.side_effect = ClientError("Connection error")
+
+    with patch(
+        "homeassistant.components.overkiz.create_cloud_client",
+        return_value=mock_client,
+    ):
+        assert not await hass.config_entries.async_setup(mock_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_entry.state is ConfigEntryState.MIGRATION_ERROR
+    assert "Failed to fetch devices during migration" in caplog.text
+    assert mock_entry.minor_version == 2
+    # The button is left untouched so the migration can be retried.
+    assert entity_registry.async_get(legacy_button.entity_id) is not None
 
 
 async def test_setup_token_reauth_error_starts_reauth(

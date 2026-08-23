@@ -15,7 +15,6 @@ from pyoverkiz.client import OverkizClient, OverkizClientSettings
 from pyoverkiz.const import REXEL_OAUTH_CLIENT_ID
 from pyoverkiz.enums import (
     APIType,
-    OverkizAttribute,
     OverkizCommand,
     OverkizState,
     Server,
@@ -24,6 +23,7 @@ from pyoverkiz.enums import (
 )
 from pyoverkiz.exceptions import (
     BadCredentialsError,
+    BaseOverkizError,
     MaintenanceError,
     NoSuchTokenError,
     NotAuthenticatedError,
@@ -63,6 +63,7 @@ from homeassistant.helpers.aiohttp_client import async_create_clientsession
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
+    ALIAS_TYPE_FAVORITE1,
     CONF_API_TYPE,
     CONF_GATEWAY_ID,
     CONF_HUB,
@@ -105,14 +106,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     return True
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:
-    """Set up Overkiz from a config entry."""
-    client: OverkizClient | None = None
-    api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
-
+async def create_client(
+    hass: HomeAssistant, entry: OverkizDataConfigEntry
+) -> OverkizClient:
+    """Create the Overkiz client matching the API type of a config entry."""
     # Local API
-    if api_type == APIType.LOCAL:
-        client = create_local_client(
+    if entry.data.get(CONF_API_TYPE, APIType.CLOUD) == APIType.LOCAL:
+        return create_local_client(
             hass,
             host=entry.data[CONF_HOST],
             token=entry.data[CONF_TOKEN],
@@ -120,17 +120,22 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
         )
 
     # Rexel Cloud API (OAuth2)
-    elif entry.data.get(CONF_HUB) == Server.REXEL:
-        client = await create_rexel_client(hass, entry)
+    if entry.data.get(CONF_HUB) == Server.REXEL:
+        return await create_rexel_client(hass, entry)
 
     # Overkiz Cloud API
-    else:
-        client = create_cloud_client(
-            hass,
-            username=entry.data[CONF_USERNAME],
-            password=entry.data[CONF_PASSWORD],
-            server=entry.data[CONF_HUB],
-        )
+    return create_cloud_client(
+        hass,
+        username=entry.data[CONF_USERNAME],
+        password=entry.data[CONF_PASSWORD],
+        server=entry.data[CONF_HUB],
+    )
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) -> bool:
+    """Set up Overkiz from a config entry."""
+    api_type = entry.data.get(CONF_API_TYPE, APIType.CLOUD)
+    client = await create_client(hass, entry)
 
     try:
         await client.login()
@@ -170,11 +175,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: OverkizDataConfigEntry) 
     )
 
     await coordinator.async_config_entry_first_refresh()
-
-    # Requires live device data, so it can't run in async_migrate_entry.
-    if entry.version == 1 and entry.minor_version < 3:
-        await _async_migrate_go_to_alias_button_unique_ids(hass, entry, coordinator)
-        hass.config_entries.async_update_entry(entry, minor_version=3)
 
     if coordinator.is_stateless:
         LOGGER.debug(
@@ -258,56 +258,71 @@ async def async_migrate_entry(
         await _async_migrate_strenum_unique_ids(hass, entry)
         hass.config_entries.async_update_entry(entry, minor_version=2)
 
+    if entry.version == 1 and entry.minor_version < 3:
+        # Whether the legacy button has a counterpart depends on the aliases the
+        # device advertises, so this migration needs the devices from the API.
+        client = await create_client(hass, entry)
+        try:
+            await client.login()
+            setup = await client.get_setup()
+        except BaseOverkizError, OAuth2TokenRequestError, TimeoutError, ClientError:
+            LOGGER.exception("Failed to fetch devices during migration")
+            return False
+
+        _async_migrate_go_to_alias_button_unique_ids(hass, entry, setup.devices)
+        hass.config_entries.async_update_entry(entry, minor_version=3)
+
     return True
 
 
-async def _async_migrate_go_to_alias_button_unique_ids(
+@callback
+def _async_migrate_go_to_alias_button_unique_ids(
     hass: HomeAssistant,
     config_entry: OverkizDataConfigEntry,
-    coordinator: OverkizDataUpdateCoordinator,
+    devices: list[Device],
 ) -> None:
-    """Migrate the legacy single goToAlias button to a per-alias unique_id."""
+    """Migrate the legacy goToAlias button to the per-alias-type unique_id."""
     entity_registry = er.async_get(hass)
     legacy_suffix = f"-{OverkizCommand.GO_TO_ALIAS}"
 
-    @callback
-    def update_unique_id(entry: er.RegistryEntry) -> dict[str, str] | None:
+    # The legacy button hardcoded alias id 1, which is the favorite1 ("My
+    # position") slot. Devices advertising any other type never had a working
+    # button, so those entities have no counterpart to migrate to.
+    devices_with_favorite = {
+        device.device_url
+        for device in devices
+        if any(
+            alias.type == ALIAS_TYPE_FAVORITE1
+            for alias in device.get_supported_aliases()
+        )
+    }
+
+    for entry in er.async_entries_for_config_entry(
+        entity_registry, config_entry.entry_id
+    ):
         if entry.domain != Platform.BUTTON or not entry.unique_id.endswith(
             legacy_suffix
         ):
-            return None
+            continue
 
-        device = coordinator.data.get(entry.unique_id.removesuffix(legacy_suffix))
-        aliases = (
-            device.attributes.get(OverkizAttribute.CORE_SUPPORTED_ALIASES)
-            if device
-            else None
-        )
-
-        # Legacy entities were hardcoded to alias id "1". Normalize with str()
-        # to match the unique_id built in button.py's setup.
-        if aliases and any(
-            str(alias["id"]) == "1" for alias in cast(list, aliases.value)
-        ):
-            new_unique_id = f"{entry.unique_id}_1"
+        if entry.unique_id.removesuffix(legacy_suffix) in devices_with_favorite:
+            new_unique_id = f"{entry.unique_id}_{ALIAS_TYPE_FAVORITE1}"
             LOGGER.debug(
                 "Migrating entity '%s' unique_id from '%s' to '%s'",
                 entry.entity_id,
                 entry.unique_id,
                 new_unique_id,
             )
-            return {"new_unique_id": new_unique_id}
+            entity_registry.async_update_entity(
+                entry.entity_id, new_unique_id=new_unique_id
+            )
+            continue
 
-        # No alias id "1" to migrate to, so the entity has no counterpart.
         LOGGER.debug(
-            "Removing entity '%s', device no longer exposes a goToAlias"
-            " button for alias id 1",
+            "Removing entity '%s', device does not expose a favorite1 alias",
             entry.entity_id,
         )
         entity_registry.async_remove(entry.entity_id)
-        return None
-
-    await er.async_migrate_entries(hass, config_entry.entry_id, update_unique_id)
 
 
 async def _async_migrate_strenum_unique_ids(

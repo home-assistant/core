@@ -40,6 +40,9 @@ CONF_GATEWAY_ID: Final = "gateway_id"
 DEFAULT_SERVER: Final = Server.SOMFY_EUROPE
 DEFAULT_HOST: Final = "gateway-xxxx-xxxx-xxxx.local:8443"
 
+# The "My position" alias slot, the only type the legacy goToAlias button targeted
+ALIAS_TYPE_FAVORITE1: Final = "favorite1"
+
 UPDATE_INTERVAL: Final = timedelta(seconds=30)
 UPDATE_INTERVAL_LOCAL: Final = timedelta(seconds=5)
 UPDATE_INTERVAL_ALL_ASSUMED_STATE: Final = timedelta(minutes=60)

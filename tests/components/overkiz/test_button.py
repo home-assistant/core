@@ -60,6 +60,11 @@ GATE = FixtureDevice(
     "io://1234-5678-1516/4204152",
     "button.elixo_3s_io_pedestrian_position",
 )
+VENETIAN_BLIND = FixtureDevice(
+    "setup/cloud_somfy_tahoma_v2_europe.json",
+    "ogp://1234-1234-6233/16730100",
+    "button.main_bedroom_bedroom_venetian_blind_my_position",
+)
 STEP_POSITIVE = FixtureDevice(
     "setup/cloud_somfy_connexoon_rts_asia.json",
     "rts://1234-1234-6362/16752757",
@@ -137,6 +142,9 @@ async def test_button_press(
         pytest.param(STUDIO_WINDOW, "goToAlias", ["1"], id="alias_favorite1"),
         pytest.param(GARAGE_DOOR, "goToAlias", ["55305"], id="alias_partial"),
         pytest.param(GATE, "goToAlias", ["55303"], id="alias_pedestrian"),
+        pytest.param(
+            VENETIAN_BLIND, "goToAlias", ["6"], id="alias_favorite1_most_featured"
+        ),
     ],
 )
 async def test_button_press_with_args(
@@ -204,6 +212,28 @@ async def test_no_button_without_supported_aliases_attribute(
     # The Roof Window device in this fixture has a goToAlias command but no
     # core:SupportedAliases attribute, so it should not get an alias button.
     assert hass.states.get("button.roof_window_my_position") is None
+
+
+async def test_one_alias_button_per_type(
+    hass: HomeAssistant,
+    setup_overkiz_integration: SetupOverkizIntegration,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that a type advertised under several alias ids yields a single button."""
+    await setup_overkiz_integration(fixture=VENETIAN_BLIND.fixture)
+
+    # This blind advertises six favorite1 slots for one logical "My position".
+    device_entry = entity_registry.async_get(VENETIAN_BLIND.entity_id)
+    assert device_entry
+    alias_entries = [
+        entry
+        for entry in er.async_entries_for_device(
+            entity_registry, device_entry.device_id
+        )
+        if "goToAlias" in entry.unique_id
+    ]
+
+    assert len(alias_entries) == 1
 
 
 async def test_button_alias_without_translation(
