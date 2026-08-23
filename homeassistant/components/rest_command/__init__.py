@@ -7,6 +7,7 @@ from typing import Any
 
 import aiohttp
 from aiohttp import hdrs
+from multidict import CIMultiDict
 import voluptuous as vol
 from yarl import URL
 
@@ -167,10 +168,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
             # Kept out of the debug log above so the credentials are not logged.
-            # A configured Authorization header wins over the credentials.
-            request_headers = headers
+            # A configured Authorization header wins over the credentials,
+            # whatever its casing, so setdefault runs on a CIMultiDict.
+            request_headers = CIMultiDict(headers)
             if basic_auth is not None:
-                request_headers = {hdrs.AUTHORIZATION: basic_auth, **headers}
+                request_headers.setdefault(hdrs.AUTHORIZATION, basic_auth)
 
             try:
                 # Prepare request kwargs

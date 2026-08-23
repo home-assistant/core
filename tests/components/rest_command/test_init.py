@@ -124,6 +124,45 @@ async def test_rest_command_auth(
     await hass.services.async_call(DOMAIN, "auth_test", {}, blocking=True)
 
     assert len(aioclient_mock.mock_calls) == 1
+    _method, _url, _data, headers = aioclient_mock.mock_calls[0]
+    encoded = base64.b64encode(b"test:123456").decode()
+    assert CIMultiDict(headers).getall("Authorization") == [f"Basic {encoded}"]
+
+
+@pytest.mark.parametrize(
+    "header_name",
+    [
+        pytest.param("Authorization", id="canonical_casing"),
+        pytest.param("authorization", id="lowercase"),
+    ],
+)
+async def test_rest_command_configured_authorization_header_wins(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+    header_name: str,
+) -> None:
+    """Call a rest command that configures its own Authorization header."""
+    config = {
+        "auth_header_test": {
+            "url": TEST_URL,
+            "method": "get",
+            "username": "test",
+            "password": "123456",
+            "headers": {header_name: "Bearer configured"},
+        }
+    }
+    await setup_component(config)
+
+    aioclient_mock.get(TEST_URL, content=b"success")
+
+    await hass.services.async_call(DOMAIN, "auth_header_test", {}, blocking=True)
+
+    assert len(aioclient_mock.mock_calls) == 1
+    _method, _url, _data, headers = aioclient_mock.mock_calls[0]
+
+    # The generated basic auth must not be sent as a second Authorization header
+    assert CIMultiDict(headers).getall("Authorization") == ["Bearer configured"]
 
 
 @pytest.mark.usefixtures("aioclient_mock")
