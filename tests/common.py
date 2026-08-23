@@ -769,7 +769,7 @@ def mock_device_registry(
         mock_entries = {}
     for key, entry in mock_entries.items():
         registry._devices[key] = entry
-    registry.deleted_devices = dr.DeletedDeviceRegistryItems()
+    registry._deleted_devices = dr.DeletedDeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
     return registry
