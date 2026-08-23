@@ -116,10 +116,6 @@ async def test_climate_entity_state(
     assert state.attributes[ATTR_TEMPERATURE] == 21.5
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
     assert state.attributes[ATTR_FAN_MODE] == "Medium"
-    assert state.attributes["outdoor_air_temp"] == 5.0
-    assert state.attributes["filter_hours"] == 120
-    assert state.attributes["filter_alarm"] is False
-    assert state.attributes["heater_enabled"] is False
 
 
 @pytest.mark.parametrize(

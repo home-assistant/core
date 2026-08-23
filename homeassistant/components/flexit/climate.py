@@ -143,15 +143,6 @@ class FlexitClimate(FlexitEntity, ClimateEntity):
         self._attr_hvac_action = (
             FLEXIT_TO_HA_HVAC_ACTION.get(activity) if activity is not None else None
         )
-        self._attr_extra_state_attributes = {
-            "filter_hours": measurements.filter_running_hours,
-            "filter_alarm": measurements.filter_alarm,
-            "heat_recovery": measurements.heat_exchanger_regulation,
-            "heating": measurements.electric_heater_regulation,
-            "heater_enabled": measurements.electric_heater_enabled,
-            "cooling": measurements.cooling_regulation,
-            "outdoor_air_temp": measurements.outdoor_air_temperature,
-        }
 
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:

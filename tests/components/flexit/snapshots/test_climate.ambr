@@ -51,7 +51,6 @@
 # name: test_climate_entity[climate.flexit-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'cooling': 0,
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 20.0,
       <ClimateEntityStateAttribute.FAN_MODE: 'fan_mode'>: 'Medium',
       <ClimateEntityCapabilityAttribute.FAN_MODES: 'fan_modes'>: list([
@@ -60,19 +59,13 @@
         'Medium',
         'High',
       ]),
-      'filter_alarm': False,
-      'filter_hours': 120,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flexit',
-      'heat_recovery': 0,
-      'heater_enabled': False,
-      'heating': 0,
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.HEAT_COOL: 'heat_cool'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
-      'outdoor_air_temp': 5.0,
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <ClimateEntityFeature: 9>,
       <ClimateEntityStateAttribute.TARGET_TEMPERATURE: 'temperature'>: 21.5,
     }),
