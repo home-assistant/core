@@ -273,11 +273,10 @@ class AddonFlowManager:
     and tracks the original add-on config for reverts.
     """
 
-    def __init__(self, hass: HomeAssistant, flow_id: str) -> None:
+    def __init__(self, hass: HomeAssistant) -> None:
         """Set up the add-on flow manager."""
         self.hass = hass
         self.addon_manager = get_addon_manager(hass)
-        self._flow_id = flow_id
         # Set to True if the add-on was running when its config was changed,
         # meaning a restart instead of a start is needed.
         self.restart_addon = False
@@ -320,15 +319,6 @@ class AddonFlowManager:
             # step sets the region.
             self.original_config = dict(addon_config)
         new_addon_config = SecurityKeys.migrate_network_key(new_addon_config)
-        if not any(
-            flow["flow_id"] == self._flow_id
-            for flow in self.hass.config_entries.flow.async_progress(
-                include_uninitialized=True
-            )
-        ):
-            # An abort doesn't cancel a step handler already running here,
-            # so don't write for a removed flow.
-            raise AbortFlow("already_in_progress")
         try:
             await self.addon_manager.async_set_addon_options(new_addon_config)
         except AddonError as err:
@@ -401,7 +391,7 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
     @cached_property
     def _addon_setup(self) -> AddonFlowManager:
         """Return the add-on flow manager."""
-        return AddonFlowManager(self.hass, self.flow_id)
+        return AddonFlowManager(self.hass)
 
     VERSION = 1
     MINOR_VERSION = 2
@@ -1217,13 +1207,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
         self, original_config: dict[str, Any]
     ) -> None:
         """Restore the add-on config and reload the config entry."""
-        if any(
-            cast(dict[str, Any], flow["context"]).get(_ADDON_OWNER_CONTEXT)
-            for flow in self._async_in_progress(include_uninitialized=True)
-        ):
-            # A new owner is writing its own add-on config and now owns
-            # the entry's recovery; don't restore the snapshot under it.
-            return
         config_entry = self._reconfigure_config_entry
         assert config_entry is not None
         addon_manager = self._addon_setup.addon_manager

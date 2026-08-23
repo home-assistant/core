@@ -21,7 +21,6 @@ from zwave_js_server.version import VersionInfo
 from homeassistant import config_entries, data_entry_flow
 from homeassistant.components.usb import SerialDevice, USBDevice
 from homeassistant.components.zwave_js.config_flow import (
-    _ADDON_OWNER_CONTEXT,
     TITLE,
     SecurityKeys,
     async_get_usb_ports,
@@ -2852,64 +2851,6 @@ async def test_concurrent_flow_during_addon_config_write(
 
     hass.config_entries.flow.async_abort(result_a["flow_id"])
     await hass.async_block_till_done()
-
-
-@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
-async def test_aborted_flow_aborts_addon_config_write(
-    hass: HomeAssistant,
-    addon_info: AsyncMock,
-    set_addon_options: AsyncMock,
-    mock_usb_serial_by_id: MagicMock,
-) -> None:
-    """Test a flow aborted mid-handler does not write the add-on config.
-
-    Aborting a flow doesn't cancel its step handler, so a handler
-    suspended on its way to the add-on config write keeps running and
-    must give up instead of writing for a removed flow.
-    """
-    info_fetch_started = asyncio.Event()
-    resume_info_fetch = asyncio.Event()
-    info_calls = 0
-    default_info = addon_info.return_value
-
-    async def blocking_addon_info(addon: str) -> Any:
-        nonlocal info_calls
-        info_calls += 1
-        # The second fetch after the prompt is the one in the add-on
-        # config write path.
-        if info_calls == 2:
-            info_fetch_started.set()
-            await resume_info_fetch.wait()
-        return default_info
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USB},
-        data=USB_DISCOVERY_INFO,
-    )
-
-    assert result["step_id"] == "installation_type"
-
-    addon_info.side_effect = blocking_addon_info
-    task = hass.async_create_task(
-        hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "intent_recommended"}
-        )
-    )
-    # Release the blocked flow also when an assertion fails, so a
-    # regression fails the test instead of hanging it.
-    try:
-        async with asyncio.timeout(5):
-            await info_fetch_started.wait()
-        hass.config_entries.flow.async_abort(result["flow_id"])
-    finally:
-        resume_info_fetch.set()
-
-    result = await task
-
-    assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_in_progress"
-    set_addon_options.assert_not_called()
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
@@ -6362,56 +6303,6 @@ async def test_reconfigure_abandoned_restores_addon_config(
         AddonsOptions(config={"device": "/test", "s0_legacy_key": "old123"}),
     )
     assert entry.state is config_entries.ConfigEntryState.LOADED
-
-
-@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
-async def test_reconfigure_abandoned_restore_skipped_for_new_owner(
-    hass: HomeAssistant,
-    integration: MockConfigEntry,
-    addon_options: dict[str, Any],
-    set_addon_options: AsyncMock,
-) -> None:
-    """Test an abandoned flow doesn't restore over a new owner's config."""
-    addon_options.update({"device": "/test", "s0_legacy_key": "old123"})
-    entry = integration
-    hass.config_entries.async_update_entry(
-        entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    result = await entry.start_reconfigure_flow(hass)
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "intent_reconfigure"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"use_addon": True}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            "usb_path": "/new",
-            "s0_legacy_key": "old123",
-        },
-    )
-
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "start_addon"
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
-    assert set_addon_options.call_count == 1
-    set_addon_options.reset_mock()
-
-    # Simulate a flow that has taken ownership of the add-on config by
-    # the time the abandoned flow's restore task runs.
-    await hass.config_entries.flow.async_init(
-        DOMAIN,
-        context={"source": config_entries.SOURCE_USER, _ADDON_OWNER_CONTEXT: True},
-    )
-
-    hass.config_entries.flow.async_abort(result["flow_id"])
-    await hass.async_block_till_done()
-
-    # The restore and reload are skipped; the new owner recovers the entry.
-    set_addon_options.assert_not_called()
-    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
