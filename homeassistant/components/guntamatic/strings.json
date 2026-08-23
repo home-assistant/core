@@ -73,5 +73,13 @@
         "name": "Status"
       }
     }
+  },
+  "exceptions": {
+    "communication_error": {
+      "message": "Cannot connect to the Guntamatic heater: {error}"
+    },
+    "no_serial": {
+      "message": "The heater did not provide the required identification information."
+    }
   }
 }
