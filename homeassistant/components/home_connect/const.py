@@ -1,7 +1,5 @@
 """Constants for the Home Connect integration."""
 
-from typing import Final
-
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
 
 from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
@@ -11,8 +9,6 @@ from .utils import bsh_key_to_translation_key
 DOMAIN = "home_connect"
 
 API_DEFAULT_RETRY_AFTER = 60
-
-ENTRY_DATA_IMAGES_SCOPE: Final = "images_scope"
 
 APPLIANCES_WITH_PROGRAMS = (
     "AirConditioner",

@@ -37,7 +37,7 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.components.home_connect.const import DOMAIN, ENTRY_DATA_IMAGES_SCOPE
+from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -79,6 +79,7 @@ def mock_token_entry(token_expiration_time: float) -> dict[str, Any]:
         "access_token": FAKE_ACCESS_TOKEN,
         "type": "Bearer",
         "expires_at": token_expiration_time,
+        "scope": "Control Monitor Images Settings IdentifyAppliance",
     }
 
 
@@ -90,7 +91,6 @@ def mock_config_entry(token_entry: dict[str, Any]) -> MockConfigEntry:
         data={
             "auth_implementation": FAKE_AUTH_IMPL,
             "token": token_entry,
-            ENTRY_DATA_IMAGES_SCOPE: True,
         },
         minor_version=3,
         unique_id="1234567890",
@@ -126,12 +126,13 @@ def mock_config_entry_v1_2(token_entry: dict[str, Any]) -> MockConfigEntry:
 @pytest.fixture(name="config_entry_no_images_scope")
 def mock_config_entry_no_image_scope(token_entry: dict[str, Any]) -> MockConfigEntry:
     """Fixture for a config entry."""
+    _token_entry = token_entry.copy()
+    _token_entry["scope"] = "Control Monitor Settings IdentifyAppliance"
     return MockConfigEntry(
         domain=DOMAIN,
         data={
             "auth_implementation": FAKE_AUTH_IMPL,
-            "token": token_entry,
-            ENTRY_DATA_IMAGES_SCOPE: False,
+            "token": _token_entry,
         },
         minor_version=3,
         unique_id="1234567890",

@@ -10,7 +10,7 @@ from aiohomeconnect.model import HomeAppliance
 import pytest
 
 from homeassistant import config_entries, setup
-from homeassistant.components.home_connect.const import DOMAIN, ENTRY_DATA_IMAGES_SCOPE
+from homeassistant.components.home_connect.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState, ConfigFlowContext
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -167,9 +167,7 @@ async def test_full_flow(
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
         await hass.async_block_till_done()
 
-    entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "1234567890")
-    assert entry
-    assert entry.data[ENTRY_DATA_IMAGES_SCOPE] is images_scope
+    assert hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "1234567890")
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -283,7 +281,6 @@ async def test_reauth_flow(
     entry = hass.config_entries.async_entry_for_domain_unique_id(DOMAIN, "1234567890")
     assert entry
     assert entry.state is ConfigEntryState.LOADED
-    assert entry.data[ENTRY_DATA_IMAGES_SCOPE] is False
     assert len(mock_setup_entry.mock_calls) == 1
 
     assert result["type"] is FlowResultType.ABORT

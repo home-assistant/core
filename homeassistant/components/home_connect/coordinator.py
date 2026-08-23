@@ -43,7 +43,6 @@ from .const import (
     APPLIANCES_WITH_PROGRAMS,
     BSH_OPERATION_STATE_PAUSE,
     DOMAIN,
-    ENTRY_DATA_IMAGES_SCOPE,
     FAVORITE_PROGRAMS,
 )
 from .utils import get_dict_from_home_connect_error
@@ -273,8 +272,8 @@ class HomeConnectApplianceCoordinator(DataUpdateCoordinator[HomeConnectAppliance
         self.global_listeners = global_listeners
         self.data = HomeConnectApplianceData.empty(appliance)
         self._execution_tracker: list[float] = []
-        self.should_fetch_images = (
-            self._config_entry.data.get(ENTRY_DATA_IMAGES_SCOPE) is True
+        self.should_fetch_images = "Images" in self._config_entry.data["token"].get(
+            "scope", ""
         )
         self._image_listeners: dict[str, list[CALLBACK_TYPE]] = {}
 
