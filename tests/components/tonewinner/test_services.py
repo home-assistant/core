@@ -9,6 +9,7 @@ from homeassistant.components.tonewinner.const import DOMAIN
 from homeassistant.components.tonewinner.media_player import TonewinnerMediaPlayer
 from homeassistant.components.tonewinner.services import SERVICE_SEND_RAW_FIELDS
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 
 
 async def test_send_raw_service_schema_validation(
@@ -116,3 +117,67 @@ async def test_send_raw_service_long_command(
     await entity.send_raw_command("A" * 1000)
 
     mock_receiver.send_command.assert_called()
+
+
+async def test_send_raw_not_connected(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test sending a raw command while disconnected raises a user error."""
+    mock_config_entry.add_to_hass(hass)
+    mock_receiver.connected = False
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+
+    with pytest.raises(HomeAssistantError, match="Not connected"):
+        await entity.send_raw_command("PWR01")
+
+    mock_receiver.send_command.assert_not_called()
+
+
+async def test_send_raw_invalid_hex(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test an invalid hex command raises a user error."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+
+    with pytest.raises(HomeAssistantError, match="Invalid hex command"):
+        await entity.send_raw_command("0xZZ")
+
+    mock_receiver.send_command.assert_not_called()
+
+
+async def test_send_raw_non_ascii_hex(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test a hex command with non-ASCII bytes raises a user error."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+
+    with pytest.raises(HomeAssistantError, match="non-ASCII"):
+        await entity.send_raw_command("0xFF")
+
+    mock_receiver.send_command.assert_not_called()
+
+
+async def test_send_raw_valid_hex(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test a valid hex command is decoded and sent."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+
+    await entity.send_raw_command("0x21 0x50")
+
+    mock_receiver.send_command.assert_called_once_with("!P")

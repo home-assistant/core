@@ -8,6 +8,6 @@
   "integration_type": "hub",
   "iot_class": "local_push",
   "loggers": ["tonewinner_rs232"],
-  "quality_scale": "bronze",
+  "quality_scale": "silver",
   "requirements": ["tonewinner-rs232==1.0.4"]
 }

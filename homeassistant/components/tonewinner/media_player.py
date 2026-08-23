@@ -24,7 +24,7 @@ from .const import CONF_SOURCE_MAPPINGS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 
-class TonewinnerError(Exception):
+class TonewinnerError(HomeAssistantError):
     """Exception for Tonewinner errors."""
 
 
@@ -49,6 +49,8 @@ INPUT_SOURCES = {
 }
 
 SOUND_MODES = {label: code for code, label in SOUND_MODE_LABELS.items()}
+
+PARALLEL_UPDATES = 1
 
 
 async def async_setup_entry(
@@ -130,6 +132,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     def _on_state_change(self, state: ReceiverState | None) -> None:
         """Handle state changes from the receiver."""
         if state is None:
+            _LOGGER.warning("Connection to the Tonewinner receiver was lost")
             self._attr_available = False
             self.async_write_ha_state()
             return
@@ -142,13 +145,15 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
         if state.power is not None:
             new_state = MediaPlayerState.ON if state.power else MediaPlayerState.OFF
+            # Update state before creating tasks: the eager asyncio task
+            # factory starts the coroutine immediately.
+            self._attr_state = new_state
             if new_state == MediaPlayerState.ON and self._was_off:
                 self._was_off = False
                 self.hass.async_create_task(self._query_input_source())
             elif new_state == MediaPlayerState.OFF:
                 self._attr_source = None
                 self._was_off = True
-            self._attr_state = new_state
 
         if state.volume is not None:
             self._attr_volume_level = state.volume / 100.0
@@ -165,9 +170,12 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             self._attr_sound_mode = state.sound_mode_label
 
         if state.power and not self._attr_source and not self._source_check_task:
-            self._source_check_task = self.hass.async_create_task(
-                self._periodic_source_check()
-            )
+            task = self.hass.async_create_task(self._periodic_source_check())
+            # With the eager asyncio task factory the coroutine may already
+            # have run to completion (and cleared itself) by the time the
+            # task is returned.
+            if not task.done():
+                self._source_check_task = task
 
         self.async_write_ha_state()
 
@@ -181,7 +189,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
         source_code = None
         for default_name, code in INPUT_SOURCES.items():
-            if default_name.lower() == source_name.lower():
+            if default_name.lower() == source_name.lower() or code == source_name:
                 source_code = code
                 break
 
@@ -282,7 +290,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             source not in self._custom_name_to_source_code
             and source not in self._source_code_to_custom_name
         ):
-            raise ValueError(f"Unknown source: {source}")
+            raise HomeAssistantError(f"Unknown source: {source}")
 
         source_code = self._custom_name_to_source_code[source]
         await self._receiver.select_source(source_code)
@@ -291,6 +299,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         if sound_mode not in SOUND_MODES:
-            raise ValueError(f"Unknown sound mode: {sound_mode}")
+            raise HomeAssistantError(f"Unknown sound mode: {sound_mode}")
         mode_code = SOUND_MODES[sound_mode]
         await self._receiver.select_sound_mode(mode_code)
