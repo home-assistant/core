@@ -1,4 +1,4 @@
-"""Test the ToneWinner AT-500 integration setup."""
+"""Test the Tonewinner AT-500 integration setup."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 

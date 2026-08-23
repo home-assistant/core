@@ -1,4 +1,4 @@
-"""Test the ToneWinner AT-500 services."""
+"""Test the Tonewinner AT-500 services."""
 
 from unittest.mock import MagicMock, patch
 

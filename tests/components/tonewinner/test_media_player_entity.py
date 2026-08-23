@@ -1,4 +1,4 @@
-"""Test the ToneWinner AT-500 media player entity."""
+"""Test the Tonewinner AT-500 media player entity."""
 
 import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
@@ -55,7 +55,7 @@ async def test_media_player_device_info(
         (DOMAIN, mock_config_entry.entry_id)
     }
     assert "manufacturer" in device_info and device_info["manufacturer"] == "Tonewinner"
-    assert "model" in device_info and device_info["model"] == "AT-500"
+    assert device_info.get("model") is None
 
 
 async def test_media_player_supported_features(

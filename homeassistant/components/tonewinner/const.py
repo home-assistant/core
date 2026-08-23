@@ -1,4 +1,4 @@
-"""Constants for the Tonewinner AT-500 integration."""
+"""Constants for the Tonewinner integration."""
 
 DOMAIN = "tonewinner"
 

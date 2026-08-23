@@ -1,4 +1,4 @@
-"""Tonewinner AT-500 media player."""
+"""Tonewinner media player."""
 
 import asyncio
 import contextlib
@@ -61,7 +61,7 @@ async def async_setup_entry(
 
 
 class TonewinnerMediaPlayer(MediaPlayerEntity):
-    """Tonewinner AT-500 media player."""
+    """Tonewinner media player."""
 
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
     _attr_supported_features = (
@@ -91,7 +91,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Tonewinner",
-            model="AT-500",
         )
         self._attr_available = False
 

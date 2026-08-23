@@ -1,4 +1,4 @@
-"""Tonewinner AT-500 configuration flow."""
+"""Tonewinner configuration flow."""
 
 from typing import Any, override
 
@@ -55,7 +55,7 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
                 await self.async_set_unique_id(user_input[CONF_SERIAL_PORT])
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
-                    title="Tonewinner AT-500", data=user_input, options={}
+                    title="Tonewinner", data=user_input, options={}
                 )
 
         return self.async_show_form(

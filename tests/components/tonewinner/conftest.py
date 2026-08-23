@@ -1,4 +1,4 @@
-"""Common fixtures for the ToneWinner AT-500 tests."""
+"""Common fixtures for the Tonewinner AT-500 tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch

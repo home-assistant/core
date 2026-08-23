@@ -1,1 +1,1 @@
-"""Tests for the ToneWinner AT-500 integration."""
+"""Tests for the Tonewinner AT-500 integration."""

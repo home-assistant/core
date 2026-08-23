@@ -1,4 +1,4 @@
-"""Test the ToneWinner AT-500 config flow."""
+"""Test the Tonewinner AT-500 config flow."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
@@ -42,7 +42,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Tonewinner AT-500"
+    assert result["title"] == "Tonewinner"
     assert result["data"] == {
         CONF_SERIAL_PORT: "/dev/ttyUSB0",
         CONF_BAUD_RATE: DEFAULT_BAUD_RATE,

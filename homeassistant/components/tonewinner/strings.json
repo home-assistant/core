@@ -22,8 +22,8 @@
           "baud_rate": "[%key:component::tonewinner::config::step::user::data_description::baud_rate%]",
           "serial_port": "[%key:component::tonewinner::config::step::user::data_description::serial_port%]"
         },
-        "description": "Update the serial port connection details for your ToneWinner AT-500 AV receiver.",
-        "title": "Reconfigure ToneWinner AT-500"
+        "description": "Update the serial port connection details for your Tonewinner AV receiver.",
+        "title": "Reconfigure Tonewinner"
       },
       "user": {
         "data": {
@@ -34,15 +34,15 @@
           "baud_rate": "Only change this if your receiver is configured for a non-default baud rate.",
           "serial_port": "Serial port path to connect to"
         },
-        "description": "Enter the serial port connection details for your ToneWinner AT-500 AV receiver.",
-        "title": "Setup ToneWinner AT-500"
+        "description": "Enter the serial port connection details for your Tonewinner AV receiver.",
+        "title": "Setup Tonewinner"
       }
     }
   },
   "entity": {
     "media_player": {
       "tonewinner": {
-        "name": "Tonewinner AT-500"
+        "name": "Tonewinner"
       }
     }
   },

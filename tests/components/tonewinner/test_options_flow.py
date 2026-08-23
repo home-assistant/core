@@ -1,4 +1,4 @@
-"""Test the ToneWinner AT-500 options flow."""
+"""Test the Tonewinner AT-500 options flow."""
 
 from homeassistant.components.tonewinner.const import (
     CONF_BAUD_RATE,
