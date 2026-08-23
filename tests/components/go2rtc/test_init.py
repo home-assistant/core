@@ -799,8 +799,11 @@ async def test_setup_with_setup_error(
     caplog: pytest.LogCaptureFixture,
     has_go2rtc_entry: bool,
     expected_log_message: str,
+    rest_client: AsyncMock,
 ) -> None:
     """Test setup integration fails."""
+    # The cases that get as far as starting the server expect it to fail
+    rest_client.validate_server_version.side_effect = Go2RtcClientError()
 
     assert not await async_setup_component(hass, DOMAIN, config)
     await hass.async_block_till_done(wait_background_tasks=True)
