@@ -266,4 +266,3 @@ async def test_coordinator_error_translations(hass: HomeAssistant) -> None:
     """Test the coordinator update failure exceptions are translated."""
     translations = await async_get_translations(hass, "en", "exceptions", [DOMAIN])
     assert "component.guntamatic.exceptions.communication_error.message" in translations
-    assert "component.guntamatic.exceptions.no_serial.message" in translations

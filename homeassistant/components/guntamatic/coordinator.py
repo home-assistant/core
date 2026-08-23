@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-from guntamatic.heater import Heater, NoSerialException
+from guntamatic.heater import Heater
 import requests
 
 from homeassistant.config_entries import ConfigEntry
@@ -44,10 +44,5 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
                 translation_domain=DOMAIN,
                 translation_key="communication_error",
                 translation_placeholders={"error": str(err)},
-            ) from err
-        except NoSerialException as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="no_serial",
             ) from err
         return data
