@@ -1,5 +1,6 @@
 """Config flow for LastFm."""
 
+from functools import partial
 import logging
 from typing import Any, override
 from urllib.parse import parse_qs, urlparse
@@ -31,7 +32,7 @@ from .const import (
     DOMAIN,
     ERROR_CODE_LOGIN_REQUIRED,
 )
-from .coordinator import LastFMConfigEntry
+from .coordinator import LastFMConfigEntry, get_lastfm_error
 
 PLACEHOLDERS = {
     "api_account_url": "https://www.last.fm/api/account/create",
@@ -51,20 +52,25 @@ CONFIG_SCHEMA: vol.Schema = vol.Schema(
 _LOGGER = logging.getLogger(__name__)
 
 
-def get_lastfm_user(api_key: str, username: str) -> tuple[User, dict[str, str]]:
+def get_lastfm_user(
+    api_key: str, username: str, check_recent_tracks: bool = True
+) -> tuple[User, dict[str, str]]:
     """Get and validate lastFM User."""
     user = LastFMNetwork(api_key=api_key).get_user(username)
     errors = {}
     try:
         user.get_playcount()
-        user.get_recent_tracks(limit=1)
-    except WSError as error:
-        if error.status == ERROR_CODE_LOGIN_REQUIRED:
+        if check_recent_tracks:
+            user.get_recent_tracks(limit=1)
+    except PyLastError as error:
+        ws_error = get_lastfm_error(error)
+        if ws_error is not None and ws_error.status == ERROR_CODE_LOGIN_REQUIRED:
             errors["base"] = "hidden_recent_tracks"
-        elif error.details == "User not found":
+        elif ws_error is not None and ws_error.details == "User not found":
             errors["base"] = "invalid_account"
         elif (
-            error.details
+            ws_error is not None
+            and ws_error.details
             == "Invalid API key - You must be granted a valid key by last.fm"
         ):
             errors["base"] = "invalid_auth"
@@ -132,7 +138,12 @@ class LastFmConfigFlowHandler(ConfigFlow, domain=DOMAIN):
             if not self.data.get(CONF_API_SECRET):
                 self.data.pop(CONF_API_SECRET, None)
             _, errors = await self.hass.async_add_executor_job(
-                get_lastfm_user, self.data[CONF_API_KEY], self.data[CONF_MAIN_USER]
+                partial(
+                    get_lastfm_user,
+                    self.data[CONF_API_KEY],
+                    self.data[CONF_MAIN_USER],
+                    check_recent_tracks=CONF_API_SECRET not in self.data,
+                )
             )
             if not errors:
                 if CONF_API_SECRET in self.data:

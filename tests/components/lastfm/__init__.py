@@ -107,7 +107,7 @@ class MockUser:
     def get_recent_tracks(self, limit: int) -> list[MockLastTrack]:
         """Get mock recent tracks."""
         if self._recent_tracks_error:
-            raise self._recent_tracks_error
+            raise PyLastError from self._recent_tracks_error
         return [MockLastTrack(track) for track in self._recent_tracks]
 
     def get_top_tracks(self, limit: int) -> list[MockTopTrack]:

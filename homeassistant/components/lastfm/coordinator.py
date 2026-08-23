@@ -30,6 +30,16 @@ def format_track(track: Track | None) -> str | None:
     return f"{track.artist} - {track.title}"
 
 
+def get_lastfm_error(error: PyLastError) -> WSError | None:
+    """Return the API error pylast hid when re-raising it as a PyLastError."""
+    if isinstance(error, WSError):
+        return error
+    cause = error.__cause__
+    if isinstance(cause, WSError):
+        return cause
+    return None
+
+
 @dataclass
 class LastFMUserData:
     """Data holder for LastFM data."""
@@ -90,9 +100,8 @@ class LastFMDataUpdateCoordinator(DataUpdateCoordinator[dict[str, LastFMUserData
             now_playing = format_track(user.get_now_playing())
             last_tracks = user.get_recent_tracks(limit=1)
         except PyLastError as exc:
-            if not (
-                isinstance(exc, WSError) and exc.status == ERROR_CODE_LOGIN_REQUIRED
-            ):
+            error = get_lastfm_error(exc)
+            if error is None or error.status != ERROR_CODE_LOGIN_REQUIRED:
                 if self.last_update_success:
                     LOGGER.error("LastFM update for %s failed: %r", username, exc)
                 return None

@@ -318,6 +318,31 @@ async def test_flow_hidden_recent_tracks(
         assert result["step_id"] == "friends"
 
 
+async def test_flow_hidden_user_with_secret(hass: HomeAssistant) -> None:
+    """Test a hidden user is accepted when an API secret is provided."""
+    with (
+        patch(
+            "pylast.User",
+            return_value=MockUser(
+                recent_tracks_error=WSError(
+                    "network", "17", "Login: User required to be logged in"
+                )
+            ),
+        ),
+        patch(
+            SESSION_KEY_GENERATOR_PATH,
+            return_value=MockSessionKeyGenerator(),
+        ),
+        patch_setup_entry(),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": SOURCE_USER}, data=CONF_USER_DATA_WITH_SECRET
+        )
+        assert result["type"] is FlowResultType.FORM
+        assert not result["errors"]
+        assert result["step_id"] == "auth_url"
+
+
 async def test_flow_friends_invalid_username(
     hass: HomeAssistant, default_user: MockUser
 ) -> None:
