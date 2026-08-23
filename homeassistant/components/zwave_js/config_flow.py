@@ -33,7 +33,7 @@ from homeassistant.const import CONF_NAME, CONF_URL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.data_entry_flow import AbortFlow
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, selector
+from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
@@ -56,13 +56,7 @@ from .const import (
     CONF_USE_ADDON,
     DOMAIN,
 )
-from .helpers import (
-    CannotConnect,
-    async_get_version_info,
-    format_home_id_for_display,
-    get_device_id,
-    get_device_id_ext,
-)
+from .helpers import CannotConnect, async_get_version_info, format_home_id_for_display
 from .models import ZwaveJSConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
@@ -1819,21 +1813,6 @@ class ZWaveJSConfigFlow(ConfigFlow, domain=DOMAIN):
             with suppress(TimeoutError):
                 async with asyncio.timeout(helpers.DRIVER_READY_EVENT_TIMEOUT):
                     await controller_reset.wait()
-
-            if own_node := controller.own_node:
-                device_registry = dr.async_get(self.hass)
-                if (
-                    (device_id_ext := get_device_id_ext(driver, own_node))
-                    and (
-                        old_device := device_registry.async_get_device_by_identifier(
-                            get_device_id(driver, own_node), config_entry.entry_id
-                        )
-                    )
-                    and device_id_ext not in old_device.identifiers
-                ):
-                    # The old controller device is stale, and unlike the
-                    # integration, the flow knows the controller was replaced.
-                    device_registry.async_remove_device(old_device.id)
         finally:
             for unsub in unsubs:
                 unsub()
