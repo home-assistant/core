@@ -11,13 +11,13 @@
       "user": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
-          "modbus_addr": "Modbus unit ID",
-          "port": "[%key:common::config_flow::data::port%]"
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Modbus unit ID"
         },
         "data_description": {
           "host": "The hostname or IP address of the inverter, or of the Modbus TCP bridge it's connected through.",
-          "modbus_addr": "The inverter's Modbus unit/slave ID.",
-          "port": "The Modbus TCP port to connect on."
+          "port": "The Modbus TCP port to connect on.",
+          "unit_id": "The inverter's Modbus unit/slave ID."
         },
         "description": "Connect over Modbus TCP. The inverter model and register map are detected automatically from its serial number."
       }

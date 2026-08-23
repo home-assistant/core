@@ -3,7 +3,7 @@
 from collections import deque
 from datetime import datetime, timedelta
 import logging
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from modbus_connection import (
     ModbusConnection,
@@ -20,12 +20,7 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import (
-    CONF_MODBUS_ADDR,
-    CONF_READ_EPS,
-    DEFAULT_MODBUS_ADDR,
-    DEFAULT_SCAN_INTERVAL,
-)
+from .const import CONF_READ_EPS, CONF_UNIT_ID, DEFAULT_SCAN_INTERVAL
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -69,17 +64,14 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
     async def _async_setup(self) -> None:
         """Set up the coordinator before the first refresh."""
         serial = self.config_entry.unique_id
-        if TYPE_CHECKING:
-            assert serial is not None
+        assert serial is not None
         inverter_type, model = identify(serial)
         if not inverter_type:
             raise ConfigEntryError(
                 f"Unrecognized Sofar inverter model for {self.config_entry.title}"
             )
         self.device = SofarInverter(
-            self.connection.for_unit(
-                int(self.config_entry.data.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR))
-            ),
+            self.connection.for_unit(self.config_entry.data[CONF_UNIT_ID]),
             serial_number=serial,
             model=model,
             inverter_type=inverter_type,

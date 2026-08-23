@@ -1,6 +1,6 @@
 """Shared entity base — device_info and the coordinator plumbing."""
 
-from typing import TYPE_CHECKING, override
+from typing import override
 
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -13,8 +13,7 @@ def build_device_info(coordinator: SofarDataUpdateCoordinator) -> DeviceInfo:
     """The one physical inverter every entity on this config entry belongs to."""
     device = coordinator.device
     serial = device.serial_number
-    if TYPE_CHECKING:
-        assert serial is not None
+    assert serial is not None
     return DeviceInfo(
         identifiers={(DOMAIN, serial)},
         manufacturer=ATTR_MANUFACTURER,
@@ -37,22 +36,16 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
         """Initialize the entity."""
         super().__init__(coordinator)
         serial = coordinator.device.serial_number
-        if TYPE_CHECKING:
-            assert serial is not None
+        assert serial is not None
         self._component = component
         self._attr_unique_id = f"{serial}_{unique_id_suffix}"
         self._attr_device_info = build_device_info(coordinator)
 
     @property
-    def _link_available(self) -> bool:
-        """Link status alone, so a subclass can survive a per-component failure."""
-        return super().available
-
-    @property
     @override
     def available(self) -> bool:
         """Whether this entity's component answered the most recent poll."""
-        if not self._link_available:
+        if not super().available:
             return False
         report = self.coordinator.data
         return report is None or self._component not in report.failed

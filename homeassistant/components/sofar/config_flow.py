@@ -10,14 +10,19 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
-from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
+from homeassistant.helpers.selector import (
+    NumberSelector,
+    NumberSelectorConfig,
+    NumberSelectorMode,
+    TextSelector,
+)
 
 from .const import (
-    CONF_MODBUS_ADDR,
     CONF_READ_EPS,
-    DEFAULT_MODBUS_ADDR,
+    CONF_UNIT_ID,
     DEFAULT_NAME,
     DEFAULT_PORT,
+    DEFAULT_UNIT_ID,
     DOMAIN,
 )
 
@@ -25,9 +30,19 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
-        vol.Required(CONF_HOST): TextSelector(TextSelectorConfig(autocomplete="url")),
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
-        vol.Optional(CONF_MODBUS_ADDR, default=DEFAULT_MODBUS_ADDR): int,
+        vol.Required(CONF_HOST): TextSelector(),
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=65535)
+            ),
+            vol.Coerce(int),
+        ),
+        vol.Required(CONF_UNIT_ID, default=DEFAULT_UNIT_ID): vol.All(
+            NumberSelector(
+                NumberSelectorConfig(mode=NumberSelectorMode.BOX, min=1, max=247)
+            ),
+            vol.Coerce(int),
+        ),
     }
 )
 
@@ -47,14 +62,12 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
             connection = ModbusConnection(
                 ModbusTcpParams(
                     host=user_input[CONF_HOST],
-                    port=user_input.get(CONF_PORT, DEFAULT_PORT),
+                    port=user_input[CONF_PORT],
                 )
             )
             try:
                 device = SofarInverter(
-                    connection.for_unit(
-                        int(user_input.get(CONF_MODBUS_ADDR, DEFAULT_MODBUS_ADDR))
-                    ),
+                    connection.for_unit(user_input[CONF_UNIT_ID]),
                     read_eps=True,
                 )
                 report = await device.async_update()

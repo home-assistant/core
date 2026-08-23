@@ -4,7 +4,7 @@ from __future__ import annotations
 
 from modbus_connection.mock import MockModbusUnit
 
-from homeassistant.components.sofar.const import CONF_MODBUS_ADDR, CONF_READ_EPS
+from homeassistant.components.sofar.const import CONF_READ_EPS, CONF_UNIT_ID
 from homeassistant.const import CONF_HOST, CONF_PORT
 
 MOCK_SERIAL = "SS2ES104N5S445"
@@ -15,7 +15,7 @@ MOCK_HYBRID_MODEL = "HYDxxKTL-3P"
 MOCK_FORM_INPUT = {
     CONF_HOST: "192.168.1.100",
     CONF_PORT: 502,
-    CONF_MODBUS_ADDR: 1,
+    CONF_UNIT_ID: 1,
 }
 
 MOCK_USER_INPUT = {
