@@ -129,7 +129,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
         connections.append((dr.CONNECTION_NETWORK_MAC, device_mac_address))
 
     dev_registry = dr.async_get(hass)
-    device_entry = None
+    device_entry: dr.DeviceEntry | None = None
     for identifier in identifiers:
         if device_entry := dev_registry.async_get_device_by_identifier(
             identifier, entry.entry_id
@@ -161,7 +161,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: UpnpConfigEntry) -> bool
             "Created device using UDN '%s', device_entry: %s", device.udn, device_entry
         )
     else:
-        # Update identifier.
         device_entry = dev_registry.async_update_device(
             device_entry.id,
             new_identifiers=set(identifiers),

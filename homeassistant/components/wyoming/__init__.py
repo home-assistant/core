@@ -3,12 +3,13 @@
 import logging
 
 from homeassistant.const import Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.typing import ConfigType
 
 from .const import ATTR_SPEAKER, DOMAIN
+from .coordinator import WyomingInfoCoordinator
 from .data import WyomingService
 from .devices import SatelliteDevice
 from .models import DomainDataItem, WyomingConfigEntry
@@ -46,7 +47,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: WyomingConfigEntry) -> b
     if service is None:
         raise ConfigEntryNotReady("Unable to connect")
 
-    item = DomainDataItem(service=service)
+    coordinator = WyomingInfoCoordinator(
+        hass, entry, entry.data["host"], entry.data["port"]
+    )
+
+    @callback
+    def _async_update_service_info() -> None:
+        service.info = coordinator.data
+
+    # The coordinator only schedules refreshes while it has listeners, so this
+    # also keeps it polling for platforms that read info without listening.
+    entry.async_on_unload(coordinator.async_add_listener(_async_update_service_info))
+    coordinator.async_set_updated_data(service.info)
+
+    item = DomainDataItem(service=service, coordinator=coordinator)
     entry.runtime_data = item
 
     await hass.config_entries.async_forward_entry_setups(entry, service.platforms)

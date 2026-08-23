@@ -3,6 +3,7 @@
 from unittest.mock import MagicMock
 
 from freezegun.api import FrozenDateTimeFactory
+from pyimouapi.const import PARAM_STATE, PARAM_STATUS
 from pyimouapi.exceptions import ImouException
 from pyimouapi.ha_device import DeviceStatus, ImouHaDevice
 import pytest
@@ -10,11 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.imou.button import PARAM_MUTE, PARAM_PTZ_UP
-from homeassistant.components.imou.const import (
-    PARAM_STATE,
-    PARAM_STATUS,
-    PTZ_MOVE_DURATION_MS,
-)
+from homeassistant.components.imou.const import PTZ_MOVE_DURATION_MS
 from homeassistant.components.imou.coordinator import SCAN_INTERVAL
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
@@ -129,7 +126,9 @@ async def test_press_button_service_propagates_api_error(
 
     entity_id = hass.states.async_all("button")[0].entity_id
 
-    with pytest.raises(HomeAssistantError, match="cloud failure"):
+    with pytest.raises(
+        HomeAssistantError, match="Imou rejected the button press: cloud failure"
+    ):
         await hass.services.async_call(
             BUTTON_DOMAIN,
             SERVICE_PRESS,

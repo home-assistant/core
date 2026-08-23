@@ -96,6 +96,9 @@
     "authentication_failed": {
       "message": "[%key:component::onedrive::exceptions::authentication_failed::message%]"
     },
+    "connection_error": {
+      "message": "[%key:component::onedrive::config::abort::connection_error%]"
+    },
     "failed_to_get_folder": {
       "message": "[%key:component::onedrive::exceptions::failed_to_get_folder::message%]"
     },
