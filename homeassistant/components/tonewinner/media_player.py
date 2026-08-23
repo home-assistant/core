@@ -121,7 +121,9 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if state.mute is not None:
             self._attr_is_volume_muted = state.mute
 
-        if state.source_name is not None:
+        # The library retains the last known source across power transitions;
+        # while powered down no input is active, so do not surface it.
+        if state.source_name is not None and state.power is not False:
             self._attr_source = self._resolve_source(
                 state.source_name, state.audio_source
             )

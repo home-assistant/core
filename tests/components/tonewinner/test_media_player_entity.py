@@ -344,7 +344,7 @@ async def test_media_player_power_off_from_callback_clears_source(
     mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
 ) -> None:
-    """Test the entity clears its source when the receiver powers off."""
+    """Test the source clears on power-off and resumes from cache on power-on."""
     mock_config_entry.add_to_hass(hass)
     await _setup_integration(hass, mock_config_entry, mock_receiver)
 
@@ -361,6 +361,17 @@ async def test_media_player_power_off_from_callback_clears_source(
     assert state is not None
     assert state.state == MediaPlayerState.OFF
     assert state.attributes.get("source") is None
+
+    # Receivers resume their previous input on power-on, so the retained
+    # source becomes visible again once a power-on report arrives.
+    mock_receiver.state.power = True
+    _state_callback(mock_receiver)(mock_receiver.state)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
+    assert state.attributes["source"] == "HDMI 1"
 
 
 async def test_media_player_unavailable_on_disconnect_and_recovery(
