@@ -95,7 +95,12 @@ class ThreemaAPIClient:
             )
 
         key_hex = await resp.text()
-        return nacl.public.PublicKey(bytes.fromhex(key_hex.strip()))
+        try:
+            return nacl.public.PublicKey(bytes.fromhex(key_hex.strip()))
+        except ValueError as err:
+            raise ThreemaSendError(
+                f"Malformed public key received for {recipient_id}: {err}"
+            ) from err
 
     def _build_encrypted_message(
         self, text: str, recipient_public_key: nacl.public.PublicKey

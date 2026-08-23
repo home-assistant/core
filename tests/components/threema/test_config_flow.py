@@ -211,6 +211,51 @@ async def test_credentials_invalid_gateway_id(
     assert result["result"].unique_id == MOCK_GATEWAY_ID
 
 
+@pytest.mark.parametrize(
+    "invalid_key",
+    ["0123456789abcdef", "g" * 64],
+    ids=["wrong_length", "non_hex"],
+)
+async def test_credentials_invalid_private_key(
+    hass: HomeAssistant,
+    mock_credentials: AsyncMock,
+    invalid_key: str,
+) -> None:
+    """Test credentials step rejects a malformed private key."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {"next_step_id": "credentials"},
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: invalid_key,
+        },
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {CONF_PRIVATE_KEY: "invalid_key"}
+
+    # Recover by clearing the invalid key (the field defaults to the
+    # previous, invalid value, so it must be explicitly cleared)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_GATEWAY_ID: MOCK_GATEWAY_ID,
+            CONF_API_SECRET: MOCK_API_SECRET,
+            CONF_PRIVATE_KEY: "",
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
 async def test_credentials_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

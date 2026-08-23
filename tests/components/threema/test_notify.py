@@ -13,13 +13,22 @@ from homeassistant.components.threema.client import (
     ThreemaConnectionError,
     ThreemaSendError,
 )
+from homeassistant.config_entries import ConfigSubentryDataWithId
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
-from .conftest import MOCK_GATEWAY_ID, MOCK_RECIPIENT_ID
+from .conftest import MOCK_GATEWAY_ID, MOCK_RECIPIENT_ID, RECIPIENT_SUBENTRY
 
 from tests.common import MockConfigEntry
+
+_OTHER_SUBENTRY: ConfigSubentryDataWithId = {
+    "data": {},
+    "subentry_id": "other_subentry_id",
+    "subentry_type": "other",
+    "title": "Other",
+    "unique_id": None,
+}
 
 
 async def test_notify_entity_created(
@@ -30,6 +39,27 @@ async def test_notify_entity_created(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test notify entity is created from subentry."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    entities = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+    notify_entities = [e for e in entities if e.domain == NOTIFY_DOMAIN]
+    assert len(notify_entities) == 1
+    assert notify_entities[0].unique_id == f"{MOCK_GATEWAY_ID}_{MOCK_RECIPIENT_ID}"
+
+
+@pytest.mark.parametrize("mock_subentries", [[RECIPIENT_SUBENTRY, _OTHER_SUBENTRY]])
+async def test_notify_entity_skips_non_recipient_subentry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_credentials: AsyncMock,
+    mock_send_message: AsyncMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test notify setup only creates entities for recipient subentries."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

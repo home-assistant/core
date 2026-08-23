@@ -187,6 +187,20 @@ async def test_send_e2e_pubkey_auth_error(hass: HomeAssistant) -> None:
             await client.send_text_message("ABCD1234", "Hello E2E!")
 
 
+async def test_send_e2e_pubkey_malformed(hass: HomeAssistant) -> None:
+    """Test that a malformed pubkey response raises ThreemaSendError."""
+    sender_hex, _ = _e2e_keys()
+    session = MagicMock()
+    session.get = AsyncMock(return_value=_make_resp(200, "not-hex-and-wrong-length"))
+
+    with _patch_session(session):
+        client = ThreemaAPIClient(
+            hass, MOCK_GATEWAY_ID, MOCK_API_SECRET, private_key=sender_hex
+        )
+        with pytest.raises(ThreemaSendError):
+            await client.send_text_message("ABCD1234", "Hello E2E!")
+
+
 async def test_send_e2e_pubkey_client_error(hass: HomeAssistant) -> None:
     """Test that aiohttp.ClientError fetching pubkey raises ThreemaSendError."""
     sender_hex, _ = _e2e_keys()
