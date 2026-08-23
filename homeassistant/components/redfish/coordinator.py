@@ -43,8 +43,11 @@ class RedfishDataUpdateCoordinator(DataUpdateCoordinator[RedfishData]):
     async def _async_update_data(self) -> RedfishData:
         """Fetch Redfish data."""
         try:
-            return await self.client.async_discover()
+            data = await self.client.async_discover()
         except RedfishError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN, translation_key="update_failed"
             ) from err
+        if not data.systems:
+            raise UpdateFailed(translation_domain=DOMAIN, translation_key="no_systems")
+        return data

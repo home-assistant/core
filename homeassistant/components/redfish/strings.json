@@ -33,6 +33,9 @@
     }
   },
   "exceptions": {
+    "no_systems": {
+      "message": "No ComputerSystem resources found"
+    },
     "reset_failed": {
       "message": "Failed to perform {reset_type} on the system"
     },

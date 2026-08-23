@@ -2,6 +2,7 @@
 
 from unittest.mock import AsyncMock, patch
 
+from homeassistant.components.redfish.models import RedfishData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
@@ -40,3 +41,18 @@ async def test_unload_failure_does_not_logout(
         assert not await hass.config_entries.async_unload(init_integration.entry_id)
 
     mock_redfish_api[3].assert_not_awaited()
+
+
+async def test_setup_retries_when_no_systems(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_redfish_api: tuple[AsyncMock, AsyncMock, AsyncMock, AsyncMock],
+) -> None:
+    """Test setup retries when initial discovery returns no systems."""
+    mock_redfish_api[0].return_value = RedfishData(systems={})
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY

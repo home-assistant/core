@@ -35,10 +35,10 @@ SYSTEM = RedfishSystem(
 )
 
 
-async def test_user_form_defaults_certificate_verification_off(
+async def test_user_form_defaults_certificate_verification_on(
     hass: HomeAssistant,
 ) -> None:
-    """Test certificate verification defaults off for self-signed BMCs."""
+    """Test certificate verification defaults on."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
@@ -52,7 +52,7 @@ async def test_user_form_defaults_certificate_verification_off(
                 CONF_PASSWORD: "password",
             }
         )[CONF_VERIFY_SSL]
-        is False
+        is True
     )
 
 
@@ -93,25 +93,29 @@ async def test_user_flow(hass: HomeAssistant, verify_ssl: bool) -> None:
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "systems", "expected_error"),
+    ("first_result", "expected_error"),
     [
-        (RedfishAuthError(), None, "invalid_auth"),
-        (RedfishError(), None, "cannot_connect"),
-        (RuntimeError(), None, "unknown"),
-        (None, {}, "no_systems"),
+        pytest.param(RedfishAuthError(), "invalid_auth", id="invalid-auth"),
+        pytest.param(RedfishError(), "cannot_connect", id="cannot-connect"),
+        pytest.param(RuntimeError(), "unknown", id="unknown"),
+        pytest.param({}, "no_systems", id="no-systems"),
     ],
 )
 async def test_user_flow_errors(
     hass: HomeAssistant,
-    side_effect: Exception | None,
-    systems: dict[str, RedfishSystem] | None,
+    first_result: Exception | dict[str, RedfishSystem],
     expected_error: str,
 ) -> None:
-    """Test authentication, connection, and no-system errors."""
-    with patch(
-        "homeassistant.components.redfish.config_flow.RedfishApi.async_get_systems",
-        side_effect=side_effect,
-        return_value=systems,
+    """Test errors can be corrected by resubmitting the same flow."""
+    with (
+        patch(
+            "homeassistant.components.redfish.config_flow.RedfishApi.async_get_systems",
+            side_effect=[first_result, {"1": SYSTEM}],
+        ),
+        patch(
+            "homeassistant.components.redfish.async_setup_entry",
+            new=AsyncMock(return_value=True),
+        ) as setup_entry,
     ):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -119,9 +123,17 @@ async def test_user_flow_errors(
             data=USER_INPUT,
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-    assert result["errors"] == {"base": expected_error}
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "user"
+        assert result["errors"] == {"base": expected_error}
+
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], user_input=USER_INPUT
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    setup_entry.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
