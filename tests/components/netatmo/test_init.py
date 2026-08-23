@@ -928,13 +928,6 @@ async def test_log_when_unavailable(
     caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test that unavailability and recovery are each logged exactly once."""
-    should_fail = False
-
-    async def fake_post(*args: Any, **kwargs: Any):
-        if should_fail:
-            raise pyatmo.ApiError("boom")
-        return await fake_post_request(hass, *args, **kwargs)
-
     with (
         patch(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
@@ -945,7 +938,8 @@ async def test_log_when_unavailable(
         ),
         patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
     ):
-        mock_auth.return_value.async_post_api_request.side_effect = fake_post
+        post_request = mock_auth.return_value.async_post_api_request
+        post_request.side_effect = partial(fake_post_request, hass)
         mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
         assert await hass.config_entries.async_setup(config_entry.entry_id)
@@ -956,13 +950,13 @@ async def test_log_when_unavailable(
     with caplog.at_level(
         logging.INFO, logger="homeassistant.components.netatmo.coordinator"
     ):
-        should_fail = True
+        post_request.side_effect = pyatmo.ApiError("boom")
         await data_handler.async_fetch_data(ACCOUNT)
         await data_handler.async_fetch_data(ACCOUNT)
 
         assert caplog.text.count("Error while fetching") == 1
 
-        should_fail = False
+        post_request.side_effect = partial(fake_post_request, hass)
         await data_handler.async_fetch_data(ACCOUNT)
         await data_handler.async_fetch_data(ACCOUNT)
 
