@@ -92,7 +92,7 @@ async def async_setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml_no_import",
-        breaks_in_ha_version="2026.10.0",
+        breaks_in_ha_version="2027.3.0",
         is_fixable=False,
         is_persistent=False,
         issue_domain=DOMAIN,

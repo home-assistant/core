@@ -1,5 +1,7 @@
 """Test the Flexit climate entity."""
 
+from unittest.mock import MagicMock
+
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusUnit
 import pytest
@@ -11,10 +13,16 @@ from homeassistant.components.climate import (
     ATTR_HVAC_ACTION,
     HVACAction,
 )
+from homeassistant.components.flexit.climate import async_setup_platform
+from homeassistant.components.flexit.const import DOMAIN
 from homeassistant.const import ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 
 from tests.common import MockConfigEntry, snapshot_platform
 from tests.components.climate.common import async_set_fan_mode, async_set_temperature
@@ -53,6 +61,17 @@ async def _setup_integration(
     config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
+
+
+async def test_deprecated_yaml_issue(
+    hass: HomeAssistant, issue_registry: ir.IssueRegistry
+) -> None:
+    """Test deprecated YAML creates an issue six months ahead."""
+    await async_setup_platform(hass, {}, MagicMock())
+
+    issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_no_import")
+    assert issue is not None
+    assert issue.breaks_in_ha_version == "2027.3.0"
 
 
 async def test_climate_entity(
