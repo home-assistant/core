@@ -56,7 +56,11 @@ async def async_setup_entry(
 ) -> None:
     """Set up the media player entity."""
     receiver = config_entry.runtime_data
-    entity = TonewinnerMediaPlayer(hass, config_entry, receiver)
+    model: str | None = None
+    with contextlib.suppress(ConnectionError):
+        info = await receiver.query_info()
+        model = info.model if info else None
+    entity = TonewinnerMediaPlayer(hass, config_entry, receiver, model)
     async_add_entities([entity])
 
 
@@ -83,6 +87,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         hass: HomeAssistant,
         entry: TonewinnerConfigEntry,
         receiver: TonewinnerReceiver,
+        model: str | None = None,
     ) -> None:
         """Initialize the media player."""
         self.hass = hass
@@ -91,6 +96,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Tonewinner",
+            model=model,
         )
         self._attr_available = False
 

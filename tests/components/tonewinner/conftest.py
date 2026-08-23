@@ -45,6 +45,7 @@ def mock_receiver() -> MagicMock:
     receiver.disconnect = AsyncMock()
     receiver.query_state = AsyncMock()
     receiver.query_source = AsyncMock()
+    receiver.query_info = AsyncMock(return_value=None)
     receiver.power_on = AsyncMock()
     receiver.power_off = AsyncMock()
     receiver.set_volume = AsyncMock()

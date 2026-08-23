@@ -4,6 +4,7 @@ import asyncio
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
+from tonewinner_rs232 import ReceiverInfo
 
 from homeassistant.components.media_player import MediaPlayerState
 from homeassistant.components.tonewinner.const import (
@@ -18,6 +19,7 @@ from homeassistant.components.tonewinner.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry
 
@@ -56,6 +58,57 @@ async def test_media_player_device_info(
     }
     assert "manufacturer" in device_info and device_info["manufacturer"] == "Tonewinner"
     assert device_info.get("model") is None
+
+
+async def test_platform_setup_queries_model(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_receiver: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test that setup queries the receiver model and wires it into the device."""
+    mock_config_entry.add_to_hass(hass)
+    mock_receiver.query_info.return_value = ReceiverInfo(model="AT-500")
+
+    with patch(
+        "homeassistant.components.tonewinner.TonewinnerReceiver",
+        return_value=mock_receiver,
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
+    )
+    assert device is not None
+    assert device.model == "AT-500"
+    mock_receiver.query_info.assert_called_once()
+
+
+async def test_media_player_model_from_info(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test that the device model is set from the constructor model argument."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver, "AT-500")
+
+    assert entity.device_info["model"] == "AT-500"
+
+
+async def test_media_player_no_model_when_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MagicMock,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test that no model is set when the model argument is None."""
+    mock_config_entry.add_to_hass(hass)
+
+    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+
+    assert entity.device_info.get("model") is None
 
 
 async def test_media_player_supported_features(
