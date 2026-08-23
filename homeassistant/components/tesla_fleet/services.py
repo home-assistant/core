@@ -200,21 +200,25 @@ MINUTES_PER_DAY = 24 * 60
 def _period_spans(period: dict[str, Any]) -> dict[int, list[tuple[int, int]]]:
     """Return the half-open minute spans a period covers, keyed by weekday.
 
-    A period ending at or before it starts runs through midnight, so it is
-    split into the tail of the day and the head of the same day.
+    A period ending at or before it starts runs through midnight, so its
+    remainder lands on the following weekday.
     """
     start: time = period.get(ATTR_START_TIME, time())
     end: time = period.get(ATTR_END_TIME, time())
     first = start.hour * 60 + start.minute
     last = end.hour * 60 + end.minute
-    if first == last:
-        spans = [(0, MINUTES_PER_DAY)]
-    elif last < first:
-        spans = [(first, MINUTES_PER_DAY), (0, last)]
-    else:
-        spans = [(first, last)]
-    days = period.get(ATTR_DAYS) or list(DAY_TO_TESLA)
-    return {DAY_TO_TESLA[day]: spans for day in days}
+
+    spans: dict[int, list[tuple[int, int]]] = {}
+    for name in period.get(ATTR_DAYS) or list(DAY_TO_TESLA):
+        day = DAY_TO_TESLA[name]
+        if first == last:
+            spans.setdefault(day, []).append((0, MINUTES_PER_DAY))
+        elif last < first:
+            spans.setdefault(day, []).append((first, MINUTES_PER_DAY))
+            spans.setdefault((day + 1) % len(DAY_TO_TESLA), []).append((0, last))
+        else:
+            spans.setdefault(day, []).append((first, last))
+    return spans
 
 
 def _check_period_overlaps(season: dict[str, Any]) -> None:

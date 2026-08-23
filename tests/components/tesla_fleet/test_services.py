@@ -557,6 +557,32 @@ async def test_time_of_use_seasons(
             {
                 "seasons": [
                     {
+                        "name": "All year",
+                        "periods": [
+                            {
+                                "name": "Night",
+                                "days": ["monday"],
+                                "start_time": "22:00:00",
+                                "end_time": "02:00:00",
+                                "buy_rate": 0.1,
+                            },
+                            {
+                                "name": "Early",
+                                "days": ["tuesday"],
+                                "start_time": "01:00:00",
+                                "end_time": "03:00:00",
+                                "buy_rate": 0.2,
+                            },
+                        ],
+                    }
+                ]
+            },
+            id="overlap_after_midnight_next_day",
+        ),
+        pytest.param(
+            {
+                "seasons": [
+                    {
                         "name": "Primary",
                         "start_month": 1,
                         "start_day": 1,
@@ -788,3 +814,53 @@ async def test_time_of_use_site_not_tou_capable(
         )
     assert exc_info.value.translation_key == "site_not_tou_capable"
     set_time_of_use.assert_not_called()
+
+
+async def test_time_of_use_period_wraps_to_next_day(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a period running past midnight does not clash with its own weekday."""
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+
+    with patch(
+        "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
+        return_value=RESPONSE_OK,
+    ) as set_time_of_use:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                "name": "Overnight",
+                "utility": "Octopus Energy",
+                "currency": "GBP",
+                "seasons": [
+                    {
+                        "name": "All year",
+                        "periods": [
+                            {
+                                "name": "Night",
+                                "days": ["monday"],
+                                "start_time": "22:00:00",
+                                "end_time": "02:00:00",
+                                "buy_rate": 0.1,
+                            },
+                            {
+                                "name": "Early",
+                                "days": ["monday"],
+                                "start_time": "01:00:00",
+                                "end_time": "03:00:00",
+                                "buy_rate": 0.2,
+                            },
+                        ],
+                    }
+                ],
+            },
+            blocking=True,
+        )
+
+    set_time_of_use.assert_called_once()
