@@ -48,6 +48,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up a cover from a config entry."""
 
+    @callback
     def _handle_channel_added(channel: Any, device_info: DeviceInfo) -> None:
         if isinstance(channel, Rollladen):
             _LOGGER.debug("creating new COVER entity for %s", channel)

@@ -1,6 +1,6 @@
 """Tests for the Haus-Bus cover platform."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import MagicMock
 
 from pyhausbus import HausBusUtils
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
@@ -19,7 +19,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import
 from homeassistant.components.hausbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_platform as ep, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
 from tests.common import MockConfigEntry
@@ -56,59 +56,33 @@ async def _setup_cover(
 
     This exercises the real discovery path end to end: HausbusGateway.
     newDeviceDetected registers the device and dispatches the channel,
-    cover.py's dispatcher-connected callback filters on isinstance(..,
-    Rollladen) and constructs the real HausbusCover. The entity is then
-    added via a directly-awaited EntityPlatform.async_add_entities call
-    rather than through the config-flow's normal fire-and-forget
-    AddConfigEntryEntitiesCallback, because HA's test harness fails to
-    resolve asyncio.current_task() for an eagerly-started, never-awaited
-    add-entities task when it is triggered from a dispatcher signal fired
-    after setup (rather than during the platform's own setup call chain).
-    That is a quirk of the lightweight test hass fixture's eager-task
-    handling, not of this integration's runtime behavior, which - like
-    every other config-entry-based platform in core - never awaits this
-    callback either.
+    cover.py's dispatcher-connected _handle_channel_added filters on
+    isinstance(.., Rollladen) and constructs the real HausbusCover via the
+    normal AddConfigEntryEntitiesCallback. _handle_channel_added must stay
+    marked @callback: undecorated, the dispatcher runs it on an executor
+    thread and calling async_add_entities() from there breaks - confirmed
+    both here and, against real hardware, in production.
     """
     mock_home_server.is_any_device_found.return_value = True
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
 
-    captured: list[MagicMock] = []
+    assert await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+    assert entry.state is ConfigEntryState.LOADED
 
-    def _capture_new_entities(
-        self, new_entities, update_before_add=False, *, config_subentry_id=None
-    ) -> None:
-        captured.extend(new_entities)
+    gateway = entry.runtime_data
+    channel = _make_channel()
 
-    with patch(
-        "homeassistant.helpers.entity_platform.EntityPlatform."
-        "_async_schedule_add_entities_for_entry",
-        _capture_new_entities,
-    ):
-        assert await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
-        assert entry.state is ConfigEntryState.LOADED
-
-        gateway = entry.runtime_data
-        channel = _make_channel()
-
-        await hass.async_add_executor_job(
-            gateway.newDeviceDetected,
-            DEVICE_ID,
-            "ESP32 Controller",
-            _make_module_id(),
-            MagicMock(),
-            [channel],
-        )
-        await hass.async_block_till_done()
-
-    assert len(captured) == 1
-
-    platforms = ep.async_get_platforms(hass, DOMAIN)
-    cover_platform = next(
-        platform for platform in platforms if platform.domain == "cover"
+    await hass.async_add_executor_job(
+        gateway.newDeviceDetected,
+        DEVICE_ID,
+        "ESP32 Controller",
+        _make_module_id(),
+        MagicMock(),
+        [channel],
     )
-    await cover_platform.async_add_entities(captured, config_subentry_id=None)
+    await hass.async_block_till_done()
 
     entity_registry = er.async_get(hass)
     entity_id = entity_registry.async_get_entity_id("cover", DOMAIN, UNIQUE_ID)
