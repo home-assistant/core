@@ -165,7 +165,11 @@ class NexiaRoomIQEntity(NexiaThermostatZoneEntity):
                 name=sensor.name,
                 suggested_area=sensor.name,
                 sw_version=None,  # not reported
-                via_device=(DOMAIN, zone.zone_id),  # type: ignore[typeddict-item] # until fix issue #139773
+                via_device_id=dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, zone.zone_id),  # type: ignore[arg-type] # until fix issue #139773
+                    config_entry_id=coordinator.config_entry.entry_id,
+                ),
             )
         super().__init__(coordinator, zone, f"{sensor.id}-{key}", dev_info)
         self._attr_translation_key = key
