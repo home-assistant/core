@@ -270,8 +270,14 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
 
     def set_circulation_schedule(self, **schedule_by_day: list[dict[str, Any]]) -> None:
         """Set the DHW circulation pump schedule."""
-        max_entries = self._circulation_schedule_max_entries
         modes = self._circulation_schedule_modes
+        if modes is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="circulation_schedule_not_supported",
+            )
+
+        max_entries = self._circulation_schedule_max_entries
         overlap_allowed = self._circulation_schedule_overlap_allowed
         for day, slots in schedule_by_day.items():
             if max_entries is not None and len(slots) > max_entries:
@@ -283,18 +289,17 @@ class ViCareWater(ViCareEntity, WaterHeaterEntity):
                         "max_entries": str(max_entries),
                     },
                 )
-            if modes is not None:
-                for slot in slots:
-                    if CIRCULATION_SCHEDULE_MODE_TO_RAW[slot["mode"]] not in modes:
-                        raise ServiceValidationError(
-                            translation_domain=DOMAIN,
-                            translation_key="circulation_schedule_mode_not_supported",
-                            translation_placeholders={
-                                "day": day,
-                                "mode": slot["mode"],
-                                "modes": ", ".join(modes),
-                            },
-                        )
+            for slot in slots:
+                if CIRCULATION_SCHEDULE_MODE_TO_RAW[slot["mode"]] not in modes:
+                    raise ServiceValidationError(
+                        translation_domain=DOMAIN,
+                        translation_key="circulation_schedule_mode_not_supported",
+                        translation_placeholders={
+                            "day": day,
+                            "mode": slot["mode"],
+                            "modes": ", ".join(modes),
+                        },
+                    )
             if overlap_allowed is False and _slots_overlap(slots):
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,

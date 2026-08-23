@@ -682,6 +682,9 @@
     "circulation_schedule_mode_not_supported": {
       "message": "The device does not support circulation mode {mode} for {day}, supported modes are: {modes}"
     },
+    "circulation_schedule_not_supported": {
+      "message": "This device does not support a DHW circulation pump schedule"
+    },
     "circulation_schedule_overlap_not_allowed": {
       "message": "The device does not support overlapping circulation slots, but {day} has overlapping slots"
     },
