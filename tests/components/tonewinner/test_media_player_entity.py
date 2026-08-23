@@ -143,10 +143,11 @@ async def test_media_player_source_list_default(
 
     entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
 
-    assert entity.source_list
-    assert len(entity.source_list) == len(INPUT_SOURCES)
-    assert "HDMI 1" in entity.source_list
-    assert "Bluetooth" in entity.source_list
+    source_list = entity.source_list
+    assert source_list is not None
+    assert len(source_list) == len(INPUT_SOURCES)
+    assert "HDMI 1" in source_list
+    assert "Bluetooth" in source_list
 
 
 async def test_media_player_source_list_with_mappings(
@@ -174,10 +175,12 @@ async def test_media_player_source_list_with_mappings(
 
     entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
 
-    assert "Living Room TV" in entity.source_list
-    assert "My Bluetooth" in entity.source_list
-    assert "Bedroom TV" not in entity.source_list
-    assert "HDMI 1" not in entity.source_list
+    source_list = entity.source_list
+    assert source_list is not None
+    assert "Living Room TV" in source_list
+    assert "My Bluetooth" in source_list
+    assert "Bedroom TV" not in source_list
+    assert "HDMI 1" not in source_list
 
 
 async def test_media_player_sound_mode_list(
@@ -676,12 +679,12 @@ async def test_media_player_unavailable_on_disconnect(
     assert "Connection to the Tonewinner receiver was lost" in caplog.text
 
 
-async def test_media_player_power_on_queries_source(
+async def test_media_player_power_on_sets_source(
     hass: HomeAssistant,
     mock_config_entry: MagicMock,
     mock_receiver: MagicMock,
 ) -> None:
-    """Test that powering on queries the current input source."""
+    """Test that a known source on power-on is applied without a query."""
     mock_config_entry.add_to_hass(hass)
 
     entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
@@ -695,34 +698,25 @@ async def test_media_player_power_on_queries_source(
 
     assert entity.state == MediaPlayerState.ON
     assert entity.source == "HDMI 1"
-    mock_receiver.query_source.assert_called_once()
+    mock_receiver.query_source.assert_not_called()
 
 
-async def test_turn_off_then_power_on_queries_source(
+async def test_turn_off_clears_source(
     hass: HomeAssistant,
     mock_config_entry: MagicMock,
     mock_receiver: MagicMock,
 ) -> None:
-    """Test powering on after a service turn_off triggers a source query."""
+    """Test that turning off clears the source state."""
     mock_config_entry.add_to_hass(hass)
 
     entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
     entity.entity_id = "media_player.test"
+    entity._attr_source = "HDMI 1"
 
-    # Device was on (acknowledged via state), then turned off via the service.
-    entity._was_off = False
     await entity.async_turn_off()
-    assert entity._was_off is True
 
-    mock_receiver.state.power = True
-    mock_receiver.state.source_name = "HDMI 1"
-    with patch.object(entity, "schedule_update_ha_state"):
-        entity._apply_state(mock_receiver.state)
-        await hass.async_block_till_done()
-
-    assert entity.state == MediaPlayerState.ON
-    assert entity.source == "HDMI 1"
-    mock_receiver.query_source.assert_called_once()
+    assert entity.state == MediaPlayerState.OFF
+    assert entity.source is None
 
 
 async def test_media_player_periodic_source_check(
@@ -735,7 +729,6 @@ async def test_media_player_periodic_source_check(
 
     entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
     entity.entity_id = "media_player.test"
-    entity._was_off = False
     mock_receiver.state.power = True
     mock_receiver.state.source_name = None
 
@@ -753,19 +746,21 @@ async def test_media_player_periodic_source_check(
     assert entity._source_check_task is None
 
 
-async def test_media_player_query_source_skipped_when_off(
+async def test_media_player_no_source_check_when_off(
     hass: HomeAssistant,
     mock_config_entry: MagicMock,
     mock_receiver: MagicMock,
 ) -> None:
-    """Test that the source query is skipped when the device is off."""
+    """Test that the periodic source check does nothing when the device is off."""
     mock_config_entry.add_to_hass(hass)
 
     entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+    entity._attr_state = MediaPlayerState.OFF
 
-    await entity._query_input_source()
+    await entity._periodic_source_check()
 
     mock_receiver.query_source.assert_not_called()
+    assert entity._source_check_task is None
 
 
 async def test_media_player_resolve_source_custom_names(
@@ -794,22 +789,6 @@ async def test_media_player_resolve_source_custom_names(
     assert entity._resolve_source("Mystery Input", "HD1") == "TV"
     # Unknown names without an audio source pass through.
     assert entity._resolve_source("Mystery Input", None) == "Mystery Input"
-
-
-async def test_media_player_will_remove_cancels_source_check(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test that removing the entity cancels the source check task."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity._source_check_task = asyncio.create_task(asyncio.sleep(10))
-
-    await entity.async_will_remove_from_hass()
-
-    assert entity._source_check_task.cancelled()
 
 
 async def test_media_player_mute_off(

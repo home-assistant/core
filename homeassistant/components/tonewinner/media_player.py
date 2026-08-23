@@ -105,7 +105,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._attr_is_volume_muted = False
         self._attr_source = None
         self._attr_sound_mode = None
-        self._was_off = True
 
         self._source_code_to_custom_name: dict[str, str] = {}
         self._custom_name_to_source_code: dict[str, str] = {}
@@ -145,16 +144,11 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._attr_available = True
 
         if state.power is not None:
-            new_state = MediaPlayerState.ON if state.power else MediaPlayerState.OFF
-            # Update state before creating tasks: the eager asyncio task
-            # factory starts the coroutine immediately.
-            self._attr_state = new_state
-            if new_state == MediaPlayerState.ON and self._was_off:
-                self._was_off = False
-                self.hass.async_create_task(self._query_input_source())
-            elif new_state == MediaPlayerState.OFF:
+            self._attr_state = (
+                MediaPlayerState.ON if state.power else MediaPlayerState.OFF
+            )
+            if not state.power:
                 self._attr_source = None
-                self._was_off = True
 
         if state.volume is not None:
             self._attr_volume_level = state.volume / 100.0
@@ -170,11 +164,14 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if state.sound_mode_label is not None:
             self._attr_sound_mode = state.sound_mode_label
 
-        if state.power and not self._attr_source and not self._source_check_task:
+        if (
+            self._attr_state == MediaPlayerState.ON
+            and not self._attr_source
+            and not self._source_check_task
+        ):
             task = self.hass.async_create_task(self._periodic_source_check())
-            # With the eager asyncio task factory the coroutine may already
-            # have run to completion (and cleared itself) by the time the
-            # task is returned.
+            # With the eager task factory the coroutine may already have run to
+            # completion (and cleared itself) by the time the task is returned.
             if not task.done():
                 self._source_check_task = task
 
@@ -202,22 +199,16 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
         return source_name
 
-    async def _query_input_source(self) -> None:
-        """Query device for current input source."""
-        if self._attr_state != MediaPlayerState.ON:
-            return
-        await self._receiver.query_source()
-        await asyncio.sleep(0.2)
-
     async def _periodic_source_check(self) -> None:
-        """Periodically check for input source when device is ON but source unknown."""
-        max_attempts = 5
-        for _attempt in range(max_attempts):
-            if self._attr_source:
-                break
-            await self._query_input_source()
-            await asyncio.sleep(3)
-        self._source_check_task = None
+        """Poll for the input source until it is known or retries are exhausted."""
+        try:
+            for _attempt in range(5):
+                if self._attr_state != MediaPlayerState.ON or self._attr_source:
+                    return
+                await self._receiver.query_source()
+                await asyncio.sleep(3)
+        finally:
+            self._source_check_task = None
 
     @override
     async def async_will_remove_from_hass(self) -> None:
@@ -257,7 +248,6 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         await self._receiver.power_off()
         self._attr_state = MediaPlayerState.OFF
         self._attr_source = None
-        self._was_off = True
         self.async_write_ha_state()
 
     @override

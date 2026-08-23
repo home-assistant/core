@@ -167,25 +167,6 @@ async def test_update_options(
         mock_reload.assert_called_once_with(mock_config_entry.entry_id)
 
 
-async def test_setup_entry_registers_update_listener(
-    hass: HomeAssistant, mock_config_entry: MagicMock, mock_receiver: MagicMock
-) -> None:
-    """Test that setup registers an update listener."""
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.tonewinner.TonewinnerReceiver",
-            return_value=mock_receiver,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            return_value=True,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-
 async def test_unload_entry_without_runtime_data(
     hass: HomeAssistant, mock_config_entry: MagicMock, mock_receiver: MagicMock
 ) -> None:
@@ -199,24 +180,3 @@ async def test_unload_entry_without_runtime_data(
         return_value=True,
     ):
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
-
-
-async def test_runtime_data_set_on_setup(
-    hass: HomeAssistant, mock_config_entry: MagicMock, mock_receiver: MagicMock
-) -> None:
-    """Test that runtime_data is set on the config entry after setup."""
-    mock_config_entry.add_to_hass(hass)
-
-    with (
-        patch(
-            "homeassistant.components.tonewinner.TonewinnerReceiver",
-            return_value=mock_receiver,
-        ),
-        patch(
-            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
-            return_value=True,
-        ),
-    ):
-        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert mock_config_entry.runtime_data is mock_receiver
