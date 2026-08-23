@@ -11,11 +11,11 @@ from homeassistant.components.threema.const import (
     CONF_API_SECRET,
     CONF_GATEWAY_ID,
     CONF_PRIVATE_KEY,
-    CONF_RECIPIENT,
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
 )
 from homeassistant.config_entries import ConfigSubentryDataWithId
+from homeassistant.const import CONF_RECIPIENT
 
 from tests.common import MockConfigEntry
 

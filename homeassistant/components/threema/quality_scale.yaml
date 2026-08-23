@@ -10,9 +10,15 @@ rules:
   config-flow-test-coverage: done
   dependency-transparency: done
   docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: Integration does not provide any automation conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: Integration does not provide any automation triggers.
   entity-event-setup:
     status: exempt
     comment: Integration does not use event subscriptions.

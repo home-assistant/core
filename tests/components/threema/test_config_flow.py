@@ -16,10 +16,10 @@ from homeassistant.components.threema.const import (
     CONF_API_SECRET,
     CONF_GATEWAY_ID,
     CONF_PRIVATE_KEY,
-    CONF_RECIPIENT,
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
 )
+from homeassistant.const import CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
 

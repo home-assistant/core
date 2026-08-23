@@ -1,10 +1,8 @@
 """Config flow for Threema Gateway integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -15,7 +13,7 @@ from homeassistant.config_entries import (
     ConfigSubentryFlow,
     SubentryFlowResult,
 )
-from homeassistant.const import CONF_NAME
+from homeassistant.const import CONF_NAME, CONF_RECIPIENT
 from homeassistant.core import callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
@@ -34,7 +32,6 @@ from .const import (
     CONF_API_SECRET,
     CONF_GATEWAY_ID,
     CONF_PRIVATE_KEY,
-    CONF_RECIPIENT,
     DOMAIN,
     SUBENTRY_TYPE_RECIPIENT,
 )
@@ -63,6 +60,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @classmethod
     @callback
+    @override
     def async_get_supported_subentry_types(
         cls, config_entry: ConfigEntry
     ) -> dict[str, type[ConfigSubentryFlow]]:
@@ -73,6 +71,7 @@ class ThreemaConfigFlow(ConfigFlow, domain=DOMAIN):
     _api_secret: str | None = None
     _private_key: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

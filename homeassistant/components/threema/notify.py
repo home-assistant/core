@@ -1,9 +1,10 @@
 """Notify platform for Threema Gateway integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.notify import NotifyEntity, NotifyEntityFeature
 from homeassistant.config_entries import ConfigSubentry
+from homeassistant.const import CONF_RECIPIENT
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -11,7 +12,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import ThreemaConfigEntry
 from .client import ThreemaAuthError, ThreemaConnectionError, ThreemaSendError
-from .const import CONF_RECIPIENT, DOMAIN, SUBENTRY_TYPE_RECIPIENT
+from .const import DOMAIN, SUBENTRY_TYPE_RECIPIENT
 
 
 async def async_setup_entry(
@@ -53,6 +54,7 @@ class ThreemaNotifyEntity(NotifyEntity):
             identifiers={(DOMAIN, self._client.gateway_id)},
         )
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to the configured Threema recipient."""
         text = f"*{title}*\n{message}" if title else message
