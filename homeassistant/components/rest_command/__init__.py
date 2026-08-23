@@ -168,8 +168,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
             # Kept out of the debug log above so the credentials are not logged.
-            # A configured Authorization header wins over the credentials,
-            # whatever its casing, so setdefault runs on a CIMultiDict.
             request_headers = CIMultiDict(headers)
             if basic_auth is not None:
                 request_headers.setdefault(hdrs.AUTHORIZATION, basic_auth)
