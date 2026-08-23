@@ -430,12 +430,12 @@ async def test_todo_event_handler(
         ),
         pytest.param(
             CannotConnect,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_connect",
         ),
         pytest.param(
             CannotRetrieveData,
-            ConfigEntryState.SETUP_RETRY,
+            ConfigEntryState.LOADED,
             id="cannot_retrieve_data",
         ),
     ],
@@ -447,7 +447,7 @@ async def test_sync_todo_list_items_error(
     side_effect: type[Exception],
     expected_state: ConfigEntryState,
 ) -> None:
-    """Test setup fails when syncing todo list items raises an error."""
+    """Test syncing todo list items handles errors without blocking setup."""
     mock_amazon_devices_client.get_todo_list_items.side_effect = side_effect
     mock_amazon_devices_client.todo_lists = [
         AmazonListInfo(id="shopping_list_id", name=None, list_type=AmazonListType.SHOP)

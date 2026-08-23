@@ -49,8 +49,8 @@ async def test_remove_config_entry_device_server(
     await hass.async_block_till_done()
 
     device_registry = dr.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
-    server_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    server_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
 
     assert server_device is not None
@@ -108,6 +108,9 @@ async def test_remove_config_entry_device_disconnected(
 
     # Create a device that's not in coordinator.data (disconnected)
     entry_id = mock_config_entry.entry_id
+    server_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry_id), entry_id
+    )
     disconnected_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={
@@ -126,7 +129,7 @@ async def test_remove_config_entry_device_disconnected(
             )
         },
         name="Old Disconnected Device",
-        via_device=(DOMAIN, entry_id),
+        via_device_id=server_device.id,
     )
 
     # Try to remove disconnected device - should succeed
@@ -150,6 +153,9 @@ async def test_remove_config_entry_device_with_multiple_identifiers(
     await hass.async_block_till_done()
 
     entry_id = mock_config_entry.entry_id
+    server_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, entry_id), entry_id
+    )
 
     # Create a device with identifiers from multiple domains
     device_with_multiple_identifiers = device_registry.async_get_or_create(
@@ -171,7 +177,7 @@ async def test_remove_config_entry_device_with_multiple_identifiers(
             ),  # This is a disconnected OpenRGB device
         },
         name="Multi-Domain Device",
-        via_device=(DOMAIN, entry_id),
+        via_device_id=server_device.id,
     )
 
     # Try to remove device - should succeed because the OpenRGB

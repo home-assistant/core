@@ -35,7 +35,6 @@ from homeassistant.const import (
     ATTR_SERIAL_NUMBER,
     ATTR_SUGGESTED_AREA,
     ATTR_SW_VERSION,
-    ATTR_VIA_DEVICE,
     CONF_ACCESS_TOKEN,
     CONF_TOKEN,
     EVENT_HOMEASSISTANT_STOP,
@@ -248,9 +247,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SmartThingsConfigEntry) 
             (DOMAIN, device_id), entry.entry_id
         )
         if dev_entry is not None:
-            device_registry.async_update_device(
-                dev_entry.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(dev_entry.id)
 
     entry.async_on_unload(
         client.add_device_lifecycle_event_listener(
@@ -501,9 +498,8 @@ def create_devices(
     rooms: dict[str, str],
 ) -> None:
     """Create devices in the device registry."""
-    for device in sorted(
-        devices.values(), key=lambda d: d.device.parent_device_id or ""
-    ):
+    created_devices: dict[str, dr.DeviceEntry] = {}
+    for device in devices.values():
         kwargs: dict[str, Any] = {}
         if device.device.hub is not None:
             kwargs = {
@@ -522,8 +518,6 @@ def create_devices(
                         format_zigbee_address(device.device.hub.hub_eui),
                     )
                 )
-        if device.device.parent_device_id and device.device.parent_device_id in devices:
-            kwargs[ATTR_VIA_DEVICE] = (DOMAIN, device.device.parent_device_id)
         if (ocf := device.device.ocf) is not None:
             kwargs.update(
                 {
@@ -601,13 +595,24 @@ def create_devices(
                     )
                 }
             )
-        device_registry.async_get_or_create(
+        created_devices[device.device.device_id] = device_registry.async_get_or_create(
             config_entry_id=entry.entry_id,
             identifiers={(DOMAIN, device.device.device_id)},
             configuration_url="https://account.smartthings.com",
             name=device.device.label,
             **kwargs,
         )
+
+    # Link child devices to their parent in a second pass, so registration is
+    # robust to any ordering of parents and children in the device list,
+    # including nested hierarchies where a parent is itself a child device.
+    for device in devices.values():
+        parent_device_id = device.device.parent_device_id
+        if parent_device_id and parent_device_id in devices:
+            device_registry.async_update_device(
+                created_devices[device.device.device_id].id,
+                via_device_id=created_devices[parent_device_id].id,
+            )
 
 
 KEEP_CAPABILITY_QUIRK: dict[

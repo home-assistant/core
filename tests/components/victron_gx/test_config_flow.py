@@ -11,7 +11,7 @@ from homeassistant.components.victron_gx.const import (
     CONF_SERIAL,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_SSDP, SOURCE_USER
+from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_SSDP, SOURCE_USER
 from homeassistant.const import (
     CONF_HOST,
     CONF_MODEL,
@@ -833,13 +833,40 @@ async def test_reconfigure_flow_different_device(
     assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
 
 
+@pytest.mark.parametrize(
+    ("entry_source", "host_data", "expected_host", "title_changed"),
+    [
+        pytest.param(
+            SOURCE_USER,
+            {CONF_HOST: MOCK_HOST},
+            "10.0.0.50",
+            True,
+            id="changed-host",
+        ),
+        pytest.param(SOURCE_IGNORE, {}, None, False, id="ignored-entry"),
+    ],
+)
 @pytest.mark.usefixtures("mock_victron_hub")
 async def test_ssdp_flow_updates_host_on_rediscovery(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entry_source: str,
+    host_data: dict[str, str],
+    expected_host: str | None,
+    title_changed: bool,
 ) -> None:
-    """Test SSDP discovery updates host when device is found at a new IP."""
+    """Test SSDP rediscovery of configured and ignored entries."""
+    mock_config_entry.source = entry_source
     mock_config_entry.add_to_hass(hass)
-    assert mock_config_entry.data[CONF_HOST] == MOCK_HOST
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        data={
+            key: value
+            for key, value in mock_config_entry.data.items()
+            if key != CONF_HOST
+        }
+        | host_data,
+    )
     original_title = mock_config_entry.title
 
     discovery_info = SsdpServiceInfo(
@@ -864,10 +891,9 @@ async def test_ssdp_flow_updates_host_on_rediscovery(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert mock_config_entry.data[CONF_HOST] == "10.0.0.50"
-    # Verify the entry title was also updated with the new host
-    assert mock_config_entry.title != original_title
-    assert "10.0.0.50" in mock_config_entry.title
+    assert mock_config_entry.data.get(CONF_HOST) == expected_host
+    assert (mock_config_entry.title != original_title) is title_changed
+    assert ("10.0.0.50" in mock_config_entry.title) is title_changed
 
 
 @pytest.mark.usefixtures("mock_victron_hub")

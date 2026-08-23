@@ -2,6 +2,7 @@
 
 from unittest.mock import MagicMock
 
+from freezegun.api import FrozenDateTimeFactory
 from proxmoxer import AuthenticationError
 from proxmoxer.core import ResourceException
 import pytest
@@ -16,6 +17,7 @@ from homeassistant.components.proxmoxve.const import (
     DOMAIN,
 )
 from homeassistant.components.proxmoxve.coordinator import (
+    DEFAULT_UPDATE_INTERVAL,
     ProxmoxNodesNotFoundError,
     ProxmoxPermissionsError,
 )
@@ -34,7 +36,11 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, async_load_json_array_fixture
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    async_load_json_array_fixture,
+)
 
 
 @pytest.mark.parametrize(
@@ -400,6 +406,108 @@ async def test_new_container_creates_entity(
     )
 
 
+@pytest.mark.parametrize(
+    "child_identifier",
+    ["vm_100", "vm_101", "container_200", "container_201", "storage_local"],
+)
+@pytest.mark.usefixtures("mock_proxmox_client")
+async def test_child_devices_link_to_node(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    child_identifier: str,
+) -> None:
+    """Test that VM/container/storage devices link to their node via via_device_id."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    entry_id = mock_config_entry.entry_id
+    node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_node_node/pve1"), entry_id
+    )
+    assert node_device is not None
+
+    child_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_{child_identifier}"), entry_id
+    )
+    assert child_device is not None
+    assert child_device.via_device_id == node_device.id
+
+
+async def test_new_node_registers_device_before_children(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a node discovered after setup registers its device before its children.
+
+    Regression test for a race where a newly discovered node's VM/container/
+    storage entities were built before the node's own device was registered,
+    causing via_device_id resolution to raise ValueError.
+
+    Without audit permissions the node surfaces no entities of its own, so the
+    node device is only registered by the coordinator: without that explicit
+    registration its child (the configured VM, whose entities are always
+    created) cannot resolve its via_device_id.
+    """
+    mock_proxmox_client.access.permissions.get.return_value = {}
+
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+
+    # setup_integration enables disabled-by-default entities, which schedules a
+    # debounced config entry reload; let it settle so it doesn't coincide with
+    # (and mask, via a fresh setup) the refresh that discovers the new node.
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # A second node, bringing its own VM, appears on the next refresh.
+    pve2_vm = {
+        **(await async_load_json_array_fixture(hass, "nodes/qemu.json", DOMAIN))[0],
+        "vmid": 300,
+        "name": "vm-pve2",
+    }
+    pve2_node_mock = MagicMock()
+    pve2_node_mock.qemu.get.return_value = [pve2_vm]
+    pve2_node_mock.lxc.get.return_value = []
+    pve2_node_mock.storage.get.return_value = []
+    pve2_node_mock.tasks.get.return_value = []
+
+    default_node_mock = mock_proxmox_client._node_mock
+    mock_proxmox_client._nodes_mock.side_effect = lambda node: (
+        pve2_node_mock if node == "pve2" else default_node_mock
+    )
+    mock_proxmox_client.nodes.get.return_value = [
+        node
+        for node in mock_proxmox_client._all_nodes
+        if node["node"] in ("pve1", "pve2")
+    ]
+
+    freezer.tick(DEFAULT_UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entry_id = mock_config_entry.entry_id
+    node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_node_node/pve2"), entry_id
+    )
+    assert node_device is not None
+
+    vm_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_vm_300"), entry_id
+    )
+    assert vm_device is not None
+    assert vm_device.via_device_id == node_device.id
+
+    # The new node's VM entity was built and populated from the refresh.
+    state = hass.states.get("binary_sensor.vm_pve2_status")
+    assert state is not None
+    assert state.state == STATE_ON
+
+
 async def test_stale_devices_removed(
     hass: HomeAssistant,
     mock_proxmox_client: MagicMock,
@@ -411,11 +519,11 @@ async def test_stale_devices_removed(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
     entry_id = mock_config_entry.entry_id
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry_id}_vm_100")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_vm_100"), entry_id
     )
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry_id}_vm_101")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_vm_101"), entry_id
     )
 
     # VM 100 is gone, VM 101 remains
@@ -430,9 +538,11 @@ async def test_stale_devices_removed(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(identifiers={(DOMAIN, f"{entry_id}_vm_100")})
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{entry_id}_vm_100"), entry_id
+        )
         is None
     )
-    assert device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{entry_id}_vm_101")}
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_vm_101"), entry_id
     )
