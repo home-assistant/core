@@ -97,12 +97,10 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             if self._attr_available:
                 _LOGGER.warning("Connection to the Tonewinner receiver was lost")
                 self._attr_available = False
-                # The library does not reconnect on its own; reloading lets HA's
-                # setup retry loop restore the connection when it comes back.
-                self._entry.async_create_task(
-                    self.hass,
-                    self.hass.config_entries.async_reload(self._entry.entry_id),
-                )
+                # The library never reconnects on its own; reload instead so
+                # HA's retry loop restores the connection. Schedule through
+                # hass so the entry does not track (and wait on) this task.
+                self.hass.config_entries.async_schedule_reload(self._entry.entry_id)
         else:
             if not self._attr_available:
                 _LOGGER.info("Connection to the Tonewinner receiver was restored")

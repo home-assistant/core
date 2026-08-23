@@ -374,22 +374,21 @@ async def test_media_player_unavailable_on_disconnect_and_recovery(
     mock_config_entry.add_to_hass(hass)
     await _setup_integration(hass, mock_config_entry, mock_receiver)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-        new_callable=AsyncMock,
-    ) as mock_reload:
+    with patch.object(
+        hass.config_entries, "async_schedule_reload"
+    ) as mock_schedule_reload:
         _state_callback(mock_receiver)(None)
         await hass.async_block_till_done()
         state = hass.states.get(ENTITY_ID)
         assert state is not None
         assert state.state == "unavailable"
         assert "Connection to the Tonewinner receiver was lost" in caplog.text
-        mock_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+        mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
 
         # A repeated disconnect notification must not schedule another reload.
         _state_callback(mock_receiver)(None)
         await hass.async_block_till_done()
-        mock_reload.assert_awaited_once_with(mock_config_entry.entry_id)
+        mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
 
     _state_callback(mock_receiver)(mock_receiver.state)
     await hass.async_block_till_done()
