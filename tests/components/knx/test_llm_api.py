@@ -1,6 +1,5 @@
 """Tests for the KNX LLM API."""
 
-from collections.abc import Callable
 from datetime import UTC, date, datetime, time
 import json
 from typing import Any
@@ -53,11 +52,9 @@ def _tool(tools: list[llm.Tool], name: str) -> llm.Tool:
 
 
 async def test_llm_api_registered_after_setup(
-    hass: HomeAssistant,
-    knx: KNXTestKit,
-    hass_admin_user: MockUser,
+    hass: HomeAssistant, knx: KNXTestKit, hass_admin_user: MockUser
 ) -> None:
-    """Setup registers the API for admins and unload deregisters it."""
+    """Setup registers the API with all tools; unload deregisters it."""
     await knx.setup_integration()
 
     instance = await llm.async_get_api(
@@ -66,7 +63,6 @@ async def test_llm_api_registered_after_setup(
     tool_names = {tool.name for tool in instance.tools}
     assert "query_telegrams" in tool_names
     assert tool_names >= _BUS_TOOLS
-    assert "Live bus reads and writes" in instance.api_prompt
 
     await hass.config_entries.async_unload(knx.mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -74,36 +70,9 @@ async def test_llm_api_registered_after_setup(
         await llm.async_get_api(hass, llm_api.LLM_API_ID, _llm_context())
 
 
-@pytest.mark.parametrize(
-    "user_id_of",
-    [
-        pytest.param(lambda user: user.id, id="non_admin_user"),
-        pytest.param(lambda user: None, id="anonymous"),
-    ],
-)
-async def test_llm_api_without_admin_has_no_bus_tools(
-    hass: HomeAssistant,
-    knx: KNXTestKit,
-    hass_read_only_user: MockUser,
-    user_id_of: Callable[[MockUser], str | None],
-) -> None:
-    """Callers that are not a known admin get the read-only tools only."""
-    await knx.setup_integration()
-
-    instance = await llm.async_get_api(
-        hass, llm_api.LLM_API_ID, _llm_context(user_id_of(hass_read_only_user))
-    )
-    tool_names = {tool.name for tool in instance.tools}
-    assert "query_telegrams" in tool_names
-    assert tool_names.isdisjoint(_BUS_TOOLS)
-    assert "Live bus reads and writes" not in instance.api_prompt
-
-
 def test_schema_from_dataclass_defaults_and_descriptions() -> None:
     """Optional fields carry defaults and their library metadata descriptions."""
-    tool = _tool(
-        llm_api._build_tools(_mock_knx(), include_bus_tools=False), "query_telegrams"
-    )
+    tool = _tool(llm_api._build_tools(_mock_knx()), "query_telegrams")
 
     descriptions = {
         marker.schema: marker.description for marker in tool.parameters.schema
@@ -130,9 +99,7 @@ def test_schema_coercion_and_nullable(
     args: dict[str, Any], expected: int | None
 ) -> None:
     """Integer coercion works and nullable defaults are accepted."""
-    tool = _tool(
-        llm_api._build_tools(_mock_knx(), include_bus_tools=False), "list_dpts"
-    )
+    tool = _tool(llm_api._build_tools(_mock_knx()), "list_dpts")
     assert tool.parameters(args)["main"] == expected
 
 
@@ -155,7 +122,7 @@ def test_schema_union_preserves_numeric_types(
 ) -> None:
     """A `bool | int | float | ...` union field keeps each type distinct."""
     tool = _tool(
-        llm_api._build_tools(_mock_knx(), include_bus_tools=True),
+        llm_api._build_tools(_mock_knx()),
         "send_group_value_write",
     )
     result = tool.parameters({"group_address": "1/2/3", "value": value})
@@ -166,7 +133,11 @@ def test_schema_union_preserves_numeric_types(
 @pytest.mark.parametrize(
     ("tool_name", "parameter", "expected"),
     [
-        ("query_telegrams", "limit", {"type": "integer"}),
+        (
+            "query_telegrams",
+            "limit",
+            {"type": "integer", "minimum": 1, "maximum": 1000},
+        ),
         (
             "query_telegrams",
             "dpt_mains",
@@ -189,7 +160,7 @@ def test_integer_parameters_are_typed_for_the_llm(
     tool_name: str, parameter: str, expected: dict[str, Any]
 ) -> None:
     """Integer fields must not be advertised to the model as strings."""
-    tool = _tool(llm_api._build_tools(_mock_knx(), include_bus_tools=False), tool_name)
+    tool = _tool(llm_api._build_tools(_mock_knx()), tool_name)
     converted = convert(tool.parameters)["properties"][parameter]
     assert {
         key: value
@@ -270,20 +241,47 @@ def test_serialize_normalizes_nested_containers(
     json.dumps(result)  # must not raise
 
 
+@pytest.mark.parametrize(
+    ("tool_name", "args"),
+    [
+        pytest.param("list_dpts", {"limit": -1}, id="negative_limit"),
+        pytest.param("list_dpts", {"limit": 0}, id="zero_limit"),
+        pytest.param("list_dpts", {"limit": 1001}, id="limit_above_maximum"),
+        pytest.param("list_dpts", {"offset": -1}, id="negative_offset"),
+        pytest.param(
+            "query_telegrams", {"delta_before_ms": -1}, id="negative_delta_before"
+        ),
+        pytest.param(
+            "query_telegrams", {"delta_after_ms": -1}, id="negative_delta_after"
+        ),
+    ],
+)
+def test_pagination_bounds_are_enforced(tool_name: str, args: dict[str, Any]) -> None:
+    """A negative limit disables pagination in the libraries - reject it here."""
+    tool = _tool(llm_api._build_tools(_mock_knx()), tool_name)
+    with pytest.raises(vol.Invalid):
+        tool.parameters(args)
+
+
+def test_pagination_bounds_are_advertised_to_the_llm() -> None:
+    """The model needs to see the bounds, not just be rejected by them."""
+    tool = _tool(llm_api._build_tools(_mock_knx()), "list_dpts")
+    properties = convert(tool.parameters)["properties"]
+    assert properties["limit"]["minimum"] == 1
+    assert properties["limit"]["maximum"] == 1000
+    assert properties["offset"]["minimum"] == 0
+
+
 def test_schema_required_field_is_enforced() -> None:
     """A field without a default (ad-hoc arg) is required."""
-    tool = _tool(
-        llm_api._build_tools(_mock_knx(), include_bus_tools=False), "describe_dpt"
-    )
+    tool = _tool(llm_api._build_tools(_mock_knx()), "describe_dpt")
     with pytest.raises(vol.Invalid):
         tool.parameters({})
 
 
 async def test_describe_dpt_tool_call(hass: HomeAssistant) -> None:
     """A DPT tool needs no KNX runtime state and returns a serialized result."""
-    tool = _tool(
-        llm_api._build_tools(_mock_knx(), include_bus_tools=False), "describe_dpt"
-    )
+    tool = _tool(llm_api._build_tools(_mock_knx()), "describe_dpt")
     result = await tool.async_call(
         hass,
         llm.ToolInput(tool_name="describe_dpt", tool_args={"dpt": "9.001"}),
@@ -306,9 +304,7 @@ async def test_query_telegrams_tool_call(hass: HomeAssistant) -> None:
         query = AsyncMock(return_value=lib_result)
         # Patch before building the tool: the factory captures the function reference.
         mp.setattr(llm_api.kts_mcp, "query_telegrams", query)
-        tool = _tool(
-            llm_api._build_tools(knx, include_bus_tools=False), "query_telegrams"
-        )
+        tool = _tool(llm_api._build_tools(knx), "query_telegrams")
         result = await tool.async_call(
             hass,
             llm.ToolInput(tool_name="query_telegrams", tool_args={"limit": "5"}),
@@ -323,7 +319,7 @@ async def test_query_telegrams_tool_call(hass: HomeAssistant) -> None:
 async def test_store_tool_without_store_raises(hass: HomeAssistant) -> None:
     """A store tool errors clearly when the telegram store is unavailable."""
     tool = _tool(
-        llm_api._build_tools(_mock_knx(store=None), include_bus_tools=False),
+        llm_api._build_tools(_mock_knx(store=None)),
         "get_store_stats",
     )
     with pytest.raises(
@@ -340,7 +336,7 @@ async def test_store_tool_without_store_raises(hass: HomeAssistant) -> None:
 async def test_project_tool_without_project_raises(hass: HomeAssistant) -> None:
     """A project tool errors clearly when no ETS project is loaded."""
     tool = _tool(
-        llm_api._build_tools(_mock_knx(project=None), include_bus_tools=False),
+        llm_api._build_tools(_mock_knx(project=None)),
         "get_project_info",
     )
     with pytest.raises(HomeAssistantError, match="llm_no_project_loaded") as err:
@@ -396,7 +392,7 @@ async def test_library_errors_become_translated_tool_errors(
     hass: HomeAssistant, tool_name: str, tool_args: dict[str, Any]
 ) -> None:
     """A library exception is reported to the model as a KNX tool failure."""
-    tool = _tool(llm_api._build_tools(_mock_knx(), include_bus_tools=False), tool_name)
+    tool = _tool(llm_api._build_tools(_mock_knx()), tool_name)
 
     with pytest.raises(HomeAssistantError) as err:
         await tool.async_call(

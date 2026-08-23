@@ -43,22 +43,13 @@ if TYPE_CHECKING:
 
 LLM_API_ID = DOMAIN
 LLM_API_NAME = "KNX"
-_API_PROMPT_BASE = (
+API_PROMPT = (
     "Tools to inspect a KNX installation: stored bus telegrams, the loaded ETS "
     "project (group addresses, devices, communication objects, functions, "
-    "topology, locations) and KNX data point types."
+    "topology, locations), KNX data point types, and live bus "
+    'reads and writes. Address formats: group addresses like "1/2/3", individual '
+    'device addresses like "1.1.5", DPTs like "9.001".'
 )
-_API_PROMPT_BUS = " Live bus reads and writes are available too."
-_API_PROMPT_ADDRESSES = (
-    ' Address formats: group addresses like "1/2/3", individual device addresses '
-    'like "1.1.5", DPTs like "9.001".'
-)
-
-
-def _api_prompt(*, include_bus_tools: bool) -> str:
-    """The API prompt, describing only the tools this instance actually got."""
-    bus = _API_PROMPT_BUS if include_bus_tools else ""
-    return f"{_API_PROMPT_BASE}{bus}{_API_PROMPT_ADDRESSES}"
 
 
 type _ToolFunc = Callable[["KNXModule", dict[str, Any]], Awaitable[Any]]
@@ -124,6 +115,19 @@ def _validator(annotation: Any) -> Any:
     return object
 
 
+# The library ``_paginate`` helpers treat a negative limit as "no limit", which
+# would return a whole ETS project or telegram history in a single tool result,
+# and a negative offset slices from the end. The dataclasses don't express
+# bounds, so they are applied here, by the field names the libraries share.
+_MAX_RESULT_ITEMS = 1000
+_FIELD_BOUNDS = {
+    "limit": vol.Range(min=1, max=_MAX_RESULT_ITEMS),
+    "offset": vol.Range(min=0),
+    "delta_before_ms": vol.Range(min=0),
+    "delta_after_ms": vol.Range(min=0),
+}
+
+
 def _schema_from_dataclass(input_type: type) -> vol.Schema:
     """Build a voluptuous schema from a library ``*.mcp`` input dataclass.
 
@@ -144,7 +148,10 @@ def _schema_from_dataclass(input_type: type) -> vol.Schema:
             )
         else:
             marker = vol.Required(field.name, description=description)
-        schema[marker] = _validator(hints[field.name])
+        validator = _validator(hints[field.name])
+        if (bounds := _FIELD_BOUNDS.get(field.name)) is not None:
+            validator = vol.All(validator, bounds)
+        schema[marker] = validator
     return vol.Schema(schema)
 
 
@@ -298,8 +305,8 @@ def _xknx_func(lib_func: Callable, input_type: type | None = None) -> _ToolFunc:
     return _call
 
 
-# name, description, parameter schema, callable. Read-only tools.
-def _read_tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
+# name, description, parameter schema, callable.
+def _tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
     return [
         (
             "query_telegrams",
@@ -452,11 +459,6 @@ def _read_tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
             vol.Schema({}),
             _xknx_func(xknx_mcp.get_connection_status),
         ),
-    ]
-
-
-def _bus_tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
-    return [
         (
             "read_group_value",
             "Read a group address live from the bus (sends a GroupValueRead and waits).",
@@ -478,18 +480,11 @@ def _bus_tool_specs() -> list[tuple[str, str, vol.Schema, _ToolFunc]]:
     ]
 
 
-def _build_tools(knx: KNXModule, *, include_bus_tools: bool) -> list[llm.Tool]:
-    """Build the KNX LLM tools for the given module.
-
-    Bus tools transmit on the KNX bus, so they are only built for admins; the
-    configured MCP endpoint (``/api/mcp``) does not itself require admin access.
-    """
-    specs = _read_tool_specs()
-    if include_bus_tools:
-        specs += _bus_tool_specs()
+def _build_tools(knx: KNXModule) -> list[llm.Tool]:
+    """Build the KNX LLM tools for the given module."""
     return [
         KNXTool(knx, name, description, parameters, func)
-        for name, description, parameters, func in specs
+        for name, description, parameters, func in _tool_specs()
     ]
 
 
@@ -504,20 +499,12 @@ class KNXLLMAPI(llm.API):
         self, llm_context: llm.LLMContext
     ) -> llm.APIInstance:
         """Return the instance of the API."""
-        include_bus_tools = await self._user_is_admin(llm_context)
         return llm.APIInstance(
             api=self,
-            api_prompt=_api_prompt(include_bus_tools=include_bus_tools),
+            api_prompt=API_PROMPT,
             llm_context=llm_context,
-            tools=_build_tools(self.knx, include_bus_tools=include_bus_tools),
+            tools=_build_tools(self.knx),
         )
-
-    async def _user_is_admin(self, llm_context: llm.LLMContext) -> bool:
-        """Whether the requesting user is a known administrator."""
-        if (context := llm_context.context) is None or not (user_id := context.user_id):
-            return False
-        user = await self.hass.auth.async_get_user(user_id)
-        return user is not None and user.is_admin
 
 
 def async_register_llm_api(hass: HomeAssistant, knx: KNXModule) -> CALLBACK_TYPE:
