@@ -123,7 +123,6 @@ async def test_image_functionality(
         "image_key_1": b"image_data_1",
         "image_key_2": b"image_data_2",
     }
-    entity_id = "image.fridgefreezer_interior_right_camera"
 
     async def mock_get_image(_: str, *, image_key: str) -> bytes:
         return image_data_dict[image_key]
@@ -133,19 +132,23 @@ async def test_image_functionality(
     assert await integration_setup(client)
     assert config_entry.state is ConfigEntryState.LOADED
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "2026-08-06T00:00:00+00:00"
-
     client.get_images.assert_awaited_once_with(appliance.ha_id)
     assert client.get_image.await_count == 2
     for image_key in image_data_dict:
         client.get_image.assert_any_call(appliance.ha_id, image_key=image_key)
 
     _client = await hass_client()
-    resp = await _client.get(state.attributes[EntityStateAttribute.ENTITY_PICTURE])
-    assert resp.status == 200
-    assert await resp.read() == image_data_dict["image_key_1"]
+    for entity_id, expected_image_data in (
+        ("image.fridgefreezer_interior_right_camera", b"image_data_1"),
+        ("image.fridgefreezer_door_right_camera", b"image_data_2"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == "2026-08-06T00:00:00+00:00"
+
+        resp = await _client.get(state.attributes[EntityStateAttribute.ENTITY_PICTURE])
+        assert resp.status == 200
+        assert await resp.read() == expected_image_data
 
 
 @pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
@@ -156,13 +159,17 @@ async def test_update_image_entity_functionality(
     config_entry: MockConfigEntry,
     integration_setup: Callable[[MagicMock], Awaitable[bool]],
     appliance: HomeAppliance,
-    images: list[Image],
 ) -> None:
-    """Test that the image entities use the correct image data."""
+    """Test that the image update correctly.
+
+    Whenever an entity does update, the integration update any other from the same
+    appliance y there's an update available.
+    """
     image_data_dict = {
         "image_key_1": b"image_data_1",
         "image_key_2": b"image_data_2",
         "image_key_3": b"image_data_3",
+        "image_key_4": b"image_data_4",
     }
     entity_id = "image.fridgefreezer_interior_right_camera"
 
@@ -179,27 +186,42 @@ async def test_update_image_entity_functionality(
     client.get_images.reset_mock()
     client.get_image.reset_mock()
 
-    client.get_images.return_value.images.append(
-        Image(
-            key="Refrigeration.Common.EnumType.Compartment.Type.InteriorRightRC",
-            image_key="image_key_3",
-            preview_image_key="preview_image_key_3",
-            timestamp=1785978000000,
-            quality="good",
-        )
+    client.get_images.return_value.images.extend(
+        [
+            Image(
+                key="Refrigeration.Common.EnumType.Compartment.Type.InteriorRightRC",
+                image_key="image_key_3",
+                preview_image_key="preview_image_key_3",
+                timestamp=1785978000000,
+                quality="good",
+            ),
+            Image(
+                key="Refrigeration.Common.EnumType.Compartment.Type.DoorRightRC",
+                image_key="image_key_4",
+                preview_image_key="preview_image_key_4",
+                timestamp=1785978000000,
+                quality="good",
+            ),
+        ]
     )
     await hass.services.async_call(
         HA_DOMAIN, SERVICE_UPDATE_ENTITY, {ATTR_ENTITY_ID: entity_id}, blocking=True
     )
 
     client.get_images.assert_awaited_once_with(appliance.ha_id)
-    client.get_image.assert_awaited_once_with(appliance.ha_id, image_key="image_key_3")
+    assert client.get_image.await_count == 2
+    client.get_image.assert_any_await(appliance.ha_id, image_key="image_key_3")
+    client.get_image.assert_any_await(appliance.ha_id, image_key="image_key_4")
 
-    state = hass.states.get(entity_id)
-    assert state
-    assert state.state == "2026-08-06T01:00:00+00:00"
+    for entity_id, expected_image_data in (
+        ("image.fridgefreezer_interior_right_camera", b"image_data_3"),
+        ("image.fridgefreezer_door_right_camera", b"image_data_4"),
+    ):
+        state = hass.states.get(entity_id)
+        assert state
+        assert state.state == "2026-08-06T01:00:00+00:00"
 
-    _client = await hass_client()
-    resp = await _client.get(state.attributes[EntityStateAttribute.ENTITY_PICTURE])
-    assert resp.status == 200
-    assert await resp.read() == image_data_dict["image_key_3"]
+        _client = await hass_client()
+        resp = await _client.get(state.attributes[EntityStateAttribute.ENTITY_PICTURE])
+        assert resp.status == 200
+        assert await resp.read() == expected_image_data

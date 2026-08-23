@@ -5,7 +5,7 @@ from typing import override
 from aiohomeconnect.model.error import HomeConnectError
 
 from homeassistant.components.image import Image, ImageEntity, ImageEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -82,11 +82,20 @@ class HomeConnectImageEntity(ImageEntity):
         """When entity is added to hass."""
         await super().async_added_to_hass()
         await self.async_fetch_image()
+        self.async_on_remove(
+            self.appliance_coordinator.add_image_listener(
+                self.entity_description.key, self._handle_coordinator_update
+            )
+        )
 
     async def async_update(self) -> None:
         """Set the value of the image based on the given value."""
         await self.appliance_coordinator.update_images()
-        await self.async_fetch_image()
+
+    @callback
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator."""
+        self.hass.async_create_task(self.async_fetch_image())
 
     async def async_fetch_image(self) -> None:
         """Fetch the image from the Home Connect API if it has changed since the last fetch."""
