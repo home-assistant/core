@@ -1,6 +1,7 @@
 """Implementation of a base class for all IHC devices."""
 
 import logging
+from typing import Any, override
 
 from ihcsdk.ihccontroller import IHCController
 
@@ -44,7 +45,8 @@ class IHCEntity(Entity):
             if "id" in product:
                 product_id = product["id"]
                 self.device_id = f"{controller_id}_{product_id}"
-                # this will name the device the same way as the IHC visual application: Product name + position
+                # Name the device like the IHC visual app:
+                # Product name + position
                 self.device_name = product["name"]
                 if self.ihc_position:
                     self.device_name += f" ({self.ihc_position})"
@@ -54,23 +56,27 @@ class IHCEntity(Entity):
             self.ihc_note = ""
             self.ihc_position = ""
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add callback for IHC changes."""
         _LOGGER.debug("Adding IHC entity notify event: %s", self.ihc_id)
         self.ihc_controller.add_notify_event(self.ihc_id, self.on_ihc_change, True)
 
     @property
+    @override
     def name(self):
         """Return the device name."""
         return self._name
 
     @property
+    @override
     def unique_id(self):
         """Return a unique ID."""
         return f"{self.controller_id}-{self.ihc_id}"
 
     @property
-    def extra_state_attributes(self):
+    @override
+    def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if not self.hass.data[DOMAIN][self.controller_id][CONF_INFO]:
             return {}

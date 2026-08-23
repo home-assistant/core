@@ -1,10 +1,9 @@
 """Support for Tibber binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 import tibber
 from tibber.data_api import TibberDevice
@@ -14,6 +13,7 @@ from homeassistant.components.binary_sensor import (
     BinarySensorEntity,
     BinarySensorEntityDescription,
 )
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -47,6 +47,12 @@ DATA_API_BINARY_SENSORS: tuple[TibberBinarySensorEntityDescription, ...] = (
         key="onOff",
         device_class=BinarySensorDeviceClass.POWER,
         is_on_fn={"on": True, "off": False}.get,
+    ),
+    TibberBinarySensorEntityDescription(
+        key="isOnline",
+        device_class=BinarySensorDeviceClass.CONNECTIVITY,
+        is_on_fn=lambda v: v.lower() == "true",
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -104,6 +110,7 @@ class TibberDataAPIBinarySensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return (
@@ -116,6 +123,7 @@ class TibberDataAPIBinarySensor(
         return self.coordinator.sensors_by_device[self._device_id]
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the binary sensor."""
         return self.entity_description.is_on_fn(

@@ -1,7 +1,5 @@
 """The Mastodon integration."""
 
-from __future__ import annotations
-
 from mastodon.Mastodon import (
     Account,
     Instance,
@@ -9,6 +7,7 @@ from mastodon.Mastodon import (
     Mastodon,
     MastodonError,
     MastodonNotFoundError,
+    MastodonUnauthorizedError,
 )
 
 from homeassistant.const import (
@@ -18,7 +17,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import slugify
@@ -28,7 +27,7 @@ from .coordinator import MastodonConfigEntry, MastodonCoordinator, MastodonData
 from .services import async_setup_services
 from .utils import construct_mastodon_username, create_mastodon_client
 
-PLATFORMS: list[Platform] = [Platform.SENSOR]
+PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.SENSOR]
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -48,8 +47,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: MastodonConfigEntry) -> 
             entry,
         )
 
+    except MastodonUnauthorizedError as error:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="auth_failed",
+        ) from error
     except MastodonError as ex:
-        raise ConfigEntryNotReady("Failed to connect") from ex
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="failed_to_connect",
+        ) from ex
 
     assert entry.unique_id
 

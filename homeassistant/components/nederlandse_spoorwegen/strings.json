@@ -127,23 +127,5 @@
         "name": "Transfers"
       }
     }
-  },
-  "issues": {
-    "deprecated_yaml_import_issue_cannot_connect": {
-      "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration, Home Assistant could not connect to the NS API. Please check your internet connection and the status of the NS API, then restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
-      "title": "[%key:component::nederlandse_spoorwegen::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
-    },
-    "deprecated_yaml_import_issue_invalid_auth": {
-      "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an invalid API key was found. Please update your YAML configuration, or remove the existing YAML configuration and set the integration up via the UI.",
-      "title": "Nederlandse Spoorwegen YAML configuration deprecated"
-    },
-    "deprecated_yaml_import_issue_invalid_station": {
-      "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration an invalid station was found. Please update your YAML configuration, or remove the existing YAML configuration and set the integration up via the UI.",
-      "title": "[%key:component::nederlandse_spoorwegen::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
-    },
-    "deprecated_yaml_import_issue_unknown": {
-      "description": "Configuring Nederlandse Spoorwegen using YAML sensor platform is deprecated.\n\nWhile importing your configuration, an unknown error occurred. Please restart Home Assistant to try again, or remove the existing YAML configuration and set the integration up via the UI.",
-      "title": "[%key:component::nederlandse_spoorwegen::issues::deprecated_yaml_import_issue_invalid_auth::title%]"
-    }
   }
 }

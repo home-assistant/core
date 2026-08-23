@@ -1,9 +1,8 @@
 """Select entities for Sonos."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.core import HomeAssistant
@@ -99,6 +98,7 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
         self.speaker_attribute = select_data.speaker_attribute
         self.soco_attribute = select_data.soco_attribute
 
+    @override
     async def _async_fallback_poll(self) -> None:
         """Poll the value if subscriptions are not working."""
         await self.hass.async_add_executor_job(self.poll_state)
@@ -112,6 +112,7 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
         )
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current option for the entity."""
         option = getattr(self.speaker, self.speaker_attribute, None)
@@ -126,6 +127,7 @@ class SonosSelectEntity(SonosEntity, SelectEntity):
         return self._attr_options[option]
 
     @soco_error()
+    @override
     def select_option(self, option: str) -> None:
         """Set a new value."""
         dialog_level = self._attr_options.index(option)

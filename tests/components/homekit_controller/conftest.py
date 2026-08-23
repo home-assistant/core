@@ -29,7 +29,7 @@ def freeze_time_in_future() -> Generator[FrozenDateTimeFactory]:
 
 @pytest.fixture
 def controller() -> Generator[FakeController]:
-    """Replace aiohomekit.Controller with an instance of aiohomekit.testing.FakeController."""
+    """Replace aiohomekit.Controller with a FakeController instance."""
     instance = FakeController()
     with patch(
         "homeassistant.components.homekit_controller.utils.Controller",

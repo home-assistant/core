@@ -683,9 +683,9 @@ async def test_cloud_errors(
     assert len(mock_lametric.notify.mock_calls) == 1
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_dhcp_discovery_updates_entry(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
 ) -> None:
     """Test DHCP discovery updates config entries."""
     mock_config_entry.add_to_hass(hass)

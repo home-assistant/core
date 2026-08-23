@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_media_player_with_and_without_sources[media_player.living_room-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'source_list': list([
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
       ]),
     }),
@@ -42,14 +43,14 @@
 # name: test_media_player_with_and_without_sources[media_player.living_room-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'tv',
-      'friendly_name': 'Living Room',
-      'is_volume_muted': False,
-      'source_list': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'tv',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room',
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED: 'is_volume_muted'>: False,
+      <MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST: 'source_list'>: list([
         'TV',
       ]),
-      'supported_features': <MediaPlayerEntityFeature: 23821>,
-      'volume_level': 0.5,
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <MediaPlayerEntityFeature: 23821>,
+      <MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL: 'volume_level'>: 0.5,
     }),
     'context': <ANY>,
     'entity_id': 'media_player.living_room',

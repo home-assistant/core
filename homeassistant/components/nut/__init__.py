@@ -1,15 +1,11 @@
 """The nut component."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
-from datetime import timedelta
 import logging
 from typing import TYPE_CHECKING
 
-from aionut import AIONUTClient, NUTError, NUTLoginError
+from aionut import AIONUTClient, NUTError
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_ALIAS,
     CONF_HOST,
@@ -21,28 +17,44 @@ from homeassistant.const import (
     EVENT_HOMEASSISTANT_STOP,
 )
 from homeassistant.core import Event, HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, format_mac
-from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import DOMAIN, INTEGRATION_SUPPORTED_COMMANDS, PLATFORMS
+from .coordinator import NutConfigEntry, NutCoordinator, NutRuntimeData
 
 NUT_FAKE_SERIAL = ["unknown", "blank"]
 
 _LOGGER = logging.getLogger(__name__)
 
-type NutConfigEntry = ConfigEntry[NutRuntimeData]
 
+def outlet_numbers_from_status(status: dict[str, str]) -> set[int]:
+    """Return the outlet numbers reported by the device.
 
-@dataclass
-class NutRuntimeData:
-    """Runtime data definition."""
+    Use ``outlet.count`` when the device reports it. Otherwise fall back to
+    discovering outlets from ``outlet.<n>.*`` status keys, so devices that
+    expose switchable outlets without reporting a count are still detected.
+    """
+    if (num_outlets := status.get("outlet.count")) is not None:
+        try:
+            count = int(num_outlets)
+        except ValueError:
+            _LOGGER.debug("Invalid outlet.count value: %s", num_outlets)
+        else:
+            return set(range(1, count + 1))
 
-    coordinator: DataUpdateCoordinator
-    data: PyNUTData
-    unique_id: str
-    user_available_commands: set[str]
+    outlet_numbers: set[int] = set()
+    prefix = "outlet."
+    for key in status:
+        rest = key.removeprefix(prefix)
+        if rest == key:
+            continue
+        number = rest.split(".", 1)[0]
+        if number.isdigit() and int(number) > 0:
+            outlet_numbers.add(int(number))
+
+    return outlet_numbers
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
@@ -73,36 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
 
     entry.async_on_unload(data.async_shutdown)
 
-    async def async_update_data() -> dict[str, str]:
-        """Fetch data from NUT."""
-        try:
-            return await data.async_update()
-        except NUTLoginError as err:
-            raise ConfigEntryAuthFailed(
-                translation_domain=DOMAIN,
-                translation_key="device_authentication",
-                translation_placeholders={
-                    "err": str(err),
-                },
-            ) from err
-        except NUTError as err:
-            raise UpdateFailed(
-                translation_domain=DOMAIN,
-                translation_key="data_fetch_error",
-                translation_placeholders={
-                    "err": str(err),
-                },
-            ) from err
-
-    coordinator = DataUpdateCoordinator(
-        hass,
-        _LOGGER,
-        config_entry=entry,
-        name="NUT resource status",
-        update_method=async_update_data,
-        update_interval=timedelta(seconds=60),
-        always_update=False,
-    )
+    coordinator = NutCoordinator(hass, data, entry)
 
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
@@ -114,7 +97,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
     )
     status = coordinator.data
 
-    _LOGGER.debug("NUT Sensors Available: %s", status if status else None)
+    _LOGGER.debug("NUT Sensors Available: %s", status or None)
 
     unique_id = _unique_id_from_status(status)
     if unique_id is None:
@@ -124,16 +107,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
         hass.config_entries.async_update_entry(entry, unique_id=unique_id)
 
     if username is not None and password is not None:
-        # Dynamically add outlet integration commands
+        # Dynamically add outlet integration commands for every detected outlet
         additional_integration_commands = set()
-        if (num_outlets := status.get("outlet.count")) is not None:
-            for outlet_num in range(1, int(num_outlets) + 1):
-                outlet_num_str: str = str(outlet_num)
-                additional_integration_commands |= {
-                    f"outlet.{outlet_num_str}.load.cycle",
-                    f"outlet.{outlet_num_str}.load.on",
-                    f"outlet.{outlet_num_str}.load.off",
-                }
+        for outlet_num in outlet_numbers_from_status(status):
+            additional_integration_commands |= {
+                f"outlet.{outlet_num}.load.cycle",
+                f"outlet.{outlet_num}.load.on",
+                f"outlet.{outlet_num}.load.off",
+            }
 
         valid_integration_commands = (
             INTEGRATION_SUPPORTED_COMMANDS | additional_integration_commands
@@ -149,7 +130,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool:
 
     _LOGGER.debug(
         "NUT Commands Available: %s",
-        user_available_commands if user_available_commands else None,
+        user_available_commands or None,
     )
 
     entry.runtime_data = NutRuntimeData(
@@ -187,7 +168,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: NutConfigEntry) -> bool
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: NutConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove NUT config entry from a device."""
     return not any(
@@ -196,6 +177,14 @@ async def async_remove_config_entry_device(
         if identifier[0] == DOMAIN
         and identifier[1] in config_entry.runtime_data.unique_id
     )
+
+
+def _strip_optional(value: str | None) -> str | None:
+    """Strip whitespace from an optional string value."""
+    if value is None:
+        return None
+    stripped = value.strip()
+    return stripped or None
 
 
 def _manufacturer_from_status(status: dict[str, str]) -> str | None:
@@ -320,15 +309,17 @@ class PyNUTData:
         if not self._status:
             return None
 
-        manufacturer = _manufacturer_from_status(self._status)
-        model = _model_from_status(self._status)
-        model_id: str | None = self._status.get("device.part")
-        firmware = _firmware_from_status(self._status)
-        serial = _serial_from_status(self._status)
-        mac_address: str | None = self._status.get("device.macaddr")
+        manufacturer = _strip_optional(_manufacturer_from_status(self._status))
+        model = _strip_optional(_model_from_status(self._status))
+        model_id: str | None = _strip_optional(self._status.get("device.part"))
+        firmware = _strip_optional(_firmware_from_status(self._status))
+        serial = _strip_optional(_serial_from_status(self._status))
+        mac_address = _strip_optional(self._status.get("device.macaddr"))
         if mac_address is not None:
-            mac_address = format_mac(mac_address.rstrip().replace(" ", ":"))
-        device_location: str | None = self._status.get("device.location")
+            mac_address = format_mac(mac_address.replace(" ", ":"))
+        device_location: str | None = _strip_optional(
+            self._status.get("device.location")
+        )
         return NUTDeviceInfo(
             manufacturer,
             model,

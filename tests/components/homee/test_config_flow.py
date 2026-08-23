@@ -13,12 +13,13 @@ from homeassistant.components.homee.const import (
     RESULT_INVALID_AUTH,
     RESULT_UNKNOWN_ERROR,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_USER, ConfigEntryState
 from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
+from . import setup_integration
 from .conftest import (
     HOMEE_ID,
     HOMEE_IP,
@@ -252,12 +253,27 @@ async def test_zeroconf_confirm_errors(
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.parametrize(
+    ("ip", "connected", "reason"),
+    [
+        (HOMEE_IP, True, "already_configured"),
+        ("192.168.1.171", True, "2nd_ip_address"),
+        ("192.168.1.171", False, "already_configured"),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_zeroconf_already_configured(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    ip: str,
+    connected: bool,
+    reason: str,
 ) -> None:
     """Test zeroconf discovery flow when already configured."""
-    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = AsyncMock()
+    mock_config_entry.runtime_data.connected = connected
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state is ConfigEntryState.LOADED
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -266,15 +282,15 @@ async def test_zeroconf_already_configured(
             name=f"homee-{HOMEE_ID}._ssh._tcp.local.",
             type="_ssh._tcp.local.",
             hostname=f"homee-{HOMEE_ID}.local.",
-            ip_address=ip_address(HOMEE_IP),
-            ip_addresses=[ip_address(HOMEE_IP)],
+            ip_address=ip_address(ip),
+            ip_addresses=[ip_address(ip)],
             port=22,
             properties={},
         ),
     )
 
     assert result["type"] is FlowResultType.ABORT
-    assert result["reason"] == "already_configured"
+    assert result["reason"] == reason
 
 
 @pytest.mark.parametrize(

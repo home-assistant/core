@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch_entities[switch.test_system_away_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_switch_entities[switch.test_system_away_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test System Away mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test System Away mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_system_away_mode',
@@ -50,8 +51,9 @@
 # ---
 # name: test_switch_entities[switch.test_system_continuous_fan-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_switch_entities[switch.test_system_continuous_fan-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test System Continuous fan',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test System Continuous fan',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_system_continuous_fan',
@@ -99,8 +101,9 @@
 # ---
 # name: test_switch_entities[switch.test_system_quiet_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_switch_entities[switch.test_system_quiet_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test System Quiet mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test System Quiet mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_system_quiet_mode',
@@ -148,8 +151,9 @@
 # ---
 # name: test_switch_entities[switch.test_system_turbo_mode-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,7 +189,7 @@
 # name: test_switch_entities[switch.test_system_turbo_mode-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Test System Turbo mode',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test System Turbo mode',
     }),
     'context': <ANY>,
     'entity_id': 'switch.test_system_turbo_mode',

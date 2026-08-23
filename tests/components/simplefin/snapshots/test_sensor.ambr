@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_all_entities[sensor.investments_dr_evil_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -40,12 +41,12 @@
 # name: test_all_entities[sensor.investments_dr_evil_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'monetary',
-      'friendly_name': 'Investments Dr Evil Balance',
-      'icon': <AccountType.INVESTMENT: 'mdi:chart-areaspline'>,
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'USD',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments Dr Evil Balance',
+      <EntityStateAttribute.ICON: 'icon'>: <AccountType.INVESTMENT: 'mdi:chart-areaspline'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.investments_dr_evil_balance',
@@ -57,8 +58,9 @@
 # ---
 # name: test_all_entities[sensor.investments_dr_evil_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -94,9 +96,9 @@
 # name: test_all_entities[sensor.investments_dr_evil_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'timestamp',
-      'friendly_name': 'Investments Dr Evil Data age',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments Dr Evil Data age',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.investments_dr_evil_data_age',
@@ -108,11 +110,12 @@
 # ---
 # name: test_all_entities[sensor.investments_my_checking_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -147,12 +150,12 @@
 # name: test_all_entities[sensor.investments_my_checking_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'monetary',
-      'friendly_name': 'Investments My Checking Balance',
-      'icon': <AccountType.CHECKING: 'mdi:checkbook'>,
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'USD',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments My Checking Balance',
+      <EntityStateAttribute.ICON: 'icon'>: <AccountType.CHECKING: 'mdi:checkbook'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.investments_my_checking_balance',
@@ -164,8 +167,9 @@
 # ---
 # name: test_all_entities[sensor.investments_my_checking_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -201,9 +205,9 @@
 # name: test_all_entities[sensor.investments_my_checking_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'timestamp',
-      'friendly_name': 'Investments My Checking Data age',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments My Checking Data age',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.investments_my_checking_data_age',
@@ -215,11 +219,12 @@
 # ---
 # name: test_all_entities[sensor.investments_nerdcorp_series_b_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -254,12 +259,12 @@
 # name: test_all_entities[sensor.investments_nerdcorp_series_b_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'monetary',
-      'friendly_name': 'Investments NerdCorp Series B Balance',
-      'icon': <AccountType.INVESTMENT: 'mdi:chart-areaspline'>,
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments NerdCorp Series B Balance',
+      <EntityStateAttribute.ICON: 'icon'>: <AccountType.INVESTMENT: 'mdi:chart-areaspline'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.investments_nerdcorp_series_b_balance',
@@ -271,8 +276,9 @@
 # ---
 # name: test_all_entities[sensor.investments_nerdcorp_series_b_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -308,9 +314,9 @@
 # name: test_all_entities[sensor.investments_nerdcorp_series_b_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'timestamp',
-      'friendly_name': 'Investments NerdCorp Series B Data age',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Investments NerdCorp Series B Data age',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.investments_nerdcorp_series_b_data_age',
@@ -322,11 +328,12 @@
 # ---
 # name: test_all_entities[sensor.mythical_randomsavings_castle_mortgage_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -361,12 +368,12 @@
 # name: test_all_entities[sensor.mythical_randomsavings_castle_mortgage_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'monetary',
-      'friendly_name': 'Mythical RandomSavings Castle Mortgage Balance',
-      'icon': <AccountType.UNKNOWN: 'mdi:cash'>,
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'USD',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mythical RandomSavings Castle Mortgage Balance',
+      <EntityStateAttribute.ICON: 'icon'>: <AccountType.UNKNOWN: 'mdi:cash'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mythical_randomsavings_castle_mortgage_balance',
@@ -378,8 +385,9 @@
 # ---
 # name: test_all_entities[sensor.mythical_randomsavings_castle_mortgage_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -415,9 +423,9 @@
 # name: test_all_entities[sensor.mythical_randomsavings_castle_mortgage_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'timestamp',
-      'friendly_name': 'Mythical RandomSavings Castle Mortgage Data age',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mythical RandomSavings Castle Mortgage Data age',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mythical_randomsavings_castle_mortgage_data_age',
@@ -429,11 +437,12 @@
 # ---
 # name: test_all_entities[sensor.mythical_randomsavings_unicorn_pot_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -468,12 +477,12 @@
 # name: test_all_entities[sensor.mythical_randomsavings_unicorn_pot_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'monetary',
-      'friendly_name': 'Mythical RandomSavings Unicorn Pot Balance',
-      'icon': <AccountType.UNKNOWN: 'mdi:cash'>,
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'USD',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mythical RandomSavings Unicorn Pot Balance',
+      <EntityStateAttribute.ICON: 'icon'>: <AccountType.UNKNOWN: 'mdi:cash'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mythical_randomsavings_unicorn_pot_balance',
@@ -485,8 +494,9 @@
 # ---
 # name: test_all_entities[sensor.mythical_randomsavings_unicorn_pot_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -522,9 +532,9 @@
 # name: test_all_entities[sensor.mythical_randomsavings_unicorn_pot_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'timestamp',
-      'friendly_name': 'Mythical RandomSavings Unicorn Pot Data age',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mythical RandomSavings Unicorn Pot Data age',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mythical_randomsavings_unicorn_pot_data_age',
@@ -536,11 +546,12 @@
 # ---
 # name: test_all_entities[sensor.random_bank_costco_anywhere_visa_r_card_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -575,12 +586,12 @@
 # name: test_all_entities[sensor.random_bank_costco_anywhere_visa_r_card_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'monetary',
-      'friendly_name': 'Random Bank Costco Anywhere Visa® Card Balance',
-      'icon': <AccountType.CREDIT_CARD: 'mdi:credit-card'>,
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'USD',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Random Bank Costco Anywhere Visa® Card Balance',
+      <EntityStateAttribute.ICON: 'icon'>: <AccountType.CREDIT_CARD: 'mdi:credit-card'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.random_bank_costco_anywhere_visa_r_card_balance',
@@ -592,8 +603,9 @@
 # ---
 # name: test_all_entities[sensor.random_bank_costco_anywhere_visa_r_card_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -629,9 +641,9 @@
 # name: test_all_entities[sensor.random_bank_costco_anywhere_visa_r_card_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'timestamp',
-      'friendly_name': 'Random Bank Costco Anywhere Visa® Card Data age',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Random Bank Costco Anywhere Visa® Card Data age',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.random_bank_costco_anywhere_visa_r_card_data_age',
@@ -643,11 +655,12 @@
 # ---
 # name: test_all_entities[sensor.the_bank_of_go_prime_savings_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -682,12 +695,12 @@
 # name: test_all_entities[sensor.the_bank_of_go_prime_savings_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'monetary',
-      'friendly_name': 'The Bank of Go PRIME SAVINGS Balance',
-      'icon': <AccountType.SAVINGS: 'mdi:piggy-bank-outline'>,
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'EUR',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'The Bank of Go PRIME SAVINGS Balance',
+      <EntityStateAttribute.ICON: 'icon'>: <AccountType.SAVINGS: 'mdi:piggy-bank-outline'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'EUR',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.the_bank_of_go_prime_savings_balance',
@@ -699,8 +712,9 @@
 # ---
 # name: test_all_entities[sensor.the_bank_of_go_prime_savings_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -736,9 +750,9 @@
 # name: test_all_entities[sensor.the_bank_of_go_prime_savings_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'timestamp',
-      'friendly_name': 'The Bank of Go PRIME SAVINGS Data age',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'The Bank of Go PRIME SAVINGS Data age',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.the_bank_of_go_prime_savings_data_age',
@@ -750,11 +764,12 @@
 # ---
 # name: test_all_entities[sensor.the_bank_of_go_the_bank_balance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -789,12 +804,12 @@
 # name: test_all_entities[sensor.the_bank_of_go_the_bank_balance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'monetary',
-      'friendly_name': 'The Bank of Go The Bank Balance',
-      'icon': <AccountType.UNKNOWN: 'mdi:cash'>,
-      'state_class': <SensorStateClass.TOTAL: 'total'>,
-      'unit_of_measurement': 'USD',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'monetary',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'The Bank of Go The Bank Balance',
+      <EntityStateAttribute.ICON: 'icon'>: <AccountType.UNKNOWN: 'mdi:cash'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'USD',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.the_bank_of_go_the_bank_balance',
@@ -806,8 +821,9 @@
 # ---
 # name: test_all_entities[sensor.the_bank_of_go_the_bank_data_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -843,9 +859,9 @@
 # name: test_all_entities[sensor.the_bank_of_go_the_bank_data_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by SimpleFIN API',
-      'device_class': 'timestamp',
-      'friendly_name': 'The Bank of Go The Bank Data age',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by SimpleFIN API',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'The Bank of Go The Bank Data age',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.the_bank_of_go_the_bank_data_age',

@@ -1,7 +1,5 @@
 """Common test utils for working with recorder."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable, Iterator
 from contextlib import contextmanager
@@ -200,7 +198,7 @@ def statistics_during_period(
     start_time: datetime,
     end_time: datetime | None = None,
     statistic_ids: set[str] | None = None,
-    period: Literal["5minute", "day", "hour", "week", "month"] = "hour",
+    period: Literal["5minute", "day", "hour", "week", "month", "year"] = "hour",
     units: dict[str, str] | None = None,
     types: set[Literal["last_reset", "max", "mean", "min", "state", "sum"]]
     | None = None,
@@ -257,7 +255,7 @@ def assert_events_equal_without_context(event: Event, other: Event) -> None:
     """Assert that two events are equal, ignoring context."""
     assert event.data == other.data
     assert event.event_type == other.event_type
-    assert event.origin == other.origin
+    assert event.origin is other.origin
     assert event.time_fired == other.time_fired
 
 

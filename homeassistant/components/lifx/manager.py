@@ -1,7 +1,5 @@
 """Support for LIFX lights."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import timedelta
@@ -33,7 +31,7 @@ from homeassistant.helpers.target import (
     async_extract_referenced_entity_ids,
 )
 
-from .const import _ATTR_COLOR_TEMP, ATTR_THEME, DOMAIN
+from .const import ATTR_THEME, DOMAIN
 from .coordinator import LIFXUpdateCoordinator
 from .util import convert_8_to_16, find_hsbk
 
@@ -135,8 +133,6 @@ LIFX_EFFECT_PULSE_SCHEMA = cv.make_entity_service_schema(
         vol.Exclusive(ATTR_COLOR_TEMP_KELVIN, COLOR_GROUP): vol.All(
             vol.Coerce(int), vol.Range(min=1500, max=9000)
         ),
-        # _ATTR_COLOR_TEMP deprecated - to be removed in 2026.1
-        vol.Exclusive(_ATTR_COLOR_TEMP, COLOR_GROUP): cv.positive_int,
         ATTR_PERIOD: vol.All(vol.Coerce(float), vol.Range(min=0.05)),
         ATTR_CYCLES: vol.All(vol.Coerce(float), vol.Range(min=1)),
         ATTR_MODE: vol.In(PULSE_MODES),
@@ -182,9 +178,7 @@ LIFX_EFFECT_MORPH_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=25)),
-        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.Optional(
-            vol.In(ThemeLibrary().themes)
-        ),
+        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.In(ThemeLibrary().themes),
         vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
             cv.ensure_list, [HSBK_SCHEMA]
         ),
@@ -196,7 +190,7 @@ LIFX_EFFECT_MOVE_SCHEMA = cv.make_entity_service_schema(
         **LIFX_EFFECT_SCHEMA,
         ATTR_SPEED: vol.All(vol.Coerce(float), vol.Clamp(min=0.1, max=60)),
         ATTR_DIRECTION: vol.In(EFFECT_MOVE_DIRECTIONS),
-        ATTR_THEME: vol.Optional(vol.In(ThemeLibrary().themes)),
+        vol.Optional(ATTR_THEME): vol.In(ThemeLibrary().themes),
     }
 )
 
@@ -215,9 +209,7 @@ LIFX_PAINT_THEME_SCHEMA = cv.make_entity_service_schema(
     {
         **LIFX_EFFECT_SCHEMA,
         ATTR_TRANSITION: vol.All(vol.Coerce(int), vol.Clamp(min=1, max=3600)),
-        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.Optional(
-            vol.In(ThemeLibrary().themes)
-        ),
+        vol.Exclusive(ATTR_THEME, COLOR_GROUP): vol.In(ThemeLibrary().themes),
         vol.Exclusive(ATTR_PALETTE, COLOR_GROUP): vol.All(
             cv.ensure_list, [HSBK_SCHEMA]
         ),

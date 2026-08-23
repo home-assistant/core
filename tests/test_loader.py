@@ -332,7 +332,7 @@ async def test_get_platform_caches_failures_when_component_loaded(
 async def test_get_platform_only_cached_module_not_found_when_component_loaded(
     hass: HomeAssistant,
 ) -> None:
-    """Test get_platform cache only cache module not found when the component is loaded."""
+    """Test get_platform caches module not found when loaded."""
     integration = await loader.async_get_integration(hass, "hue")
 
     with (
@@ -913,7 +913,7 @@ async def test_get_application_credentials(hass: HomeAssistant) -> None:
 
 
 async def test_get_zeroconf_back_compat(hass: HomeAssistant) -> None:
-    """Verify that custom components with zeroconf are found and legacy matchers are converted."""
+    """Verify custom components with zeroconf and legacy matchers."""
     test_1_integration = _get_test_integration(hass, "test_1", True)
     test_2_integration = _get_test_integration_with_legacy_zeroconf_matcher(
         hass, "test_2", True
@@ -1074,7 +1074,7 @@ async def test_get_custom_components_recovery_mode(hass: HomeAssistant) -> None:
 
 
 async def test_custom_integration_missing_version(hass: HomeAssistant) -> None:
-    """Test trying to load a custom integration without a version twice does not deadlock."""
+    """Test loading custom integration without version twice."""
     with pytest.raises(loader.IntegrationNotFound):
         await loader.async_get_integration(hass, "test_no_version")
 
@@ -1297,14 +1297,14 @@ async def test_config_folder_not_in_path() -> None:
         import check_config_not_in_path  # noqa: F401, PLC0415
 
     # Verify that we are able to load the file with absolute path
-    # pylint: disable-next=hass-relative-import
+    # pylint: disable-next=home-assistant-relative-import
     import tests.testing_config.check_config_not_in_path  # noqa: F401, PLC0415
 
 
 async def test_async_get_component_preloads_config_and_config_flow(
     hass: HomeAssistant,
 ) -> None:
-    """Verify async_get_component will try to preload the config and config_flow platform."""
+    """Verify async_get_component preloads config and config_flow."""
     executor_import_integration = _get_test_integration(
         hass, "executor_import", True, import_executor=True
     )
@@ -1350,7 +1350,7 @@ async def test_async_get_component_preloads_config_and_config_flow(
 async def test_async_get_component_loads_loop_if_already_in_sys_modules(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verify async_get_component does not create an executor job if the module is already in sys.modules."""
+    """Verify async_get_component skips executor if already in sys.modules."""
     integration = await loader.async_get_integration(
         hass, "test_package_loaded_executor"
     )
@@ -1412,7 +1412,7 @@ async def test_async_get_component_loads_loop_if_already_in_sys_modules(
 
 @pytest.mark.usefixtures("enable_custom_integrations")
 async def test_async_get_component_concurrent_loads(hass: HomeAssistant) -> None:
-    """Verify async_get_component waits if the first load if called again when still in progress."""
+    """Verify async_get_component waits if load is in progress."""
     integration = await loader.async_get_integration(
         hass, "test_package_loaded_executor"
     )
@@ -1472,7 +1472,7 @@ async def test_async_get_component_concurrent_loads(hass: HomeAssistant) -> None
 async def test_async_get_component_deadlock_fallback(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verify async_get_component fallback to importing in the event loop on deadlock."""
+    """Verify async_get_component falls back to event loop."""
     executor_import_integration = _get_test_integration(
         hass, "executor_import", True, import_executor=True
     )
@@ -1488,7 +1488,8 @@ async def test_async_get_component_deadlock_fallback(
         if import_attempts == 1:
             # _DeadlockError inherits from RuntimeError
             raise RuntimeError(
-                "Detected deadlock trying to import homeassistant.components.executor_import"
+                "Detected deadlock trying to import"
+                " homeassistant.components.executor_import"
             )
 
         return module_mock
@@ -1553,7 +1554,7 @@ async def test_async_get_component_deadlock_fallback_module_not_found(
 async def test_async_get_component_raises_after_import_failure(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verify async_get_component raises if we fail to import in both the executor and loop."""
+    """Verify async_get_component raises on import failure."""
     executor_import_integration = _get_test_integration(
         hass, "executor_import", True, import_executor=True
     )
@@ -1569,7 +1570,8 @@ async def test_async_get_component_raises_after_import_failure(
         if import_attempts == 1:
             # _DeadlockError inherits from RuntimeError
             raise RuntimeError(
-                "Detected deadlock trying to import homeassistant.components.executor_import"
+                "Detected deadlock trying to import"
+                " homeassistant.components.executor_import"
             )
 
         if import_attempts == 2:
@@ -1610,7 +1612,8 @@ async def test_async_get_platform_deadlock_fallback(
         if import_attempts == 1:
             # _DeadlockError inherits from RuntimeError
             raise RuntimeError(
-                "Detected deadlock trying to import homeassistant.components.executor_import"
+                "Detected deadlock trying to import"
+                " homeassistant.components.executor_import"
             )
 
         return module_mock
@@ -1679,7 +1682,7 @@ async def test_async_get_platform_deadlock_fallback_module_not_found(
 async def test_async_get_platform_raises_after_import_failure(
     hass: HomeAssistant, caplog: pytest.LogCaptureFixture
 ) -> None:
-    """Verify async_get_platform raises if we fail to import in both the executor and loop."""
+    """Verify async_get_platform raises on import failure."""
     executor_import_integration = _get_test_integration(
         hass, "executor_import", True, import_executor=True
     )
@@ -1695,7 +1698,8 @@ async def test_async_get_platform_raises_after_import_failure(
         if import_attempts == 1:
             # _DeadlockError inherits from RuntimeError
             raise RuntimeError(
-                "Detected deadlock trying to import homeassistant.components.executor_import"
+                "Detected deadlock trying to import"
+                " homeassistant.components.executor_import"
             )
 
         if import_attempts == 2:

@@ -7,7 +7,7 @@ from typing import Any
 
 from aiohttp.hdrs import METH_POST
 from aiohttp.web import Request, Response
-from aiotedee.exception import TedeeDataUpdateException, TedeeWebhookException
+from aiotedee.exceptions import TedeeDataUpdateException, TedeeWebhookException
 
 from homeassistant.components.http import HomeAssistantView
 from homeassistant.components.webhook import (
@@ -134,9 +134,6 @@ async def async_migrate_entry(
     hass: HomeAssistant, config_entry: TedeeConfigEntry
 ) -> bool:
     """Migrate old entry."""
-    if config_entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
 
     version = config_entry.version
     minor_version = config_entry.minor_version

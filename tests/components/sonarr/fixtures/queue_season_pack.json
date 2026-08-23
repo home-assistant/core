@@ -1,0 +1,246 @@
+{
+  "page": 1,
+  "pageSize": 10,
+  "sortKey": "timeleft",
+  "sortDirection": "ascending",
+  "totalRecords": 3,
+  "records": [
+    {
+      "series": {
+        "title": "House",
+        "sortTitle": "house",
+        "seasonCount": 8,
+        "status": "ended",
+        "overview": "A medical drama.",
+        "network": "FOX",
+        "airTime": "21:00",
+        "images": [
+          {
+            "coverType": "fanart",
+            "url": "/MediaCover/64/fanart.jpg",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/fanart/original/73255-11.jpg"
+          },
+          {
+            "coverType": "banner",
+            "url": "/MediaCover/64/banner.jpg",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/graphical/73255-g7.jpg"
+          },
+          {
+            "coverType": "poster",
+            "url": "/MediaCover/64/poster.jpg",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/series/73255/posters/230801.jpg"
+          }
+        ],
+        "year": 2004,
+        "path": "/data/tv/House",
+        "monitored": true,
+        "tvdbId": 73255,
+        "imdbId": "tt0412142",
+        "id": 64
+      },
+      "episode": {
+        "seriesId": 64,
+        "episodeFileId": 0,
+        "seasonNumber": 2,
+        "episodeNumber": 1,
+        "title": "Acceptance",
+        "airDate": "2005-09-13",
+        "airDateUtc": "2005-09-14T01:00:00Z",
+        "overview": "A death row inmate is felled by an unknown disease.",
+        "hasFile": false,
+        "monitored": true,
+        "absoluteEpisodeNumber": 24,
+        "unverifiedSceneNumbering": false,
+        "id": 2303
+      },
+      "quality": {
+        "quality": {
+          "id": 7,
+          "name": "Bluray-1080p"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0
+        }
+      },
+      "size": 84429221268,
+      "title": "House.S02.1080p.BluRay.x264-SHORTBREHD",
+      "sizeleft": 83819785620,
+      "timeleft": "00:00:00",
+      "estimatedCompletionTime": "2026-02-05T22:46:52.440104Z",
+      "status": "paused",
+      "trackedDownloadStatus": "ok",
+      "trackedDownloadState": "downloading",
+      "statusMessages": [],
+      "downloadId": "CA4552774085F1B5DB3C8E7D39DD220B0474FE4B",
+      "protocol": "torrent",
+      "downloadClient": "qBittorrent",
+      "indexer": "LST (Prowlarr)",
+      "episodeHasFile": false,
+      "languages": [{ "id": 1, "name": "English" }],
+      "customFormatScore": 0,
+      "seriesId": 64,
+      "episodeId": 2303,
+      "seasonNumber": 2,
+      "id": 1462284976
+    },
+    {
+      "series": {
+        "title": "House",
+        "sortTitle": "house",
+        "seasonCount": 8,
+        "status": "ended",
+        "overview": "A medical drama.",
+        "network": "FOX",
+        "airTime": "21:00",
+        "images": [
+          {
+            "coverType": "fanart",
+            "url": "/MediaCover/64/fanart.jpg",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/fanart/original/73255-11.jpg"
+          },
+          {
+            "coverType": "banner",
+            "url": "/MediaCover/64/banner.jpg",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/graphical/73255-g7.jpg"
+          },
+          {
+            "coverType": "poster",
+            "url": "/MediaCover/64/poster.jpg",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/series/73255/posters/230801.jpg"
+          }
+        ],
+        "year": 2004,
+        "path": "/data/tv/House",
+        "monitored": true,
+        "tvdbId": 73255,
+        "imdbId": "tt0412142",
+        "id": 64
+      },
+      "episode": {
+        "seriesId": 64,
+        "episodeFileId": 0,
+        "seasonNumber": 2,
+        "episodeNumber": 2,
+        "title": "Autopsy",
+        "airDate": "2005-09-20",
+        "airDateUtc": "2005-09-21T01:00:00Z",
+        "overview": "Dr. Wilson convinces House to take a case.",
+        "hasFile": false,
+        "monitored": true,
+        "absoluteEpisodeNumber": 25,
+        "unverifiedSceneNumbering": false,
+        "id": 2304
+      },
+      "quality": {
+        "quality": {
+          "id": 7,
+          "name": "Bluray-1080p"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0
+        }
+      },
+      "size": 84429221268,
+      "title": "House.S02.1080p.BluRay.x264-SHORTBREHD",
+      "sizeleft": 83819785620,
+      "timeleft": "00:00:00",
+      "estimatedCompletionTime": "2026-02-05T22:46:52.440104Z",
+      "status": "paused",
+      "trackedDownloadStatus": "ok",
+      "trackedDownloadState": "downloading",
+      "statusMessages": [],
+      "downloadId": "CA4552774085F1B5DB3C8E7D39DD220B0474FE4B",
+      "protocol": "torrent",
+      "downloadClient": "qBittorrent",
+      "indexer": "LST (Prowlarr)",
+      "episodeHasFile": false,
+      "languages": [{ "id": 1, "name": "English" }],
+      "customFormatScore": 0,
+      "seriesId": 64,
+      "episodeId": 2304,
+      "seasonNumber": 2,
+      "id": 1566152913
+    },
+    {
+      "series": {
+        "title": "House",
+        "sortTitle": "house",
+        "seasonCount": 8,
+        "status": "ended",
+        "overview": "A medical drama.",
+        "network": "FOX",
+        "airTime": "21:00",
+        "images": [
+          {
+            "coverType": "fanart",
+            "url": "/MediaCover/64/fanart.jpg",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/fanart/original/73255-11.jpg"
+          },
+          {
+            "coverType": "banner",
+            "url": "/MediaCover/64/banner.jpg",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/graphical/73255-g7.jpg"
+          },
+          {
+            "coverType": "poster",
+            "url": "/MediaCover/64/poster.jpg",
+            "remoteUrl": "https://artworks.thetvdb.com/banners/series/73255/posters/230801.jpg"
+          }
+        ],
+        "year": 2004,
+        "path": "/data/tv/House",
+        "monitored": true,
+        "tvdbId": 73255,
+        "imdbId": "tt0412142",
+        "id": 64
+      },
+      "episode": {
+        "seriesId": 64,
+        "episodeFileId": 0,
+        "seasonNumber": 2,
+        "episodeNumber": 24,
+        "title": "No Reason",
+        "airDate": "2006-05-23",
+        "airDateUtc": "2006-05-24T01:00:00Z",
+        "overview": "House finds himself in a fight for his life.",
+        "hasFile": false,
+        "monitored": true,
+        "absoluteEpisodeNumber": 47,
+        "unverifiedSceneNumbering": false,
+        "id": 2326
+      },
+      "quality": {
+        "quality": {
+          "id": 7,
+          "name": "Bluray-1080p"
+        },
+        "revision": {
+          "version": 1,
+          "real": 0
+        }
+      },
+      "size": 84429221268,
+      "title": "House.S02.1080p.BluRay.x264-SHORTBREHD",
+      "sizeleft": 83819785620,
+      "timeleft": "00:00:00",
+      "estimatedCompletionTime": "2026-02-05T22:46:52.440104Z",
+      "status": "paused",
+      "trackedDownloadStatus": "ok",
+      "trackedDownloadState": "downloading",
+      "statusMessages": [],
+      "downloadId": "CA4552774085F1B5DB3C8E7D39DD220B0474FE4B",
+      "protocol": "torrent",
+      "downloadClient": "qBittorrent",
+      "indexer": "LST (Prowlarr)",
+      "episodeHasFile": false,
+      "languages": [{ "id": 1, "name": "English" }],
+      "customFormatScore": 0,
+      "seriesId": 64,
+      "episodeId": 2326,
+      "seasonNumber": 2,
+      "id": 1634887132
+    }
+  ]
+}

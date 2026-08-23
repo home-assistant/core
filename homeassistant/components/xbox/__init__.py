@@ -1,7 +1,5 @@
 """The xbox integration."""
 
-from __future__ import annotations
-
 import asyncio
 import logging
 
@@ -111,7 +109,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bo
             # Migrate unique_id from `xbox` to account xuid and
             # change generic entry name to user's gamertag
             try:
-                own = await client.people.get_friends_by_xuid(client.xuid)
+                own = await client.people.get_friend_by_xuid(client.xuid)
             except TimeoutException as e:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
@@ -162,14 +160,17 @@ async def async_migrate_entry(hass: HomeAssistant, entry: XboxConfigEntry) -> bo
                 )
                 hass.config_entries.async_add_subentry(entry, subentry)
 
-                if device := dev_reg.async_get_device({(DOMAIN, friend.xuid)}):
+                if device := dev_reg.async_get_device_by_identifier(
+                    (DOMAIN, friend.xuid), entry.entry_id
+                ):
                     dev_reg.async_update_device(
                         device.id,
-                        remove_config_entry_id=entry.entry_id,
-                        add_config_subentry_id=subentry.subentry_id,
-                        add_config_entry_id=entry.entry_id,
+                        new_config_entry_id=entry.entry_id,
+                        new_config_subentry_id=subentry.subentry_id,
                     )
-            if device := dev_reg.async_get_device({(DOMAIN, "xbox_live")}):
+            if device := dev_reg.async_get_device_by_identifier(
+                (DOMAIN, "xbox_live"), entry.entry_id
+            ):
                 dev_reg.async_update_device(
                     device.id, new_identifiers={(DOMAIN, client.xuid)}
                 )

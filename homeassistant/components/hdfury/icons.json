@@ -5,6 +5,20 @@
         "default": "mdi:connection"
       }
     },
+    "number": {
+      "audio_unmute": {
+        "default": "mdi:volume-high"
+      },
+      "earc_unmute": {
+        "default": "mdi:volume-high"
+      },
+      "oled_fade": {
+        "default": "mdi:cellphone-information"
+      },
+      "reboot_timer": {
+        "default": "mdi:timer-refresh"
+      }
+    },
     "select": {
       "opmode": {
         "default": "mdi:cogs"
@@ -64,6 +78,21 @@
       "autosw": {
         "default": "mdi:import"
       },
+      "cec": {
+        "default": "mdi:remote-tv"
+      },
+      "cec0en": {
+        "default": "mdi:remote-tv"
+      },
+      "cec1en": {
+        "default": "mdi:remote-tv"
+      },
+      "cec2en": {
+        "default": "mdi:remote-tv"
+      },
+      "cec3en": {
+        "default": "mdi:remote-tv"
+      },
       "htpcmode0": {
         "default": "mdi:desktop-classic"
       },
@@ -90,6 +119,12 @@
       },
       "relay": {
         "default": "mdi:electric-switch"
+      },
+      "tx0plus5": {
+        "default": "mdi:lightning-bolt"
+      },
+      "tx1plus5": {
+        "default": "mdi:lightning-bolt"
       }
     }
   }

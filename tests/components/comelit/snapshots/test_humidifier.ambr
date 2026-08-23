@@ -1,16 +1,17 @@
 # serializer version: 1
 # name: test_all_entities[humidifier.climate0_dehumidifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'available_modes': list([
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'normal',
         'auto',
       ]),
-      'max_humidity': 90,
-      'min_humidity': 10,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 90,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 10,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -45,19 +46,19 @@
 # name: test_all_entities[humidifier.climate0_dehumidifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'action': <HumidifierAction.OFF: 'off'>,
-      'available_modes': list([
+      <HumidifierEntityStateAttribute.ACTION: 'action'>: <HumidifierAction.OFF: 'off'>,
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'normal',
         'auto',
       ]),
-      'current_humidity': 65.0,
-      'device_class': 'dehumidifier',
-      'friendly_name': 'Climate0 Dehumidifier',
-      'humidity': 50.0,
-      'max_humidity': 90,
-      'min_humidity': 10,
-      'mode': 'normal',
-      'supported_features': <HumidifierEntityFeature: 1>,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 65.0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'dehumidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate0 Dehumidifier',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 50.0,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 90,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 10,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'normal',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.climate0_dehumidifier',
@@ -69,16 +70,17 @@
 # ---
 # name: test_all_entities[humidifier.climate0_humidifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'available_modes': list([
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'normal',
         'auto',
       ]),
-      'max_humidity': 90,
-      'min_humidity': 10,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 90,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 10,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -113,19 +115,19 @@
 # name: test_all_entities[humidifier.climate0_humidifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'action': <HumidifierAction.IDLE: 'idle'>,
-      'available_modes': list([
+      <HumidifierEntityStateAttribute.ACTION: 'action'>: <HumidifierAction.IDLE: 'idle'>,
+      <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
         'normal',
         'auto',
       ]),
-      'current_humidity': 65.0,
-      'device_class': 'humidifier',
-      'friendly_name': 'Climate0 Humidifier',
-      'humidity': 50.0,
-      'max_humidity': 90,
-      'min_humidity': 10,
-      'mode': 'normal',
-      'supported_features': <HumidifierEntityFeature: 1>,
+      <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 65.0,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Climate0 Humidifier',
+      <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 50.0,
+      <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 90,
+      <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 10,
+      <HumidifierEntityStateAttribute.MODE: 'mode'>: 'normal',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
     'entity_id': 'humidifier.climate0_humidifier',

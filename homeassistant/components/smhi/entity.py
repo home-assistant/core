@@ -1,8 +1,7 @@
 """Support for the Swedish weather institute weather  base entities."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
+from typing import override
 
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
@@ -56,6 +55,7 @@ class SmhiWeatherEntity(
         SmhiWeatherBaseEntity.__init__(self, latitude, longitude)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_entity_data()
@@ -78,6 +78,7 @@ class SmhiFireEntity(
         SmhiWeatherBaseEntity.__init__(self, latitude, longitude)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.update_entity_data()

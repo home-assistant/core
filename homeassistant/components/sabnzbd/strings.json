@@ -16,7 +16,7 @@
         },
         "data_description": {
           "api_key": "The API key of the SABnzbd server. This can be found in the SABnzbd web interface under Config cog (top right) > General > Security.",
-          "url": "The full URL, including port, of the SABnzbd server. Example: `{sabnzbd_full_url_local}` or `{sabnzbd_full_url_addon}`, if you are using the add-on."
+          "url": "The full URL, including port, of the SABnzbd server. Example: `{sabnzbd_full_url_local}` or `{sabnzbd_full_url_addon}`, if you are using the SABnzbd app for Home Assistant."
         }
       }
     }

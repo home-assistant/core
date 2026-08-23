@@ -1,7 +1,5 @@
 """MySensors constants."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from typing import Final, Literal, TypedDict
 
@@ -33,7 +31,7 @@ SCHEMA: Final = "schema"
 CHILD_CALLBACK: str = "mysensors_child_callback_{}_{}_{}_{}"
 NODE_CALLBACK: str = "mysensors_node_callback_{}_{}"
 MYSENSORS_DISCOVERY: str = "mysensors_discovery_{}_{}"
-MYSENSORS_NODE_DISCOVERY: str = "mysensors_node_discovery"
+MYSENSORS_NODE_DISCOVERY: str = "mysensors_node_discovery_{}"
 TYPE: Final = "type"
 UPDATE_DELAY: float = 0.1
 

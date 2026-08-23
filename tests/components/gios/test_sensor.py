@@ -38,28 +38,12 @@ async def test_sensor(
 
 
 @pytest.mark.usefixtures("init_integration")
-async def test_availability(hass: HomeAssistant) -> None:
-    """Ensure that we mark the entities unavailable correctly when service causes an error."""
-    state = hass.states.get("sensor.home_pm2_5")
-    assert state
-    assert state.state == "4"
-
-    state = hass.states.get("sensor.home_pm2_5_index")
-    assert state
-    assert state.state == "good"
-
-    state = hass.states.get("sensor.home_air_quality_index")
-    assert state
-    assert state.state == "good"
-
-
-@pytest.mark.usefixtures("init_integration")
 async def test_availability_api_error(
     hass: HomeAssistant,
     mock_gios: MagicMock,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service causes an error."""
+    """Ensure entities are marked unavailable when service errors."""
     state = hass.states.get("sensor.home_pm2_5")
     assert state
     assert state.state == "4"

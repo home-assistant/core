@@ -1,7 +1,5 @@
 """API calls to manage Insteon configuration changes."""
 
-from __future__ import annotations
-
 from typing import Any, TypedDict
 
 from pyinsteon import async_close, async_connect, devices
@@ -139,21 +137,25 @@ def remove_device_override(hass: HomeAssistant, address: Address):
 
 
 async def async_link_to_dict(
-    address: Address, record: ALDBRecord, dev_registry: dr.DeviceRegistry, status=None
+    address: Address,
+    record: ALDBRecord,
+    dev_registry: dr.DeviceRegistry,
+    config_entry_id: str,
+    status=None,
 ) -> dict[str, str | int]:
     """Convert a link to a dictionary."""
     link_dict: dict[str, str | int] = {}
-    device_name = await async_device_name(dev_registry, address)
-    target_name = await async_device_name(dev_registry, record.target)
+    device_name = await async_device_name(dev_registry, address, config_entry_id)
+    target_name = await async_device_name(dev_registry, record.target, config_entry_id)
     link_dict["address"] = str(address)
-    link_dict["device_name"] = device_name if device_name else str(address)
+    link_dict["device_name"] = device_name or str(address)
     link_dict["mem_addr"] = record.mem_addr
     link_dict["in_use"] = record.is_in_use
     link_dict["group"] = record.group
     link_dict["is_controller"] = record.is_controller
     link_dict["highwater"] = record.is_high_water_mark
     link_dict["target"] = str(record.target)
-    link_dict["target_name"] = target_name if target_name else str(record.target)
+    link_dict["target_name"] = target_name or str(record.target)
     link_dict["data1"] = record.data1
     link_dict["data2"] = record.data2
     link_dict["data3"] = record.data3
@@ -313,8 +315,9 @@ async def websocket_get_broken_links(
     """Get any broken links between devices."""
     broken_links = get_broken_links(devices=devices)
     dev_registry = dr.async_get(hass)
+    config_entry_id = get_insteon_config_entry(hass).entry_id
     broken_links_list = [
-        await async_link_to_dict(address, record, dev_registry, status)
+        await async_link_to_dict(address, record, dev_registry, config_entry_id, status)
         for address, record, status in broken_links
         if status != LinkStatus.MISSING_TARGET
     ]

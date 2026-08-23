@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .const import TEST_SERIAL_NUMBER
@@ -39,6 +40,7 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.freeze_time("2023-12-02T13:00:00+00:00")
 async def test_image_entity(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -82,7 +84,11 @@ async def test_image_entity(
     body = await resp.read()
     assert body == snapshot
 
+    assert (state := hass.states.async_all(IMAGE_DOMAIN)[0])
+    assert state.state == "2023-12-02T13:00:00+00:00"
 
+
+@pytest.mark.freeze_time("2023-12-02T13:00:00+00:00")
 async def test_image_update(
     hass: HomeAssistant,
     hass_client: ClientSessionGenerator,
@@ -104,6 +110,9 @@ async def test_image_update(
 
     resp_body = await resp.read()
 
+    assert (state := hass.states.get(entity_id))
+    assert state.state == "2023-12-02T13:00:00+00:00"
+
     mock_vodafone_station_router.get_wifi_data.return_value = {
         WIFI_DATA: {
             "guest": {
@@ -122,12 +131,16 @@ async def test_image_update(
     freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    new_time = dt_util.utcnow()
 
     resp = await client.get(f"/api/image_proxy/{entity_id}")
     assert resp.status == HTTPStatus.OK
 
     resp_body_new = await resp.read()
     assert resp_body != resp_body_new
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == new_time.isoformat()
 
 
 async def test_no_wifi_data(

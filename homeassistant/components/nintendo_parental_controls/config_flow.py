@@ -1,10 +1,8 @@
 """Config flow for the Nintendo Switch parental controls integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pynintendoauth.exceptions import HttpException, InvalidSessionTokenException
 from pynintendoparental import Authenticator
@@ -27,6 +25,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize a new config flow instance."""
         self.auth: Authenticator | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -41,7 +40,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             try:
                 await self.auth.async_complete_login(user_input[CONF_API_TOKEN])
-            except (ValueError, InvalidSessionTokenException, HttpException):
+            except ValueError, InvalidSessionTokenException, HttpException:
                 errors["base"] = "invalid_auth"
             else:
                 if TYPE_CHECKING:
@@ -90,7 +89,7 @@ class NintendoConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             try:
                 await self.auth.async_complete_login(user_input[CONF_API_TOKEN])
-            except (ValueError, InvalidSessionTokenException, HttpException):
+            except ValueError, InvalidSessionTokenException, HttpException:
                 errors["base"] = "invalid_auth"
             else:
                 return self.async_update_reload_and_abort(

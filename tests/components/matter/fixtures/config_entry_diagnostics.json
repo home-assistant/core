@@ -7,7 +7,9 @@
     "wifi_credentials_set": true,
     "thread_credentials_set": false,
     "min_supported_schema_version": 1,
-    "bluetooth_enabled": false
+    "bluetooth_enabled": false,
+    "wifi_ssid": "test_ssid",
+    "ble_proxy_enabled": false
   },
   "nodes": [
     {

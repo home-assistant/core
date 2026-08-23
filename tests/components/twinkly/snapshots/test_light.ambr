@@ -1,15 +1,16 @@
 # serializer version: 1
 # name: test_entities[light.tree_1-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'effect_list': list([
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         '1 Rainbow',
         '2 Flare',
       ]),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
     }),
@@ -46,28 +47,28 @@
 # name: test_entities[light.tree_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'brightness': 26,
-      'color_mode': <ColorMode.RGB: 'rgb'>,
-      'effect': '1 Rainbow',
-      'effect_list': list([
+      <LightEntityStateAttribute.BRIGHTNESS: 'brightness'>: 26,
+      <LightEntityStateAttribute.COLOR_MODE: 'color_mode'>: <ColorMode.RGB: 'rgb'>,
+      <LightEntityStateAttribute.EFFECT: 'effect'>: '1 Rainbow',
+      <LightEntityCapabilityAttribute.EFFECT_LIST: 'effect_list'>: list([
         '1 Rainbow',
         '2 Flare',
       ]),
-      'friendly_name': 'Tree 1',
-      'hs_color': tuple(
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Tree 1',
+      <LightEntityStateAttribute.HS_COLOR: 'hs_color'>: tuple(
         0.0,
         0.0,
       ),
-      'rgb_color': tuple(
+      <LightEntityStateAttribute.RGB_COLOR: 'rgb_color'>: tuple(
         255,
         255,
         255,
       ),
-      'supported_color_modes': list([
+      <LightEntityCapabilityAttribute.SUPPORTED_COLOR_MODES: 'supported_color_modes'>: list([
         <ColorMode.RGB: 'rgb'>,
       ]),
-      'supported_features': <LightEntityFeature: 4>,
-      'xy_color': tuple(
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <LightEntityFeature: 4>,
+      <LightEntityStateAttribute.XY_COLOR: 'xy_color'>: tuple(
         0.323,
         0.329,
       ),

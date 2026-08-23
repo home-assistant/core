@@ -120,6 +120,136 @@
           'nameplate_energy': 40500,
           'nameplate_power': 15000,
           'site_name': 'Site',
+          'tariff_content_v2_code': 'Test',
+          'tariff_content_v2_daily_charges': list([
+            dict({
+              'name': 'Charge',
+            }),
+          ]),
+          'tariff_content_v2_demand_charges': dict({
+            'ALL': dict({
+              'rates': dict({
+                'ALL': 0,
+              }),
+            }),
+            'Summer': dict({
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_energy_charges': dict({
+            'ALL': dict({
+              'rates': dict({
+                'ALL': 0,
+              }),
+            }),
+            'Summer': dict({
+              'rates': dict({
+                'OFF_PEAK': 0.198,
+                'ON_PEAK': 0.22,
+              }),
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_name': 'Battery Maximiser',
+          'tariff_content_v2_seasons': dict({
+            'Summer': dict({
+              'fromDay': 1,
+              'fromMonth': 1,
+              'toDay': 31,
+              'toMonth': 12,
+              'tou_periods': dict({
+                'OFF_PEAK': dict({
+                  'periods': list([
+                    dict({
+                      'fromDayOfWeek': 0,
+                      'fromHour': 21,
+                      'toDayOfWeek': 6,
+                      'toHour': 16,
+                    }),
+                  ]),
+                }),
+                'ON_PEAK': dict({
+                  'periods': list([
+                    dict({
+                      'fromDayOfWeek': 0,
+                      'fromHour': 16,
+                      'toDayOfWeek': 6,
+                      'toHour': 21,
+                    }),
+                  ]),
+                }),
+              }),
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_sell_tariff_daily_charges': list([
+            dict({
+              'name': 'Charge',
+            }),
+          ]),
+          'tariff_content_v2_sell_tariff_demand_charges': dict({
+            'ALL': dict({
+              'rates': dict({
+                'ALL': 0,
+              }),
+            }),
+            'Summer': dict({
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_sell_tariff_energy_charges': dict({
+            'ALL': dict({
+              'rates': dict({
+                'ALL': 0,
+              }),
+            }),
+            'Summer': dict({
+              'rates': dict({
+                'OFF_PEAK': 0.08,
+                'ON_PEAK': 0.16,
+              }),
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_sell_tariff_name': 'Battery Maximiser',
+          'tariff_content_v2_sell_tariff_seasons': dict({
+            'Summer': dict({
+              'fromDay': 1,
+              'fromMonth': 1,
+              'toDay': 31,
+              'toMonth': 12,
+              'tou_periods': dict({
+                'OFF_PEAK': dict({
+                  'periods': list([
+                    dict({
+                      'fromHour': 21,
+                      'toDayOfWeek': 6,
+                      'toHour': 16,
+                    }),
+                  ]),
+                }),
+                'ON_PEAK': dict({
+                  'periods': list([
+                    dict({
+                      'fromHour': 16,
+                      'toDayOfWeek': 6,
+                      'toHour': 21,
+                    }),
+                  ]),
+                }),
+              }),
+            }),
+            'Winter': dict({
+            }),
+          }),
+          'tariff_content_v2_sell_tariff_utility': 'Origin',
+          'tariff_content_v2_utility': 'Origin',
+          'tariff_content_v2_version': 1,
           'tou_settings_optimization_strategy': 'economics',
           'tou_settings_schedule': list([
             dict({

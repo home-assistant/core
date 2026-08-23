@@ -1,7 +1,6 @@
 """Tests for the Bluesound Media Player platform."""
 
 import dataclasses
-from unittest.mock import call
 
 from pyblu import PairedPlayer
 from pyblu.errors import PlayerUnreachableError
@@ -11,10 +10,6 @@ from syrupy.filters import props
 
 from homeassistant.components.bluesound import DOMAIN
 from homeassistant.components.bluesound.const import ATTR_MASTER
-from homeassistant.components.bluesound.media_player import (
-    SERVICE_CLEAR_TIMER,
-    SERVICE_SET_TIMER,
-)
 from homeassistant.components.media_player import (
     ATTR_GROUP_MEMBERS,
     ATTR_INPUT_SOURCE,
@@ -187,7 +182,8 @@ async def test_stop_maps_to_idle(
         )
     )
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     assert (
@@ -209,7 +205,8 @@ async def test_status_updated(
     status = dataclasses.replace(status, state="pause", volume=50, etag="changed")
     player_mocks.player_data.status_long_polling_mock.set(status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     post_state = hass.states.get("media_player.player_name1111")
@@ -232,43 +229,13 @@ async def test_unavailable_when_offline(
     )
     player_mocks.player_data.status_long_polling_mock.trigger()
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     post_state = hass.states.get("media_player.player_name1111")
 
     assert post_state.state == STATE_UNAVAILABLE
-
-
-async def test_set_sleep_timer(
-    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
-) -> None:
-    """Test the set sleep timer action."""
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_TIMER,
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
-        blocking=True,
-    )
-
-    player_mocks.player_data.player.sleep_timer.assert_called_once()
-
-
-async def test_clear_sleep_timer(
-    hass: HomeAssistant, setup_config_entry: None, player_mocks: PlayerMocks
-) -> None:
-    """Test the clear sleep timer action."""
-
-    player_mocks.player_data.player.sleep_timer.side_effect = [15, 30, 45, 60, 90, 0]
-
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_CLEAR_TIMER,
-        {ATTR_ENTITY_ID: "media_player.player_name1111"},
-        blocking=True,
-    )
-
-    player_mocks.player_data.player.sleep_timer.assert_has_calls([call()] * 6)
 
 
 async def test_join_cannot_join_to_self(
@@ -322,7 +289,8 @@ async def test_unjoin(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -354,7 +322,8 @@ async def test_attr_master(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     attr_master = hass.states.get("media_player.player_name1111").attributes[
@@ -382,7 +351,8 @@ async def test_attr_bluesound_group(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     attr_bluesound_group = hass.states.get(
@@ -410,7 +380,8 @@ async def test_attr_bluesound_group_for_follower(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     updated_sync_status = dataclasses.replace(
@@ -421,7 +392,8 @@ async def test_attr_bluesound_group_for_follower(
         updated_sync_status
     )
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     attr_bluesound_group = hass.states.get(
@@ -438,7 +410,9 @@ async def test_volume_up_from_6_to_7(
 ) -> None:
     """Test the media player volume up from 6 to 7.
 
-    This fails if if rounding is not done correctly. See https://github.com/home-assistant/core/issues/129956 for more details.
+    This fails if rounding is not done correctly. See
+    https://github.com/home-assistant/core/issues/129956
+    for more details.
     """
     player_mocks.player_data.status_long_polling_mock.set(
         dataclasses.replace(
@@ -446,7 +420,8 @@ async def test_volume_up_from_6_to_7(
         )
     )
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     await hass.services.async_call(
@@ -477,7 +452,8 @@ async def test_attr_group_members(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     attr_group_members = hass.states.get("media_player.player_name1111").attributes.get(
@@ -541,7 +517,8 @@ async def test_unjoin_player(
     )
     player_mocks.player_data.sync_status_long_polling_mock.set(updated_sync_status)
 
-    # give the long polling loop a chance to update the state; this could be any async call
+    # give the long polling loop a chance to update the
+    # state; this could be any async call
     await hass.async_block_till_done()
 
     await hass.services.async_call(

@@ -83,6 +83,7 @@ get_statistics:
             - "day"
             - "week"
             - "month"
+            - "year"
 
     types:
       required: true

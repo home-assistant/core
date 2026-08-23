@@ -1,7 +1,5 @@
 """Helper functions for Acmeda Pulse."""
 
-from __future__ import annotations
-
 from typing import TYPE_CHECKING
 
 from aiopulse import Roller
@@ -50,7 +48,9 @@ async def update_devices(
 
     for api_item in api.values():
         # Update Device name
-        device = dev_registry.async_get_device(identifiers={(DOMAIN, api_item.id)})
+        device = dev_registry.async_get_device_by_identifier(
+            (DOMAIN, str(api_item.id)), config_entry.entry_id
+        )
         if device is not None:
             dev_registry.async_update_device(
                 device.id,

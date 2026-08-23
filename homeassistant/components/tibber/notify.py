@@ -1,6 +1,8 @@
 """Support for Tibber notifications."""
 
-from __future__ import annotations
+from typing import override
+
+import tibber
 
 from homeassistant.components.notify import (
     ATTR_TITLE_DEFAULT,
@@ -35,9 +37,12 @@ class TibberNotificationEntity(NotifyEntity):
         self._attr_unique_id = entry.entry_id
         self._entry = entry
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to Tibber devices."""
-        tibber_connection = self._entry.runtime_data.tibber_connection
+        tibber_connection: tibber.Tibber = (
+            await self._entry.runtime_data.async_get_client(self.hass)
+        )
         try:
             await tibber_connection.send_notification(
                 title or ATTR_TITLE_DEFAULT, message

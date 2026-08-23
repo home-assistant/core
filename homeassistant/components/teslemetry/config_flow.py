@@ -1,10 +1,8 @@
 """Config Flow for Teslemetry integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientConnectionError
 from tesla_fleet_api.exceptions import (
@@ -18,7 +16,11 @@ from homeassistant.components.application_credentials import (
     ClientCredential,
     async_import_client_credential,
 )
-from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlowResult
+from homeassistant.config_entries import (
+    SOURCE_REAUTH,
+    SOURCE_RECONFIGURE,
+    ConfigFlowResult,
+)
 from homeassistant.helpers import config_entry_oauth2_flow
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
@@ -40,10 +42,12 @@ class OAuth2FlowHandler(
         self.uid: str | None = None
 
     @property
+    @override
     def logger(self) -> logging.Logger:
         """Return logger."""
         return LOGGER
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -55,6 +59,7 @@ class OAuth2FlowHandler(
         )
         return await super().async_step_user()
 
+    @override
     async def async_oauth_create_entry(
         self,
         data: dict[str, Any],
@@ -72,6 +77,11 @@ class OAuth2FlowHandler(
             self._abort_if_unique_id_mismatch(reason="reauth_account_mismatch")
             return self.async_update_reload_and_abort(
                 self._get_reauth_entry(), data=data
+            )
+        if self.source == SOURCE_RECONFIGURE:
+            self._abort_if_unique_id_mismatch(reason="reconfigure_account_mismatch")
+            return self.async_update_reload_and_abort(
+                self._get_reconfigure_entry(), data=data
             )
         self._abort_if_unique_id_configured()
 
@@ -121,3 +131,9 @@ class OAuth2FlowHandler(
             )
 
         return await super().async_step_user()
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration."""
+        return await self.async_step_user()

@@ -1,6 +1,6 @@
 """AdGuard Home base entity."""
 
-from __future__ import annotations
+from typing import override
 
 from adguardhome import AdGuardHomeError
 
@@ -49,10 +49,11 @@ class AdGuardHomeEntity(Entity):
         raise NotImplementedError
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this AdGuard Home instance."""
         if self._entry.source == SOURCE_HASSIO:
-            config_url = "homeassistant://hassio/ingress/a0d7b954_adguard"
+            config_url = "homeassistant://app/a0d7b954_adguard"
         elif self.adguard.tls:
             config_url = f"https://{self.adguard.host}:{self.adguard.port}"
         else:

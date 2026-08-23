@@ -1,6 +1,6 @@
 """Sensor platform for CoolMasterNet integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import EntityCategory
@@ -33,6 +33,7 @@ class CoolmasterCleanFilter(CoolmasterEntity, SensorEntity):
     )
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the error code or OK."""
         return self._unit.error_code or "OK"

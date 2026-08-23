@@ -4,24 +4,24 @@ from collections.abc import Iterable
 from datetime import timedelta
 from functools import partial
 from itertools import chain
+from typing import override
 
 import pypck
 
 from homeassistant.components.sensor import (
-    DOMAIN as DOMAIN_SENSOR,
+    DOMAIN as SENSOR_DOMAIN,
     SensorDeviceClass,
     SensorEntity,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     CONF_DOMAIN,
     CONF_ENTITIES,
     CONF_SOURCE,
     CONF_UNIT_OF_MEASUREMENT,
     LIGHT_LUX,
-    PERCENTAGE,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
+    UnitOfRatio,
     UnitOfSpeed,
     UnitOfTemperature,
 )
@@ -66,8 +66,8 @@ UNIT_OF_MEASUREMENT_MAPPING = {
     pypck.lcn_defs.VarUnit.METERPERSECOND: UnitOfSpeed.METERS_PER_SECOND,
     pypck.lcn_defs.VarUnit.VOLT: UnitOfElectricPotential.VOLT,
     pypck.lcn_defs.VarUnit.AMPERE: UnitOfElectricCurrent.AMPERE,
-    pypck.lcn_defs.VarUnit.PPM: CONCENTRATION_PARTS_PER_MILLION,
-    pypck.lcn_defs.VarUnit.PERCENT: PERCENTAGE,
+    pypck.lcn_defs.VarUnit.PPM: UnitOfRatio.PARTS_PER_MILLION,
+    pypck.lcn_defs.VarUnit.PERCENT: UnitOfRatio.PERCENTAGE,
 }
 
 
@@ -102,14 +102,14 @@ async def async_setup_entry(
     )
 
     config_entry.runtime_data.add_entities_callbacks.update(
-        {DOMAIN_SENSOR: add_entities}
+        {SENSOR_DOMAIN: add_entities}
     )
 
     add_entities(
         (
             entity_config
             for entity_config in config_entry.data[CONF_ENTITIES]
-            if entity_config[CONF_DOMAIN] == DOMAIN_SENSOR
+            if entity_config[CONF_DOMAIN] == SENSOR_DOMAIN
         ),
     )
 
@@ -140,11 +140,12 @@ class LcnVariableSensor(LcnEntity, SensorEntity):
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
         if (
             not isinstance(input_obj, pypck.inputs.ModStatusVar)
-            or input_obj.get_var() != self.variable
+            or input_obj.get_var() is not self.variable
         ):
             return
         self._attr_available = True
@@ -175,12 +176,13 @@ class LcnLedLogicSensor(LcnEntity, SensorEntity):
     async def async_update(self) -> None:
         """Update the state of the entity."""
         self._attr_available = (
-            await self.device_connection.request_status_led_and_logic_ops(
+            await self.device_connection.request_status_leds_and_logic_ops(
                 SCAN_INTERVAL.seconds
             )
             is not None
         )
 
+    @override
     def input_received(self, input_obj: InputType) -> None:
         """Set sensor value when LCN input object (command) is received."""
         if not isinstance(input_obj, pypck.inputs.ModStatusLedsAndLogicOps):

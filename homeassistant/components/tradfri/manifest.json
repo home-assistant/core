@@ -7,6 +7,7 @@
   "homekit": {
     "models": ["TRADFRI"]
   },
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pytradfri"],
   "requirements": ["pytradfri[async]==9.0.1"]

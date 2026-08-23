@@ -14,8 +14,8 @@
     "flow_title": "{host}",
     "step": {
       "hassio_confirm": {
-        "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the add-on {addon}?",
-        "title": "deCONZ Zigbee gateway via Home Assistant add-on"
+        "description": "Do you want to configure Home Assistant to connect to the deCONZ gateway provided by the app {addon}?",
+        "title": "deCONZ Zigbee gateway via Home Assistant app"
       },
       "link": {
         "description": "Unlock your deCONZ gateway to register with Home Assistant.\n\n1. Go to deCONZ Settings > Gateway > Advanced\n2. Select the **Authenticate app** button",
@@ -94,6 +94,23 @@
       "remote_rotate_from_side_6": "Device rotated from \"side 6\" to \"{subtype}\"",
       "remote_turned_clockwise": "Device turned clockwise",
       "remote_turned_counter_clockwise": "Device turned counterclockwise"
+    }
+  },
+  "exceptions": {
+    "configure_failed": {
+      "message": "Failed to configure device"
+    },
+    "device_refresh_failed": {
+      "message": "Failed to refresh devices"
+    },
+    "entity_not_found": {
+      "message": "Could not find entity {entity_id}"
+    },
+    "gateway_not_found": {
+      "message": "Could not find gateway {bridge_id}"
+    },
+    "no_master_gateway": {
+      "message": "No master gateway available"
     }
   },
   "options": {

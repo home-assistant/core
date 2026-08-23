@@ -7,7 +7,10 @@
         {
           "id": "r1",
           "name": "Waffles",
-          "total_time": 1500
+          "total_time": 1500,
+          "thumbnail": "https://assets.tmecosys.com/image/upload/t_web_thumbnail/r1.jpg",
+          "image": "https://assets.tmecosys.com/image/upload/t_web_large/r1.jpg",
+          "url": "https://cookidoo.ch/recipes/recipe/de-CH/r1"
         }
       ]
     },
@@ -18,7 +21,10 @@
         {
           "id": "r2",
           "name": "Mint Tea",
-          "total_time": 1500
+          "total_time": 1500,
+          "thumbnail": "https://assets.tmecosys.com/image/upload/t_web_thumbnail/r2.jpg",
+          "image": "https://assets.tmecosys.com/image/upload/t_web_large/r2.jpg",
+          "url": "https://cookidoo.ch/recipes/recipe/de-CH/r2"
         }
       ]
     }

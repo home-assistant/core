@@ -1,8 +1,6 @@
 """Support for EufyHome lights."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import lakeside
 
@@ -46,12 +44,12 @@ class EufyHomeLight(LightEntity):
         self._temp = None
         self._brightness = None
         self._hs = None
-        self._state = None
-        self._name = device["name"]
-        self._address = device["address"]
-        self._code = device["code"]
+        self._attr_name = device["name"]
         self._type = device["type"]
-        self._bulb = lakeside.bulb(self._address, self._code, self._type)
+        self._bulb = lakeside.bulb(
+            (device_address := device["address"]), device["code"], self._type
+        )
+        self._attr_unique_id = device_address
         self._colormode = False
         if self._type == "T1011":
             self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
@@ -72,29 +70,16 @@ class EufyHomeLight(LightEntity):
                 self._hs = color_util.color_RGB_to_hs(*self._bulb.colors)
             else:
                 self._colormode = False
-        self._state = self._bulb.power
+        self._attr_is_on = self._bulb.power
 
     @property
-    def unique_id(self):
-        """Return the ID of this light."""
-        return self._address
-
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state
-
-    @property
-    def brightness(self):
+    @override
+    def brightness(self) -> int:
         """Return the brightness of this light between 0..255."""
         return int(self._brightness * 255 / 100)
 
     @property
+    @override
     def color_temp_kelvin(self) -> int:
         """Return the color temperature value in Kelvin."""
         return int(
@@ -103,11 +88,13 @@ class EufyHomeLight(LightEntity):
         )
 
     @property
-    def hs_color(self):
+    @override
+    def hs_color(self) -> tuple[float, float] | None:
         """Return the color of this light."""
         return self._hs
 
     @property
+    @override
     def color_mode(self) -> ColorMode:
         """Return the color mode of the light."""
         if self._type == "T1011":
@@ -119,6 +106,7 @@ class EufyHomeLight(LightEntity):
             return ColorMode.COLOR_TEMP
         return ColorMode.HS
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the specified light on."""
         brightness = kwargs.get(ATTR_BRIGHTNESS)
@@ -161,6 +149,7 @@ class EufyHomeLight(LightEntity):
                 power=True, brightness=brightness, temperature=temp, colors=rgb
             )
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the specified light off."""
         try:

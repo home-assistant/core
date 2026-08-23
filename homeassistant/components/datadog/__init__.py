@@ -3,9 +3,8 @@
 import logging
 
 from datadog import DogStatsd, initialize
-import voluptuous as vol
 
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PORT,
@@ -16,53 +15,15 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, state as state_helper
-from homeassistant.helpers.typing import ConfigType
 
 from . import config_flow as config_flow
-from .const import (
-    CONF_RATE,
-    DEFAULT_HOST,
-    DEFAULT_PORT,
-    DEFAULT_PREFIX,
-    DEFAULT_RATE,
-    DOMAIN,
-)
+from .const import CONF_RATE, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
 type DatadogConfigEntry = ConfigEntry[DogStatsd]
 
-CONFIG_SCHEMA = vol.Schema(
-    {
-        DOMAIN: vol.Schema(
-            {
-                vol.Required(CONF_HOST, default=DEFAULT_HOST): cv.string,
-                vol.Optional(CONF_PORT, default=DEFAULT_PORT): cv.port,
-                vol.Optional(CONF_PREFIX, default=DEFAULT_PREFIX): cv.string,
-                vol.Optional(CONF_RATE, default=DEFAULT_RATE): vol.All(
-                    vol.Coerce(int), vol.Range(min=1)
-                ),
-            }
-        )
-    },
-    extra=vol.ALLOW_EXTRA,
-)
-
-
-async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
-    """Set up the Datadog integration from YAML, initiating config flow import."""
-    if DOMAIN not in config:
-        return True
-
-    hass.async_create_task(
-        hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data=config[DOMAIN],
-        )
-    )
-
-    return True
+CONFIG_SCHEMA = cv.removed(DOMAIN, raise_if_present=False)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: DatadogConfigEntry) -> bool:

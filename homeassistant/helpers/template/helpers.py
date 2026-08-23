@@ -1,13 +1,12 @@
 """Template helper functions for Home Assistant."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING, Any, NoReturn
+from typing import TYPE_CHECKING, Any, NoReturn, overload
 
 import voluptuous as vol
 
 from homeassistant.helpers import (
     area_registry as ar,
+    config_validation as cv,
     device_registry as dr,
     entity_registry as er,
 )
@@ -16,6 +15,8 @@ from .context import template_cv
 
 if TYPE_CHECKING:
     from homeassistant.core import HomeAssistant
+
+_SENTINEL = object()
 
 
 def raise_no_default(function: str, value: Any) -> NoReturn:
@@ -47,9 +48,6 @@ def resolve_area_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
     if areas_list:
         return areas_list[0].id
 
-    # Import here, not at top-level to avoid circular import
-    from homeassistant.helpers import config_validation as cv  # noqa: PLC0415
-
     # Check if it's an entity ID
     try:
         cv.entity_id(lookup_value)
@@ -60,12 +58,45 @@ def resolve_area_id(hass: HomeAssistant, lookup_value: Any) -> str | None:
             # If entity has an area ID, return that
             if entity.area_id:
                 return entity.area_id
-            # If entity has a device ID, return the area ID for the device
+            # If entity has a device ID, return the effective area of the device
             if entity.device_id and (device := dev_reg.async_get(entity.device_id)):
-                return device.area_id
+                return dr.async_get_effective_area_id(hass, device)
 
     # Check if it's a device ID
     if device := dev_reg.async_get(lookup_value):
-        return device.area_id
+        return dr.async_get_effective_area_id(hass, device)
 
     return None
+
+
+@overload
+def forgiving_boolean(value: Any) -> bool | object: ...
+
+
+@overload
+def forgiving_boolean[_T](value: Any, default: _T) -> bool | _T: ...
+
+
+def forgiving_boolean[_T](
+    value: Any, default: _T | object = _SENTINEL
+) -> bool | _T | object:
+    """Try to convert value to a boolean."""
+    try:
+        return cv.boolean(value)
+    except vol.Invalid:
+        if default is _SENTINEL:
+            raise_no_default("bool", value)
+        return default
+
+
+def result_as_boolean(template_result: Any | None) -> bool:
+    """Convert the template result to a boolean.
+
+    True/not 0/'1'/'true'/'yes'/'on'/'enable' are considered truthy
+    False/0/None/'0'/'false'/'no'/'off'/'disable' are considered falsy
+    All other values are falsy
+    """
+    if template_result is None:
+        return False
+
+    return forgiving_boolean(template_result, default=False)

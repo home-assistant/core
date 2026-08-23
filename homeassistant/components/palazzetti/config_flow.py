@@ -1,6 +1,6 @@
 """Config flow for Palazzetti."""
 
-from typing import Any
+from typing import Any, override
 
 from pypalazzetti.client import PalazzettiClient
 from pypalazzetti.exceptions import CommunicationError
@@ -19,6 +19,7 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
 
     _discovered_device: PalazzettiClient
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -52,6 +53,7 @@ class PalazzettiConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

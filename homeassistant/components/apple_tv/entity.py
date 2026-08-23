@@ -1,6 +1,6 @@
 """The Apple TV integration."""
 
-from __future__ import annotations
+from typing import override
 
 from pyatv.interface import AppleTV as AppleTVInterface
 
@@ -18,7 +18,6 @@ class AppleTVEntity(Entity):
 
     _attr_should_poll = False
     _attr_has_entity_name = True
-    _attr_name = None
     atv: AppleTVInterface | None = None
 
     def __init__(self, name: str, identifier: str, manager: AppleTVManager) -> None:
@@ -30,6 +29,7 @@ class AppleTVEntity(Entity):
             name=name,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle when an entity is about to be added to Home Assistant."""
 

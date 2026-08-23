@@ -1,9 +1,7 @@
 """Config flow for Ruuvi Gateway integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import aioruuvigateway.api as gw_api
 from aioruuvigateway.excs import CannotConnect, InvalidAuth
@@ -64,6 +62,7 @@ class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
             errors["base"] = "unknown"
         return (None, errors)
 
+    @override
     async def async_step_user(
         self,
         user_input: dict[str, Any] | None = None,
@@ -81,6 +80,7 @@ class RuuviConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=(errors or None),
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

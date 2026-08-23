@@ -8,11 +8,13 @@ from homeassistant.components.waze_travel_time.const import (
     CONF_AVOID_FERRIES,
     CONF_AVOID_SUBSCRIPTION_ROADS,
     CONF_AVOID_TOLL_ROADS,
+    CONF_BASE_COORDINATES,
     CONF_DESTINATION,
     CONF_EXCL_FILTER,
     CONF_INCL_FILTER,
     CONF_ORIGIN,
     CONF_REALTIME,
+    CONF_TIME_DELTA,
     CONF_UNITS,
     CONF_VEHICLE_TYPE,
     DEFAULT_NAME,
@@ -20,10 +22,11 @@ from homeassistant.components.waze_travel_time.const import (
     DOMAIN,
     IMPERIAL_UNITS,
 )
-from homeassistant.const import CONF_NAME, CONF_REGION
+from homeassistant.const import CONF_LATITUDE, CONF_LONGITUDE, CONF_NAME, CONF_REGION
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 
+from . import get_default_options
 from .const import CONFIG_FLOW_USER_INPUT, MOCK_CONFIG
 
 from tests.common import MockConfigEntry
@@ -62,6 +65,7 @@ async def test_reconfigure(hass: HomeAssistant) -> None:
         data=MOCK_CONFIG,
         options=DEFAULT_OPTIONS,
         version=WazeConfigFlow.VERSION,
+        minor_version=WazeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -99,8 +103,9 @@ async def test_options(hass: HomeAssistant) -> None:
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_CONFIG,
-        options=DEFAULT_OPTIONS,
+        options=get_default_options(hass),
         version=WazeConfigFlow.VERSION,
+        minor_version=WazeConfigFlow.MINOR_VERSION,
     )
     entry.add_to_hass(hass)
     await hass.config_entries.async_setup(entry.entry_id)
@@ -117,9 +122,14 @@ async def test_options(hass: HomeAssistant) -> None:
             CONF_AVOID_FERRIES: True,
             CONF_AVOID_SUBSCRIPTION_ROADS: True,
             CONF_AVOID_TOLL_ROADS: True,
+            CONF_BASE_COORDINATES: {
+                CONF_LATITUDE: 1.123,
+                CONF_LONGITUDE: -1.123,
+            },
             CONF_EXCL_FILTER: ["ExcludeThis"],
             CONF_INCL_FILTER: ["IncludeThis"],
             CONF_REALTIME: False,
+            CONF_TIME_DELTA: {"hours": 1, "minutes": 30},
             CONF_UNITS: IMPERIAL_UNITS,
             CONF_VEHICLE_TYPE: "taxi",
         },
@@ -130,9 +140,14 @@ async def test_options(hass: HomeAssistant) -> None:
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
+        CONF_BASE_COORDINATES: {
+            CONF_LATITUDE: 1.123,
+            CONF_LONGITUDE: -1.123,
+        },
         CONF_EXCL_FILTER: ["ExcludeThis"],
         CONF_INCL_FILTER: ["IncludeThis"],
         CONF_REALTIME: False,
+        CONF_TIME_DELTA: {"hours": 1, "minutes": 30},
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }
@@ -141,9 +156,14 @@ async def test_options(hass: HomeAssistant) -> None:
         CONF_AVOID_FERRIES: True,
         CONF_AVOID_SUBSCRIPTION_ROADS: True,
         CONF_AVOID_TOLL_ROADS: True,
+        CONF_BASE_COORDINATES: {
+            CONF_LATITUDE: 1.123,
+            CONF_LONGITUDE: -1.123,
+        },
         CONF_EXCL_FILTER: ["ExcludeThis"],
         CONF_INCL_FILTER: ["IncludeThis"],
         CONF_REALTIME: False,
+        CONF_TIME_DELTA: {"hours": 1, "minutes": 30},
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }
@@ -215,6 +235,7 @@ async def test_reset_filters(hass: HomeAssistant) -> None:
         options=options,
         entry_id="test",
         version=WazeConfigFlow.VERSION,
+        minor_version=WazeConfigFlow.MINOR_VERSION,
     )
     config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -243,6 +264,38 @@ async def test_reset_filters(hass: HomeAssistant) -> None:
         CONF_EXCL_FILTER: [""],
         CONF_INCL_FILTER: [""],
         CONF_REALTIME: False,
+        CONF_TIME_DELTA: {"minutes": 0},
         CONF_UNITS: IMPERIAL_UNITS,
         CONF_VEHICLE_TYPE: "taxi",
     }
+
+
+@pytest.mark.usefixtures("mock_update")
+async def test_reset_base_coordinates(hass: HomeAssistant) -> None:
+    """Test clearing base coordinates in the options flow."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data=MOCK_CONFIG,
+        options=get_default_options(hass),
+        version=WazeConfigFlow.VERSION,
+        minor_version=WazeConfigFlow.MINOR_VERSION,
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id, data=None)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_AVOID_FERRIES: False,
+            CONF_AVOID_SUBSCRIPTION_ROADS: False,
+            CONF_AVOID_TOLL_ROADS: False,
+            CONF_REALTIME: True,
+            CONF_UNITS: IMPERIAL_UNITS,
+            CONF_VEHICLE_TYPE: "taxi",
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert CONF_BASE_COORDINATES not in entry.options

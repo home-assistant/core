@@ -1,0 +1,37 @@
+# serializer version: 1
+# name: test_entry_diagnostics
+  dict({
+    'backup': list([
+      dict({
+        'addons': list([
+        ]),
+        'backup_id': '23e64aec',
+        'database_included': True,
+        'date': '2024-11-22T11:48:48.727189+01:00',
+        'extra_metadata': dict({
+        }),
+        'folders': list([
+        ]),
+        'homeassistant_included': True,
+        'homeassistant_version': '2024.12.0.dev0',
+        'name': 'Core 2024.12.0.dev0',
+        'protected': False,
+        'size': 1048576,
+      }),
+    ]),
+    'backup_agents': list([
+      dict({
+        'name': 'test',
+      }),
+    ]),
+    'config': dict({
+      'access_key_id': '**REDACTED**',
+      'bucket': 'test',
+      'endpoint_url': 'https://s3.eu-south-1.amazonaws.com',
+      'secret_access_key': '**REDACTED**',
+    }),
+    'coordinator_data': dict({
+      'all_backups_size': 1048576,
+    }),
+  })
+# ---

@@ -13,12 +13,15 @@ import homeassistant.helpers.entity_registry as er
 from . import setup_integration, update_callback
 
 from tests.common import MockConfigEntry, snapshot_platform
+from tests.conftest import AiohttpClientMocker
 
 
+@pytest.mark.usefixtures("aioclient_mock_fixture")
 async def test_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_mqtt_provider: AsyncMock,
+    aioclient_mock: AiohttpClientMocker,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
@@ -28,10 +31,12 @@ async def test_entities(
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
 
+@pytest.mark.usefixtures("aioclient_mock_fixture")
 @pytest.mark.freeze_time("2021-07-30")
 async def test_entities_update(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
+    aioclient_mock: AiohttpClientMocker,
     mock_mqtt_provider: AsyncMock,
 ) -> None:
     """Check if the entities are updated."""

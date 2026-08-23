@@ -1,4 +1,12 @@
 {
+  "conditions": {
+    "is_off": {
+      "condition": "mdi:bullhorn-outline"
+    },
+    "is_on": {
+      "condition": "mdi:bullhorn"
+    }
+  },
   "entity_component": {
     "_": {
       "default": "mdi:bullhorn"

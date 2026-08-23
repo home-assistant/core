@@ -18,7 +18,7 @@ from homeassistant.components.ecovacs.const import DOMAIN
 from homeassistant.components.ecovacs.controller import EcovacsController
 from homeassistant.components.number import (
     ATTR_VALUE,
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
@@ -139,7 +139,7 @@ async def test_number_entities(
 
         device._execute_command.reset_mock()
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: test_case.set_value},
             blocking=True,

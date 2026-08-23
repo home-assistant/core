@@ -1,23 +1,18 @@
 """Viessmann ViCare sensor device."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from PyViCare.PyViCareDevice import Device as PyViCareDevice
 from PyViCare.PyViCareDeviceConfig import PyViCareDeviceConfig
+from PyViCare.PyViCareFloorHeating import FloorHeating
 from PyViCare.PyViCareHeatingDevice import (
     HeatingDeviceWithComponent as PyViCareHeatingDeviceComponent,
 )
-from PyViCare.PyViCareUtils import (
-    PyViCareInvalidDataError,
-    PyViCareNotSupportedFeatureError,
-    PyViCareRateLimitError,
-)
-import requests
+from PyViCare.PyViCareUtils import PyViCareNotSupportedFeatureError
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -26,14 +21,16 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
+    SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
     EntityCategory,
+    UnitOfDensity,
+    UnitOfElectricCurrent,
     UnitOfEnergy,
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolume,
@@ -60,8 +57,8 @@ from .utils import (
     get_circuits,
     get_compressors,
     get_condensers,
-    get_device_serial,
     get_evaporators,
+    get_inverters,
     is_supported,
     normalize_state,
 )
@@ -83,7 +80,7 @@ VICARE_UNIT_TO_HA_UNIT = {
     VICARE_CUBIC_METER: UnitOfVolume.CUBIC_METERS,
     VICARE_KW: UnitOfPower.KILO_WATT,
     VICARE_KWH: UnitOfEnergy.KILO_WATT_HOUR,
-    VICARE_PERCENT: PERCENTAGE,
+    VICARE_PERCENT: UnitOfRatio.PERCENTAGE,
     VICARE_W: UnitOfPower.WATT,
     VICARE_WH: UnitOfEnergy.WATT_HOUR,
 }
@@ -120,7 +117,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="outside_humidity",
         translation_key="outside_humidity",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getOutsideHumidity(),
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
@@ -166,6 +163,16 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
+        key="primary_circuit_pump_rotation",
+        translation_key="primary_circuit_pump_rotation",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        value_getter=lambda api: api.getPrimaryCircuitPumpRotation(),
+        unit_getter=lambda api: api.getPrimaryCircuitPumpRotationUnit(),
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
         key="secondary_circuit_supply_temperature",
         translation_key="secondary_circuit_supply_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -180,6 +187,36 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getReturnTemperatureSecondaryCircuit(),
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="hot_gas_temperature",
+        translation_key="hot_gas_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getHotGasTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="liquid_gas_temperature",
+        translation_key="liquid_gas_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getLiquidGasTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="suction_gas_temperature",
+        translation_key="suction_gas_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getSuctionGasTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="hotwater_out_temperature",
@@ -403,7 +440,9 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="hotwater_gas_summary_consumption_heating_currentday",
         translation_key="hotwater_gas_summary_consumption_heating_currentday",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-        value_getter=lambda api: api.getGasSummaryConsumptionDomesticHotWaterCurrentDay(),
+        value_getter=lambda api: (
+            api.getGasSummaryConsumptionDomesticHotWaterCurrentDay()
+        ),
         unit_getter=lambda api: api.getGasSummaryConsumptionDomesticHotWaterUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -411,7 +450,9 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="hotwater_gas_summary_consumption_heating_currentmonth",
         translation_key="hotwater_gas_summary_consumption_heating_currentmonth",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-        value_getter=lambda api: api.getGasSummaryConsumptionDomesticHotWaterCurrentMonth(),
+        value_getter=lambda api: (
+            api.getGasSummaryConsumptionDomesticHotWaterCurrentMonth()
+        ),
         unit_getter=lambda api: api.getGasSummaryConsumptionDomesticHotWaterUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -420,7 +461,9 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="hotwater_gas_summary_consumption_heating_currentyear",
         translation_key="hotwater_gas_summary_consumption_heating_currentyear",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-        value_getter=lambda api: api.getGasSummaryConsumptionDomesticHotWaterCurrentYear(),
+        value_getter=lambda api: (
+            api.getGasSummaryConsumptionDomesticHotWaterCurrentYear()
+        ),
         unit_getter=lambda api: api.getGasSummaryConsumptionDomesticHotWaterUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -429,7 +472,9 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="hotwater_gas_summary_consumption_heating_lastsevendays",
         translation_key="hotwater_gas_summary_consumption_heating_lastsevendays",
         native_unit_of_measurement=UnitOfVolume.CUBIC_METERS,
-        value_getter=lambda api: api.getGasSummaryConsumptionDomesticHotWaterLastSevenDays(),
+        value_getter=lambda api: (
+            api.getGasSummaryConsumptionDomesticHotWaterLastSevenDays()
+        ),
         unit_getter=lambda api: api.getGasSummaryConsumptionDomesticHotWaterUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -499,7 +544,9 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="energy_dhw_summary_consumption_heating_currentday",
         translation_key="energy_dhw_summary_consumption_heating_currentday",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterCurrentDay(),
+        value_getter=lambda api: (
+            api.getPowerSummaryConsumptionDomesticHotWaterCurrentDay()
+        ),
         unit_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
     ),
@@ -507,7 +554,9 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="energy_dhw_summary_consumption_heating_currentmonth",
         translation_key="energy_dhw_summary_consumption_heating_currentmonth",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterCurrentMonth(),
+        value_getter=lambda api: (
+            api.getPowerSummaryConsumptionDomesticHotWaterCurrentMonth()
+        ),
         unit_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -516,7 +565,9 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="energy_dhw_summary_consumption_heating_currentyear",
         translation_key="energy_dhw_summary_consumption_heating_currentyear",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterCurrentYear(),
+        value_getter=lambda api: (
+            api.getPowerSummaryConsumptionDomesticHotWaterCurrentYear()
+        ),
         unit_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -525,7 +576,9 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="energy_summary_dhw_consumption_heating_lastsevendays",
         translation_key="energy_summary_dhw_consumption_heating_lastsevendays",
         native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        value_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterLastSevenDays(),
+        value_getter=lambda api: (
+            api.getPowerSummaryConsumptionDomesticHotWaterLastSevenDays()
+        ),
         unit_getter=lambda api: api.getPowerSummaryConsumptionDomesticHotWaterUnit(),
         state_class=SensorStateClass.TOTAL_INCREASING,
         entity_registry_enabled_default=False,
@@ -668,6 +721,26 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
+        key="energy_consumption_heating_this_year",
+        translation_key="energy_consumption_heating_this_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerConsumptionHeatingThisYear(),
+        unit_getter=lambda api: api.getPowerConsumptionHeatingUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="energy_consumption_dhw_this_year",
+        translation_key="energy_consumption_dhw_this_year",
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        value_getter=lambda api: api.getPowerConsumptionDomesticHotWaterThisYear(),
+        unit_getter=lambda api: api.getPowerConsumptionDomesticHotWaterUnit(),
+        device_class=SensorDeviceClass.ENERGY,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
         key="buffer top temperature",
         translation_key="buffer_top_temperature",
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -726,7 +799,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="ess_state_of_charge",
         translation_key="ess_state_of_charge",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getElectricalEnergySystemSOC(),
@@ -751,46 +824,70 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="ess_charge_total",
         translation_key="ess_charge_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_getter=lambda api: api.getElectricalEnergySystemTransferChargeCumulatedLifeCycle(),
-        unit_getter=lambda api: api.getElectricalEnergySystemTransferChargeCumulatedUnit(),
+        value_getter=lambda api: (
+            api.getElectricalEnergySystemTransferChargeCumulatedLifeCycle()
+        ),
+        unit_getter=lambda api: (
+            api.getElectricalEnergySystemTransferChargeCumulatedUnit()
+        ),
     ),
     ViCareSensorEntityDescription(
         key="ess_discharge_today",
         translation_key="ess_discharge_today",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentDay(),
-        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        value_getter=lambda api: (
+            api.getElectricalEnergySystemTransferDischargeCumulatedCurrentDay()
+        ),
+        unit_getter=lambda api: (
+            api.getElectricalEnergySystemTransferDischargeCumulatedUnit()
+        ),
     ),
     ViCareSensorEntityDescription(
         key="ess_discharge_this_week",
         translation_key="ess_discharge_this_week",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentWeek(),
-        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        value_getter=lambda api: (
+            api.getElectricalEnergySystemTransferDischargeCumulatedCurrentWeek()
+        ),
+        unit_getter=lambda api: (
+            api.getElectricalEnergySystemTransferDischargeCumulatedUnit()
+        ),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="ess_discharge_this_month",
         translation_key="ess_discharge_this_month",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentMonth(),
-        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        value_getter=lambda api: (
+            api.getElectricalEnergySystemTransferDischargeCumulatedCurrentMonth()
+        ),
+        unit_getter=lambda api: (
+            api.getElectricalEnergySystemTransferDischargeCumulatedUnit()
+        ),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="ess_discharge_this_year",
         translation_key="ess_discharge_this_year",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedCurrentYear(),
-        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        value_getter=lambda api: (
+            api.getElectricalEnergySystemTransferDischargeCumulatedCurrentYear()
+        ),
+        unit_getter=lambda api: (
+            api.getElectricalEnergySystemTransferDischargeCumulatedUnit()
+        ),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="ess_discharge_total",
         translation_key="ess_discharge_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
-        value_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedLifeCycle(),
-        unit_getter=lambda api: api.getElectricalEnergySystemTransferDischargeCumulatedUnit(),
+        value_getter=lambda api: (
+            api.getElectricalEnergySystemTransferDischargeCumulatedLifeCycle()
+        ),
+        unit_getter=lambda api: (
+            api.getElectricalEnergySystemTransferDischargeCumulatedUnit()
+        ),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -806,7 +903,9 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
         state_class=SensorStateClass.TOTAL_INCREASING,
         value_getter=lambda api: api.getPointOfCommonCouplingTransferConsumptionTotal(),
-        unit_getter=lambda api: api.getPointOfCommonCouplingTransferConsumptionTotalUnit(),
+        unit_getter=lambda api: (
+            api.getPointOfCommonCouplingTransferConsumptionTotalUnit()
+        ),
     ),
     ViCareSensorEntityDescription(
         key="pcc_energy_feed_in",
@@ -887,9 +986,17 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getTemperature(),
     ),
     ViCareSensorEntityDescription(
+        key="target_temperature",
+        translation_key="target_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getTargetTemperature(),
+    ),
+    ViCareSensorEntityDescription(
         key="room_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getHumidity(),
     ),
@@ -925,6 +1032,28 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         value_getter=lambda api: api.getSupplyPressure(),
         unit_getter=lambda api: api.getSupplyPressureUnit(),
+    ),
+    ViCareSensorEntityDescription(
+        key="hot_gas_pressure",
+        translation_key="hot_gas_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getHotGasPressure(),
+        unit_getter=lambda api: api.getHotGasPressureUnit(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="suction_gas_pressure",
+        translation_key="suction_gas_pressure",
+        device_class=SensorDeviceClass.PRESSURE,
+        native_unit_of_measurement=UnitOfPressure.BAR,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getSuctionGasPressure(),
+        unit_getter=lambda api: api.getSuctionGasPressureUnit(),
+        entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
         key="heating_rod_starts",
@@ -963,19 +1092,57 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         value_getter=lambda api: api.getSeasonalPerformanceFactorHeating(),
     ),
     ViCareSensorEntityDescription(
+        key="cop_heating",
+        translation_key="cop_heating",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getCoefficientOfPerformanceHeating(),
+    ),
+    ViCareSensorEntityDescription(
+        key="cop_dhw",
+        translation_key="cop_dhw",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getCoefficientOfPerformanceDHW(),
+    ),
+    ViCareSensorEntityDescription(
+        key="cop_total",
+        translation_key="cop_total",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getCoefficientOfPerformanceTotal(),
+    ),
+    ViCareSensorEntityDescription(
+        key="cop_cooling",
+        translation_key="cop_cooling",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_getter=lambda api: api.getCoefficientOfPerformanceCooling(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
         key="battery_level",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.BATTERY,
         entity_category=EntityCategory.DIAGNOSTIC,
         value_getter=lambda api: api.getBatteryLevel(),
     ),
     ViCareSensorEntityDescription(
+        key="wifi_signal_strength",
+        device_class=SensorDeviceClass.SIGNAL_STRENGTH,
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        native_unit_of_measurement=SIGNAL_STRENGTH_DECIBELS_MILLIWATT,
+        value_getter=lambda api: api.getWifiSignalStrength(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
         key="zigbee_signal_strength",
         translation_key="zigbee_signal_strength",
         state_class=SensorStateClass.MEASUREMENT,
         entity_category=EntityCategory.DIAGNOSTIC,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getZigbeeSignalStrength(),
         entity_registry_enabled_default=False,
     ),
@@ -983,7 +1150,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="valve_position",
         translation_key="valve_position",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getValvePosition(),
         entity_registry_enabled_default=False,
     ),
@@ -1010,7 +1177,7 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         key="supply_humidity",
         translation_key="supply_humidity",
         device_class=SensorDeviceClass.HUMIDITY,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getSupplyHumidity(),
     ),
@@ -1031,6 +1198,38 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
         entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="exhaust_humidity",
+        translation_key="exhaust_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getExhaustHumidity(),
+    ),
+    ViCareSensorEntityDescription(
+        key="exhaust_temperature",
+        translation_key="exhaust_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getExhaustTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    ViCareSensorEntityDescription(
+        key="extract_humidity",
+        translation_key="extract_humidity",
+        device_class=SensorDeviceClass.HUMIDITY,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_getter=lambda api: api.getExtractHumidity(),
+    ),
+    ViCareSensorEntityDescription(
+        key="extract_temperature",
+        translation_key="extract_temperature",
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getExtractTemperature(),
+        device_class=SensorDeviceClass.TEMPERATURE,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     ViCareSensorEntityDescription(
         key="filter_hours",
@@ -1062,28 +1261,28 @@ GLOBAL_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="pm01",
         device_class=SensorDeviceClass.PM1,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getAirborneDustPM1(),
     ),
     ViCareSensorEntityDescription(
         key="pm02",
         device_class=SensorDeviceClass.PM25,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getAirborneDustPM2d5(),
     ),
     ViCareSensorEntityDescription(
         key="pm04",
         device_class=SensorDeviceClass.PM4,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getAirborneDustPM4(),
     ),
     ViCareSensorEntityDescription(
         key="pm10",
         device_class=SensorDeviceClass.PM10,
-        native_unit_of_measurement=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        native_unit_of_measurement=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         state_class=SensorStateClass.MEASUREMENT,
         value_getter=lambda api: api.getAirborneDustPM10(),
     ),
@@ -1107,6 +1306,16 @@ CIRCUIT_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     SUPPLY_TEMPERATURE_SENSOR,
 )
 
+FLOOR_HEATING_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key="active_mode",
+        translation_key="active_mode",
+        device_class=SensorDeviceClass.ENUM,
+        options=["cooling", "heating", "standby"],
+        value_getter=lambda api: api.getActiveMode(),
+    ),
+)
+
 BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="burner_starts",
@@ -1126,13 +1335,30 @@ BURNER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
     ViCareSensorEntityDescription(
         key="burner_modulation",
         translation_key="burner_modulation",
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         value_getter=lambda api: api.getModulation(),
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
 
 COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key="compressor_power",
+        translation_key="compressor_power",
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        value_getter=lambda api: api.getPower(),
+        unit_getter=lambda api: api.getPowerUnit(),
+        device_class=SensorDeviceClass.POWER,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    ViCareSensorEntityDescription(
+        key="compressor_modulation",
+        translation_key="compressor_modulation",
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
+        value_getter=lambda api: api.getModulation(),
+        unit_getter=lambda api: api.getModulationUnit(),
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
     ViCareSensorEntityDescription(
         key="compressor_starts",
         translation_key="compressor_starts",
@@ -1204,8 +1430,8 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="compressor_inlet_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getCompressorInletTemperature(),
-        unit_getter=lambda api: api.getCompressorInletTemperatureUnit(),
+        value_getter=lambda api: api.getInletTemperature(),
+        unit_getter=lambda api: api.getInletTemperatureUnit(),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1213,8 +1439,8 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="compressor_outlet_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getCompressorOutletTemperature(),
-        unit_getter=lambda api: api.getCompressorOutletTemperatureUnit(),
+        value_getter=lambda api: api.getOutletTemperature(),
+        unit_getter=lambda api: api.getOutletTemperatureUnit(),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1222,8 +1448,8 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="compressor_inlet_pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.BAR,
-        value_getter=lambda api: api.getCompressorInletPressure(),
-        unit_getter=lambda api: api.getCompressorInletPressureUnit(),
+        value_getter=lambda api: api.getInletPressure(),
+        unit_getter=lambda api: api.getInletPressureUnit(),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1231,8 +1457,8 @@ COMPRESSOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="compressor_outlet_pressure",
         device_class=SensorDeviceClass.PRESSURE,
         native_unit_of_measurement=UnitOfPressure.BAR,
-        value_getter=lambda api: api.getCompressorOutletPressure(),
-        unit_getter=lambda api: api.getCompressorOutletPressureUnit(),
+        value_getter=lambda api: api.getOutletPressure(),
+        unit_getter=lambda api: api.getOutletPressureUnit(),
         entity_registry_enabled_default=False,
     ),
 )
@@ -1243,8 +1469,8 @@ CONDENSER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="condenser_liquid_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getCondensorLiquidTemperature(),
-        unit_getter=lambda api: api.getCondensorLiquidTemperatureUnit(),
+        value_getter=lambda api: api.getLiquidTemperature(),
+        unit_getter=lambda api: api.getLiquidTemperatureUnit(),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1252,8 +1478,8 @@ CONDENSER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="condenser_subcooling_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getCondensorSubcoolingTemperature(),
-        unit_getter=lambda api: api.getCondensorSubcoolingTemperatureUnit(),
+        value_getter=lambda api: api.getSubcoolingTemperature(),
+        unit_getter=lambda api: api.getSubcoolingTemperatureUnit(),
         entity_registry_enabled_default=False,
     ),
 )
@@ -1264,8 +1490,8 @@ EVAPORATOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="evaporator_overheat_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getEvaporatorOverheatTemperature(),
-        unit_getter=lambda api: api.getEvaporatorOverheatTemperatureUnit(),
+        value_getter=lambda api: api.getOverheatTemperature(),
+        unit_getter=lambda api: api.getOverheatTemperatureUnit(),
         entity_registry_enabled_default=False,
     ),
     ViCareSensorEntityDescription(
@@ -1273,8 +1499,35 @@ EVAPORATOR_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
         translation_key="evaporator_liquid_temperature",
         device_class=SensorDeviceClass.TEMPERATURE,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
-        value_getter=lambda api: api.getEvaporatorLiquidTemperature(),
-        unit_getter=lambda api: api.getEvaporatorLiquidTemperatureUnit(),
+        value_getter=lambda api: api.getLiquidTemperature(),
+        unit_getter=lambda api: api.getLiquidTemperatureUnit(),
+        entity_registry_enabled_default=False,
+    ),
+)
+
+INVERTER_SENSORS: tuple[ViCareSensorEntityDescription, ...] = (
+    ViCareSensorEntityDescription(
+        key="inverter_current",
+        translation_key="inverter_current",
+        device_class=SensorDeviceClass.CURRENT,
+        native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
+        value_getter=lambda api: api.getCurrent(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="inverter_power",
+        translation_key="inverter_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        value_getter=lambda api: api.getPower(),
+        entity_registry_enabled_default=False,
+    ),
+    ViCareSensorEntityDescription(
+        key="inverter_temperature",
+        translation_key="inverter_temperature",
+        device_class=SensorDeviceClass.TEMPERATURE,
+        native_unit_of_measurement=UnitOfTemperature.CELSIUS,
+        value_getter=lambda api: api.getTemperature(),
         entity_registry_enabled_default=False,
     ),
 )
@@ -1291,13 +1544,25 @@ def _build_entities(
         entities.extend(
             ViCareSensor(
                 description,
-                get_device_serial(device.api),
+                device.serial,
                 device.config,
                 device.api,
             )
             for description in GLOBAL_SENSORS
             if is_supported(description.key, description.value_getter, device.api)
         )
+        # add device-class-specific entities
+        if isinstance(device.api, FloorHeating):
+            entities.extend(
+                ViCareSensor(
+                    description,
+                    device.serial,
+                    device.config,
+                    device.api,
+                )
+                for description in FLOOR_HEATING_SENSORS
+                if is_supported(description.key, description.value_getter, device.api)
+            )
         # add component entities
         for component_list, entity_description_list in (
             (get_circuits(device.api), CIRCUIT_SENSORS),
@@ -1305,11 +1570,12 @@ def _build_entities(
             (get_compressors(device.api), COMPRESSOR_SENSORS),
             (get_condensers(device.api), CONDENSER_SENSORS),
             (get_evaporators(device.api), EVAPORATOR_SENSORS),
+            (get_inverters(device.api), INVERTER_SENSORS),
         ):
             entities.extend(
                 ViCareSensor(
                     description,
-                    get_device_serial(device.api),
+                    device.serial,
                     device.config,
                     device.api,
                     component,
@@ -1357,6 +1623,7 @@ class ViCareSensor(ViCareEntity, SensorEntity):
         self.entity_description = description
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._attr_native_value is not None
@@ -1364,22 +1631,11 @@ class ViCareSensor(ViCareEntity, SensorEntity):
     def update(self) -> None:
         """Update state of sensor."""
         vicare_unit = None
-        try:
-            with suppress(PyViCareNotSupportedFeatureError):
-                self._attr_native_value = self.entity_description.value_getter(
-                    self._api
-                )
+        with self.vicare_api_handler(), suppress(PyViCareNotSupportedFeatureError):
+            self._attr_native_value = self.entity_description.value_getter(self._api)
 
-                if self.entity_description.unit_getter:
-                    vicare_unit = self.entity_description.unit_getter(self._api)
-        except requests.exceptions.ConnectionError:
-            _LOGGER.error("Unable to retrieve data from ViCare server")
-        except ValueError:
-            _LOGGER.error("Unable to decode data from ViCare server")
-        except PyViCareRateLimitError as limit_exception:
-            _LOGGER.error("Vicare API rate limit exceeded: %s", limit_exception)
-        except PyViCareInvalidDataError as invalid_data_exception:
-            _LOGGER.error("Invalid data from Vicare server: %s", invalid_data_exception)
+            if self.entity_description.unit_getter:
+                vicare_unit = self.entity_description.unit_getter(self._api)
 
         if vicare_unit is not None:
             if (

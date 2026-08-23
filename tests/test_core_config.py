@@ -882,6 +882,25 @@ async def test_config_path_with_dir_and_file() -> None:
     assert config.path("dir", "test.conf") == "/test/ha-config/dir/test.conf"
 
 
+async def test_config_cache_path_with_file() -> None:
+    """Test cache_path method with file."""
+    hass = Mock()
+    hass.data = {}
+    config = Config(hass, "/test/ha-config")
+    assert config.cache_path("test.cache") == "/test/ha-config/.cache/test.cache"
+
+
+async def test_config_cache_path_with_dir_and_file() -> None:
+    """Test cache_path method with dir and file."""
+    hass = Mock()
+    hass.data = {}
+    config = Config(hass, "/test/ha-config")
+    assert (
+        config.cache_path("dir", "test.cache")
+        == "/test/ha-config/.cache/dir/test.cache"
+    )
+
+
 async def test_config_as_dict() -> None:
     """Test as dict."""
     hass = Mock()
@@ -909,6 +928,9 @@ async def test_config_as_dict() -> None:
         "currency": "EUR",
         "country": None,
         "language": "en",
+        "logging": {
+            "log_file_disabled_reason": None,
+        },
         "safe_mode": False,
         "debug": False,
         "radius": 100,

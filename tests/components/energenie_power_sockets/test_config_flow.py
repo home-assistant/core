@@ -103,7 +103,7 @@ async def test_user_flow_device_not_found(
     mock_get_device: MagicMock,
     mock_search_for_devices: MagicMock,
 ) -> None:
-    """Test configuration flow when the given device_id does not match any found devices."""
+    """Test config flow when device_id does not match any found devices."""
 
     mock_get_device.return_value = None
 

@@ -1,10 +1,8 @@
 """Clickatell platform for notify component."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -46,6 +44,7 @@ class ClickatellNotificationService(BaseNotificationService):
         self.api_key: str = config[CONF_API_KEY]
         self.recipient: str = config[CONF_RECIPIENT]
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         data = {"apiKey": self.api_key, "to": self.recipient, "content": message}

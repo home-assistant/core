@@ -1,7 +1,5 @@
 """Define fixtures for electric kiwi tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from time import time
 from unittest.mock import AsyncMock, patch
@@ -17,6 +15,7 @@ from electrickiwi_api.model import (
 import pytest
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -34,7 +33,7 @@ REDIRECT_URI = "https://example.com/auth/external/callback"
 @pytest.fixture(autouse=True)
 async def setup_credentials(hass: HomeAssistant) -> None:
     """Fixture to setup application credentials component."""
-    await async_setup_component(hass, "application_credentials", {})
+    await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
     await async_import_client_credential(
         hass,
         DOMAIN,

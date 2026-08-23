@@ -1,9 +1,7 @@
 """Support for RFXtrx devices."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
-from typing import cast
+from typing import cast, override
 
 import RFXtrx as rfxtrxmod
 
@@ -52,10 +50,12 @@ class RfxtrxEntity(RestoreEntity):
         self._device = device
         self._event = event
         self._device_id = device_id
-        # If id_string is 213c7f2:1, the group_id is 213c7f2, and the device will respond to
+        # If id_string is 213c7f2:1, the group_id is 213c7f2,
+        # and the device will respond to
         # group events regardless of their group indices.
         (self._group_id, _, _) = device_id.id_string.partition(":")
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore RFXtrx device state (ON/OFF)."""
         if self._event:
@@ -66,6 +66,7 @@ class RfxtrxEntity(RestoreEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, str] | None:
         """Return the device state attributes."""
         if not self._event:
@@ -119,5 +120,7 @@ class RfxtrxCommandEntity(RfxtrxEntity):
     async def _async_send[*_Ts](
         self, fun: Callable[[rfxtrxmod.PySerialTransport, *_Ts], None], *args: *_Ts
     ) -> None:
+        # Uses legacy hass.data[DOMAIN] pattern
+        # pylint: disable-next=home-assistant-use-runtime-data
         rfx_object: rfxtrxmod.Connect = self.hass.data[DOMAIN][DATA_RFXOBJECT]
         await self.hass.async_add_executor_job(fun, rfx_object.transport, *args)

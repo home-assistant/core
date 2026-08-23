@@ -1,7 +1,5 @@
 """ONVIF device abstraction."""
 
-from __future__ import annotations
-
 import asyncio
 from contextlib import suppress
 import datetime as dt
@@ -41,8 +39,10 @@ from .const import (
     TILT_FACTOR,
     ZOOM_FACTOR,
 )
-from .event import EventManager
+from .event_manager import EventManager
 from .models import PTZ, Capabilities, DeviceInfo, Profile, Resolution, Video
+
+type ONVIFConfigEntry = ConfigEntry[ONVIFDevice]
 
 
 class ONVIFDevice:
@@ -165,7 +165,7 @@ class ONVIFDevice:
         # Bind the listener to the ONVIFDevice instance since
         # async_update_listener only creates a weak reference to the listener
         # and we need to make sure it doesn't get garbage collected since only
-        # the ONVIFDevice instance is stored in hass.data
+        # the ONVIFDevice instance is stored in config_entry.runtime_data
         self.config_entry.async_on_unload(
             self.config_entry.add_update_listener(self._async_update_listener)
         )
@@ -218,9 +218,10 @@ class ONVIFDevice:
             try:
                 await device_mgmt.SetSystemDateAndTime(dt_param)
                 LOGGER.debug("%s: SetSystemDateAndTime: success", self.name)
-            # Some cameras don't support setting the timezone and will throw an IndexError
-            # if we try to set it. If we get an error, try again without the timezone.
-            except (IndexError, Fault):
+            # Some cameras don't support setting the timezone
+            # and will throw an IndexError if we try to set it.
+            # If we get an error, try again without the timezone.
+            except IndexError, Fault:
                 if idx == timezone_max_idx:
                     raise
             else:
@@ -303,7 +304,7 @@ class ONVIFDevice:
         # Set Date and Time ourselves if Date and Time is set manually in the camera.
         try:
             await self.async_manually_set_date_and_time()
-        except (TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault):
+        except TimeoutError, aiohttp.ClientError, TransportError, IndexError, Fault:
             LOGGER.warning("%s: Could not sync date/time on this camera", self.name)
             self._async_log_time_out_of_sync(cam_date_utc, system_date)
 
@@ -333,8 +334,9 @@ class ONVIFDevice:
         try:
             device_info = await device_mgmt.GetDeviceInformation()
         except (XMLParseError, XMLSyntaxError, TransportError) as ex:
-            # Some cameras have invalid UTF-8 in their device information (TransportError)
-            # and others have completely invalid XML (XMLParseError, XMLSyntaxError)
+            # Some cameras have invalid UTF-8 in their device
+            # information (TransportError) and others have
+            # completely invalid XML (XMLParseError, XMLSyntaxError)
             LOGGER.warning("%s: Failed to fetch device information: %s", self.name, ex)
         else:
             manufacturer = device_info.Manufacturer
@@ -498,7 +500,12 @@ class ONVIFDevice:
         tilt=None,
         zoom=None,
     ):
-        """Perform a PTZ action on the camera."""
+        """Perform a PTZ action on the camera.
+
+        For ContinuousMove operations, calling this service with
+        continuous_duration = 0 disables the automatic Stop call; other move
+        modes do not auto-stop.
+        """
         if not self.capabilities.ptz:
             LOGGER.warning("PTZ actions are not supported on device '%s'", self.name)
             return
@@ -542,12 +549,17 @@ class ONVIFDevice:
                 req.Velocity = velocity
 
                 await ptz_service.ContinuousMove(req)
-                await asyncio.sleep(continuous_duration)
-                req = ptz_service.create_type("Stop")
-                req.ProfileToken = profile.token
-                await ptz_service.Stop(
-                    {"ProfileToken": req.ProfileToken, "PanTilt": True, "Zoom": False}
-                )
+                if continuous_duration > 0:
+                    await asyncio.sleep(continuous_duration)
+                    req = ptz_service.create_type("Stop")
+                    req.ProfileToken = profile.token
+                    await ptz_service.Stop(
+                        {
+                            "ProfileToken": req.ProfileToken,
+                            "PanTilt": True,
+                            "Zoom": False,
+                        }
+                    )
             elif move_mode == RELATIVE_MOVE:
                 # Guard against unsupported operation
                 if not profile.ptz or not profile.ptz.relative:

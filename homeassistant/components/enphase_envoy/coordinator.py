@@ -1,12 +1,11 @@
 """The enphase_envoy component."""
 
-from __future__ import annotations
-
 import contextlib
 import datetime
 from datetime import timedelta
 import logging
-from typing import Any
+import math
+from typing import Any, override
 
 from pyenphase import Envoy, EnvoyError, EnvoyTokenAuth
 from pyenphase.models.home import EnvoyInterfaceInformation
@@ -15,18 +14,26 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.helpers.event import async_call_later, async_track_time_interval
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, INVALID_AUTH_ERRORS
+from .const import (
+    ACB_SLEEP_SOC_BANDS,
+    CONF_MANUAL_TOKEN,
+    DEFAULT_ACB_SLEEP_SOC_BAND,
+    DOMAIN,
+    INVALID_AUTH_ERRORS,
+    OPERATIONAL_RETRY_TIMEOUT,
+    SETUP_RETRY_TIMEOUT,
+)
 
 SCAN_INTERVAL = timedelta(seconds=60)
 
 TOKEN_REFRESH_CHECK_INTERVAL = timedelta(days=1)
-STALE_TOKEN_THRESHOLD = timedelta(days=30).total_seconds()
-NOTIFICATION_ID = "enphase_envoy_notification"
+STALE_TOKEN_THRESHOLD = 30  # days
+TOKEN_REPAIR_ID = "enphase_envoy_token_expiry"
 FIRMWARE_REFRESH_INTERVAL = timedelta(hours=4)
 MAC_VERIFICATION_DELAY = timedelta(seconds=34)
 _LOGGER = logging.getLogger(__name__)
@@ -42,6 +49,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     envoy_firmware: str
     config_entry: EnphaseConfigEntry
     interface: EnvoyInterfaceInformation | None
+    token_lifetime: int  # days of token life left
 
     def __init__(
         self, hass: HomeAssistant, envoy: Envoy, entry: EnphaseConfigEntry
@@ -49,14 +57,18 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Initialize DataUpdateCoordinator for the envoy."""
         self.envoy = envoy
         entry_data = entry.data
-        self.username = entry_data[CONF_USERNAME]
-        self.password = entry_data[CONF_PASSWORD]
+        self.username = entry_data.get(CONF_USERNAME)
+        self.password = entry_data.get(CONF_PASSWORD)
+        self.manual_token = entry_data.get(CONF_MANUAL_TOKEN, False)
         self._setup_complete = False
+        self._operational_timeout = False
         self.envoy_firmware = ""
         self.interface = None
         self._cancel_token_refresh: CALLBACK_TYPE | None = None
         self._cancel_firmware_refresh: CALLBACK_TYPE | None = None
         self._cancel_mac_verification: CALLBACK_TYPE | None = None
+        self.token_lifetime = 0
+        self._acb_sleep_soc_band: str | None = None
         super().__init__(
             hass,
             _LOGGER,
@@ -66,19 +78,99 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             always_update=False,
         )
 
+    def _track_token_lifetime(self) -> bool:
+        """Update tokenlifetime and return if still fresh."""
+        assert isinstance(self.envoy.auth, EnvoyTokenAuth)
+        self.token_lifetime = max(
+            0,
+            math.ceil(
+                (self.envoy.auth.expire_timestamp - dt_util.utcnow().timestamp())
+                / 86400
+            ),
+        )
+        return self.token_lifetime > STALE_TOKEN_THRESHOLD
+
+    @property
+    def acb_sleep_soc_band(self) -> str:
+        """Return the selected ACB sleep SOC band (e.g. ``95-100``).
+
+        This is the SOC band that the sleep buttons apply. It is kept as
+        in-memory state, since persisting it in the config entry options would
+        trigger a reload on every change. When not set by the user it defaults
+        to the first battery reporting a valid band (batteries are not
+        guaranteed to agree), else a default.
+        """
+        if self._acb_sleep_soc_band is not None:
+            return self._acb_sleep_soc_band
+        if (data := self.envoy.data) and data.acb_inventory:
+            for acb in data.acb_inventory.values():
+                if acb.sleep_min_soc is not None and acb.sleep_max_soc is not None:
+                    band = f"{acb.sleep_min_soc}-{acb.sleep_max_soc}"
+                    if band in ACB_SLEEP_SOC_BANDS:
+                        return band
+        return DEFAULT_ACB_SLEEP_SOC_BAND
+
+    @acb_sleep_soc_band.setter
+    def acb_sleep_soc_band(self, value: str) -> None:
+        """Store the selected ACB sleep SOC band."""
+        self._acb_sleep_soc_band = value
+
+    def acb_sleep_soc(self) -> tuple[int, int]:
+        """Return the selected ACB sleep SOC band as (min, max) integers."""
+        low, high = self.acb_sleep_soc_band.split("-")
+        return int(low), int(high)
+
     @callback
     def _async_refresh_token_if_needed(self, now: datetime.datetime) -> None:
         """Proactively refresh token if its stale in case cloud services goes down."""
         assert isinstance(self.envoy.auth, EnvoyTokenAuth)
-        expire_time = self.envoy.auth.expire_timestamp
-        remain = expire_time - now.timestamp()
-        fresh = remain > STALE_TOKEN_THRESHOLD
+        fresh = self._track_token_lifetime()
         name = self.name
-        _LOGGER.debug("%s: %s seconds remaining on token fresh=%s", name, remain, fresh)
+        _LOGGER.debug(
+            "%s: %s days remaining on token, fresh=%s, manual token mode=%s",
+            name,
+            self.token_lifetime,
+            fresh,
+            self.manual_token,
+        )
         if not fresh:
-            self.hass.async_create_background_task(
-                self._async_try_refresh_token(), "{name} token refresh"
+            if not self.manual_token:
+                self.hass.async_create_background_task(
+                    self._async_try_refresh_token(), f"{name} token refresh"
+                )
+                return
+
+            # User configured manual token entry, warn for upcoming expiry by issuing a repair
+            _LOGGER.debug(
+                "Create repair issue for %s token expiry in %s days",
+                self.name,
+                self.token_lifetime,
             )
+            # Force issue rering each day until resolved by user
+            ir.async_delete_issue(
+                self.hass, DOMAIN, f"{TOKEN_REPAIR_ID}_{self.envoy_serial_number}"
+            )
+            ir.async_create_issue(
+                self.hass,
+                domain=DOMAIN,
+                issue_id=f"{TOKEN_REPAIR_ID}_{self.envoy_serial_number}",
+                is_fixable=False,
+                is_persistent=True,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="token_expiry",
+                translation_placeholders={
+                    "token_lifetime": str(self.token_lifetime),
+                    "name": self.name,
+                },
+                learn_more_url="https://www.home-assistant.io/integrations/enphase_envoy",
+            )
+            return
+        if not self.manual_token:
+            return
+        # remove any repair that warned user to refresh manual token
+        ir.async_delete_issue(
+            self.hass, DOMAIN, f"{TOKEN_REPAIR_ID}_{self.envoy_serial_number}"
+        )
 
     async def _async_try_refresh_token(self) -> None:
         """Try to refresh token."""
@@ -157,13 +249,8 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         # Add to or update device registry connections as needed
         device_registry = dr.async_get(self.hass)
-        envoy_device = device_registry.async_get_device(
-            identifiers={
-                (
-                    DOMAIN,
-                    self.envoy_serial_number,
-                )
-            }
+        envoy_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, self.envoy_serial_number), self.config_entry.entry_id
         )
         if envoy_device is None:
             _LOGGER.error(
@@ -194,7 +281,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     @callback
     def _async_mark_setup_complete(self) -> None:
-        """Mark setup as complete and setup firmware checks and token refresh if needed."""
+        """Mark setup as complete, setup firmware checks and token refresh."""
         self._setup_complete = True
         self.async_cancel_firmware_refresh()
         self._cancel_firmware_refresh = async_track_time_interval(
@@ -252,6 +339,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # startup without hitting the Cloud API
         # as long as the token is valid
         _LOGGER.debug("%s: Updating token in config entry from auth", self.name)
+        self._track_token_lifetime()
         self.hass.config_entries.async_update_entry(
             self.config_entry,
             data={
@@ -260,6 +348,7 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             },
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch all device and sensor data from api."""
         envoy = self.envoy
@@ -267,10 +356,15 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             try:
                 if not self._setup_complete:
                     _LOGGER.debug("update on try %s, setup not complete", tries)
+                    self.envoy.set_retry_policy(max_delay=SETUP_RETRY_TIMEOUT)
+                    self._operational_timeout = False
                     await self._async_setup_and_authenticate()
                     self._async_mark_setup_complete()
                 # dump all received data in debug mode to assist troubleshooting
                 envoy_data = await envoy.update()
+                if not self._operational_timeout:
+                    self.envoy.set_retry_policy(max_delay=OPERATIONAL_RETRY_TIMEOUT)
+                    self._operational_timeout = True
             except INVALID_AUTH_ERRORS as err:
                 _LOGGER.debug("update on try %s, INVALID_AUTH_ERRORS %s", tries, err)
                 if self._setup_complete and tries == 0:
@@ -304,7 +398,8 @@ class EnphaseUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 new_firmware := envoy.firmware
             ):
                 _LOGGER.warning(
-                    "Envoy firmware changed from: %s to: %s, reloading enphase envoy integration",
+                    "Envoy firmware changed from: %s to: %s,"
+                    " reloading enphase envoy integration",
                     current_firmware,
                     new_firmware,
                 )

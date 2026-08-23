@@ -1,10 +1,7 @@
 """Component to embed Aqualink devices."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable, Coroutine
 from dataclasses import dataclass
-from datetime import datetime
 from functools import wraps
 import logging
 from typing import Any, Concatenate
@@ -18,19 +15,27 @@ from iaqualink.device import (
     AqualinkSwitch,
     AqualinkThermostat,
 )
-from iaqualink.exception import AqualinkServiceException
+from iaqualink.exception import (
+    AqualinkServiceException,
+    AqualinkServiceUnauthorizedException,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import device_registry as dr
-from homeassistant.helpers.dispatcher import async_dispatcher_send
-from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.httpx_client import get_async_client
+from homeassistant.util.ssl import SSL_ALPN_HTTP11_HTTP2
 
-from .const import DOMAIN, UPDATE_INTERVAL
+from .const import DOMAIN
+from .coordinator import AqualinkDataUpdateCoordinator
 from .entity import AqualinkEntity
+from .utils import error_detail
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -53,6 +58,7 @@ class AqualinkRuntimeData:
     """Runtime data for Aqualink."""
 
     client: AqualinkClient
+    coordinators: dict[str, AqualinkDataUpdateCoordinator]
     # These will contain the initialized devices
     binary_sensors: list[AqualinkBinarySensor]
     lights: list[AqualinkLight]
@@ -66,43 +72,77 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
     username = entry.data[CONF_USERNAME]
     password = entry.data[CONF_PASSWORD]
 
-    aqualink = AqualinkClient(username, password, httpx_client=get_async_client(hass))
+    aqualink = AqualinkClient(
+        username,
+        password,
+        httpx_client=get_async_client(hass, alpn_protocols=SSL_ALPN_HTTP11_HTTP2),
+    )
     try:
         await aqualink.login()
-    except AqualinkServiceException as login_exception:
-        _LOGGER.error("Failed to login: %s", login_exception)
+    except AqualinkServiceUnauthorizedException as auth_exception:
         await aqualink.close()
-        return False
-    except (TimeoutError, httpx.HTTPError) as aio_exception:
+        raise ConfigEntryAuthFailed(
+            "Invalid credentials for iAquaLink"
+        ) from auth_exception
+    except (AqualinkServiceException, TimeoutError, httpx.HTTPError) as aio_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
-            f"Error while attempting login: {aio_exception}"
+            f"Error while attempting login: {error_detail(aio_exception)}"
         ) from aio_exception
 
     try:
         systems = await aqualink.get_systems()
-    except AqualinkServiceException as svc_exception:
+    except AqualinkServiceUnauthorizedException as auth_exception:
+        await aqualink.close()
+        raise ConfigEntryAuthFailed(
+            "Invalid credentials for iAquaLink"
+        ) from auth_exception
+    except (AqualinkServiceException, TimeoutError, httpx.HTTPError) as svc_exception:
         await aqualink.close()
         raise ConfigEntryNotReady(
-            f"Error while attempting to retrieve systems list: {svc_exception}"
+            "Error while attempting to retrieve systems list: "
+            f"{error_detail(svc_exception)}"
         ) from svc_exception
 
-    systems = list(systems.values())
-    if not systems:
-        _LOGGER.error("No systems detected or supported")
+    systems_list = list(systems.values())
+    if not systems_list:
         await aqualink.close()
-        return False
+        raise ConfigEntryError("No systems detected or supported")
 
     runtime_data = AqualinkRuntimeData(
-        aqualink, binary_sensors=[], lights=[], sensors=[], switches=[], thermostats=[]
+        aqualink,
+        coordinators={},
+        binary_sensors=[],
+        lights=[],
+        sensors=[],
+        switches=[],
+        thermostats=[],
     )
-    for system in systems:
+    for system in systems_list:
+        coordinator = AqualinkDataUpdateCoordinator(hass, entry, system)
+        runtime_data.coordinators[system.serial] = coordinator
+        try:
+            await coordinator.async_config_entry_first_refresh()
+        except ConfigEntryAuthFailed:
+            await aqualink.close()
+            raise
+
         try:
             devices = await system.get_devices()
-        except AqualinkServiceException as svc_exception:
+        except AqualinkServiceUnauthorizedException as auth_exception:
+            await aqualink.close()
+            raise ConfigEntryAuthFailed(
+                "Invalid credentials for iAquaLink"
+            ) from auth_exception
+        except (
+            AqualinkServiceException,
+            TimeoutError,
+            httpx.HTTPError,
+        ) as svc_exception:
             await aqualink.close()
             raise ConfigEntryNotReady(
-                f"Error while attempting to retrieve devices list: {svc_exception}"
+                "Error while attempting to retrieve devices list: "
+                f"{error_detail(svc_exception)}"
             ) from svc_exception
 
         device_registry = dr.async_get(hass)
@@ -146,32 +186,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: AqualinkConfigEntry) -> 
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
-    async def _async_systems_update(_: datetime) -> None:
-        """Refresh internal state for all systems."""
-        for system in systems:
-            prev = system.online
-
-            try:
-                await system.update()
-            except (AqualinkServiceException, httpx.HTTPError) as svc_exception:
-                if prev is not None:
-                    _LOGGER.warning(
-                        "Failed to refresh system %s state: %s",
-                        system.serial,
-                        svc_exception,
-                    )
-                await system.aqualink.close()
-            else:
-                cur = system.online
-                if cur and not prev:
-                    _LOGGER.warning("System %s reconnected to iAqualink", system.serial)
-
-            async_dispatcher_send(hass, DOMAIN)
-
-    entry.async_on_unload(
-        async_track_time_interval(hass, _async_systems_update, UPDATE_INTERVAL)
-    )
-
     return True
 
 
@@ -192,6 +206,6 @@ def refresh_system[_AqualinkEntityT: AqualinkEntity, **_P](
     ) -> None:
         """Call decorated function and send update signal to all entities."""
         await func(self, *args, **kwargs)
-        async_dispatcher_send(self.hass, DOMAIN)
+        self.coordinator.async_update_listeners()
 
     return wrapper

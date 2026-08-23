@@ -1,6 +1,6 @@
 """The Modern Forms integration."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -27,6 +27,7 @@ class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator
         self._entry_id = entry_id
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device information about this Modern Forms device."""
         return DeviceInfo(

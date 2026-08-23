@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_sensors[sensor.ijdok_long_parking_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,9 +39,9 @@
 # name: test_all_sensors[sensor.ijdok_long_parking_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by municipality of Amsterdam',
-      'friendly_name': 'IJDok Long parking capacity',
-      'unit_of_measurement': 'cars',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by municipality of Amsterdam',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IJDok Long parking capacity',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cars',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ijdok_long_parking_capacity',
@@ -52,11 +53,12 @@
 # ---
 # name: test_all_sensors[sensor.ijdok_long_parking_free_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -91,10 +93,10 @@
 # name: test_all_sensors[sensor.ijdok_long_parking_free_space-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by municipality of Amsterdam',
-      'friendly_name': 'IJDok Long parking free space',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'cars',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by municipality of Amsterdam',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IJDok Long parking free space',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cars',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ijdok_long_parking_free_space',
@@ -106,8 +108,9 @@
 # ---
 # name: test_all_sensors[sensor.ijdok_short_parking_capacity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -143,9 +146,9 @@
 # name: test_all_sensors[sensor.ijdok_short_parking_capacity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by municipality of Amsterdam',
-      'friendly_name': 'IJDok Short parking capacity',
-      'unit_of_measurement': 'cars',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by municipality of Amsterdam',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IJDok Short parking capacity',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cars',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ijdok_short_parking_capacity',
@@ -157,11 +160,12 @@
 # ---
 # name: test_all_sensors[sensor.ijdok_short_parking_free_space-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -196,10 +200,10 @@
 # name: test_all_sensors[sensor.ijdok_short_parking_free_space-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by municipality of Amsterdam',
-      'friendly_name': 'IJDok Short parking free space',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'cars',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by municipality of Amsterdam',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'IJDok Short parking free space',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'cars',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ijdok_short_parking_free_space',

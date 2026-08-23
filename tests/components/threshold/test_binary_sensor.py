@@ -2,6 +2,7 @@
 
 import pytest
 
+from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.components.threshold.const import (
     ATTR_HYSTERESIS,
     ATTR_LOWER,
@@ -68,7 +69,7 @@ async def test_sensor_upper(
         }
     }
 
-    assert await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.threshold")
@@ -114,7 +115,7 @@ async def test_sensor_lower(
         }
     }
 
-    assert await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.threshold")
@@ -176,7 +177,7 @@ async def test_sensor_upper_hysteresis(
         }
     }
 
-    assert await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.threshold")
@@ -238,7 +239,7 @@ async def test_sensor_lower_hysteresis(
         }
     }
 
-    assert await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.threshold")
@@ -300,7 +301,7 @@ async def test_sensor_in_range_no_hysteresis(
         }
     }
 
-    assert await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.threshold")
@@ -393,7 +394,7 @@ async def test_sensor_in_range_with_hysteresis(
         }
     }
 
-    assert await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     state = hass.states.get("binary_sensor.threshold")
@@ -428,7 +429,7 @@ async def test_sensor_in_range_unknown_state(
         }
     }
 
-    assert await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     hass.states.async_set(
@@ -478,7 +479,7 @@ async def test_sensor_lower_zero_threshold(hass: HomeAssistant) -> None:
         }
     }
 
-    assert await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.test_monitored", 16)
@@ -506,7 +507,7 @@ async def test_sensor_upper_zero_threshold(hass: HomeAssistant) -> None:
         }
     }
 
-    assert await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    assert await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     hass.states.async_set("sensor.test_monitored", -10)
@@ -535,7 +536,7 @@ async def test_sensor_no_lower_upper(
         }
     }
 
-    await async_setup_component(hass, Platform.BINARY_SENSOR, config)
+    await async_setup_component(hass, BINARY_SENSOR_DOMAIN, config)
     await hass.async_block_till_done()
 
     assert "Lower or Upper thresholds are not provided" in caplog.text
@@ -562,13 +563,13 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     utility_meter_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
-            CONF_ENTITY_ID: "sensor.test_source",
+            CONF_ENTITY_ID: source_entity.entity_id,
             CONF_HYSTERESIS: 0.0,
             CONF_LOWER: -2.0,
             CONF_NAME: "Threshold",
@@ -582,6 +583,49 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(utility_meter_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    utility_meter_entity = entity_registry.async_get("binary_sensor.threshold")
+    utility_meter_entity = entity_registry.async_get(
+        "binary_sensor.mock_title_threshold"
+    )
     assert utility_meter_entity is not None
     assert utility_meter_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured Threshold."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("sensor", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "sensor",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        "binary_sensor",
+        {
+            "binary_sensor": {
+                "platform": "threshold",
+                "name": "Threshold",
+                "entity_id": "sensor.test_source",
+                "lower": -2.0,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert hass.states.get("binary_sensor.threshold") is not None
+    assert "attempts to attach a device to an entity" not in caplog.text

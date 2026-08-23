@@ -1,8 +1,6 @@
 """Support for Goal Zero Yeti Sensors."""
 
-from __future__ import annotations
-
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -144,6 +142,7 @@ class GoalZeroSensor(GoalZeroEntity, SensorEntity):
     """Representation of a Goal Zero Yeti sensor."""
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state."""
         return cast(StateType, self._api.data[self.entity_description.key])

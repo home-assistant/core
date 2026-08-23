@@ -1,10 +1,13 @@
 # serializer version: 1
 # name: test_sensors[sensor.erics273_follower-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -38,8 +41,9 @@
 # name: test_sensors[sensor.erics273_follower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'erics273 Follower',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Follower',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_follower',
@@ -51,10 +55,13 @@
 # ---
 # name: test_sensors[sensor.erics273_following-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -88,8 +95,9 @@
 # name: test_sensors[sensor.erics273_following-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'erics273 Following',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Following',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_following',
@@ -101,10 +109,13 @@
 # ---
 # name: test_sensors[sensor.erics273_friends-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -138,8 +149,9 @@
 # name: test_sensors[sensor.erics273_friends-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'erics273 Friends',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Friends',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_friends',
@@ -151,10 +163,13 @@
 # ---
 # name: test_sensors[sensor.erics273_gamerscore-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -188,8 +203,9 @@
 # name: test_sensors[sensor.erics273_gamerscore-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'erics273 Gamerscore',
-      'unit_of_measurement': 'points',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Gamerscore',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'points',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_gamerscore',
@@ -201,8 +217,9 @@
 # ---
 # name: test_sensors[sensor.erics273_in_party-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -238,8 +255,8 @@
 # name: test_sensors[sensor.erics273_in_party-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'erics273 In party',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 In party',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_in_party',
@@ -251,8 +268,9 @@
 # ---
 # name: test_sensors[sensor.erics273_last_online-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -288,8 +306,8 @@
 # name: test_sensors[sensor.erics273_last_online-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'erics273 Last online',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Last online',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_last_online',
@@ -301,8 +319,9 @@
 # ---
 # name: test_sensors[sensor.erics273_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -340,10 +359,11 @@
     'attributes': ReadOnlyDict({
       'achievements': None,
       'developer': None,
-      'friendly_name': 'erics273 Now playing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Now playing',
       'gamerscore': None,
       'genres': None,
       'min_age': None,
+      'platform': None,
       'progress': None,
       'publisher': None,
       'release_date': None,
@@ -359,11 +379,12 @@
 # ---
 # name: test_sensors[sensor.erics273_party_join_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'invite_only',
         'joinable',
       ]),
@@ -401,9 +422,9 @@
 # name: test_sensors[sensor.erics273_party_join_restrictions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'erics273 Party join restrictions',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Party join restrictions',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'invite_only',
         'joinable',
       ]),
@@ -418,8 +439,9 @@
 # ---
 # name: test_sensors[sensor.erics273_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -455,7 +477,7 @@
 # name: test_sensors[sensor.erics273_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'erics273 Status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'erics273 Status',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.erics273_status',
@@ -467,10 +489,13 @@
 # ---
 # name: test_sensors[sensor.gsr_ae_follower-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -504,8 +529,9 @@
 # name: test_sensors[sensor.gsr_ae_follower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Follower',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Follower',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_follower',
@@ -517,10 +543,13 @@
 # ---
 # name: test_sensors[sensor.gsr_ae_following-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -554,8 +583,9 @@
 # name: test_sensors[sensor.gsr_ae_following-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Following',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Following',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_following',
@@ -567,10 +597,13 @@
 # ---
 # name: test_sensors[sensor.gsr_ae_friends-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -604,8 +637,9 @@
 # name: test_sensors[sensor.gsr_ae_friends-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Friends',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Friends',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_friends',
@@ -617,10 +651,13 @@
 # ---
 # name: test_sensors[sensor.gsr_ae_gamerscore-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -654,8 +691,9 @@
 # name: test_sensors[sensor.gsr_ae_gamerscore-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Gamerscore',
-      'unit_of_measurement': 'points',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Gamerscore',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'points',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_gamerscore',
@@ -667,8 +705,9 @@
 # ---
 # name: test_sensors[sensor.gsr_ae_in_party-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -704,8 +743,8 @@
 # name: test_sensors[sensor.gsr_ae_in_party-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae In party',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae In party',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_in_party',
@@ -717,8 +756,9 @@
 # ---
 # name: test_sensors[sensor.gsr_ae_last_online-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -754,8 +794,8 @@
 # name: test_sensors[sensor.gsr_ae_last_online-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'GSR Ae Last online',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Last online',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_last_online',
@@ -767,8 +807,9 @@
 # ---
 # name: test_sensors[sensor.gsr_ae_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -806,11 +847,12 @@
     'attributes': ReadOnlyDict({
       'achievements': '2 / 43',
       'developer': 'Mistwalker / Artoon',
-      'entity_picture': 'https://store-images.s-microsoft.com/image/apps.35072.13670972585585116.70570f0d-17aa-4f97-b692-5412fa183673.25a97451-9369-4f6b-b66b-3427913235eb',
-      'friendly_name': 'GSR Ae Now playing',
+      <EntityStateAttribute.ENTITY_PICTURE: 'entity_picture'>: 'https://store-images.s-microsoft.com/image/apps.35072.13670972585585116.70570f0d-17aa-4f97-b692-5412fa183673.25a97451-9369-4f6b-b66b-3427913235eb',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Now playing',
       'gamerscore': '10 / 1000',
       'genres': 'Role Playing',
       'min_age': 13,
+      'platform': 'Xbox 360',
       'progress': '1 %',
       'publisher': 'Microsoft',
       'release_date': datetime.date(2016, 12, 14),
@@ -826,11 +868,12 @@
 # ---
 # name: test_sensors[sensor.gsr_ae_party_join_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'invite_only',
         'joinable',
       ]),
@@ -868,9 +911,9 @@
 # name: test_sensors[sensor.gsr_ae_party_join_restrictions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'GSR Ae Party join restrictions',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Party join restrictions',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'invite_only',
         'joinable',
       ]),
@@ -885,8 +928,9 @@
 # ---
 # name: test_sensors[sensor.gsr_ae_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -922,7 +966,7 @@
 # name: test_sensors[sensor.gsr_ae_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'GSR Ae Status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'GSR Ae Status',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.gsr_ae_status',
@@ -934,10 +978,13 @@
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_follower-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -971,8 +1018,9 @@
 # name: test_sensors[sensor.ikken_hissatsuu_follower-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ikken Hissatsuu Follower',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Follower',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_follower',
@@ -984,10 +1032,13 @@
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_following-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1021,8 +1072,9 @@
 # name: test_sensors[sensor.ikken_hissatsuu_following-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ikken Hissatsuu Following',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Following',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_following',
@@ -1034,10 +1086,13 @@
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_friends-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1071,8 +1126,9 @@
 # name: test_sensors[sensor.ikken_hissatsuu_friends-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ikken Hissatsuu Friends',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Friends',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_friends',
@@ -1084,10 +1140,13 @@
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_gamerscore-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -1121,8 +1180,9 @@
 # name: test_sensors[sensor.ikken_hissatsuu_gamerscore-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ikken Hissatsuu Gamerscore',
-      'unit_of_measurement': 'points',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Gamerscore',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'points',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_gamerscore',
@@ -1134,8 +1194,9 @@
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_in_party-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1171,8 +1232,8 @@
 # name: test_sensors[sensor.ikken_hissatsuu_in_party-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ikken Hissatsuu In party',
-      'unit_of_measurement': 'people',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu In party',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'people',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_in_party',
@@ -1184,8 +1245,9 @@
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_last_online-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1221,8 +1283,8 @@
 # name: test_sensors[sensor.ikken_hissatsuu_last_online-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'timestamp',
-      'friendly_name': 'Ikken Hissatsuu Last online',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Last online',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_last_online',
@@ -1234,8 +1296,9 @@
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_now_playing-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1273,10 +1336,11 @@
     'attributes': ReadOnlyDict({
       'achievements': None,
       'developer': None,
-      'friendly_name': 'Ikken Hissatsuu Now playing',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Now playing',
       'gamerscore': None,
       'genres': None,
       'min_age': None,
+      'platform': None,
       'progress': None,
       'publisher': None,
       'release_date': None,
@@ -1292,11 +1356,12 @@
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_party_join_restrictions-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'invite_only',
         'joinable',
       ]),
@@ -1334,9 +1399,9 @@
 # name: test_sensors[sensor.ikken_hissatsuu_party_join_restrictions-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Ikken Hissatsuu Party join restrictions',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Party join restrictions',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'invite_only',
         'joinable',
       ]),
@@ -1351,8 +1416,9 @@
 # ---
 # name: test_sensors[sensor.ikken_hissatsuu_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1388,7 +1454,7 @@
 # name: test_sensors[sensor.ikken_hissatsuu_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Ikken Hissatsuu Status',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Ikken Hissatsuu Status',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ikken_hissatsuu_status',
@@ -1400,11 +1466,12 @@
 # ---
 # name: test_sensors[sensor.xone_free_space_external-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1445,10 +1512,10 @@
 # name: test_sensors[sensor.xone_free_space_external-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'XONE Free space - External',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONE Free space - External',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.xone_free_space_external',
@@ -1460,11 +1527,12 @@
 # ---
 # name: test_sensors[sensor.xone_free_space_internal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1505,10 +1573,10 @@
 # name: test_sensors[sensor.xone_free_space_internal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'XONE Free space - Internal',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONE Free space - Internal',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.xone_free_space_internal',
@@ -1520,11 +1588,12 @@
 # ---
 # name: test_sensors[sensor.xone_total_space_external-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1565,10 +1634,10 @@
 # name: test_sensors[sensor.xone_total_space_external-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'XONE Total space - External',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONE Total space - External',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.xone_total_space_external',
@@ -1580,11 +1649,12 @@
 # ---
 # name: test_sensors[sensor.xone_total_space_internal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1625,10 +1695,10 @@
 # name: test_sensors[sensor.xone_total_space_internal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'XONE Total space - Internal',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONE Total space - Internal',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.xone_total_space_internal',
@@ -1640,11 +1710,12 @@
 # ---
 # name: test_sensors[sensor.xonex_free_space_internal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1685,10 +1756,10 @@
 # name: test_sensors[sensor.xonex_free_space_internal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'XONEX Free space - Internal',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONEX Free space - Internal',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.xonex_free_space_internal',
@@ -1700,11 +1771,12 @@
 # ---
 # name: test_sensors[sensor.xonex_total_space_internal-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1745,10 +1817,10 @@
 # name: test_sensors[sensor.xonex_total_space_internal-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'XONEX Total space - Internal',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIBIBYTES: 'GiB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'XONEX Total space - Internal',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIBIBYTES: 'GiB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.xonex_total_space_internal',

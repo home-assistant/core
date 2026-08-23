@@ -14,7 +14,6 @@ from homeassistant.const import (
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
-    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -23,6 +22,7 @@ from homeassistant.util import slugify
 from . import init_integration
 from .consts import (
     DUMMY_DUAL_SHUTTER_SINGLE_LIGHT_DEVICE as DEVICE3,
+    DUMMY_HEATER_DEVICE,
     DUMMY_PLUG_DEVICE,
     DUMMY_SHUTTER_DEVICE as DEVICE,
     DUMMY_SINGLE_SHUTTER_DUAL_LIGHT_DEVICE as DEVICE2,
@@ -87,6 +87,56 @@ async def test_switch(
         assert state.state == STATE_OFF
 
 
+@pytest.mark.parametrize("mock_bridge", [[DUMMY_HEATER_DEVICE]], indirect=True)
+async def test_switch_token_needed(
+    hass: HomeAssistant, mock_bridge, mock_api, monkeypatch: pytest.MonkeyPatch
+) -> None:
+    """Test the switch."""
+    await init_integration(hass, USERNAME, TOKEN)
+    assert mock_bridge
+
+    device = DUMMY_HEATER_DEVICE
+    entity_id = f"{SWITCH_DOMAIN}.{slugify(device.name)}"
+
+    # Test initial state - on
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    # Test state change on --> off
+    monkeypatch.setattr(device, "device_state", DeviceState.OFF)
+    mock_bridge.mock_callbacks([device])
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+    # Test turning on
+    with patch(
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device",
+    ) as mock_control_device:
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_ON, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    assert mock_api.call_count == 2
+    mock_control_device.assert_called_once_with(Command.ON)
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_ON
+
+    # Test turning off
+    with patch(
+        "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device"
+    ) as mock_control_device:
+        await hass.services.async_call(
+            SWITCH_DOMAIN, SERVICE_TURN_OFF, {ATTR_ENTITY_ID: entity_id}, blocking=True
+        )
+
+    assert mock_api.call_count == 4
+    mock_control_device.assert_called_once_with(Command.OFF)
+    state = hass.states.get(entity_id)
+    assert state.state == STATE_OFF
+
+
 @pytest.mark.parametrize("mock_bridge", [[DUMMY_WATER_HEATER_DEVICE]], indirect=True)
 async def test_switch_ignore_previous_async_state(
     hass: HomeAssistant, mock_bridge, mock_api
@@ -148,7 +198,8 @@ async def test_switch_control_fail(
     state = hass.states.get(entity_id)
     assert state.state == STATE_OFF
 
-    # Test exception during turn on
+    # Test exception during turn on - the call fails but a single failed
+    # command must not flap the entity unavailable.
     with patch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device",
         side_effect=RuntimeError("fake error"),
@@ -164,16 +215,9 @@ async def test_switch_control_fail(
         assert mock_api.call_count == 2
         mock_control_device.assert_called_once_with(Command.ON)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == STATE_OFF
 
-    # Make device available again
-    mock_bridge.mock_callbacks([DUMMY_PLUG_DEVICE])
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
-
-    # Test error response during turn on
+    # Test error response during turn on - same, the entity stays available.
     with patch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.control_device",
         return_value=SwitcherBaseResponse(None),
@@ -189,7 +233,7 @@ async def test_switch_control_fail(
         assert mock_api.call_count == 4
         mock_control_device.assert_called_once_with(Command.ON)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == STATE_OFF
 
 
 @pytest.mark.parametrize(
@@ -391,16 +435,9 @@ async def test_child_lock_control_fail(
         assert mock_api.call_count == 2
         mock_control_device.assert_called_once_with(ShutterChildLock.ON, cover_id)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == STATE_OFF
 
-    # Make device available again
-    mock_bridge.mock_callbacks([device])
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state.state == STATE_OFF
-
-    # Test error response during turn on
+    # Test error response during turn on - the entity stays available.
     with patch(
         "homeassistant.components.switcher_kis.entity.SwitcherApi.set_shutter_child_lock",
         return_value=SwitcherBaseResponse(None),
@@ -416,4 +453,4 @@ async def test_child_lock_control_fail(
         assert mock_api.call_count == 4
         mock_control_device.assert_called_once_with(ShutterChildLock.ON, cover_id)
         state = hass.states.get(entity_id)
-        assert state.state == STATE_UNAVAILABLE
+        assert state.state == STATE_OFF

@@ -1,22 +1,14 @@
 """Support for KNX date entities."""
 
-from __future__ import annotations
-
 from datetime import date as dt_date
-from typing import Any
+from typing import Any, override
 
 from xknx.devices import DateDevice as XknxDateDevice
 from xknx.dpt.dpt_11 import KNXDate as XKNXDate
 
 from homeassistant import config_entries
 from homeassistant.components.date import DateEntity
-from homeassistant.const import (
-    CONF_ENTITY_CATEGORY,
-    CONF_NAME,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-    Platform,
-)
+from homeassistant.const import CONF_NAME, STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -33,7 +25,12 @@ from .const import (
     KNX_ADDRESS,
     KNX_MODULE_KEY,
 )
-from .entity import KnxUiEntity, KnxUiEntityPlatformController, KnxYamlEntity
+from .entity import (
+    KnxUiEntity,
+    KnxUiEntityPlatformController,
+    KnxYamlEntity,
+    build_yaml_unique_id,
+)
 from .knx_module import KNXModule
 from .storage.const import CONF_ENTITY, CONF_GA_DATE
 from .storage.util import ConfigExtractor
@@ -76,23 +73,24 @@ class _KNXDate(DateEntity, RestoreEntity):
 
     _device: XknxDateDevice
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Restore last state."""
         await super().async_added_to_hass()
         if (
-            not self._device.remote_value.readable
-            and (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-        ):
+            last_state := await self.async_get_last_state()
+        ) is not None and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE):
             self._device.remote_value.value = XKNXDate.from_date(
                 dt_date.fromisoformat(last_state.state)
             )
 
     @property
+    @override
     def native_value(self) -> dt_date | None:
         """Return the latest value."""
         return self._device.value
 
+    @override
     async def async_set_value(self, value: dt_date) -> None:
         """Change the value."""
         await self._device.set(value)
@@ -105,20 +103,20 @@ class KnxYamlDate(_KNXDate, KnxYamlEntity):
 
     def __init__(self, knx_module: KNXModule, config: ConfigType) -> None:
         """Initialize a KNX date."""
+        self._device = XknxDateDevice(
+            knx_module.xknx,
+            name=config[CONF_NAME],
+            localtime=False,
+            group_address=config[KNX_ADDRESS],
+            group_address_state=config.get(CONF_STATE_ADDRESS),
+            respond_to_read=config[CONF_RESPOND_TO_READ],
+            sync_state=config[CONF_SYNC_STATE],
+        )
         super().__init__(
             knx_module=knx_module,
-            device=XknxDateDevice(
-                knx_module.xknx,
-                name=config[CONF_NAME],
-                localtime=False,
-                group_address=config[KNX_ADDRESS],
-                group_address_state=config.get(CONF_STATE_ADDRESS),
-                respond_to_read=config[CONF_RESPOND_TO_READ],
-                sync_state=config[CONF_SYNC_STATE],
-            ),
+            unique_id=build_yaml_unique_id(self._device.remote_value.group_address),
+            entity_config=config,
         )
-        self._attr_entity_category = config.get(CONF_ENTITY_CATEGORY)
-        self._attr_unique_id = str(self._device.remote_value.group_address)
 
 
 class KnxUiDate(_KNXDate, KnxUiEntity):

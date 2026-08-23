@@ -20,11 +20,6 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, async_get_device_automations
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     ("set_state", "features_reg", "features_state", "expected_condition_types"),
     [
@@ -59,7 +54,9 @@ async def test_get_conditions(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+            entity_entry.entity_id,
+            "attributes",
+            {"supported_features": features_state},
         )
     expected_conditions = []
     basic_condition_types = ["is_on", "is_off"]
@@ -220,7 +217,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_mode - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_mode - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -298,7 +298,10 @@ async def test_if_state_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_mode - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_mode - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

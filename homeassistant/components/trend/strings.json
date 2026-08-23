@@ -42,7 +42,7 @@
   "services": {
     "reload": {
       "description": "Reloads trend sensors from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload trend sensors"
     }
   },
   "title": "Trend"

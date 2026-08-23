@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switches[switch.scrubbed_spa_filter_pump-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_switches[switch.scrubbed_spa_filter_pump-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SCRUBBED Spa  Filter Pump ',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SCRUBBED Spa  Filter Pump ',
     }),
     'context': <ANY>,
     'entity_id': 'switch.scrubbed_spa_filter_pump',
@@ -50,8 +51,9 @@
 # ---
 # name: test_switches[switch.scrubbed_spa_spa_jets-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_switches[switch.scrubbed_spa_spa_jets-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'SCRUBBED Spa  Spa Jets ',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'SCRUBBED Spa  Spa Jets ',
     }),
     'context': <ANY>,
     'entity_id': 'switch.scrubbed_spa_spa_jets',

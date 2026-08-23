@@ -1,21 +1,16 @@
 """The tests for the water heater component."""
 
-from __future__ import annotations
-
-from typing import Any
 from unittest import mock
 from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 import voluptuous as vol
 
-from homeassistant.components import water_heater
 from homeassistant.components.water_heater import (
     DOMAIN,
     SERVICE_SET_OPERATION_MODE,
     SET_TEMPERATURE_SCHEMA,
     WaterHeaterEntity,
-    WaterHeaterEntityDescription,
     WaterHeaterEntityFeature,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -30,7 +25,6 @@ from tests.common import (
     MockModule,
     MockPlatform,
     async_mock_service,
-    import_and_test_deprecated_constant,
     mock_integration,
     mock_platform,
 )
@@ -91,13 +85,13 @@ async def test_sync_turn_on(hass: HomeAssistant) -> None:
     water_heater.hass = hass
 
     # Test with turn_on method defined
-    setattr(water_heater, "turn_on", MagicMock())
+    water_heater.turn_on = MagicMock()
     await water_heater.async_turn_on()
 
     assert water_heater.turn_on.call_count == 1
 
     # Test with async_turn_on method defined
-    setattr(water_heater, "async_turn_on", AsyncMock())
+    water_heater.async_turn_on = AsyncMock()
     await water_heater.async_turn_on()
 
     assert water_heater.async_turn_on.call_count == 1
@@ -109,13 +103,13 @@ async def test_sync_turn_off(hass: HomeAssistant) -> None:
     water_heater.hass = hass
 
     # Test with turn_off method defined
-    setattr(water_heater, "turn_off", MagicMock())
+    water_heater.turn_off = MagicMock()
     await water_heater.async_turn_off()
 
     assert water_heater.turn_off.call_count == 1
 
     # Test with async_turn_off method defined
-    setattr(water_heater, "async_turn_off", AsyncMock())
+    water_heater.async_turn_off = AsyncMock()
     await water_heater.async_turn_off()
 
     assert water_heater.async_turn_off.call_count == 1
@@ -210,30 +204,3 @@ async def test_operation_mode_validation(
     )
     await hass.async_block_till_done()
     water_heater_entity.set_operation_mode.assert_has_calls([mock.call("eco")])
-
-
-@pytest.mark.parametrize(
-    ("constant_name", "replacement_name", "replacement"),
-    [
-        (
-            "WaterHeaterEntityEntityDescription",
-            "WaterHeaterEntityDescription",
-            WaterHeaterEntityDescription,
-        ),
-    ],
-)
-def test_deprecated_constants(
-    caplog: pytest.LogCaptureFixture,
-    constant_name: str,
-    replacement_name: str,
-    replacement: Any,
-) -> None:
-    """Test deprecated automation constants."""
-    import_and_test_deprecated_constant(
-        caplog,
-        water_heater,
-        constant_name,
-        replacement_name,
-        replacement,
-        "2026.1",
-    )

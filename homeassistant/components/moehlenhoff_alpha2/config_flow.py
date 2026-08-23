@@ -1,7 +1,7 @@
 """Alpha2 config flow."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from moehlenhoff_alpha2 import Alpha2Base
@@ -26,7 +26,7 @@ async def validate_input(data: dict[str, Any]) -> dict[str, str]:
     base = Alpha2Base(data[CONF_HOST])
     try:
         await base.update_data()
-    except (aiohttp.client_exceptions.ClientConnectorError, TimeoutError):
+    except aiohttp.client_exceptions.ClientConnectorError, TimeoutError:
         return {"error": "cannot_connect"}
     except Exception:
         _LOGGER.exception("Unexpected exception")
@@ -41,6 +41,7 @@ class Alpha2BaseConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

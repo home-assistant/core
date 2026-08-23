@@ -1,8 +1,7 @@
 """Tests for the EnOcean switch platform."""
 
-from enocean.utils import combine_hex
-
 from homeassistant.components.enocean import DOMAIN
+from homeassistant.components.enocean.entity import combine_hex
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er

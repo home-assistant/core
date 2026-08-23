@@ -158,9 +158,7 @@ async def test_pairing(hass: HomeAssistant, mock_tv_pairable, mock_setup_entry) 
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_pair_request_failed(
-    hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
-) -> None:
+async def test_pair_request_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
     mock_tv.pairRequest.side_effect = PairingFailure({})
@@ -185,9 +183,7 @@ async def test_pair_request_failed(
     }
 
 
-async def test_pair_grant_failed(
-    hass: HomeAssistant, mock_tv_pairable, mock_setup_entry
-) -> None:
+async def test_pair_grant_failed(hass: HomeAssistant, mock_tv_pairable) -> None:
     """Test we get the form."""
     mock_tv = mock_tv_pairable
 

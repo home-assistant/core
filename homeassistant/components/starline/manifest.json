@@ -4,6 +4,7 @@
   "codeowners": ["@anonym-tsk"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/starline",
+  "integration_type": "hub",
   "iot_class": "cloud_polling",
   "loggers": ["starline"],
   "requirements": ["starline==0.1.5"]

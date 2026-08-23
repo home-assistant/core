@@ -26,7 +26,8 @@ class MastodonEntity(CoordinatorEntity[MastodonCoordinator]):
         assert unique_id is not None
         self._attr_unique_id = f"{unique_id}_{entity_description.key}"
 
-        # Legacy yaml config default title is Mastodon, don't make name Mastodon Mastodon
+        # Legacy yaml config default title is Mastodon,
+        # don't make name Mastodon Mastodon
         name = "Mastodon"
         if data.title != DEFAULT_NAME:
             name = f"Mastodon {data.title}"
@@ -45,3 +46,4 @@ class MastodonEntity(CoordinatorEntity[MastodonCoordinator]):
         )
 
         self.entity_description = entity_description
+        self.instance = data.runtime_data.instance

@@ -1,21 +1,21 @@
 """Common fixtures for the ToneWinner AT-500 tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
-from serial_asyncio_fast import SerialTransport
 
 from homeassistant.components.tonewinner.const import (
     CONF_BAUD_RATE,
     CONF_SERIAL_PORT,
     DOMAIN,
 )
+
 from tests.common import MockConfigEntry
 
 
 @pytest.fixture
-def mock_config_entry():
+def mock_config_entry() -> MockConfigEntry:
     """Return a mock config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
@@ -30,18 +30,33 @@ def mock_config_entry():
 
 
 @pytest.fixture
-def mock_serial_connection():
-    """Mock serial connection."""
-    transport = MagicMock(spec=SerialTransport)
-    transport.write = MagicMock()
-    transport.close = MagicMock()
-    transport.protocol = MagicMock()
-
-    with patch(
-        "serial_asyncio_fast.create_serial_connection",
-        return_value=(transport, MagicMock()),
-    ):
-        yield transport
+def mock_receiver() -> MagicMock:
+    """Return a mock TonewinnerReceiver."""
+    receiver = MagicMock()
+    receiver.connected = True
+    receiver.state.power = False
+    receiver.state.volume = 50.0
+    receiver.state.mute = False
+    receiver.state.source_name = None
+    receiver.state.audio_source = None
+    receiver.state.sound_mode_label = None
+    type(receiver).state = PropertyMock(return_value=receiver.state)
+    receiver.connect = AsyncMock()
+    receiver.disconnect = AsyncMock()
+    receiver.query_state = AsyncMock()
+    receiver.query_source = AsyncMock()
+    receiver.power_on = AsyncMock()
+    receiver.power_off = AsyncMock()
+    receiver.set_volume = AsyncMock()
+    receiver.volume_up = AsyncMock()
+    receiver.volume_down = AsyncMock()
+    receiver.mute_on = AsyncMock()
+    receiver.mute_off = AsyncMock()
+    receiver.select_source = AsyncMock()
+    receiver.select_sound_mode = AsyncMock()
+    receiver.send_command = AsyncMock()
+    receiver.subscribe = MagicMock(return_value=lambda: None)
+    return receiver
 
 
 @pytest.fixture

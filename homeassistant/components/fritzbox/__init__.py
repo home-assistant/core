@@ -1,11 +1,11 @@
 """Support for AVM FRITZ!SmartHome devices."""
 
-from __future__ import annotations
+from requests.exceptions import ConnectionError as RequestConnectionError, HTTPError
 
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, UnitOfTemperature
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry, async_migrate_entries
 
 from .const import DOMAIN, LOGGER, PLATFORMS
@@ -57,13 +57,16 @@ async def async_setup_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> 
 
 async def async_unload_entry(hass: HomeAssistant, entry: FritzboxConfigEntry) -> bool:
     """Unloading the AVM FRITZ!SmartHome platforms."""
-    await hass.async_add_executor_job(entry.runtime_data.fritz.logout)
+    try:
+        await hass.async_add_executor_job(entry.runtime_data.fritz.logout)
+    except (RequestConnectionError, HTTPError) as ex:
+        LOGGER.debug("logout failed with '%s', anyway continue with unload", ex)
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: FritzboxConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: FritzboxConfigEntry, device: AnyDeviceEntry
 ) -> bool:
     """Remove Fritzbox config entry from a device."""
     coordinator = entry.runtime_data

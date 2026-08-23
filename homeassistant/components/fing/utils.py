@@ -16,7 +16,7 @@ class DeviceType(Enum):
     GAME_CONSOLE = "mdi:nintendo-game-boy"
     STREAMING_DONGLE = "mdi:cast"
     LOUDSPEAKER = SOUND_SYSTEM = STB = SATELLITE = MUSIC = "mdi:speaker"
-    DISC_PLAYER = "mdi:disk-player"
+    DISC_PLAYER = "mdi:disc-player"
     REMOTE_CONTROL = "mdi:remote-tv"
     RADIO = "mdi:radio"
     PHOTO_CAMERA = PHOTOS = "mdi:camera"
@@ -81,5 +81,5 @@ def get_icon_from_type(type: str) -> str:
     """Return the right icon based on the type."""
     try:
         return DeviceType[type].value
-    except (ValueError, KeyError):
+    except ValueError, KeyError:
         return "mdi:lan-connect"

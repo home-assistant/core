@@ -10,7 +10,7 @@ from homeassistant.components.update import (
     ATTR_LATEST_VERSION,
     ATTR_RELEASE_SUMMARY,
     ATTR_RELEASE_URL,
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as UPDATE_DOMAIN,
     SERVICE_INSTALL,
     UpdateDeviceClass,
 )
@@ -148,7 +148,7 @@ async def test_update_available(hass: HomeAssistant) -> None:
     )
 
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        UPDATE_DOMAIN,
         SERVICE_INSTALL,
         {ATTR_ENTITY_ID: "update.friendly_name"},
         blocking=True,
@@ -166,7 +166,7 @@ async def test_firmware_update_not_required(hass: HomeAssistant) -> None:
 
     with pytest.raises(HomeAssistantError):
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            UPDATE_DOMAIN,
             SERVICE_INSTALL,
             {ATTR_ENTITY_ID: "update.friendly_name"},
             blocking=True,

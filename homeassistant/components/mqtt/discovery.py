@@ -1,7 +1,5 @@
 """Support for MQTT discovery."""
 
-from __future__ import annotations
-
 import asyncio
 from collections import deque
 from dataclasses import dataclass
@@ -21,7 +19,11 @@ from homeassistant.config_entries import (
 )
 from homeassistant.const import CONF_DEVICE, CONF_PLATFORM
 from homeassistant.core import HassJobType, HomeAssistant, callback
-from homeassistant.helpers import config_validation as cv, discovery_flow
+from homeassistant.helpers import (
+    config_validation as cv,
+    discovery_flow,
+    entity_registry as er,
+)
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
@@ -40,6 +42,7 @@ from .const import (
     ATTR_DISCOVERY_TOPIC,
     CONF_AVAILABILITY,
     CONF_COMPONENTS,
+    CONF_DISCOVERY_QOS,
     CONF_ORIGIN,
     CONF_TOPIC,
     DOMAIN,
@@ -47,7 +50,10 @@ from .const import (
 )
 from .models import DATA_MQTT, MqttComponentConfig, MqttOriginInfo, ReceiveMessage
 from .schemas import DEVICE_DISCOVERY_SCHEMA, MQTT_ORIGIN_INFO_SCHEMA, SHARED_OPTIONS
-from .util import async_forward_entry_setup_and_setup_discovery
+from .util import (
+    async_cleanup_device_registry,
+    async_forward_entry_setup_and_setup_discovery,
+)
 
 ABBREVIATIONS_SET = set(ABBREVIATIONS)
 DEVICE_ABBREVIATIONS_SET = set(DEVICE_ABBREVIATIONS)
@@ -337,9 +343,11 @@ def _merge_common_device_options(
         CONF_AVAILABILITY_TEMPLATE,
         CONF_AVAILABILITY_TOPIC,
         CONF_COMMAND_TOPIC,
+        CONF_ENCODING,
         CONF_PAYLOAD_AVAILABLE,
         CONF_PAYLOAD_NOT_AVAILABLE,
         CONF_STATE_TOPIC,
+        CONF_QOS
     Common options in the body of the device based config are inherited into
     the component. Unless the option is explicitly specified at component level,
     in that case the option at component level will override the common option.
@@ -547,7 +555,7 @@ async def async_start(  # noqa: C901
                     MQTT_DISCOVERY_DONE.format(*discovery_hash),
                     discovery_done,
                 ),
-                "pending": deque([]),
+                "pending": deque(),
             }
 
         if component not in mqtt_data.platforms_loaded and payload:
@@ -557,7 +565,10 @@ async def async_start(  # noqa: C901
             )
         elif already_discovered:
             # Dispatch update
-            message = f"Component has already been discovered: {component} {discovery_id}, sending update"
+            message = (
+                f"Component has already been discovered:"
+                f" {component} {discovery_id}, sending update"
+            )
             async_log_discovery_origin_info(message, payload)
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_UPDATED.format(*discovery_hash), payload
@@ -565,17 +576,39 @@ async def async_start(  # noqa: C901
         elif payload:
             _async_add_component(payload)
         else:
-            # Unhandled discovery message
+            entity_registry = er.async_get(hass)
+            if (
+                (
+                    entity_hash := mqtt_data.discovery_discovered_and_disabled.pop(
+                        discovery_hash, None
+                    )
+                )
+                and (entity_id := entity_registry.entities.get_entity_id(entity_hash))
+                and (entity_entry := entity_registry.async_get(entity_id))
+            ):
+                # Cleanup discovered disabled entity / device
+                entity_registry.async_remove(entity_id)
+                hass.async_create_task(
+                    async_cleanup_device_registry(
+                        hass,
+                        device_id=entity_entry.device_id,
+                        config_entry_id=entity_entry.config_entry_id,
+                    ),
+                    name=f"Check for cleanup device registry for {entity_id}",
+                )
+
+            # Finish handling discovery message
             async_dispatcher_send(
                 hass, MQTT_DISCOVERY_DONE.format(*discovery_hash), None
             )
 
+    discovery_qos: int = config_entry.options.get(CONF_DISCOVERY_QOS, 0)
     mqtt_data.discovery_unsubscribe = [
         async_subscribe_internal(
             hass,
             topic,
             async_discovery_message_received,
-            0,
+            discovery_qos,
             job_type=HassJobType.Callback,
         )
         # Subscribe first for platform discovery wildcard topics first,
@@ -680,7 +713,7 @@ async def async_start(  # noqa: C901
                 hass,
                 topic,
                 functools.partial(async_integration_message_received, integration),
-                0,
+                discovery_qos,
                 job_type=HassJobType.Coroutinefunction,
             )
             for integration, topics in mqtt_integrations.items()

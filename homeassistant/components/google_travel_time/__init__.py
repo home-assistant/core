@@ -5,13 +5,24 @@ import logging
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
-from .const import CONF_TIME
+from .const import CONF_TIME, DOMAIN
+from .services import async_setup_services
 
 PLATFORMS = [Platform.SENSOR]
 
 _LOGGER = logging.getLogger(__name__)
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Google Travel Time component."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -46,7 +57,9 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
                     )
                 except ValueError:
                     _LOGGER.error(
-                        "Invalid time format found while migrating: %s. The old config never worked. Reset to default (empty)",
+                        "Invalid time format found while migrating: %s."
+                        " The old config never worked."
+                        " Reset to default (empty)",
                         options[CONF_TIME],
                     )
                     options[CONF_TIME] = None

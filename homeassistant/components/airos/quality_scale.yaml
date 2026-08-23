@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: airOS does not have actions
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: local_polling without events
@@ -42,16 +48,20 @@ rules:
   # Gold
   devices: done
   diagnostics: done
-  discovery-update-info: todo
-  discovery: todo
+  discovery-update-info: done
+  discovery:
+    status: exempt
+    comment: No way to detect device on the network
   docs-data-update: done
-  docs-examples: todo
+  docs-examples: done
   docs-known-limitations: done
   docs-supported-devices: done
   docs-supported-functions: done
   docs-troubleshooting: done
   docs-use-cases: done
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: single airOS device per config entry; peer/remote endpoints are not modeled as child devices/entities at this time
   entity-category: done
   entity-device-class: done
   entity-disabled-by-default: done
@@ -61,8 +71,10 @@ rules:
     status: exempt
     comment: no (custom) icons used or envisioned
   reconfiguration-flow: done
-  repair-issues: todo
-  stale-devices: todo
+  repair-issues: done
+  stale-devices:
+    status: exempt
+    comment: single airOS device per config entry; peer/remote endpoints are not modeled as child devices/entities at this time
 
   # Platinum
   async-dependency: done

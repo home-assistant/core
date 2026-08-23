@@ -1,7 +1,5 @@
 """Handle the auth of a connection."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import TYPE_CHECKING, Any, Final
 
@@ -9,7 +7,9 @@ from aiohttp.web import Request
 import voluptuous as vol
 from voluptuous.humanize import humanize_error
 
+from homeassistant.components.http.auth_util import async_user_not_allowed_do_auth
 from homeassistant.components.http.ban import process_success_login, process_wrong_login
+from homeassistant.components.http.const import KEY_HASS_USER
 from homeassistant.const import __version__
 from homeassistant.core import CALLBACK_TYPE, HomeAssistant
 from homeassistant.helpers.json import json_bytes
@@ -68,6 +68,20 @@ class AuthPhase:
         # send_bytes_text will directly send a message to the client.
         self._send_bytes_text = send_bytes_text
 
+    async def async_handle_supervisor_unix_socket(self) -> ActiveConnection:
+        """Handle a pre-authenticated Unix socket connection."""
+        conn = ActiveConnection(
+            self._logger,
+            self._hass,
+            self._send_message,
+            self._request[KEY_HASS_USER],
+            refresh_token=None,
+            remote=self._request.remote,
+        )
+        await self._send_bytes_text(AUTH_OK_MESSAGE)
+        self._logger.debug("Auth OK (unix socket)")
+        return conn
+
     async def async_handle(self, msg: JsonValueType) -> ActiveConnection:
         """Handle authentication."""
         try:
@@ -83,12 +97,20 @@ class AuthPhase:
         if (access_token := valid_msg.get("access_token")) and (
             refresh_token := self._hass.auth.async_validate_access_token(access_token)
         ):
+            if user_access_error := async_user_not_allowed_do_auth(
+                self._hass, refresh_token.user, self._request
+            ):
+                await self._send_bytes_text(auth_invalid_message(user_access_error))
+                await process_wrong_login(self._request)
+                raise Disconnect
+
             conn = ActiveConnection(
                 self._logger,
                 self._hass,
                 self._send_message,
                 refresh_token.user,
                 refresh_token,
+                remote=self._request.remote,
             )
             conn.subscriptions["auth"] = (
                 self._hass.auth.async_register_revoke_token_callback(

@@ -1,5 +1,6 @@
 """Test KNX sensor."""
 
+import logging
 from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
@@ -11,6 +12,7 @@ from homeassistant.components.knx.const import (
     CONF_SYNC_STATE,
 )
 from homeassistant.components.knx.schema import SensorSchema
+from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.const import CONF_NAME, CONF_TYPE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant, State
 
@@ -22,6 +24,7 @@ from tests.common import (
     async_fire_time_changed,
     mock_restore_cache_with_extra_data,
 )
+from tests.typing import WebSocketGenerator
 
 
 async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -42,13 +45,18 @@ async def test_sensor(hass: HomeAssistant, knx: KNXTestKit) -> None:
     # StateUpdater initialize state
     await knx.assert_read("1/1/1")
     await knx.receive_response("1/1/1", (0, 40))
-    state = hass.states.get("sensor.test")
-    assert state.state == "40"
+    knx.assert_state(
+        "sensor.test",
+        "40",
+        # default values for DPT type "current"
+        device_class=SensorDeviceClass.CURRENT,
+        state_class=SensorStateClass.MEASUREMENT,
+        unit_of_measurement="mA",
+    )
 
     # update from KNX
     await knx.receive_write("1/1/1", (0x03, 0xE8))
-    state = hass.states.get("sensor.test")
-    assert state.state == "1000"
+    knx.assert_state("sensor.test", "1000")
 
     # don't answer to GroupValueRead requests
     await knx.receive_read("1/1/1")
@@ -84,7 +92,8 @@ async def test_sensor_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
     knx.assert_state("sensor.test", RESTORED_STATE, **RESTORED_STATE_ATTRIBUTES)
     await knx.assert_telegram_count(0)
 
-    # receiving the restored value from restored source does not trigger state_changed event
+    # receiving the restored value from restored source does not
+    # trigger state_changed event
     events = async_capture_events(hass, "state_changed")
     await knx.receive_write(ADDRESS, RAW_FLOAT_21_0)
     assert not events
@@ -173,6 +182,44 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
 
 @pytest.mark.parametrize(
+    "attribute_config",
+    [
+        {"state_class": "total_increasing"},  # invalid for temperature DPT
+        {"unit_of_measurement": "invalid"},
+        {"device_class": "energy", "unit_of_measurement": "invalid"},
+    ],
+)
+async def test_sensor_yaml_attribute_validation(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    knx: KNXTestKit,
+    attribute_config: dict[str, Any],
+) -> None:
+    """Test creating a sensor with invalid unit, state_class or device_class."""
+    with caplog.at_level(logging.ERROR):
+        await knx.setup_integration(
+            {
+                SensorSchema.PLATFORM: {
+                    CONF_NAME: "test",
+                    CONF_STATE_ADDRESS: "1/1/1",
+                    CONF_TYPE: "9.001",  # temperature 2 byte float
+                    **attribute_config,
+                }
+            }
+        )
+    assert len(caplog.messages) == 2
+    record = caplog.records[0]
+    assert record.levelname == "ERROR"
+    assert "Invalid config for 'knx': " in record.message
+
+    record = caplog.records[1]
+    assert record.levelname == "ERROR"
+    assert "Setup failed for 'knx': Invalid config." in record.message
+
+    assert hass.states.get("sensor.test") is None
+
+
+@pytest.mark.parametrize(
     ("knx_config", "response_payload", "expected_state"),
     [
         (
@@ -186,8 +233,8 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
             (0, 0),
             {
                 "state": "0.0",
-                "device_class": "temperature",
-                "state_class": "measurement",
+                "device_class": SensorDeviceClass.TEMPERATURE,
+                "state_class": SensorStateClass.MEASUREMENT,
                 "unit_of_measurement": "°C",
             },
         ),
@@ -206,8 +253,8 @@ async def test_always_callback(hass: HomeAssistant, knx: KNXTestKit) -> None:
             (1, 2, 3, 4),
             {
                 "state": "16909060",
-                "device_class": "energy",
-                "state_class": "total_increasing",
+                "device_class": SensorDeviceClass.ENERGY,
+                "state_class": SensorStateClass.TOTAL_INCREASING,
             },
         ),
     ],
@@ -288,17 +335,25 @@ async def test_sensor_ui_load(knx: KNXTestKit) -> None:
 async def test_sensor_ui_create_attribute_validation(
     hass: HomeAssistant,
     knx: KNXTestKit,
-    create_ui_entity: KnxEntityGenerator,
+    hass_ws_client: WebSocketGenerator,
     knx_config: dict[str, Any],
 ) -> None:
     """Test creating a sensor with invalid unit, state_class or device_class."""
     await knx.setup_integration()
-    with pytest.raises(AssertionError) as err:
-        await create_ui_entity(
-            platform=Platform.SENSOR,
-            entity_data={"name": "test"},
-            knx_data=knx_config,
-        )
-    assert "success" in err.value.args[0]
-    assert "error_base" in err.value.args[0]
-    assert "path" in err.value.args[0]
+    client = await hass_ws_client(hass)
+
+    await client.send_json_auto_id(
+        {
+            "type": "knx/create_entity",
+            "platform": Platform.SENSOR,
+            "data": {
+                "entity": {"name": "test"},
+                "knx": knx_config,
+            },
+        }
+    )
+    res = await client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is False
+    assert res["result"]["error_base"]
+    assert res["result"]["errors"][0]["path"]

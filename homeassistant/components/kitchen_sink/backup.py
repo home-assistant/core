@@ -1,11 +1,9 @@
 """Backup platform for the kitchen_sink integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator, Callable, Coroutine
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.backup import (
     AddonInfo,
@@ -13,6 +11,7 @@ from homeassistant.components.backup import (
     BackupAgent,
     BackupNotFound,
     Folder,
+    OnProgressCallback,
 )
 from homeassistant.core import HomeAssistant, callback
 
@@ -74,6 +73,7 @@ class KitchenSinkBackupAgent(BackupAgent):
             )
         ]
 
+    @override
     async def async_download_backup(
         self,
         backup_id: str,
@@ -86,17 +86,20 @@ class KitchenSinkBackupAgent(BackupAgent):
         reader.feed_eof()
         return reader
 
+    @override
     async def async_upload_backup(
         self,
         *,
         open_stream: Callable[[], Coroutine[Any, Any, AsyncIterator[bytes]]],
         backup: AgentBackup,
+        on_progress: OnProgressCallback,
         **kwargs: Any,
     ) -> None:
         """Upload a backup."""
         LOGGER.info("Uploading backup %s %s", backup.backup_id, backup)
         self._uploads.append(backup)
 
+    @override
     async def async_delete_backup(
         self,
         backup_id: str,
@@ -108,10 +111,12 @@ class KitchenSinkBackupAgent(BackupAgent):
         ]
         LOGGER.info("Deleted backup %s", backup_id)
 
+    @override
     async def async_list_backups(self, **kwargs: Any) -> list[AgentBackup]:
         """List synced backups."""
         return self._uploads
 
+    @override
     async def async_get_backup(
         self,
         backup_id: str,

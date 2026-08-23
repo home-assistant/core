@@ -21,7 +21,6 @@ from .common import (
     MOCK_UPTIMEROBOT_CONFIG_ENTRY_DATA_KEY_READ_ONLY,
     MOCK_UPTIMEROBOT_MONITOR,
     UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY,
-    MockApiResponseKey,
     mock_uptimerobot_api_response,
     setup_uptimerobot_integration,
 )
@@ -46,7 +45,10 @@ async def test_reauthentication_trigger_in_setup(
     flows = hass.config_entries.flow.async_progress()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
-    assert mock_config_entry.reason == "could not authenticate"
+    assert (
+        mock_config_entry.reason
+        == "API authentication failed, please check your API key"
+    )
 
     assert len(flows) == 1
     flow = flows[0]
@@ -56,8 +58,8 @@ async def test_reauthentication_trigger_in_setup(
     assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
     assert (
-        "Config entry 'test@test.test' for uptimerobot integration could not authenticate"
-        in caplog.text
+        "Config entry 'test@test.test' for uptimerobot integration"
+        " could not authenticate" in caplog.text
     )
 
 
@@ -89,8 +91,8 @@ async def test_reauthentication_trigger_key_read_only(
     assert flow["context"]["entry_id"] == mock_config_entry.entry_id
 
     assert (
-        "Config entry 'test@test.test' for uptimerobot integration could not authenticate"
-        in caplog.text
+        "Config entry 'test@test.test' for uptimerobot integration"
+        " could not authenticate" in caplog.text
     )
 
 
@@ -137,7 +139,7 @@ async def test_integration_reload(
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
-        return_value=mock_uptimerobot_api_response(),
+        return_value=mock_uptimerobot_api_response(data=[MOCK_UPTIMEROBOT_MONITOR]),
     ):
         assert await hass.config_entries.async_reload(mock_entry.entry_id)
         freezer.tick(COORDINATOR_UPDATE_INTERVAL)
@@ -170,7 +172,7 @@ async def test_update_errors(
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
-        return_value=mock_uptimerobot_api_response(),
+        return_value=mock_uptimerobot_api_response(data=[MOCK_UPTIMEROBOT_MONITOR]),
     ):
         freezer.tick(COORDINATOR_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
@@ -180,7 +182,7 @@ async def test_update_errors(
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
-        return_value=mock_uptimerobot_api_response(key=MockApiResponseKey.ERROR),
+        side_effect=Exception("Unexpected error"),
     ):
         freezer.tick(COORDINATOR_UPDATE_INTERVAL)
         async_fire_time_changed(hass)
@@ -188,7 +190,7 @@ async def test_update_errors(
         assert (entity := hass.states.get(UPTIMEROBOT_BINARY_SENSOR_TEST_ENTITY))
         assert entity.state == STATE_UNAVAILABLE
 
-    assert "Error fetching uptimerobot data: test error from API" in caplog.text
+    assert "Error fetching uptimerobot data:" in caplog.text
 
 
 async def test_device_management(
@@ -196,7 +198,7 @@ async def test_device_management(
     device_registry: dr.DeviceRegistry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that we are adding and removing devices for monitors returned from the API."""
+    """Test adding and removing devices for monitors returned from the API."""
     mock_entry = await setup_uptimerobot_integration(hass)
 
     devices = dr.async_entries_for_config_entry(device_registry, mock_entry.entry_id)
@@ -231,7 +233,7 @@ async def test_device_management(
 
     with patch(
         "pyuptimerobot.UptimeRobot.async_get_monitors",
-        return_value=mock_uptimerobot_api_response(),
+        return_value=mock_uptimerobot_api_response(data=[MOCK_UPTIMEROBOT_MONITOR]),
     ):
         freezer.tick(COORDINATOR_UPDATE_INTERVAL)
         async_fire_time_changed(hass)

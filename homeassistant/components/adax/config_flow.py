@@ -1,9 +1,7 @@
 """Config flow for Adax integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import adax
 import adax_local
@@ -41,6 +39,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -87,7 +86,7 @@ class AdaxConfigFlow(ConfigFlow, domain=DOMAIN):
                 data_schema=data_schema,
             )
 
-        wifi_ssid = user_input[WIFI_SSID].replace(" ", "")
+        wifi_ssid = user_input[WIFI_SSID]
         wifi_pswd = user_input[WIFI_PSWD].replace(" ", "")
         configurator = adax_local.AdaxConfig(wifi_ssid, wifi_pswd)
 

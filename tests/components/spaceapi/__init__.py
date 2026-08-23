@@ -1,1 +1,1 @@
-"""Tests for the spaceapi component."""
+"""Tests for the SpaceAPI component."""

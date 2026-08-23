@@ -13,7 +13,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
-from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME, TEST_HOST, TEST_PASSWORD
+from .conftest import TEST_DEVICE_ID, TEST_DEVICE_NAME, TEST_HOST
 
 from tests.common import MockConfigEntry, snapshot_platform
 
@@ -40,6 +40,7 @@ async def test_all_entities(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("amount_of_channels", [2])
 async def test_nvr_entities(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -49,12 +50,39 @@ async def test_nvr_entities(
 ) -> None:
     """Test NVR camera entities with multiple channels."""
     mock_hikcamera.return_value.get_type = "NVR"
-    mock_hikcamera.return_value.get_channels.return_value = [1, 2]
 
     with patch("random.SystemRandom.getrandbits", return_value=123123123123):
         await setup_integration(hass, mock_config_entry)
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize("amount_of_channels", [2])
+async def test_nvr_entities_with_channel_names(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hikcamera: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test NVR camera entities use custom channel names when available."""
+    mock_hikcamera.return_value.get_type = "NVR"
+
+    with patch("random.SystemRandom.getrandbits", return_value=123123123123):
+        await setup_integration(hass, mock_config_entry)
+
+    # Verify device names use channel names instead of "Channel N"
+    device_1 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_ID}_1"), mock_config_entry.entry_id
+    )
+    assert device_1 is not None
+    assert device_1.name == "Front Camera channel 1"
+
+    device_2 = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_ID}_2"), mock_config_entry.entry_id
+    )
+    assert device_2 is not None
+    assert device_2.name == "Front Camera channel 2"
 
 
 async def test_camera_device_info(
@@ -66,8 +94,8 @@ async def test_camera_device_info(
     """Test camera is linked to device."""
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_ID), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.name == TEST_DEVICE_NAME
@@ -139,27 +167,3 @@ async def test_camera_stream_source(
 
     # Verify get_stream_url was called with channel 1
     mock_hikcamera.return_value.get_stream_url.assert_called_with(1)
-
-
-async def test_camera_stream_source_nvr(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_hikcamera: MagicMock,
-) -> None:
-    """Test NVR camera stream source URL."""
-    mock_hikcamera.return_value.get_type = "NVR"
-    mock_hikcamera.return_value.get_channels.return_value = [2]
-    mock_hikcamera.return_value.get_stream_url.return_value = (
-        f"rtsp://admin:{TEST_PASSWORD}@{TEST_HOST}:554/Streaming/Channels/201"
-    )
-
-    await setup_integration(hass, mock_config_entry)
-
-    stream_url = await async_get_stream_source(hass, "camera.front_camera_channel_2")
-
-    # NVR channel 2 should use stream channel 201
-    assert stream_url is not None
-    assert f"@{TEST_HOST}:554/Streaming/Channels/201" in stream_url
-
-    # Verify get_stream_url was called with channel 2
-    mock_hikcamera.return_value.get_stream_url.assert_called_with(2)

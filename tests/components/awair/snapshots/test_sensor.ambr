@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_awair_gen1_sensors[sensor.living_room_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -34,18 +35,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Living Room Carbon dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Carbon dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_carbon_dioxide',
@@ -57,11 +58,12 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -90,18 +92,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'humidity',
-      'friendly_name': 'Living Room Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_humidity',
@@ -113,11 +115,12 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_pm10-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -146,18 +149,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_PM10',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_pm10-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 1.0,
-      'device_class': 'pm10',
-      'friendly_name': 'Living Room PM10',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room PM10',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm10',
@@ -169,11 +172,12 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -202,18 +206,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_DUST',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 1.0,
-      'device_class': 'pm25',
-      'friendly_name': 'Living Room PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room PM2.5',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm2_5',
@@ -225,11 +229,12 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -258,16 +263,16 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_score-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'friendly_name': 'Living Room Score',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Score',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_score',
@@ -279,11 +284,12 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -321,12 +327,12 @@
 # name: test_awair_gen1_sensors[sensor.living_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 1.0,
-      'device_class': 'temperature',
-      'friendly_name': 'Living Room Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_temperature',
@@ -338,11 +344,12 @@
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -371,18 +378,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_awair_gen1_sensors[sensor.living_room_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 1.0,
-      'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'Living Room Volatile organic compounds parts',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Volatile organic compounds parts',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_volatile_organic_compounds_parts',
@@ -394,11 +401,12 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -427,18 +435,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Living Room Carbon dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Carbon dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_carbon_dioxide',
@@ -450,11 +458,12 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -483,18 +492,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 1.0,
-      'device_class': 'humidity',
-      'friendly_name': 'Living Room Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_humidity',
@@ -506,11 +515,12 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -539,18 +549,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_PM25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'pm25',
-      'friendly_name': 'Living Room PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room PM2.5',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm2_5',
@@ -562,11 +572,12 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -595,16 +606,16 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_score-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'friendly_name': 'Living Room Score',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Score',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_score',
@@ -616,11 +627,12 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -658,12 +670,12 @@
 # name: test_awair_gen2_sensors[sensor.living_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'temperature',
-      'friendly_name': 'Living Room Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_temperature',
@@ -675,11 +687,12 @@
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -708,18 +721,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_awair_gen2_sensors[sensor.living_room_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'Living Room Volatile organic compounds parts',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Volatile organic compounds parts',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_volatile_organic_compounds_parts',
@@ -731,11 +744,12 @@
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -764,18 +778,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Living Room Carbon dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Carbon dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_carbon_dioxide',
@@ -787,11 +801,12 @@
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -820,18 +835,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'humidity',
-      'friendly_name': 'Living Room Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_humidity',
@@ -843,11 +858,12 @@
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -876,16 +892,16 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_score-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'friendly_name': 'Living Room Score',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Score',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_score',
@@ -897,11 +913,12 @@
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -939,12 +956,12 @@
 # name: test_awair_glow_sensors[sensor.living_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 1.0,
-      'device_class': 'temperature',
-      'friendly_name': 'Living Room Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_temperature',
@@ -956,11 +973,12 @@
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -989,18 +1007,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_awair_glow_sensors[sensor.living_room_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'Living Room Volatile organic compounds parts',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Volatile organic compounds parts',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_volatile_organic_compounds_parts',
@@ -1012,11 +1030,12 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1045,18 +1064,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'humidity',
-      'friendly_name': 'Living Room Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_humidity',
@@ -1068,11 +1087,12 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1107,11 +1127,11 @@
 # name: test_awair_mint_sensors[sensor.living_room_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'device_class': 'illuminance',
-      'friendly_name': 'Living Room Illuminance',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'lx',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'illuminance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Illuminance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'lx',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_illuminance',
@@ -1123,11 +1143,12 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1156,18 +1177,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_PM25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'pm25',
-      'friendly_name': 'Living Room PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room PM2.5',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm2_5',
@@ -1179,11 +1200,12 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1212,16 +1234,16 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_score-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'friendly_name': 'Living Room Score',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Score',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_score',
@@ -1233,11 +1255,12 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1275,12 +1298,12 @@
 # name: test_awair_mint_sensors[sensor.living_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'temperature',
-      'friendly_name': 'Living Room Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_temperature',
@@ -1292,11 +1315,12 @@
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1325,18 +1349,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_awair_mint_sensors[sensor.living_room_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'Living Room Volatile organic compounds parts',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Volatile organic compounds parts',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_volatile_organic_compounds_parts',
@@ -1348,11 +1372,12 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1381,18 +1406,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Living Room Carbon dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Carbon dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_carbon_dioxide',
@@ -1404,11 +1429,12 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1437,18 +1463,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'humidity',
-      'friendly_name': 'Living Room Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_humidity',
@@ -1460,11 +1486,12 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_illuminance-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1499,11 +1526,11 @@
 # name: test_awair_omni_sensors[sensor.living_room_illuminance-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'device_class': 'illuminance',
-      'friendly_name': 'Living Room Illuminance',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'lx',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'illuminance',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Illuminance',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'lx',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_illuminance',
@@ -1515,11 +1542,12 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1548,18 +1576,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_PM25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'pm25',
-      'friendly_name': 'Living Room PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room PM2.5',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_pm2_5',
@@ -1571,11 +1599,12 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1604,16 +1633,16 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_score-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'friendly_name': 'Living Room Score',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Score',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_score',
@@ -1625,11 +1654,12 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_sound_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1664,11 +1694,11 @@
 # name: test_awair_omni_sensors[sensor.living_room_sound_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'device_class': 'sound_pressure',
-      'friendly_name': 'Living Room Sound level',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfSoundPressure.WEIGHTED_DECIBEL_A: 'dBA'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'sound_pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Sound level',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfSoundPressure.WEIGHTED_DECIBEL_A: 'dBA'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_sound_level',
@@ -1680,11 +1710,12 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1722,12 +1753,12 @@
 # name: test_awair_omni_sensors[sensor.living_room_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'temperature',
-      'friendly_name': 'Living Room Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_temperature',
@@ -1739,11 +1770,12 @@
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1772,18 +1804,18 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_awair_omni_sensors[sensor.living_room_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
       'awair_index': 0.0,
-      'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'Living Room Volatile organic compounds parts',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Living Room Volatile organic compounds parts',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.living_room_volatile_organic_compounds_parts',
@@ -1795,11 +1827,12 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_absolute_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1831,17 +1864,17 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair-element_24947_absolute_humidity',
-    'unit_of_measurement': 'g/m³',
+    'unit_of_measurement': <UnitOfDensity.GRAMS_PER_CUBIC_METER: 'g/m³'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_absolute_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'device_class': 'absolute_humidity',
-      'friendly_name': 'Mock Title Absolute humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'g/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'absolute_humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Absolute humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.GRAMS_PER_CUBIC_METER: 'g/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_absolute_humidity',
@@ -1853,11 +1886,12 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1886,17 +1920,17 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair-element_24947_CO2',
-    'unit_of_measurement': 'ppm',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'device_class': 'carbon_dioxide',
-      'friendly_name': 'Mock Title Carbon dioxide',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppm',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Carbon dioxide',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_carbon_dioxide',
@@ -1908,11 +1942,12 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_dew_point-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1950,11 +1985,11 @@
 # name: test_local_awair_sensors[sensor.mock_title_dew_point-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Title Dew point',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Dew point',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_dew_point',
@@ -1966,11 +2001,12 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_humidity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -1999,17 +2035,17 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair-element_24947_HUMID',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_humidity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'device_class': 'humidity',
-      'friendly_name': 'Mock Title Humidity',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'humidity',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Humidity',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_humidity',
@@ -2021,11 +2057,12 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_pm2_5-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2054,17 +2091,17 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair-element_24947_PM25',
-    'unit_of_measurement': 'μg/m³',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'device_class': 'pm25',
-      'friendly_name': 'Mock Title PM2.5',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'μg/m³',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title PM2.5',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_pm2_5',
@@ -2076,11 +2113,12 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_score-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2109,16 +2147,16 @@
     'supported_features': 0,
     'translation_key': 'score',
     'unique_id': 'awair-element_24947_score',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_score-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'friendly_name': 'Mock Title Score',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': '%',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Score',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_score',
@@ -2130,11 +2168,12 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_temperature-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2172,11 +2211,11 @@
 # name: test_local_awair_sensors[sensor.mock_title_temperature-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'device_class': 'temperature',
-      'friendly_name': 'Mock Title Temperature',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'temperature',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Temperature',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTemperature.CELSIUS: '°C'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_temperature',
@@ -2188,11 +2227,12 @@
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -2221,17 +2261,17 @@
     'supported_features': 0,
     'translation_key': None,
     'unique_id': 'awair-element_24947_VOC',
-    'unit_of_measurement': 'ppb',
+    'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
 # name: test_local_awair_sensors[sensor.mock_title_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Awair air quality sensor',
-      'device_class': 'volatile_organic_compounds_parts',
-      'friendly_name': 'Mock Title Volatile organic compounds parts',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'ppb',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Awair air quality sensor',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Volatile organic compounds parts',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.mock_title_volatile_organic_compounds_parts',

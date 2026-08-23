@@ -1,7 +1,10 @@
 """The tests for the denonavr media player platform."""
 
+from datetime import timedelta
 from unittest.mock import patch
 
+from denonavr.exceptions import AvrIncompleteResponseError, AvrInvalidResponseError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components import media_player
@@ -11,17 +14,17 @@ from homeassistant.components.denonavr.config_flow import (
     CONF_TYPE,
     DOMAIN,
 )
-from homeassistant.components.denonavr.media_player import (
+from homeassistant.components.denonavr.const import ATTR_DYNAMIC_EQ
+from homeassistant.components.denonavr.services import (
     ATTR_COMMAND,
-    ATTR_DYNAMIC_EQ,
     SERVICE_GET_COMMAND,
     SERVICE_SET_DYNAMIC_EQ,
     SERVICE_UPDATE_AUDYSSEY,
 )
-from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL
+from homeassistant.const import ATTR_ENTITY_ID, CONF_HOST, CONF_MODEL, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 TEST_HOST = "1.2.3.4"
 TEST_NAME = "Test_Receiver"
@@ -137,3 +140,40 @@ async def test_update_audyssey(hass: HomeAssistant, client) -> None:
     await hass.async_block_till_done()
 
     client.async_update_audyssey.assert_called_once()
+
+
+@pytest.mark.parametrize(
+    "exception",
+    [
+        pytest.param(
+            AvrInvalidResponseError("XML parse error", "GET"),
+            id="invalid_response",
+        ),
+        pytest.param(
+            AvrIncompleteResponseError("Incomplete", "GET"),
+            id="incomplete_response",
+        ),
+    ],
+)
+async def test_malformed_response_marks_unavailable(
+    hass: HomeAssistant,
+    client,
+    freezer: FrozenDateTimeFactory,
+    exception: Exception,
+) -> None:
+    """Test that malformed response errors mark the entity unavailable."""
+    await setup_denonavr(hass)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state != STATE_UNAVAILABLE
+
+    # Force polling by disabling telnet, then trigger the error
+    client.telnet_connected = False
+    client.telnet_healthy = False
+    client.async_update.side_effect = exception
+    freezer.tick(timedelta(seconds=11))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.state == STATE_UNAVAILABLE

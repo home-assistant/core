@@ -1,9 +1,8 @@
 """Platform for sensor."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from ohme import ChargerStatus, OhmeApiClient
 
@@ -18,7 +17,6 @@ from homeassistant.const import (
     STATE_UNKNOWN,
     UnitOfElectricCurrent,
     UnitOfElectricPotential,
-    UnitOfEnergy,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -62,15 +60,6 @@ SENSORS = [
         value_fn=lambda client: client.power.watts,
     ),
     OhmeSensorDescription(
-        key="energy",
-        device_class=SensorDeviceClass.ENERGY,
-        native_unit_of_measurement=UnitOfEnergy.WATT_HOUR,
-        suggested_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
-        suggested_display_precision=1,
-        state_class=SensorStateClass.TOTAL_INCREASING,
-        value_fn=lambda client: client.energy,
-    ),
-    OhmeSensorDescription(
         key="voltage",
         device_class=SensorDeviceClass.VOLTAGE,
         native_unit_of_measurement=UnitOfElectricPotential.VOLT,
@@ -89,8 +78,9 @@ SENSORS = [
     OhmeSensorDescription(
         key="slot_list",
         translation_key="slot_list",
-        value_fn=lambda client: ", ".join(str(x) for x in client.slots)
-        or STATE_UNKNOWN,
+        value_fn=lambda client: (
+            ", ".join(str(x) for x in client.slots) or STATE_UNKNOWN
+        ),
     ),
 ]
 
@@ -116,6 +106,7 @@ class OhmeSensor(OhmeEntity, SensorEntity):
     entity_description: OhmeSensorDescription
 
     @property
+    @override
     def native_value(self) -> str | int | float | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.client)

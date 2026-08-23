@@ -33,11 +33,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 async def test_get_triggers(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -400,8 +395,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 8
     assert {service_calls[6].data["some"], service_calls[7].data["some"]} == {
-        "turn_off device - humidifier.test_5678 - on - off - None",
-        "turn_on_or_off device - humidifier.test_5678 - on - off - None",
+        f"turn_off device - {entry.entity_id} - on - off - None",
+        f"turn_on_or_off device - {entry.entity_id} - on - off - None",
     }
 
     # Fake turn on
@@ -413,8 +408,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 10
     assert {service_calls[8].data["some"], service_calls[9].data["some"]} == {
-        "turn_on device - humidifier.test_5678 - off - on - None",
-        "turn_on_or_off device - humidifier.test_5678 - off - on - None",
+        f"turn_on device - {entry.entity_id} - off - on - None",
+        f"turn_on_or_off device - {entry.entity_id} - off - on - None",
     }
 
 

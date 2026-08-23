@@ -1,9 +1,7 @@
 """Config flow for OurGroceries integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from ourgroceries import OurGroceries
@@ -30,6 +28,7 @@ class OurGroceriesConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -39,7 +38,7 @@ class OurGroceriesConfigFlow(ConfigFlow, domain=DOMAIN):
             og = OurGroceries(user_input[CONF_USERNAME], user_input[CONF_PASSWORD])
             try:
                 await og.login()
-            except (TimeoutError, ClientError):
+            except TimeoutError, ClientError:
                 errors["base"] = "cannot_connect"
             except InvalidLoginException:
                 errors["base"] = "invalid_auth"

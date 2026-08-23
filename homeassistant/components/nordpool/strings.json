@@ -5,6 +5,7 @@
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "no_areas": "No area(s) selected",
       "no_data": "API connected but the response was empty"
     },
     "step": {
@@ -31,6 +32,11 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "tomorrow_price_available": {
+        "name": "Tomorrow price available"
+      }
+    },
     "sensor": {
       "block_average": {
         "name": "{block} average"
@@ -101,12 +107,6 @@
     },
     "could_not_fetch_data": {
       "message": "Data could not be retrieved: {error}"
-    },
-    "entry_not_found": {
-      "message": "The Nord Pool integration is not configured in Home Assistant."
-    },
-    "entry_not_loaded": {
-      "message": "The Nord Pool integration is currently not loaded or disabled in Home Assistant."
     },
     "initial_update_failed": {
       "message": "Initial update failed on startup with error {error}"

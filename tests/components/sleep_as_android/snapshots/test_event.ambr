@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_setup[event.sleep_as_android_alarm_clock-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'alert_dismiss',
         'alert_start',
         'rescheduled',
@@ -47,8 +48,8 @@
 # name: test_setup[event.sleep_as_android_alarm_clock-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'alert_dismiss',
         'alert_start',
         'rescheduled',
@@ -56,7 +57,7 @@
         'snooze_canceled',
         'snooze_clicked',
       ]),
-      'friendly_name': 'Sleep as Android Alarm clock',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android Alarm clock',
     }),
     'context': <ANY>,
     'entity_id': 'event.sleep_as_android_alarm_clock',
@@ -68,11 +69,12 @@
 # ---
 # name: test_setup[event.sleep_as_android_jet_lag_prevention-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'jet_lag_start',
         'jet_lag_stop',
       ]),
@@ -110,12 +112,12 @@
 # name: test_setup[event.sleep_as_android_jet_lag_prevention-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'jet_lag_start',
         'jet_lag_stop',
       ]),
-      'friendly_name': 'Sleep as Android Jet lag prevention',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android Jet lag prevention',
     }),
     'context': <ANY>,
     'entity_id': 'event.sleep_as_android_jet_lag_prevention',
@@ -127,11 +129,12 @@
 # ---
 # name: test_setup[event.sleep_as_android_lullaby-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'start',
         'stop',
         'volume_down',
@@ -170,13 +173,13 @@
 # name: test_setup[event.sleep_as_android_lullaby-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'start',
         'stop',
         'volume_down',
       ]),
-      'friendly_name': 'Sleep as Android Lullaby',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android Lullaby',
     }),
     'context': <ANY>,
     'entity_id': 'event.sleep_as_android_lullaby',
@@ -188,11 +191,12 @@
 # ---
 # name: test_setup[event.sleep_as_android_sleep_health-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'antisnoring',
         'apnea_alarm',
       ]),
@@ -230,12 +234,12 @@
 # name: test_setup[event.sleep_as_android_sleep_health-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'antisnoring',
         'apnea_alarm',
       ]),
-      'friendly_name': 'Sleep as Android Sleep health',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android Sleep health',
     }),
     'context': <ANY>,
     'entity_id': 'event.sleep_as_android_sleep_health',
@@ -247,11 +251,12 @@
 # ---
 # name: test_setup[event.sleep_as_android_sleep_phase-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'awake',
         'deep_sleep',
         'light_sleep',
@@ -292,15 +297,15 @@
 # name: test_setup[event.sleep_as_android_sleep_phase-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'awake',
         'deep_sleep',
         'light_sleep',
         'not_awake',
         'rem',
       ]),
-      'friendly_name': 'Sleep as Android Sleep phase',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android Sleep phase',
     }),
     'context': <ANY>,
     'entity_id': 'event.sleep_as_android_sleep_phase',
@@ -312,11 +317,12 @@
 # ---
 # name: test_setup[event.sleep_as_android_sleep_tracking-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'paused',
         'resumed',
         'started',
@@ -356,15 +362,15 @@
 # name: test_setup[event.sleep_as_android_sleep_tracking-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'button',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'button',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'paused',
         'resumed',
         'started',
         'stopped',
       ]),
-      'friendly_name': 'Sleep as Android Sleep tracking',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android Sleep tracking',
     }),
     'context': <ANY>,
     'entity_id': 'event.sleep_as_android_sleep_tracking',
@@ -376,11 +382,12 @@
 # ---
 # name: test_setup[event.sleep_as_android_smart_wake_up-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'before_smart_period',
         'smart_period',
       ]),
@@ -418,12 +425,12 @@
 # name: test_setup[event.sleep_as_android_smart_wake_up-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'before_smart_period',
         'smart_period',
       ]),
-      'friendly_name': 'Sleep as Android Smart wake-up',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android Smart wake-up',
     }),
     'context': <ANY>,
     'entity_id': 'event.sleep_as_android_smart_wake_up',
@@ -435,11 +442,12 @@
 # ---
 # name: test_setup[event.sleep_as_android_sound_recognition-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'baby',
         'cough',
         'laugh',
@@ -480,15 +488,15 @@
 # name: test_setup[event.sleep_as_android_sound_recognition-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'baby',
         'cough',
         'laugh',
         'snore',
         'talk',
       ]),
-      'friendly_name': 'Sleep as Android Sound recognition',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android Sound recognition',
     }),
     'context': <ANY>,
     'entity_id': 'event.sleep_as_android_sound_recognition',
@@ -500,11 +508,12 @@
 # ---
 # name: test_setup[event.sleep_as_android_user_notification-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'wake_up_check',
         'show_skip_next_alarm',
         'time_to_bed_alarm_alert',
@@ -543,13 +552,13 @@
 # name: test_setup[event.sleep_as_android_user_notification-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'wake_up_check',
         'show_skip_next_alarm',
         'time_to_bed_alarm_alert',
       ]),
-      'friendly_name': 'Sleep as Android User notification',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Sleep as Android User notification',
     }),
     'context': <ANY>,
     'entity_id': 'event.sleep_as_android_user_notification',

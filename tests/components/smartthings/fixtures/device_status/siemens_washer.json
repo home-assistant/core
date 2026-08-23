@@ -1,0 +1,76 @@
+{
+  "components": {
+    "main": {
+      "signalahead13665.pauseresumev2": {
+        "pauseState": {
+          "value": "play",
+          "timestamp": "2026-02-14T10:26:29.493Z"
+        }
+      },
+      "signalahead13665.startstopprogramv2": {
+        "startstop": {
+          "value": "play",
+          "timestamp": "2026-02-14T10:26:29.493Z"
+        }
+      },
+      "healthCheck": {
+        "checkInterval": {
+          "value": 60,
+          "unit": "s",
+          "data": {
+            "deviceScheme": "UNTRACKED",
+            "protocol": "cloud"
+          },
+          "timestamp": "2025-11-18T19:30:58.067Z"
+        },
+        "healthStatus": {
+          "value": null
+        },
+        "DeviceWatch-Enroll": {
+          "value": null
+        },
+        "DeviceWatch-DeviceStatus": {
+          "value": "online",
+          "data": {},
+          "timestamp": "2026-02-14T10:56:39.394Z"
+        }
+      },
+      "refresh": {},
+      "signalahead13665.applianceoperationstatesv2": {
+        "operationState": {
+          "value": "Finished",
+          "timestamp": "2026-02-14T10:26:29.493Z"
+        }
+      },
+      "signalahead13665.washerprogramsv2": {
+        "availablePrograms": {
+          "value": [
+            "LaundryCare_Washer_Program_Mix",
+            "LaundryCare_Washer_Program_ShirtsBlouses",
+            "LaundryCare_Washer_Program_Cotton",
+            "LaundryCare_Washer_Program_Cotton_CottonEco",
+            "LaundryCare_Washer_Program_EasyCare",
+            "LaundryCare_Washer_Program_Wool",
+            "LaundryCare_Washer_Program_Auto40",
+            "LaundryCare_Washer_Program_Super153045_Super1530",
+            "LaundryCare_Washer_Program_DelicatesSilk",
+            "LaundryCare_Washer_Program_Auto30",
+            "LaundryCare_Washer_Program_Sensitive"
+          ],
+          "timestamp": "2026-02-14T08:35:09.780Z"
+        },
+        "program": {
+          "value": "None",
+          "data": {},
+          "timestamp": "2026-02-14T08:35:09.780Z"
+        }
+      },
+      "switch": {
+        "switch": {
+          "value": "on",
+          "timestamp": "2026-02-09T08:35:03.405Z"
+        }
+      }
+    }
+  }
+}

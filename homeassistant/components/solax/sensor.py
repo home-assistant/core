@@ -1,6 +1,6 @@
 """Support for Solax inverter via local API."""
 
-from __future__ import annotations
+from typing import override
 
 from solax.units import Units
 
@@ -25,7 +25,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import SolaxConfigEntry
-from .const import DOMAIN, MANUFACTURER
+from .const import DOMAIN, MANUFACTURER, model_name_for_inverter
 from .coordinator import SolaxDataUpdateCoordinator
 
 DEFAULT_PORT = 80
@@ -97,6 +97,7 @@ async def async_setup_entry(
     resp = coordinator.data
     serial = resp.serial_number
     version = resp.version
+    model = model_name_for_inverter(api.inverter)
     entities: list[InverterSensorEntity] = []
     for sensor, (idx, measurement) in api.inverter.sensor_map().items():
         description = SENSOR_DESCRIPTIONS[(measurement.unit, measurement.is_monotonic)]
@@ -109,10 +110,9 @@ async def async_setup_entry(
                 uid,
                 serial,
                 version,
+                model,
                 sensor,
-                description.native_unit_of_measurement,
-                description.state_class,
-                description.device_class,
+                description,
             )
         )
     async_add_entities(entities)
@@ -130,27 +130,26 @@ class InverterSensorEntity(CoordinatorEntity, SensorEntity):
         uid: str,
         serial: str,
         version: str,
+        model: str,
         key: str,
-        unit: str | None,
-        state_class: SensorStateClass | str | None,
-        device_class: SensorDeviceClass | None,
+        entity_description: SensorEntityDescription,
     ) -> None:
         """Initialize an inverter sensor."""
         super().__init__(coordinator)
         self._attr_unique_id = uid
         self._attr_name = f"{manufacturer} {serial} {key}"
-        self._attr_native_unit_of_measurement = unit
-        self._attr_state_class = state_class
-        self._attr_device_class = device_class
+        self.entity_description = entity_description
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=MANUFACTURER,
             name=f"{manufacturer} {serial}",
+            model=model,
             sw_version=version,
         )
         self.key = key
 
     @property
+    @override
     def native_value(self):
         """State of this inverter attribute."""
         return self.coordinator.data.data[self.key]

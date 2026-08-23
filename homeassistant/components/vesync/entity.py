@@ -1,5 +1,7 @@
 """Common entity for VeSync Component."""
 
+from typing import override
+
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -9,14 +11,12 @@ from .const import DOMAIN
 from .coordinator import VeSyncDataCoordinator
 
 
-class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
+class VeSyncBaseEntity[T: VeSyncBaseDevice](CoordinatorEntity[VeSyncDataCoordinator]):
     """Base class for VeSync Entity Representations."""
 
     _attr_has_entity_name = True
 
-    def __init__(
-        self, device: VeSyncBaseDevice, coordinator: VeSyncDataCoordinator
-    ) -> None:
+    def __init__(self, device: T, coordinator: VeSyncDataCoordinator) -> None:
         """Initialize the VeSync device."""
         super().__init__(coordinator)
         self.device = device
@@ -40,6 +40,7 @@ class VeSyncBaseEntity(CoordinatorEntity[VeSyncDataCoordinator]):
         return self.device.cid
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if device is available."""
         return super().available and self.device.state.connection_status == "online"

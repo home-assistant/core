@@ -1,14 +1,15 @@
 # serializer version: 1
 # name: test_all_entities[number.garden_light_brightness-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 8.0,
-      'min': 1.0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 8.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -43,11 +44,11 @@
 # name: test_all_entities[number.garden_light_brightness-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Light brightness',
-      'max': 8.0,
-      'min': 1.0,
-      'mode': <NumberMode.SLIDER: 'slider'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Light brightness',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 8.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.SLIDER: 'slider'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.garden_light_brightness',
@@ -59,14 +60,15 @@
 # ---
 # name: test_all_entities[number.garden_plants_age-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 999.0,
-      'min': 0.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 999.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -101,12 +103,12 @@
 # name: test_all_entities[number.garden_plants_age-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Garden Plants age',
-      'max': 999.0,
-      'min': 0.0,
-      'mode': <NumberMode.BOX: 'box'>,
-      'step': 1,
-      'unit_of_measurement': <UnitOfTime.DAYS: 'd'>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Garden Plants age',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 999.0,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0.0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.BOX: 'box'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.DAYS: 'd'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.garden_plants_age',

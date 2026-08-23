@@ -1,10 +1,8 @@
 """Config flow for Motionblinds Bluetooth integration."""
 
-from __future__ import annotations
-
 import logging
 import re
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from bleak.backends.device import BLEDevice
 from motionblindsble.const import DISPLAY_NAME, SETTING_DISCONNECT_TIME, MotionBlindType
@@ -12,12 +10,7 @@ import voluptuous as vol
 
 from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
@@ -27,6 +20,7 @@ from homeassistant.helpers.selector import (
     SelectSelectorMode,
 )
 
+from . import MotionConfigEntry
 from .const import (
     CONF_BLIND_TYPE,
     CONF_LOCAL_NAME,
@@ -56,6 +50,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
         self._mac_code: str | None = None
         self._blind_type: MotionBlindType | None = None
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -73,6 +68,7 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_confirm()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -184,8 +180,9 @@ class FlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
-        config_entry: ConfigEntry,
+        config_entry: MotionConfigEntry,
     ) -> OptionsFlow:
         """Create the options flow."""
         return OptionsFlowHandler()

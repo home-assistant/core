@@ -1,0 +1,375 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry': dict({
+      'created_at': '2026-03-20T21:22:23+00:00',
+      'data': dict({
+        'api_key': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'google_weather',
+      'minor_version': 1,
+      'modified_at': '2026-03-20T21:22:23+00:00',
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+        dict({
+          'data': dict({
+            'latitude': '**REDACTED**',
+            'longitude': '**REDACTED**',
+          }),
+          'subentry_id': 'home-subentry-id',
+          'subentry_type': 'location',
+          'title': 'Home',
+          'unique_id': None,
+        }),
+      ]),
+      'title': 'Google Weather',
+      'unique_id': None,
+      'version': 1,
+    }),
+    'subentries': dict({
+      'home-subentry-id': dict({
+        'daily_forecast_data': dict({
+          'forecast_days': list([
+            dict({
+              'daytime_forecast': dict({
+                'cloud_cover': 53,
+                'ice_thickness': None,
+                'interval': dict({
+                  'end_time': '2025-02-11T03:00:00Z',
+                  'start_time': '2025-02-10T15:00:00Z',
+                }),
+                'precipitation': dict({
+                  'probability': dict({
+                    'percent': 5,
+                    'type': 'RAIN',
+                  }),
+                  'qpf': dict({
+                    'quantity': 0.0,
+                    'unit': 'MILLIMETERS',
+                  }),
+                  'snow_qpf': None,
+                }),
+                'relative_humidity': 54,
+                'thunderstorm_probability': 0,
+                'uv_index': 3,
+                'weather_condition': dict({
+                  'description': dict({
+                    'language_code': 'en',
+                    'text': 'Partly sunny',
+                  }),
+                  'icon_base_uri': 'https://maps.gstatic.com/weather/v1/party_cloudy',
+                  'type': 'PARTLY_CLOUDY',
+                }),
+                'wind': dict({
+                  'direction': dict({
+                    'cardinal': 'WEST',
+                    'degrees': 280,
+                  }),
+                  'gust': dict({
+                    'unit': 'KILOMETERS_PER_HOUR',
+                    'value': 14.0,
+                  }),
+                  'speed': dict({
+                    'unit': 'KILOMETERS_PER_HOUR',
+                    'value': 6.0,
+                  }),
+                }),
+              }),
+              'display_date': dict({
+                'day': 10,
+                'month': 2,
+                'year': 2025,
+              }),
+              'feels_like_max_temperature': dict({
+                'degrees': 13.3,
+                'unit': 'CELSIUS',
+              }),
+              'feels_like_min_temperature': dict({
+                'degrees': 1.5,
+                'unit': 'CELSIUS',
+              }),
+              'ice_thickness': dict({
+                'thickness': 0.0,
+                'unit': 'MILLIMETERS',
+              }),
+              'interval': dict({
+                'end_time': '2025-02-11T15:00:00Z',
+                'start_time': '2025-02-10T15:00:00Z',
+              }),
+              'max_heat_index': dict({
+                'degrees': 13.3,
+                'unit': 'CELSIUS',
+              }),
+              'max_temperature': dict({
+                'degrees': 13.3,
+                'unit': 'CELSIUS',
+              }),
+              'min_temperature': dict({
+                'degrees': 1.5,
+                'unit': 'CELSIUS',
+              }),
+              'moon_events': dict({
+                'moon_phase': 'WAXING_GIBBOUS',
+                'moonrise_times': list([
+                  '2025-02-10T23:54:17.713157984Z',
+                ]),
+                'moonset_times': list([
+                  '2025-02-10T14:13:58.625181191Z',
+                ]),
+              }),
+              'nighttime_forecast': dict({
+                'cloud_cover': 70,
+                'ice_thickness': None,
+                'interval': dict({
+                  'end_time': '2025-02-11T15:00:00Z',
+                  'start_time': '2025-02-11T03:00:00Z',
+                }),
+                'precipitation': dict({
+                  'probability': dict({
+                    'percent': 10,
+                    'type': 'RAIN_AND_SNOW',
+                  }),
+                  'qpf': dict({
+                    'quantity': 0.0,
+                    'unit': 'MILLIMETERS',
+                  }),
+                  'snow_qpf': None,
+                }),
+                'relative_humidity': 85,
+                'thunderstorm_probability': 0,
+                'uv_index': 0,
+                'weather_condition': dict({
+                  'description': dict({
+                    'language_code': 'en',
+                    'text': 'Partly cloudy',
+                  }),
+                  'icon_base_uri': 'https://maps.gstatic.com/weather/v1/partly_clear',
+                  'type': 'PARTLY_CLOUDY',
+                }),
+                'wind': dict({
+                  'direction': dict({
+                    'cardinal': 'SOUTH_SOUTHWEST',
+                    'degrees': 201,
+                  }),
+                  'gust': dict({
+                    'unit': 'KILOMETERS_PER_HOUR',
+                    'value': 14.0,
+                  }),
+                  'speed': dict({
+                    'unit': 'KILOMETERS_PER_HOUR',
+                    'value': 6.0,
+                  }),
+                }),
+              }),
+              'sun_events': dict({
+                'sunrise_time': '2025-02-10T15:02:35.703929582Z',
+                'sunset_time': '2025-02-11T01:43:00.762932858Z',
+              }),
+            }),
+          ]),
+          'next_page_token': None,
+          'time_zone': dict({
+            'id': 'America/Los_Angeles',
+            'version': None,
+          }),
+        }),
+        'hourly_forecast_data': dict({
+          'forecast_hours': list([
+            dict({
+              'air_pressure': dict({
+                'mean_sea_level_millibars': 1019.13,
+              }),
+              'cloud_cover': 0,
+              'dew_point': dict({
+                'degrees': 2.7,
+                'unit': 'CELSIUS',
+              }),
+              'display_date_time': dict({
+                'day': 5,
+                'hours': 15,
+                'minutes': None,
+                'month': 2,
+                'nanos': None,
+                'seconds': None,
+                'time_zone': None,
+                'utc_offset': '-28800s',
+                'year': 2025,
+              }),
+              'feels_like_temperature': dict({
+                'degrees': 12.0,
+                'unit': 'CELSIUS',
+              }),
+              'heat_index': dict({
+                'degrees': 12.7,
+                'unit': 'CELSIUS',
+              }),
+              'ice_thickness': dict({
+                'thickness': 0.0,
+                'unit': 'MILLIMETERS',
+              }),
+              'interval': dict({
+                'end_time': '2025-02-06T00:00:00Z',
+                'start_time': '2025-02-05T23:00:00Z',
+              }),
+              'is_daytime': True,
+              'precipitation': dict({
+                'probability': dict({
+                  'percent': 0,
+                  'type': 'RAIN',
+                }),
+                'qpf': dict({
+                  'quantity': 0.0,
+                  'unit': 'MILLIMETERS',
+                }),
+                'snow_qpf': None,
+              }),
+              'relative_humidity': 51,
+              'temperature': dict({
+                'degrees': 12.7,
+                'unit': 'CELSIUS',
+              }),
+              'thunderstorm_probability': 0,
+              'uv_index': 1,
+              'visibility': dict({
+                'distance': 16.0,
+                'unit': 'KILOMETERS',
+              }),
+              'weather_condition': dict({
+                'description': dict({
+                  'language_code': 'en',
+                  'text': 'Sunny',
+                }),
+                'icon_base_uri': 'https://maps.gstatic.com/weather/v1/sunny',
+                'type': 'CLEAR',
+              }),
+              'wet_bulb_temperature': dict({
+                'degrees': 7.7,
+                'unit': 'CELSIUS',
+              }),
+              'wind': dict({
+                'direction': dict({
+                  'cardinal': 'NORTH_NORTHWEST',
+                  'degrees': 335,
+                }),
+                'gust': dict({
+                  'unit': 'KILOMETERS_PER_HOUR',
+                  'value': 19.0,
+                }),
+                'speed': dict({
+                  'unit': 'KILOMETERS_PER_HOUR',
+                  'value': 10.0,
+                }),
+              }),
+              'wind_chill': dict({
+                'degrees': 12.0,
+                'unit': 'CELSIUS',
+              }),
+            }),
+          ]),
+          'next_page_token': None,
+          'time_zone': dict({
+            'id': 'America/Los_Angeles',
+            'version': None,
+          }),
+        }),
+        'observation_data': dict({
+          'air_pressure': dict({
+            'mean_sea_level_millibars': 1019.16,
+          }),
+          'cloud_cover': 0,
+          'current_conditions_history': dict({
+            'max_temperature': dict({
+              'degrees': 14.3,
+              'unit': 'CELSIUS',
+            }),
+            'min_temperature': dict({
+              'degrees': 3.7,
+              'unit': 'CELSIUS',
+            }),
+            'qpf': dict({
+              'quantity': 0.0,
+              'unit': 'MILLIMETERS',
+            }),
+            'temperature_change': dict({
+              'degrees': -0.6,
+              'unit': 'CELSIUS',
+            }),
+          }),
+          'current_time': '2025-01-28T22:04:12.025273178Z',
+          'dew_point': dict({
+            'degrees': 1.1,
+            'unit': 'CELSIUS',
+          }),
+          'feels_like_temperature': dict({
+            'degrees': 13.1,
+            'unit': 'CELSIUS',
+          }),
+          'heat_index': dict({
+            'degrees': 13.7,
+            'unit': 'CELSIUS',
+          }),
+          'is_daytime': True,
+          'precipitation': dict({
+            'probability': dict({
+              'percent': 0,
+              'type': 'RAIN',
+            }),
+            'qpf': dict({
+              'quantity': 0.0,
+              'unit': 'MILLIMETERS',
+            }),
+            'snow_qpf': None,
+          }),
+          'relative_humidity': 42,
+          'temperature': dict({
+            'degrees': 13.7,
+            'unit': 'CELSIUS',
+          }),
+          'thunderstorm_probability': 0,
+          'time_zone': dict({
+            'id': 'America/Los_Angeles',
+            'version': None,
+          }),
+          'uv_index': 1,
+          'visibility': dict({
+            'distance': 16.0,
+            'unit': 'KILOMETERS',
+          }),
+          'weather_condition': dict({
+            'description': dict({
+              'language_code': 'en',
+              'text': 'Sunny',
+            }),
+            'icon_base_uri': 'https://maps.gstatic.com/weather/v1/sunny',
+            'type': 'CLEAR',
+          }),
+          'wind': dict({
+            'direction': dict({
+              'cardinal': 'NORTH_NORTHWEST',
+              'degrees': 335,
+            }),
+            'gust': dict({
+              'unit': 'KILOMETERS_PER_HOUR',
+              'value': 18.0,
+            }),
+            'speed': dict({
+              'unit': 'KILOMETERS_PER_HOUR',
+              'value': 8.0,
+            }),
+          }),
+          'wind_chill': dict({
+            'degrees': 13.1,
+            'unit': 'CELSIUS',
+          }),
+        }),
+      }),
+    }),
+  })
+# ---

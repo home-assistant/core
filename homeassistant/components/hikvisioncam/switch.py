@@ -1,9 +1,7 @@
 """Support turning on/off motion detection on Hikvision cameras."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import hikvision.api
 from hikvision.error import HikvisionError, MissingParamError
@@ -19,8 +17,6 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     CONF_USERNAME,
-    STATE_OFF,
-    STATE_ON,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -79,25 +75,17 @@ class HikvisionMotionSwitch(SwitchEntity):
 
     def __init__(self, name, hikvision_cam):
         """Initialize the switch."""
-        self._name = name
+        self._attr_name = name
         self._hikvision_cam = hikvision_cam
-        self._state = STATE_OFF
+        self._attr_is_on = False
 
-    @property
-    def name(self):
-        """Return the name of the device if any."""
-        return self._name
-
-    @property
-    def is_on(self):
-        """Return true if device is on."""
-        return self._state == STATE_ON
-
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         _LOGGING.info("Turning on Motion Detection ")
         self._hikvision_cam.enable_motion_detection()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         _LOGGING.info("Turning off Motion Detection ")
@@ -105,7 +93,5 @@ class HikvisionMotionSwitch(SwitchEntity):
 
     def update(self) -> None:
         """Update Motion Detection state."""
-        enabled = self._hikvision_cam.is_motion_detection_enabled()
-        _LOGGING.info("enabled: %s", enabled)
-
-        self._state = STATE_ON if enabled else STATE_OFF
+        self._attr_is_on = self._hikvision_cam.is_motion_detection_enabled()
+        _LOGGING.info("enabled: %s", self._attr_is_on)

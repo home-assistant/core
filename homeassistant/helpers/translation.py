@@ -1,7 +1,5 @@
 """Translation string lookup helpers."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Iterable, Mapping
 from contextlib import suppress
@@ -21,7 +19,6 @@ from homeassistant.loader import (
     Integration,
     async_get_config_flows,
     async_get_integrations,
-    bind_hass,
 )
 from homeassistant.util.json import load_json
 
@@ -284,7 +281,8 @@ class _TranslationCache:
             if updated_placeholders != cached_placeholders:
                 _LOGGER.error(
                     (
-                        "Validation of translation placeholders for localized (%s) string "
+                        "Validation of translation placeholders"
+                        " for localized (%s) string "
                         "%s failed: (%s != %s)"
                     ),
                     language,
@@ -332,7 +330,6 @@ class _TranslationCache:
                 component_cache.update(flat)
 
 
-@bind_hass
 async def async_get_translations(
     hass: HomeAssistant,
     language: str,
@@ -468,7 +465,7 @@ def async_translate_state(
     translation_key: str | None,
     device_class: str | None,
 ) -> str:
-    """Translate provided state using cached translations for currently selected language."""
+    """Translate provided state using cached translations."""
     if state in [STATE_UNAVAILABLE, STATE_UNKNOWN]:
         return state
     language = hass.config.language
@@ -492,3 +489,43 @@ def async_translate_state(
         return translations[localize_key]
 
     return state
+
+
+@callback
+def async_translate_state_attr(
+    hass: HomeAssistant,
+    attr_value: str,
+    domain: str,
+    platform: str | None,
+    translation_key: str | None,
+    device_class: str | None,
+    attribute_name: str,
+) -> str:
+    """Translate state attribute value using cached translations."""
+    language = hass.config.language
+    if platform is not None and translation_key is not None:
+        localize_key = (
+            f"component.{platform}.entity.{domain}"
+            f".{translation_key}.state_attributes.{attribute_name}"
+            f".state.{attr_value}"
+        )
+        translations = async_get_cached_translations(hass, language, "entity")
+        if localize_key in translations:
+            return translations[localize_key]
+
+    translations = async_get_cached_translations(hass, language, "entity_component")
+    if device_class is not None:
+        localize_key = (
+            f"component.{domain}.entity_component.{device_class}"
+            f".state_attributes.{attribute_name}.state.{attr_value}"
+        )
+        if localize_key in translations:
+            return translations[localize_key]
+    localize_key = (
+        f"component.{domain}.entity_component._"
+        f".state_attributes.{attribute_name}.state.{attr_value}"
+    )
+    if localize_key in translations:
+        return translations[localize_key]
+
+    return attr_value

@@ -1,7 +1,5 @@
 """The thread websocket API."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from python_otbr_api.tlv_parser import TLVError
@@ -42,12 +40,16 @@ async def ws_add_dataset(
     tlv = msg["tlv"]
 
     try:
-        await dataset_store.async_add_dataset(hass, source, tlv)
+        result = await dataset_store.async_add_dataset(hass, source, tlv)
     except TLVError as exc:
         connection.send_error(msg["id"], websocket_api.ERR_INVALID_FORMAT, str(exc))
         return
 
-    connection.send_result(msg["id"])
+    # The outcome rides in the result payload rather than an error: existing
+    # callers treat any error as a failed transfer, while a discarded dataset
+    # means the store already holds this network's dataset in a same-or-newer
+    # revision.
+    connection.send_result(msg["id"], {"result": str(result)})
 
 
 @websocket_api.require_admin

@@ -23,11 +23,6 @@ from homeassistant.setup import async_setup_component
 from tests.common import MockConfigEntry, async_get_device_automations
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 async def test_get_conditions(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -160,7 +155,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_on - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_on - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -178,7 +176,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_off - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_off - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -196,7 +197,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_idle - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_idle - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -214,7 +218,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_paused - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_paused - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -232,7 +239,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_playing - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_playing - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -250,7 +260,10 @@ async def test_if_state(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_buffering - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_buffering - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },
@@ -361,7 +374,10 @@ async def test_if_state_legacy(
                     "action": {
                         "service": "test.automation",
                         "data_template": {
-                            "some": "is_on - {{ trigger.platform }} - {{ trigger.event.event_type }}"
+                            "some": (
+                                "is_on - {{ trigger.platform }}"
+                                " - {{ trigger.event.event_type }}"
+                            )
                         },
                     },
                 },

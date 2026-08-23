@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator, Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from freezegun.api import FrozenDateTimeFactory
 from pyanglianwater.api import API
 from pyanglianwater.meter import SmartMeter
 import pytest
@@ -32,20 +33,20 @@ def mock_config_entry() -> MockConfigEntry:
 
 
 @pytest.fixture
-def mock_smart_meter() -> SmartMeter:
-    """Return a mocked Smart Meter."""
-    mock = AsyncMock(spec=SmartMeter)
-    mock.serial_number = "TESTSN"
-    mock.get_yesterday_consumption = 50
-    mock.latest_read = 50
-    mock.yesterday_water_cost = 0.5
-    mock.yesterday_sewerage_cost = 0.5
-    mock.readings = [
-        {"read_at": "2024-06-01T12:00:00Z", "consumption": 10, "read": 10},
-        {"read_at": "2024-06-01T13:00:00Z", "consumption": 15, "read": 25},
-        {"read_at": "2024-06-01T14:00:00Z", "consumption": 25, "read": 50},
+def mock_smart_meter(freezer: FrozenDateTimeFactory) -> SmartMeter:
+    """Return a Smart Meter for testing."""
+    # Freeze time to June 2, 2024 so "yesterday" is June 1, matching our test readings
+    freezer.move_to("2024-06-02T00:00:00Z")
+
+    meter = SmartMeter("TESTSN")
+    meter.readings = [
+        {"read_at": "2024-06-01T12:00:00", "consumption": 10, "read": 10},
+        {"read_at": "2024-06-01T13:00:00", "consumption": 15, "read": 25},
+        {"read_at": "2024-06-01T14:00:00", "consumption": 25, "read": 50},
     ]
-    return mock
+    meter.yesterday_water_cost = 0.5
+    meter.yesterday_sewerage_cost = 0.5
+    return meter
 
 
 @pytest.fixture

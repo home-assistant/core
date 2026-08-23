@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_switch[amax_3000-None][switch.main_door_locked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,7 +39,7 @@
 # name: test_switch[amax_3000-None][switch.main_door_locked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Locked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Door Locked',
     }),
     'context': <ANY>,
     'entity_id': 'switch.main_door_locked',
@@ -50,8 +51,9 @@
 # ---
 # name: test_switch[amax_3000-None][switch.main_door_momentarily_unlocked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -87,7 +89,7 @@
 # name: test_switch[amax_3000-None][switch.main_door_momentarily_unlocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Momentarily unlocked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Door Momentarily unlocked',
     }),
     'context': <ANY>,
     'entity_id': 'switch.main_door_momentarily_unlocked',
@@ -99,8 +101,9 @@
 # ---
 # name: test_switch[amax_3000-None][switch.main_door_secured-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -136,7 +139,7 @@
 # name: test_switch[amax_3000-None][switch.main_door_secured-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Secured',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Door Secured',
     }),
     'context': <ANY>,
     'entity_id': 'switch.main_door_secured',
@@ -148,8 +151,9 @@
 # ---
 # name: test_switch[amax_3000-None][switch.output_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -185,7 +189,7 @@
 # name: test_switch[amax_3000-None][switch.output_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Output A',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Output A',
     }),
     'context': <ANY>,
     'entity_id': 'switch.output_a',
@@ -197,8 +201,9 @@
 # ---
 # name: test_switch[b5512-None][switch.main_door_locked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -234,7 +239,7 @@
 # name: test_switch[b5512-None][switch.main_door_locked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Locked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Door Locked',
     }),
     'context': <ANY>,
     'entity_id': 'switch.main_door_locked',
@@ -246,8 +251,9 @@
 # ---
 # name: test_switch[b5512-None][switch.main_door_momentarily_unlocked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -283,7 +289,7 @@
 # name: test_switch[b5512-None][switch.main_door_momentarily_unlocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Momentarily unlocked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Door Momentarily unlocked',
     }),
     'context': <ANY>,
     'entity_id': 'switch.main_door_momentarily_unlocked',
@@ -295,8 +301,9 @@
 # ---
 # name: test_switch[b5512-None][switch.main_door_secured-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -332,7 +339,7 @@
 # name: test_switch[b5512-None][switch.main_door_secured-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Secured',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Door Secured',
     }),
     'context': <ANY>,
     'entity_id': 'switch.main_door_secured',
@@ -344,8 +351,9 @@
 # ---
 # name: test_switch[b5512-None][switch.output_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -381,7 +389,7 @@
 # name: test_switch[b5512-None][switch.output_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Output A',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Output A',
     }),
     'context': <ANY>,
     'entity_id': 'switch.output_a',
@@ -393,8 +401,9 @@
 # ---
 # name: test_switch[solution_3000-None][switch.main_door_locked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -430,7 +439,7 @@
 # name: test_switch[solution_3000-None][switch.main_door_locked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Locked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Door Locked',
     }),
     'context': <ANY>,
     'entity_id': 'switch.main_door_locked',
@@ -442,8 +451,9 @@
 # ---
 # name: test_switch[solution_3000-None][switch.main_door_momentarily_unlocked-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -479,7 +489,7 @@
 # name: test_switch[solution_3000-None][switch.main_door_momentarily_unlocked-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Momentarily unlocked',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Door Momentarily unlocked',
     }),
     'context': <ANY>,
     'entity_id': 'switch.main_door_momentarily_unlocked',
@@ -491,8 +501,9 @@
 # ---
 # name: test_switch[solution_3000-None][switch.main_door_secured-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -528,7 +539,7 @@
 # name: test_switch[solution_3000-None][switch.main_door_secured-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Main Door Secured',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Main Door Secured',
     }),
     'context': <ANY>,
     'entity_id': 'switch.main_door_secured',
@@ -540,8 +551,9 @@
 # ---
 # name: test_switch[solution_3000-None][switch.output_a-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -577,7 +589,7 @@
 # name: test_switch[solution_3000-None][switch.output_a-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Output A',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Output A',
     }),
     'context': <ANY>,
     'entity_id': 'switch.output_a',

@@ -7,7 +7,7 @@ from functools import partial
 import json
 import logging
 from pathlib import Path
-from typing import TYPE_CHECKING, Any, Final
+from typing import TYPE_CHECKING, Any, Final, override
 
 import orjson
 
@@ -20,6 +20,7 @@ _LOGGER = logging.getLogger(__name__)
 class JSONEncoder(json.JSONEncoder):
     """JSONEncoder that supports Home Assistant objects."""
 
+    @override
     def default(self, o: Any) -> Any:
         """Convert Home Assistant objects.
 
@@ -70,6 +71,7 @@ else:
 class ExtendedJSONEncoder(JSONEncoder):
     """JSONEncoder that supports Home Assistant objects and falls back to repr(o)."""
 
+    @override
     def default(self, o: Any) -> Any:
         """Convert certain objects.
 
@@ -233,7 +235,7 @@ def find_paths_unserializable_data(
         try:
             dump(obj)
             continue
-        except (ValueError, TypeError):
+        except ValueError, TypeError:
             pass
 
         # We convert objects with as_dict to their dict values

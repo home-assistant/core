@@ -1,10 +1,8 @@
 """Config flow for the Open Thread Border Router integration."""
 
-from __future__ import annotations
-
 from contextlib import suppress
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 import aiohttp
 import python_otbr_api
@@ -111,7 +109,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                 pan_id = generate_random_pan_id()
                 await api.create_active_dataset(
                     python_otbr_api.ActiveDataSet(
-                        channel=allowed_channel if allowed_channel else DEFAULT_CHANNEL,
+                        channel=allowed_channel or DEFAULT_CHANNEL,
                         network_name=compose_default_network_name(pan_id),
                         pan_id=pan_id,
                     )
@@ -156,6 +154,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return border_agent_id
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -187,6 +186,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="user", data_schema=data_schema, errors=errors
         )
 
+    @override
     async def async_step_hassio(
         self, discovery_info: HassioServiceInfo
     ) -> ConfigFlowResult:
@@ -215,7 +215,7 @@ class OTBRConfigFlow(ConfigFlow, domain=DOMAIN):
                     or current_url.port == config["port"]
                 ):
                     # Reload the entry since OTBR has restarted
-                    if current_entry.state == ConfigEntryState.LOADED:
+                    if current_entry.state is ConfigEntryState.LOADED:
                         assert current_entry.unique_id is not None
                         await self.hass.config_entries.async_reload(
                             current_entry.entry_id

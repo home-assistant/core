@@ -1,9 +1,7 @@
 """Vodafone Station image."""
 
-from __future__ import annotations
-
 from io import BytesIO
-from typing import Final, cast
+from typing import Final, cast, override
 
 from aiovodafone.const import WIFI_DATA
 
@@ -12,8 +10,9 @@ from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER
+from .const import LOGGER
 from .coordinator import VodafoneConfigEntry, VodafoneStationRouter
 
 # Coordinator is used to centralize the data updates
@@ -38,7 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Guest WiFi QR code for device."""
-    _LOGGER.debug("Setting up Vodafone Station images")
+    LOGGER.debug("Setting up Vodafone Station images")
 
     coordinator = entry.runtime_data
 
@@ -75,9 +74,11 @@ class VodafoneGuestWifiQRImage(
         self.entity_description = description
         self._attr_device_info = coordinator.device_info
         self._attr_unique_id = f"{coordinator.serial_number}-{description.key}-qr-code"
+        self._cached_qr_code: bytes | None = None
 
-    async def async_image(self) -> bytes | None:
-        """Return QR code image bytes."""
+    @property
+    def _qr_code(self) -> bytes:
+        """Return QR code bytes."""
         qr_code = cast(
             BytesIO,
             self.coordinator.data.wifi[WIFI_DATA][self.entity_description.key][
@@ -85,3 +86,27 @@ class VodafoneGuestWifiQRImage(
             ],
         )
         return qr_code.getvalue()
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Set the update time."""
+        self._attr_image_last_updated = dt_util.utcnow()
+        await super().async_added_to_hass()
+
+    @override
+    def _handle_coordinator_update(self) -> None:
+        """Handle updated data from the coordinator.
+
+        If the coordinator has updated the QR code, we can update the image.
+        """
+        qr_code = self._qr_code
+        if self._cached_qr_code != qr_code:
+            self._cached_qr_code = qr_code
+            self._attr_image_last_updated = dt_util.utcnow()
+
+        super()._handle_coordinator_update()
+
+    @override
+    async def async_image(self) -> bytes | None:
+        """Return QR code image."""
+        return self._qr_code

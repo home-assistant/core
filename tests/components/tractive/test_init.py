@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock, patch
 from aiotractive.exceptions import TractiveError, UnauthorizedError
 import pytest
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.tractive.const import (
     ATTR_DAILY_GOAL,
     ATTR_MINUTES_ACTIVE,
@@ -17,6 +18,7 @@ from homeassistant.components.tractive.const import (
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import EVENT_HOMEASSISTANT_STOP, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 
 from . import init_integration
 
@@ -104,8 +106,8 @@ async def test_trackable_without_details(
     await init_integration(hass, mock_config_entry)
 
     assert (
-        "Tracker xyz098 has no details and will be skipped. This happens for shared trackers"
-        in caplog.text
+        "Tracker xyz098 has no details and will be skipped."
+        " This happens for shared trackers" in caplog.text
     )
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -148,7 +150,7 @@ async def test_server_unavailable(
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """Test states of the sensor."""
-    entity_id = "sensor.test_pet_tracker_battery"
+    entity_id = "sensor.tracker_device_id_123_battery"
 
     await init_integration(hass, mock_config_entry)
 
@@ -216,3 +218,28 @@ async def test_missing_activity_data(
     payload = async_dispatcher_send_mock.mock_calls[0][1][2]
     assert payload[ATTR_DAILY_GOAL] is None
     assert payload[ATTR_MINUTES_ACTIVE] is None
+
+
+@pytest.mark.parametrize("sensor", ["activity_label", "calories", "sleep_label"])
+async def test_remove_unsupported_sensor_entity(
+    hass: HomeAssistant,
+    mock_tractive_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    sensor: str,
+) -> None:
+    """Test removing unsupported sensor entity."""
+    entity_id = f"sensor.test_pet_{sensor}"
+    mock_config_entry.add_to_hass(hass)
+
+    entity_registry.async_get_or_create(
+        SENSOR_DOMAIN,
+        DOMAIN,
+        f"pet_id_123_{sensor}",
+        suggested_object_id=entity_id.rsplit(".", maxsplit=1)[-1],
+        config_entry=mock_config_entry,
+    )
+
+    await init_integration(hass, mock_config_entry)
+
+    assert entity_registry.async_get(entity_id) is None

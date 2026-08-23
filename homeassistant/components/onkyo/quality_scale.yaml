@@ -5,15 +5,21 @@ rules:
     status: exempt
     comment: |
       This integration uses a push API. No polling required.
-  brands: todo
-  common-modules: todo
+  brands: done
+  common-modules: done
   config-flow: done
   config-flow-test-coverage: done
   dependency-transparency: done
-  docs-actions: todo
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-actions: done
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: done
     comment: |
@@ -23,13 +29,13 @@ rules:
   runtime-data: done
   test-before-configure: done
   test-before-setup: done
-  unique-config-entry: todo
+  unique-config-entry: done
 
   # Silver
   action-exceptions: todo
   config-entry-unloading: done
-  docs-configuration-parameters: todo
-  docs-installation-parameters: todo
+  docs-configuration-parameters: done
+  docs-installation-parameters: done
   entity-unavailable: done
   integration-owner: done
   log-when-unavailable: done
@@ -42,12 +48,12 @@ rules:
   # Gold
   devices: todo
   diagnostics: todo
-  discovery: todo
-  discovery-update-info: todo
+  discovery: done
+  discovery-update-info: done
   docs-data-update: todo
   docs-examples: todo
   docs-known-limitations: todo
-  docs-supported-devices: todo
+  docs-supported-devices: done
   docs-supported-functions: todo
   docs-troubleshooting: todo
   docs-use-cases: todo
@@ -61,8 +67,8 @@ rules:
   entity-translations: todo
   exception-translations: todo
   icon-translations: todo
-  reconfiguration-flow: todo
-  repair-issues: todo
+  reconfiguration-flow: done
+  repair-issues: done
   stale-devices:
     status: exempt
     comment: |

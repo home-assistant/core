@@ -1,9 +1,8 @@
 """Support for monitoring a Neurio energy sensor."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 import neurio
 import requests.exceptions
@@ -139,7 +138,7 @@ class NeurioData:
             sample = self.neurio_client.get_samples_live_last(self.sensor_id)
             self._active_power = sample["consumptionPower"]
             self._active_generation = sample.get("generationPower")
-        except (requests.exceptions.RequestException, ValueError, KeyError):
+        except requests.exceptions.RequestException, ValueError, KeyError:
             _LOGGER.warning("Could not update current power usage")
 
     def get_daily_usage(self) -> None:
@@ -155,7 +154,7 @@ class NeurioData:
             history = self.neurio_client.get_samples_stats(
                 self.sensor_id, start_time, "days", end_time
             )
-        except (requests.exceptions.RequestException, ValueError, KeyError):
+        except requests.exceptions.RequestException, ValueError, KeyError:
             _LOGGER.warning("Could not update daily power usage")
             return
 
@@ -200,16 +199,19 @@ class NeurioEnergy(SensorEntity):
             self._attr_state_class = SensorStateClass.TOTAL_INCREASING
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._unit_of_measurement

@@ -1,7 +1,5 @@
 """Storage for remote scanners."""
 
-from __future__ import annotations
-
 from habluetooth import (
     DiscoveredDeviceAdvertisementData,
     DiscoveredDeviceAdvertisementDataDict,

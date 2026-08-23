@@ -1,14 +1,12 @@
 """Support for AirVisual Pro diagnostics."""
 
-from __future__ import annotations
-
 from typing import Any
 
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD
 from homeassistant.core import HomeAssistant
 
-from . import AirVisualProConfigEntry
+from .coordinator import AirVisualProConfigEntry
 
 CONF_MAC_ADDRESS = "mac_address"
 CONF_SERIAL_NUMBER = "serial_number"

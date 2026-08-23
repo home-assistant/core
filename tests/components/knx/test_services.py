@@ -115,7 +115,7 @@ async def test_send(
     await knx.setup_integration()
 
     await hass.services.async_call(
-        "knx",
+        DOMAIN,
         "send",
         service_payload,
         blocking=True,
@@ -131,12 +131,12 @@ async def test_read(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await knx.setup_integration()
 
     # send read telegram
-    await hass.services.async_call("knx", "read", {"address": "1/1/1"}, blocking=True)
+    await hass.services.async_call(DOMAIN, "read", {"address": "1/1/1"}, blocking=True)
     await knx.assert_read("1/1/1")
 
     # send multiple read telegrams
     await hass.services.async_call(
-        "knx",
+        DOMAIN,
         "read",
         {"address": ["1/1/1", "2/2/2", "3/3/3"]},
         blocking=True,
@@ -159,7 +159,7 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # register event with `type`
     await hass.services.async_call(
-        "knx",
+        DOMAIN,
         "event_register",
         {"address": test_address, "type": "2byte_unsigned"},
         blocking=True,
@@ -172,7 +172,7 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # remove event registration - no event added
     await hass.services.async_call(
-        "knx",
+        DOMAIN,
         "event_register",
         {"address": test_address, "remove": True},
         blocking=True,
@@ -182,7 +182,7 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # register event without `type`
     await hass.services.async_call(
-        "knx", "event_register", {"address": test_address}, blocking=True
+        DOMAIN, "event_register", {"address": test_address}, blocking=True
     )
     await knx.receive_write(test_address, True)
     await knx.receive_write(test_address, False)
@@ -193,6 +193,18 @@ async def test_event_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
     untyped_event_1 = events.pop()
     assert untyped_event_1.data["data"] is True
     assert untyped_event_1.data["value"] is None
+
+    # remove event for non-registered address - raise error
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            DOMAIN,
+            "event_register",
+            {"address": "4/4/4", "remove": True},
+            blocking=True,
+        )
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "service_event_register_ga_not_found"
+    assert exc_info.value.translation_placeholders == {"group_addresses": "4/4/4"}
 
 
 async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -210,7 +222,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # register exposure
     await hass.services.async_call(
-        "knx",
+        DOMAIN,
         "exposure_register",
         {"address": test_address, "entity_id": test_entity, "type": "binary"},
         blocking=True,
@@ -221,7 +233,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # register exposure
     await hass.services.async_call(
-        "knx",
+        DOMAIN,
         "exposure_register",
         {"address": test_address, "remove": True},
         blocking=True,
@@ -232,7 +244,7 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
 
     # register exposure for attribute with default
     await hass.services.async_call(
-        "knx",
+        DOMAIN,
         "exposure_register",
         {
             "address": test_address,
@@ -243,7 +255,8 @@ async def test_exposure_register(hass: HomeAssistant, knx: KNXTestKit) -> None:
         },
         blocking=True,
     )
-    # no attribute on first change wouldn't work because no attribute change since last test
+    # no attribute on first change wouldn't work because no
+    # attribute change since last test
     hass.states.async_set(test_entity, STATE_ON, {test_attribute: 30})
     await hass.async_block_till_done()
     await knx.assert_write(test_address, (30,))
@@ -276,7 +289,7 @@ async def test_reload_service(
         patch("homeassistant.components.knx.async_setup_entry") as mock_setup_entry,
     ):
         await hass.services.async_call(
-            "knx",
+            DOMAIN,
             "reload",
             blocking=True,
         )
@@ -291,7 +304,7 @@ async def test_service_setup_failed(hass: HomeAssistant, knx: KNXTestKit) -> Non
 
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            "knx",
+            DOMAIN,
             "send",
             {"address": "1/2/3", "payload": True, "response": False},
             blocking=True,

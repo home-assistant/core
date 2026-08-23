@@ -37,10 +37,10 @@
   "services": {
     "reload": {
       "description": "Reloads helpers from the YAML-configuration.",
-      "name": "[%key:common::action::reload%]"
+      "name": "Reload input datetimes"
     },
     "set_datetime": {
-      "description": "Sets the date and/or time.",
+      "description": "Sets the date and/or time of an input datetime.",
       "fields": {
         "date": {
           "description": "The target date.",
@@ -59,7 +59,7 @@
           "name": "Timestamp"
         }
       },
-      "name": "Set"
+      "name": "Set input datetime value"
     }
   },
   "title": "Input datetime"

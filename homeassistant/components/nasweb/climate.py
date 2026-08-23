@@ -1,9 +1,7 @@
 """Platform for NASweb thermostat."""
 
-from __future__ import annotations
-
 import time
-from typing import Any
+from typing import Any, override
 
 from webio_api import Thermostat as NASwebThermostat
 from webio_api.const import KEY_THERMOSTAT
@@ -77,11 +75,12 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         self._thermostat = nasweb_thermostat
         self._attr_available = False
         self._attr_name = nasweb_thermostat.name
-        self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"
+        self._attr_unique_id = f"{DOMAIN}.{self._thermostat.webio_serial}.thermostat"  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self._thermostat.webio_serial)}
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
@@ -99,6 +98,7 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
             self._attr_available = available if available is not None else False
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._attr_current_temperature = self._thermostat.current_temp
@@ -106,7 +106,7 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
         self._attr_target_temperature_high = self._thermostat.temp_target_max
         self._attr_hvac_mode = self._get_current_hvac_mode()
         self._attr_hvac_action = self._get_current_action()
-        self._attr_name = self._thermostat.name if self._thermostat.name else None
+        self._attr_name = self._thermostat.name or None
         self._set_attr_available(
             self._thermostat.last_update, self._thermostat.available
         )
@@ -150,17 +150,21 @@ class Thermostat(ClimateEntity, BaseCoordinatorEntity):
             return HVACAction.FAN
         return HVACAction.IDLE
 
+    @override
     async def async_update(self) -> None:
         """Update the entity.
 
         Only used by the generic entity update service.
-        Scheduling updates is not necessary, the coordinator takes care of updates via push notifications.
+        Scheduling updates is not necessary, the coordinator
+        takes care of updates via push notifications.
         """
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set HVACMode for Thermostat."""
         await self._thermostat.set_hvac_mode(hvac_mode)
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set temperature range for Thermostat."""
         await self._thermostat.set_temperature(

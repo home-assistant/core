@@ -1,7 +1,5 @@
 """Zeroconf discovery for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
 from fnmatch import translate
@@ -15,6 +13,7 @@ from zeroconf import BadTypeInNameException, IPVersion, ServiceStateChange
 from zeroconf.asyncio import AsyncServiceBrowser, AsyncServiceInfo
 
 from homeassistant import config_entries
+from homeassistant.const import ATTR_DOMAIN, ATTR_NAME
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import discovery_flow
 from homeassistant.helpers.discovery_flow import DiscoveryKey
@@ -24,12 +23,9 @@ from homeassistant.helpers.service_info.zeroconf import (
     ZeroconfServiceInfo as _ZeroconfServiceInfo,
 )
 from homeassistant.loader import HomeKitDiscoveredIntegration, ZeroconfMatcher
-from homeassistant.util.hass_dict import HassKey
 
 from .const import DOMAIN, REQUEST_TIMEOUT
-
-if TYPE_CHECKING:
-    from .models import HaZeroconf
+from .models import HaZeroconf
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -46,14 +42,9 @@ HOMEKIT_PAIRED_STATUS_FLAG = "sf"
 HOMEKIT_MODEL_LOWER = "md"
 HOMEKIT_MODEL_UPPER = "MD"
 
-ATTR_DOMAIN: Final = "domain"
-ATTR_NAME: Final = "name"
 ATTR_PROPERTIES: Final = "properties"
 
 DUPLICATE_INSTANCE_ID_ISSUE_ID = "duplicate_instance_id"
-
-
-DATA_DISCOVERY: HassKey[ZeroconfDiscovery] = HassKey("zeroconf_discovery")
 
 
 def build_homekit_model_lookups(
@@ -268,6 +259,8 @@ class ZeroconfDiscovery:
             _ZeroconfServiceInfo,
             lambda service_info: bool(service_info.name == name),
         ):
+            if flow.get("context", {}).get("dismiss_protected"):
+                continue
             self.hass.config_entries.flow.async_abort(flow["flow_id"])
 
     @callback
@@ -470,7 +463,8 @@ class ZeroconfDiscovery:
         # Conflict detected, create repair issue
         _joined_ips = ", ".join(str(ip_address) for ip_address in discovered_ips)
         _LOGGER.warning(
-            "Discovered another Home Assistant instance with the same instance ID (%s) at %s",
+            "Discovered another Home Assistant instance"
+            " with the same instance ID (%s) at %s",
             discovered_instance_id,
             _joined_ips,
         )

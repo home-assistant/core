@@ -72,9 +72,11 @@ def mock_router(mock_device_registry_devices):
         # device_tracker
         instance.lan.get_interfaces = AsyncMock(return_value=DATA_LAN_GET_INTERFACES)
         instance.lan.get_hosts_list = AsyncMock(
-            side_effect=lambda interface: DATA_LAN_GET_HOSTS_LIST
-            if interface == "pub"
-            else DATA_LAN_GET_HOSTS_LIST_GUEST
+            side_effect=lambda interface: (
+                DATA_LAN_GET_HOSTS_LIST
+                if interface == "pub"
+                else DATA_LAN_GET_HOSTS_LIST_GUEST
+            )
         )
         # sensor
         instance.call.get_calls_log = AsyncMock(return_value=DATA_CALL_GET_CALLS_LOG)
@@ -105,13 +107,15 @@ def mock_router_bridge_mode(mock_device_registry_devices, router):
 
     router().lan.get_interfaces = AsyncMock(
         side_effect=HttpRequestError(
-            f"Request failed (APIResponse: {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
+            "Request failed (APIResponse:"
+            f" {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
         )
     )
 
     router().lan.get_hosts_list = AsyncMock(
         side_effect=HttpRequestError(
-            f"Request failed (APIResponse: {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
+            "Request failed (APIResponse:"
+            f" {json.dumps(DATA_LAN_GET_HOSTS_LIST_MODE_BRIDGE)})"
         )
     )
 

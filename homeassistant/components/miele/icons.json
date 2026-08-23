@@ -32,6 +32,12 @@
       "core_temperature": {
         "default": "mdi:thermometer-probe"
       },
+      "degreasing_counter": {
+        "default": "mdi:hydro-power"
+      },
+      "descaling_counter": {
+        "default": "mdi:water-alert-outline"
+      },
       "drying_step": {
         "default": "mdi:water-outline"
       },
@@ -43,6 +49,9 @@
       },
       "finish": {
         "default": "mdi:clock-end"
+      },
+      "milk_cleaning_counter": {
+        "default": "mdi:pipe"
       },
       "plate": {
         "default": "mdi:circle-outline",

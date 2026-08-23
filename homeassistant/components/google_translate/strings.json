@@ -11,5 +11,10 @@
         }
       }
     }
+  },
+  "device": {
+    "google_translate": {
+      "name": "Google Translate {lang} {tld}"
+    }
   }
 }

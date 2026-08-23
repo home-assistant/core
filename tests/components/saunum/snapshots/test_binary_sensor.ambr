@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[binary_sensor.saunum_leil_door-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_entities[binary_sensor.saunum_leil_door-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Saunum Leil Door',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Saunum Leil Door',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.saunum_leil_door',
@@ -51,8 +52,9 @@
 # ---
 # name: test_entities[binary_sensor.saunum_leil_door_open_during_heating_alarm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_entities[binary_sensor.saunum_leil_door_open_during_heating_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Saunum Leil Door open during heating alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Saunum Leil Door open during heating alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.saunum_leil_door_open_during_heating_alarm',
@@ -101,8 +103,9 @@
 # ---
 # name: test_entities[binary_sensor.saunum_leil_door_open_too_long_alarm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_entities[binary_sensor.saunum_leil_door_open_too_long_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Saunum Leil Door open too long alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Saunum Leil Door open too long alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.saunum_leil_door_open_too_long_alarm',
@@ -151,8 +154,9 @@
 # ---
 # name: test_entities[binary_sensor.saunum_leil_internal_temperature_alarm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_entities[binary_sensor.saunum_leil_internal_temperature_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Saunum Leil Internal temperature alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Saunum Leil Internal temperature alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.saunum_leil_internal_temperature_alarm',
@@ -201,8 +205,9 @@
 # ---
 # name: test_entities[binary_sensor.saunum_leil_temperature_sensor_disconnected_alarm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -238,8 +243,8 @@
 # name: test_entities[binary_sensor.saunum_leil_temperature_sensor_disconnected_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Saunum Leil Temperature sensor disconnected alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Saunum Leil Temperature sensor disconnected alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.saunum_leil_temperature_sensor_disconnected_alarm',
@@ -251,8 +256,9 @@
 # ---
 # name: test_entities[binary_sensor.saunum_leil_temperature_sensor_shorted_alarm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -288,8 +294,8 @@
 # name: test_entities[binary_sensor.saunum_leil_temperature_sensor_shorted_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Saunum Leil Temperature sensor shorted alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Saunum Leil Temperature sensor shorted alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.saunum_leil_temperature_sensor_shorted_alarm',
@@ -301,8 +307,9 @@
 # ---
 # name: test_entities[binary_sensor.saunum_leil_thermal_cutoff_alarm-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -338,8 +345,8 @@
 # name: test_entities[binary_sensor.saunum_leil_thermal_cutoff_alarm-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Saunum Leil Thermal cutoff alarm',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Saunum Leil Thermal cutoff alarm',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.saunum_leil_thermal_cutoff_alarm',

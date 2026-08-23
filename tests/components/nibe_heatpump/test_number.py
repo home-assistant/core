@@ -11,7 +11,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.number import (
     ATTR_VALUE,
-    DOMAIN as PLATFORM_DOMAIN,
+    DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
 from homeassistant.const import ATTR_ENTITY_ID, Platform
@@ -95,7 +95,7 @@ async def test_set_value(
 
     # Write value
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
         blocking=True,
@@ -158,7 +158,7 @@ async def test_set_value_fail(
     # Write value
     with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
-            PLATFORM_DOMAIN,
+            NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
             {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
             blocking=True,
@@ -192,7 +192,7 @@ async def test_set_value_same(
 
     # Write value
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        NUMBER_DOMAIN,
         SERVICE_SET_VALUE,
         {ATTR_ENTITY_ID: entity_id, ATTR_VALUE: value},
         blocking=True,

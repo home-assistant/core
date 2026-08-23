@@ -1,5 +1,6 @@
 """Test the Google Drive backup platform."""
 
+from collections.abc import AsyncIterator
 from io import StringIO
 import json
 from typing import Any
@@ -16,6 +17,7 @@ from homeassistant.components.backup import (
     AgentBackup,
 )
 from homeassistant.components.google_drive import DOMAIN
+from homeassistant.components.google_drive.backup import GoogleDriveBackupAgent
 from homeassistant.core import HomeAssistant
 from homeassistant.setup import async_setup_component
 
@@ -57,6 +59,18 @@ TEST_AGENT_BACKUP_RESULT = {
     "name": "Test",
     "with_automatic_settings": None,
 }
+
+
+async def consume_stream(
+    file_metadata: Any,
+    open_stream: Any,
+    *args: Any,
+    **kwargs: Any,
+) -> None:
+    """Consume the stream from the open_stream callable."""
+    stream = await open_stream()
+    async for _ in stream:
+        pass
 
 
 @pytest.fixture(autouse=True)
@@ -283,7 +297,7 @@ async def test_agents_upload(
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test agent upload backup."""
-    mock_api.resumable_upload_file = AsyncMock(return_value=None)
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream)
 
     client = await hass_client()
 
@@ -324,7 +338,7 @@ async def test_agents_upload_create_folder_if_missing(
     mock_api.create_file = AsyncMock(
         return_value={"id": "new folder id", "name": "Home Assistant"}
     )
-    mock_api.resumable_upload_file = AsyncMock(return_value=None)
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream)
 
     client = await hass_client()
 
@@ -352,6 +366,37 @@ async def test_agents_upload_create_folder_if_missing(
     mock_api.create_file.assert_called_once()
     mock_api.resumable_upload_file.assert_called_once()
     assert [tuple(mock_call) for mock_call in mock_api.mock_calls] == snapshot
+
+
+async def test_agents_upload_progress(
+    hass: HomeAssistant,
+    mock_api: MagicMock,
+) -> None:
+    """Test agent upload reports progress."""
+    mock_api.resumable_upload_file = AsyncMock(side_effect=consume_stream)
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    agent = GoogleDriveBackupAgent(entries[0])
+
+    progress_calls = []
+
+    def on_progress(*, bytes_uploaded: int, **kwargs: Any) -> None:
+        progress_calls.append(bytes_uploaded)
+
+    async def open_stream() -> AsyncIterator[bytes]:
+        async def stream() -> AsyncIterator[bytes]:
+            yield b"chunk1"
+            yield b"chunk2"
+
+        return stream()
+
+    await agent.async_upload_backup(
+        open_stream=open_stream,
+        backup=TEST_AGENT_BACKUP,
+        on_progress=on_progress,
+    )
+
+    assert progress_calls == [6, 12]
 
 
 async def test_agents_upload_fail(

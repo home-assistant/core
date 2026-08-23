@@ -15,7 +15,7 @@
     "flow_title": "{host}",
     "step": {
       "hassio_confirm": {
-        "description": "Do you want to connect to add-on {addon}?"
+        "description": "Do you want to connect to the {addon} app?"
       },
       "reauth_confirm": {
         "data": {
@@ -34,6 +34,14 @@
           "host": "Hostname or IP address of your VLC media player."
         }
       }
+    }
+  },
+  "exceptions": {
+    "command_error": {
+      "message": "Command error: {error}"
+    },
+    "connect_error": {
+      "message": "Connection error: {error}"
     }
   }
 }

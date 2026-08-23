@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_states[switch.front_door_in_home_chime-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_states[switch.front_door_in_home_chime-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Front Door In-home chime',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door In-home chime',
     }),
     'context': <ANY>,
     'entity_id': 'switch.front_door_in_home_chime',
@@ -51,8 +52,9 @@
 # ---
 # name: test_states[switch.front_door_motion_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_states[switch.front_door_motion_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Front Door Motion detection',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Door Motion detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.front_door_motion_detection',
@@ -101,8 +103,9 @@
 # ---
 # name: test_states[switch.front_motion_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_states[switch.front_motion_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Front Motion detection',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Motion detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.front_motion_detection',
@@ -151,8 +154,9 @@
 # ---
 # name: test_states[switch.front_siren-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_states[switch.front_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Front Siren',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Front Siren',
     }),
     'context': <ANY>,
     'entity_id': 'switch.front_siren',
@@ -201,8 +205,9 @@
 # ---
 # name: test_states[switch.internal_motion_detection-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -238,8 +243,8 @@
 # name: test_states[switch.internal_motion_detection-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Internal Motion detection',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internal Motion detection',
     }),
     'context': <ANY>,
     'entity_id': 'switch.internal_motion_detection',
@@ -251,8 +256,9 @@
 # ---
 # name: test_states[switch.internal_siren-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -288,8 +294,8 @@
 # name: test_states[switch.internal_siren-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'attribution': 'Data provided by Ring.com',
-      'friendly_name': 'Internal Siren',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ring.com',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Internal Siren',
     }),
     'context': <ANY>,
     'entity_id': 'switch.internal_siren',

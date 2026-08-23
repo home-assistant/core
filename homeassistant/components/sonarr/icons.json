@@ -20,5 +20,25 @@
         "default": "mdi:television"
       }
     }
+  },
+  "services": {
+    "get_diskspace": {
+      "service": "mdi:harddisk"
+    },
+    "get_episodes": {
+      "service": "mdi:filmstrip"
+    },
+    "get_queue": {
+      "service": "mdi:download"
+    },
+    "get_series": {
+      "service": "mdi:television"
+    },
+    "get_upcoming": {
+      "service": "mdi:calendar-clock"
+    },
+    "get_wanted": {
+      "service": "mdi:magnify"
+    }
   }
 }

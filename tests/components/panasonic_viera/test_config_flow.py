@@ -1,8 +1,10 @@
 """Test the Panasonic Viera config flow."""
 
-from unittest.mock import patch
+from collections.abc import Generator
+from unittest.mock import AsyncMock, patch
 
 from panasonic_viera import SOAPError
+import pytest
 
 from homeassistant import config_entries
 from homeassistant.components.panasonic_viera.const import (
@@ -24,6 +26,16 @@ from .conftest import (
 )
 
 from tests.common import MockConfigEntry
+
+
+@pytest.fixture(autouse=True)
+def mock_setup_entry() -> Generator[AsyncMock]:
+    """Mock setting up a config entry."""
+    with patch(
+        "homeassistant.components.panasonic_viera.async_setup_entry",
+        return_value=True,
+    ) as mock_setup:
+        yield mock_setup
 
 
 async def test_flow_non_encrypted(hass: HomeAssistant) -> None:
@@ -102,7 +114,7 @@ async def test_flow_unknown_abort(hass: HomeAssistant) -> None:
 async def test_flow_encrypted_not_connected_pin_code_request(
     hass: HomeAssistant,
 ) -> None:
-    """Test flow with encryption and PIN code request connection error abortion during pairing request step."""
+    """Test encrypted flow with PIN request connection error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -127,7 +139,7 @@ async def test_flow_encrypted_not_connected_pin_code_request(
 
 
 async def test_flow_encrypted_unknown_pin_code_request(hass: HomeAssistant) -> None:
-    """Test flow with encryption and PIN code request unknown error abortion during pairing request step."""
+    """Test encrypted flow with PIN request unknown error."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -232,7 +244,7 @@ async def test_flow_encrypted_invalid_pin_code_error(hass: HomeAssistant) -> Non
 
 
 async def test_flow_encrypted_not_connected_abort(hass: HomeAssistant) -> None:
-    """Test flow with encryption and PIN code connection error abortion during pairing step."""
+    """Test encrypted flow with PIN connection error during pairing."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -265,7 +277,7 @@ async def test_flow_encrypted_not_connected_abort(hass: HomeAssistant) -> None:
 
 
 async def test_flow_encrypted_unknown_abort(hass: HomeAssistant) -> None:
-    """Test flow with encryption and PIN code unknown error abortion during pairing step."""
+    """Test encrypted flow with PIN unknown error during pairing."""
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -394,7 +406,7 @@ async def test_imported_flow_encrypted_valid_pin_code(hass: HomeAssistant) -> No
 async def test_imported_flow_encrypted_invalid_pin_code_error(
     hass: HomeAssistant,
 ) -> None:
-    """Test imported flow with encryption and invalid PIN code error during pairing step."""
+    """Test imported encrypted flow with invalid PIN error."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=SOAPError)
 
@@ -426,7 +438,7 @@ async def test_imported_flow_encrypted_invalid_pin_code_error(
 
 
 async def test_imported_flow_encrypted_not_connected_abort(hass: HomeAssistant) -> None:
-    """Test imported flow with encryption and PIN code connection error abortion during pairing step."""
+    """Test imported encrypted flow with PIN connection error."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=TimeoutError)
 
@@ -453,7 +465,7 @@ async def test_imported_flow_encrypted_not_connected_abort(hass: HomeAssistant) 
 
 
 async def test_imported_flow_encrypted_unknown_abort(hass: HomeAssistant) -> None:
-    """Test imported flow with encryption and PIN code unknown error abortion during pairing step."""
+    """Test imported encrypted flow with PIN unknown error."""
 
     mock_remote = get_mock_remote(encrypted=True, authorize_error=Exception)
 

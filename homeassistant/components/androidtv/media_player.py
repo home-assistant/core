@@ -1,10 +1,9 @@
 """Support for functionality to interact with Android / Fire TV devices."""
 
-from __future__ import annotations
-
 from datetime import datetime, timedelta
 import hashlib
 import logging
+from typing import override
 
 from androidtv.constants import APPS, KEYS
 from androidtv.setup_async import AndroidTVAsync, FireTVAsync
@@ -36,7 +35,7 @@ from .const import (
     SIGNAL_CONFIG_ENTITY,
 )
 from .entity import AndroidTVEntity, adb_decorator
-from .services import ATTR_ADB_RESPONSE, ATTR_HDMI_INPUT, SERVICE_LEARN_SENDEVENT
+from .services import ATTR_ADB_RESPONSE, ATTR_HDMI_INPUT
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -129,6 +128,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
         self.turn_off_command = options.get(CONF_TURN_OFF_COMMAND)
         self.turn_on_command = options.get(CONF_TURN_ON_COMMAND)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Set config parameter when add to hass."""
         await super().async_added_to_hass()
@@ -178,26 +178,31 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             self._media_image = None, None
             self._attr_media_image_hash = None
 
+    @override
     async def async_get_media_image(self) -> tuple[bytes | None, str | None]:
         """Fetch current playing image."""
         return self._media_image
 
     @adb_decorator()
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self.aftv.media_play()
 
     @adb_decorator()
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.aftv.media_pause()
 
     @adb_decorator()
+    @override
     async def async_media_play_pause(self) -> None:
         """Send play/pause command."""
         await self.aftv.media_play_pause()
 
     @adb_decorator()
+    @override
     async def async_turn_on(self) -> None:
         """Turn on the device."""
         if self.turn_on_command:
@@ -206,6 +211,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             await self.aftv.turn_on()
 
     @adb_decorator()
+    @override
     async def async_turn_off(self) -> None:
         """Turn off the device."""
         if self.turn_off_command:
@@ -214,16 +220,19 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             await self.aftv.turn_off()
 
     @adb_decorator()
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command (results in rewind)."""
         await self.aftv.media_previous_track()
 
     @adb_decorator()
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command (results in fast-forward)."""
         await self.aftv.media_next_track()
 
     @adb_decorator()
+    @override
     async def async_select_source(self, source: str) -> None:
         """Select input source.
 
@@ -271,7 +280,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
             self.async_write_ha_state()
 
             msg = (
-                f"Output from service '{SERVICE_LEARN_SENDEVENT}' from"
+                f"Output from service 'learn_sendevent' from"
                 f" {self.entity_id}: '{output}'"
             )
             persistent_notification.async_create(
@@ -283,7 +292,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
 
     @adb_decorator()
     async def service_download(self, device_path: str, local_path: str) -> None:
-        """Download a file from your Android / Fire TV device to your Home Assistant instance."""
+        """Download a file from your Android / Fire TV device."""
         if not self.hass.config.is_allowed_path(local_path):
             _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             return
@@ -292,7 +301,7 @@ class ADBDevice(AndroidTVEntity, MediaPlayerEntity):
 
     @adb_decorator()
     async def service_upload(self, device_path: str, local_path: str) -> None:
-        """Upload a file from your Home Assistant instance to an Android / Fire TV device."""
+        """Upload a file to an Android / Fire TV device."""
         if not self.hass.config.is_allowed_path(local_path):
             _LOGGER.warning("'%s' is not secure to load data from!", local_path)
             return
@@ -367,11 +376,13 @@ class AndroidTVDevice(ADBDevice):
         await self._async_get_screencap(prev_app_id)
 
     @adb_decorator()
+    @override
     async def async_media_stop(self) -> None:
         """Send stop command."""
         await self.aftv.media_stop()
 
     @adb_decorator()
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Mute the volume."""
         is_muted = await self.aftv.is_volume_muted()
@@ -381,16 +392,19 @@ class AndroidTVDevice(ADBDevice):
             await self.aftv.mute_volume()
 
     @adb_decorator()
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set the volume level."""
         await self.aftv.set_volume_level(volume)
 
     @adb_decorator()
+    @override
     async def async_volume_down(self) -> None:
         """Send volume down command."""
         self._attr_volume_level = await self.aftv.volume_down(self._attr_volume_level)
 
     @adb_decorator()
+    @override
     async def async_volume_up(self) -> None:
         """Send volume up command."""
         self._attr_volume_level = await self.aftv.volume_up(self._attr_volume_level)
@@ -457,6 +471,7 @@ class FireTVDevice(ADBDevice):
         await self._async_get_screencap(prev_app_id)
 
     @adb_decorator()
+    @override
     async def async_media_stop(self) -> None:
         """Send stop (back) command."""
         await self.aftv.back()

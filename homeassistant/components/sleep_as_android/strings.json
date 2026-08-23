@@ -2,12 +2,17 @@
   "config": {
     "abort": {
       "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
+      "reconfigure_successful": "**Reconfiguration was successful**\n\nIn Sleep as Android go to *Settings → Services → Automation → Webhooks* and update the webhook with the following URL:\n\n`{webhook_url}`",
       "webhook_not_internet_accessible": "[%key:common::config_flow::abort::webhook_not_internet_accessible%]"
     },
     "create_entry": {
       "default": "To send events to Home Assistant, you will need to set up a webhook.\n\nOpen Sleep as Android and go to *Settings → Services → Automation → Webhooks*\n\nEnable *Webhooks* and fill in the following webhook in the URL field:\n\n`{webhook_url}`\n\nSee [the documentation]({docs_url}) for further details."
     },
     "step": {
+      "reconfigure": {
+        "description": "Are you sure you want to reconfigure the Sleep as Android integration?",
+        "title": "Reconfigure Sleep as Android"
+      },
       "user": {
         "description": "Are you sure you want to set up the Sleep as Android integration?",
         "title": "Set up Sleep as Android"

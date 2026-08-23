@@ -2,12 +2,24 @@
 
 from unittest.mock import Mock
 
+import pytest
+
+from homeassistant.components.hue.const import DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.util.json import JsonArrayType
 
 from .conftest import setup_platform
-from .const import FAKE_BINARY_SENSOR, FAKE_DEVICE, FAKE_ZIGBEE_CONNECTIVITY
+from .const import (
+    FAKE_BEHAVIOR_INSTANCE,
+    FAKE_BEHAVIOR_SCRIPT,
+    FAKE_BINARY_SENSOR,
+    FAKE_DEVICE,
+    FAKE_PRESENCE_MIMICKING_INSTANCE,
+    FAKE_PRESENCE_MIMICKING_SCRIPT,
+    FAKE_ZIGBEE_CONNECTIVITY,
+)
 
 
 async def test_switch(
@@ -29,10 +41,11 @@ async def test_switch(
     assert test_entity.state == "on"
     assert test_entity.attributes["device_class"] == "switch"
 
-    # test config switch to enable/disable a behavior_instance resource (=builtin automation)
-    test_entity = hass.states.get("switch.automation_timer_test")
+    # test config switch to enable/disable a behavior_instance resource (=builtin
+    # automation)
+    test_entity = hass.states.get("switch.philips_hue_automation_timer_test")
     assert test_entity is not None
-    assert test_entity.name == "Automation: Timer Test"
+    assert test_entity.name == "Philips hue Automation: Timer Test"
     assert test_entity.state == "on"
     assert test_entity.attributes["device_class"] == "switch"
 
@@ -113,7 +126,8 @@ async def test_switch_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     # verify entity does not exist before we start
     assert hass.states.get(test_entity_id) is None
 
-    # Add new fake entity (and attached device and zigbee_connectivity) by emitting events
+    # Add new fake entity (and attached device and zigbee_connectivity) by emitting
+    # events
     mock_bridge_v2.api.emit_event("add", FAKE_BINARY_SENSOR)
     await hass.async_block_till_done()
 
@@ -129,3 +143,136 @@ async def test_switch_added(hass: HomeAssistant, mock_bridge_v2: Mock) -> None:
     test_entity = hass.states.get(test_entity_id)
     assert test_entity is not None
     assert test_entity.state == "off"
+
+
+@pytest.mark.parametrize(
+    "metadata",
+    [
+        pytest.param(
+            {"name": "Hue Accessories", "category": "accessory"}, id="accessory"
+        ),
+        pytest.param(
+            {"name": "Light state after streaming", "category": "entertainment"},
+            id="entertainment",
+        ),
+        pytest.param({"name": "Old bridge script"}, id="no_category"),
+    ],
+)
+async def test_internal_behavior_instance_not_added(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    metadata: dict,
+) -> None:
+    """Test internal behavior instances are not exposed as switches.
+
+    The bridge accepts a change to `enabled` on these but keeps running them,
+    so a switch for them would silently do nothing. Bridges that do not report
+    a category at all are skipped for the same reason.
+    """
+    internal_script = {**FAKE_BEHAVIOR_SCRIPT, "metadata": metadata}
+    await mock_bridge_v2.api.load_test_data(
+        [*v2_resources_test_data, internal_script, FAKE_BEHAVIOR_INSTANCE]
+    )
+
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
+
+    assert hass.states.get("switch.philips_hue_automation_wall_switch_hallway") is None
+    assert hass.states.get("switch.philips_hue_automation_timer_test") is not None
+    assert len(hass.states.async_all()) == 4
+
+
+async def test_internal_behavior_instance_entity_removed(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a previously created entity for an internal instance is removed."""
+    # Simulate an entity created with a previous version of the integration
+    stale_entity = entity_registry.async_get_or_create(
+        Platform.SWITCH, DOMAIN, FAKE_BEHAVIOR_INSTANCE["id"]
+    )
+    await mock_bridge_v2.api.load_test_data(
+        [*v2_resources_test_data, FAKE_BEHAVIOR_SCRIPT, FAKE_BEHAVIOR_INSTANCE]
+    )
+
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
+
+    assert entity_registry.async_get(stale_entity.entity_id) is None
+
+
+@pytest.mark.parametrize(
+    ("pm_state", "expected_state"), [("started", "on"), ("stopped", "off")]
+)
+async def test_presence_mimicking_switch_state(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    pm_state: str,
+    expected_state: str,
+) -> None:
+    """Test the switch follows the run state instead of enabled."""
+    instance = {**FAKE_PRESENCE_MIMICKING_INSTANCE, "state": {"pm_state": pm_state}}
+    await mock_bridge_v2.api.load_test_data(
+        [*v2_resources_test_data, FAKE_PRESENCE_MIMICKING_SCRIPT, instance]
+    )
+
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
+
+    test_entity = hass.states.get("switch.philips_hue_automation_mimic_presence")
+    assert test_entity is not None
+    assert test_entity.state == expected_state
+
+
+@pytest.mark.parametrize(
+    ("service", "expected_trigger"),
+    [("turn_on", {"start": {}}), ("turn_off", {"stop": {}})],
+)
+async def test_presence_mimicking_switch_services(
+    hass: HomeAssistant,
+    mock_bridge_v2: Mock,
+    v2_resources_test_data: JsonArrayType,
+    service: str,
+    expected_trigger: dict,
+) -> None:
+    """Test the switch starts and stops instead of touching enabled."""
+    await mock_bridge_v2.api.load_test_data(
+        [
+            *v2_resources_test_data,
+            FAKE_PRESENCE_MIMICKING_SCRIPT,
+            FAKE_PRESENCE_MIMICKING_INSTANCE,
+        ]
+    )
+
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
+
+    await hass.services.async_call(
+        "switch",
+        service,
+        {"entity_id": "switch.philips_hue_automation_mimic_presence"},
+        blocking=True,
+    )
+
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert mock_bridge_v2.mock_requests[0]["method"] == "put"
+    assert mock_bridge_v2.mock_requests[0]["json"] == {"trigger": expected_trigger}
+
+
+async def test_regular_automation_switch_uses_enabled(
+    hass: HomeAssistant, mock_bridge_v2: Mock, v2_resources_test_data: JsonArrayType
+) -> None:
+    """Test an automation without a run state still toggles enabled."""
+    await mock_bridge_v2.api.load_test_data(v2_resources_test_data)
+
+    await setup_platform(hass, mock_bridge_v2, Platform.SWITCH)
+
+    await hass.services.async_call(
+        "switch",
+        "turn_off",
+        {"entity_id": "switch.philips_hue_automation_timer_test"},
+        blocking=True,
+    )
+
+    assert len(mock_bridge_v2.mock_requests) == 1
+    assert mock_bridge_v2.mock_requests[0]["json"] == {"enabled": False}

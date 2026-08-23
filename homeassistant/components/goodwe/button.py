@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from datetime import datetime
 import logging
+from typing import override
 
 from goodwe import Inverter, InverterError
 
@@ -29,7 +30,7 @@ SYNCHRONIZE_CLOCK = GoodweButtonEntityDescription(
     key="synchronize_clock",
     translation_key="synchronize_clock",
     entity_category=EntityCategory.CONFIG,
-    action=lambda inv: inv.write_setting("time", datetime.now()),
+    action=lambda inv: inv.write_setting("time", datetime.now()),  # pylint: disable=home-assistant-enforce-naive-now
 )
 
 
@@ -45,7 +46,7 @@ async def async_setup_entry(
     # read current time from the inverter
     try:
         await inverter.read_setting("time")
-    except (InverterError, ValueError):
+    except InverterError, ValueError:
         # Inverter model does not support clock synchronization
         _LOGGER.debug("Could not read inverter current clock time")
     else:
@@ -73,6 +74,7 @@ class GoodweButtonEntity(ButtonEntity):
         self._attr_device_info = device_info
         self._inverter: Inverter = inverter
 
+    @override
     async def async_press(self) -> None:
         """Triggers the button press service."""
         await self.entity_description.action(self._inverter)

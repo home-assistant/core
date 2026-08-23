@@ -1,9 +1,8 @@
 """The FireServiceRota integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import Any, override
 
 from pyfireservicerota import (
     ExpiredTokenError,
@@ -53,6 +52,7 @@ class FireServiceUpdateCoordinator(DataUpdateCoordinator[dict | None]):
 
         self.client = client
 
+    @override
     async def _async_update_data(self) -> dict | None:
         """Get the latest availability data."""
         return await self.client.async_update()
@@ -173,15 +173,18 @@ class FireServiceRotaClient:
 
         try:
             return await self._hass.async_add_executor_job(func, *args)
-        except (ExpiredTokenError, InvalidTokenError):
+        except ExpiredTokenError, InvalidTokenError:
             await self._hass.async_add_executor_job(self.websocket.stop_listener)
             self.token_refresh_failure = True
 
             if await self.oauth.async_refresh_tokens():
                 self.token_refresh_failure = False
-                await self._hass.async_add_executor_job(self.websocket.start_listener)
 
-                return await self._hass.async_add_executor_job(func, *args)
+                def _restart_and_call() -> Any:
+                    self.websocket.start_listener()
+                    return func(*args)
+
+                return await self._hass.async_add_executor_job(_restart_and_call)
 
     async def async_update(self) -> dict | None:
         """Get the latest availability data."""

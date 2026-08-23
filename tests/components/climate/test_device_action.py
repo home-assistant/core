@@ -24,11 +24,6 @@ from tests.common import (
 )
 
 
-@pytest.fixture(autouse=True, name="stub_blueprint_populate")
-def stub_blueprint_populate_autouse(stub_blueprint_populate: None) -> None:
-    """Stub copying the blueprints to the config folder."""
-
-
 @pytest.mark.parametrize(
     ("set_state", "features_reg", "features_state", "expected_action_types"),
     [
@@ -73,7 +68,9 @@ async def test_get_actions(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678", "attributes", {"supported_features": features_state}
+            entity_entry.entity_id,
+            "attributes",
+            {"supported_features": features_state},
         )
 
     expected_actions = []
@@ -204,8 +201,8 @@ async def test_action(
         },
     )
 
-    set_hvac_mode_calls = async_mock_service(hass, "climate", "set_hvac_mode")
-    set_preset_mode_calls = async_mock_service(hass, "climate", "set_preset_mode")
+    set_hvac_mode_calls = async_mock_service(hass, DOMAIN, "set_hvac_mode")
+    set_preset_mode_calls = async_mock_service(hass, DOMAIN, "set_preset_mode")
 
     hass.bus.async_fire("test_event_set_hvac_mode")
     await hass.async_block_till_done()
@@ -278,7 +275,7 @@ async def test_action_legacy(
         },
     )
 
-    set_hvac_mode_calls = async_mock_service(hass, "climate", "set_hvac_mode")
+    set_hvac_mode_calls = async_mock_service(hass, DOMAIN, "set_hvac_mode")
 
     hass.bus.async_fire("test_event_set_hvac_mode")
     await hass.async_block_till_done()
@@ -385,7 +382,7 @@ async def test_capabilities(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678",
+            entity_entry.entity_id,
             HVACMode.COOL,
             capabilities_state,
         )
@@ -503,7 +500,7 @@ async def test_capabilities_legacy(
     )
     if set_state:
         hass.states.async_set(
-            f"{DOMAIN}.test_5678",
+            entity_entry.entity_id,
             HVACMode.COOL,
             capabilities_state,
         )

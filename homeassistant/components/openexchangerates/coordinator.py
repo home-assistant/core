@@ -1,9 +1,8 @@
 """Provide an OpenExchangeRates data coordinator."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
+from typing import override
 
 from aiohttp import ClientSession
 from aioopenexchangerates import (
@@ -20,16 +19,18 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CLIENT_TIMEOUT, DOMAIN, LOGGER
 
+type OpenexchangeratesConfigEntry = ConfigEntry[OpenexchangeratesCoordinator]
+
 
 class OpenexchangeratesCoordinator(DataUpdateCoordinator[Latest]):
     """Represent a coordinator for Open Exchange Rates API."""
 
-    config_entry: ConfigEntry
+    config_entry: OpenexchangeratesConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: OpenexchangeratesConfigEntry,
         session: ClientSession,
         api_key: str,
         base: str,
@@ -46,6 +47,7 @@ class OpenexchangeratesCoordinator(DataUpdateCoordinator[Latest]):
         self.base = base
         self.client = Client(api_key, session)
 
+    @override
     async def _async_update_data(self) -> Latest:
         """Update data from Open Exchange Rates."""
         try:

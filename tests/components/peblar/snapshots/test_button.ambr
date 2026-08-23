@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_entities[button][button.peblar_ev_charger_identify-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_entities[button][button.peblar_ev_charger_identify-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'identify',
-      'friendly_name': 'Peblar EV Charger Identify',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'identify',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peblar EV Charger Identify',
     }),
     'context': <ANY>,
     'entity_id': 'button.peblar_ev_charger_identify',
@@ -51,8 +52,9 @@
 # ---
 # name: test_entities[button][button.peblar_ev_charger_restart-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_entities[button][button.peblar_ev_charger_restart-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'restart',
-      'friendly_name': 'Peblar EV Charger Restart',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'restart',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Peblar EV Charger Restart',
     }),
     'context': <ANY>,
     'entity_id': 'button.peblar_ev_charger_restart',

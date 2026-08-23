@@ -1,7 +1,5 @@
 """Support for the Transmission BitTorrent client API."""
 
-from __future__ import annotations
-
 from functools import partial
 import logging
 import re
@@ -25,7 +23,11 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 from homeassistant.helpers import (
     config_validation as cv,
     device_registry as dr,
@@ -34,14 +36,14 @@ from homeassistant.helpers import (
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.typing import ConfigType
 
-from .const import DEFAULT_PATH, DEFAULT_SSL, DOMAIN
+from .const import DEFAULT_PATH, DEFAULT_SSL, DOMAIN, MIN_REQUIRED_TRANSMISSION_VERSION
 from .coordinator import TransmissionConfigEntry, TransmissionDataUpdateCoordinator
-from .errors import AuthenticationError, CannotConnect, UnknownError
+from .helpers import create_version
 from .services import async_setup_services
 
 _LOGGER = logging.getLogger(__name__)
 
-PLATFORMS = [Platform.SENSOR, Platform.SWITCH]
+PLATFORMS = [Platform.EVENT, Platform.SENSOR, Platform.SWITCH]
 
 MIGRATION_NAME_TO_KEY = {
     # Sensors
@@ -81,7 +83,8 @@ async def async_setup_entry(
         if CONF_NAME not in config_entry.data:
             return None
         match = re.search(
-            f"{config_entry.data[CONF_HOST]}-{config_entry.data[CONF_NAME]} (?P<name>.+)",
+            f"{config_entry.data[CONF_HOST]}"
+            f"-{config_entry.data[CONF_NAME]} (?P<name>.+)",
             entity_entry.unique_id,
         )
 
@@ -93,10 +96,21 @@ async def async_setup_entry(
 
     try:
         api = await get_api(hass, dict(config_entry.data))
-    except CannotConnect as error:
-        raise ConfigEntryNotReady from error
-    except (AuthenticationError, UnknownError) as error:
-        raise ConfigEntryAuthFailed from error
+    except TransmissionAuthError as err:
+        raise ConfigEntryAuthFailed from err
+    except (TransmissionConnectError, TransmissionError) as err:
+        raise ConfigEntryNotReady from err
+
+    version = create_version(api.server_version)
+    if version.valid and version < MIN_REQUIRED_TRANSMISSION_VERSION:
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="version_error",
+            translation_placeholders={
+                "transmission_version": api.server_version,
+                "min_version": MIN_REQUIRED_TRANSMISSION_VERSION,
+            },
+        )
 
     protocol: Final = "https" if config_entry.data[CONF_SSL] else "http"
     device_registry = dr.async_get(hass)
@@ -140,10 +154,8 @@ async def async_migrate_entry(
     )
 
     if config_entry.version == 1:
-        # Version 1.2 adds ssl and path
         if config_entry.minor_version < 2:
             new = {**config_entry.data}
-
             new[CONF_PATH] = DEFAULT_PATH
             new[CONF_SSL] = DEFAULT_SSL
 
@@ -171,26 +183,17 @@ async def get_api(
     username = entry.get(CONF_USERNAME)
     password = entry.get(CONF_PASSWORD)
 
-    try:
-        api = await hass.async_add_executor_job(
-            partial(
-                transmission_rpc.Client,
-                username=username,
-                password=password,
-                protocol=protocol,
-                host=host,
-                port=port,
-                path=path,
-            )
+    api = await hass.async_add_executor_job(
+        partial(
+            transmission_rpc.Client,
+            username=username,
+            password=password,
+            protocol=protocol,
+            host=host,
+            port=port,
+            path=path,
         )
-    except TransmissionAuthError as error:
-        _LOGGER.error("Credentials for Transmission client are not valid")
-        raise AuthenticationError from error
-    except TransmissionConnectError as error:
-        _LOGGER.error("Connecting to the Transmission client %s failed", host)
-        raise CannotConnect from error
-    except TransmissionError as error:
-        _LOGGER.error(error)
-        raise UnknownError from error
+    )
+
     _LOGGER.debug("Successfully connected to %s", host)
     return api

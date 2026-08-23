@@ -47,10 +47,12 @@ from homeassistant.components.homekit.const import (
     FEATURE_ON_OFF,
     FEATURE_PLAY_PAUSE,
     TYPE_FAUCET,
+    TYPE_HEATER_COOLER,
     TYPE_OUTLET,
     TYPE_SHOWER,
     TYPE_SPRINKLER,
     TYPE_SWITCH,
+    TYPE_THERMOSTAT,
     TYPE_VALVE,
 )
 from homeassistant.components.homekit.models import HomeKitEntryData
@@ -133,15 +135,20 @@ def test_validate_entity_config() -> None:
         {
             "switch.test": {
                 CONF_TYPE: "sprinkler",
-                CONF_LINKED_VALVE_DURATION: "number.valve_duration",  # Must be input_number entity
-                CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",  # Must be sensor (timestamp) entity
+                # Must be input_number entity
+                CONF_LINKED_VALVE_DURATION: "number.valve_duration",
+                # Must be sensor (timestamp) entity
+                CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",
             }
         },
         {"fan.test": {CONF_TYPE: "invalid_type"}},
+        {"climate.test": {CONF_TYPE: "invalid_type"}},
         {
             "valve.test": {
-                CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",  # Must be sensor (timestamp) entity
-                CONF_LINKED_VALVE_DURATION: "number.valve_duration",  # Must be input_number
+                # Must be sensor (timestamp) entity
+                CONF_LINKED_VALVE_END_TIME: "datetime.valve_end_time",
+                # Must be input_number
+                CONF_LINKED_VALVE_DURATION: "number.valve_duration",
             }
         },
         {
@@ -231,6 +238,12 @@ def test_validate_entity_config() -> None:
     }
     assert vec({"switch.demo": {CONF_TYPE: TYPE_VALVE}}) == {
         "switch.demo": {CONF_TYPE: TYPE_VALVE, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"climate.demo": {CONF_TYPE: TYPE_HEATER_COOLER}}) == {
+        "climate.demo": {CONF_TYPE: TYPE_HEATER_COOLER, CONF_LOW_BATTERY_THRESHOLD: 20}
+    }
+    assert vec({"climate.demo": {CONF_TYPE: TYPE_THERMOSTAT}}) == {
+        "climate.demo": {CONF_TYPE: TYPE_THERMOSTAT, CONF_LOW_BATTERY_THRESHOLD: 20}
     }
     config = {
         CONF_TYPE: TYPE_SPRINKLER,

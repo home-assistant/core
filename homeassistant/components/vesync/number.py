@@ -3,6 +3,7 @@
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 import logging
+from typing import override
 
 from pyvesync.base_devices.vesyncbasedevice import VeSyncBaseDevice
 from pyvesync.device_container import DeviceContainer
@@ -27,6 +28,20 @@ _LOGGER = logging.getLogger(__name__)
 PARALLEL_UPDATES = 1
 
 
+def _mist_levels(device: VeSyncBaseDevice) -> list[int]:
+    """Check if the device supports mist level adjustment."""
+    if is_humidifier(device):
+        return device.mist_levels
+    raise HomeAssistantError("Device does not support mist level adjustment.")
+
+
+def _set_mist_level(device: VeSyncBaseDevice, value: float) -> Awaitable[bool]:
+    """Set mist level on humidifier."""
+    if is_humidifier(device):
+        return device.set_mist_level(int(value))
+    raise HomeAssistantError("Device does not support mist level adjustment.")
+
+
 @dataclass(frozen=True, kw_only=True)
 class VeSyncNumberEntityDescription(NumberEntityDescription):
     """Class to describe a Vesync number entity."""
@@ -42,12 +57,12 @@ NUMBER_DESCRIPTIONS: list[VeSyncNumberEntityDescription] = [
     VeSyncNumberEntityDescription(
         key="mist_level",
         translation_key="mist_level",
-        native_min_value_fn=lambda device: min(device.mist_levels),
-        native_max_value_fn=lambda device: max(device.mist_levels),
+        native_min_value_fn=lambda device: min(_mist_levels(device)),
+        native_max_value_fn=lambda device: max(_mist_levels(device)),
         native_step=1,
         mode=NumberMode.SLIDER,
         exists_fn=is_humidifier,
-        set_value_fn=lambda device, value: device.set_mist_level(value),
+        set_value_fn=_set_mist_level,
         value_fn=lambda device: device.state.mist_virtual_level,
     )
 ]
@@ -109,20 +124,24 @@ class VeSyncNumberEntity(VeSyncBaseEntity, NumberEntity):
         self._attr_unique_id = f"{super().unique_id}-{description.key}"
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the value reported by the number."""
         return self.entity_description.value_fn(self.device)
 
     @property
+    @override
     def native_min_value(self) -> float:
         """Return the value reported by the number."""
         return self.entity_description.native_min_value_fn(self.device)
 
     @property
+    @override
     def native_max_value(self) -> float:
         """Return the value reported by the number."""
         return self.entity_description.native_max_value_fn(self.device)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         if not await self.entity_description.set_value_fn(self.device, value):

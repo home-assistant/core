@@ -1,5 +1,7 @@
 """Sensor platform for HDFury Integration."""
 
+from typing import override
+
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
@@ -7,6 +9,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
+
+PARALLEL_UPDATES = 0
 
 SENSORS: tuple[SensorEntityDescription, ...] = (
     SensorEntityDescription(
@@ -115,6 +119,7 @@ class HDFurySensor(HDFuryEntity, SensorEntity):
     entity_description: SensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> str:
         """Set Sensor Value."""
 

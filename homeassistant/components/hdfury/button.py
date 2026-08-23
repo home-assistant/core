@@ -2,6 +2,7 @@
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from hdfury import HDFuryAPI, HDFuryError
 
@@ -18,6 +19,8 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .coordinator import HDFuryConfigEntry
 from .entity import HDFuryEntity
+
+PARALLEL_UPDATES = 1
 
 
 @dataclass(kw_only=True, frozen=True)
@@ -62,6 +65,7 @@ class HDFuryButton(HDFuryEntity, ButtonEntity):
 
     entity_description: HDFuryButtonEntityDescription
 
+    @override
     async def async_press(self) -> None:
         """Handle Button Press."""
 

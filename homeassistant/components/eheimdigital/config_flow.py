@@ -1,9 +1,7 @@
 """Config flow for EHEIM Digital."""
 
-from __future__ import annotations
-
 import asyncio
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import ClientError
 from eheimdigital.device import EheimDigitalDevice
@@ -37,6 +35,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
         self.data: dict[str, Any] = {}
         self.main_device_added_event = asyncio.Event()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -64,7 +63,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                     # At this point the main device is always set
                     assert isinstance(hub.main, EheimDigitalDevice)
                 await hub.close()
-        except (ClientError, TimeoutError):
+        except ClientError, TimeoutError:
             return self.async_abort(reason="cannot_connect")
         except Exception:  # noqa: BLE001
             LOGGER.exception("Unknown exception occurred")
@@ -86,6 +85,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
         self._set_confirm_only()
         return self.async_show_form(step_id="discovery_confirm")
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -118,7 +118,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                     hub.main.mac_address, raise_on_progress=False
                 )
                 await hub.close()
-        except (ClientError, TimeoutError):
+        except ClientError, TimeoutError:
             errors["base"] = "cannot_connect"
         except Exception:  # noqa: BLE001
             errors["base"] = "unknown"
@@ -164,7 +164,7 @@ class EheimDigitalConfigFlow(ConfigFlow, domain=DOMAIN):
                     assert isinstance(hub.main, EheimDigitalDevice)
                 await self.async_set_unique_id(hub.main.mac_address)
                 await hub.close()
-        except (ClientError, TimeoutError):
+        except ClientError, TimeoutError:
             errors["base"] = "cannot_connect"
         except Exception:  # noqa: BLE001
             errors["base"] = "unknown"

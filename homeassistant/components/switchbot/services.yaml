@@ -1,0 +1,14 @@
+add_password:
+  fields:
+    device_id:
+      required: true
+      example: "c2d01328efd261f586e56d914e3af07e"
+      selector:
+        device:
+          integration: switchbot
+    password:
+      required: true
+      example: "123456"
+      selector:
+        text:
+          type: password

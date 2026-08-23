@@ -1,9 +1,8 @@
 """Support for deCONZ binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pydeconz.interfaces.sensors import SensorResources
 from pydeconz.models.event import EventType
@@ -213,11 +212,13 @@ class DeconzBinarySensor(DeconzDevice[SensorResources], BinarySensorEntity):
             self._update_keys.update({"on", "state"})
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self._device)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, bool | float | int | list | None]:
         """Return the state attributes of the sensor."""
         attr: dict[str, bool | float | int | list | None] = {}

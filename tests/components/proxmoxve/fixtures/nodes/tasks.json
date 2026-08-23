@@ -1,0 +1,14 @@
+[
+  {
+    "pid": 2146406,
+    "type": "vzdump",
+    "user": "root@pam",
+    "starttime": 1774350000,
+    "pstart": 70119940,
+    "status": "OK",
+    "node": "pve1",
+    "id": "",
+    "endtime": 1774350433,
+    "upid": "UPID:pve1:0020C066:042DF204:69C26EB0:vzdump::root@pam:"
+  }
+]

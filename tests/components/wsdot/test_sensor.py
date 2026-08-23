@@ -4,6 +4,7 @@ from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.wsdot.const import CONF_TRAVEL_TIMES, DOMAIN
 from homeassistant.const import (
     CONF_API_KEY,
@@ -37,7 +38,7 @@ async def test_travel_sensor_platform_setup(
     """Test the wsdot Travel Time sensor still supports setup from platform config."""
     assert await async_setup_component(
         hass,
-        Platform.SENSOR,
+        SENSOR_DOMAIN,
         {
             Platform.SENSOR: [
                 {
@@ -62,7 +63,7 @@ async def test_travel_sensor_platform_setup_bad_routes(
     """Test the wsdot Travel Time sensor platform upgrade skips unknown route ids."""
     assert await async_setup_component(
         hass,
-        Platform.SENSOR,
+        SENSOR_DOMAIN,
         {
             Platform.SENSOR: [
                 {

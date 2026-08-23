@@ -1,9 +1,8 @@
 """Support for Android IP Webcam sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from pydroid_ipcam import PyDroidIPCam
 
@@ -155,11 +154,13 @@ class IPWebcamSensor(AndroidIPCamBaseEntity, SensorEntity):
         super().__init__(coordinator)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return native value of sensor."""
         return self.entity_description.value_fn(self.cam)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return native unit of measurement of sensor."""
         return self.entity_description.unit_fn(self.cam)

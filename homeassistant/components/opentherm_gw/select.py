@@ -4,6 +4,7 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import IntEnum, StrEnum
 from functools import partial
+from typing import override
 
 from pyotgw.vars import (
     OTGW_GPIO_A,
@@ -156,9 +157,11 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
         ],
         select_action=partial(set_gpio_mode, "A"),
         convert_pyotgw_state_to_ha_state=(
-            lambda state: OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
-            if state in PyotgwGPIOMode
-            else None
+            lambda state: (
+                OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
+                if state in PyotgwGPIOMode
+                else None
+            )
         ),
     ),
     OpenThermSelectEntityDescription(
@@ -169,9 +172,11 @@ SELECT_DESCRIPTIONS: tuple[OpenThermSelectEntityDescription, ...] = (
         options=list(OpenThermSelectGPIOMode),
         select_action=partial(set_gpio_mode, "B"),
         convert_pyotgw_state_to_ha_state=(
-            lambda state: OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
-            if state in PyotgwGPIOMode
-            else None
+            lambda state: (
+                OpenThermSelectGPIOMode[PyotgwGPIOMode(state).name]
+                if state in PyotgwGPIOMode
+                else None
+            )
         ),
     ),
     OpenThermSelectEntityDescription(
@@ -251,6 +256,7 @@ class OpenThermSelect(OpenThermStatusEntity, SelectEntity):
     _attr_entity_category = EntityCategory.CONFIG
     entity_description: OpenThermSelectEntityDescription
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         new_option = await self.entity_description.select_action(self._gateway, option)
@@ -259,6 +265,7 @@ class OpenThermSelect(OpenThermStatusEntity, SelectEntity):
             self.async_write_ha_state()
 
     @callback
+    @override
     def receive_report(self, status: dict[OpenThermDataSource, dict]) -> None:
         """Handle status updates from the component."""
         state = status[self.entity_description.device_description.data_source].get(

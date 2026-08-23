@@ -8,7 +8,7 @@ from nibe.coil_groups import UNIT_COILGROUPS
 from nibe.heatpump import Model
 import pytest
 
-from homeassistant.components.button import DOMAIN as PLATFORM_DOMAIN, SERVICE_PRESS
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     STATE_UNAVAILABLE,
@@ -67,7 +67,7 @@ async def test_reset_button(
 
     # Press button
     await hass.services.async_call(
-        PLATFORM_DOMAIN,
+        BUTTON_DOMAIN,
         SERVICE_PRESS,
         {ATTR_ENTITY_ID: entity_id},
         blocking=True,

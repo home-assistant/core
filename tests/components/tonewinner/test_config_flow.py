@@ -2,8 +2,6 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-import serial
-
 from homeassistant import config_entries
 from homeassistant.components.tonewinner.const import (
     CONF_BAUD_RATE,
@@ -24,11 +22,14 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["errors"] == {}
     assert result["step_id"] == "user"
 
-    # Mock successful serial port connection
-    mock_serial = MagicMock()
-    mock_serial.close = MagicMock()
+    mock_receiver = MagicMock()
+    mock_receiver.connect = AsyncMock()
+    mock_receiver.disconnect = AsyncMock()
 
-    with patch("serial.Serial", return_value=mock_serial):
+    with patch(
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+        return_value=mock_receiver,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -56,10 +57,14 @@ async def test_form_with_custom_baudrate(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_serial = MagicMock()
-    mock_serial.close = MagicMock()
+    mock_receiver = MagicMock()
+    mock_receiver.connect = AsyncMock()
+    mock_receiver.disconnect = AsyncMock()
 
-    with patch("serial.Serial", return_value=mock_serial):
+    with patch(
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+        return_value=mock_receiver,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -76,16 +81,59 @@ async def test_form_with_custom_baudrate(
     }
 
 
+async def test_form_duplicate_serial_port(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test that configuring the same serial port twice aborts."""
+    mock_receiver = MagicMock()
+    mock_receiver.connect = AsyncMock()
+    mock_receiver.disconnect = AsyncMock()
+
+    with patch(
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+        return_value=mock_receiver,
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERIAL_PORT: "/dev/ttyUSB0",
+                CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
+            },
+        )
+        await hass.async_block_till_done()
+        assert result["type"] is FlowResultType.CREATE_ENTRY
+
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                CONF_SERIAL_PORT: "/dev/ttyUSB0",
+                CONF_BAUD_RATE: DEFAULT_BAUD_RATE,
+            },
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # Mock serial port failure
+    mock_receiver = MagicMock()
+    mock_receiver.connect = AsyncMock(side_effect=OSError("Permission denied"))
+
     with patch(
-        "serial.Serial",
-        side_effect=serial.SerialException("Permission denied"),
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+        return_value=mock_receiver,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -99,10 +147,14 @@ async def test_form_cannot_connect(hass: HomeAssistant) -> None:
     assert result["errors"] == {"base": "cannot_connect"}
 
     # Test recovery from error
-    mock_serial = MagicMock()
-    mock_serial.close = MagicMock()
+    mock_receiver2 = MagicMock()
+    mock_receiver2.connect = AsyncMock()
+    mock_receiver2.disconnect = AsyncMock()
 
-    with patch("serial.Serial", return_value=mock_serial):
+    with patch(
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+        return_value=mock_receiver2,
+    ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             {
@@ -121,10 +173,12 @@ async def test_form_os_error(hass: HomeAssistant) -> None:
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    # Mock OS error
+    mock_receiver = MagicMock()
+    mock_receiver.connect = AsyncMock(side_effect=OSError("Port not found"))
+
     with patch(
-        "serial.Serial",
-        side_effect=OSError("Port not found"),
+        "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
+        return_value=mock_receiver,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -145,6 +199,5 @@ async def test_form_default_values(hass: HomeAssistant) -> None:
     )
 
     assert result["type"] is FlowResultType.FORM
-    # Check that default values are present in the schema
     data_schema = result["data_schema"]
     assert data_schema is not None

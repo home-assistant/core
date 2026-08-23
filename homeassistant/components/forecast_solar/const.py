@@ -1,7 +1,5 @@
 """Constants for the Forecast.Solar integration."""
 
-from __future__ import annotations
-
 import logging
 
 DOMAIN = "forecast_solar"
@@ -14,3 +12,9 @@ CONF_DAMPING = "damping"
 CONF_DAMPING_MORNING = "damping_morning"
 CONF_DAMPING_EVENING = "damping_evening"
 CONF_INVERTER_SIZE = "inverter_size"
+DEFAULT_DECLINATION = 25
+DEFAULT_AZIMUTH = 180
+DEFAULT_MODULES_POWER = 10000
+DEFAULT_DAMPING = 0.0
+MAX_PLANES = 4
+SUBENTRY_TYPE_PLANE = "plane"

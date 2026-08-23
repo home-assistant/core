@@ -1,7 +1,5 @@
 """LCN Websocket API."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from functools import wraps
 from typing import Any, Final
@@ -11,6 +9,7 @@ from pypck.device import DeviceConnection
 import voluptuous as vol
 
 from homeassistant.components import panel_custom, websocket_api
+from homeassistant.components.frontend import async_panel_exists
 from homeassistant.components.http import StaticPathConfig
 from homeassistant.components.websocket_api import (
     ActiveConnection,
@@ -76,7 +75,7 @@ async def register_panel_and_ws_api(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_add_entity)
     websocket_api.async_register_command(hass, websocket_delete_entity)
 
-    if DOMAIN not in hass.data.get("frontend_panels", {}):
+    if not async_panel_exists(hass, DOMAIN):
         await hass.http.async_register_static_paths(
             [
                 StaticPathConfig(
@@ -262,10 +261,10 @@ async def websocket_delete_device(
     device_config = get_device_config(msg[CONF_ADDRESS], config_entry)
 
     device_registry = dr.async_get(hass)
-    identifiers = {
-        (DOMAIN, generate_unique_id(config_entry.entry_id, msg[CONF_ADDRESS]))
-    }
-    device = device_registry.async_get_device(identifiers, set())
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, generate_unique_id(config_entry.entry_id, msg[CONF_ADDRESS])),
+        config_entry.entry_id,
+    )
 
     if not (device and device_config):
         connection.send_result(msg["id"], False)

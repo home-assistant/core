@@ -1,6 +1,6 @@
 """Elmax sensor platform."""
 
-from __future__ import annotations
+from typing import override
 
 from elmax_api.model.panel import PanelStatus
 
@@ -26,7 +26,8 @@ async def async_setup_entry(
 
     def _discover_new_devices():
         panel_status: PanelStatus = coordinator.data
-        # In case the panel is offline, its status will be None. In that case, simply do nothing
+        # In case the panel is offline, its status will be
+        # None. In that case, simply do nothing
         if panel_status is None:
             return
 
@@ -61,6 +62,7 @@ class ElmaxSensor(ElmaxEntity, BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         return self.coordinator.get_zone_state(self._device.endpoint_id).opened

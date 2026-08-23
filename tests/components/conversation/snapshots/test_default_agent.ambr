@@ -11,8 +11,6 @@
         ]),
         'success': list([
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en-us',
       'response_type': 'action_done',
@@ -37,8 +35,6 @@
         ]),
         'success': list([
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en-us',
       'response_type': 'action_done',
@@ -62,8 +58,6 @@
         'failed': list([
         ]),
         'success': list([
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -94,8 +88,6 @@
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -124,8 +116,6 @@
             'name': 'kitchen light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -198,8 +188,6 @@
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -228,8 +216,6 @@
             'name': 'kitchen',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -260,8 +246,6 @@
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -291,8 +275,6 @@
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
         ]),
-        'targets': list([
-        ]),
       }),
       'language': 'en',
       'response_type': 'action_done',
@@ -320,7 +302,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any area called late added',
+          'speech': 'Sorry, I am not aware of any device called late added',
         }),
       }),
     }),
@@ -342,8 +324,6 @@
             'name': 'kitchen light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -393,7 +373,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any area called kitchen',
+          'speech': 'Sorry, I am not aware of any device called kitchen',
         }),
       }),
     }),
@@ -415,8 +395,6 @@
             'name': 'kitchen light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -445,7 +423,7 @@
       'speech': dict({
         'plain': dict({
           'extra_data': None,
-          'speech': 'Sorry, I am not aware of any area called renamed',
+          'speech': 'Sorry, I am not aware of any device called renamed',
         }),
       }),
     }),
@@ -467,8 +445,6 @@
             'name': 'kitchen light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',
@@ -498,8 +474,6 @@
             'name': 'renamed light',
             'type': <IntentResponseTargetType.ENTITY: 'entity'>,
           }),
-        ]),
-        'targets': list([
         ]),
       }),
       'language': 'en',

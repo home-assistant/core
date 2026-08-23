@@ -1,0 +1,520 @@
+{
+  "chain_names": [
+    {
+      "name": "Chain 0",
+      "number": 1
+    },
+    {
+      "name": "Chain 1",
+      "number": 2
+    }
+  ],
+  "derived": {
+    "access_point": true,
+    "fw_major": 8,
+    "mac": "04:11:22:33:19:7E",
+    "mac_interface": "br0",
+    "mode": "point_to_multipoint",
+    "ptmp": true,
+    "ptp": false,
+    "role": "access_point",
+    "sku": "LAP-GPS",
+    "station": false
+  },
+  "firewall": {
+    "eb6tables": false,
+    "ebtables": false,
+    "ip6tables": false,
+    "iptables": false
+  },
+  "genuine": "/images/genuine.png",
+  "gps": {
+    "alt": 252.5,
+    "dim": 3,
+    "dop": 1.52,
+    "fix": 1,
+    "lat": 52.379894,
+    "lon": 4.901608,
+    "sats": 8,
+    "time_synced": null
+  },
+  "host": {
+    "cpuload": 59.595959,
+    "device_id": "b222d222222f2222f0e2ecbcc22d2e22",
+    "devmodel": "LiteAP GPS",
+    "freeram": 13541376,
+    "fwversion": "v8.7.18",
+    "height": null,
+    "hostname": "House-Bridge",
+    "loadavg": 0.188965,
+    "netrole": "bridge",
+    "power_time": 1461661,
+    "temperature": 0,
+    "time": "2025-08-06 16:37:55",
+    "timestamp": 2148019169,
+    "totalram": 63447040,
+    "uptime": 81655
+  },
+  "interfaces": [
+    {
+      "enabled": true,
+      "hwaddr": "05:11:22:33:19:7E",
+      "ifname": "eth0",
+      "mtu": 1500,
+      "status": {
+        "cable_len": 48,
+        "duplex": true,
+        "ip6addr": null,
+        "ipaddr": "0.0.0.0",
+        "plugged": true,
+        "rx_bytes": 17307482485,
+        "rx_dropped": 0,
+        "rx_errors": 0,
+        "rx_packets": 208585470,
+        "snr": [30, 30, 29, 29],
+        "speed": 1000,
+        "tx_bytes": 268785703196,
+        "tx_dropped": 1,
+        "tx_errors": 0,
+        "tx_packets": 212573426
+      }
+    },
+    {
+      "enabled": true,
+      "hwaddr": "04:11:22:33:19:7E",
+      "ifname": "ath0",
+      "mtu": 1500,
+      "status": {
+        "cable_len": null,
+        "duplex": false,
+        "ip6addr": null,
+        "ipaddr": "0.0.0.0",
+        "plugged": false,
+        "rx_bytes": 274358042002,
+        "rx_dropped": 0,
+        "rx_errors": 0,
+        "rx_packets": 212583924,
+        "snr": null,
+        "speed": 0,
+        "tx_bytes": 16450464430,
+        "tx_dropped": 227,
+        "tx_errors": 0,
+        "tx_packets": 150354889
+      }
+    },
+    {
+      "enabled": true,
+      "hwaddr": "04:11:22:33:19:7E",
+      "ifname": "br0",
+      "mtu": 1500,
+      "status": {
+        "cable_len": null,
+        "duplex": false,
+        "ip6addr": null,
+        "ipaddr": "127.0.0.85",
+        "plugged": true,
+        "rx_bytes": 6053730278,
+        "rx_dropped": 0,
+        "rx_errors": 0,
+        "rx_packets": 51908268,
+        "snr": null,
+        "speed": 0,
+        "tx_bytes": 38072153,
+        "tx_dropped": 0,
+        "tx_errors": 0,
+        "tx_packets": 99493
+      }
+    }
+  ],
+  "ntpclient": {
+    "last_sync": "2025-08-06 16:28:17"
+  },
+  "portfw": false,
+  "provmode": {},
+  "services": {
+    "airview": 2,
+    "dhcp6d_stateful": false,
+    "dhcpc": true,
+    "dhcpd": false,
+    "pppoe": false
+  },
+  "unms": {
+    "status": 0,
+    "timestamp": null
+  },
+  "wireless": {
+    "antenna_gain": 17,
+    "apmac": "03:11:22:33:19:7E",
+    "aprepeater": false,
+    "band": 2,
+    "cac_state": 0,
+    "cac_timeout": 0,
+    "center1_freq": 5690,
+    "chanbw": 40,
+    "compat_11n": 1,
+    "count": 2,
+    "dfs": 1,
+    "distance": 300,
+    "essid": "House-shed1",
+    "frequency": 5680,
+    "hide_essid": 0,
+    "ieeemode": "11ACVHT40",
+    "mode": "ap-ptmp",
+    "noisef": -92,
+    "nol_state": 0,
+    "nol_timeout": 0,
+    "polling": {
+      "atpc_status": 2,
+      "cb_capacity": 342000,
+      "dl_capacity": 342000,
+      "ff_cap_rep": false,
+      "fixed_frame": false,
+      "flex_mode": 1,
+      "gps_sync": false,
+      "rx_use": 98,
+      "tx_use": 168,
+      "ul_capacity": 342000,
+      "use": 266
+    },
+    "rstatus": 5,
+    "rx_chainmask": 3,
+    "rx_idx": 9,
+    "rx_nss": 2,
+    "security": "WPA2",
+    "service": {
+      "link": 1461418,
+      "time": 1461511
+    },
+    "sta": [
+      {
+        "airmax": {
+          "actual_priority": 2,
+          "atpc_status": 4,
+          "beam": 0,
+          "cb_capacity": 343800,
+          "desired_priority": 2,
+          "dl_capacity": 342000,
+          "rx": {
+            "cinr": 33,
+            "evm": [
+              [
+                33, 34, 37, 33, 34, 34, 35, 34, 35, 36, 33, 33, 31, 34, 33, 33,
+                33, 32, 32, 33, 34, 31, 33, 34, 34, 36, 33, 35, 34, 34, 33, 35,
+                34, 36, 33, 39, 31, 33, 34, 35, 31, 29, 32, 33, 36, 33, 33, 33,
+                32, 35, 33, 32, 32, 32, 35, 37, 34, 34, 32, 34, 36, 33, 32, 31
+              ],
+              [
+                42, 42, 42, 42, 43, 42, 42, 43, 43, 43, 42, 42, 42, 41, 43, 42,
+                42, 43, 42, 42, 42, 42, 43, 43, 43, 42, 44, 42, 42, 42, 42, 42,
+                43, 43, 41, 42, 42, 41, 42, 42, 42, 42, 42, 42, 41, 42, 41, 43,
+                41, 42, 42, 43, 41, 44, 43, 43, 43, 42, 44, 42, 42, 42, 42, 42
+              ]
+            ],
+            "usage": 34
+          },
+          "tx": {
+            "cinr": 33,
+            "evm": [
+              [
+                34, 31, 33, 35, 34, 35, 34, 31, 34, 33, 33, 29, 26, 35, 34, 35,
+                35, 28, 32, 32, 32, 27, 28, 36, 34, 32, 31, 33, 28, 34, 35, 33,
+                33, 34, 37, 33, 33, 32, 29, 32, 34, 37, 29, 33, 32, 33, 33, 32,
+                29, 32, 32, 31, 32, 32, 35, 32, 33, 31, 35, 33, 33, 30, 32, 33
+              ],
+              [
+                44, 43, 43, 43, 43, 43, 43, 44, 42, 44, 43, 43, 43, 44, 44, 44,
+                44, 44, 44, 44, 43, 43, 44, 44, 43, 42, 43, 43, 43, 44, 43, 43,
+                43, 43, 44, 44, 44, 43, 44, 43, 44, 43, 43, 43, 43, 43, 43, 43,
+                42, 43, 43, 43, 43, 43, 43, 43, 42, 43, 43, 43, 43, 43, 42, 44
+              ]
+            ],
+            "usage": 6
+          },
+          "ul_capacity": 345600
+        },
+        "airos_connected": true,
+        "cb_capacity_expect": 286000,
+        "chainrssi": [43, 41, 0],
+        "distance": 300,
+        "dl_avg_linkscore": 100,
+        "dl_capacity_expect": 260000,
+        "dl_linkscore": 100,
+        "dl_rate_expect": 7,
+        "dl_signal_expect": -68,
+        "last_disc": 0,
+        "lastip": "127.0.0.82",
+        "mac": "00:11:22:33:2E:05",
+        "noisefloor": -92,
+        "remote": {
+          "age": 3,
+          "airview": 2,
+          "antenna_gain": 19,
+          "cable_loss": 0,
+          "chainrssi": [44, 39, 0],
+          "compat_11n": 0,
+          "cpuload": 13.0,
+          "device_id": "22222dd22222c2e2b22d0d2222aedb38",
+          "distance": 300,
+          "ethlist": [
+            {
+              "cable_len": 1,
+              "duplex": true,
+              "enabled": true,
+              "ifname": "eth0",
+              "plugged": true,
+              "snr": [30, 29, 30, 30],
+              "speed": 1000
+            },
+            {
+              "cable_len": 0,
+              "duplex": true,
+              "enabled": true,
+              "ifname": "eth1",
+              "plugged": false,
+              "snr": [0, 0, 0, 0],
+              "speed": 0
+            }
+          ],
+          "freeram": 20488192,
+          "gps": {
+            "alt": null,
+            "dim": null,
+            "dop": null,
+            "fix": 0,
+            "lat": 52.379894,
+            "lon": 4.901608,
+            "sats": null,
+            "time_synced": null
+          },
+          "height": 2,
+          "hostname": "NanoBeam-shed2",
+          "ip6addr": null,
+          "ipaddr": ["127.0.0.82"],
+          "mode": "sta-ptmp",
+          "netrole": "bridge",
+          "noisefloor": -94,
+          "oob": false,
+          "platform": "NanoBeam 5AC",
+          "power_time": 16088831,
+          "rssi": 45,
+          "rx_bytes": 6168364701,
+          "rx_chainmask": 3,
+          "rx_throughput": 755,
+          "service": {
+            "link": 16087519,
+            "time": 16088594
+          },
+          "signal": -51,
+          "sys_id": "0xe7fc",
+          "temperature": 0,
+          "time": "2025-08-06 16:37:53",
+          "totalram": 63447040,
+          "tx_bytes": 35767943005,
+          "tx_power": -4,
+          "tx_ratedata": [2, 0, 1, 9, 4150, 89921, 4, 4, 28560, 7836817],
+          "tx_throughput": 4666,
+          "unms": {
+            "status": 0,
+            "timestamp": null
+          },
+          "uptime": 82335,
+          "version": "WA.ar934x.v8.7.18.48247.250728.0850"
+        },
+        "rssi": 45,
+        "rx_idx": 9,
+        "rx_nss": 2,
+        "signal": -51,
+        "stats": {
+          "rx_bytes": 35530195638,
+          "rx_packets": 30533587,
+          "rx_pps": 256,
+          "tx_bytes": 6597810092,
+          "tx_packets": 47272530,
+          "tx_pps": 0
+        },
+        "tx_idx": 9,
+        "tx_latency": 1,
+        "tx_lretries": 0,
+        "tx_nss": 2,
+        "tx_packets": 0,
+        "tx_ratedata": [2, 0, 1, 8, 8, 15523, 4, 4, 867, 7181836],
+        "tx_sretries": 0,
+        "ul_avg_linkscore": 100,
+        "ul_capacity_expect": 312000,
+        "ul_linkscore": 100,
+        "ul_rate_expect": 8,
+        "ul_signal_expect": -62,
+        "uptime": 81581
+      },
+      {
+        "airmax": {
+          "actual_priority": 2,
+          "atpc_status": 4,
+          "beam": 0,
+          "cb_capacity": 342000,
+          "desired_priority": 2,
+          "dl_capacity": 342000,
+          "rx": {
+            "cinr": 33,
+            "evm": [
+              [
+                32, 31, 34, 35, 32, 33, 31, 36, 35, 32, 41, 34, 34, 34, 31, 31,
+                33, 30, 34, 35, 32, 34, 31, 30, 33, 32, 29, 29, 36, 34, 32, 32,
+                32, 33, 33, 34, 33, 34, 35, 33, 34, 33, 33, 33, 33, 29, 32, 32,
+                31, 33, 33, 34, 34, 31, 34, 33, 29, 34, 34, 32, 30, 32, 32, 33
+              ],
+              [
+                50, 53, 51, 51, 51, 50, 53, 50, 52, 50, 51, 51, 50, 50, 49, 50,
+                52, 51, 50, 50, 51, 51, 50, 50, 52, 50, 50, 51, 50, 50, 50, 51,
+                50, 50, 49, 50, 50, 53, 51, 51, 50, 51, 52, 51, 51, 51, 51, 50,
+                50, 50, 52, 50, 50, 50, 50, 51, 51, 50, 51, 51, 52, 52, 53, 53
+              ]
+            ],
+            "usage": 62
+          },
+          "tx": {
+            "cinr": 34,
+            "evm": [
+              [
+                35, 34, 33, 34, 32, 32, 35, 31, 34, 32, 37, 34, 35, 33, 33, 32,
+                32, 33, 36, 33, 34, 33, 31, 35, 34, 35, 33, 33, 35, 32, 34, 34,
+                34, 33, 33, 34, 35, 36, 33, 33, 33, 36, 34, 36, 36, 33, 34, 34,
+                33, 34, 34, 34, 30, 32, 37, 35, 35, 35, 33, 35, 34, 32, 33, 34
+              ],
+              [
+                51, 52, 52, 50, 51, 52, 52, 51, 52, 51, 52, 52, 50, 52, 51, 52,
+                52, 51, 52, 51, 51, 51, 51, 51, 52, 51, 51, 51, 52, 51, 51, 51,
+                51, 51, 51, 51, 51, 51, 51, 52, 52, 51, 51, 51, 51, 51, 51, 51,
+                52, 51, 51, 51, 52, 52, 51, 50, 52, 52, 52, 51, 51, 52, 50, 51
+              ]
+            ],
+            "usage": 21
+          },
+          "ul_capacity": 342000
+        },
+        "airos_connected": true,
+        "cb_capacity_expect": 286000,
+        "chainrssi": [50, 51, 0],
+        "distance": 300,
+        "dl_avg_linkscore": 100,
+        "dl_capacity_expect": 260000,
+        "dl_linkscore": 100,
+        "dl_rate_expect": 7,
+        "dl_signal_expect": -68,
+        "last_disc": 0,
+        "lastip": "127.0.0.90",
+        "mac": "01:11:22:33:31:38",
+        "noisefloor": -92,
+        "remote": {
+          "age": 2,
+          "airview": 2,
+          "antenna_gain": 19,
+          "cable_loss": 0,
+          "chainrssi": [50, 52, 0],
+          "compat_11n": 0,
+          "cpuload": 23.5294,
+          "device_id": "2b2b22222b222222aa2fd22a22222c2c",
+          "distance": 300,
+          "ethlist": [
+            {
+              "cable_len": 1,
+              "duplex": true,
+              "enabled": true,
+              "ifname": "eth0",
+              "plugged": true,
+              "snr": [30, 30, 30, 30],
+              "speed": 1000
+            },
+            {
+              "cable_len": 0,
+              "duplex": true,
+              "enabled": true,
+              "ifname": "eth1",
+              "plugged": false,
+              "snr": [0, 0, 0, 0],
+              "speed": 0
+            }
+          ],
+          "freeram": 19714048,
+          "gps": {
+            "alt": null,
+            "dim": null,
+            "dop": null,
+            "fix": 0,
+            "lat": 52.379894,
+            "lon": 4.901608,
+            "sats": null,
+            "time_synced": null
+          },
+          "height": 2,
+          "hostname": "NanoBeam-shed1",
+          "ip6addr": null,
+          "ipaddr": ["127.0.0.90"],
+          "mode": "sta-ptmp",
+          "netrole": "bridge",
+          "noisefloor": -91,
+          "oob": false,
+          "platform": "NanoBeam 5AC",
+          "power_time": 1461670,
+          "rssi": 54,
+          "rx_bytes": 14205619701,
+          "rx_chainmask": 3,
+          "rx_throughput": 1322,
+          "service": {
+            "link": 1461239,
+            "time": 1461517
+          },
+          "signal": -42,
+          "sys_id": "0xe7fc",
+          "temperature": 0,
+          "time": "2025-08-06 16:37:53",
+          "totalram": 63447040,
+          "tx_bytes": 242792119032,
+          "tx_power": -4,
+          "tx_ratedata": [2, 0, 1, 8, 5296, 373316, 5, 788, 4003255, 21672948],
+          "tx_throughput": 23354,
+          "unms": {
+            "status": 0,
+            "timestamp": null
+          },
+          "uptime": 83207,
+          "version": "WA.ar934x.v8.7.18.48247.250728.0850"
+        },
+        "rssi": 54,
+        "rx_idx": 9,
+        "rx_nss": 2,
+        "signal": -42,
+        "stats": {
+          "rx_bytes": 238827846427,
+          "rx_packets": 182050337,
+          "rx_pps": 2641,
+          "tx_bytes": 14544700857,
+          "tx_packets": 131651046,
+          "tx_pps": 0
+        },
+        "tx_idx": 9,
+        "tx_latency": 1,
+        "tx_lretries": 0,
+        "tx_nss": 2,
+        "tx_packets": 0,
+        "tx_ratedata": [2, 0, 1, 8, 12, 31932, 4, 12, 363974, 20502633],
+        "tx_sretries": 0,
+        "ul_avg_linkscore": 100,
+        "ul_capacity_expect": 312000,
+        "ul_linkscore": 100,
+        "ul_rate_expect": 8,
+        "ul_signal_expect": -62,
+        "uptime": 81580
+      }
+    ],
+    "sta_disconnected": [],
+    "throughput": {
+      "rx": 24259,
+      "tx": 1565
+    },
+    "tx_chainmask": 3,
+    "tx_idx": 9,
+    "tx_nss": 2,
+    "txpower": -1
+  }
+}

@@ -1,9 +1,7 @@
 """Todo platform for the Bring! integration."""
 
-from __future__ import annotations
-
 from itertools import chain
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 import uuid
 
 from bring_api import (
@@ -13,7 +11,6 @@ from bring_api import (
     BringNotificationType,
     BringRequestException,
 )
-import voluptuous as vol
 
 from homeassistant.components.todo import (
     TodoItem,
@@ -23,15 +20,9 @@ from homeassistant.components.todo import (
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import (
-    ATTR_ITEM_NAME,
-    ATTR_NOTIFICATION_TYPE,
-    DOMAIN,
-    SERVICE_PUSH_NOTIFICATION,
-)
+from .const import DOMAIN
 from .coordinator import BringConfigEntry, BringData, BringDataUpdateCoordinator
 from .entity import BringBaseEntity
 
@@ -63,19 +54,6 @@ async def async_setup_entry(
     coordinator.async_add_listener(add_entities)
     add_entities()
 
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        SERVICE_PUSH_NOTIFICATION,
-        {
-            vol.Required(ATTR_NOTIFICATION_TYPE): vol.All(
-                vol.Upper, vol.Coerce(BringNotificationType)
-            ),
-            vol.Optional(ATTR_ITEM_NAME): cv.string,
-        },
-        "async_send_message",
-    )
-
 
 class BringTodoListEntity(BringBaseEntity, TodoListEntity):
     """A To-do List representation of the Bring! Shopping List."""
@@ -98,6 +76,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         self._attr_unique_id = f"{coordinator.config_entry.unique_id}_{self._list_uuid}"
 
     @property
+    @override
     def todo_items(self) -> list[TodoItem]:
         """Return the todo items."""
         return [
@@ -128,6 +107,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
         """Return the bring list."""
         return self.coordinator.data[self._list_uuid]
 
+    @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
         """Add an item to the To-do list."""
         try:
@@ -146,8 +126,9 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
-        """Update an item to the To-do list.
+        """Update an item in the To-do list.
 
         Bring has an internal 'recent' list which we want to use instead of a todo list
         status, therefore completed todo list items are matched to the recent list and
@@ -232,6 +213,7 @@ class BringTodoListEntity(BringBaseEntity, TodoListEntity):
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_delete_todo_items(self, uids: list[str]) -> None:
         """Delete an item from the To-do list."""
 

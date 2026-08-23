@@ -1,11 +1,12 @@
 # serializer version: 1
 # name: test_sensor_platform[sensor.paperless_ngx_available_storage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -43,10 +44,10 @@
 # name: test_sensor_platform[sensor.paperless_ngx_available_storage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Paperless-ngx Available storage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Available storage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.paperless_ngx_available_storage',
@@ -58,11 +59,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_correspondents-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -97,9 +99,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_correspondents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Paperless-ngx Correspondents',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'correspondents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Correspondents',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'correspondents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.paperless_ngx_correspondents',
@@ -111,11 +113,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_document_types-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -150,9 +153,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_document_types-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Paperless-ngx Document types',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'document types',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Document types',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'document types',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.paperless_ngx_document_types',
@@ -164,11 +167,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_documents_in_inbox-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -203,9 +207,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_documents_in_inbox-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Paperless-ngx Documents in inbox',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'documents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Documents in inbox',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'documents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.paperless_ngx_documents_in_inbox',
@@ -217,11 +221,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_status_celery-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -260,9 +265,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_status_celery-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Paperless-ngx Status Celery',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Status Celery',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -278,11 +283,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_status_classifier-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -321,9 +327,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_status_classifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Paperless-ngx Status classifier',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Status classifier',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -339,11 +345,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_status_database-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -382,9 +389,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_status_database-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Paperless-ngx Status database',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Status database',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -400,11 +407,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_status_index-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -443,9 +451,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_status_index-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Paperless-ngx Status index',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Status index',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -461,11 +469,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_status_redis-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -504,9 +513,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_status_redis-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Paperless-ngx Status Redis',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Status Redis',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -522,11 +531,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_status_sanity-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'options': list([
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -565,9 +575,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_status_sanity-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'enum',
-      'friendly_name': 'Paperless-ngx Status sanity',
-      'options': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Status sanity',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'ok',
         'error',
         'warning',
@@ -583,11 +593,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_tags-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -622,9 +633,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_tags-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Paperless-ngx Tags',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'tags',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Tags',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'tags',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.paperless_ngx_tags',
@@ -636,11 +647,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_total_characters-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -675,9 +687,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_total_characters-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Paperless-ngx Total characters',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'characters',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Total characters',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'characters',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.paperless_ngx_total_characters',
@@ -689,11 +701,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_total_documents-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -728,9 +741,9 @@
 # name: test_sensor_platform[sensor.paperless_ngx_total_documents-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Paperless-ngx Total documents',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': 'documents',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Total documents',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'documents',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.paperless_ngx_total_documents',
@@ -742,11 +755,12 @@
 # ---
 # name: test_sensor_platform[sensor.paperless_ngx_total_storage-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': dict({
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -784,10 +798,10 @@
 # name: test_sensor_platform[sensor.paperless_ngx_total_storage-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'data_size',
-      'friendly_name': 'Paperless-ngx Total storage',
-      'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-      'unit_of_measurement': <UnitOfInformation.GIGABYTES: 'GB'>,
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'data_size',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Paperless-ngx Total storage',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfInformation.GIGABYTES: 'GB'>,
     }),
     'context': <ANY>,
     'entity_id': 'sensor.paperless_ngx_total_storage',

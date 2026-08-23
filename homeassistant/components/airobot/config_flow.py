@@ -1,11 +1,10 @@
 """Config flow for the Airobot integration."""
 
-from __future__ import annotations
-
+import asyncio
 from collections.abc import Mapping
 from dataclasses import dataclass
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyairobotrest import AirobotClient
 from pyairobotrest.exceptions import (
@@ -60,11 +59,17 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> DeviceInf
 
     try:
         # Try to fetch data to validate connection and authentication
-        status = await client.get_statuses()
-        settings = await client.get_settings()
+        status, settings = await asyncio.gather(
+            client.get_statuses(), client.get_settings()
+        )
     except AirobotAuthError as err:
         raise InvalidAuth from err
-    except (AirobotConnectionError, AirobotTimeoutError, AirobotError) as err:
+    except (
+        AirobotConnectionError,
+        AirobotTimeoutError,
+        AirobotError,
+        TimeoutError,
+    ) as err:
         raise CannotConnect from err
 
     # Use device name or device ID as title
@@ -85,6 +90,7 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
         self._discovered_mac: str | None = None
         self._discovered_device_id: str | None = None
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -149,6 +155,7 @@ class AirobotConfigFlow(BaseConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

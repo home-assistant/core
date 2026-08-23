@@ -129,7 +129,7 @@ async def test_generic_numeric_sensor_with_entity_category_and_icon(
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
-    assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
     assert entry.entity_category is EntityCategory.DIAGNOSTIC
 
 
@@ -162,11 +162,50 @@ async def test_generic_numeric_sensor_state_class_measurement(
     assert state is not None
     assert state.state == "50"
     assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == UnitOfPower.WATT
     entry = entity_registry.async_get("sensor.test_my_sensor")
     assert entry is not None
     # Note that ESPHome includes the EntityInfo type in the unique id
     # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
-    assert entry.unique_id == "11:22:33:44:55:AA-sensor-mysensor"
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
+    assert entry.entity_category is None
+
+
+async def test_generic_numeric_sensor_state_class_measurement_angle(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a generic sensor entity."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            state_class=ESPHomeSensorStateClass.MEASUREMENT_ANGLE,
+            unit_of_measurement="°",
+        )
+    ]
+    states = [SensorState(key=1, state=50)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "50"
+    assert state.attributes[ATTR_STATE_CLASS] == SensorStateClass.MEASUREMENT_ANGLE
+    assert state.attributes[ATTR_UNIT_OF_MEASUREMENT] == "°"
+    entry = entity_registry.async_get("sensor.test_my_sensor")
+    assert entry is not None
+    # Note that ESPHome includes the EntityInfo type in the unique id
+    # as this is not a 1:1 mapping to the entity platform (ie. text_sensor)
+    assert entry.unique_id == "11:22:33:44:55:AA/0/sensor/my sensor"
     assert entry.entity_category is None
 
 
@@ -197,12 +236,39 @@ async def test_generic_numeric_sensor_device_class_timestamp(
     assert state.state == "2023-06-22T18:43:52+00:00"
 
 
+async def test_generic_numeric_sensor_device_class_uptime(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    mock_generic_device_entry: MockGenericDeviceEntryType,
+) -> None:
+    """Test a sensor entity that uses uptime (epoch)."""
+    entity_info = [
+        SensorInfo(
+            object_id="mysensor",
+            key=1,
+            name="my sensor",
+            device_class="uptime",
+        )
+    ]
+    states = [SensorState(key=1, state=1687459432.466624)]
+    user_service = []
+    await mock_generic_device_entry(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        user_service=user_service,
+        states=states,
+    )
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "2023-06-22T18:43:52+00:00"
+
+
 async def test_generic_numeric_sensor_legacy_last_reset_convert(
     hass: HomeAssistant,
     mock_client: APIClient,
     mock_generic_device_entry: MockGenericDeviceEntryType,
 ) -> None:
-    """Test a state class of measurement with last reset type of auto is converted to total increasing."""
+    """Test measurement with last_reset auto converts to total_increasing."""
     entity_info = [
         SensorInfo(
             object_id="mysensor",

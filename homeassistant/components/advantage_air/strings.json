@@ -17,6 +17,11 @@
       }
     }
   },
+  "exceptions": {
+    "update_failed": {
+      "message": "An error occurred while updating from the Advantage Air API: {error}"
+    }
+  },
   "services": {
     "set_time_to": {
       "description": "Controls timers to turn the system on or off after a set number of minutes.",

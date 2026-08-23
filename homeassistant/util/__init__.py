@@ -1,7 +1,5 @@
 """Helper methods for various modules."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Iterable, KeysView, Mapping
 from datetime import datetime, timedelta
 from functools import wraps
@@ -64,7 +62,7 @@ def convert[_T, _U](
     """Convert value to to_type, returns default if fails."""
     try:
         return default if value is None else to_type(value)
-    except (ValueError, TypeError):
+    except ValueError, TypeError:
         # If value could not be converted
         return default
 
@@ -102,7 +100,8 @@ def snakecase(text: str) -> str:
     """Convert a string to snake_case."""
     text = re.sub(r"[\s.-]", "_", text)
     if not text.isupper():
-        # Underscore before last uppercase of groups of 2+ uppercase ("HTTPResponse", "IPAddress")
+        # Underscore before last uppercase of groups of 2+
+        # uppercase ("HTTPResponse", "IPAddress")
         text = re.sub(
             r"[A-Z]{2,}(?=[A-Z][^A-Z])", lambda match: match.group(0) + "_", text
         )

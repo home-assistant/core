@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_fluid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Brake fluid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Brake fluid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_brake_fluid',
@@ -51,8 +52,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_light_center-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_light_center-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Brake light center',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Brake light center',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_brake_light_center',
@@ -101,8 +103,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -138,8 +141,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_light_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Brake light left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Brake light left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_brake_light_left',
@@ -151,8 +154,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -188,8 +192,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_brake_light_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Brake light right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Brake light right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_brake_light_right',
@@ -201,8 +205,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_coolant_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -238,8 +243,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_coolant_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Coolant level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Coolant level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_coolant_level',
@@ -251,8 +256,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_daytime_running_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -288,8 +294,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_daytime_running_light_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Daytime running light left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Daytime running light left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_daytime_running_light_left',
@@ -301,8 +307,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_daytime_running_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -338,8 +345,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_daytime_running_light_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Daytime running light right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Daytime running light right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_daytime_running_light_right',
@@ -351,8 +358,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -388,8 +396,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo EX30 Door front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Door front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_door_front_left',
@@ -401,8 +409,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -438,8 +447,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo EX30 Door front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Door front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_door_front_right',
@@ -451,8 +460,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -488,8 +498,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo EX30 Door rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Door rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_door_rear_left',
@@ -501,8 +511,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -538,8 +549,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_door_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo EX30 Door rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Door rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_door_rear_right',
@@ -551,8 +562,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_engine_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -588,8 +600,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_engine_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Volvo EX30 Engine status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Engine status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_engine_status',
@@ -601,8 +613,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_fog_light_front-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -638,8 +651,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_fog_light_front-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Fog light front',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Fog light front',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_fog_light_front',
@@ -651,8 +664,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_fog_light_rear-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -688,8 +702,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_fog_light_rear-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Fog light rear',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Fog light rear',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_fog_light_rear',
@@ -701,8 +715,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_hazard_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -738,8 +753,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_hazard_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Hazard lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Hazard lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_hazard_lights',
@@ -751,8 +766,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_high_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -788,8 +804,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_high_beam_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 High beam left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 High beam left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_high_beam_left',
@@ -801,8 +817,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_high_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -838,8 +855,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_high_beam_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 High beam right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 High beam right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_high_beam_right',
@@ -851,8 +868,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -888,8 +906,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_hood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo EX30 Hood',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Hood',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_hood',
@@ -901,8 +919,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_low_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -938,8 +957,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_low_beam_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Low beam left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Low beam left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_low_beam_left',
@@ -951,8 +970,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_low_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -988,8 +1008,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_low_beam_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Low beam right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Low beam right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_low_beam_right',
@@ -1001,8 +1021,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_oil_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1038,8 +1059,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_oil_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Oil level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Oil level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_oil_level',
@@ -1051,8 +1072,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1088,8 +1110,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Position light front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Position light front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_position_light_front_left',
@@ -1101,8 +1123,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1138,8 +1161,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Position light front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Position light front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_position_light_front_right',
@@ -1151,8 +1174,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1188,8 +1212,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Position light rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Position light rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_position_light_rear_left',
@@ -1201,8 +1225,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1238,8 +1263,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_position_light_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Position light rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Position light rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_position_light_rear_right',
@@ -1251,8 +1276,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_registration_plate_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1288,8 +1314,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_registration_plate_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Registration plate light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Registration plate light',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_registration_plate_light',
@@ -1301,8 +1327,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_reverse_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1338,8 +1365,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_reverse_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Reverse lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Reverse lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_reverse_lights',
@@ -1351,8 +1378,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1388,8 +1416,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_side_mark_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Side mark lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Side mark lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_side_mark_lights',
@@ -1401,8 +1429,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_sunroof-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1438,8 +1467,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_sunroof-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo EX30 Sunroof',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Sunroof',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_sunroof',
@@ -1451,8 +1480,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tailgate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1488,8 +1518,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tailgate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo EX30 Tailgate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Tailgate',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_tailgate',
@@ -1501,8 +1531,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tank_lid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1538,8 +1569,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tank_lid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo EX30 Tank lid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Tank lid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_tank_lid',
@@ -1551,8 +1582,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1588,8 +1620,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Tire front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Tire front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_tire_front_left',
@@ -1601,8 +1633,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1638,8 +1671,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Tire front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Tire front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_tire_front_right',
@@ -1651,8 +1684,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1688,8 +1722,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Tire rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Tire rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_tire_rear_left',
@@ -1701,8 +1735,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1738,8 +1773,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_tire_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Tire rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Tire rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_tire_rear_right',
@@ -1751,8 +1786,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1788,8 +1824,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Turn indication front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Turn indication front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_turn_indication_front_left',
@@ -1801,8 +1837,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1838,8 +1875,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Turn indication front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Turn indication front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_turn_indication_front_right',
@@ -1851,8 +1888,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1888,8 +1926,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Turn indication rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Turn indication rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_turn_indication_rear_left',
@@ -1901,8 +1939,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1938,8 +1977,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_turn_indication_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Turn indication rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Turn indication rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_turn_indication_rear_right',
@@ -1951,8 +1990,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_washer_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -1988,8 +2028,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_washer_fluid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo EX30 Washer fluid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Washer fluid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_washer_fluid',
@@ -2001,8 +2041,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2038,8 +2079,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo EX30 Window front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Window front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_window_front_left',
@@ -2051,8 +2092,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2088,8 +2130,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo EX30 Window front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Window front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_window_front_right',
@@ -2101,8 +2143,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2138,8 +2181,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo EX30 Window rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Window rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_window_rear_left',
@@ -2151,8 +2194,9 @@
 # ---
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2188,8 +2232,8 @@
 # name: test_binary_sensor[ex30_2024][binary_sensor.volvo_ex30_window_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo EX30 Window rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo EX30 Window rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_ex30_window_rear_right',
@@ -2201,8 +2245,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2238,8 +2283,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_fluid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Brake fluid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Brake fluid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_brake_fluid',
@@ -2251,8 +2296,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_light_center-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2288,8 +2334,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_light_center-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Brake light center',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Brake light center',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_brake_light_center',
@@ -2301,8 +2347,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2338,8 +2385,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_light_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Brake light left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Brake light left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_brake_light_left',
@@ -2351,8 +2398,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2388,8 +2436,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_brake_light_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Brake light right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Brake light right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_brake_light_right',
@@ -2401,8 +2449,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_coolant_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2438,8 +2487,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_coolant_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Coolant level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Coolant level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_coolant_level',
@@ -2451,8 +2500,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_daytime_running_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2488,8 +2538,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_daytime_running_light_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Daytime running light left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Daytime running light left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_daytime_running_light_left',
@@ -2501,8 +2551,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_daytime_running_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2538,8 +2589,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_daytime_running_light_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Daytime running light right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Daytime running light right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_daytime_running_light_right',
@@ -2551,8 +2602,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2588,8 +2640,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo S90 Door front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Door front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_door_front_left',
@@ -2601,8 +2653,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2638,8 +2691,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo S90 Door front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Door front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_door_front_right',
@@ -2651,8 +2704,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2688,8 +2742,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo S90 Door rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Door rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_door_rear_left',
@@ -2701,8 +2755,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2738,8 +2793,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_door_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo S90 Door rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Door rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_door_rear_right',
@@ -2751,8 +2806,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_engine_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2788,8 +2844,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_engine_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Volvo S90 Engine status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Engine status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_engine_status',
@@ -2801,8 +2857,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_fog_light_front-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2838,8 +2895,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_fog_light_front-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Fog light front',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Fog light front',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_fog_light_front',
@@ -2851,8 +2908,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_fog_light_rear-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2888,8 +2946,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_fog_light_rear-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Fog light rear',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Fog light rear',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_fog_light_rear',
@@ -2901,8 +2959,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_hazard_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2938,8 +2997,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_hazard_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Hazard lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Hazard lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_hazard_lights',
@@ -2951,8 +3010,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_high_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -2988,8 +3048,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_high_beam_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 High beam left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 High beam left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_high_beam_left',
@@ -3001,8 +3061,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_high_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3038,8 +3099,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_high_beam_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 High beam right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 High beam right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_high_beam_right',
@@ -3051,8 +3112,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3088,8 +3150,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_hood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo S90 Hood',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Hood',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_hood',
@@ -3101,8 +3163,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_low_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3138,8 +3201,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_low_beam_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Low beam left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Low beam left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_low_beam_left',
@@ -3151,8 +3214,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_low_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3188,8 +3252,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_low_beam_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Low beam right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Low beam right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_low_beam_right',
@@ -3201,8 +3265,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_oil_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3238,8 +3303,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_oil_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Oil level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Oil level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_oil_level',
@@ -3251,8 +3316,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3288,8 +3354,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Position light front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Position light front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_position_light_front_left',
@@ -3301,8 +3367,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3338,8 +3405,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Position light front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Position light front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_position_light_front_right',
@@ -3351,8 +3418,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3388,8 +3456,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Position light rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Position light rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_position_light_rear_left',
@@ -3401,8 +3469,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3438,8 +3507,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_position_light_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Position light rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Position light rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_position_light_rear_right',
@@ -3451,8 +3520,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_registration_plate_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3488,8 +3558,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_registration_plate_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Registration plate light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Registration plate light',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_registration_plate_light',
@@ -3501,8 +3571,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_reverse_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3538,8 +3609,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_reverse_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Reverse lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Reverse lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_reverse_lights',
@@ -3551,8 +3622,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3588,8 +3660,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_side_mark_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Side mark lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Side mark lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_side_mark_lights',
@@ -3601,8 +3673,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_sunroof-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3638,8 +3711,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_sunroof-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo S90 Sunroof',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Sunroof',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_sunroof',
@@ -3651,8 +3724,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tailgate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3688,8 +3762,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tailgate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo S90 Tailgate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Tailgate',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_tailgate',
@@ -3701,8 +3775,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tank_lid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3738,8 +3813,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tank_lid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo S90 Tank lid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Tank lid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_tank_lid',
@@ -3751,8 +3826,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3788,8 +3864,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Tire front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Tire front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_tire_front_left',
@@ -3801,8 +3877,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3838,8 +3915,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Tire front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Tire front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_tire_front_right',
@@ -3851,8 +3928,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3888,8 +3966,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Tire rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Tire rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_tire_rear_left',
@@ -3901,8 +3979,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3938,8 +4017,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_tire_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Tire rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Tire rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_tire_rear_right',
@@ -3951,8 +4030,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -3988,8 +4068,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Turn indication front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Turn indication front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_turn_indication_front_left',
@@ -4001,8 +4081,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4038,8 +4119,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Turn indication front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Turn indication front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_turn_indication_front_right',
@@ -4051,8 +4132,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4088,8 +4170,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Turn indication rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Turn indication rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_turn_indication_rear_left',
@@ -4101,8 +4183,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4138,8 +4221,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_turn_indication_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Turn indication rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Turn indication rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_turn_indication_rear_right',
@@ -4151,8 +4234,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_washer_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4188,8 +4272,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_washer_fluid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo S90 Washer fluid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Washer fluid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_washer_fluid',
@@ -4201,8 +4285,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4238,8 +4323,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo S90 Window front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Window front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_window_front_left',
@@ -4251,8 +4336,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4288,8 +4374,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo S90 Window front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Window front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_window_front_right',
@@ -4301,8 +4387,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4338,8 +4425,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo S90 Window rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Window rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_window_rear_left',
@@ -4351,8 +4438,9 @@
 # ---
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4388,8 +4476,8 @@
 # name: test_binary_sensor[s90_diesel_2018][binary_sensor.volvo_s90_window_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo S90 Window rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo S90 Window rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_s90_window_rear_right',
@@ -4401,8 +4489,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4438,8 +4527,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_fluid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Brake fluid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Brake fluid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_brake_fluid',
@@ -4451,8 +4540,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_light_center-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4488,8 +4578,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_light_center-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Brake light center',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Brake light center',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_brake_light_center',
@@ -4501,8 +4591,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4538,8 +4629,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_light_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Brake light left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Brake light left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_brake_light_left',
@@ -4551,8 +4642,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4588,8 +4680,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_brake_light_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Brake light right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Brake light right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_brake_light_right',
@@ -4601,8 +4693,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_coolant_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4638,8 +4731,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_coolant_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Coolant level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Coolant level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_coolant_level',
@@ -4651,8 +4744,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_daytime_running_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4688,8 +4782,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_daytime_running_light_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Daytime running light left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Daytime running light left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_daytime_running_light_left',
@@ -4701,8 +4795,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_daytime_running_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4738,8 +4833,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_daytime_running_light_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Daytime running light right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Daytime running light right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_daytime_running_light_right',
@@ -4751,8 +4846,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4788,8 +4884,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC40 Door front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Door front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_door_front_left',
@@ -4801,8 +4897,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4838,8 +4935,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC40 Door front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Door front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_door_front_right',
@@ -4851,8 +4948,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4888,8 +4986,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC40 Door rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Door rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_door_rear_left',
@@ -4901,8 +4999,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4938,8 +5037,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_door_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC40 Door rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Door rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_door_rear_right',
@@ -4951,8 +5050,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_engine_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -4988,8 +5088,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_engine_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Volvo XC40 Engine status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Engine status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_engine_status',
@@ -5001,8 +5101,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_fog_light_front-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5038,8 +5139,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_fog_light_front-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Fog light front',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Fog light front',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_fog_light_front',
@@ -5051,8 +5152,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_fog_light_rear-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5088,8 +5190,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_fog_light_rear-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Fog light rear',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Fog light rear',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_fog_light_rear',
@@ -5101,8 +5203,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_hazard_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5138,8 +5241,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_hazard_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Hazard lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Hazard lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_hazard_lights',
@@ -5151,8 +5254,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_high_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5188,8 +5292,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_high_beam_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 High beam left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 High beam left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_high_beam_left',
@@ -5201,8 +5305,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_high_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5238,8 +5343,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_high_beam_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 High beam right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 High beam right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_high_beam_right',
@@ -5251,8 +5356,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5288,8 +5394,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_hood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC40 Hood',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Hood',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_hood',
@@ -5301,8 +5407,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_low_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5338,8 +5445,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_low_beam_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Low beam left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Low beam left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_low_beam_left',
@@ -5351,8 +5458,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_low_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5388,8 +5496,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_low_beam_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Low beam right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Low beam right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_low_beam_right',
@@ -5401,8 +5509,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_oil_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5438,8 +5547,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_oil_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Oil level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Oil level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_oil_level',
@@ -5451,8 +5560,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5488,8 +5598,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Position light front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Position light front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_position_light_front_left',
@@ -5501,8 +5611,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5538,8 +5649,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Position light front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Position light front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_position_light_front_right',
@@ -5551,8 +5662,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5588,8 +5700,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Position light rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Position light rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_position_light_rear_left',
@@ -5601,8 +5713,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5638,8 +5751,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_position_light_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Position light rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Position light rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_position_light_rear_right',
@@ -5651,8 +5764,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_registration_plate_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5688,8 +5802,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_registration_plate_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Registration plate light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Registration plate light',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_registration_plate_light',
@@ -5701,8 +5815,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_reverse_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5738,8 +5853,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_reverse_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Reverse lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Reverse lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_reverse_lights',
@@ -5751,8 +5866,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5788,8 +5904,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_side_mark_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Side mark lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Side mark lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_side_mark_lights',
@@ -5801,8 +5917,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_sunroof-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5838,8 +5955,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_sunroof-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo XC40 Sunroof',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Sunroof',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_sunroof',
@@ -5851,8 +5968,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tailgate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5888,8 +6006,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tailgate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC40 Tailgate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Tailgate',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_tailgate',
@@ -5901,8 +6019,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tank_lid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5938,8 +6057,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tank_lid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC40 Tank lid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Tank lid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_tank_lid',
@@ -5951,8 +6070,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -5988,8 +6108,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Tire front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Tire front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_tire_front_left',
@@ -6001,8 +6121,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6038,8 +6159,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Tire front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Tire front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_tire_front_right',
@@ -6051,8 +6172,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6088,8 +6210,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Tire rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Tire rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_tire_rear_left',
@@ -6101,8 +6223,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6138,8 +6261,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_tire_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Tire rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Tire rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_tire_rear_right',
@@ -6151,8 +6274,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6188,8 +6312,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Turn indication front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Turn indication front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_turn_indication_front_left',
@@ -6201,8 +6325,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6238,8 +6363,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Turn indication front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Turn indication front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_turn_indication_front_right',
@@ -6251,8 +6376,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6288,8 +6414,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Turn indication rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Turn indication rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_turn_indication_rear_left',
@@ -6301,8 +6427,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6338,8 +6465,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_turn_indication_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Turn indication rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Turn indication rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_turn_indication_rear_right',
@@ -6351,8 +6478,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_washer_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6388,8 +6516,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_washer_fluid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC40 Washer fluid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Washer fluid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_washer_fluid',
@@ -6401,8 +6529,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6438,8 +6567,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo XC40 Window front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Window front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_window_front_left',
@@ -6451,8 +6580,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6488,8 +6618,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo XC40 Window front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Window front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_window_front_right',
@@ -6501,8 +6631,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6538,8 +6669,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo XC40 Window rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Window rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_window_rear_left',
@@ -6551,8 +6682,9 @@
 # ---
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6588,8 +6720,8 @@
 # name: test_binary_sensor[xc40_electric_2024][binary_sensor.volvo_xc40_window_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo XC40 Window rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC40 Window rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc40_window_rear_right',
@@ -6601,8 +6733,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6638,8 +6771,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_fluid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Brake fluid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Brake fluid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_brake_fluid',
@@ -6651,8 +6784,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_light_center-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6688,8 +6822,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_light_center-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Brake light center',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Brake light center',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_brake_light_center',
@@ -6701,8 +6835,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6738,8 +6873,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_light_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Brake light left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Brake light left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_brake_light_left',
@@ -6751,8 +6886,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6788,8 +6924,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_brake_light_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Brake light right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Brake light right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_brake_light_right',
@@ -6801,8 +6937,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_coolant_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6838,8 +6975,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_coolant_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Coolant level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Coolant level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_coolant_level',
@@ -6851,8 +6988,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_daytime_running_light_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6888,8 +7026,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_daytime_running_light_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Daytime running light left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Daytime running light left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_daytime_running_light_left',
@@ -6901,8 +7039,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_daytime_running_light_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6938,8 +7077,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_daytime_running_light_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Daytime running light right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Daytime running light right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_daytime_running_light_right',
@@ -6951,8 +7090,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -6988,8 +7128,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC90 Door front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Door front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_door_front_left',
@@ -7001,8 +7141,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7038,8 +7179,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC90 Door front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Door front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_door_front_right',
@@ -7051,8 +7192,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7088,8 +7230,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC90 Door rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Door rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_door_rear_left',
@@ -7101,8 +7243,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7138,8 +7281,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_door_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC90 Door rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Door rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_door_rear_right',
@@ -7151,8 +7294,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_engine_status-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7188,8 +7332,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_engine_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'running',
-      'friendly_name': 'Volvo XC90 Engine status',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'running',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Engine status',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_engine_status',
@@ -7201,8 +7345,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_fog_light_front-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7238,8 +7383,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_fog_light_front-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Fog light front',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Fog light front',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_fog_light_front',
@@ -7251,8 +7396,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_fog_light_rear-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7288,8 +7434,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_fog_light_rear-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Fog light rear',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Fog light rear',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_fog_light_rear',
@@ -7301,8 +7447,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_hazard_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7338,8 +7485,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_hazard_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Hazard lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Hazard lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_hazard_lights',
@@ -7351,8 +7498,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_high_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7388,8 +7536,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_high_beam_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 High beam left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 High beam left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_high_beam_left',
@@ -7401,8 +7549,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_high_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7438,8 +7587,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_high_beam_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 High beam right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 High beam right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_high_beam_right',
@@ -7451,8 +7600,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_hood-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7488,8 +7638,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_hood-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC90 Hood',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Hood',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_hood',
@@ -7501,8 +7651,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_low_beam_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7538,8 +7689,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_low_beam_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Low beam left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Low beam left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_low_beam_left',
@@ -7551,8 +7702,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_low_beam_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7588,8 +7740,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_low_beam_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Low beam right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Low beam right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_low_beam_right',
@@ -7601,8 +7753,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_oil_level-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7638,8 +7791,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_oil_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Oil level',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Oil level',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_oil_level',
@@ -7651,8 +7804,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7688,8 +7842,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Position light front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Position light front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_position_light_front_left',
@@ -7701,8 +7855,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7738,8 +7893,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Position light front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Position light front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_position_light_front_right',
@@ -7751,8 +7906,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7788,8 +7944,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Position light rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Position light rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_position_light_rear_left',
@@ -7801,8 +7957,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7838,8 +7995,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_position_light_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Position light rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Position light rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_position_light_rear_right',
@@ -7851,8 +8008,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_registration_plate_light-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7888,8 +8046,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_registration_plate_light-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Registration plate light',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Registration plate light',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_registration_plate_light',
@@ -7901,8 +8059,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_reverse_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7938,8 +8097,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_reverse_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Reverse lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Reverse lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_reverse_lights',
@@ -7951,8 +8110,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_side_mark_lights-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -7988,8 +8148,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_side_mark_lights-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Side mark lights',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Side mark lights',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_side_mark_lights',
@@ -8001,8 +8161,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_sunroof-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8038,8 +8199,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_sunroof-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo XC90 Sunroof',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Sunroof',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_sunroof',
@@ -8051,8 +8212,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tailgate-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8088,8 +8250,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tailgate-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC90 Tailgate',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Tailgate',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_tailgate',
@@ -8101,8 +8263,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tank_lid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8138,8 +8301,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tank_lid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'door',
-      'friendly_name': 'Volvo XC90 Tank lid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'door',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Tank lid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_tank_lid',
@@ -8151,8 +8314,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8188,8 +8352,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Tire front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Tire front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_tire_front_left',
@@ -8201,8 +8365,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8238,8 +8403,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Tire front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Tire front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_tire_front_right',
@@ -8251,8 +8416,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8288,8 +8454,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Tire rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Tire rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_tire_rear_left',
@@ -8301,8 +8467,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8338,8 +8505,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_tire_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Tire rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Tire rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_tire_rear_right',
@@ -8351,8 +8518,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8388,8 +8556,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Turn indication front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Turn indication front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_turn_indication_front_left',
@@ -8401,8 +8569,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8438,8 +8607,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Turn indication front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Turn indication front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_turn_indication_front_right',
@@ -8451,8 +8620,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8488,8 +8658,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Turn indication rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Turn indication rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_turn_indication_rear_left',
@@ -8501,8 +8671,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8538,8 +8709,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_turn_indication_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Turn indication rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Turn indication rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_turn_indication_rear_right',
@@ -8551,8 +8722,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_washer_fluid-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8588,8 +8760,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_washer_fluid-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'problem',
-      'friendly_name': 'Volvo XC90 Washer fluid',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Washer fluid',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_washer_fluid',
@@ -8601,8 +8773,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_front_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8638,8 +8811,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_front_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo XC90 Window front left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Window front left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_window_front_left',
@@ -8651,8 +8824,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_front_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8688,8 +8862,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_front_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo XC90 Window front right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Window front right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_window_front_right',
@@ -8701,8 +8875,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_rear_left-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8738,8 +8913,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_rear_left-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo XC90 Window rear left',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Window rear left',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_window_rear_left',
@@ -8751,8 +8926,9 @@
 # ---
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_rear_right-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -8788,8 +8964,8 @@
 # name: test_binary_sensor[xc90_petrol_2019][binary_sensor.volvo_xc90_window_rear_right-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'window',
-      'friendly_name': 'Volvo XC90 Window rear right',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'window',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Volvo XC90 Window rear right',
     }),
     'context': <ANY>,
     'entity_id': 'binary_sensor.volvo_xc90_window_rear_right',

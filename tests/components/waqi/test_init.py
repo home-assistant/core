@@ -4,6 +4,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiowaqi import WAQIError
+import attr
 import pytest
 
 from homeassistant.components.waqi import DOMAIN
@@ -32,11 +33,11 @@ async def test_setup_failed(
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_migration_from_v1(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
-    mock_setup_entry: AsyncMock,
 ) -> None:
     """Test migration from version 1 to version 2."""
     # Create a v1 config entry with conversation options and an entity
@@ -110,7 +111,11 @@ async def test_migration_from_v1(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert (device := device_registry.async_get_device(identifiers={(DOMAIN, "4584")}))
+    assert (
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "4584"), mock_config_entry.entry_id
+        )
+    )
     assert device.identifiers == {(DOMAIN, "4584")}
     assert device.id == device_1.id
     assert device.config_entries == {mock_config_entry.entry_id}
@@ -128,7 +133,11 @@ async def test_migration_from_v1(
     assert entity.unique_id == "4585_air_quality"
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert (device := device_registry.async_get_device(identifiers={(DOMAIN, "4585")}))
+    assert (
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, "4585"), mock_config_entry.entry_id
+        )
+    )
     assert device.identifiers == {(DOMAIN, "4585")}
     assert device.id == device_2.id
     assert device.config_entries == {mock_config_entry.entry_id}
@@ -150,13 +159,15 @@ async def test_migration_from_v1(
             None,
             [
                 {
-                    "sensor_entity_id": "sensor.not_de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": (
+                        "sensor.not_de_jongweg_utrecht_air_quality_index"
+                    ),
                     "device_disabled_by": None,
                     "entity_disabled_by": None,
                     "device": 1,
                 },
                 {
-                    "sensor_entity_id": "sensor.de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": ("sensor.de_jongweg_utrecht_air_quality_index"),
                     "device_disabled_by": DeviceEntryDisabler.USER,
                     "entity_disabled_by": RegistryEntryDisabler.DEVICE,
                     "device": 0,
@@ -169,13 +180,15 @@ async def test_migration_from_v1(
             None,
             [
                 {
-                    "sensor_entity_id": "sensor.de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": ("sensor.de_jongweg_utrecht_air_quality_index"),
                     "device_disabled_by": DeviceEntryDisabler.USER,
                     "entity_disabled_by": RegistryEntryDisabler.DEVICE,
                     "device": 0,
                 },
                 {
-                    "sensor_entity_id": "sensor.not_de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": (
+                        "sensor.not_de_jongweg_utrecht_air_quality_index"
+                    ),
                     "device_disabled_by": None,
                     "entity_disabled_by": None,
                     "device": 1,
@@ -188,13 +201,19 @@ async def test_migration_from_v1(
             ConfigEntryDisabler.USER,
             [
                 {
-                    "sensor_entity_id": "sensor.de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": ("sensor.de_jongweg_utrecht_air_quality_index"),
                     "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
                     "entity_disabled_by": RegistryEntryDisabler.CONFIG_ENTRY,
                     "device": 0,
                 },
                 {
-                    "sensor_entity_id": "sensor.not_de_jongweg_utrecht_air_quality_index",
+                    "sensor_entity_id": (
+                        "sensor.not_de_jongweg_utrecht_air_quality_index"
+                    ),
+                    # Device 2 was created enabled; the migration moves it onto the
+                    # disabled merged config entry, so the move re-evaluates it as disabled
+                    # by CONFIG_ENTRY (the entity keeps its own disabled_by - propagating a
+                    # move-disable to entities is a separate mechanism)
                     "device_disabled_by": DeviceEntryDisabler.CONFIG_ENTRY,
                     "entity_disabled_by": None,
                     "device": 1,
@@ -239,8 +258,12 @@ async def test_migration_from_v1_disabled(
         identifiers={(DOMAIN, mock_config_entry.unique_id)},
         name=mock_config_entry.title,
         entry_type=dr.DeviceEntryType.SERVICE,
-        disabled_by=DeviceEntryDisabler.CONFIG_ENTRY,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    device_1 = attr.evolve(device_1, disabled_by=DeviceEntryDisabler.CONFIG_ENTRY)
+    device_registry._devices[device_1.id] = device_1
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -257,6 +280,11 @@ async def test_migration_from_v1_disabled(
         name=mock_config_entry_2.title,
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A device created on a disabled config entry is disabled by the registry
+    # API; clear the flag directly to simulate existing storage with a stale
+    # enabled device.
+    device_2 = attr.evolve(device_2, disabled_by=None)
+    device_registry._devices[device_2.id] = device_2
     entity_registry.async_get_or_create(
         "sensor",
         DOMAIN,
@@ -295,11 +323,11 @@ async def test_migration_from_v1_disabled(
         assert subentry.data == {CONF_STATION_NUMBER: int(subentry.unique_id)}
         assert "de Jongweg" in subentry.title
 
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry.entry_id)}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
-    assert not device_registry.async_get_device(
-        identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_config_entry_2.entry_id), mock_config_entry_2.entry_id
     )
 
     for idx, subentry in enumerate(station_subentries):
@@ -311,8 +339,9 @@ async def test_migration_from_v1_disabled(
         assert entity.disabled_by is subentry_data["entity_disabled_by"]
 
         assert (
-            device := device_registry.async_get_device(
-                identifiers={(DOMAIN, subentry.unique_id)}
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, subentry.unique_id),
+                mock_config_entries[main_config_entry].entry_id,
             )
         )
         assert device.identifiers == {(DOMAIN, subentry.unique_id)}

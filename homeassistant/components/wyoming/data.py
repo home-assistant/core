@@ -1,7 +1,5 @@
 """Base class for Wyoming providers."""
 
-from __future__ import annotations
-
 import asyncio
 
 from wyoming.client import AsyncTcpClient
@@ -11,7 +9,9 @@ from homeassistant.const import Platform
 
 from .error import WyomingError
 
-_INFO_TIMEOUT = 1
+# Allow time for satellites that are briefly busy on connect (e.g. playing a
+# startup sound) to answer the Describe before we time out and retry.
+_INFO_TIMEOUT = 5
 _INFO_RETRY_WAIT = 2
 _INFO_RETRIES = 3
 
@@ -126,7 +126,7 @@ async def load_wyoming_info(
 
                 if wyoming_info is not None:
                     break  # for
-        except (TimeoutError, OSError, WyomingError):
+        except TimeoutError, OSError, WyomingError:
             # Sleep and try again
             await asyncio.sleep(retry_wait)
 

@@ -1,10 +1,8 @@
 """Sensors for the Seko PoolDose integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -13,9 +11,9 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     EntityCategory,
     UnitOfElectricPotential,
+    UnitOfRatio,
     UnitOfTime,
 )
 from homeassistant.core import HomeAssistant
@@ -53,7 +51,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
     PooldoseSensorEntityDescription(
         key="cl",
         translation_key="cl",
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     PooldoseSensorEntityDescription(
         key="flow_rate",
@@ -121,7 +119,7 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
         device_class=SensorDeviceClass.ENUM,
-        options=["off", "proportional", "on_off", "timed"],
+        options=["off", "proportional", "on_off", "timed", "cycle"],
     ),
     PooldoseSensorEntityDescription(
         key="ofa_orp_time",
@@ -183,6 +181,22 @@ SENSOR_DESCRIPTIONS: tuple[PooldoseSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         native_unit_of_measurement=UnitOfElectricPotential.MILLIVOLT,
     ),
+    PooldoseSensorEntityDescription(
+        key="device_config",
+        translation_key="device_config",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["ph_orp", "ph_orp_chlorine"],
+    ),
+    PooldoseSensorEntityDescription(
+        key="temperature_unit",
+        translation_key="temperature_unit",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+        device_class=SensorDeviceClass.ENUM,
+        options=["celsius", "fahrenheit"],
+    ),
 )
 
 
@@ -218,6 +232,7 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
     entity_description: PooldoseSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> float | int | str | None:
         """Return the current value of the sensor."""
         data = self.get_data()
@@ -226,6 +241,7 @@ class PooldoseSensor(PooldoseEntity, SensorEntity):
         return None
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return the unit of measurement."""
         if (

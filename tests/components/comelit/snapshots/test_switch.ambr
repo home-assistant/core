@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_all_entities[switch.switch0-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_all_entities[switch.switch0-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'outlet',
-      'friendly_name': 'Switch0',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'outlet',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Switch0',
     }),
     'context': <ANY>,
     'entity_id': 'switch.switch0',

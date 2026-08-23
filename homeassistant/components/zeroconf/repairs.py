@@ -1,13 +1,10 @@
 """Repairs for the zeroconf integration."""
 
-from __future__ import annotations
-
-from homeassistant import data_entry_flow
 from homeassistant.components.homeassistant import (
-    DOMAIN as DOMAIN_HOMEASSISTANT,
+    DOMAIN as HOMEASSISTANT_DOMAIN,
     SERVICE_HOMEASSISTANT_RESTART,
 )
-from homeassistant.components.repairs import RepairsFlow
+from homeassistant.components.repairs import RepairsFlow, RepairsFlowResult
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import instance_id, issue_registry as ir
 
@@ -24,18 +21,18 @@ class DuplicateInstanceIDRepairFlow(RepairsFlow):
 
     async def async_step_init(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the initial step."""
         return await self.async_step_confirm_recreate()
 
     async def async_step_confirm_recreate(
         self, user_input: dict[str, str] | None = None
-    ) -> data_entry_flow.FlowResult:
+    ) -> RepairsFlowResult:
         """Handle the confirm step."""
         if user_input is not None:
             await instance_id.async_recreate(self.hass)
             await self.hass.services.async_call(
-                DOMAIN_HOMEASSISTANT, SERVICE_HOMEASSISTANT_RESTART
+                HOMEASSISTANT_DOMAIN, SERVICE_HOMEASSISTANT_RESTART
             )
 
             return self.async_create_entry(title="", data={})

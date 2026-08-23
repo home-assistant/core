@@ -1,9 +1,7 @@
 """Config flow to configure the IPP integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from pyipp import (
     IPP,
@@ -63,6 +61,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
         """Set up the instance."""
         self.discovery_info: dict[str, Any] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -74,7 +73,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, user_input)
         except IPPConnectionUpgradeRequired:
             return self._show_setup_form({"base": "connection_upgrade"})
-        except (IPPConnectionError, IPPResponseError):
+        except IPPConnectionError, IPPResponseError:
             _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
             return self._show_setup_form({"base": "cannot_connect"})
         except IPPParseError:
@@ -102,6 +101,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return self.async_create_entry(title=user_input[CONF_HOST], data=user_input)
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -142,7 +142,7 @@ class IPPFlowHandler(ConfigFlow, domain=DOMAIN):
             info = await validate_input(self.hass, self.discovery_info)
         except IPPConnectionUpgradeRequired:
             return self.async_abort(reason="connection_upgrade")
-        except (IPPConnectionError, IPPResponseError):
+        except IPPConnectionError, IPPResponseError:
             _LOGGER.debug("IPP Connection/Response Error", exc_info=True)
             return self.async_abort(reason="cannot_connect")
         except IPPParseError:

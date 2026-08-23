@@ -6,7 +6,8 @@ from hdfury import HDFuryError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import Platform
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
+from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 import homeassistant.helpers.entity_registry as er
@@ -47,9 +48,9 @@ async def test_button_presses(
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
     await hass.services.async_call(
-        "button",
-        "press",
-        {"entity_id": entity_id},
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: entity_id},
         blocking=True,
     )
 
@@ -67,10 +68,13 @@ async def test_button_press_error(
 
     await setup_integration(hass, mock_config_entry, [Platform.BUTTON])
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(
+        HomeAssistantError,
+        match="An error occurred while communicating with HDFury device",
+    ):
         await hass.services.async_call(
-            "button",
-            "press",
-            {"entity_id": "button.hdfury_vrroom_02_restart"},
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: "button.hdfury_vrroom_02_restart"},
             blocking=True,
         )

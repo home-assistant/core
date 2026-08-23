@@ -1,14 +1,20 @@
 """Tests for the Ollama integration."""
 
 from typing import Any
-from unittest.mock import patch
+from unittest.mock import AsyncMock, patch
 
+import attr
 from httpx import ConnectError
+from ollama import ResponseError
 import pytest
 
 from homeassistant.components import ollama
 from homeassistant.components.ollama.const import DOMAIN
-from homeassistant.config_entries import ConfigEntryDisabler, ConfigSubentryData
+from homeassistant.config_entries import (
+    ConfigEntryDisabler,
+    ConfigEntryState,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_URL
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er, llm
@@ -21,7 +27,7 @@ from . import TEST_OPTIONS
 from tests.common import MockConfigEntry
 
 V1_TEST_USER_DATA = {
-    ollama.CONF_URL: "http://localhost:11434",
+    CONF_URL: "http://localhost:11434",
     ollama.CONF_MODEL: "test_model:latest",
 }
 
@@ -56,6 +62,99 @@ async def test_init_error(
         assert await async_setup_component(hass, ollama.DOMAIN, {})
         await hass.async_block_till_done()
         assert error in caplog.text
+
+
+@pytest.mark.parametrize("has_token", [True])
+async def test_init_with_api_key(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test initialization with API key - Authorization header should be set."""
+    # Create entry with API key in data (version 3.0 after migration)
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert any(
+            call.kwargs["headers"] == {"Authorization": "Bearer test_token"}
+            for call in mock_client.call_args_list
+        )
+
+
+async def test_init_without_api_key(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test initialization without API key - Authorization header should not be set."""
+    # Create entry without API key in data (version 3.0 after migration)
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(return_value={"models": []})
+
+        assert await async_setup_component(hass, ollama.DOMAIN, {})
+        await hass.async_block_till_done()
+
+        assert all(
+            call.kwargs["headers"] is None for call in mock_client.call_args_list
+        )
+
+
+@pytest.mark.parametrize(
+    ("status_code", "entry_state"),
+    [
+        (401, ConfigEntryState.SETUP_ERROR),
+        (403, ConfigEntryState.SETUP_ERROR),
+        (500, ConfigEntryState.SETUP_RETRY),
+        (429, ConfigEntryState.SETUP_RETRY),
+        (400, ConfigEntryState.SETUP_ERROR),
+    ],
+)
+async def test_async_setup_entry_auth_failed_on_response_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    status_code: int,
+    entry_state: ConfigEntryState,
+) -> None:
+    """Test async_setup_entry raises auth failed on 401/403 response."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(
+            side_effect=ResponseError(error="Unauthorized", status_code=status_code)
+        )
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is entry_state
+
+
+@pytest.mark.parametrize(
+    "side_effect",
+    [
+        ConnectError(message="Connect error"),
+        ConnectionError("Failed to connect to Ollama."),
+        TimeoutError(),
+    ],
+)
+async def test_async_setup_entry_not_ready_on_connection_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+) -> None:
+    """Test async_setup_entry raises ConfigEntryNotReady on connection errors."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.ollama.ollama.AsyncClient") as mock_client:
+        mock_client.return_value.list = AsyncMock(side_effect=side_effect)
+
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_migration_from_v1(
@@ -102,7 +201,7 @@ async def test_migration_from_v1(
     assert mock_config_entry.version == 3
     assert mock_config_entry.minor_version == 3
     # After migration, parent entry should only have URL
-    assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}
+    assert mock_config_entry.data == {CONF_URL: "http://localhost:11434"}
     assert mock_config_entry.options == {}
 
     assert len(mock_config_entry.subentries) == 2
@@ -140,12 +239,12 @@ async def test_migration_from_v1(
     assert migrated_entity.unique_id == subentry.subentry_id
 
     # Check device migration
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        migrated_device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        migrated_device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert migrated_device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -256,8 +355,8 @@ async def test_migration_from_v1_with_multiple_urls(
         assert ai_task_subentry.subentry_type == "ai_task_data"
         assert ai_task_subentry.title == "Ollama AI Task"
 
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, list(entry.subentries.values())[0].subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, list(entry.subentries.values())[0].subentry_id), entry.entry_id
         )
         assert dev is not None
         assert dev.config_entries == {entry.entry_id}
@@ -359,8 +458,8 @@ async def test_migration_from_v1_with_same_urls(
         assert subentry.data == expected_subentry_data
 
         # Check devices were migrated correctly
-        dev = device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        dev = device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
         assert dev is not None
         assert dev.config_entries == {mock_config_entry.entry_id}
@@ -553,10 +652,10 @@ async def test_migration_from_v1_disabled(
     assert ai_task_subentries[0].data == {"model": "llama3.2:latest"}
     assert ai_task_subentries[0].title == "Ollama AI Task"
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry_2.entry_id)}
     )
 
@@ -569,8 +668,9 @@ async def test_migration_from_v1_disabled(
         assert entity.disabled_by is subentry_data["entity_disabled_by"]
 
         assert (
-            device := device_registry.async_get_device(
-                identifiers={(DOMAIN, subentry.subentry_id)}
+            device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, subentry.subentry_id),
+                mock_config_entries[main_config_entry].entry_id,
             )
         )
         assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -589,12 +689,7 @@ async def test_migration_from_v2_1(
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test migration from version 2.1.
-
-    This tests we clean up the broken migration in Home Assistant Core
-    2025.7.0b0-2025.7.0b1:
-    - Fix device registry (Fixed in Home Assistant Core 2025.7.0b2)
-    """
+    """Test migration from version 2.1."""
     # Create a v2.1 config entry with 2 subentries, devices and entities
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -631,10 +726,6 @@ async def test_migration_from_v2_1(
         model="Ollama",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
-    device_1 = device_registry.async_update_device(
-        device_1.id, add_config_entry_id="mock_entry_id", add_config_subentry_id=None
-    )
-    assert device_1.config_entries_subentries == {"mock_entry_id": {None, "mock_id_1"}}
     entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,
@@ -688,7 +779,8 @@ async def test_migration_from_v2_1(
     assert len(conversation_subentries) == 2
     for subentry in conversation_subentries:
         assert subentry.subentry_type == "conversation"
-        # Since TEST_USER_DATA no longer has a model, subentry data should be TEST_OPTIONS
+        # Since TEST_USER_DATA no longer has a model, subentry
+        # data should be TEST_OPTIONS
         assert subentry.data == TEST_OPTIONS
         assert "Ollama" in subentry.title
 
@@ -699,12 +791,12 @@ async def test_migration_from_v2_1(
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
 
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -720,12 +812,12 @@ async def test_migration_from_v2_1(
     assert entity.unique_id == subentry.subentry_id
     assert entity.config_subentry_id == subentry.subentry_id
     assert entity.config_entry_id == entry.entry_id
-    assert not device_registry.async_get_device(
+    assert not device_registry.async_get_devices(
         identifiers={(DOMAIN, mock_config_entry.entry_id)}
     )
     assert (
-        device := device_registry.async_get_device(
-            identifiers={(DOMAIN, subentry.subentry_id)}
+        device := device_registry.async_get_device_by_identifier(
+            (DOMAIN, subentry.subentry_id), mock_config_entry.entry_id
         )
     )
     assert device.identifiers == {(DOMAIN, subentry.subentry_id)}
@@ -748,7 +840,7 @@ async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
     mock_config_entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            ollama.CONF_URL: "http://localhost:11434",
+            CONF_URL: "http://localhost:11434",
             ollama.CONF_MODEL: "test_model:latest",  # Model still in main data
         },
         version=2,
@@ -768,7 +860,7 @@ async def test_migration_from_v2_2(hass: HomeAssistant) -> None:
     assert mock_config_entry.minor_version == 3
 
     # Check that model was moved from main data to subentry
-    assert mock_config_entry.data == {ollama.CONF_URL: "http://localhost:11434"}
+    assert mock_config_entry.data == {CONF_URL: "http://localhost:11434"}
     assert len(mock_config_entry.subentries) == 2
 
     subentry = next(iter(mock_config_entry.subentries.values()))
@@ -947,13 +1039,19 @@ async def test_migrate_entry_from_v3_2(
     conversation_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
         config_subentry_id=conversation_subentry_id,
-        disabled_by=device_disabled_by,
         identifiers={(DOMAIN, mock_config_entry.entry_id)},
         name=mock_config_entry.title,
         manufacturer="Ollama",
         model="Ollama",
         entry_type=dr.DeviceEntryType.SERVICE,
     )
+    # A stale disabled_by flag can't be set through the registry API, which
+    # validates it against the config entry's disabled state; write it
+    # directly to simulate existing storage.
+    conversation_device = attr.evolve(
+        conversation_device, disabled_by=device_disabled_by
+    )
+    device_registry._devices[conversation_device.id] = conversation_device
     conversation_entity = entity_registry.async_get_or_create(
         "conversation",
         DOMAIN,

@@ -1,7 +1,5 @@
 """Google Photos services."""
 
-from __future__ import annotations
-
 import asyncio
 import mimetypes
 from pathlib import Path
@@ -18,8 +16,8 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN, UPLOAD_SCOPE
 from .coordinator import GooglePhotosConfigEntry
@@ -80,21 +78,15 @@ def _read_file_contents(
 
 async def _async_handle_upload(call: ServiceCall) -> ServiceResponse:
     """Generate content from text and optionally images."""
-    config_entry: GooglePhotosConfigEntry | None = (
-        call.hass.config_entries.async_get_entry(call.data[CONF_CONFIG_ENTRY_ID])
+    config_entry: GooglePhotosConfigEntry = service.async_get_config_entry(
+        call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY_ID]
     )
-    if not config_entry:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="integration_not_found",
-            translation_placeholders={"target": DOMAIN},
-        )
+
     scopes = config_entry.data["token"]["scope"].split(" ")
     if UPLOAD_SCOPE not in scopes:
         raise HomeAssistantError(
             translation_domain=DOMAIN,
             translation_key="missing_upload_permission",
-            translation_placeholders={"target": DOMAIN},
         )
     coordinator = config_entry.runtime_data
     client_api = coordinator.client

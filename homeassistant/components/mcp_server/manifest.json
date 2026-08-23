@@ -3,11 +3,11 @@
   "name": "Model Context Protocol Server",
   "codeowners": ["@allenporter"],
   "config_flow": true,
-  "dependencies": ["homeassistant", "http", "conversation"],
+  "dependencies": ["http", "conversation"],
   "documentation": "https://www.home-assistant.io/integrations/mcp_server",
   "integration_type": "service",
   "iot_class": "local_push",
   "quality_scale": "silver",
-  "requirements": ["mcp==1.14.1", "aiohttp_sse==2.2.0", "anyio==4.10.0"],
+  "requirements": ["mcp==1.26.0", "aiohttp_sse==2.2.0", "anyio==4.13.0"],
   "single_config_entry": true
 }

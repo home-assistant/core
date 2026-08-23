@@ -1,45 +1,42 @@
 """The motion_blinds component."""
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 import logging
-from typing import TYPE_CHECKING
 
-from motionblinds import AsyncMotionMulticast
+from motionblinds import DEVICE_TYPES_GATEWAY, DEVICE_TYPES_WIFI, AsyncMotionMulticast
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.helpers import device_registry as dr
 
 from .const import (
     CONF_BLIND_TYPE_LIST,
     CONF_INTERFACE,
-    CONF_WAIT_FOR_PUSH,
     DEFAULT_INTERFACE,
-    DEFAULT_WAIT_FOR_PUSH,
     DOMAIN,
-    KEY_API_LOCK,
-    KEY_COORDINATOR,
-    KEY_GATEWAY,
     KEY_MULTICAST_LISTENER,
     KEY_SETUP_LOCK,
     KEY_UNSUB_STOP,
     PLATFORMS,
 )
-from .coordinator import DataUpdateCoordinatorMotionBlinds
+from .coordinator import DataUpdateCoordinatorMotionBlinds, MotionBlindsConfigEntry
+from .entity import gateway_device_info
 from .gateway import ConnectMotionGateway
 
 _LOGGER = logging.getLogger(__name__)
 
 
-async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+async def async_setup_entry(
+    hass: HomeAssistant, entry: MotionBlindsConfigEntry
+) -> bool:
     """Set up the motion_blinds components from a config entry."""
     hass.data.setdefault(DOMAIN, {})
     setup_lock = hass.data[DOMAIN].setdefault(KEY_SETUP_LOCK, asyncio.Lock())
     host = entry.data[CONF_HOST]
     key = entry.data[CONF_API_KEY]
     multicast_interface = entry.data.get(CONF_INTERFACE, DEFAULT_INTERFACE)
-    wait_for_push = entry.options.get(CONF_WAIT_FOR_PUSH, DEFAULT_WAIT_FOR_PUSH)
     blind_type_list = entry.data.get(CONF_BLIND_TYPE_LIST)
 
     # Create multicast Listener
@@ -88,15 +85,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     ):
         raise ConfigEntryNotReady
     motion_gateway = connect_gateway_class.gateway_device
-    api_lock = asyncio.Lock()
-    coordinator_info = {
-        KEY_GATEWAY: motion_gateway,
-        KEY_API_LOCK: api_lock,
-        CONF_WAIT_FOR_PUSH: wait_for_push,
-    }
 
     coordinator = DataUpdateCoordinatorMotionBlinds(
-        hass, entry, _LOGGER, coordinator_info
+        hass, entry, _LOGGER, motion_gateway
     )
 
     # store blind type list for next time
@@ -110,20 +101,30 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     # Fetch initial data so we have data when entities subscribe
     await coordinator.async_config_entry_first_refresh()
 
-    hass.data[DOMAIN][entry.entry_id] = {
-        KEY_GATEWAY: motion_gateway,
-        KEY_COORDINATOR: coordinator,
-    }
+    entry.runtime_data = coordinator
 
-    if TYPE_CHECKING:
-        assert entry.unique_id is not None
+    # Register the gateway device up front so child blinds can resolve it as their
+    # via_device parent regardless of the order platforms are set up in. The any()
+    # is the exact complement of the children's linking condition, so the gateway is
+    # still registered if it self-reports an unexpected device_type while RF (non
+    # Wi-Fi) blinds depend on it.
+    if motion_gateway.device_type in DEVICE_TYPES_GATEWAY or any(
+        blind.device_type not in DEVICE_TYPES_WIFI
+        for blind in motion_gateway.device_list.values()
+    ):
+        dr.async_get(hass).async_get_or_create(
+            config_entry_id=entry.entry_id,
+            **gateway_device_info(motion_gateway),
+        )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
 
-async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> bool:
+async def async_unload_entry(
+    hass: HomeAssistant, config_entry: MotionBlindsConfigEntry
+) -> bool:
     """Unload a config entry."""
     unload_ok = await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
@@ -132,7 +133,6 @@ async def async_unload_entry(hass: HomeAssistant, config_entry: ConfigEntry) -> 
     if unload_ok:
         multicast = hass.data[DOMAIN][KEY_MULTICAST_LISTENER]
         multicast.Unregister_motion_gateway(config_entry.data[CONF_HOST])
-        hass.data[DOMAIN].pop(config_entry.entry_id)
 
     if not hass.config_entries.async_loaded_entries(DOMAIN):
         # No motion gateways left, stop Motion multicast

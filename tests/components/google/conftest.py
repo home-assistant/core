@@ -1,7 +1,5 @@
 """Test configuration and mocks for the google integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator, Awaitable, Callable, Generator
 import datetime
 import http
@@ -16,6 +14,7 @@ import pytest
 import yaml
 
 from homeassistant.components.application_credentials import (
+    DOMAIN as APPLICATION_CREDENTIALS_DOMAIN,
     ClientCredential,
     async_import_client_credential,
 )
@@ -353,13 +352,15 @@ def component_setup(
     """Fixture for setting up the integration."""
 
     async def _setup_func() -> bool:
-        assert await async_setup_component(hass, "application_credentials", {})
+        assert await async_setup_component(hass, APPLICATION_CREDENTIALS_DOMAIN, {})
         await async_import_client_credential(
             hass,
             DOMAIN,
             ClientCredential("client-id", "client-secret"),
         )
         config_entry.add_to_hass(hass)
-        return await hass.config_entries.async_setup(config_entry.entry_id)
+        result = await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+        return result
 
     return _setup_func

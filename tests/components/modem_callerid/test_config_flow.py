@@ -1,6 +1,6 @@
 """Test Modem Caller ID config flow."""
 
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, patch
 
 import phone_modem
 
@@ -30,7 +30,10 @@ def _patch_setup():
     )
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.modem_callerid.config_flow.usb.async_scan_serial_ports",
+    AsyncMock(return_value=[com_port()]),
+)
 async def test_flow_usb(hass: HomeAssistant) -> None:
     """Test usb discovery flow."""
     with patch_config_flow_modem(), _patch_setup():
@@ -50,7 +53,10 @@ async def test_flow_usb(hass: HomeAssistant) -> None:
         assert result["data"] == {CONF_DEVICE: com_port().device}
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.modem_callerid.config_flow.usb.async_scan_serial_ports",
+    AsyncMock(return_value=[com_port()]),
+)
 async def test_flow_usb_cannot_connect(hass: HomeAssistant) -> None:
     """Test usb flow connection error."""
     with patch_config_flow_modem() as modemmock:
@@ -62,7 +68,10 @@ async def test_flow_usb_cannot_connect(hass: HomeAssistant) -> None:
         assert result["reason"] == "cannot_connect"
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.modem_callerid.config_flow.usb.async_scan_serial_ports",
+    AsyncMock(return_value=[com_port()]),
+)
 async def test_flow_user(hass: HomeAssistant) -> None:
     """Test user initialized flow."""
     port = com_port()
@@ -92,7 +101,10 @@ async def test_flow_user(hass: HomeAssistant) -> None:
         assert result["reason"] == "no_devices_found"
 
 
-@patch("serial.tools.list_ports.comports", MagicMock(return_value=[com_port()]))
+@patch(
+    "homeassistant.components.modem_callerid.config_flow.usb.async_scan_serial_ports",
+    AsyncMock(return_value=[com_port()]),
+)
 async def test_flow_user_error(hass: HomeAssistant) -> None:
     """Test user initialized flow with unreachable device."""
     port = com_port()
@@ -122,7 +134,10 @@ async def test_flow_user_error(hass: HomeAssistant) -> None:
         assert result["data"] == {CONF_DEVICE: port.device}
 
 
-@patch("serial.tools.list_ports.comports", MagicMock())
+@patch(
+    "homeassistant.components.modem_callerid.config_flow.usb.async_scan_serial_ports",
+    AsyncMock(return_value=[]),
+)
 async def test_flow_user_no_port_list(hass: HomeAssistant) -> None:
     """Test user with no list of ports."""
     with patch_config_flow_modem():

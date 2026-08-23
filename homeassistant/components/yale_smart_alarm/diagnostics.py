@@ -1,7 +1,5 @@
 """Diagnostics support for Yale Smart Alarm."""
 
-from __future__ import annotations
-
 from dataclasses import asdict
 from typing import Any
 

@@ -1,0 +1,27 @@
+{
+  "conditions": {
+    "is_detected": {
+      "condition": "mdi:water"
+    },
+    "is_not_detected": {
+      "condition": "mdi:water-off"
+    },
+    "is_value": {
+      "condition": "mdi:water-percent"
+    }
+  },
+  "triggers": {
+    "changed": {
+      "trigger": "mdi:water-percent"
+    },
+    "cleared": {
+      "trigger": "mdi:water-off"
+    },
+    "crossed_threshold": {
+      "trigger": "mdi:water-percent"
+    },
+    "detected": {
+      "trigger": "mdi:water"
+    }
+  }
+}

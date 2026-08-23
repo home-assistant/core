@@ -5,7 +5,10 @@ from unittest.mock import patch
 import pytest
 
 from homeassistant.components import zha
-from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN
+from homeassistant.components.hassio import DOMAIN as HASSIO_DOMAIN, HassioNotReadyError
+from homeassistant.components.homeassistant_hardware.repair_helpers import (
+    ISSUE_MULTI_PAN_MIGRATION,
+)
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
@@ -14,12 +17,15 @@ from homeassistant.components.homeassistant_yellow.config_flow import (
     HomeAssistantYellowConfigFlow,
 )
 from homeassistant.components.homeassistant_yellow.const import DOMAIN
+from homeassistant.components.usb import SerialDevice, async_scan_serial_ports
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
+from tests.components.usb import patch_scanned_serial_ports
 
 
 @pytest.mark.parametrize(
@@ -147,7 +153,61 @@ async def test_setup_zha(hass: HomeAssistant, addon_store_info) -> None:
         "radio_type": "ezsp",
     }
     assert config_entry.options == {}
-    assert config_entry.title == "Yellow"
+
+
+async def test_contributes_radio_serial_port(
+    hass: HomeAssistant, addon_store_info
+) -> None:
+    """Yellow registers a scanner that contributes its radio serial port."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    bare_port = SerialDevice(
+        device="/dev/ttyAMA1",
+        serial_number=None,
+        manufacturer=None,
+        description=None,
+    )
+
+    config_entry = MockConfigEntry(
+        data={"firmware": ApplicationType.EZSP},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=True,
+        ),
+        patch_scanned_serial_ports(return_value=[bare_port]),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+        ports = await async_scan_serial_ports(hass)
+
+        assert ports == [
+            SerialDevice(
+                device="/dev/ttyAMA1",
+                serial_number=None,
+                manufacturer="Nabu Casa",
+                description="Yellow Zigbee Radio",
+            )
+        ]
+
+        assert await hass.config_entries.async_unload(config_entry.entry_id)
+
+        ports = await async_scan_serial_ports(hass)
+        assert ports == [bare_port]
 
 
 async def test_setup_entry_no_hassio(hass: HomeAssistant) -> None:
@@ -219,7 +279,7 @@ async def test_setup_entry_wait_hassio(hass: HomeAssistant) -> None:
     config_entry.add_to_hass(hass)
     with patch(
         "homeassistant.components.homeassistant_yellow.get_os_info",
-        return_value=None,
+        side_effect=HassioNotReadyError,
     ) as mock_get_os_info:
         assert not await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -263,6 +323,157 @@ async def test_setup_entry_addon_info_fails(
 
     await hass.async_block_till_done()
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+async def test_multi_pan_migration_issue_not_created_for_cpc(
+    hass: HomeAssistant,
+    addon_store_info,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test no repair issue is created for CPC firmware when the addon is not running."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    config_entry = MockConfigEntry(
+        data={"firmware": ApplicationType.CPC},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.check_multi_pan_addon",
+            return_value=None,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.multi_pan_addon_using_device",
+            return_value=False,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )
+
+
+async def test_multi_pan_migration_issue_created_for_addon(
+    hass: HomeAssistant,
+    addon_store_info,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the repair issue is created when the multi-PAN addon is running."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    config_entry = MockConfigEntry(
+        data={"firmware": ApplicationType.SPINEL},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.multi_pan_addon_using_device",
+            return_value=True,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    issue = issue_registry.async_get_issue(
+        domain=DOMAIN,
+        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+    )
+    assert issue is not None
+    assert issue.translation_key == ISSUE_MULTI_PAN_MIGRATION
+    assert issue.translation_placeholders == {"hardware_name": "Home Assistant Yellow"}
+    assert issue.data == {"entry_id": config_entry.entry_id}
+    assert issue.is_fixable
+
+
+async def test_multi_pan_migration_issue_deleted_for_ezsp(
+    hass: HomeAssistant,
+    addon_store_info,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the multi-PAN migration repair issue is removed when not using multi-PAN."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    config_entry = MockConfigEntry(
+        data={"firmware": ApplicationType.EZSP},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=2,
+    )
+    config_entry.add_to_hass(hass)
+
+    # Pre-existing issue from a previous CPC run
+    ir.async_create_issue(
+        hass,
+        domain=DOMAIN,
+        issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        is_fixable=True,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key=ISSUE_MULTI_PAN_MIGRATION,
+        translation_placeholders={"hardware_name": "Home Assistant Yellow"},
+        data={"entry_id": config_entry.entry_id},
+    )
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.onboarding.async_is_onboarded",
+            return_value=False,
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.multi_pan_addon_using_device",
+            return_value=False,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert (
+        issue_registry.async_get_issue(
+            domain=DOMAIN,
+            issue_id=f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}",
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -323,6 +534,10 @@ async def test_migrate_entry(
                 owners=[],
             ),
         ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.multi_pan_addon_using_device",
+            return_value=False,
+        ),
     ):
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
@@ -331,3 +546,46 @@ async def test_migrate_entry(
     assert config_entry.options == {}
     assert config_entry.minor_version == HomeAssistantYellowConfigFlow.MINOR_VERSION
     assert config_entry.version == HomeAssistantYellowConfigFlow.VERSION
+
+
+async def test_setup_entry_clears_sw_version(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test setup clears the redundant firmware version from the device."""
+    mock_integration(hass, MockModule("hassio"))
+    await async_setup_component(hass, HASSIO_DOMAIN, {})
+
+    config_entry = MockConfigEntry(
+        data={"firmware": "ezsp", "firmware_version": "7.3.1.0"},
+        domain=DOMAIN,
+        options={},
+        title="Home Assistant Yellow",
+        version=1,
+        minor_version=4,
+    )
+    config_entry.add_to_hass(hass)
+
+    device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "yellow")},
+        sw_version="EmberZNet Zigbee 7.3.1.0",
+    )
+    assert device.sw_version == "EmberZNet Zigbee 7.3.1.0"
+
+    with (
+        patch(
+            "homeassistant.components.homeassistant_yellow.get_os_info",
+            return_value={"board": "yellow"},
+        ),
+        patch(
+            "homeassistant.components.homeassistant_yellow.multi_pan_addon_using_device",
+            return_value=False,
+        ),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    device = device_registry.async_get(device.id)
+    assert device is not None
+    assert device.sw_version is None

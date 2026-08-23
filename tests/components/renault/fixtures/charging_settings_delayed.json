@@ -1,0 +1,12 @@
+{
+  "data": {
+    "type": "Car",
+    "id": "VF1AAAAA555777999",
+    "attributes": {
+      "startDateTime": "2025-12-29T10:20:30Z",
+      "delay": 300,
+      "mode": "delayed",
+      "schedules": []
+    }
+  }
+}

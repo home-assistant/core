@@ -1,5 +1,6 @@
 """Test the laundrify sensor platform."""
 
+from collections.abc import AsyncGenerator
 from datetime import timedelta
 import logging
 from unittest.mock import patch
@@ -19,6 +20,7 @@ from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_UNIT_OF_MEASUREMENT,
     STATE_UNKNOWN,
+    Platform,
     UnitOfPower,
 )
 from homeassistant.core import HomeAssistant
@@ -26,6 +28,13 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.util import slugify
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+@pytest.fixture(autouse=True)
+async def platforms() -> AsyncGenerator[None]:
+    """Return the platforms to be loaded for this test."""
+    with patch("homeassistant.components.laundrify.PLATFORMS", [Platform.SENSOR]):
+        yield
 
 
 async def test_laundrify_sensor_init(
@@ -41,7 +50,9 @@ async def test_laundrify_sensor_init(
     assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.POWER
     assert state.state == STATE_UNKNOWN
 
-    device = device_registry.async_get_device({(DOMAIN, mock_device.id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, mock_device.id), laundrify_config_entry.entry_id
+    )
     assert device is not None
     assert device.name == mock_device.name
     assert device.identifiers == {(DOMAIN, mock_device.id)}

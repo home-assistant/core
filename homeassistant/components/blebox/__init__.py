@@ -1,12 +1,9 @@
 """The BleBox devices integration."""
 
-import logging
-
 from blebox_uniapi.box import Box
-from blebox_uniapi.error import Error
+from blebox_uniapi.error import ConnectionError, Error, HttpError, UnauthorizedRequest
 from blebox_uniapi.session import ApiHost
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_HOST,
     CONF_PASSWORD,
@@ -15,14 +12,15 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryError,
+    ConfigEntryNotReady,
+)
 
 from .const import DEFAULT_SETUP_TIMEOUT
+from .coordinator import BleBoxConfigEntry, BleBoxCoordinator
 from .helpers import get_maybe_authenticated_session
-
-type BleBoxConfigEntry = ConfigEntry[Box]
-
-_LOGGER = logging.getLogger(__name__)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -32,9 +30,8 @@ PLATFORMS = [
     Platform.LIGHT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
-
-PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: BleBoxConfigEntry) -> bool:
@@ -53,11 +50,20 @@ async def async_setup_entry(hass: HomeAssistant, entry: BleBoxConfigEntry) -> bo
 
     try:
         product = await Box.async_from_host(api_host)
-    except Error as ex:
-        _LOGGER.error("Identify failed at %s:%d (%s)", api_host.host, api_host.port, ex)
+    except UnauthorizedRequest as ex:
+        raise ConfigEntryAuthFailed from ex
+    except (
+        ConnectionError,
+        HttpError,
+    ) as ex:
         raise ConfigEntryNotReady from ex
+    except Error as ex:
+        raise ConfigEntryError from ex
 
-    entry.runtime_data = product
+    coordinator = BleBoxCoordinator(hass, entry, product)
+    await coordinator.async_config_entry_first_refresh()
+
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

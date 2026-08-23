@@ -1,18 +1,15 @@
 """Support for Velbus devices."""
 
-from __future__ import annotations
-
 import os
 import shutil
 from typing import TYPE_CHECKING
 
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import config_validation as cv, selector, service
 from homeassistant.helpers.storage import STORAGE_DIR
 
 if TYPE_CHECKING:
@@ -33,26 +30,11 @@ from .const import (
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register the velbus services."""
 
-    async def get_config_entry(call: ServiceCall) -> VelbusConfigEntry:
-        """Get the config entry for this service call."""
-        entry_id: str = call.data[CONF_CONFIG_ENTRY]
-        if not (entry := hass.config_entries.async_get_entry(entry_id)):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="integration_not_found",
-                translation_placeholders={"target": DOMAIN},
-            )
-        if entry.state is not ConfigEntryState.LOADED:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="not_loaded",
-                translation_placeholders={"target": entry.title},
-            )
-        return entry
-
     async def scan(call: ServiceCall) -> None:
         """Handle a scan service call."""
-        entry = await get_config_entry(call)
+        entry: VelbusConfigEntry = service.async_get_config_entry(
+            call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY]
+        )
         try:
             await entry.runtime_data.controller.scan()
         except OSError as exc:
@@ -64,7 +46,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def syn_clock(call: ServiceCall) -> None:
         """Handle a sync clock service call."""
-        entry = await get_config_entry(call)
+        entry: VelbusConfigEntry = service.async_get_config_entry(
+            call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY]
+        )
         try:
             await entry.runtime_data.controller.sync_clock()
         except OSError as exc:
@@ -76,7 +60,9 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def set_memo_text(call: ServiceCall) -> None:
         """Handle Memo Text service call."""
-        entry = await get_config_entry(call)
+        entry: VelbusConfigEntry = service.async_get_config_entry(
+            call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY]
+        )
         memo_text = call.data[CONF_MEMO_TEXT]
         address = call.data[CONF_ADDRESS]
         module = entry.runtime_data.controller.get_module(address)
@@ -97,23 +83,27 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
     async def clear_cache(call: ServiceCall) -> None:
         """Handle a clear cache service call."""
-        entry = await get_config_entry(call)
-        try:
+        entry: VelbusConfigEntry = service.async_get_config_entry(
+            call.hass, DOMAIN, call.data[CONF_CONFIG_ENTRY]
+        )
+
+        def _clear_cache() -> None:
             if call.data.get(CONF_ADDRESS):
-                await hass.async_add_executor_job(
-                    os.unlink,
-                    hass.config.path(
-                        STORAGE_DIR,
-                        f"velbuscache-{entry.entry_id}/{call.data[CONF_ADDRESS]}.p",
-                    ),
+                cache_path = hass.config.path(
+                    STORAGE_DIR,
+                    f"velbuscache-{entry.entry_id}/{call.data[CONF_ADDRESS]}.p",
                 )
+                if os.path.exists(cache_path):
+                    os.unlink(cache_path)
             else:
-                await hass.async_add_executor_job(
-                    shutil.rmtree,
-                    hass.config.path(STORAGE_DIR, f"velbuscache-{entry.entry_id}/"),
+                cache_path = hass.config.path(
+                    STORAGE_DIR, f"velbuscache-{entry.entry_id}/"
                 )
-        except FileNotFoundError:
-            pass  # It's okay if the file doesn't exist
+                if os.path.isdir(cache_path):
+                    shutil.rmtree(cache_path)
+
+        try:
+            await hass.async_add_executor_job(_clear_cache)
         except OSError as exc:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

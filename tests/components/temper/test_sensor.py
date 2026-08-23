@@ -1,4 +1,4 @@
-"""The tests for the temper (USB temperature sensor) component."""
+"""The tests for the TEMPer integration."""
 
 from datetime import timedelta
 from unittest.mock import Mock, patch

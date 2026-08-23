@@ -1,11 +1,15 @@
 """Test the Home Assistant Connect ZBT-2 config flow."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, Mock, call, patch
+from unittest.mock import ANY, AsyncMock, Mock, call, patch
 
 import pytest
+from universal_silabs_flasher.flasher import Zbt2Flasher
 
 from homeassistant.components.homeassistant_connect_zbt2.const import DOMAIN
+from homeassistant.components.homeassistant_hardware import (
+    DOMAIN as HOMEASSISTANT_HARDWARE_DOMAIN,
+)
 from homeassistant.components.homeassistant_hardware.firmware_config_flow import (
     STEP_PICK_FIRMWARE_THREAD,
     STEP_PICK_FIRMWARE_ZIGBEE,
@@ -16,9 +20,8 @@ from homeassistant.components.homeassistant_hardware.helpers import (
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
     FirmwareInfo,
-    ResetTarget,
 )
-from homeassistant.components.usb import USBDevice
+from homeassistant.components.usb import DOMAIN as USB_DOMAIN, USBDevice
 from homeassistant.config_entries import ConfigFlowResult
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -302,7 +305,8 @@ async def test_options_flow(
         patch(
             "homeassistant.components.homeassistant_hardware.firmware_config_flow.probe_silabs_firmware_info",
             side_effect=[
-                # First call: probe before installation (returns current SPINEL firmware)
+                # First call: probe before installation (returns current SPINEL
+                # firmware)
                 FirmwareInfo(
                     device=usb_data.device,
                     firmware_type=ApplicationType.SPINEL,
@@ -350,11 +354,15 @@ async def test_options_flow(
         "vid": usb_data.vid,
     }
 
-    # Verify async_flash_silabs_firmware was called with ZBT-2's reset methods
-    assert flash_mock.call_count == 1
-    assert flash_mock.mock_calls[0].kwargs["bootloader_reset_methods"] == [
-        ResetTarget.RTS_DTR,
-        ResetTarget.BAUDRATE,
+    assert flash_mock.mock_calls == [
+        call(
+            hass=hass,
+            device=USB_DATA_ZBT2.device,
+            fw_data=ANY,
+            flasher_cls=Zbt2Flasher,
+            expected_installed_firmware_type=ApplicationType.EZSP,
+            progress_callback=ANY,
+        )
     ]
 
     flows = hass.config_entries.flow.async_progress()
@@ -418,13 +426,8 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
             "vid": USB_DATA_ZBT2.vid,
         },
         version=1,
-        minor_version=1,
-        unique_id=(
-            f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_"
-            f"{USB_DATA_ZBT2.serial_number}_"
-            f"{USB_DATA_ZBT2.manufacturer}_"
-            f"{USB_DATA_ZBT2.description}"
-        ),
+        minor_version=2,
+        unique_id=USB_DATA_ZBT2.serial_number,
     )
     config_entry.add_to_hass(hass)
 
@@ -441,9 +444,9 @@ async def test_duplicate_discovery_updates_usb_path(hass: HomeAssistant) -> None
 
 
 async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None:
-    """Test that firmware notification triggers import flow that auto-creates config entry."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
-    await async_setup_component(hass, "usb", {})
+    """Test firmware notification triggers import flow creating entry."""
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
+    await async_setup_component(hass, USB_DOMAIN, {})
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": "usb"}, data=USB_DATA_ZBT2
@@ -499,8 +502,8 @@ async def test_firmware_callback_auto_creates_entry(hass: HomeAssistant) -> None
 
 async def test_firmware_callback_updates_existing_entry(hass: HomeAssistant) -> None:
     """Test that firmware notification updates existing config entry device path."""
-    await async_setup_component(hass, "homeassistant_hardware", {})
-    await async_setup_component(hass, "usb", {})
+    await async_setup_component(hass, HOMEASSISTANT_HARDWARE_DOMAIN, {})
+    await async_setup_component(hass, USB_DOMAIN, {})
 
     # Create existing config entry with old device path
     config_entry = MockConfigEntry(
@@ -515,12 +518,7 @@ async def test_firmware_callback_updates_existing_entry(hass: HomeAssistant) -> 
             "manufacturer": USB_DATA_ZBT2.manufacturer,
             "product": USB_DATA_ZBT2.description,
         },
-        unique_id=(
-            f"{USB_DATA_ZBT2.vid}:{USB_DATA_ZBT2.pid}_"
-            f"{USB_DATA_ZBT2.serial_number}_"
-            f"{USB_DATA_ZBT2.manufacturer}_"
-            f"{USB_DATA_ZBT2.description}"
-        ),
+        unique_id=USB_DATA_ZBT2.serial_number,
     )
     config_entry.add_to_hass(hass)
 

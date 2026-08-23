@@ -1,8 +1,9 @@
 # serializer version: 1
 # name: test_todo[todo.baumarkt-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -38,8 +39,8 @@
 # name: test_todo[todo.baumarkt-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Baumarkt',
-      'supported_features': <TodoListEntityFeature: 71>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Baumarkt',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 71>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.baumarkt',
@@ -51,8 +52,9 @@
 # ---
 # name: test_todo[todo.einkauf-entry]
   EntityRegistryEntrySnapshot({
-    'aliases': set({
-    }),
+    'aliases': list([
+      None,
+    ]),
     'area_id': None,
     'capabilities': None,
     'config_entry_id': <ANY>,
@@ -88,8 +90,8 @@
 # name: test_todo[todo.einkauf-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Einkauf',
-      'supported_features': <TodoListEntityFeature: 71>,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Einkauf',
+      <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <TodoListEntityFeature: 71>,
     }),
     'context': <ANY>,
     'entity_id': 'todo.einkauf',
