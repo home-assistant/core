@@ -642,6 +642,9 @@
     "oauth2_implementation_unavailable": {
       "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     },
+    "site_not_tou_capable": {
+      "message": "This energy site does not support time-of-use tariffs."
+    },
     "update_failed": {
       "message": "{endpoint} data request failed: {message}"
     },

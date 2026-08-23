@@ -2,6 +2,7 @@
 
 from copy import deepcopy
 from datetime import date, time
+from itertools import pairwise
 from math import isfinite
 from typing import Any
 
@@ -137,12 +138,26 @@ def _period_key(name: str) -> str:
     return key
 
 
+def _whole_number(value: Any) -> int:
+    """Validate a whole number, since truncating one would move a season."""
+    if isinstance(value, bool):
+        raise vol.Invalid("Value must be a whole number")
+    if isinstance(value, float):
+        if not value.is_integer():
+            raise vol.Invalid("Value must be a whole number")
+        return int(value)
+    if isinstance(value, int):
+        return value
+    try:
+        return int(str(value).strip())
+    except ValueError:
+        raise vol.Invalid("Value must be a whole number") from None
+
+
 def _validate_period(period: dict[str, Any]) -> dict[str, Any]:
     """Validate a single rate period."""
     if (ATTR_START_TIME in period) != (ATTR_END_TIME in period):
         raise vol.Invalid("start_time and end_time must be provided together")
-    if ATTR_DAYS in period and not period[ATTR_DAYS]:
-        raise vol.Invalid("days must contain at least one day when provided")
     return period
 
 
@@ -164,20 +179,79 @@ TOU_SEASON_SCHEMA = vol.Schema(
     {
         vol.Required(ATTR_NAME): _non_empty_string,
         vol.Optional(ATTR_START_MONTH): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=12)
+            _whole_number, vol.Range(min=1, max=12)
         ),
-        vol.Optional(ATTR_START_DAY): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=31)
-        ),
-        vol.Optional(ATTR_END_MONTH): vol.All(
-            vol.Coerce(int), vol.Range(min=1, max=12)
-        ),
-        vol.Optional(ATTR_END_DAY): vol.All(vol.Coerce(int), vol.Range(min=1, max=31)),
+        vol.Optional(ATTR_START_DAY): vol.All(_whole_number, vol.Range(min=1, max=31)),
+        vol.Optional(ATTR_END_MONTH): vol.All(_whole_number, vol.Range(min=1, max=12)),
+        vol.Optional(ATTR_END_DAY): vol.All(_whole_number, vol.Range(min=1, max=31)),
         vol.Required(ATTR_PERIODS): vol.All(
             cv.ensure_list, vol.Length(min=1), [TOU_PERIOD_SCHEMA]
         ),
     }
 )
+
+
+MINUTES_PER_DAY = 24 * 60
+
+
+def _period_spans(period: dict[str, Any]) -> dict[int, list[tuple[int, int]]]:
+    """Return the half-open minute spans a period covers, keyed by weekday.
+
+    A period ending at or before it starts runs through midnight, so it is
+    split into the tail of the day and the head of the same day.
+    """
+    start: time = period.get(ATTR_START_TIME, time())
+    end: time = period.get(ATTR_END_TIME, time())
+    first = start.hour * 60 + start.minute
+    last = end.hour * 60 + end.minute
+    if first == last:
+        spans = [(0, MINUTES_PER_DAY)]
+    elif last < first:
+        spans = [(first, MINUTES_PER_DAY), (0, last)]
+    else:
+        spans = [(first, last)]
+    days = period.get(ATTR_DAYS) or list(DAY_TO_TESLA)
+    return {DAY_TO_TESLA[day]: spans for day in days}
+
+
+def _check_period_overlaps(season: dict[str, Any]) -> None:
+    """Reject periods that price the same weekday and minute twice."""
+    by_day: dict[int, list[tuple[int, int, str]]] = {}
+    for period in season[ATTR_PERIODS]:
+        for day, spans in _period_spans(period).items():
+            for first, last in spans:
+                by_day.setdefault(day, []).append((first, last, period[ATTR_NAME]))
+
+    for day_spans in by_day.values():
+        day_spans.sort()
+        for (_, earlier_end, earlier), (later_start, _, later) in pairwise(day_spans):
+            if later_start < earlier_end:
+                raise vol.Invalid(
+                    f"Periods {earlier!r} and {later!r} overlap in "
+                    f"{season[ATTR_NAME]!r}"
+                )
+
+
+def _season_spans(season: dict[str, Any]) -> list[tuple[int, int]]:
+    """Return the half-open day-of-year spans a season covers."""
+    first = date(2000, season[ATTR_START_MONTH], season[ATTR_START_DAY]).timetuple()
+    last = date(2000, season[ATTR_END_MONTH], season[ATTR_END_DAY]).timetuple()
+    if last.tm_yday < first.tm_yday:
+        return [(first.tm_yday, 367), (1, last.tm_yday + 1)]
+    return [(first.tm_yday, last.tm_yday + 1)]
+
+
+def _check_season_overlaps(seasons: list[dict[str, Any]]) -> None:
+    """Reject seasons that cover the same date."""
+    spans: list[tuple[int, int, str]] = [
+        (first, last, season[ATTR_NAME])
+        for season in seasons
+        for first, last in _season_spans(season)
+    ]
+    spans.sort()
+    for (_, earlier_end, earlier), (later_start, _, later) in pairwise(spans):
+        if later_start < earlier_end:
+            raise vol.Invalid(f"Seasons {earlier!r} and {later!r} overlap")
 
 
 def _validate_seasons(seasons: list[dict[str, Any]]) -> list[dict[str, Any]]:
@@ -210,6 +284,8 @@ def _validate_seasons(seasons: list[dict[str, Any]]) -> list[dict[str, Any]]:
                 raise vol.Invalid(f"Duplicate season name {season[ATTR_NAME]!r}")
             season_names.add(season[ATTR_NAME])
 
+        _check_season_overlaps(seasons)
+
     periods = [period for season in seasons for period in season[ATTR_PERIODS]]
     if any(ATTR_SELL_RATE in period for period in periods) and any(
         ATTR_SELL_RATE not in period for period in periods
@@ -237,6 +313,8 @@ def _validate_seasons(seasons: list[dict[str, Any]]) -> list[dict[str, Any]]:
                     f"{season[ATTR_NAME]!r} with different rates"
                 )
 
+        _check_period_overlaps(season)
+
     return seasons
 
 
@@ -261,7 +339,7 @@ def _is_year_round(seasons: list[dict[str, Any]]) -> bool:
 
 def _tesla_day_ranges(days: list[str] | None) -> list[tuple[int, int]]:
     """Convert selected weekdays into contiguous Tesla day ranges."""
-    if days is None:
+    if not days:
         return [(0, 6)]
 
     numbers = sorted({DAY_TO_TESLA[day] for day in days})
@@ -400,6 +478,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="missing_scope_energy_cmds",
+            )
+        if not site.info_coordinator.data.get("components_tou_capable"):
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="site_not_tou_capable",
             )
 
         resp = await handle_command(

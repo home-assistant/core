@@ -5,6 +5,7 @@ from typing import Any
 from unittest.mock import patch
 
 import pytest
+from syrupy.assertion import SnapshotAssertion
 import voluptuous as vol
 
 from homeassistant.components.tesla_fleet.const import DOMAIN
@@ -60,71 +61,42 @@ AGILE_LOW_PERIODS = [
     for day in (0, 2, 4)
 ]
 
-# Tesla's published tariffs always carry these, zeroed when unused.
-UNUSED_CHARGES = {
-    "monthly_minimum_bill": 0,
-    "min_applicable_demand": 0,
-    "max_applicable_demand": 0,
-    "monthly_charges": 0,
-    "daily_demand_charges": {},
-}
-
-EXPECTED_TARIFF = {
-    "version": 1,
-    "code": "home_assistant",
-    "name": "Agile",
-    "utility": "Octopus Energy",
-    "currency": "GBP",
-    "daily_charges": [{"name": "Charge", "amount": 0.6}],
-    "demand_charges": {"ALL": {"rates": {"ALL": 0}}},
-    "energy_charges": {"ALL": {"rates": {"AGILE_LOW": -0.05}}},
-    "seasons": {"ALL": {"tou_periods": {"AGILE_LOW": {"periods": AGILE_LOW_PERIODS}}}},
-    "sell_tariff": {
-        "version": 1,
-        "code": "",
-        "currency": "",
-        "name": "Agile",
-        "utility": "Octopus Energy",
-        "daily_charges": [{"name": "Charge", "amount": 0}],
-        "demand_charges": {"ALL": {"rates": {"ALL": 0}}},
-        "energy_charges": {"ALL": {"rates": {"AGILE_LOW": 0.15}}},
-        "seasons": {
-            "ALL": {"tou_periods": {"AGILE_LOW": {"periods": AGILE_LOW_PERIODS}}}
-        },
-        **UNUSED_CHARGES,
-    },
-    **UNUSED_CHARGES,
-}
-
 
 @pytest.mark.parametrize(
     ("days", "expected"),
     [
-        pytest.param(None, [(0, 6)], id="unset"),
-        pytest.param(["sunday"], [(6, 6)], id="single_day"),
-        pytest.param(["saturday", "sunday"], [(5, 6)], id="weekend"),
-        pytest.param(["sunday", "monday"], [(6, 0)], id="sunday_monday"),
+        pytest.param({}, [(0, 6)], id="unset"),
+        pytest.param({"days": []}, [(0, 6)], id="empty_means_every_day"),
+        pytest.param({"days": ["sunday"]}, [(6, 6)], id="single_day"),
+        pytest.param({"days": ["saturday", "sunday"]}, [(5, 6)], id="weekend"),
+        pytest.param({"days": ["sunday", "monday"]}, [(6, 0)], id="sunday_monday"),
         pytest.param(
-            ["monday", "wednesday", "friday"], [(0, 0), (2, 2), (4, 4)], id="disjoint"
+            {"days": ["monday", "wednesday", "friday"]},
+            [(0, 0), (2, 2), (4, 4)],
+            id="disjoint",
         ),
         pytest.param(
-            ["friday", "saturday", "sunday", "monday"], [(4, 0)], id="friday_to_monday"
+            {"days": ["friday", "saturday", "sunday", "monday"]},
+            [(4, 0)],
+            id="friday_to_monday",
         ),
         pytest.param(
-            ["monday", "wednesday", "sunday"],
+            {"days": ["monday", "wednesday", "sunday"]},
             [(6, 0), (2, 2)],
             id="wrap_preserves_middle",
         ),
         pytest.param(
-            [
-                "monday",
-                "tuesday",
-                "wednesday",
-                "thursday",
-                "friday",
-                "saturday",
-                "sunday",
-            ],
+            {
+                "days": [
+                    "monday",
+                    "tuesday",
+                    "wednesday",
+                    "thursday",
+                    "friday",
+                    "saturday",
+                    "sunday",
+                ]
+            },
             [(0, 6)],
             id="every_day",
         ),
@@ -134,16 +106,14 @@ async def test_time_of_use_day_ranges(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
-    days: list[str] | None,
+    days: dict[str, list[str]],
     expected: list[tuple[int, int]],
 ) -> None:
     """Test weekday selections become circular contiguous Tesla day ranges."""
     await setup_platform(hass, normal_config_entry)
 
     energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
-    period: dict[str, Any] = {"name": "Peak", "buy_rate": 0.1}
-    if days is not None:
-        period["days"] = days
+    period: dict[str, Any] = {"name": "Peak", "buy_rate": 0.1, **days}
 
     with patch(
         "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
@@ -238,6 +208,7 @@ async def test_time_of_use(
     hass: HomeAssistant,
     normal_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test the time_of_use service builds the expected Tesla tariff."""
     await setup_platform(hass, normal_config_entry)
@@ -256,7 +227,7 @@ async def test_time_of_use(
             {CONF_DEVICE_ID: energy_device, **TIME_OF_USE_DATA},
             blocking=True,
         )
-        set_time_of_use.assert_called_once_with(EXPECTED_TARIFF)
+        assert set_time_of_use.call_args[0][0] == snapshot
 
 
 async def test_time_of_use_seasons(
@@ -333,62 +304,6 @@ async def test_time_of_use_seasons(
         "toMonth": 9,
         "toDay": 30,
     }
-
-
-async def test_time_of_use_wrapping_days(
-    hass: HomeAssistant,
-    normal_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that a weekend-wrapping day selection becomes a single Tesla range."""
-    await setup_platform(hass, normal_config_entry)
-
-    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
-
-    with patch(
-        "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
-        return_value=RESPONSE_OK,
-    ) as set_time_of_use:
-        await hass.services.async_call(
-            DOMAIN,
-            SERVICE_TIME_OF_USE,
-            {
-                CONF_DEVICE_ID: energy_device,
-                "name": "Weekend",
-                "utility": "Octopus Energy",
-                "currency": "GBP",
-                "seasons": [
-                    {
-                        "name": "All year",
-                        "periods": [
-                            {
-                                "name": "Off peak",
-                                "days": [
-                                    "friday",
-                                    "saturday",
-                                    "sunday",
-                                    "monday",
-                                ],
-                                "buy_rate": 0.1,
-                            }
-                        ],
-                    }
-                ],
-            },
-            blocking=True,
-        )
-
-    periods = set_time_of_use.call_args[0][0]["seasons"]["ALL"]["tou_periods"]
-    assert periods["OFF_PEAK"]["periods"] == [
-        {
-            "fromDayOfWeek": 4,
-            "toDayOfWeek": 0,
-            "fromHour": 0,
-            "fromMinute": 0,
-            "toHour": 0,
-            "toMinute": 0,
-        }
-    ]
 
 
 @pytest.mark.parametrize(
@@ -597,6 +512,70 @@ async def test_time_of_use_wrapping_days(
             },
             id="sub_minute_time",
         ),
+        pytest.param(
+            {
+                "seasons": [
+                    {
+                        "name": "Summer",
+                        "start_month": 1.9,
+                        "start_day": 1,
+                        "end_month": 12,
+                        "end_day": 31,
+                        "periods": [{"name": "Peak", "buy_rate": 0.3}],
+                    }
+                ]
+            },
+            id="fractional_season_boundary",
+        ),
+        pytest.param(
+            {
+                "seasons": [
+                    {
+                        "name": "All year",
+                        "periods": [
+                            {
+                                "name": "Peak",
+                                "days": ["monday"],
+                                "start_time": "08:00:00",
+                                "end_time": "12:00:00",
+                                "buy_rate": 0.3,
+                            },
+                            {
+                                "name": "Off peak",
+                                "days": ["monday"],
+                                "start_time": "11:00:00",
+                                "end_time": "13:00:00",
+                                "buy_rate": 0.1,
+                            },
+                        ],
+                    }
+                ]
+            },
+            id="overlapping_periods",
+        ),
+        pytest.param(
+            {
+                "seasons": [
+                    {
+                        "name": "Primary",
+                        "start_month": 1,
+                        "start_day": 1,
+                        "end_month": 12,
+                        "end_day": 31,
+                        "periods": [{"name": "Peak", "buy_rate": 0.3}],
+                    },
+                    {
+                        "name": "Overlapping",
+                        "start_month": 6,
+                        "start_day": 1,
+                        "end_month": 8,
+                        "end_day": 31,
+                        "periods": [{"name": "Peak", "buy_rate": 0.4}],
+                    },
+                ]
+            },
+            id="overlapping_seasons",
+        ),
         pytest.param({"currency": "pounds"}, id="invalid_currency"),
         pytest.param({"daily_charge": -1}, id="negative_daily_charge"),
     ],
@@ -744,4 +723,68 @@ async def test_time_of_use_missing_scope(
             blocking=True,
         )
     assert exc_info.value.translation_key == "missing_scope_energy_cmds"
+    set_time_of_use.assert_not_called()
+
+
+async def test_time_of_use_zero_sell_rate(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a zero export rate is not treated as absent."""
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+
+    with patch(
+        "tesla_fleet_api.tesla.EnergySite.time_of_use_settings",
+        return_value=RESPONSE_OK,
+    ) as set_time_of_use:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {
+                CONF_DEVICE_ID: energy_device,
+                "name": "Flat",
+                "utility": "Octopus Energy",
+                "currency": "GBP",
+                "seasons": [
+                    {
+                        "name": "All year",
+                        "periods": [{"name": "Flat", "buy_rate": 0.2, "sell_rate": 0}],
+                    }
+                ],
+            },
+            blocking=True,
+        )
+
+    tariff = set_time_of_use.call_args[0][0]
+    assert tariff["sell_tariff"]["energy_charges"]["ALL"]["rates"] == {"FLAT": 0.0}
+
+
+async def test_time_of_use_site_not_tou_capable(
+    hass: HomeAssistant,
+    normal_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a site without time-of-use support is rejected before any command."""
+    await setup_platform(hass, normal_config_entry)
+
+    energy_device = entity_registry.async_get(ENERGY_SITE_ENTITY).device_id
+    site = normal_config_entry.runtime_data.energysites[0]
+    site.info_coordinator.data["components_tou_capable"] = False
+
+    with (
+        patch(
+            "tesla_fleet_api.tesla.EnergySite.time_of_use_settings"
+        ) as set_time_of_use,
+        pytest.raises(ServiceValidationError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_TIME_OF_USE,
+            {CONF_DEVICE_ID: energy_device, **TIME_OF_USE_DATA},
+            blocking=True,
+        )
+    assert exc_info.value.translation_key == "site_not_tou_capable"
     set_time_of_use.assert_not_called()

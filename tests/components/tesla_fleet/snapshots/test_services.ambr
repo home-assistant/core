@@ -1,0 +1,137 @@
+# serializer version: 1
+# name: test_time_of_use
+  dict({
+    'code': 'home_assistant',
+    'currency': 'GBP',
+    'daily_charges': list([
+      dict({
+        'amount': 0.6,
+        'name': 'Charge',
+      }),
+    ]),
+    'daily_demand_charges': dict({
+    }),
+    'demand_charges': dict({
+      'ALL': dict({
+        'rates': dict({
+          'ALL': 0,
+        }),
+      }),
+    }),
+    'energy_charges': dict({
+      'ALL': dict({
+        'rates': dict({
+          'AGILE_LOW': -0.05,
+        }),
+      }),
+    }),
+    'max_applicable_demand': 0,
+    'min_applicable_demand': 0,
+    'monthly_charges': 0,
+    'monthly_minimum_bill': 0,
+    'name': 'Agile',
+    'seasons': dict({
+      'ALL': dict({
+        'tou_periods': dict({
+          'AGILE_LOW': dict({
+            'periods': list([
+              dict({
+                'fromDayOfWeek': 0,
+                'fromHour': 0,
+                'fromMinute': 30,
+                'toDayOfWeek': 0,
+                'toHour': 4,
+                'toMinute': 30,
+              }),
+              dict({
+                'fromDayOfWeek': 2,
+                'fromHour': 0,
+                'fromMinute': 30,
+                'toDayOfWeek': 2,
+                'toHour': 4,
+                'toMinute': 30,
+              }),
+              dict({
+                'fromDayOfWeek': 4,
+                'fromHour': 0,
+                'fromMinute': 30,
+                'toDayOfWeek': 4,
+                'toHour': 4,
+                'toMinute': 30,
+              }),
+            ]),
+          }),
+        }),
+      }),
+    }),
+    'sell_tariff': dict({
+      'code': '',
+      'currency': '',
+      'daily_charges': list([
+        dict({
+          'amount': 0,
+          'name': 'Charge',
+        }),
+      ]),
+      'daily_demand_charges': dict({
+      }),
+      'demand_charges': dict({
+        'ALL': dict({
+          'rates': dict({
+            'ALL': 0,
+          }),
+        }),
+      }),
+      'energy_charges': dict({
+        'ALL': dict({
+          'rates': dict({
+            'AGILE_LOW': 0.15,
+          }),
+        }),
+      }),
+      'max_applicable_demand': 0,
+      'min_applicable_demand': 0,
+      'monthly_charges': 0,
+      'monthly_minimum_bill': 0,
+      'name': 'Agile',
+      'seasons': dict({
+        'ALL': dict({
+          'tou_periods': dict({
+            'AGILE_LOW': dict({
+              'periods': list([
+                dict({
+                  'fromDayOfWeek': 0,
+                  'fromHour': 0,
+                  'fromMinute': 30,
+                  'toDayOfWeek': 0,
+                  'toHour': 4,
+                  'toMinute': 30,
+                }),
+                dict({
+                  'fromDayOfWeek': 2,
+                  'fromHour': 0,
+                  'fromMinute': 30,
+                  'toDayOfWeek': 2,
+                  'toHour': 4,
+                  'toMinute': 30,
+                }),
+                dict({
+                  'fromDayOfWeek': 4,
+                  'fromHour': 0,
+                  'fromMinute': 30,
+                  'toDayOfWeek': 4,
+                  'toHour': 4,
+                  'toMinute': 30,
+                }),
+              ]),
+            }),
+          }),
+        }),
+      }),
+      'utility': 'Octopus Energy',
+      'version': 1,
+    }),
+    'utility': 'Octopus Energy',
+    'version': 1,
+  })
+# ---
