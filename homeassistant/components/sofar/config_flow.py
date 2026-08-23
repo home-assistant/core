@@ -1,7 +1,7 @@
 """TCP-only config flow (Phase 1); probes the device for its unique_id."""
 
 import logging
-from typing import TYPE_CHECKING, Any, override
+from typing import Any, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
 from modbus_connection.tmodbus import ModbusConnection
@@ -64,8 +64,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
             except ModbusError:
                 errors["base"] = "cannot_connect"
             else:
-                if TYPE_CHECKING:
-                    assert device.serial_number is not None
+                assert device.serial_number is not None
                 if not device.inverter_type:
                     errors["base"] = "unrecognized_inverter"
                 else:
