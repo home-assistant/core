@@ -1,6 +1,6 @@
 """Tests for the enum_identity_compare mypy plugin.
 
-Each test snippet is run through mypy's API with the plugin enabled.
+Each test snippet is run through mypy in a subprocess with the plugin enabled.
 Tests assert the number of ``home-assistant-enum-identity-compare`` errors emitted
 and the relevant message content (operator pair and enum class name).
 
