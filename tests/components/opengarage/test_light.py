@@ -67,15 +67,25 @@ async def test_light_not_created_without_capability(
     assert hass.states.get(ENTITY_ID) is None
 
 
+@pytest.mark.parametrize(
+    ("result", "message"),
+    [
+        (2, "Device key is incorrect"),
+        (None, "Unable to connect or light control is unavailable"),
+        (3, "OpenGarage returned error code 3"),
+    ],
+)
 async def test_light_control_error_surfaces_to_user(
     hass: HomeAssistant,
     mock_opengarage: MagicMock,
     init_integration: MockConfigEntry,
+    result: int | None,
+    message: str,
 ) -> None:
-    """Test device authentication failures are raised to the service caller."""
-    mock_opengarage.set_light.return_value = 2
+    """Test light control failures are raised to the service caller."""
+    mock_opengarage.set_light.return_value = result
 
-    with pytest.raises(HomeAssistantError, match="Device key is incorrect"):
+    with pytest.raises(HomeAssistantError, match=message):
         await hass.services.async_call(
             light.DOMAIN,
             light.SERVICE_TURN_ON,
