@@ -11,12 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .const import (
-    CONF_READ_EPS,
-    CONF_UNIT_ID,
-    DEFAULT_SCAN_INTERVAL,
-    SETTINGS_SCAN_INTERVAL,
-)
+from .const import CONF_UNIT_ID, DEFAULT_SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
@@ -44,7 +39,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         serial_number=serial,
         model=model,
         inverter_type=inverter_type,
-        read_eps=entry.data.get(CONF_READ_EPS, False),
     )
 
     readings = SofarDataUpdateCoordinator(

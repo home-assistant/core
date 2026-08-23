@@ -10,4 +10,3 @@ DEFAULT_SCAN_INTERVAL = 5
 SETTINGS_SCAN_INTERVAL = 60  # matches the old slow tier's 12-cycle cadence
 
 CONF_UNIT_ID = "unit_id"
-CONF_READ_EPS = "read_eps"
