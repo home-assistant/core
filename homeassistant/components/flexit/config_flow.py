@@ -19,7 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from .connection import create_modbus_connection
+from . import create_modbus_connection
 from .const import (
     CONF_BAUDRATE,
     CONF_BYTESIZE,
