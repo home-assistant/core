@@ -6,6 +6,7 @@ from unittest.mock import AsyncMock
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
+from modbus_connection.mock import MockModbusConnection
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -43,6 +44,7 @@ async def test_communication_health_sensor(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test communication_health tracks poll outcomes, incl. disabled entities."""
@@ -85,7 +87,7 @@ async def test_communication_health_sensor(
     assert last_error_sensor.native_value is None
     assert last_error_time_sensor.native_value is None
 
-    unit = readings.connection.for_unit(1)
+    unit = mock_connection.for_unit(1)
     unit.fail_read(0x0484, ModbusTimeoutError("stuck"))
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)
@@ -216,6 +218,7 @@ async def test_sensor_dead_link_unavailable(init_integration: MockConfigEntry) -
 async def test_sensor_availability_on_component_failure(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
+    mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
 ) -> None:
     """Test SofarSensor.available reflects its own component, not the link."""
@@ -228,7 +231,7 @@ async def test_sensor_availability_on_component_failure(
     sensor = SofarSensor(runtime_data, description)
     assert sensor.available
 
-    unit = runtime_data.readings.connection.for_unit(1)
+    unit = mock_connection.for_unit(1)
     unit.fail_read(0x0484, ModbusTimeoutError("stuck"))
     freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
     async_fire_time_changed(hass)

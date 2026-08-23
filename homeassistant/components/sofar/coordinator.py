@@ -7,12 +7,7 @@ from datetime import datetime, timedelta
 import logging
 from typing import override
 
-from modbus_connection import (
-    ModbusConnection,
-    ModbusConnectionError,
-    ModbusError,
-    ModbusTimeoutError,
-)
+from modbus_connection import ModbusConnectionError, ModbusError
 from sofar_modbus.model import UpdateReport
 from sofar_modbus.modern.device import SofarInverter
 
@@ -23,7 +18,6 @@ from homeassistant.util import dt as dt_util
 
 _LOGGER = logging.getLogger(__name__)
 
-_TIMEOUT_DISCONNECT_THRESHOLD = 3
 _HEALTH_WINDOW = 60  # ~5min at the 5s readings interval
 
 
@@ -37,12 +31,9 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self,
         hass: HomeAssistant,
         entry: SofarConfigEntry,
-        connection: ModbusConnection,
         device: SofarInverter,
         poll: Callable[[], Awaitable[UpdateReport]],
         interval: timedelta,
-        *,
-        recycle_stuck_link: bool = False,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -52,13 +43,8 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             name=entry.title,
             update_interval=interval,
         )
-        self.connection = connection
         self.device = device
         self._poll = poll
-        # Only the fastest-interval coordinator may recycle the shared link,
-        # so a stuck poll on the other one doesn't drop it mid-request.
-        self._recycle_stuck_link = recycle_stuck_link
-        self._consecutive_timeouts = 0
         self._consecutive_failures: dict[str, int] = {}
         self._poll_outcomes: deque[bool] = deque(maxlen=_HEALTH_WINDOW)
         self.last_error: str | None = None
@@ -97,28 +83,12 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                 raise UpdateFailed(
                     f"{self.name}: no component answered"
                 ) from ExceptionGroup("all components failed to refresh", errors)
-        except ModbusTimeoutError as err:
-            self._consecutive_timeouts += 1
-            if (
-                self._recycle_stuck_link
-                and self._consecutive_timeouts >= _TIMEOUT_DISCONNECT_THRESHOLD
-            ):
-                _LOGGER.debug(
-                    "%s: %d consecutive timed-out polls, recycling the connection",
-                    self.name,
-                    self._consecutive_timeouts,
-                )
-                await self.connection.disconnect()
-                self._consecutive_timeouts = 0
-            self._record_poll_outcome(False, err)
-            raise UpdateFailed(str(err)) from err
         except ModbusError as err:
-            # ModbusConnectionError (dead link) reaches here; per-block failures
-            # once alive land in UpdateReport.failed instead.
+            # ModbusConnectionError (dead link) and ModbusTimeoutError reach
+            # here; per-block failures once alive land in report.failed instead.
             self._record_poll_outcome(False, err)
             raise UpdateFailed(str(err)) from err
         else:
-            self._consecutive_timeouts = 0
             self._record_poll_outcome(
                 not report.failed, next(iter(report.failed.values()), None)
             )

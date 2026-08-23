@@ -1,9 +1,5 @@
 """Test the Sofar Inverter Modbus integration setup and unload."""
 
-from unittest.mock import patch
-
-from modbus_connection.mock import MockModbusConnection
-
 from homeassistant.components.sofar.const import DOMAIN
 from homeassistant.components.sofar.coordinator import SofarRuntimeData
 from homeassistant.config_entries import ConfigEntryState
@@ -33,21 +29,15 @@ async def test_setup_entry_unrecognized_inverter_raises_setup_error(
 ) -> None:
     """Test setup fails permanently (no retry) for an unrecognized serial."""
     # Not reachable via the config flow; covers an existing entry
-    # outliving a sofar-modbus library downgrade.
+    # outliving a sofar-modbus library downgrade. Caught before any
+    # Modbus I/O, so no connection needs mocking here.
     entry = MockConfigEntry(
         domain=DOMAIN, unique_id="UNRECOGNIZED_SERIAL_XYZ", data=MOCK_USER_INPUT
     )
     entry.add_to_hass(hass)
 
-    unseeded_connection = MockModbusConnection()
-    unseeded_connection.for_unit(1)  # zeroed registers -> no recognizable serial
-
-    with patch(
-        "homeassistant.components.sofar.ModbusConnection",
-        return_value=unseeded_connection,
-    ):
-        await hass.config_entries.async_setup(entry.entry_id)
-        await hass.async_block_till_done()
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
 
     assert entry.state is ConfigEntryState.SETUP_ERROR
 
