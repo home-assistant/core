@@ -636,7 +636,7 @@ async def test_set_circulation_schedule_service_unsupported_mode(
         patch(
             f"{MODULE}._setup_vicare_api",
             return_value=MockPyViCare(
-                [Fixture(set(), "vicare/Vitocal222G_Vitovent300W.json")]
+                [Fixture(set(), "vicare/Vitocal250A.json")]
             ).as_vicare_data(),
         ),
         patch(f"{MODULE}.PLATFORMS", [Platform.WATER_HEATER]),
@@ -645,10 +645,7 @@ async def test_set_circulation_schedule_service_unsupported_mode(
 
     entity = _get_water_heater_entity(hass, ENTITY_WATER_HEATER)
     await entity.async_update_ha_state(force_refresh=True)
-    assert entity._circulation_schedule_modes == ["5/25-cycles", "5/10-cycles", "on"]
-
-    # Simulate a device that does not report every known circulation mode.
-    entity._circulation_schedule_modes = ["on"]
+    assert entity._circulation_schedule_modes == ["on"]
 
     with patch.object(
         entity._api, "setDomesticHotWaterCirculationSchedule"

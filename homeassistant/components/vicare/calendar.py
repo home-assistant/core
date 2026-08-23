@@ -115,6 +115,7 @@ class ViCareCirculationScheduleCalendar(ViCareEntity, CalendarEntity):
                     continue
                 events.append(event)
             date += timedelta(days=1)
+        events.sort(key=lambda event: event.start)
         return events
 
     def _slot_to_event(self, date: datetime, slot: dict[str, Any]) -> CalendarEvent:

@@ -76,6 +76,15 @@ def _validate_slot_resolution(slot: dict[str, Any]) -> dict[str, Any]:
     return slot
 
 
+def _slot_minutes(slot: dict[str, Any]) -> tuple[int, int]:
+    """Return a slot's (start, end) as minutes since midnight, 24:00 as 1440."""
+    start_time: dt_time = slot["start_time"]
+    end_time: dt_time = slot["end_time"]
+    start = start_time.hour * 60 + start_time.minute
+    end = 24 * 60 if end_time == dt_time(0, 0) else end_time.hour * 60 + end_time.minute
+    return start, end
+
+
 def _validate_slot_time_range(slot: dict[str, Any]) -> dict[str, Any]:
     """Validate that a slot's end time is after its start time."""
     start, end = _slot_minutes(slot)
@@ -123,15 +132,6 @@ def _serialize_slot(slot: dict[str, Any]) -> dict[str, Any]:
         "mode": CIRCULATION_SCHEDULE_MODE_TO_RAW[slot["mode"]],
         "position": slot["position"],
     }
-
-
-def _slot_minutes(slot: dict[str, Any]) -> tuple[int, int]:
-    """Return a slot's (start, end) as minutes since midnight, 24:00 as 1440."""
-    start_time: dt_time = slot["start_time"]
-    end_time: dt_time = slot["end_time"]
-    start = start_time.hour * 60 + start_time.minute
-    end = 24 * 60 if end_time == dt_time(0, 0) else end_time.hour * 60 + end_time.minute
-    return start, end
 
 
 def _slots_overlap(slots: list[dict[str, Any]]) -> bool:
