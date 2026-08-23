@@ -278,10 +278,9 @@ async def test_room_iq_sensor_no_longer_present(
     assert state.state == "unavailable"
 
     def get_sensor_raise_from_native_value(sensor_id: int) -> NexiaSensor:
-        caller_frame = inspect.stack()[4]
-
-        if caller_frame.function == "native_value":
-            raise KeyError
+        for caller_frame in inspect.stack():
+            if caller_frame.function == "native_value":
+                raise KeyError
 
         return get_item(sensor_id)
 
