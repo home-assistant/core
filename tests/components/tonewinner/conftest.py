@@ -1,15 +1,12 @@
-"""Common fixtures for the Tonewinner AT-500 tests."""
+"""Common fixtures for the Tonewinner tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, PropertyMock, patch
 
 import pytest
 
-from homeassistant.components.tonewinner.const import (
-    CONF_BAUD_RATE,
-    CONF_SERIAL_PORT,
-    DOMAIN,
-)
+from homeassistant.components.tonewinner.const import CONF_SERIAL_PORT, DOMAIN
+from homeassistant.const import CONF_MODEL
 
 from tests.common import MockConfigEntry
 
@@ -21,11 +18,10 @@ def mock_config_entry() -> MockConfigEntry:
         domain=DOMAIN,
         data={
             CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            CONF_BAUD_RATE: 9600,
+            CONF_MODEL: "AT-500",
         },
-        options={},
         entry_id="test_entry_id",
-        title="Tonewinner AT-500",
+        title="AT-500",
     )
 
 

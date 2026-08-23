@@ -1,21 +1,19 @@
-"""Test the Tonewinner AT-500 integration setup."""
+"""Test the Tonewinner integration setup."""
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
-from homeassistant.components.tonewinner import async_update_options
-from homeassistant.components.tonewinner.const import (
-    CONF_BAUD_RATE,
-    CONF_SERIAL_PORT,
-    DOMAIN,
-)
+from homeassistant.components.tonewinner.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
 
 
 async def test_setup_entry(
-    hass: HomeAssistant, mock_config_entry: MagicMock, mock_receiver: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
 ) -> None:
     """Test setting up the integration."""
     mock_config_entry.add_to_hass(hass)
@@ -31,35 +29,57 @@ async def test_setup_entry(
         ),
     ):
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
+    assert mock_config_entry.state is ConfigEntryState.LOADED
     assert mock_config_entry.runtime_data is mock_receiver
-    mock_receiver.connect.assert_called_once()
-    mock_receiver.query_state.assert_called_once()
+    mock_receiver.connect.assert_awaited_once()
+    mock_receiver.query_state.assert_awaited_once()
+    mock_receiver.disconnect.assert_not_awaited()
+
+
+async def test_setup_entry_not_ready(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test a failed connection raises ConfigEntryNotReady and cleans up."""
+    mock_config_entry.add_to_hass(hass)
+    mock_receiver.connect.side_effect = OSError("Permission denied")
+
+    with (
+        patch(
+            "homeassistant.components.tonewinner.TonewinnerReceiver",
+            return_value=mock_receiver,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+            return_value=True,
+        ),
+    ):
+        assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_receiver.disconnect.assert_awaited_once()
 
 
 async def test_setup_entry_multiple_times(
-    hass: HomeAssistant, mock_receiver: MagicMock
+    hass: HomeAssistant,
+    mock_receiver: MagicMock,
 ) -> None:
     """Test that setting up multiple entries doesn't conflict."""
     entry1 = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            CONF_BAUD_RATE: 9600,
-        },
-        options={},
+        data={CONF_SERIAL_PORT: "/dev/ttyUSB0", CONF_MODEL: "AT-500"},
         entry_id="test_entry_id_1",
-        title="Tonewinner AT-500",
+        title="AT-500",
     )
     entry2 = MockConfigEntry(
         domain=DOMAIN,
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB1",
-            CONF_BAUD_RATE: 9600,
-        },
-        options={},
+        data={CONF_SERIAL_PORT: "/dev/ttyUSB1", CONF_MODEL: "AT-500"},
         entry_id="test_entry_id_2",
-        title="Tonewinner AT-500",
+        title="AT-500",
     )
 
     entry1.add_to_hass(hass)
@@ -70,7 +90,7 @@ async def test_setup_entry_multiple_times(
     mock_receiver2.query_state = AsyncMock()
     mock_receiver2.disconnect = AsyncMock()
 
-    def receiver_factory(*args, **kwargs):
+    def receiver_factory(*args: str, **kwargs: int) -> MagicMock:
         if args[0] == "/dev/ttyUSB1":
             return mock_receiver2
         return mock_receiver
@@ -97,9 +117,11 @@ async def test_setup_entry_multiple_times(
 
 
 async def test_unload_entry(
-    hass: HomeAssistant, mock_config_entry: MagicMock, mock_receiver: MagicMock
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
 ) -> None:
-    """Test unloading the integration."""
+    """Test unloading the integration disconnects the receiver."""
     mock_config_entry.add_to_hass(hass)
 
     with (
@@ -115,38 +137,38 @@ async def test_unload_entry(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
         return_value=True,
     ):
         assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
-    mock_receiver.disconnect.assert_called_once()
+    mock_receiver.disconnect.assert_awaited_once()
 
 
-async def test_update_options(
-    hass: HomeAssistant, mock_config_entry: MagicMock
+async def test_unload_entry_platform_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
 ) -> None:
-    """Test updating options triggers reload."""
+    """Test unload keeps the receiver connected when platforms fail to unload."""
     mock_config_entry.add_to_hass(hass)
 
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_reload",
-    ) as mock_reload:
-        await async_update_options(hass, mock_config_entry)
-
-        mock_reload.assert_called_once_with(mock_config_entry.entry_id)
-
-
-async def test_unload_entry_without_runtime_data(
-    hass: HomeAssistant, mock_config_entry: MagicMock, mock_receiver: MagicMock
-) -> None:
-    """Test unloading when runtime_data is None."""
-    mock_config_entry.add_to_hass(hass)
-    mock_config_entry.mock_state(hass, ConfigEntryState.LOADED)
-    mock_config_entry.runtime_data = None
-
-    with patch(
-        "homeassistant.config_entries.ConfigEntries.async_forward_entry_unload",
-        return_value=True,
+    with (
+        patch(
+            "homeassistant.components.tonewinner.TonewinnerReceiver",
+            return_value=mock_receiver,
+        ),
+        patch(
+            "homeassistant.config_entries.ConfigEntries.async_forward_entry_setups",
+            return_value=True,
+        ),
     ):
-        assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+
+    with patch(
+        "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
+        return_value=False,
+    ):
+        assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+    mock_receiver.disconnect.assert_not_awaited()

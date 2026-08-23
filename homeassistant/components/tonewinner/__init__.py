@@ -1,59 +1,42 @@
 """Set up Tonewinner from a config entry."""
 
-import logging
-
 from tonewinner_rs232 import TonewinnerReceiver
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import config_validation as cv
 
-from .const import CONF_BAUD_RATE, CONF_SERIAL_PORT, DOMAIN
+from .const import CONF_SERIAL_PORT, DOMAIN
+
+PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
-_LOGGER = logging.getLogger(__name__)
-
 type TonewinnerConfigEntry = ConfigEntry[TonewinnerReceiver]
-
-
-async def async_update_options(hass: HomeAssistant, entry: ConfigEntry) -> None:
-    """Update options."""
-    _LOGGER.debug("Options updated, reloading integration")
-    await hass.config_entries.async_reload(entry.entry_id)
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: TonewinnerConfigEntry) -> bool:
     """Set up Tonewinner from a config entry."""
     port = entry.data[CONF_SERIAL_PORT]
-    baud = entry.data.get(CONF_BAUD_RATE, 9600)
 
+    receiver = TonewinnerReceiver(port)
     try:
-        receiver = TonewinnerReceiver(port, baudrate=baud)
         await receiver.connect()
         await receiver.query_state()
     except OSError as err:
+        await receiver.disconnect()
         raise ConfigEntryNotReady(f"Unable to connect to {port}") from err
 
     entry.runtime_data = receiver
 
-    await hass.config_entries.async_forward_entry_setups(entry, ["media_player"])
-    entry.async_on_unload(entry.add_update_listener(async_update_options))
-
-    _LOGGER.info("Tonewinner integration setup complete")
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
 
 
 async def async_unload_entry(hass: HomeAssistant, entry: TonewinnerConfigEntry) -> bool:
     """Unload a config entry."""
-    _LOGGER.debug("Unloading Tonewinner integration")
-
-    await hass.config_entries.async_forward_entry_unload(entry, "media_player")
-
-    receiver = getattr(entry, "runtime_data", None)
-    if receiver is not None:
-        await receiver.disconnect()
-
-    _LOGGER.info("Tonewinner integration unloaded")
-    return True
+    if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        await entry.runtime_data.disconnect()
+    return unload_ok

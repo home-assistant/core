@@ -2,38 +2,34 @@
 
 from typing import Any, override
 
-from tonewinner_rs232 import TonewinnerReceiver
+from tonewinner_rs232 import ReceiverInfo, TonewinnerReceiver
 import voluptuous as vol
 
-from homeassistant.config_entries import (
-    ConfigEntry,
-    ConfigFlow as ConfigEntryFlow,
-    ConfigFlowResult,
-    OptionsFlow,
-)
-from homeassistant.core import callback
-import homeassistant.helpers.config_validation as cv
+from homeassistant.config_entries import ConfigFlow as ConfigEntryFlow, ConfigFlowResult
+from homeassistant.const import CONF_MODEL
 from homeassistant.helpers.selector import SerialPortSelector
 
-from .const import (
-    CONF_BAUD_RATE,
-    CONF_SERIAL_PORT,
-    CONF_SOURCE_MAPPINGS,
-    DEFAULT_BAUD_RATE,
-    DOMAIN,
-)
-from .media_player import INPUT_SOURCES
+from .const import CONF_SERIAL_PORT, DOMAIN
 
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_SERIAL_PORT): SerialPortSelector(),
-        vol.Required(CONF_BAUD_RATE, default=DEFAULT_BAUD_RATE): cv.positive_int,
     }
 )
 
 
 class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
-    """Handle the initial step of the configuration flow."""
+    """Handle the Tonewinner config flow."""
+
+    async def _async_probe_receiver(self, port: str) -> str | None:
+        """Verify a receiver answers on the port and return its model."""
+        receiver = TonewinnerReceiver(port)
+        try:
+            await receiver.connect()
+            info: ReceiverInfo | None = await receiver.query_info()
+        finally:
+            await receiver.disconnect()
+        return info.model if info else None
 
     @override
     async def async_step_user(
@@ -42,21 +38,19 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
         """Handle initial step of configuration flow."""
         errors = {}
         if user_input is not None:
+            port = user_input[CONF_SERIAL_PORT]
             try:
-                receiver = TonewinnerReceiver(
-                    user_input[CONF_SERIAL_PORT],
-                    baudrate=user_input[CONF_BAUD_RATE],
-                )
-                await receiver.connect()
-                await receiver.disconnect()
+                model = await self._async_probe_receiver(port)
             except OSError:
                 errors["base"] = "cannot_connect"
-            if not errors:
-                await self.async_set_unique_id(user_input[CONF_SERIAL_PORT])
-                self._abort_if_unique_id_configured()
-                return self.async_create_entry(
-                    title="Tonewinner", data=user_input, options={}
-                )
+            else:
+                self._async_abort_entries_match({CONF_SERIAL_PORT: port})
+                data: dict[str, Any] = {CONF_SERIAL_PORT: port}
+                title = "Tonewinner"
+                if model:
+                    data[CONF_MODEL] = model
+                    title = model
+                return self.async_create_entry(title=title, data=data)
 
         return self.async_show_form(
             step_id="user",
@@ -72,77 +66,26 @@ class TonewinnerConfigFlow(ConfigEntryFlow, domain=DOMAIN):
         entry = self._get_reconfigure_entry()
 
         if user_input is not None:
+            port = user_input[CONF_SERIAL_PORT]
             try:
-                receiver = TonewinnerReceiver(
-                    user_input[CONF_SERIAL_PORT],
-                    baudrate=user_input[CONF_BAUD_RATE],
-                )
-                await receiver.connect()
-                await receiver.disconnect()
+                model = await self._async_probe_receiver(port)
             except OSError:
                 errors["base"] = "cannot_connect"
-            if not errors:
+            else:
+                self._async_abort_entries_match({CONF_SERIAL_PORT: port})
+                data_updates: dict[str, Any] = {CONF_SERIAL_PORT: port}
+                if model:
+                    data_updates[CONF_MODEL] = model
                 return self.async_update_reload_and_abort(
-                    entry, data_updates=user_input
+                    entry,
+                    data_updates=data_updates,
+                    title=model or entry.title,
                 )
 
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA, self._get_reconfigure_entry().data
+                STEP_USER_DATA_SCHEMA, entry.data
             ),
             errors=errors,
-        )
-
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(config_entry: ConfigEntry) -> OptionsFlow:
-        """Get the options flow for this handler."""
-        return TonewinnerOptionsFlow(config_entry)
-
-
-class TonewinnerOptionsFlow(OptionsFlow):
-    """Handle options flow for Tonewinner."""
-
-    _config_entry: ConfigEntry
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self._config_entry = config_entry
-
-    async def async_step_init(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
-        if user_input is not None:
-            source_mappings = {}
-            for source_name, source_code in INPUT_SOURCES.items():
-                enabled_key = f"{source_code}_enabled"
-                name_key = f"{source_code}_name"
-
-                if enabled_key in user_input:
-                    source_mappings[source_code] = {
-                        "enabled": user_input[enabled_key],
-                        "name": user_input.get(name_key, source_name),
-                    }
-
-            return self.async_create_entry(
-                title="", data={CONF_SOURCE_MAPPINGS: source_mappings}
-            )
-
-        current_mappings = self._config_entry.options.get(CONF_SOURCE_MAPPINGS, {})
-
-        schema: dict[vol.Marker, Any] = {}
-        for source_name, source_code in INPUT_SOURCES.items():
-            current_mapping = current_mappings.get(source_code, {})
-            enabled = current_mapping.get("enabled", True)
-            custom_name = current_mapping.get("name", source_name)
-
-            schema[vol.Optional(f"{source_code}_enabled", default=enabled)] = cv.boolean
-            schema[vol.Optional(f"{source_code}_name", default=custom_name)] = cv.string
-
-        return self.async_show_form(
-            step_id="init",
-            data_schema=vol.Schema(schema),
         )

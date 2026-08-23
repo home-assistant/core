@@ -1,21 +1,17 @@
-"""Test the Tonewinner AT-500 media player entity."""
+"""Test the Tonewinner media player entity."""
 
 import asyncio
+from collections.abc import Callable
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
-from tonewinner_rs232 import ReceiverInfo
 
 from homeassistant.components.media_player import (
+    ATTR_SOUND_MODE,
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
-from homeassistant.components.tonewinner.const import (
-    CONF_BAUD_RATE,
-    CONF_SERIAL_PORT,
-    CONF_SOURCE_MAPPINGS,
-    DOMAIN,
-)
+from homeassistant.components.tonewinner.const import DOMAIN
 from homeassistant.components.tonewinner.media_player import (
     INPUT_SOURCES,
     SOUND_MODES,
@@ -23,57 +19,19 @@ from homeassistant.components.tonewinner.media_player import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from tests.common import MockConfigEntry
 
+ENTITY_ID = "media_player.at_500"
 
-async def test_media_player_setup(
+
+async def _setup_integration(
     hass: HomeAssistant,
-    mock_config_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
 ) -> None:
-    """Test media player entity setup."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    assert entity.unique_id == mock_config_entry.entry_id
-    assert entity.has_entity_name is True
-    assert entity.name is None
-    assert entity.device_class == "receiver"
-    assert entity.state == MediaPlayerState.OFF
-
-
-async def test_media_player_device_info(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test media player device info."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    device_info = entity.device_info
-    assert device_info is not None
-    assert "identifiers" in device_info and device_info["identifiers"] == {
-        (DOMAIN, mock_config_entry.entry_id)
-    }
-    assert "manufacturer" in device_info and device_info["manufacturer"] == "Tonewinner"
-    assert device_info.get("model") is None
-
-
-async def test_platform_setup_queries_model(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Test that setup queries the receiver model and wires it into the device."""
-    mock_config_entry.add_to_hass(hass)
-    mock_receiver.query_info.return_value = ReceiverInfo(model="AT-500")
-
+    """Set up the integration against a mocked receiver."""
     with patch(
         "homeassistant.components.tonewinner.TonewinnerReceiver",
         return_value=mock_receiver,
@@ -81,51 +39,75 @@ async def test_platform_setup_queries_model(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
+
+def _state_callback(mock_receiver: MagicMock) -> Callable[[object], None]:
+    """Return the callback the entity registered for receiver state updates."""
+    return mock_receiver.subscribe.call_args.args[0]
+
+
+async def _call_media_player_service(
+    hass: HomeAssistant, service: str, **service_data: object
+) -> None:
+    """Call a media player service on the test entity."""
+    await hass.services.async_call(
+        "media_player",
+        service,
+        {"entity_id": ENTITY_ID, **service_data},
+        blocking=True,
+    )
+
+
+async def test_media_player_setup(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test media player entity setup."""
+    mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
+    assert state.attributes["friendly_name"] == "AT-500"
+
+    entry = entity_registry.async_get(ENTITY_ID)
+    assert entry is not None
+    assert entry.unique_id == mock_config_entry.entry_id
+
+
+async def test_media_player_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test media player device info comes from stored data without querying."""
+    mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
+
     device = device_registry.async_get_device_by_identifier(
         (DOMAIN, mock_config_entry.entry_id), mock_config_entry.entry_id
     )
     assert device is not None
+    assert device.manufacturer == "Tonewinner"
     assert device.model == "AT-500"
-    mock_receiver.query_info.assert_called_once()
-
-
-async def test_media_player_model_from_info(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test that the device model is set from the constructor model argument."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver, "AT-500")
-
-    assert entity.device_info["model"] == "AT-500"
-
-
-async def test_media_player_no_model_when_unknown(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test that no model is set when the model argument is None."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    assert entity.device_info.get("model") is None
+    mock_receiver.query_info.assert_not_called()
 
 
 async def test_media_player_supported_features(
     hass: HomeAssistant,
-    mock_config_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
 ) -> None:
     """Test media player supported features."""
     mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
 
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    assert entity.supported_features == (
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["supported_features"] == (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
         | MediaPlayerEntityFeature.TURN_ON
@@ -136,270 +118,64 @@ async def test_media_player_supported_features(
     )
 
 
-async def test_media_player_source_list_default(
+async def test_media_player_source_and_sound_mode_lists(
     hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
 ) -> None:
-    """Test media player default source list."""
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            CONF_BAUD_RATE: 9600,
-        },
-        options={},
-        entry_id="test_entry_id",
-        title="Tonewinner AT-500",
-    )
+    """Test the source list and sound mode list are derived from the library."""
     mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
 
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    source_list = entity.source_list
-    assert source_list is not None
-    assert len(source_list) == len(INPUT_SOURCES)
-    assert "HDMI 1" in source_list
-    assert "Bluetooth" in source_list
-
-
-async def test_media_player_source_list_with_mappings(
-    hass: HomeAssistant,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test media player source list with custom mappings."""
-    source_mappings = {
-        "HD1": {"enabled": True, "name": "Living Room TV"},
-        "HD2": {"enabled": False, "name": "Bedroom TV"},
-        "BT": {"enabled": True, "name": "My Bluetooth"},
-    }
-
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            CONF_BAUD_RATE: 9600,
-        },
-        options={CONF_SOURCE_MAPPINGS: source_mappings},
-        entry_id="test_entry_id",
-        title="Tonewinner AT-500",
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    source_list = entity.source_list
-    assert source_list is not None
-    assert "Living Room TV" in source_list
-    assert "My Bluetooth" in source_list
-    assert "Bedroom TV" not in source_list
-    assert "HDMI 1" not in source_list
-
-
-async def test_media_player_sound_mode_list(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test media player sound mode list."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    assert entity.sound_mode_list == list(SOUND_MODES.keys())
-
-
-async def test_media_player_handle_power_on(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test handling power on via state callback."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
-
-    with patch.object(entity, "schedule_update_ha_state"):
-        entity._on_state_change(mock_receiver.state)
-        assert entity.available is True
-
-
-async def test_media_player_handle_power_off(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test handling power off via state callback."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
-    entity._attr_source = "HDMI 1"
-
-    mock_receiver.state.power = False
-    entity._apply_state(mock_receiver.state)
-
-    assert entity.state == MediaPlayerState.OFF
-    assert entity.source is None
-
-
-async def test_media_player_handle_volume_response(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test handling volume level response."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
-
-    mock_receiver.state.volume = 50.0
-    entity._apply_state(mock_receiver.state)
-
-    assert entity.volume_level == 0.5
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes["source_list"] == list(INPUT_SOURCES)
+    assert state.attributes["sound_mode_list"] == list(SOUND_MODES)
 
 
 @pytest.mark.parametrize(
-    ("mute", "expected"),
-    [(True, True), (False, False)],
-    ids=["on", "off"],
+    ("volume", "expected"),
+    [(0.5, 50.0), (1.0, 80.0)],
+    ids=["half", "max_clamped"],
 )
-async def test_media_player_handle_mute(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-    mute: bool,
-    expected: bool,
-) -> None:
-    """Test handling mute response."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
-
-    mock_receiver.state.mute = mute
-    entity._apply_state(mock_receiver.state)
-
-    assert entity.is_volume_muted is expected
-
-
-async def test_media_player_handle_input_source(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test handling input source response."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
-
-    mock_receiver.state.source_name = "HDMI 1"
-    mock_receiver.state.audio_source = "HDMI"
-    mock_receiver.state.power = True
-    entity._apply_state(mock_receiver.state)
-
-    assert entity.source == "HDMI 1"
-
-
-async def test_media_player_handle_custom_source_name(
-    hass: HomeAssistant,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test handling input source with custom name."""
-    source_mappings = {
-        "HD1": {"enabled": True, "name": "Living Room TV"},
-    }
-
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            CONF_BAUD_RATE: 9600,
-        },
-        options={CONF_SOURCE_MAPPINGS: source_mappings},
-        entry_id="test_entry_id",
-        title="Tonewinner AT-500",
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
-
-    mock_receiver.state.source_name = "HDMI 1"
-    mock_receiver.state.audio_source = None
-    mock_receiver.state.power = True
-    entity._apply_state(mock_receiver.state)
-
-    assert entity.source == "Living Room TV"
-
-
-async def test_media_player_turn_on(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test turning on the media player."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    await entity.async_turn_on()
-
-    mock_receiver.power_on.assert_called_once()
-
-
-async def test_media_player_handle_sound_mode(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test handling sound mode response."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
-
-    mock_receiver.state.sound_mode_label = "Direct"
-    entity._apply_state(mock_receiver.state)
-
-    assert entity.sound_mode == "Direct"
-
-
-async def test_media_player_turn_off(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test turning off the media player clears source state."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
-    entity._attr_source = "HDMI 1"
-
-    await entity.async_turn_off()
-
-    mock_receiver.power_off.assert_called_once()
-    assert entity.state == MediaPlayerState.OFF
-    assert entity.source is None
-
-
 async def test_media_player_set_volume_level(
     hass: HomeAssistant,
-    mock_config_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
+    volume: float,
+    expected: float,
 ) -> None:
-    """Test setting volume level."""
+    """Test setting volume level maps HA scale onto the receiver's 0-80 range."""
     mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
 
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
+    await _call_media_player_service(hass, "volume_set", volume_level=volume)
 
-    await entity.async_set_volume_level(0.5)
+    mock_receiver.set_volume.assert_called_once_with(expected)
 
-    mock_receiver.set_volume.assert_called_once_with(50.0)
+
+@pytest.mark.parametrize(
+    ("service", "method"),
+    [
+        ("volume_up", "volume_up"),
+        ("volume_down", "volume_down"),
+    ],
+    ids=["up", "down"],
+)
+async def test_media_player_volume_step(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+    service: str,
+    method: str,
+) -> None:
+    """Test volume stepping delegates to the receiver."""
+    mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
+
+    await _call_media_player_service(hass, service)
+
+    getattr(mock_receiver, method).assert_called_once()
 
 
 @pytest.mark.parametrize(
@@ -409,120 +185,240 @@ async def test_media_player_set_volume_level(
 )
 async def test_media_player_mute_volume(
     hass: HomeAssistant,
-    mock_config_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
     mute: bool,
     method: str,
 ) -> None:
     """Test muting and unmuting the media player."""
     mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
 
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    await entity.async_mute_volume(mute)
+    await _call_media_player_service(hass, "volume_mute", is_volume_muted=mute)
 
     getattr(mock_receiver, method).assert_called_once()
 
 
+async def test_media_player_turn_on(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test turning on the media player."""
+    mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
+
+    await _call_media_player_service(hass, "turn_on")
+
+    mock_receiver.power_on.assert_called_once()
+
+
+async def test_media_player_turn_off_clears_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+) -> None:
+    """Test turning off the media player clears source state."""
+    mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
+
+    mock_receiver.state.power = True
+    mock_receiver.state.source_name = "HDMI 1"
+    _state_callback(mock_receiver)(mock_receiver.state)
+    await hass.async_block_till_done()
+
+    await _call_media_player_service(hass, "turn_off")
+
+    mock_receiver.power_off.assert_called_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
+    assert state.attributes.get("source") is None
+
+
 async def test_media_player_select_source(
     hass: HomeAssistant,
-    mock_config_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
 ) -> None:
     """Test selecting input source."""
     mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
 
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    await entity.async_select_source("HDMI 1")
-
-    mock_receiver.select_source.assert_called_once_with("HD1")
-
-
-async def test_media_player_select_custom_source(
-    hass: HomeAssistant,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test selecting source with custom name."""
-    source_mappings = {
-        "HD1": {"enabled": True, "name": "Living Room TV"},
-    }
-
-    mock_config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={
-            CONF_SERIAL_PORT: "/dev/ttyUSB0",
-            CONF_BAUD_RATE: 9600,
-        },
-        options={CONF_SOURCE_MAPPINGS: source_mappings},
-        entry_id="test_entry_id",
-        title="Tonewinner AT-500",
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    await entity.async_select_source("Living Room TV")
+    await _call_media_player_service(hass, "select_source", source="HDMI 1")
 
     mock_receiver.select_source.assert_called_once_with("HD1")
 
 
 async def test_media_player_select_sound_mode(
     hass: HomeAssistant,
-    mock_config_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
 ) -> None:
     """Test selecting sound mode."""
     mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
 
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    await entity.async_select_sound_mode("Stereo")
+    await _call_media_player_service(hass, "select_sound_mode", sound_mode="Stereo")
 
     mock_receiver.select_sound_mode.assert_called_once_with("STEREO")
 
 
-async def test_media_player_volume_up(
+@pytest.mark.parametrize(
+    ("service", "payload"),
+    [
+        ("select_source", {"source": "Nope"}),
+        ("select_source", {"source": "HD1"}),
+        ("select_sound_mode", {"sound_mode": "Nope"}),
+    ],
+    ids=["unknown_source", "raw_source_code", "unknown_sound_mode"],
+)
+async def test_media_player_invalid_selections(
     hass: HomeAssistant,
-    mock_config_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+    service: str,
+    payload: dict[str, str],
+) -> None:
+    """Test invalid source and sound mode selections raise an error."""
+    mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
+
+    with pytest.raises(HomeAssistantError):
+        await _call_media_player_service(hass, service, **payload)
+
+    mock_receiver.select_source.assert_not_called()
+    mock_receiver.select_sound_mode.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("state_updates", "attribute", "expected"),
+    [
+        (
+            {"power": True, "volume": 40.0, "source_name": "HDMI 1"},
+            "volume_level",
+            0.4,
+        ),
+        (
+            {"power": True, "mute": True, "source_name": "HDMI 1"},
+            "is_volume_muted",
+            True,
+        ),
+        ({"power": True, "source_name": "HDMI 1"}, "source", "HDMI 1"),
+        (
+            {"power": True, "sound_mode_label": "Direct", "source_name": "HDMI 1"},
+            ATTR_SOUND_MODE,
+            "Direct",
+        ),
+    ],
+    ids=["volume", "mute", "source", "sound_mode"],
+)
+async def test_media_player_state_updates(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+    state_updates: dict[str, object],
+    attribute: str,
+    expected: object,
+) -> None:
+    """Test receiver state updates are reflected on the entity."""
+    mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
+
+    for key, value in state_updates.items():
+        setattr(mock_receiver.state, key, value)
+    _state_callback(mock_receiver)(mock_receiver.state)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(ENTITY_ID)
+    assert state.attributes[attribute] == expected
+    mock_receiver.query_source.assert_not_called()
+
+
+async def test_media_player_power_off_from_callback_clears_source(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
 ) -> None:
-    """Test volume up."""
+    """Test the entity clears its source when the receiver powers off."""
     mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
 
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+    mock_receiver.state.power = True
+    mock_receiver.state.source_name = "HDMI 1"
+    _state_callback(mock_receiver)(mock_receiver.state)
+    await hass.async_block_till_done()
 
-    await entity.async_volume_up()
+    mock_receiver.state.power = False
+    _state_callback(mock_receiver)(mock_receiver.state)
+    await hass.async_block_till_done()
 
-    mock_receiver.volume_up.assert_called_once()
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
+    assert state.attributes.get("source") is None
 
 
-async def test_media_player_volume_down(
+async def test_media_player_unavailable_on_disconnect_and_recovery(
     hass: HomeAssistant,
-    mock_config_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_receiver: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test the entity toggles availability as the connection drops and recovers."""
+    mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
+
+    _state_callback(mock_receiver)(None)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "unavailable"
+    assert "Connection to the Tonewinner receiver was lost" in caplog.text
+
+    _state_callback(mock_receiver)(mock_receiver.state)
+    await hass.async_block_till_done()
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.OFF
+
+
+async def test_media_player_periodic_source_check(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
 ) -> None:
-    """Test volume down."""
+    """Test the bounded retry loop when the source is unknown."""
     mock_config_entry.add_to_hass(hass)
+    await _setup_integration(hass, mock_config_entry, mock_receiver)
 
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+    mock_receiver.state.power = True
+    mock_receiver.state.source_name = None
 
-    await entity.async_volume_down()
+    with patch(
+        "homeassistant.components.tonewinner.media_player.asyncio.sleep",
+        new_callable=AsyncMock,
+    ):
+        _state_callback(mock_receiver)(mock_receiver.state)
+        await hass.async_block_till_done()
 
-    mock_receiver.volume_down.assert_called_once()
+    assert mock_receiver.query_source.call_count == 5
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == MediaPlayerState.ON
 
 
 async def test_media_player_cleanup_on_removal(
     hass: HomeAssistant,
-    mock_config_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
 ) -> None:
     """Test cleanup when entity is removed."""
-    mock_config_entry.add_to_hass(hass)
+    mock_config_entry.runtime_data = mock_receiver
 
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
+    entity = TonewinnerMediaPlayer(mock_config_entry)
 
-    async def dummy_task():
+    async def dummy_task() -> None:
         await asyncio.sleep(10)
 
     entity._source_check_task = asyncio.create_task(dummy_task())
@@ -532,162 +428,35 @@ async def test_media_player_cleanup_on_removal(
     assert entity._source_check_task.cancelled()
 
 
-async def test_media_player_unavailable_on_disconnect(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
+@pytest.mark.parametrize(
+    ("source_name", "audio_source", "expected"),
+    [
+        ("HDMI 1", None, "HDMI 1"),
+        ("hdmi 1", None, "HDMI 1"),
+        ("HD1", None, "HDMI 1"),
+        ("eARC/ARC", None, "HDMI eARC"),
+        ("Mystery Input", "HD1", "HDMI 1"),
+        ("Mystery Input", None, "Mystery Input"),
+    ],
+    ids=[
+        "exact_name",
+        "case_insensitive_name",
+        "code",
+        "firmware_earc_label",
+        "audio_source_fallback",
+        "passthrough",
+    ],
+)
+def test_media_player_resolve_source(
+    mock_config_entry: MockConfigEntry,
     mock_receiver: MagicMock,
-    caplog: pytest.LogCaptureFixture,
+    source_name: str,
+    audio_source: str | None,
+    expected: str | None,
 ) -> None:
-    """Test the entity becomes unavailable when the connection is lost."""
-    mock_config_entry.add_to_hass(hass)
+    """Test resolving device-reported source names to display names."""
+    mock_config_entry.runtime_data = mock_receiver
 
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
+    entity = TonewinnerMediaPlayer(mock_config_entry)
 
-    with patch.object(entity, "schedule_update_ha_state"):
-        entity._on_state_change(None)
-
-    assert entity.available is False
-    assert "Connection to the Tonewinner receiver was lost" in caplog.text
-
-
-async def test_media_player_power_on_sets_source(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test that a known source on power-on is applied without a query."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
-    mock_receiver.state.power = True
-    mock_receiver.state.source_name = "HDMI 1"
-
-    with patch.object(entity, "schedule_update_ha_state"):
-        entity._apply_state(mock_receiver.state)
-        await hass.async_block_till_done()
-
-    assert entity.state == MediaPlayerState.ON
-    assert entity.source == "HDMI 1"
-    mock_receiver.query_source.assert_not_called()
-
-
-async def test_media_player_periodic_source_check(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test the bounded retry loop when the source is unknown."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity.entity_id = "media_player.test"
-    mock_receiver.state.power = True
-    mock_receiver.state.source_name = None
-
-    with (
-        patch.object(entity, "schedule_update_ha_state"),
-        patch(
-            "homeassistant.components.tonewinner.media_player.asyncio.sleep",
-            new_callable=AsyncMock,
-        ),
-    ):
-        entity._apply_state(mock_receiver.state)
-        await hass.async_block_till_done()
-
-    assert mock_receiver.query_source.call_count == 5
-    assert entity._source_check_task is None
-
-
-async def test_media_player_no_source_check_when_off(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test that the periodic source check does nothing when the device is off."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-    entity._attr_state = MediaPlayerState.OFF
-
-    await entity._periodic_source_check()
-
-    mock_receiver.query_source.assert_not_called()
-    assert entity._source_check_task is None
-
-
-async def test_media_player_resolve_source_custom_names(
-    hass: HomeAssistant,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test resolving device source names against custom names."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={CONF_SERIAL_PORT: "/dev/ttyUSB0", CONF_BAUD_RATE: 9600},
-        options={CONF_SOURCE_MAPPINGS: {"HD1": {"enabled": True, "name": "TV"}}},
-        entry_id="test_entry_id",
-        title="Tonewinner AT-500",
-    )
-    entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, entry, mock_receiver)
-
-    # Default name maps to the configured custom name.
-    assert entity._resolve_source("HDMI 1", None) == "TV"
-    # Custom names pass through unchanged.
-    assert entity._resolve_source("TV", None) == "TV"
-    # Firmware's eARC label maps to the eARC input.
-    assert entity._resolve_source("eARC/ARC", None) == "HDMI eARC"
-    # Unknown names fall back to the audio source code.
-    assert entity._resolve_source("Mystery Input", "HD1") == "TV"
-    # Unknown names without an audio source pass through.
-    assert entity._resolve_source("Mystery Input", None) == "Mystery Input"
-
-
-async def test_media_player_select_source_unknown(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test selecting an unknown source raises an error."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    with pytest.raises(HomeAssistantError, match="Unknown source"):
-        await entity.async_select_source("Nope")
-
-    mock_receiver.select_source.assert_not_called()
-
-
-async def test_media_player_select_source_code_raises(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test that passing a raw source code raises instead of KeyError."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    with pytest.raises(HomeAssistantError, match="Unknown source"):
-        await entity.async_select_source("HD1")
-
-    mock_receiver.select_source.assert_not_called()
-
-
-async def test_media_player_select_sound_mode_unknown(
-    hass: HomeAssistant,
-    mock_config_entry: MagicMock,
-    mock_receiver: MagicMock,
-) -> None:
-    """Test selecting an unknown sound mode raises an error."""
-    mock_config_entry.add_to_hass(hass)
-
-    entity = TonewinnerMediaPlayer(hass, mock_config_entry, mock_receiver)
-
-    with pytest.raises(HomeAssistantError, match="Unknown sound mode"):
-        await entity.async_select_sound_mode("Nope")
-
-    mock_receiver.select_sound_mode.assert_not_called()
+    assert entity._resolve_source(source_name, audio_source) == expected

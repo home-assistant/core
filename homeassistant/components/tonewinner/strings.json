@@ -1,8 +1,4 @@
 {
-  "common": {
-    "baud_rate": "Baud Rate",
-    "serial_port": "Serial Port"
-  },
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
@@ -15,26 +11,22 @@
     "step": {
       "reconfigure": {
         "data": {
-          "baud_rate": "[%key:component::tonewinner::common::baud_rate%]",
           "serial_port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "baud_rate": "[%key:component::tonewinner::config::step::user::data_description::baud_rate%]",
           "serial_port": "[%key:component::tonewinner::config::step::user::data_description::serial_port%]"
         },
-        "description": "Update the serial port connection details for your Tonewinner AV receiver.",
+        "description": "Update the serial port for your Tonewinner AV receiver.",
         "title": "Reconfigure Tonewinner"
       },
       "user": {
         "data": {
-          "baud_rate": "[%key:component::tonewinner::common::baud_rate%]",
           "serial_port": "[%key:common::config_flow::data::port%]"
         },
         "data_description": {
-          "baud_rate": "Only change this if your receiver is configured for a non-default baud rate.",
           "serial_port": "Serial port path to connect to"
         },
-        "description": "Enter the serial port connection details for your Tonewinner AV receiver.",
+        "description": "Enter the serial port of your Tonewinner AV receiver.",
         "title": "Setup Tonewinner"
       }
     }
@@ -43,90 +35,6 @@
     "media_player": {
       "tonewinner": {
         "name": "Tonewinner"
-      }
-    }
-  },
-  "options": {
-    "step": {
-      "init": {
-        "data": {
-          "AN1_enabled": "Enable Analog 1",
-          "AN1_name": "Custom name for Analog 1",
-          "AN2_enabled": "Enable Analog 2",
-          "AN2_name": "Custom name for Analog 2",
-          "AN3_enabled": "Enable Analog 3",
-          "AN3_name": "Custom name for Analog 3",
-          "ARC_enabled": "Enable HDMI eARC",
-          "ARC_name": "Custom name for HDMI eARC",
-          "BT_enabled": "Enable Bluetooth",
-          "BT_name": "Custom name for Bluetooth",
-          "CO1_enabled": "Enable Coaxial 1",
-          "CO1_name": "Custom name for Coaxial 1",
-          "CO2_enabled": "Enable Coaxial 2",
-          "CO2_name": "Custom name for Coaxial 2",
-          "HD1_enabled": "Enable HDMI 1",
-          "HD1_name": "Custom name for HDMI 1",
-          "HD2_enabled": "Enable HDMI 2",
-          "HD2_name": "Custom name for HDMI 2",
-          "HD3_enabled": "Enable HDMI 3",
-          "HD3_name": "Custom name for HDMI 3",
-          "HD4_enabled": "Enable HDMI 4",
-          "HD4_name": "Custom name for HDMI 4",
-          "HD5_enabled": "Enable HDMI 5",
-          "HD5_name": "Custom name for HDMI 5",
-          "HD6_enabled": "Enable HDMI 6",
-          "HD6_name": "Custom name for HDMI 6",
-          "OP1_enabled": "Enable Optical 1",
-          "OP1_name": "Custom name for Optical 1",
-          "OP2_enabled": "Enable Optical 2",
-          "OP2_name": "Custom name for Optical 2",
-          "PC_enabled": "Enable PC",
-          "PC_name": "Custom name for PC",
-          "USB_enabled": "Enable USB",
-          "USB_name": "Custom name for USB",
-          "baud_rate": "[%key:component::tonewinner::common::baud_rate%]",
-          "serial_port": "[%key:component::tonewinner::common::serial_port%]"
-        },
-        "data_description": {
-          "AN1_enabled": "Show the Analog 1 input in the source list.",
-          "AN1_name": "Overrides the default name shown in the source list.",
-          "AN2_enabled": "Show the Analog 2 input in the source list.",
-          "AN2_name": "Overrides the default name shown in the source list.",
-          "AN3_enabled": "Show the Analog 3 input in the source list.",
-          "AN3_name": "Overrides the default name shown in the source list.",
-          "ARC_enabled": "Show the HDMI eARC input in the source list.",
-          "ARC_name": "Overrides the default name shown in the source list.",
-          "BT_enabled": "Show the Bluetooth input in the source list.",
-          "BT_name": "Overrides the default name shown in the source list.",
-          "CO1_enabled": "Show the Coaxial 1 input in the source list.",
-          "CO1_name": "Overrides the default name shown in the source list.",
-          "CO2_enabled": "Show the Coaxial 2 input in the source list.",
-          "CO2_name": "Overrides the default name shown in the source list.",
-          "HD1_enabled": "Show the HDMI 1 input in the source list.",
-          "HD1_name": "Overrides the default name shown in the source list.",
-          "HD2_enabled": "Show the HDMI 2 input in the source list.",
-          "HD2_name": "Overrides the default name shown in the source list.",
-          "HD3_enabled": "Show the HDMI 3 input in the source list.",
-          "HD3_name": "Overrides the default name shown in the source list.",
-          "HD4_enabled": "Show the HDMI 4 input in the source list.",
-          "HD4_name": "Overrides the default name shown in the source list.",
-          "HD5_enabled": "Show the HDMI 5 input in the source list.",
-          "HD5_name": "Overrides the default name shown in the source list.",
-          "HD6_enabled": "Show the HDMI 6 input in the source list.",
-          "HD6_name": "Overrides the default name shown in the source list.",
-          "OP1_enabled": "Show the Optical 1 input in the source list.",
-          "OP1_name": "Overrides the default name shown in the source list.",
-          "OP2_enabled": "Show the Optical 2 input in the source list.",
-          "OP2_name": "Overrides the default name shown in the source list.",
-          "PC_enabled": "Show the PC input in the source list.",
-          "PC_name": "Overrides the default name shown in the source list.",
-          "USB_enabled": "Show the USB input in the source list.",
-          "USB_name": "Overrides the default name shown in the source list.",
-          "baud_rate": "Only change this if your receiver is configured for a non-default baud rate.",
-          "serial_port": "Serial port path to connect to"
-        },
-        "description": "Update serial port settings and customize the names and visibility of your input sources.",
-        "title": "Configure Device"
       }
     }
   }

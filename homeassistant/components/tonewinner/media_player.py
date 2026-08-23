@@ -5,12 +5,7 @@ import contextlib
 import logging
 from typing import override
 
-from tonewinner_rs232 import (
-    INPUT_SOURCE_NAMES,
-    SOUND_MODE_LABELS,
-    ReceiverState,
-    TonewinnerReceiver,
-)
+from tonewinner_rs232 import INPUT_SOURCE_NAMES, SOUND_MODE_LABELS, ReceiverState
 
 from homeassistant.components.media_player import (
     MediaPlayerDeviceClass,
@@ -18,16 +13,16 @@ from homeassistant.components.media_player import (
     MediaPlayerEntityFeature,
     MediaPlayerState,
 )
+from homeassistant.const import CONF_MODEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import TonewinnerConfigEntry
-from .const import CONF_SOURCE_MAPPINGS, DOMAIN
+from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
 
 INPUT_SOURCES = {name: code for code, name in INPUT_SOURCE_NAMES.items()}
 
@@ -42,13 +37,7 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the media player entity."""
-    receiver = config_entry.runtime_data
-    model: str | None = None
-    with contextlib.suppress(ConnectionError):
-        info = await receiver.query_info()
-        model = info.model if info else None
-    entity = TonewinnerMediaPlayer(hass, config_entry, receiver, model)
-    async_add_entities([entity])
+    async_add_entities([TonewinnerMediaPlayer(config_entry)])
 
 
 class TonewinnerMediaPlayer(MediaPlayerEntity):
@@ -69,21 +58,14 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
 
     _source_check_task: asyncio.Task[None] | None = None
 
-    def __init__(
-        self,
-        hass: HomeAssistant,
-        entry: TonewinnerConfigEntry,
-        receiver: TonewinnerReceiver,
-        model: str | None = None,
-    ) -> None:
+    def __init__(self, entry: TonewinnerConfigEntry) -> None:
         """Initialize the media player."""
-        self.hass = hass
-        self._receiver = receiver
+        self._receiver = entry.runtime_data
         self._attr_unique_id = entry.entry_id
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             manufacturer="Tonewinner",
-            model=model,
+            model=entry.data.get(CONF_MODEL),
         )
         self._attr_available = False
 
@@ -93,20 +75,8 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         self._attr_source = None
         self._attr_sound_mode = None
 
-        self._source_code_to_custom_name: dict[str, str] = {}
-        self._custom_name_to_source_code: dict[str, str] = {}
-        source_mappings = entry.options.get(CONF_SOURCE_MAPPINGS, {})
-        self._attr_source_list = []
-        for source_name, source_code in INPUT_SOURCES.items():
-            mapping = source_mappings.get(source_code, {})
-            if not mapping.get("enabled", True):
-                continue
-            custom_name = mapping.get("name", source_name)
-            self._source_code_to_custom_name[source_code] = custom_name
-            self._custom_name_to_source_code[custom_name] = source_code
-            self._attr_source_list.append(custom_name)
-
-        self._attr_sound_mode_list = list(SOUND_MODES.keys())
+        self._attr_source_list = list(INPUT_SOURCES)
+        self._attr_sound_mode_list = list(SOUND_MODES)
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -121,9 +91,9 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         if state is None:
             _LOGGER.warning("Connection to the Tonewinner receiver was lost")
             self._attr_available = False
-            self.async_write_ha_state()
-            return
-        self._apply_state(state)
+        else:
+            self._apply_state(state)
+        self.async_write_ha_state()
 
     @callback
     def _apply_state(self, state: ReceiverState) -> None:
@@ -162,27 +132,17 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
             if not task.done():
                 self._source_check_task = task
 
-        self.async_write_ha_state()
-
     def _resolve_source(self, source_name: str, audio_source: str | None) -> str | None:
-        """Resolve a device source name to the configured display name."""
+        """Resolve a device-reported source name to a display name."""
         if source_name == "eARC/ARC":
             source_name = "ARC"
 
-        if source_name in self._custom_name_to_source_code:
-            return source_name
+        for name, code in INPUT_SOURCES.items():
+            if source_name.lower() in (name.lower(), code.lower()):
+                return name
 
-        source_code = None
-        for default_name, code in INPUT_SOURCES.items():
-            if default_name.lower() == source_name.lower() or code == source_name:
-                source_code = code
-                break
-
-        if source_code and source_code in self._source_code_to_custom_name:
-            return self._source_code_to_custom_name[source_code]
-
-        if audio_source and audio_source in self._source_code_to_custom_name:
-            return self._source_code_to_custom_name[audio_source]
+        if audio_source in INPUT_SOURCE_NAMES:
+            return INPUT_SOURCE_NAMES[audio_source]
 
         return source_name
 
@@ -246,16 +206,14 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     @override
     async def async_select_source(self, source: str) -> None:
         """Select input source."""
-        if source not in self._custom_name_to_source_code:
+        if source not in INPUT_SOURCES:
             raise HomeAssistantError(f"Unknown source: {source}")
 
-        source_code = self._custom_name_to_source_code[source]
-        await self._receiver.select_source(source_code)
+        await self._receiver.select_source(INPUT_SOURCES[source])
 
     @override
     async def async_select_sound_mode(self, sound_mode: str) -> None:
         """Select sound mode."""
         if sound_mode not in SOUND_MODES:
             raise HomeAssistantError(f"Unknown sound mode: {sound_mode}")
-        mode_code = SOUND_MODES[sound_mode]
-        await self._receiver.select_sound_mode(mode_code)
+        await self._receiver.select_sound_mode(SOUND_MODES[sound_mode])
