@@ -137,6 +137,7 @@ async def test_async_setup_entry_cannot_connect(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert not hasattr(mock_config_entry, "runtime_data")
 
 
 async def test_async_setup_entry_coordinator_update_fails(
