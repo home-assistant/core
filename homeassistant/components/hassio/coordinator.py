@@ -214,9 +214,6 @@ def presentable_issue_suggestions(
         # drop all suggestions, including any would break the repair
         return []
 
-    if len(issue.suggestions) == 1:
-        return issue.suggestions
-
     presentable = [
         suggestion
         for suggestion in issue.suggestions
