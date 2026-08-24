@@ -125,7 +125,7 @@ async def test_rest_command_auth(
 
     assert len(aioclient_mock.mock_calls) == 1
     _method, _url, _data, headers = aioclient_mock.mock_calls[0]
-    encoded = base64.b64encode(b"test:123456").decode()
+    encoded = base64.b64encode("tøst:123456".encode("latin-1")).decode()
     assert CIMultiDict(headers).getall("Authorization") == [f"Basic {encoded}"]
 
 
