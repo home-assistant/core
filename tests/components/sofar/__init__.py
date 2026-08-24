@@ -16,7 +16,7 @@ MOCK_USER_INPUT = {
 
 
 def seed_pv_inverter(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
-    """Seed registers for a PV-only inverter: identify() plus power control."""
+    """Seed a PV-only inverter: identify(), power control, PV strings."""
     padded = serial.ljust(14, "\x00")
     for i in range(7):
         hi, lo = ord(padded[2 * i]), ord(padded[2 * i + 1])
@@ -24,3 +24,8 @@ def seed_pv_inverter(unit: MockModbusUnit, serial: str = MOCK_SERIAL) -> None:
     unit.holding[0x0404] = 2  # Running
     unit.holding[0x0484] = 5000  # 50.00 Hz
     unit.holding[0x1105] = 0  # active power control -> nothing armed
+    unit.holding[0x0586] = 250  # pv_power_1 -> 2.5 kW
+    unit.holding[0x0589] = 180  # pv_power_2 -> 1.8 kW
+    unit.holding[0x05C4] = 43  # pv_power_total -> 4.3 kW
+    unit.holding[0x0686] = 0  # solar_generation_total high word
+    unit.holding[0x0687] = 150  # solar_generation_total low word -> 15.0 kWh

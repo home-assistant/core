@@ -8,19 +8,16 @@ from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 import pytest
+from sofar_modbus.modern.device import SofarInverter
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorStateClass
 from homeassistant.components.sofar.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.sofar.sensor import (
-    _HEALTH_DESCRIPTION,
-    _LAST_ERROR_DESCRIPTION,
-    _LAST_ERROR_TIME_DESCRIPTION,
-    _SUCCESS_RATE_DESCRIPTION,
+    SENSOR_DESCRIPTIONS,
     SofarSensor,
     SofarSensorDescription,
     SofarTotalSensor,
-    _SofarCommunicationHealthEntity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -41,112 +38,48 @@ async def test_all_entities(
     await snapshot_platform(hass, entity_registry, snapshot, init_integration.entry_id)
 
 
-async def test_communication_health_sensor(
+def test_sensor_description_components_are_real() -> None:
+    """Guards SENSOR_DESCRIPTIONS against a component/key transcription slip."""
+    inverter = SofarInverter(MockModbusConnection().for_unit(1))
+    for description in SENSOR_DESCRIPTIONS:
+        component = getattr(inverter, description.component, None)
+        assert component is not None, f"unknown component {description.component!r}"
+        assert hasattr(component, description.key), (
+            f"{description.component}.{description.key} does not exist"
+        )
+
+
+async def test_sensor_entities_created_and_state(
     hass: HomeAssistant,
-    freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
-    mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test communication_health tracks poll outcomes, incl. disabled entities."""
-    health_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_communication_health"
+    """Test the four shipped sensors are created with the right values."""
+    pv_power_1_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_pv_power_1"
     )
-    success_rate_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN,
-        "sofar",
-        f"{MOCK_SERIAL}_communication_health_success_rate",
+    pv_power_2_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_pv_power_2"
     )
-    last_error_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_communication_health_last_error"
+    pv_power_total_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_pv_power_total"
     )
-    last_error_time_id = entity_registry.async_get_entity_id(
-        SENSOR_DOMAIN,
-        "sofar",
-        f"{MOCK_SERIAL}_communication_health_last_error_time",
+    solar_generation_total_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, "sofar", f"{MOCK_SERIAL}_solar_generation_total"
     )
-    assert health_id is not None
-    assert success_rate_id is not None
-    assert last_error_id is not None
-    assert last_error_time_id is not None
-    last_error_entry = entity_registry.async_get(last_error_id)
-    last_error_time_entry = entity_registry.async_get(last_error_time_id)
-    assert last_error_entry is not None
-    assert last_error_entry.disabled_by is not None
-    assert last_error_time_entry is not None
-    assert last_error_time_entry.disabled_by is not None
+    assert pv_power_1_id is not None
+    assert pv_power_2_id is not None
+    assert pv_power_total_id is not None
+    assert solar_generation_total_id is not None
 
-    # Disabled by default: not in hass.states, so instantiate directly.
-    readings = init_integration.runtime_data.readings
-    last_error_sensor = _SofarCommunicationHealthEntity(
-        readings, _LAST_ERROR_DESCRIPTION
-    )
-    last_error_time_sensor = _SofarCommunicationHealthEntity(
-        readings, _LAST_ERROR_TIME_DESCRIPTION
-    )
-
-    assert (state := hass.states.get(health_id)) is not None
-    assert state.state == "good"
-    assert (state := hass.states.get(success_rate_id)) is not None
-    assert state.state == "100.0"
-    assert last_error_sensor.native_value is None
-    assert last_error_time_sensor.native_value is None
-
-    unit = mock_connection.for_unit(1)
-    unit.fail_read(0x0484, ModbusTimeoutError("stuck"))
-    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done()
-
-    assert (state := hass.states.get(health_id)) is not None
-    assert state.state != "good"
-    assert (state := hass.states.get(success_rate_id)) is not None
-    assert float(state.state) == readings.success_rate
-    assert readings.success_rate is not None
-    assert readings.success_rate < 100.0
-    assert last_error_sensor.native_value is not None
-    assert "ModbusTimeoutError" in last_error_sensor.native_value
-    assert last_error_time_sensor.native_value is not None
-
-
-async def test_communication_health_sensor_degraded_bucket(
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test the health sensor reports "degraded" for a rate in [80, 100)."""
-    readings = init_integration.runtime_data.readings
-    readings._poll_outcomes.clear()
-    readings._poll_outcomes.extend([True] * 9 + [False])
-
-    health_sensor = _SofarCommunicationHealthEntity(readings, _HEALTH_DESCRIPTION)
-    assert readings.success_rate == 90.0
-    assert health_sensor.native_value == "degraded"
-
-    readings._poll_outcomes.clear()
-    assert readings.success_rate is None
-    assert health_sensor.native_value == "unknown"
-
-
-async def test_communication_health_entities_stay_available_on_dead_link(
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test communication_health stays available when the link is down."""
-    readings = init_integration.runtime_data.readings
-    health_sensor = _SofarCommunicationHealthEntity(readings, _HEALTH_DESCRIPTION)
-    success_rate_sensor = _SofarCommunicationHealthEntity(
-        readings, _SUCCESS_RATE_DESCRIPTION
-    )
-    last_error_sensor = _SofarCommunicationHealthEntity(
-        readings, _LAST_ERROR_DESCRIPTION
-    )
-    last_error_time_sensor = _SofarCommunicationHealthEntity(
-        readings, _LAST_ERROR_TIME_DESCRIPTION
-    )
-
-    readings.last_update_success = False
-    assert health_sensor.available
-    assert success_rate_sensor.available
-    assert last_error_sensor.available
-    assert last_error_time_sensor.available
+    assert (state := hass.states.get(pv_power_1_id)) is not None
+    assert float(state.state) == 2.5
+    assert (state := hass.states.get(pv_power_2_id)) is not None
+    assert float(state.state) == 1.8
+    assert (state := hass.states.get(pv_power_total_id)) is not None
+    assert float(state.state) == 4.3
+    assert (state := hass.states.get(solar_generation_total_id)) is not None
+    assert float(state.state) == 15.0
 
 
 async def test_total_sensor_restore_data_parsing(

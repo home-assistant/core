@@ -1,8 +1,7 @@
 """One entity per served row; each is available independently."""
 
-from collections.abc import Callable
 from dataclasses import dataclass
-from datetime import date, datetime
+from datetime import date
 from enum import IntEnum
 from typing import cast, override
 
@@ -13,12 +12,11 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory
+from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
+from .coordinator import SofarConfigEntry, SofarRuntimeData
 from .entity import SofarEntity, SofarEntityDescription
 
 
@@ -51,99 +49,7 @@ async def async_setup_entry(
         for description in SENSOR_DESCRIPTIONS
         if description.component in served
     ]
-    readings = runtime_data.readings
-    entities.extend(
-        _SofarCommunicationHealthEntity(readings, description)
-        for description in _COMMUNICATION_HEALTH_DESCRIPTIONS
-    )
     async_add_entities(entities)
-
-
-def _health_bucket(coordinator: SofarDataUpdateCoordinator) -> str:
-    """Bucket success_rate into the communication_health ENUM options."""
-    rate = coordinator.success_rate
-    if rate is None:
-        return "unknown"
-    if rate == 100:
-        return "good"
-    if rate >= 80:
-        return "degraded"
-    return "poor"
-
-
-@dataclass(frozen=True, kw_only=True)
-class _CommunicationHealthDescription(SensorEntityDescription):
-    """Computed from the coordinator, not tied to a device component."""
-
-    entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
-    value_fn: Callable[[SofarDataUpdateCoordinator], str | float | datetime | None]
-
-
-_HEALTH_DESCRIPTION = _CommunicationHealthDescription(
-    key="communication_health",
-    translation_key="communication_health",
-    device_class=SensorDeviceClass.ENUM,
-    options=["good", "degraded", "poor", "unknown"],
-    value_fn=_health_bucket,
-)
-_SUCCESS_RATE_DESCRIPTION = _CommunicationHealthDescription(
-    key="communication_health_success_rate",
-    translation_key="communication_health_success_rate",
-    native_unit_of_measurement=PERCENTAGE,
-    state_class=SensorStateClass.MEASUREMENT,
-    value_fn=lambda coordinator: coordinator.success_rate,
-)
-_LAST_ERROR_DESCRIPTION = _CommunicationHealthDescription(
-    key="communication_health_last_error",
-    translation_key="communication_health_last_error",
-    entity_registry_enabled_default=False,
-    value_fn=lambda coordinator: coordinator.last_error,
-)
-_LAST_ERROR_TIME_DESCRIPTION = _CommunicationHealthDescription(
-    key="communication_health_last_error_time",
-    translation_key="communication_health_last_error_time",
-    device_class=SensorDeviceClass.TIMESTAMP,
-    entity_registry_enabled_default=False,
-    value_fn=lambda coordinator: coordinator.last_error_time,
-)
-
-_COMMUNICATION_HEALTH_DESCRIPTIONS: tuple[_CommunicationHealthDescription, ...] = (
-    _HEALTH_DESCRIPTION,
-    _SUCCESS_RATE_DESCRIPTION,
-    _LAST_ERROR_DESCRIPTION,
-    _LAST_ERROR_TIME_DESCRIPTION,
-)
-
-
-class _SofarCommunicationHealthEntity(
-    CoordinatorEntity[SofarDataUpdateCoordinator], SensorEntity
-):
-    """Sensor computed from the coordinator; available even on a dead link."""
-
-    _attr_has_entity_name = True
-    entity_description: _CommunicationHealthDescription
-
-    def __init__(
-        self,
-        coordinator: SofarDataUpdateCoordinator,
-        description: _CommunicationHealthDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self.entity_description = description
-        serial = coordinator.device.serial_number
-        self._attr_unique_id = f"{serial}_{description.key}"
-        self._attr_device_info = coordinator.device_info
-
-    @property
-    @override
-    def available(self) -> bool:
-        return True
-
-    @property
-    @override
-    def native_value(self) -> str | float | datetime | None:
-        return self.entity_description.value_fn(self.coordinator)
 
 
 class SofarSensor(SofarEntity, SensorEntity):
@@ -230,4 +136,40 @@ class SofarSensorDescription(SensorEntityDescription, SofarEntityDescription):
     """A SensorEntityDescription bound to which Component the value comes from."""
 
 
-SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = ()
+SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
+    SofarSensorDescription(
+        key="pv_power_1",
+        component="pv_1_2",
+        translation_key="pv_power_1",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+    ),
+    SofarSensorDescription(
+        key="pv_power_2",
+        component="pv_1_2",
+        translation_key="pv_power_2",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        suggested_display_precision=2,
+    ),
+    SofarSensorDescription(
+        key="pv_power_total",
+        component="pv_1_2",
+        translation_key="pv_power_total",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.KILO_WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+    ),
+    SofarSensorDescription(
+        key="solar_generation_total",
+        component="energy",
+        translation_key="solar_generation_total",
+        device_class=SensorDeviceClass.ENERGY,
+        native_unit_of_measurement=UnitOfEnergy.KILO_WATT_HOUR,
+        state_class=SensorStateClass.TOTAL_INCREASING,
+        suggested_display_precision=2,
+    ),
+)

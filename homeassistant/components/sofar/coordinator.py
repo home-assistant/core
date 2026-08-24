@@ -1,9 +1,8 @@
 """Runs one of SofarInverter's update methods on its own interval."""
 
-from collections import deque
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from datetime import datetime, timedelta
+from datetime import timedelta
 import logging
 from typing import override
 
@@ -16,13 +15,10 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
 from .const import ATTR_MANUFACTURER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-_HEALTH_WINDOW = 60  # ~5min at the 5s readings interval
 
 
 class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
@@ -50,9 +46,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self.device = device
         self._poll = poll
         self._consecutive_failures: dict[str, int] = {}
-        self._poll_outcomes: deque[bool] = deque(maxlen=_HEALTH_WINDOW)
-        self.last_error: str | None = None
-        self.last_error_time: datetime | None = None
 
     @cached_property
     def device_info(self) -> DeviceInfo:
@@ -65,19 +58,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             model=self.device.model or None,
             serial_number=serial,
         )
-
-    @property
-    def success_rate(self) -> float | None:
-        """Success rate over recent cycles — whole-device, not per-component."""
-        if not self._poll_outcomes:
-            return None
-        return round(100 * sum(self._poll_outcomes) / len(self._poll_outcomes), 1)
-
-    def _record_poll_outcome(self, success: bool, error: ModbusError | None) -> None:
-        self._poll_outcomes.append(success)
-        if error is not None:
-            self.last_error = f"{type(error).__name__}: {error}"
-            self.last_error_time = dt_util.utcnow()
 
     @property
     def served_components(self) -> frozenset[str]:
@@ -93,7 +73,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             report = await self._retry_failed(report)
             if not report.updated:
                 errors = list(report.failed.values())
-                self._record_poll_outcome(False, errors[0] if errors else None)
                 if not errors:
                     raise UpdateFailed(f"{self.name}: no component answered")
                 raise UpdateFailed(
@@ -102,12 +81,8 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
             # here; per-block failures once alive land in report.failed instead.
-            self._record_poll_outcome(False, err)
             raise UpdateFailed(str(err)) from err
         else:
-            self._record_poll_outcome(
-                not report.failed, next(iter(report.failed.values()), None)
-            )
             return report
 
     async def _retry_failed(self, report: UpdateReport) -> UpdateReport:

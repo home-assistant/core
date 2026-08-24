@@ -25,17 +25,17 @@
   },
   "entity": {
     "sensor": {
-      "communication_health": {
-        "name": "Communication health"
+      "pv_power_1": {
+        "name": "PV power 1"
       },
-      "communication_health_last_error": {
-        "name": "Last error"
+      "pv_power_2": {
+        "name": "PV power 2"
       },
-      "communication_health_last_error_time": {
-        "name": "Last error time"
+      "pv_power_total": {
+        "name": "PV power total"
       },
-      "communication_health_success_rate": {
-        "name": "Success rate"
+      "solar_generation_total": {
+        "name": "Solar generation total"
       }
     }
   }
