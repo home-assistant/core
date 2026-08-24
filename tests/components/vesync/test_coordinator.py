@@ -4,6 +4,7 @@ from datetime import timedelta
 import time
 
 from freezegun.api import FrozenDateTimeFactory
+from pyvesync import VeSync
 
 from homeassistant.components.vesync.const import UPDATE_INTERVAL_ENERGY
 from homeassistant.components.vesync.coordinator import VeSyncDataCoordinator
@@ -14,7 +15,7 @@ from homeassistant.core import HomeAssistant
 async def test_should_update_energy(
     hass: HomeAssistant,
     config_entry: ConfigEntry,
-    manager,
+    manager: VeSync,
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test energy data is only refreshed once per interval."""
