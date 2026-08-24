@@ -34,9 +34,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the RTM todo platform."""
     coordinator = entry.runtime_data.coordinator
-    for subentry in entry.subentries.values():
-        if subentry.subentry_type != SUBENTRY_TYPE_LIST:
-            continue
+    for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LIST):
         async_add_entities(
             [RtmTodoListEntity(coordinator, subentry)],
             config_subentry_id=subentry.subentry_id,
@@ -101,19 +99,15 @@ class RtmTodoListEntity(CoordinatorEntity[RtmTodoCoordinator], TodoListEntity):
     def todo_items(self) -> list[TodoItem]:
         """Return the To-do items in the To-do list."""
         rtm_list = self.coordinator.data.get(self._list_id)
-        return [rtm_task.todo_item for rtm_task in (rtm_list.tasks if rtm_list else [])]
+        return [
+            rtm_task.todo_item
+            for rtm_task in (rtm_list.tasks.values() if rtm_list else [])
+        ]
 
     def _find_rtm_task(self, uid: str) -> RtmTask | None:
         """Return the RtmTask for the given UID, or None if not found."""
         rtm_list = self.coordinator.data.get(self._list_id)
-        return next(
-            (
-                rtm_task
-                for rtm_task in (rtm_list.tasks if rtm_list else [])
-                if rtm_task.uid == uid
-            ),
-            None,
-        )
+        return rtm_list.tasks.get(uid) if rtm_list else None
 
     @handle_api_errors
     @override

@@ -23,7 +23,7 @@ class RtmList:
     """An RTM list with its name and current tasks."""
 
     name: str
-    tasks: list[RtmTask]
+    tasks: dict[str, RtmTask]
 
 
 @dataclass
@@ -80,7 +80,7 @@ class RtmTodoCoordinator(DataUpdateCoordinator[dict[int, RtmList]]):
             raise UpdateFailed(f"Error communicating with API: {err}") from err
 
         result: dict[int, RtmList] = {
-            lst.id: RtmList(name=lst.name, tasks=[])
+            lst.id: RtmList(name=lst.name, tasks={})
             for lst in lists_response.lists
             if not (lst.smart or lst.archived or lst.locked or lst.deleted)
         }
@@ -106,18 +106,16 @@ class RtmTodoCoordinator(DataUpdateCoordinator[dict[int, RtmList]]):
                         first_note = taskseries.notes[0]
                         description = first_note.body or None
                         note_id = first_note.id
-                    result[task_list.id].tasks.append(
-                        RtmTask(
+                    result[task_list.id].tasks[uid] = RtmTask(
+                        uid=uid,
+                        todo_item=TodoItem(
                             uid=uid,
-                            todo_item=TodoItem(
-                                uid=uid,
-                                summary=taskseries.name,
-                                status=status,
-                                due=due,
-                                description=description,
-                            ),
-                            note_id=note_id,
-                        )
+                            summary=taskseries.name,
+                            status=status,
+                            due=due,
+                            description=description,
+                        ),
+                        note_id=note_id,
                     )
         self._async_sync_subentries(result)
         return result
@@ -128,8 +126,7 @@ class RtmTodoCoordinator(DataUpdateCoordinator[dict[int, RtmList]]):
         entry = self.config_entry
         existing = {
             subentry.data[CONF_LIST_ID]: subentry
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_LIST
+            for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LIST)
         }
         for list_id, rtm_list in lists.items():
             subentry = existing.get(list_id)
