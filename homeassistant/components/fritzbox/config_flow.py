@@ -288,7 +288,9 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="reconfigure",
             data_schema=vol.Schema(
                 {
-                    vol.Required(CONF_URL, default=self._url): str,
+                    vol.Required(CONF_URL, default=self._url): TextSelector(
+                        config=TextSelectorConfig(type=TextSelectorType.URL)
+                    ),
                     vol.Required(CONF_VERIFY_SSL, default=self._verify_ssl): bool,
                 }
             ),
