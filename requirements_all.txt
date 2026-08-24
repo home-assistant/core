@@ -1608,7 +1608,7 @@ moat-ble==0.1.1
 
 # homeassistant.components.modbus
 # homeassistant.components.sofar
-modbus-connection[tmodbus]==4.8.1
+modbus-connection[tmodbus]==4.9.0
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
