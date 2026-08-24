@@ -89,7 +89,7 @@ def setup_platform(
         hass,
         DOMAIN,
         "deprecated_yaml",
-        breaks_in_ha_version="2027.2.0",
+        breaks_in_ha_version="2027.3.0",
         is_fixable=False,
         issue_domain=DOMAIN,
         severity=ir.IssueSeverity.WARNING,
