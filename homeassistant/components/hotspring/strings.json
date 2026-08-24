@@ -18,6 +18,10 @@
           "host": "Hostname or IP address of your Hot Spring Home Network Adapter (HNA)."
         },
         "description": "Set up your Hot Spring Home Network Adapter (HNA) to integrate with Home Assistant."
+      },
+      "zeroconf_confirm": {
+        "description": "Do you want to add the Hot Spring spa named `{name}` to Home Assistant?",
+        "title": "Discovered Hot Spring spa"
       }
     }
   },
@@ -25,6 +29,29 @@
     "number": {
       "target_temperature": {
         "name": "Target temperature"
+      }
+    },
+    "sensor": {
+      "control_box_version": {
+        "name": "Control box version"
+      },
+      "current_temperature": {
+        "name": "Current temperature"
+      },
+      "fwss_version": {
+        "name": "FreshWater Salt System version"
+      },
+      "water_care_10_day_timer": {
+        "name": "Salt 10-day check timer"
+      },
+      "water_care_120_day_timer": {
+        "name": "Salt cartridge age"
+      },
+      "water_care_salt_value": {
+        "name": "Salt value"
+      },
+      "wifi_dongle_version": {
+        "name": "Wi-Fi dongle version"
       }
     }
   },
