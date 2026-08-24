@@ -16,7 +16,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.setup import async_setup_component
 
-from .utils import MockUFPFixture, init_entry
+from .utils import MockUFPFixture, init_entry, setup_public_sensor
 
 from tests.typing import WebSocketGenerator
 
@@ -468,6 +468,45 @@ async def test_migrate_sense_setting_mirror_in_use(
     )
     assert issue is not None
     assert issue.translation_placeholders["entity_id"] == mirror.entity_id
+    replacement_id = entity_registry.async_get_entity_id(
+        Platform.SWITCH, DOMAIN, f"{sensor_all.mac}_alarm"
+    )
+    assert issue.translation_placeholders["replacement"] == replacement_id
+
+
+async def test_migrate_sense_setting_mirror_in_use_no_replacement(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """A device that cannot support the setting gets the no-replacement repair."""
+    setup_public_sensor(ufp, capabilities=set())
+    mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_alarm",
+        config_entry=ufp.entry,
+    )
+    await _load_automation(hass, mirror.entity_id)
+
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+
+    assert entity_registry.async_get(mirror.entity_id) is None
+    assert (
+        entity_registry.async_get_entity_id(
+            Platform.SWITCH, DOMAIN, f"{sensor_all.mac}_alarm"
+        )
+        is None
+    )
+    issue = issue_registry.async_get_issue(
+        DOMAIN, f"sense_setting_mirror_removed_{sensor_all.mac}_alarm"
+    )
+    assert issue is not None
+    assert issue.translation_key == "sense_setting_mirror_removed_no_replacement"
+    assert issue.translation_placeholders["entity_id"] == mirror.entity_id
+    assert "replacement" not in issue.translation_placeholders
 
 
 async def test_migrate_sense_setting_keys_scoped_to_sensors(
