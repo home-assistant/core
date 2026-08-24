@@ -222,7 +222,11 @@ class RtmTodoListEntity(CoordinatorEntity[RtmTodoCoordinator], TodoListEntity):
                 title="",
                 text=new_description,
             )
-        elif note_id is not None:
+        elif (
+            note_id is not None
+            and existing is not None
+            and existing.todo_item.description is not None
+        ):
             await client.rtm.tasks.notes.delete(
                 timeline=timeline,
                 note_id=note_id,

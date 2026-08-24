@@ -534,6 +534,46 @@ async def test_update_todo_item_delete_description(
     client.rtm.tasks.notes.edit.assert_not_called()
 
 
+@pytest.mark.usefixtures("storage")
+async def test_update_todo_item_empty_note_preserved(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that an unrelated update does not delete a note with an empty body.
+
+    RTM notes can have a title but an empty body. The coordinator represents those
+    as description=None (because body or None collapses an empty string), but the
+    note still has a note_id. An unrelated update (e.g. completing the task) must
+    not delete that note.
+    """
+    note = MagicMock()
+    note.id = 55
+    note.body = ""
+    _set_tasks_response(
+        client, _make_task_list(LIST_ID, 10, 1, "Buy milk", notes=[note])
+    )
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    uid = f"{LIST_ID}_10_1"
+    await hass.services.async_call(
+        TODO_DOMAIN,
+        TodoServices.UPDATE_ITEM,
+        {
+            ATTR_ENTITY_ID: ENTITY_ID,
+            ATTR_ITEM: uid,
+            ATTR_STATUS: TodoItemStatus.COMPLETED,
+        },
+        blocking=True,
+    )
+
+    client.rtm.tasks.notes.delete.assert_not_called()
+    client.rtm.tasks.notes.edit.assert_not_called()
+    client.rtm.tasks.notes.add.assert_not_called()
+
+
 @pytest.mark.usefixtures("client", "storage")
 async def test_setup_skips_non_list_subentries(hass: HomeAssistant) -> None:
     """Test that async_setup_entry ignores subentries that are not list subentries."""
