@@ -115,6 +115,9 @@
     "coordinator_connection_error": {
       "message": "Error while establishing connection with BSB-LAN device at {host}"
     },
+    "coordinator_state_error": {
+      "message": "Error while fetching state data for heating circuit {circuit} from the BSB-LAN device at {host}"
+    },
     "end_time_before_start_time": {
       "message": "End time ({end_time}) must be after start time ({start_time})"
     },
@@ -123,6 +126,9 @@
     },
     "no_config_entry_for_device": {
       "message": "No configuration entry found for device: {device_id}"
+    },
+    "not_a_water_heater_device": {
+      "message": "The selected device ({device_name}) is not a water heater. Please select the water heater sub-device."
     },
     "set_data_error": {
       "message": "An error occurred while sending the data to the BSB-LAN device"
@@ -145,8 +151,17 @@
     "setup_general_error": {
       "message": "An unknown error occurred while retrieving static device data"
     },
+    "setup_outdated_firmware": {
+      "message": "Your BSB-LAN device is running firmware {firmware_version}, which is no longer supported. Please update your BSB-LAN board firmware to a newer version to keep using this integration."
+    },
     "sync_time_failed": {
       "message": "Failed to sync time for {device_name}: {error}"
+    }
+  },
+  "issues": {
+    "outdated_firmware": {
+      "description": "Your BSB-LAN device is running firmware {firmware_version}, which uses an older JSON-API version that only supports a reduced set of features. Update your BSB-LAN firmware to enable full support, including multiple heating circuits.",
+      "title": "Update your BSB-LAN firmware"
     }
   },
   "services": {

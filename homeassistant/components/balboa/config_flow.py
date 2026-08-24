@@ -1,7 +1,7 @@
 """Config flow for Balboa Spa Client integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from pybalboa import SpaClient
 from pybalboa.exceptions import SpaConnectionError
@@ -59,10 +59,12 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(config_entry: ConfigEntry) -> SchemaOptionsFlowHandler:
         """Get the options flow for this handler."""
         return SchemaOptionsFlowHandler(config_entry, OPTIONS_FLOW)
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -100,6 +102,7 @@ class BalboaSpaClientFlowHandler(ConfigFlow, domain=DOMAIN):
             description_placeholders={CONF_HOST: self._host},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

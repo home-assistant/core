@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 from greencell_client.utils import GreencellUtils
 import voluptuous as vol
@@ -64,6 +64,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             if self._discovery_event:
                 self._discovery_event.set()
 
+    @override
     async def async_step_mqtt(
         self, discovery_info: MqttServiceInfo
     ) -> config_entries.ConfigFlowResult:
@@ -103,6 +104,7 @@ class EVSEConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             description_placeholders={"serial": serial},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> config_entries.ConfigFlowResult:

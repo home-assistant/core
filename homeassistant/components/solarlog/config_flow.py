@@ -1,7 +1,7 @@
 """Config flow for solarlog integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 from urllib.parse import ParseResult, urlparse
 
 from solarlog_cli.solarlog_connector import SolarLogConnector
@@ -70,6 +70,7 @@ class SolarLogConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return response
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

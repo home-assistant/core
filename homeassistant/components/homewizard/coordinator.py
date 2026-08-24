@@ -1,5 +1,7 @@
 """Update coordinator for HomeWizard."""
 
+from typing import override
+
 from homewizard_energy import HomeWizardEnergy
 from homewizard_energy.errors import DisabledError, RequestError, UnauthorizedError
 from homewizard_energy.models import Batteries, CombinedModels as DeviceResponseEntry
@@ -73,6 +75,7 @@ class HWEnergyDeviceUpdateCoordinator(DataUpdateCoordinator[DeviceResponseEntry]
         elif not battery_mode_cloud_issue_active and issue_exists:
             ir.async_delete_issue(self.hass, DOMAIN, issue_id)
 
+    @override
     async def _async_update_data(self) -> DeviceResponseEntry:
         """Fetch all device and sensor data from api."""
         try:

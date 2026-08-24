@@ -1,7 +1,7 @@
 """Support for Slide slides."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import ATTR_POSITION, CoverDeviceClass, CoverEntity
 from homeassistant.const import ATTR_ID
@@ -55,16 +55,19 @@ class SlideCover(CoverEntity):
         self._invert = slide["invert"]
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if the cover is opening or not."""
         return self._slide["state"] == OPENING
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if the cover is closing or not."""
         return self._slide["state"] == CLOSING
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return None if status is unknown, True if closed, else False."""
         if self._slide["state"] is None:
@@ -72,11 +75,13 @@ class SlideCover(CoverEntity):
         return self._slide["state"] == CLOSED
 
     @property
+    @override
     def available(self) -> bool:
         """Return False if state is not available."""
         return self._slide["online"]
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Return the current position of cover shutter."""
         if (pos := self._slide["pos"]) is not None:
@@ -87,20 +92,24 @@ class SlideCover(CoverEntity):
             pos = int(pos * 100)
         return pos
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         self._slide["state"] = OPENING
         await self._api.slide_open(self._id)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         self._slide["state"] = CLOSING
         await self._api.slide_close(self._id)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         await self._api.slide_stop(self._id)
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move the cover to a specific position."""
         position = kwargs[ATTR_POSITION] / 100

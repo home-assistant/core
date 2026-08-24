@@ -14,6 +14,7 @@ from aiohttp.web import HTTPBadRequest, Request, Response, json_response
 from nacl.exceptions import CryptoError
 from nacl.secret import SecretBox
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.components import (
     camera,
@@ -35,11 +36,11 @@ from homeassistant.const import (
     ATTR_MODEL,
     ATTR_SERVICE,
     ATTR_SERVICE_DATA,
-    ATTR_SUPPORTED_FEATURES,
     CONF_NAME,
     CONF_UNIQUE_ID,
     CONF_WEBHOOK_ID,
     EntityCategory,
+    EntityStateAttribute,
 )
 from homeassistant.core import EventOrigin, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceNotFound, TemplateError
@@ -159,7 +160,7 @@ def validate_schema(schema):
             try:
                 data = schema(data)
             except vol.Invalid as ex:
-                err = vol.humanize.humanize_error(data, ex)
+                err = humanize_error(data, ex)
                 _LOGGER.error("Received invalid webhook payload: %s", err)
                 return empty_okay_response()
 
@@ -200,7 +201,7 @@ async def handle_webhook(
     try:
         req_data = WEBHOOK_PAYLOAD_SCHEMA(req_data)
     except vol.Invalid as ex:
-        err = vol.humanize.humanize_error(req_data, ex)
+        err = humanize_error(req_data, ex)
         _LOGGER.error(
             "Received invalid webhook from %s with payload: %s", device_name, err
         )
@@ -352,7 +353,10 @@ async def webhook_stream_camera(
         "mjpeg_path": f"/api/camera_proxy_stream/{camera_state.entity_id}"
     }
 
-    if camera_state.attributes[ATTR_SUPPORTED_FEATURES] & CameraEntityFeature.STREAM:
+    if (
+        camera_state.attributes[EntityStateAttribute.SUPPORTED_FEATURES]
+        & CameraEntityFeature.STREAM
+    ):
         try:
             resp["hls_path"] = await camera.async_request_stream(
                 hass, camera_state.entity_id, "hls"
@@ -648,7 +652,7 @@ async def webhook_update_sensor_states(
         try:
             sensor = SENSOR_SCHEMA_FULL(sensor)
         except vol.Invalid as err:
-            err_msg = vol.humanize.humanize_error(sensor, err)
+            err_msg = humanize_error(sensor, err)
             _LOGGER.error(
                 "Received invalid sensor payload from %s for %s: %s",
                 device_name,

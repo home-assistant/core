@@ -29,8 +29,8 @@ async def test_services(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test the Fully Kiosk Browser services."""
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "abcdef-123456")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "abcdef-123456"), init_integration.entry_id
     )
 
     assert device_entry
@@ -127,8 +127,8 @@ async def test_service_unloaded_entry(
     """Test service not called when config entry unloaded."""
     await hass.config_entries.async_unload(init_integration.entry_id)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "abcdef-123456")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "abcdef-123456"), init_integration.entry_id
     )
 
     assert device_entry

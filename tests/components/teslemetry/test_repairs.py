@@ -21,11 +21,7 @@ from . import setup_platform
 from .const import METADATA
 
 from tests.common import async_fire_time_changed
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 VEHICLE_VIN = "LRW3F7EK4NC700000"
@@ -166,7 +162,6 @@ async def test_repair_fix_flow(
 ) -> None:
     """Test the fix flow re-checks metadata and resolves once fixed."""
     assert await async_setup_component(hass, "repairs", {})
-    await async_process_repairs_platforms(hass)
     client = await hass_client()
 
     with patch(

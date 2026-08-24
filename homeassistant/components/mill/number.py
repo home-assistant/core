@@ -1,5 +1,7 @@
 """Support for mill wifi-enabled home heaters."""
 
+from typing import override
+
 from mill import Heater, MillDevice
 
 from homeassistant.components.number import NumberDeviceClass, NumberEntity
@@ -47,12 +49,14 @@ class MillNumber(MillBaseEntity, NumberEntity):
         super().__init__(coordinator, mill_device)
 
     @callback
+    @override
     def _update_attr(self, device: MillDevice) -> None:
         self._attr_native_value = device.data["deviceSettings"]["reported"].get(
             "max_heater_power"
         )
         self._available = device.available and self._attr_native_value is not None
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Set new value."""
         await self.coordinator.mill_data_connection.max_heating_power(self._id, value)

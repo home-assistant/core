@@ -147,6 +147,7 @@ class NotifyEntity(RestoreEntity):
         self.__dict__.pop("state", None)
         self.__last_notified_isoformat = state
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the notify entity is added to hass."""
         await super().async_internal_added_to_hass()

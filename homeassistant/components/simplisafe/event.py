@@ -1,7 +1,7 @@
 """Support for SimpliSafe events."""
 
 from dataclasses import dataclass
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from simplipy.device import Device
 from simplipy.device.camera import CameraTypes
@@ -149,6 +149,7 @@ class SimpliSafeEvent(SimpliSafeEntity, EventEntity):
         self._attr_unique_id = unique_id
 
     @callback
+    @override
     def _handle_websocket_update(self, event: WebsocketEvent) -> None:
         """Update the entity with new websocket data."""
         if self._ws_serial and event.sensor_serial != self._ws_serial:
@@ -157,6 +158,7 @@ class SimpliSafeEvent(SimpliSafeEntity, EventEntity):
         super()._handle_websocket_update(event)
 
     @callback
+    @override
     def async_update_from_websocket_event(self, event: WebsocketEvent) -> None:
         """Update the entity when new data comes from the websocket."""
         assert event.event_type is not None

@@ -6,7 +6,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'automatic_test',
         'device_test',
         'secret_alert_triggered',
@@ -47,15 +47,15 @@
 # name: test_event_entities[event.alarm_control_panel_system_events-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'event_type': None,
-      'event_types': list([
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'automatic_test',
         'device_test',
         'secret_alert_triggered',
         'sensor_paired_and_named',
         'user_initiated_test',
       ]),
-      'friendly_name': 'Alarm control panel System events',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Alarm control panel System events',
       'last_event_info': 'System Disarmed by PIN 2',
       'last_event_sensor_name': 'Kitchen',
       'last_event_sensor_type': 'keypad',
@@ -77,7 +77,7 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'event_types': list([
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'camera_motion_detected',
       ]),
     }),
@@ -114,12 +114,12 @@
 # name: test_event_entities[event.camera_camera_motion-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'device_class': 'motion',
-      'event_type': None,
-      'event_types': list([
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'motion',
+      <EventEntityStateAttribute.EVENT_TYPE: 'event_type'>: None,
+      <EventEntityCapabilityAttribute.EVENT_TYPES: 'event_types'>: list([
         'camera_motion_detected',
       ]),
-      'friendly_name': 'Camera Camera Motion',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Camera Camera Motion',
       'last_event_info': 'System Disarmed by PIN 2',
       'last_event_sensor_name': 'Kitchen',
       'last_event_sensor_type': 'keypad',

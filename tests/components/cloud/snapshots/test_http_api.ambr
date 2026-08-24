@@ -21,7 +21,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 22
+  Built-in integrations: 23
   Custom integrations: 1
   
   <details><summary>Built-in integrations</summary>
@@ -42,6 +42,7 @@
   homeassistant | Home Assistant Core Integration
   http | HTTP
   intent | Intent
+  llm | LLM
   media_source | Media Source
   mock_no_info_integration | mock_no_info_integration
   repairs | Repairs
@@ -156,7 +157,7 @@
   
   ## Active Integrations
   
-  Built-in integrations: 22
+  Built-in integrations: 23
   Custom integrations: 0
   
   <details><summary>Built-in integrations</summary>
@@ -177,6 +178,7 @@
   homeassistant | Home Assistant Core Integration
   http | HTTP
   intent | Intent
+  llm | LLM
   media_source | Media Source
   mock_no_info_integration | mock_no_info_integration
   repairs | Repairs

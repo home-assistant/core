@@ -1,5 +1,7 @@
 """Balboa entities."""
 
+from typing import override
+
 from pybalboa import EVENT_UPDATE, SpaClient
 
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -30,10 +32,12 @@ class BalboaEntity(Entity):
         self._client = client
 
     @property
+    @override
     def assumed_state(self) -> bool:
         """Return whether the state is based on actual reading from device."""
         return not self._client.available
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self.async_on_remove(self._client.on(EVENT_UPDATE, self.async_write_ha_state))

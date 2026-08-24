@@ -1,7 +1,7 @@
 """Config flow for the Teleinfo integration."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import serial
 from teleinfo import decode, read_frame
@@ -57,6 +57,7 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
             return errors, None
         return errors, decoded_data
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -83,6 +84,7 @@ class TeleinfoConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_usb(self, discovery_info: UsbServiceInfo) -> ConfigFlowResult:
         """Handle USB discovery."""
         # Resolve stable /dev/serial/by-id/ path

@@ -1,7 +1,7 @@
 """Support for interacting with Digital Ocean droplets."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -73,16 +73,19 @@ class DigitalOceanSwitch(SwitchEntity):
         self._state = None
 
     @property
+    @override
     def name(self):
         """Return the name of the switch."""
         return self.data.name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if switch is on."""
         return self.data.status == "active"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes of the Digital Ocean droplet."""
         return {
@@ -97,11 +100,13 @@ class DigitalOceanSwitch(SwitchEntity):
             ATTR_VCPUS: self.data.vcpus,
         }
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Boot-up the droplet."""
         if self.data.status != "active":
             self.data.power_on()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Shutdown the droplet."""
         if self.data.status == "active":

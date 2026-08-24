@@ -3,7 +3,7 @@
 import datetime
 import json
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import growattServer
 from growattServer import GrowattV1ApiErrorCode
@@ -72,6 +72,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # executor thread (_sync_update_data). Bool assignment is atomic under CPython's GIL.
         self._fetch_device_list: bool = False
 
+        # api is an OpenApiV1 (v1) or its base class GrowattApi (classic), chosen
+        # by api_version. The two expose different method sets, and mypy cannot
+        # narrow self.api by api_version at each call site, so it is typed as Any.
+        self.api: Any
         if self.api_version == "v1":
             self.username = None
             self.password = None
@@ -331,6 +335,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         return self.data
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Asynchronously update data via library."""
         try:

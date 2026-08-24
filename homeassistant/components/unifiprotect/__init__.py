@@ -159,12 +159,31 @@ async def _async_setup_entry(
     await async_migrate_data(hass, entry, data_service.api, bootstrap)
     data_service.async_setup()
 
-    # Prime the public bootstrap. The devices websocket subscription was already
-    # registered in async_setup() per library docs (subscribe first, then prime).
+    # Prime the public bootstrap (subscribe-then-prime, per library docs). Camera
+    # streams depend on it, so a failed prime retries instead of building
+    # streamless cameras.
     try:
-        await data_service.api.update_public()
-    except Exception:  # noqa: BLE001
-        _LOGGER.debug("Public API bootstrap update failed", exc_info=True)
+        await data_service.async_update_public()
+    except NotAuthorized as err:
+        # A public 401 means a bad/revoked API key (independent of the private
+        # session); route to reauth instead of retrying forever.
+        await data_service.async_stop()
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="api_key_required",
+        ) from err
+    except (TimeoutError, ClientError, ServerDisconnectedError) as err:
+        # async_setup() already subscribed the websockets and started polling;
+        # tear them down so a setup retry does not leak another set.
+        await data_service.async_stop()
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="public_bootstrap_failed",
+        ) from err
+
+    # The bootstrap is primed above (a failed prime aborts setup and HA retries),
+    # so the public events websocket can be subscribed here.
+    data_service.async_subscribe_public_events()
 
     # Load PTZ patrol data before loading platforms
     await data_service.async_load_ptz_patrols()
@@ -173,7 +192,7 @@ async def _async_setup_entry(
     # This ensures via_device references work for all device entities
     nvr = bootstrap.nvr
     device_registry = dr.async_get(hass)
-    device_registry.async_get_or_create(
+    nvr_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         connections={(dr.CONNECTION_NETWORK_MAC, nvr.mac)},
         identifiers={(DOMAIN, nvr.mac)},
@@ -183,6 +202,7 @@ async def _async_setup_entry(
         sw_version=str(nvr.version),
         configuration_url=nvr.api.base_url,
     )
+    data_service.nvr_device_id = nvr_device.id
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     hass.http.register_view(ThumbnailProxyView(hass))
@@ -217,9 +237,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: UFPConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: UFPConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove ufp config entry from a device."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     unifi_macs = {
         _async_unifi_mac_from_hass(connection[1])
         for connection in device_entry.connections

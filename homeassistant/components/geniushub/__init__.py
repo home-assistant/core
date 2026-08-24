@@ -5,12 +5,9 @@ import logging
 
 import aiohttp
 from geniushubclient import GeniusHub
-import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_ENTITY_ID,
-    ATTR_TEMPERATURE,
     CONF_HOST,
     CONF_MAC,
     CONF_PASSWORD,
@@ -18,14 +15,15 @@ from homeassistant.const import (
     CONF_USERNAME,
     Platform,
 )
-from homeassistant.core import HomeAssistant, ServiceCall, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
-from homeassistant.helpers.service import verify_domain_control
+from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
+from .services import setup_service_functions
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -33,31 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 SCAN_INTERVAL = timedelta(seconds=60)
 
 MAC_ADDRESS_REGEXP = r"^([0-9A-F]{2}:){5}([0-9A-F]{2})$"
-
-ATTR_ZONE_MODE = "mode"
-ATTR_DURATION = "duration"
-
-SVC_SET_ZONE_MODE = "set_zone_mode"
-SVC_SET_ZONE_OVERRIDE = "set_zone_override"
-
-SET_ZONE_MODE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_ZONE_MODE): vol.In(["off", "timer", "footprint"]),
-    }
-)
-SET_ZONE_OVERRIDE_SCHEMA = vol.Schema(
-    {
-        vol.Required(ATTR_ENTITY_ID): cv.entity_id,
-        vol.Required(ATTR_TEMPERATURE): vol.All(
-            vol.Coerce(float), vol.Range(min=4, max=28)
-        ),
-        vol.Optional(ATTR_DURATION): vol.All(
-            cv.time_period,
-            vol.Range(min=timedelta(minutes=5), max=timedelta(days=1)),
-        ),
-    }
-)
 
 PLATFORMS = [
     Platform.BINARY_SENSOR,
@@ -69,6 +42,14 @@ PLATFORMS = [
 
 
 type GeniusHubConfigEntry = ConfigEntry[GeniusBroker]
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up Genius Hub services."""
+    setup_service_functions(hass)
+    return True
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) -> bool:
@@ -111,47 +92,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: GeniusHubConfigEntry) ->
 
     async_track_time_interval(hass, broker.async_update, SCAN_INTERVAL)
 
-    setup_service_functions(hass, broker)
-
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
-
-
-@callback
-def setup_service_functions(hass: HomeAssistant, broker):
-    """Set up the service functions."""
-
-    @verify_domain_control(DOMAIN)
-    async def set_zone_mode(call: ServiceCall) -> None:
-        """Set the system mode."""
-        entity_id = call.data[ATTR_ENTITY_ID]
-
-        registry = er.async_get(hass)
-        registry_entry = registry.async_get(entity_id)
-
-        if registry_entry is None or registry_entry.platform != DOMAIN:
-            raise ValueError(f"'{entity_id}' is not a known {DOMAIN} entity")
-
-        if registry_entry.domain != "climate":
-            raise ValueError(f"'{entity_id}' is not an {DOMAIN} zone")
-
-        payload = {
-            "unique_id": registry_entry.unique_id,
-            "service": call.service,
-            "data": call.data,
-        }
-
-        async_dispatcher_send(hass, DOMAIN, payload)
-
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN, SVC_SET_ZONE_MODE, set_zone_mode, schema=SET_ZONE_MODE_SCHEMA
-    )
-    # pylint: disable-next=home-assistant-service-registered-in-setup-entry
-    hass.services.async_register(
-        DOMAIN, SVC_SET_ZONE_OVERRIDE, set_zone_mode, schema=SET_ZONE_OVERRIDE_SCHEMA
-    )
 
 
 class GeniusBroker:

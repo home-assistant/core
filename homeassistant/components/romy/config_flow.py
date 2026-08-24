@@ -1,5 +1,7 @@
 """Config flow for ROMY integration."""
 
+from typing import override
+
 import romy
 import voluptuous as vol
 
@@ -22,6 +24,7 @@ class RomyConfigFlow(ConfigFlow, domain=DOMAIN):
         self.password: str = ""
         self.robot_name_given_by_user: str = ""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, str] | None = None
     ) -> ConfigFlowResult:
@@ -81,6 +84,7 @@ class RomyConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:

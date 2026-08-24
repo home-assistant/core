@@ -1,26 +1,19 @@
 """Proxmox parent entity class."""
 
-from typing import Any
+from typing import Any, override
 
-from yarl import URL
-
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import ProxmoxCoordinator, ProxmoxNodeData
-
-
-def _proxmox_base_url(coordinator: ProxmoxCoordinator) -> URL:
-    """Return the base URL for the Proxmox VE."""
-    data = coordinator.config_entry.data
-    return URL.build(
-        scheme="https",
-        host=data[CONF_HOST],
-        port=data[CONF_PORT],
-    )
+from .coordinator import (
+    ProxmoxCoordinator,
+    ProxmoxNodeData,
+    node_device_info,
+    proxmox_base_url,
+)
 
 
 class ProxmoxCoordinatorEntity(CoordinatorEntity[ProxmoxCoordinator]):
@@ -44,16 +37,7 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
         self.device_id = node_data.node["id"]
         self.device_name = node_data.node["node"]
         self.entity_description = entity_description
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.entry_id}_node_{self.device_id}")
-            },
-            name=node_data.node.get("node", str(self.device_id)),
-            model="Node",
-            configuration_url=_proxmox_base_url(coordinator).with_fragment(
-                f"v1:0:=node/{node_data.node['node']}"
-            ),
-        )
+        self._attr_device_info = node_device_info(coordinator, node_data)
 
         self._attr_unique_id = (
             f"{coordinator.config_entry.entry_id}"
@@ -62,6 +46,7 @@ class ProxmoxNodeEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return super().available and self.device_name in self.coordinator.data
@@ -94,12 +79,16 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
             },
             name=f"Storage ({self.device_name})",
             model="Storage",
-            configuration_url=_proxmox_base_url(coordinator).with_fragment(
+            configuration_url=proxmox_base_url(coordinator).with_fragment(
                 f"v1:0:=storage/{self._node_name}/{storage_data['storage']}"
             ),
-            via_device=(
-                DOMAIN,
-                f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
+                ),
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
 
@@ -110,6 +99,7 @@ class ProxmoxStorageEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -148,12 +138,16 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
             },
             name=self.device_name,
             model="VM",
-            configuration_url=_proxmox_base_url(coordinator).with_fragment(
+            configuration_url=proxmox_base_url(coordinator).with_fragment(
                 f"v1:0:=qemu/{vm_data['vmid']}"
             ),
-            via_device=(
-                DOMAIN,
-                f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
+                ),
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
 
@@ -163,6 +157,7 @@ class ProxmoxVMEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (
@@ -204,12 +199,16 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
             },
             name=self.device_name,
             model="Container",
-            configuration_url=_proxmox_base_url(coordinator).with_fragment(
+            configuration_url=proxmox_base_url(coordinator).with_fragment(
                 f"v1:0:=lxc/{container_data['vmid']}"
             ),
-            via_device=(
-                DOMAIN,
-                f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (
+                    DOMAIN,
+                    f"{coordinator.config_entry.entry_id}_node_{node_data.node['id']}",
+                ),
+                config_entry_id=coordinator.config_entry.entry_id,
             ),
         )
 
@@ -219,6 +218,7 @@ class ProxmoxContainerEntity(ProxmoxCoordinatorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the device is available."""
         return (

@@ -1,6 +1,6 @@
 """Config flow for kraken integration."""
 
-from typing import Any
+from typing import Any, override
 
 import krakenex
 from pykrakenapi.pykrakenapi import KrakenAPI
@@ -23,12 +23,14 @@ class KrakenConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: KrakenConfigEntry,
     ) -> KrakenOptionsFlowHandler:
         """Get the options flow for this handler."""
         return KrakenOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

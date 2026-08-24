@@ -1,5 +1,7 @@
 """Support for IRM KMI weather."""
 
+from typing import override
+
 from irm_kmi_api import CurrentWeatherData
 
 from homeassistant.components.weather import (
@@ -58,6 +60,7 @@ class IrmKmiWeather(
         self._attr_unique_id = entry.data[CONF_UNIQUE_ID]
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return super().available
@@ -68,48 +71,58 @@ class IrmKmiWeather(
         return self.coordinator.data.current_weather
 
     @property
+    @override
     def condition(self) -> str | None:
         """Return the current condition."""
         return self.current_weather.get("condition")
 
     @property
+    @override
     def native_temperature(self) -> float | None:
         """Return the temperature in native units."""
         return self.current_weather.get("temperature")
 
     @property
+    @override
     def native_wind_speed(self) -> float | None:
         """Return the wind speed in native units."""
         return self.current_weather.get("wind_speed")
 
     @property
+    @override
     def native_wind_gust_speed(self) -> float | None:
         """Return the wind gust speed in native units."""
         return self.current_weather.get("wind_gust_speed")
 
     @property
+    @override
     def wind_bearing(self) -> float | str | None:
         """Return the wind bearing."""
         return self.current_weather.get("wind_bearing")
 
     @property
+    @override
     def native_pressure(self) -> float | None:
         """Return the pressure in native units."""
         return self.current_weather.get("pressure")
 
     @property
+    @override
     def uv_index(self) -> float | None:
         """Return the UV index."""
         return self.current_weather.get("uv_index")
 
+    @override
     def _async_forecast_twice_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self.coordinator.data.daily_forecast
 
+    @override
     def _async_forecast_daily(self) -> list[Forecast] | None:
         """Return the daily forecast in native units."""
         return self.daily_forecast()
 
+    @override
     def _async_forecast_hourly(self) -> list[Forecast] | None:
         """Return the hourly forecast in native units."""
         return self.coordinator.data.hourly_forecast
