@@ -22,12 +22,12 @@ def _generate() -> str:
         for device_class in set(SensorDeviceClass) - NON_NUMERIC_DEVICE_CLASSES
     )
     device_class_units = {
-        device_class: sorted(unit or "{no_unit}" for unit in units)
+        device_class: sorted(units, key=lambda u: (u is None, u or ""))
         for device_class, units in DEVICE_CLASS_UNITS.items()
     }
     state_classes = sorted(state_class.value for state_class in SensorStateClass)
     state_class_units = {
-        state_class: sorted(unit or "{no_unit}" for unit in units)
+        state_class: sorted(units, key=lambda u: (u is None, u or ""))
         for state_class, units in STATE_CLASS_UNITS.items()
     }
     return json.dumps(

@@ -10,7 +10,7 @@
       "mVA"
     ],
     "aqi": [
-      "{no_unit}"
+      null
     ],
     "area": [
       "ac",
@@ -201,7 +201,7 @@
       "\u03bcg/m\u00b3"
     ],
     "ph": [
-      "{no_unit}"
+      null
     ],
     "pm1": [
       "\u03bcg/m\u00b3"
@@ -217,7 +217,7 @@
     ],
     "power_factor": [
       "%",
-      "{no_unit}"
+      null
     ],
     "power": [
       "GW",
