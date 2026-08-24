@@ -15,7 +15,11 @@ from homeassistant.components.vacuum import (
     VacuumActivity,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -44,6 +48,23 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
     mock_account.robots[0].start_cleaning.assert_called_once()
 
     assert await hass.config_entries.async_unload(entry.entry_id)
+
+
+async def test_shutdown_disconnects_account(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Home Assistant stopping disconnects the account.
+
+    Entries are not unloaded at shutdown, so the stop event is the only place
+    the account is reached. An account left connected keeps its WebSocket
+    monitor running until the shared session is detached under it.
+    """
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_account.disconnect.assert_awaited_once()
 
 
 @pytest.mark.parametrize(
