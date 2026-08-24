@@ -40,6 +40,10 @@ def get_hub(hass: HomeAssistant, name: str) -> ModbusHub:
         core_behavior=ReportBehavior.IGNORE,
         core_integration_behavior=ReportBehavior.IGNORE,
         custom_integration_behavior=ReportBehavior.LOG,
+        # get_hub is defined here, so its own frame is the first one the stack
+        # walk meets. Without this it reports modbus every time, and the core
+        # behavior above then silences the caller it was meant to name.
+        exclude_integrations={DOMAIN},
     )
     return hass.data[DATA_MODBUS_HUBS][name]
 
