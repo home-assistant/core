@@ -458,10 +458,9 @@ filterwarnings = [
   # Modify app state for testing
   "ignore:Changing state of started or joined application is deprecated:DeprecationWarning:tests.components.http.test_ban",
 
-  # -- Tests
-  # Ignore custom pytest marks
-  "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
-  "ignore:Unknown pytest.mark.dataset:pytest.PytestUnknownMarkWarning:tests.components.screenlogic",
+  # -- HomeAssistant - design choice
+  # airOS 6 firmware negotiates nothing newer than TLS 1.0
+  "ignore:ssl.TLSVersion.TLSv1 is deprecated:DeprecationWarning:homeassistant.components.airos.helpers",
 
   # -- DeprecationWarning already fixed in our codebase
   # https://github.com/kurtmckee/feedparser/ - 6.0.12

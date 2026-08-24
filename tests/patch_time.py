@@ -2,6 +2,8 @@
 
 import datetime
 import time
+import types
+from typing import Any
 
 import freezegun
 
@@ -22,6 +24,27 @@ def ha_datetime_to_fakedatetime(datetime) -> freezegun.api.FakeDatetime:  # type
         datetime.tzinfo,
         fold=datetime.fold,
     )
+
+
+def ha_get_module_attributes(module: types.ModuleType) -> list[tuple[str, Any]]:
+    """Return the attributes of a module.
+
+    Modified to only look at attributes which are already set, instead of every
+    name dir() offers. Packages with a lazy __getattr__, such as scipy or
+    elevenlabs, import their whole tree when each name is read, which takes
+    seconds and is charged to whichever test freezes time next.
+    """
+    return list(getattr(module, "__dict__", {}).items())
+
+
+def ha_get_module_attributes_hash(module: types.ModuleType) -> str:
+    """Return a hash of the module attributes.
+
+    Modified to hash the same namespace ha_get_module_attributes reads, so that
+    a module which grows an attribute after it was first scanned is scanned
+    again. dir() does not report such a change for lazy modules.
+    """
+    return f"{id(module)}-{hash(frozenset(getattr(module, '__dict__', {})))}"
 
 
 class HAFakeDateMeta(freezegun.api.FakeDateMeta):

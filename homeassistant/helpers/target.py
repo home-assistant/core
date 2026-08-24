@@ -179,18 +179,16 @@ def _resolve_referenced_devices(
                 selected.referenced_devices.add(split_device.id)
                 selected.referenced_devices.update(
                     child_device.id
-                    for child_device in (
-                        dev_reg.child_devices.get_children_for_device_id(
-                            split_device.id
-                        )
+                    for child_device in dr.async_entries_for_parent_device(
+                        dev_reg, split_device.id
                     )
                 )
         else:
             selected.referenced_devices.add(device_id)
             selected.referenced_devices.update(
                 child_device.id
-                for child_device in dev_reg.child_devices.get_children_for_device_id(
-                    device_id
+                for child_device in dr.async_entries_for_parent_device(
+                    dev_reg, device_id
                 )
             )
 
