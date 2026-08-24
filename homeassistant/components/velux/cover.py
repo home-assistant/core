@@ -79,6 +79,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
         | CoverEntityFeature.CLOSE
         | CoverEntityFeature.SET_POSITION
         | CoverEntityFeature.STOP
+        | CoverEntityFeature.SPEED
     )
     _attr_supported_speeds = [
         Velocity.SILENT.name.lower(),
