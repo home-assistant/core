@@ -40,7 +40,6 @@ from homeassistant.components.water_heater import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_TEMPERATURE,
     PERCENTAGE,
     SERVICE_TURN_OFF,
@@ -48,6 +47,7 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import State, callback
@@ -172,7 +172,7 @@ class Thermostat(HomeKitClimateAccessory):
             attributes.get(ATTR_MIN_HUMIDITY, DEFAULT_MIN_HUMIDITY),
             attributes.get(ATTR_MAX_HUMIDITY, DEFAULT_MAX_HUMIDITY),
         )
-        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if features & ClimateEntityFeature.TARGET_TEMPERATURE_RANGE:
             self.chars.extend(
@@ -290,7 +290,7 @@ class Thermostat(HomeKitClimateAccessory):
         service = None
         state = self.hass.states.get(self.entity_id)
         assert state
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         homekit_hvac_mode = _hk_hvac_mode_from_state(state)
         # Homekit will reset the mode when VIEWING the temp
         # Ignore it if its the same mode
@@ -449,7 +449,7 @@ class Thermostat(HomeKitClimateAccessory):
     def async_update_state(self, new_state: State) -> None:
         """Update state without rechecking the device features."""
         attributes = new_state.attributes
-        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         # Update target operation mode FIRST
         if (homekit_hvac_mode := _hk_hvac_mode_from_state(new_state)) is not None:
@@ -547,7 +547,7 @@ class WaterHeater(HomeAccessory):
         assert state
         min_temp, max_temp = self.get_temperature_range(state)
 
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         operation_list = state.attributes.get(ATTR_OPERATION_LIST) or []
         self._supports_on_off = bool(features & WaterHeaterEntityFeature.ON_OFF)
         self._supports_operation_mode = bool(
