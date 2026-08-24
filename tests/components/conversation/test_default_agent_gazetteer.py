@@ -1,5 +1,6 @@
 """Test the gazetteer fallback in the default agent."""
 
+import asyncio
 from typing import Any
 from unittest.mock import patch
 
@@ -778,3 +779,54 @@ async def test_a_misheard_name_in_a_question(hass: HomeAssistant) -> None:
 
     assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
     assert result.response.speech["plain"]["speech"] == "Yes"
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_the_home_is_built_off_the_event_loop(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """Test neither building nor refreshing the matcher blocks the event loop.
+
+    Assembling the tagger around a home grows with the size of that home, into
+    hundreds of milliseconds for a large one, which is far too long to hold the loop.
+    """
+    off_loop: list[bool] = []
+
+    def record() -> None:
+        """Note whether this ran somewhere with a running event loop."""
+        try:
+            asyncio.get_running_loop()
+        except RuntimeError:
+            off_loop.append(True)
+        else:
+            off_loop.append(False)
+
+    real_init = GazetteerMatcher.__init__
+    real_set_home = GazetteerMatcher.set_home
+
+    def init(self, **kwargs):
+        record()
+        real_init(self, **kwargs)
+
+    def set_home(self, home):
+        record()
+        real_set_home(self, home)
+
+    with (
+        patch.object(GazetteerMatcher, "__init__", init),
+        patch.object(GazetteerMatcher, "set_home", set_home),
+    ):
+        # The first sentence builds the matcher.
+        await conversation.async_converse(
+            hass, "turn on the kichen lights", None, Context(), None
+        )
+        assert off_loop == [True]
+
+        # A registry change makes the home stale, so the next one refreshes it.
+        area_registry.async_update("kitchen_id", name="Scullery")
+        await hass.async_block_till_done()
+        await conversation.async_converse(
+            hass, "turn on the scullary lights", None, Context(), None
+        )
+
+    assert off_loop == [True, True]
