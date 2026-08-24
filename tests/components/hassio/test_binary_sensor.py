@@ -128,6 +128,106 @@ async def test_binary_sensor(
     assert state.state == expected
 
 
+async def test_addon_state_from_supervisor_event(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+) -> None:
+    """Test addon running binary sensor updates from Supervisor state events."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Enable the entity.
+    entity_id = "binary_sensor.test2_running"
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+    client = await hass_supervisor_ws_client()
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "supervisor/event",
+            "data": {"event": "addon", "slug": "test2", "state": "started"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "on"
+
+    await client.send_json(
+        {
+            "id": 2,
+            "type": "supervisor/event",
+            "data": {"event": "addon", "slug": "test2", "state": "stopped"},
+        }
+    )
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+
+@pytest.mark.parametrize(
+    "event_data",
+    [
+        pytest.param(
+            {"event": "addon", "slug": "not_installed", "state": "started"},
+            id="unknown_addon",
+        ),
+        pytest.param(
+            {"event": "addon", "slug": "test2", "state": "not_a_state"},
+            id="unknown_state",
+        ),
+        pytest.param({"event": "addon"}, id="missing_fields"),
+    ],
+)
+async def test_addon_state_event_ignored(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    hass_supervisor_ws_client: WebSocketGenerator,
+    event_data: dict[str, str],
+) -> None:
+    """Test invalid Supervisor addon state events are ignored."""
+    config_entry = MockConfigEntry(domain=DOMAIN, data={}, unique_id=DOMAIN)
+    config_entry.add_to_hass(hass)
+
+    with patch.dict(os.environ, MOCK_ENVIRON):
+        assert await async_setup_component(hass, DOMAIN, {"hassio": {}})
+    await hass.async_block_till_done()
+
+    # Enable the entity.
+    entity_id = "binary_sensor.test2_running"
+    entity_registry.async_update_entity(entity_id, disabled_by=None)
+    await hass.config_entries.async_reload(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    client = await hass_supervisor_ws_client()
+    await client.send_json({"id": 1, "type": "supervisor/event", "data": event_data})
+    msg = await client.receive_json()
+    assert msg["success"]
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "off"
+
+
 async def test_mount_binary_sensor(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
