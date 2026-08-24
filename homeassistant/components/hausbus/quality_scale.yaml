@@ -22,18 +22,9 @@ rules:
     status: exempt
     comment: |
       This integration does not register any actions.
-  docs-high-level-description:
-    status: done
-    comment: |
-      See the accompanying home-assistant.io documentation page.
-  docs-installation-instructions:
-    status: done
-    comment: |
-      See the accompanying home-assistant.io documentation page.
-  docs-removal-instructions:
-    status: done
-    comment: |
-      See the accompanying home-assistant.io documentation page.
+  docs-high-level-description: todo
+  docs-installation-instructions: todo
+  docs-removal-instructions: todo
   entity-event-setup:
     status: done
     comment: |
