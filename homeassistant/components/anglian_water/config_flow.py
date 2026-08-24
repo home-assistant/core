@@ -1,5 +1,6 @@
 """Config flow for the Anglian Water integration."""
 
+from collections.abc import Mapping
 import logging
 from typing import TYPE_CHECKING, Any, override
 
@@ -102,6 +103,31 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         self.accounts: list[selector.SelectOptionDict] = []
         self.user_input: dict[str, Any] | None = None
 
+    def _create_authenticator(self, user_input: dict[str, Any]) -> MSOB2CAuth:
+        """Create an MSOB2CAuth instance with the provided user input."""
+        return MSOB2CAuth(
+            username=user_input[CONF_USERNAME],
+            password=user_input[CONF_PASSWORD],
+            session=async_create_clientsession(
+                self.hass,
+                cookie_jar=CookieJar(quote_cookie=False),
+            ),
+        )
+
+    async def _async_validate_mfa(self, code: str) -> str | None:
+        """Validate the provided MFA code."""
+        if TYPE_CHECKING:
+            # This can never not be None at this point.
+            assert self.authenticator
+        try:
+            await self.authenticator.send_mfa_request(code)
+        except MFARequiredError:
+            return "invalid_code"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return "unknown"
+        return None
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -109,14 +135,7 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            self.authenticator = MSOB2CAuth(
-                username=user_input[CONF_USERNAME],
-                password=user_input[CONF_PASSWORD],
-                session=async_create_clientsession(
-                    self.hass,
-                    cookie_jar=CookieJar(quote_cookie=False),
-                ),
-            )
+            self.authenticator = self._create_authenticator(user_input)
             validation_response = await validate_credentials(self.authenticator)
             if isinstance(validation_response, str):
                 if validation_response == "mfa_required":
@@ -140,13 +159,9 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             if TYPE_CHECKING:
                 assert self.authenticator
-            try:
-                await self.authenticator.send_mfa_request(user_input[CONF_CODE])
-            except MFARequiredError:
-                errors["base"] = "invalid_code"
-            except Exception:
-                _LOGGER.exception("Unexpected exception")
-                errors["base"] = "unknown"
+            error = await self._async_validate_mfa(user_input[CONF_CODE])
+            if error:
+                errors["base"] = error
             else:
                 self.accounts = await get_accounts(self.authenticator)
                 return await self.async_step_select_account()
@@ -208,4 +223,52 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         return self.async_create_entry(
             title=user_input[CONF_ACCOUNT_NUMBER],
             data=config_entry_data,
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Initial configuration step via reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle receiving username/password."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            self.authenticator = self._create_authenticator(user_input)
+            validation_response = await validate_credentials(self.authenticator)
+            if isinstance(validation_response, str):
+                if validation_response == "mfa_required":
+                    self.user_input = user_input
+                    return await self.async_step_reauth_mfa()
+                errors["base"] = validation_response
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_ACCESS_TOKEN: self.authenticator.refresh_token},
+                )
+        return self.async_show_form(
+            step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reauth_mfa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the MFA step during reauthentication."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if TYPE_CHECKING:
+                assert self.authenticator
+            error = await self._async_validate_mfa(user_input[CONF_CODE])
+            if error:
+                errors["base"] = error
+            else:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(),
+                    data_updates={CONF_ACCESS_TOKEN: self.authenticator.refresh_token},
+                )
+        return self.async_show_form(
+            step_id="reauth_mfa", data_schema=STEP_MFA_DATA_SCHEMA, errors=errors
         )
