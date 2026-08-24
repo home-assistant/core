@@ -100,11 +100,23 @@
       "door_unlocked_alarm": {
         "name": "Unlocked alarm"
       },
+      "duress_alarm": {
+        "name": "Duress alarm"
+      },
       "half_lock_calibration": {
         "name": "Half-lock calibration"
       },
       "half_locked": {
         "name": "Half locked"
+      },
+      "high_temperature": {
+        "name": "High temperature"
+      },
+      "lockout_alarm": {
+        "name": "Lockout alarm"
+      },
+      "low_temperature": {
+        "name": "Low temperature"
       }
     },
     "button": {
@@ -349,6 +361,15 @@
       },
       "light_level": {
         "name": "Light level"
+      },
+      "pir_triggered_level": {
+        "name": "PIR triggered level"
+      },
+      "radar_triggered_distance": {
+        "name": "Radar triggered distance"
+      },
+      "radar_triggered_level": {
+        "name": "Radar triggered level"
       },
       "water_level": {
         "name": "Water level",

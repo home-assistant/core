@@ -441,7 +441,6 @@ async def async_cleanup_device_registry(
     entity_registry = er.async_get(hass)
     if (
         device_id
-        and device_id not in device_registry.deleted_devices
         and config_entry_id
         and (device := device_registry.async_get(device_id)) is not None
         # Only remove the device if it is owned by the MQTT config entry
