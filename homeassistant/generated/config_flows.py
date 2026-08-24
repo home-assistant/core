@@ -796,6 +796,7 @@ FLOWS = {
         "togrill",
         "tolo",
         "tomorrowio",
+        "tonewinner",
         "toon",
         "totalconnect",
         "touchline",
