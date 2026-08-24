@@ -100,7 +100,10 @@ async def _async_handle_purge_service(service: ServiceCall) -> None:
 
 async def _async_handle_purge_entities_service(service: ServiceCall) -> None:
     """Handle calls to the purge entities service."""
-    entity_ids = await async_extract_entity_ids(service)
+    # Purge the entity_ids exactly as given instead of expanding group
+    # members, otherwise a targeted group.* entity is dropped from the
+    # purge set instead of having its own history purged.
+    entity_ids = await async_extract_entity_ids(service, expand_group=False)
     domains = service.data.get(ATTR_DOMAINS, [])
     keep_days = service.data.get(ATTR_KEEP_DAYS, 0)
     entity_globs = service.data.get(ATTR_ENTITY_GLOBS, [])
