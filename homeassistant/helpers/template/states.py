@@ -4,12 +4,12 @@ from collections.abc import Generator, Iterable
 from datetime import datetime
 from enum import Enum
 from functools import cache, partial
-from typing import Any
+from typing import Any, override
 
 from lru import LRU
 from propcache.api import under_cached_property
 
-from homeassistant.const import ATTR_UNIT_OF_MEASUREMENT, STATE_UNKNOWN
+from homeassistant.const import STATE_UNKNOWN, EntityStateAttribute
 from homeassistant.core import (
     Context,
     HomeAssistant,
@@ -160,6 +160,7 @@ class AllStates:
             return state.format_state(rounded, with_unit)  # type: ignore[arg-type]
         return state.state
 
+    @override
     def __repr__(self) -> str:
         """Representation of All States."""
         return "<template AllStates>"
@@ -181,7 +182,7 @@ class StateTranslated:
 
         state_value = state.state
         domain = state.domain
-        device_class = state.attributes.get("device_class")
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         entry = er.async_get(self._hass).async_get(entity_id)
         platform = None if entry is None else entry.platform
         translation_key = None if entry is None else entry.translation_key
@@ -190,6 +191,7 @@ class StateTranslated:
             self._hass, state_value, domain, platform, translation_key, device_class
         )
 
+    @override
     def __repr__(self) -> str:
         """Representation of Translated state."""
         return "<template StateTranslated>"
@@ -217,7 +219,7 @@ class StateAttrTranslated:
             return attr_value
 
         domain = state.domain
-        device_class = state.attributes.get("device_class")
+        device_class = state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         entry = er.async_get(self._hass).async_get(entity_id)
         platform = None if entry is None else entry.platform
         translation_key = None if entry is None else entry.translation_key
@@ -232,6 +234,7 @@ class StateAttrTranslated:
             attribute,
         )
 
+    @override
     def __repr__(self) -> str:
         """Representation of Translated state attribute."""
         return "<template StateAttrTranslated>"
@@ -276,6 +279,7 @@ class DomainStates:
         self._collect_domain_lifecycle()
         return self._hass.states.async_entity_ids_count(self._domain)
 
+    @override
     def __repr__(self) -> str:
         """Representation of Domain States."""
         return f"<template DomainStates('{self._domain}')>"
@@ -320,6 +324,7 @@ class TemplateStateBase(State):
         raise KeyError
 
     @under_cached_property
+    @override
     def entity_id(self) -> str:
         """Wrap State.entity_id.
 
@@ -328,54 +333,63 @@ class TemplateStateBase(State):
         return self._entity_id
 
     @property
+    @override
     def state(self) -> str:  # type: ignore[override]
         """Wrap State.state."""
         self._collect_state()
         return self._state.state
 
     @property
+    @override
     def attributes(self) -> ReadOnlyDict[str, Any]:  # type: ignore[override]
         """Wrap State.attributes."""
         self._collect_state()
         return self._state.attributes
 
     @property
+    @override
     def last_changed(self) -> datetime:  # type: ignore[override]
         """Wrap State.last_changed."""
         self._collect_state()
         return self._state.last_changed
 
     @property
+    @override
     def last_reported(self) -> datetime:  # type: ignore[override]
         """Wrap State.last_reported."""
         self._collect_state()
         return self._state.last_reported
 
     @property
+    @override
     def last_updated(self) -> datetime:  # type: ignore[override]
         """Wrap State.last_updated."""
         self._collect_state()
         return self._state.last_updated
 
     @property
+    @override
     def context(self) -> Context:  # type: ignore[override]
         """Wrap State.context."""
         self._collect_state()
         return self._state.context
 
     @property
+    @override
     def domain(self) -> str:  # type: ignore[override]
         """Wrap State.domain."""
         self._collect_state()
         return self._state.domain
 
     @property
+    @override
     def object_id(self) -> str:  # type: ignore[override]
         """Wrap State.object_id."""
         self._collect_state()
         return self._state.object_id
 
     @property
+    @override
     def name(self) -> str:
         """Wrap State.name."""
         self._collect_state()
@@ -399,10 +413,13 @@ class TemplateStateBase(State):
             state = async_rounded_state(self._hass, self._entity_id, self._state)
         else:
             state = self._state.state
-        if with_unit and (unit := self._state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)):
+        if with_unit and (
+            unit := self._state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        ):
             return f"{state} {unit}"
         return state
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Ensure we collect on equality check."""
         self._collect_state()
@@ -420,6 +437,7 @@ class TemplateState(TemplateStateBase):
         super().__init__(hass, collect, state.entity_id)
         self._state = state
 
+    @override
     def __repr__(self) -> str:
         """Representation of Template State."""
         return f"<template TemplateState({self._state!r})>"
@@ -437,12 +455,14 @@ class TemplateStateFromEntityId(TemplateStateBase):
         super().__init__(hass, collect, entity_id)
 
     @property
+    @override
     def _state(self) -> State:  # type: ignore[override]
         state = self._hass.states.get(self._entity_id)
         if not state:
             state = State(self._entity_id, STATE_UNKNOWN)
         return state
 
+    @override
     def __repr__(self) -> str:
         """Representation of Template State."""
         return f"<template TemplateStateFromEntityId({self._entity_id})>"

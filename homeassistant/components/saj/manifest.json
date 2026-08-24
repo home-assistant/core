@@ -1,8 +1,10 @@
 {
   "domain": "saj",
   "name": "SAJ Solar Inverter",
-  "codeowners": ["@fredericvl"],
+  "codeowners": ["@fredericvl", "@edurenye"],
+  "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/saj",
+  "integration_type": "hub",
   "iot_class": "local_polling",
   "loggers": ["pysaj"],
   "quality_scale": "legacy",

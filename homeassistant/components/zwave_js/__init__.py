@@ -17,6 +17,7 @@ from zwave_js_server.exceptions import (
 from zwave_js_server.model.driver import Driver
 from zwave_js_server.model.node import Node as ZwaveNode
 from zwave_js_server.model.notification import (
+    BatteryNotification,
     EntryControlNotification,
     MultilevelSwitchNotification,
     NotificationNotification,
@@ -79,6 +80,7 @@ from .const import (
     ATTR_STATUS,
     ATTR_TEST_NODE_ID,
     ATTR_TYPE,
+    ATTR_URGENCY,
     ATTR_VALUE,
     ATTR_VALUE_RAW,
     CONF_ADDON_DEVICE,
@@ -92,7 +94,6 @@ from .const import (
     CONF_ADDON_SOCKET,
     CONF_DATA_COLLECTION_OPTED_IN,
     CONF_INTEGRATION_CREATED_ADDON,
-    CONF_KEEP_OLD_DEVICES,
     CONF_LR_S2_ACCESS_CONTROL_KEY,
     CONF_LR_S2_AUTHENTICATED_KEY,
     CONF_NETWORK_KEY,
@@ -161,13 +162,27 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if not isinstance(entry.unique_id, str):
-            hass.config_entries.async_update_entry(
-                entry, unique_id=str(entry.unique_id)
-            )
-
     async_setup_services(hass)
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
+    """Migrate old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        unique_id = entry.unique_id
+        if not isinstance(unique_id, str):
+            # Old entries stored the home ID as int.
+            unique_id = str(unique_id)
+        data = dict(entry.data)
+        # s0_legacy_key was saved as network_key before s2 was added.
+        if CONF_NETWORK_KEY in data:
+            network_key = data.pop(CONF_NETWORK_KEY)
+            if not data.get(CONF_S0_LEGACY_KEY):
+                data[CONF_S0_LEGACY_KEY] = network_key
+        hass.config_entries.async_update_entry(
+            entry, data=data, unique_id=unique_id, minor_version=2
+        )
 
     return True
 
@@ -389,27 +404,27 @@ class DriverEvents:
             controller.on("identify", self.controller_events.async_on_identify)
         )
 
-        if (
+        unknown_controller = (
             old_unique_id := self.config_entry.unique_id
         ) is not None and old_unique_id != (
             new_unique_id := str(driver.controller.home_id)
-        ):
+        )
+        if unknown_controller:
             device_registry = dr.async_get(self.hass)
             controller_model = "Unknown model"
             if (
                 (own_node := driver.controller.own_node)
                 and (
-                    controller_device_entry := device_registry.async_get_device(
-                        identifiers={get_device_id(driver, own_node)}
+                    controller_device_entry := (
+                        device_registry.async_get_device_by_identifier(
+                            get_device_id(driver, own_node), self.config_entry.entry_id
+                        )
                     )
                 )
                 and (model := controller_device_entry.model)
             ):
                 controller_model = model
 
-            # Do not clean up old stale devices if an unknown controller is connected.
-            data = {**self.config_entry.data, CONF_KEEP_OLD_DEVICES: True}
-            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
             async_create_issue(
                 self.hass,
                 DOMAIN,
@@ -426,9 +441,6 @@ class DriverEvents:
                 translation_key="migrate_unique_id",
             )
         else:
-            data = self.config_entry.data.copy()
-            data.pop(CONF_KEEP_OLD_DEVICES, None)
-            self.hass.config_entries.async_update_entry(self.config_entry, data=data)
             async_delete_issue(
                 self.hass, DOMAIN, f"migrate_unique_id.{self.config_entry.entry_id}"
             )
@@ -438,7 +450,9 @@ class DriverEvents:
             self.dev_reg, self.config_entry.entry_id
         )
         known_devices = [
-            self.dev_reg.async_get_device(identifiers={get_device_id(driver, node)})
+            self.dev_reg.async_get_device_by_identifier(
+                get_device_id(driver, node), self.config_entry.entry_id
+            )
             for node in controller.nodes.values()
         ]
         provisioned_devices = [
@@ -449,8 +463,8 @@ class DriverEvents:
         ]
 
         # Devices that are in the device registry that are not known by the controller
-        # can be removed
-        if not self.config_entry.data.get(CONF_KEEP_OLD_DEVICES):
+        # can be removed, but not while an unknown controller is connected.
+        if not unknown_controller:
             for device in stored_devices:
                 if device not in known_devices and device not in provisioned_devices:
                     self.dev_reg.async_remove_device(device.id)
@@ -559,7 +573,9 @@ class ControllerEvents:
         reason: RemoveNodeReason = event["reason"]
         # grab device in device registry attached to this node
         dev_id = get_device_id(self.driver_events.driver, node)
-        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        device = self.dev_reg.async_get_device_by_identifier(
+            dev_id, self.config_entry.entry_id
+        )
         # We assert because we know the device exists
         assert device
         if reason in (RemoveNodeReason.REPLACED, RemoveNodeReason.PROXY_REPLACED):
@@ -608,7 +624,9 @@ class ControllerEvents:
         # Get node device
         node: ZwaveNode = event["node"]
         dev_id = get_device_id(self.driver_events.driver, node)
-        device = self.dev_reg.async_get_device(identifiers={dev_id})
+        device = self.dev_reg.async_get_device_by_identifier(
+            dev_id, self.config_entry.entry_id
+        )
         assert device
         device_name = device.name_by_user or device.name or f"Node {node.node_id}"
         # In case the user has multiple networks, we should give them more information
@@ -656,13 +674,17 @@ class ControllerEvents:
             if device_id_ext:
                 new_identifiers.add(device_id_ext)
 
-            if self.dev_reg.async_get_device(identifiers=new_identifiers):
+            if self.dev_reg.async_get_device_by_identifier(
+                device_id, self.config_entry.entry_id
+            ) or (
+                device_id_ext
+                and self.dev_reg.async_get_device_by_identifier(
+                    device_id_ext, self.config_entry.entry_id
+                )
+            ):
                 # If a device entry is registered with the node ID based identifiers,
                 # just remove the device entry with the DSK identifier.
-                self.dev_reg.async_update_device(
-                    pre_provisioned_device.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                self.dev_reg.async_remove_device(pre_provisioned_device.id)
             else:
                 # Add the node ID based identifiers to the device entry
                 # with the DSK identifier and remove the DSK identifier.
@@ -676,12 +698,18 @@ class ControllerEvents:
         driver = self.driver_events.driver
         device_id = get_device_id(driver, node)
         device_id_ext = get_device_id_ext(driver, node)
-        node_id_device = self.dev_reg.async_get_device(identifiers={device_id})
-        via_identifier = None
+        node_id_device = self.dev_reg.async_get_device_by_identifier(
+            device_id, self.config_entry.entry_id
+        )
+        via_device_id: str | None = None
         controller = driver.controller
         # Get the controller node device ID if this node is not the controller
         if controller.own_node and controller.own_node != node:
-            via_identifier = get_device_id(driver, controller.own_node)
+            via_device_id = dr.async_get_device_id_by_identifier(
+                self.hass,
+                get_device_id(driver, controller.own_node),
+                config_entry_id=self.config_entry.entry_id,
+            )
 
         if device_id_ext:
             # If there is a device with this node ID but with a different hardware
@@ -707,8 +735,8 @@ class ControllerEvents:
             # based identifier, add the node ID based identifier to the orphaned
             # device.
             if (
-                hardware_device := self.dev_reg.async_get_device(
-                    identifiers={device_id_ext}
+                hardware_device := self.dev_reg.async_get_device_by_identifier(
+                    device_id_ext, self.config_entry.entry_id
                 )
             ) and len(hardware_device.identifiers) == 1:
                 new_identifiers = hardware_device.identifiers.copy()
@@ -728,7 +756,7 @@ class ControllerEvents:
             model=node.device_config.label,
             manufacturer=node.device_config.manufacturer,
             suggested_area=node.location or UNDEFINED,
-            via_device=via_identifier,
+            via_device_id=via_device_id,
         )
 
         async_dispatcher_send(self.hass, EVENT_DEVICE_ADDED_TO_REGISTRY, device)
@@ -912,7 +940,11 @@ class NodeEvents:
         )
         if (
             not value.node.ready
-            or not (device := self.dev_reg.async_get_device(identifiers={device_id}))
+            or not (
+                device := self.dev_reg.async_get_device_by_identifier(
+                    device_id, self.config_entry.entry_id
+                )
+            )
             or value.value_id in self.controller_events.discovered_value_ids[device.id]
         ):
             return
@@ -927,8 +959,8 @@ class NodeEvents:
     def async_on_value_notification(self, notification: ValueNotification) -> None:
         """Relay stateless value notification events from Z-Wave nodes to hass."""
         driver = self.controller_events.driver_events.driver
-        device = self.dev_reg.async_get_device(
-            identifiers={get_device_id(driver, notification.node)}
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, notification.node), self.config_entry.entry_id
         )
         # We assert because we know the device exists
         assert device
@@ -965,13 +997,14 @@ class NodeEvents:
 
         driver = self.controller_events.driver_events.driver
         notification: (
-            EntryControlNotification
+            BatteryNotification
+            | EntryControlNotification
             | NotificationNotification
             | PowerLevelNotification
             | MultilevelSwitchNotification
         ) = event["notification"]
-        device = self.dev_reg.async_get_device(
-            identifiers={get_device_id(driver, notification.node)}
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, notification.node), self.config_entry.entry_id
         )
         # We assert because we know the device exists
         assert device
@@ -985,7 +1018,15 @@ class NodeEvents:
             ATTR_COMMAND_CLASS: notification.command_class,
         }
 
-        if isinstance(notification, EntryControlNotification):
+        if isinstance(notification, BatteryNotification):
+            event_data.update(
+                {
+                    ATTR_COMMAND_CLASS_NAME: "Battery",
+                    ATTR_EVENT_TYPE: notification.event_type,
+                    ATTR_URGENCY: notification.urgency,
+                }
+            )
+        elif isinstance(notification, EntryControlNotification):
             event_data.update(
                 {
                     ATTR_COMMAND_CLASS_NAME: "Entry Control",
@@ -1045,8 +1086,8 @@ class NodeEvents:
         driver = self.controller_events.driver_events.driver
         disc_info = value_updates_disc_info[value.value_id]
 
-        device = self.dev_reg.async_get_device(
-            identifiers={get_device_id(driver, value.node)}
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, value.node), self.config_entry.entry_id
         )
         # We assert because we know the device exists
         assert device
@@ -1183,10 +1224,7 @@ async def async_ensure_addon_running(
 
     usb_path: str | None = entry.data[CONF_USB_PATH]
     socket_path: str | None = entry.data.get(CONF_SOCKET_PATH)
-    # s0_legacy_key was saved as network_key before s2 was added.
     s0_legacy_key: str = entry.data.get(CONF_S0_LEGACY_KEY, "")
-    if not s0_legacy_key:
-        s0_legacy_key = entry.data.get(CONF_NETWORK_KEY, "")
     s2_access_control_key: str = entry.data.get(CONF_S2_ACCESS_CONTROL_KEY, "")
     s2_authenticated_key: str = entry.data.get(CONF_S2_AUTHENTICATED_KEY, "")
     s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")

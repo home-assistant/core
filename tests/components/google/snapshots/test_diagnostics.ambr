@@ -8,6 +8,7 @@
           dict({
             'attendees': '**REDACTED**',
             'attendees_omitted': False,
+            'color_id': None,
             'description': '**REDACTED**',
             'end': dict({
               'date': None,
@@ -40,6 +41,7 @@
           dict({
             'attendees': '**REDACTED**',
             'attendees_omitted': False,
+            'color_id': None,
             'description': '**REDACTED**',
             'end': dict({
               'date': '2022-10-09',

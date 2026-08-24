@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -19,6 +19,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightEntityStateAttribute,
     filter_supported_color_modes,
 )
 from homeassistant.const import (
@@ -132,10 +133,12 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
     _topics: dict[str, str | None]
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA_TEMPLATE
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._color_temp_kelvin = config[CONF_COLOR_TEMP_KELVIN]
@@ -335,6 +338,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
                 )
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -350,6 +354,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
             },
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -357,18 +362,23 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         last_state = await self.async_get_last_state()
         if self._optimistic and last_state:
             self._attr_is_on = last_state.state == STATE_ON
-            if last_state.attributes.get(ATTR_BRIGHTNESS):
-                self._attr_brightness = last_state.attributes.get(ATTR_BRIGHTNESS)
-            if last_state.attributes.get(ATTR_HS_COLOR):
-                self._attr_hs_color = last_state.attributes.get(ATTR_HS_COLOR)
+            if brightness := last_state.attributes.get(
+                LightEntityStateAttribute.BRIGHTNESS
+            ):
+                self._attr_brightness = brightness
+            if hs_color := last_state.attributes.get(
+                LightEntityStateAttribute.HS_COLOR
+            ):
+                self._attr_hs_color = hs_color
                 self._update_color_mode()
-            if last_state.attributes.get(ATTR_COLOR_TEMP_KELVIN):
-                self._attr_color_temp_kelvin = last_state.attributes.get(
-                    ATTR_COLOR_TEMP_KELVIN
-                )
-            if last_state.attributes.get(ATTR_EFFECT):
-                self._attr_effect = last_state.attributes.get(ATTR_EFFECT)
+            if color_temp_kelvin := last_state.attributes.get(
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN
+            ):
+                self._attr_color_temp_kelvin = color_temp_kelvin
+            if effect := last_state.attributes.get(LightEntityStateAttribute.EFFECT):
+                self._attr_effect = effect
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on.
 
@@ -444,6 +454,7 @@ class MqttLightTemplate(MqttEntity, LightEntity, RestoreEntity):
         if self._optimistic:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off.
 

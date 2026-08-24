@@ -3,7 +3,7 @@
 from dataclasses import dataclass
 from enum import StrEnum
 import logging
-from typing import Self, cast
+from typing import Self, cast, override
 
 from google_photos_library_api.exceptions import GooglePhotosApiError
 from google_photos_library_api.model import Album, MediaItem
@@ -108,6 +108,7 @@ class GooglePhotosMediaSource(MediaSource):
         super().__init__(DOMAIN)
         self.hass = hass
 
+    @override
     async def async_resolve_media(self, item: MediaSourceItem) -> PlayMedia:
         """Resolve media identifier to a url.
 
@@ -139,6 +140,7 @@ class GooglePhotosMediaSource(MediaSource):
             mime_type=media_item.mime_type,
         )
 
+    @override
     async def async_browse_media(self, item: MediaSourceItem) -> BrowseMediaSource:
         """Return details about the media source.
 

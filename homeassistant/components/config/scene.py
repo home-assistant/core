@@ -1,6 +1,6 @@
 """Provide configuration end points for Scenes."""
 
-from typing import Any
+from typing import Any, override
 import uuid
 
 from homeassistant.components.scene import (
@@ -55,6 +55,7 @@ def async_setup(hass: HomeAssistant) -> bool:
 class EditSceneConfigView(EditIdBasedConfigView):
     """Edit scene config."""
 
+    @override
     def _write_value(
         self,
         hass: HomeAssistant,

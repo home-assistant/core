@@ -3,6 +3,7 @@
 from dataclasses import dataclass
 from datetime import timedelta
 import logging
+from typing import override
 
 from meteofrance_api.client import MeteoFranceClient
 from meteofrance_api.model import CurrentPhenomenons, Forecast, Rain
@@ -53,6 +54,7 @@ class MeteoFranceForecastUpdateCoordinator(DataUpdateCoordinator[Forecast]):
         self._latitude = entry.data[CONF_LATITUDE]
         self._longitude = entry.data[CONF_LONGITUDE]
 
+    @override
     async def _async_update_data(self) -> Forecast:
         """Get data from Meteo-France forecast."""
         return await self.hass.async_add_executor_job(
@@ -83,6 +85,7 @@ class MeteoFranceRainUpdateCoordinator(DataUpdateCoordinator[Rain]):
         self._latitude = entry.data[CONF_LATITUDE]
         self._longitude = entry.data[CONF_LONGITUDE]
 
+    @override
     async def _async_update_data(self) -> Rain:
         """Get data from Meteo-France rain."""
         return await self.hass.async_add_executor_job(
@@ -113,6 +116,7 @@ class MeteoFranceAlertUpdateCoordinator(DataUpdateCoordinator[CurrentPhenomenons
         self._client = client
         self._department = department
 
+    @override
     async def _async_update_data(self) -> CurrentPhenomenons:
         """Get data from Meteo-France alert."""
         return await self.hass.async_add_executor_job(

@@ -30,7 +30,7 @@ from homeassistant.helpers import (
     event as ev,
     issue_registry as ir,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import async_get_platforms
 from homeassistant.helpers.issue_registry import IssueSeverity, async_create_issue
@@ -87,7 +87,6 @@ from .const import (
     DEFAULT_RETAIN,
     DOMAIN,
     ENTITY_PLATFORMS,
-    ENTRY_OPTION_FIELDS,
     MQTT_CONNECTION_STATE,
     PROTOCOL_5,
     PROTOCOL_311,
@@ -154,7 +153,6 @@ __all__ = [
     "DEFAULT_RETAIN",
     "DOMAIN",
     "ENTITY_PLATFORMS",
-    "ENTRY_OPTION_FIELDS",
     "MQTT",
     "MQTT_BASE_SCHEMA",
     "MQTT_CONNECTION_STATE",
@@ -294,7 +292,6 @@ async def async_check_config_schema(
                     message = conf_util.format_schema_error(
                         hass, exc, domain, config, integration.documentation
                     )
-                    # pylint: disable-next=home-assistant-exception-message-with-translation
                     raise ServiceValidationError(
                         translation_domain=DOMAIN,
                         translation_key="invalid_platform_config_message",
@@ -469,27 +466,30 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
-    """Migrate the options from config entry data."""
+    """Migrate the config entry to the latest version."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
     data: dict[str, Any] = dict(entry.data)
     options: dict[str, Any] = dict(entry.options)
 
     if entry.version == 1 and entry.minor_version < 2:
-        # Can be removed when the config entry is bumped to version 2.1
-        # with HA Core 2026.7.0. Read support for version 2.1 is expected with 2026.1
-        # From 2026.7 we will write version 2.1
-        for key in ENTRY_OPTION_FIELDS:
+        for key in (
+            CONF_DISCOVERY,
+            CONF_DISCOVERY_PREFIX,
+            "birth_message",
+            "will_message",
+        ):
             if key not in data:
                 continue
             options[key] = data.pop(key)
-        # Write version 1.2 for backwards compatibility
-        hass.config_entries.async_update_entry(
-            entry,
-            data=data,
-            options=options,
-            version=1,
-            minor_version=2,
-        )
+
+    # Bump config entry to version 2.1
+    hass.config_entries.async_update_entry(
+        entry,
+        data=data,
+        options=options,
+        version=2,
+        minor_version=1,
+    )
 
     _LOGGER.debug(
         "Migration to version %s.%s successful", entry.version, entry.minor_version
@@ -689,7 +689,7 @@ def is_connected(hass: HomeAssistant) -> bool:
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: ConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove MQTT config entry from a device."""
     from . import device_automation  # noqa: PLC0415

@@ -2,6 +2,7 @@
 
 from json import JSONDecodeError
 import logging
+from typing import override
 
 from homeassistant.components import ai_task, conversation
 from homeassistant.core import HomeAssistant
@@ -43,6 +44,7 @@ class OpenRouterAITaskEntity(
         | ai_task.AITaskEntityFeature.SUPPORT_ATTACHMENTS
     )
 
+    @override
     async def _async_generate_data(
         self,
         task: ai_task.GenDataTask,

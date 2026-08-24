@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 import zeversolar
 
@@ -78,6 +79,7 @@ class ZeversolarSensor(ZeversolarEntity, SensorEntity):
         self._attr_unique_id = f"{coordinator.data.serial_number}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | float:
         """Return sensor state."""
         return self.entity_description.value_fn(self.coordinator.data)

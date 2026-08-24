@@ -1,11 +1,13 @@
 """The tests for the Template device_tracker platform."""
 
+from itertools import chain
 from typing import Any
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import device_tracker, template, zone
+from homeassistant.components.template.device_tracker import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
@@ -21,12 +23,16 @@ from homeassistant.helpers.typing import ConfigType
 from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_extra_template_attributes,
+    assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
     make_test_trigger,
     setup_and_test_nested_unique_id,
     setup_and_test_unique_id,
     setup_entity,
+    setup_mock_template_entity_restore_state,
+    setup_restore_template_entity,
 )
 
 from tests.common import MockConfigEntry, async_setup_component
@@ -35,6 +41,7 @@ from tests.conftest import WebSocketGenerator
 TEST_STATE_ENTITY_ID = "sensor.test_state"
 TEST_LATITUDE_ENTITY_ID = "sensor.test_latitude"
 TEST_LONGITUDE_ENTITY_ID = "sensor.test_longitude"
+TEST_LOCATION_ACCURACY_ENTITY_ID = "sensor.test_location_accuracy"
 TEST_AVAILABILITY_ENTITY_ID = "binary_sensor.availability"
 TEST_TRACKER = TemplatePlatformSetup(
     device_tracker.DOMAIN,
@@ -43,6 +50,7 @@ TEST_TRACKER = TemplatePlatformSetup(
         TEST_AVAILABILITY_ENTITY_ID,
         TEST_LATITUDE_ENTITY_ID,
         TEST_LONGITUDE_ENTITY_ID,
+        TEST_LOCATION_ACCURACY_ENTITY_ID,
         TEST_STATE_ENTITY_ID,
     ),
 )
@@ -150,7 +158,7 @@ async def test_setup_config_entry(
         options={
             "name": TEST_TRACKER.object_id,
             **TEST_MINIMUM_REQUIREMENTS,
-            "advanced_options": {"location_accuracy": "{{ 10 }}"},
+            "additional_options": {"location_accuracy": "{{ 10 }}"},
             "template_type": device_tracker.DOMAIN,
         },
         title="My template",
@@ -199,7 +207,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(template_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    template_entity = entity_registry.async_get("device_tracker.my_template")
+    template_entity = entity_registry.async_get("device_tracker.mock_title_my_template")
     assert template_entity is not None
     assert template_entity.device_id == device_entry.id
 
@@ -623,3 +631,208 @@ async def test_flow_preview(
     assert state["state"] == STATE_NOT_HOME
     assert state["attributes"]["latitude"] == 10.0
     assert state["attributes"]["longitude"] == 40.0
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    "config",
+    [
+        {
+            "in_zones": "{{ state_attr('sensor.test_state', 'in_zones') }}",
+            "latitude": "{{ states('sensor.test_latitude') | float(None) }}",
+            "longitude": "{{ states('sensor.test_longitude') | float(None) }}",
+            "location_accuracy": "{{ states('sensor.test_location_accuracy') | float(None) }}",
+        },
+    ],
+)
+@pytest.mark.parametrize(
+    (
+        "saved_state",
+        "saved_extra_data",
+        "initial_state",
+        "initial_attributes",
+    ),
+    [
+        (
+            STATE_HOME,
+            {
+                "in_zones": ["zone.home"],
+                "latitude": 32.87336,
+                "longitude": 117.228743,
+                "location_accuracy": 5.0,
+            },
+            STATE_HOME,
+            {
+                "in_zones": ["zone.home"],
+                "latitude": 32.87336,
+                "longitude": 117.228743,
+                "gps_accuracy": 5.0,
+            },
+        ),
+        (
+            STATE_NOT_HOME,
+            {
+                "in_zones": [],
+                "latitude": 15.0,
+                "longitude": 15.0,
+                "location_accuracy": 10.0,
+            },
+            STATE_NOT_HOME,
+            {
+                "in_zones": [],
+                "latitude": 15.0,
+                "longitude": 15.0,
+                "gps_accuracy": 10.0,
+            },
+        ),
+        (
+            # Missing Key
+            STATE_HOME,
+            {
+                "in_zones": [],
+                "location_accuracy": 10.0,
+            },
+            STATE_UNKNOWN,
+            {
+                "in_zones": [],
+                "latitude": None,
+                "longitude": None,
+                "gps_accuracy": None,
+            },
+        ),
+        (
+            STATE_UNAVAILABLE,
+            {
+                "in_zones": [],
+                "latitude": 15.0,
+                "longitude": 15.0,
+                "location_accuracy": 10.0,
+            },
+            STATE_UNKNOWN,
+            {
+                "in_zones": [],
+                "latitude": None,
+                "longitude": None,
+                "gps_accuracy": None,
+            },
+        ),
+        (
+            STATE_UNKNOWN,
+            {
+                "in_zones": [],
+                "latitude": 15.0,
+                "longitude": 15.0,
+                "location_accuracy": 10.0,
+            },
+            STATE_UNKNOWN,
+            {
+                "in_zones": [],
+                "latitude": None,
+                "longitude": None,
+                "gps_accuracy": None,
+            },
+        ),
+    ],
+)
+async def test_restore_state(
+    hass: HomeAssistant,
+    config: ConfigType,
+    style: ConfigurationStyle,
+    saved_state: str,
+    saved_extra_data: dict | None,
+    initial_state: str,
+    initial_attributes: ConfigType,
+) -> None:
+    """Test restoring trigger template device tracker."""
+
+    restored_attributes = {  # These should be ignored
+        "latitude": 5,
+        "longitude": 5,
+        "location_accuracy": 2.0,
+    }
+
+    setup_mock_template_entity_restore_state(
+        hass,
+        TEST_TRACKER,
+        saved_state,
+        saved_extra_data=saved_extra_data,
+        saved_attributes=restored_attributes,
+    )
+
+    await setup_restore_template_entity(
+        hass,
+        TEST_TRACKER,
+        style,
+        config,
+        "states('sensor.test_latitude') | float(0) > 19.9",
+    )
+
+    state = assert_state_and_attributes(
+        hass,
+        TEST_TRACKER,
+        initial_state,
+        initial_attributes,
+    )
+
+    await async_trigger(
+        hass, "sensor.test_state", "anything", {"in_zones": ["zone.home"]}
+    )
+    await async_trigger(hass, "sensor.test_latitude", "32.88")
+    await async_trigger(hass, "sensor.test_longitude", "117.24")
+    await async_trigger(hass, "sensor.test_location_accuracy", "20")
+
+    state = hass.states.get(TEST_TRACKER.entity_id)
+    assert state.state == STATE_HOME
+    assert state.attributes["in_zones"] == ["zone.home"]
+    assert state.attributes["latitude"] == 32.88
+    assert state.attributes["longitude"] == 117.24
+    assert state.attributes["gps_accuracy"] == 20.0
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_TRACKER, style, TEST_MINIMUM_REQUIREMENTS
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(
+        chain(
+            device_tracker.DeviceTrackerEntityCapabilityAttribute,
+            device_tracker.DeviceTrackerEntityStateAttribute,
+            device_tracker.TrackerEntityStateAttribute,
+        )
+    ),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_TRACKER,
+        style,
+        0,
+        {
+            **TEST_MINIMUM_REQUIREMENTS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )

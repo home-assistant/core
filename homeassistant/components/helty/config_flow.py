@@ -1,6 +1,6 @@
 """Config flow for the Helty Flow integration."""
 
-from typing import Any
+from typing import Any, override
 
 from pyhelty import HeltyClient, HeltyConnectionError, HeltyError
 import voluptuous as vol
@@ -16,6 +16,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
 class HeltyConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Helty Flow."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

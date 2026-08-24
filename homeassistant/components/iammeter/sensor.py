@@ -5,6 +5,7 @@ from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 from iammeter.client import IamMeter
 import voluptuous as vol
@@ -179,6 +180,7 @@ class IammeterSensor(update_coordinator.CoordinatorEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self):
         """Return the native sensor value."""
         raw_attr = self.coordinator.data.get(self.entity_description.key, None)

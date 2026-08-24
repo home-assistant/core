@@ -1728,3 +1728,22 @@ async def test_returns_array_friends(
     assert response_json[0]["lat"] == 10
     assert response_json[0]["lon"] == 20
     assert response_json[0]["tid"] == "p1"
+
+
+@pytest.mark.usefixtures("context")
+async def test_mobile_beacon_uppercase_name(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that a mobile beacon with uppercase name gets a valid entity ID."""
+    await send_message(hass, LOCATION_TOPIC, LOCATION_MESSAGE)
+
+    message = build_message(
+        {"desc": "Office", "event": "enter"}, DEFAULT_BEACON_TRANSITION_MESSAGE
+    )
+    await send_message(hass, EVENT_TOPIC, message)
+
+    state = hass.states.get("device_tracker.beacon_office")
+    assert state is not None
+    assert state.state == "outer"
+    assert "sets an invalid entity ID" not in caplog.text
