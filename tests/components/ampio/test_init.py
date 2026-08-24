@@ -14,6 +14,7 @@ import pytest
 
 from homeassistant.components.ampio.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -34,6 +35,23 @@ async def test_setup_and_unload(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_client.stop.assert_awaited_once()
+
+
+async def test_shutdown_stops_client(
+    hass: HomeAssistant, mock_client: MagicMock, mock_config_entry: MockConfigEntry
+) -> None:
+    """Home Assistant stopping closes the connection.
+
+    Entries are not unloaded at shutdown, so the stop event is the only place
+    the client is reached, and a connection left open there is torn down by
+    task cancellation and reported as an outage.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
     mock_client.stop.assert_awaited_once()
 
 

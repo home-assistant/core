@@ -13,8 +13,13 @@ from ampio_mqtt import (
 )
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_HOST, CONF_PASSWORD, CONF_USERNAME
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import (
+    CONF_HOST,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
+)
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import (
     ConfigEntryAuthFailed,
     ConfigEntryError,
@@ -48,6 +53,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: AmpioConfigEntry) -> boo
         entry.data[CONF_PASSWORD],
     )
     entry.async_on_unload(client.stop)
+
+    # Home Assistant does not unload entries when it stops, so without this the
+    # connection dies by task cancellation and is reported as a lost connection.
+    async def _async_stop_client(event: Event) -> None:
+        await client.stop()
+
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_client)
+    )
 
     try:
         discovered = await client.start()
