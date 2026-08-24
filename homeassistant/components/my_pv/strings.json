@@ -49,7 +49,7 @@
   },
   "exceptions": {
     "auth_error": {
-      "message": "Authentication failed, please reauthenticate."
+      "message": "Authentication failed. Remove and add the integration again with the current device password."
     },
     "cannot_connect": {
       "message": "[%key:common::config_flow::error::cannot_connect%]"
