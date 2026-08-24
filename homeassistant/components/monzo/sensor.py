@@ -13,6 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DEVICE_MODEL_ACCOUNT, DEVICE_MODEL_POT, NON_TRANSFER_ACCOUNT_TYPES
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoData
 from .entity import MonzoBaseEntity
 
@@ -60,8 +61,6 @@ POT_SENSORS = (
     ),
 )
 
-MODEL_POT = "Pot"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -76,7 +75,11 @@ async def async_setup_entry(
             coordinator,
             entity_description,
             account_id,
-            account["name"],
+            (
+                account["name"]
+                if account["type"] in NON_TRANSFER_ACCOUNT_TYPES
+                else DEVICE_MODEL_ACCOUNT
+            ),
             account["balance"]["currency"],
             lambda x: x.accounts,
         )
@@ -89,7 +92,7 @@ async def async_setup_entry(
             coordinator,
             entity_description,
             pot_id,
-            MODEL_POT,
+            DEVICE_MODEL_POT,
             pot["currency"],
             lambda x: x.pots,
         )

@@ -9,10 +9,10 @@ from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -360,7 +360,7 @@ class AirPurifier(Fan):
             return
 
         unit = new_state.attributes.get(
-            ATTR_UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
+            EntityStateAttribute.UNIT_OF_MEASUREMENT, UnitOfTemperature.CELSIUS
         )
         current_temperature = temperature_to_homekit(current_temperature, unit)
 

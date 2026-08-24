@@ -15,10 +15,10 @@ from homeassistant.components.remote import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 
@@ -93,7 +93,7 @@ class RemoteInputSelectAccessory(HomeAccessory, ABC):
         super().__init__(*args, category=category, **kwargs)
         state = self.hass.states.get(self.entity_id)
         assert state
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         self._reload_on_change_attrs.extend((source_list_key,))
         self._mapped_sources_list: list[str] = []
         self._mapped_sources: dict[str, str] = {}

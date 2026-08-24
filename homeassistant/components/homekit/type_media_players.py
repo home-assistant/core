@@ -17,7 +17,6 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_MEDIA_PAUSE,
     SERVICE_MEDIA_PLAY,
     SERVICE_MEDIA_PLAY_PAUSE,
@@ -33,6 +32,7 @@ from homeassistant.const import (
     STATE_PLAYING,
     STATE_STANDBY,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 
@@ -266,7 +266,7 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         )
         state = self.hass.states.get(self.entity_id)
         assert state
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         self.chars_speaker: list[str] = []
 
