@@ -766,6 +766,9 @@
     "public_bootstrap_failed": {
       "message": "Could not load the public API bootstrap for camera streams"
     },
+    "public_device_unavailable": {
+      "message": "{name} is no longer available on the UniFi Protect controller"
+    },
     "relay_not_available": {
       "message": "Relay is no longer available"
     },

@@ -21,6 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .utils import (
@@ -322,6 +323,55 @@ async def test_light_added_during_gap_public_only(
     assert hass.states.get("light.gap_light") is not None
     # The resync re-offers the first light too; the dedup must drop it.
     assert "already exists" not in caplog.text
+
+
+async def test_light_command_when_public_object_vanishes(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """A light deleted mid-call raises a translated error, not AttributeError.
+
+    Service calls filter unavailable entities once up front and then run the
+    entity coroutines, so a delete frame landing after that check must not
+    reach the command path as a missing public object.
+    """
+
+    first = make_public_light(light)
+    second = make_public_light(light)
+    second.id = "vanishing-light"
+    second.mac = "FFEEDDCCBB03"
+    second.name = "Vanishing Light"
+    second.display_name = "Vanishing Light"
+
+    _use_public_only_bootstrap(ufp, first, second)
+
+    await init_entry(hass, ufp, [])
+    assert_entity_counts(hass, Platform.LIGHT, 2, 2)
+
+    def _delete_on_command(victim: Mock, result: Mock) -> AsyncMock:
+        """Delete ``victim`` while the other light's command is running."""
+
+        async def _run(*args: Any, **kwargs: Any) -> Mock:
+            ufp.api.public_bootstrap.lights.pop(victim.id, None)
+            msg = public_device_ws_message(victim)
+            msg.new_obj = None
+            msg.old_obj = victim
+            ufp.devices_ws_subscription(msg)
+            return result
+
+        return AsyncMock(side_effect=_run)
+
+    # Each light deletes the other, so whichever entity runs first, the second
+    # one meets a missing public object regardless of scheduling order.
+    first.set_light = _delete_on_command(second, first)
+    second.set_light = _delete_on_command(first, second)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            "light",
+            "turn_off",
+            {ATTR_ENTITY_ID: ["light.test_light", "light.vanishing_light"]},
+            blocking=True,
+        )
 
 
 async def test_light_turn_on_with_brightness_public_only(
