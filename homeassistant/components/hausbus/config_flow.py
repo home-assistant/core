@@ -51,7 +51,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         if not self._search_task.done():
             return self.async_show_progress(
                 step_id="wait_for_device",
-                progress_action="searching devices",
+                progress_action="wait_for_device"
                 progress_task=self._search_task,
             )
 
