@@ -92,14 +92,12 @@ async def test_async_media_caps() -> None:
     )
 
 
-@pytest.mark.parametrize("raise_error", [True, False])
 async def test_async_update_disconnect(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     fake_afsapi_dev: FakeAFSAPIDevice,
-    raise_error: bool,
 ) -> None:
     """Test that an update with a disconnect can change device availability."""
 
@@ -122,17 +120,20 @@ async def test_async_update_disconnect(
     entities = er.async_entries_for_device(entity_registry, device_entry.id)
     assert len(entities) == expected_num_entities
 
+    # Get hass to do an update
+    await async_update_entity(hass, entities[0].entity_id)
+    # Fake device starts in off state
+    assert hass.states.get(entities[0].entity_id).state == STATE_OFF
+
     # Make the fake device raise a connection error next time get_power is called
-    fake_afsapi_dev.fail_get_power = raise_error
+    fake_afsapi_dev.fail_get_power = True
     # get hass to do an update
     await async_update_entity(hass, entities[0].entity_id)
-
-    # Check device availability based on raise_error flag
-    assert (
-        hass.states.get(entities[0].entity_id).state == STATE_UNAVAILABLE
-        if raise_error
-        else STATE_OFF
-    )
+    # Check device availability, should now be offline
+    assert hass.states.get(entities[0].entity_id).state == STATE_UNAVAILABLE
 
     # Reset device error state
     fake_afsapi_dev.fail_get_power = False
+    await async_update_entity(hass, entities[0].entity_id)
+    # Fake device should be back in off state
+    assert hass.states.get(entities[0].entity_id).state == STATE_OFF
