@@ -22,8 +22,7 @@ Pass in parameter 'client_id' and 'redirect_url' validate by indieauth.
 Pass in parameter 'handler' to specify the auth provider to use. Auth providers
 are identified by type and id.
 
-And optional parameter 'type' has to set as 'link_user' if login flow used for
-link credential to exist user. Default 'type' is 'authorize'.
+The default 'type' is 'authorize'.
 
 {
     "client_id": "https://hassbian.local:8123/",
@@ -54,9 +53,6 @@ Progress the flow. Most flows will be 1 page, but could optionally add extra
 login challenges, like TFA. Once the flow has finished, the returned step will
 have type FlowResultType.CREATE_ENTRY and "result" key will contain
 an authorization code.
-The authorization code associated with an authorized user by default, it will
-associate with an credential if "type" set to "link_user" in
-"/auth/login_flow"
 
 {
     "flow_id": "8f7e42faab604bcab7ac43c44ca34d58",
@@ -141,12 +137,11 @@ class WellKnownOAuthInfoView(HomeAssistantView):
             "authorization_endpoint": f"{url_prefix}/auth/authorize",
             "token_endpoint": f"{url_prefix}/auth/token",
             "revocation_endpoint": f"{url_prefix}/auth/revoke",
-            # Home Assistant already accepts URL-based client_ids via
-            # IndieAuth without prior registration, which is compatible with
-            # draft-ietf-oauth-client-id-metadata-document. This flag
-            # advertises that support to encourage clients to use it. The
-            # metadata document is not actually fetched as IndieAuth doesn't
-            # require it.
+            # Home Assistant accepts URL-based client_ids via IndieAuth without
+            # prior registration, and discovers allowed redirect URIs from link
+            # tags or a Client ID Metadata Document served at the client_id URL.
+            # This flag advertises that support
+            # (draft-ietf-oauth-client-id-metadata-document).
             "client_id_metadata_document_supported": True,
             "response_types_supported": ["code"],
             "service_documentation": (
@@ -351,7 +346,9 @@ class LoginFlowIndexView(LoginFlowBaseView):
                     [vol.Any(str, None)], vol.Length(2, 2), vol.Coerce(tuple)
                 ),
                 vol.Required("redirect_uri"): str,
-                vol.Optional("type", default="authorize"): str,
+                vol.Optional(
+                    "type", default="authorize"
+                ): str,  # not used, kept for backwards compatibility
             }
         )
     )
@@ -371,7 +368,6 @@ class LoginFlowIndexView(LoginFlowBaseView):
                 handler,
                 context=AuthFlowContext(
                     ip_address=ip_address(request.remote),  # type: ignore[arg-type]
-                    credential_only=data.get("type") == "link_user",
                     redirect_uri=redirect_uri,
                 ),
             )

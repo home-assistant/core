@@ -13,12 +13,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfVolumeFlowRate,
-)
+from homeassistant.const import UnitOfRatio, UnitOfTemperature, UnitOfVolumeFlowRate
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
@@ -54,14 +49,14 @@ _T2 = FreshrSensorEntityDescription(
 _CO2 = FreshrSensorEntityDescription(
     key="co2",
     device_class=SensorDeviceClass.CO2,
-    native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+    native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=lambda r: r.co2,
 )
 _HUM = FreshrSensorEntityDescription(
     key="hum",
     device_class=SensorDeviceClass.HUMIDITY,
-    native_unit_of_measurement=PERCENTAGE,
+    native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     state_class=SensorStateClass.MEASUREMENT,
     value_fn=lambda r: r.hum,
 )

@@ -84,11 +84,10 @@ async def test_async_setup_entry_update(
     dummy_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, entry.entry_id, 0, 7, False)},
-        via_device=(DOMAIN, entry.entry_id),
     )
 
     assert dummy_entity in entity_registry.entities.values()
-    assert dummy_device in device_registry.devices.values()
+    assert dummy_device in device_registry.devices
 
 
 @pytest.mark.parametrize(

@@ -36,7 +36,7 @@ from homeassistant.helpers.selector import (
     NumericThresholdSelector,
     NumericThresholdSelectorConfig,
 )
-from homeassistant.helpers.sun import get_astral_event_date, get_astral_observer
+from homeassistant.helpers.sun import get_astral_event_date, get_astral_observer, is_up
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -226,8 +226,7 @@ class _UpCondition(_SunStateCondition):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
-        elevation, _ = _solar_position(self._hass)
-        return elevation >= ELEVATION_HORIZON
+        return is_up(self._hass)
 
 
 class _SetCondition(_SunStateCondition):
@@ -236,8 +235,7 @@ class _SetCondition(_SunStateCondition):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
-        elevation, _ = _solar_position(self._hass)
-        return elevation < ELEVATION_HORIZON
+        return not is_up(self._hass)
 
 
 class _AscendingCondition(_SunStateCondition):

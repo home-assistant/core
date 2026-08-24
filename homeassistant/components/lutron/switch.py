@@ -28,12 +28,26 @@ async def async_setup_entry(
 
     # Add Lutron Switches
     for area_name, device in entry_data.switches:
-        entities.append(LutronSwitch(area_name, device, entry_data.client))
+        entities.append(
+            LutronSwitch(
+                hass, area_name, device, entry_data.client, config_entry.entry_id
+            )
+        )
 
     # Add the indicator LEDs for scenes (keypad buttons)
     for area_name, keypad, scene, led in entry_data.scenes:
         if led is not None:
-            entities.append(LutronLed(area_name, keypad, scene, led, entry_data.client))
+            entities.append(
+                LutronLed(
+                    hass,
+                    area_name,
+                    keypad,
+                    scene,
+                    led,
+                    entry_data.client,
+                    config_entry.entry_id,
+                )
+            )
     async_add_entities(entities, True)
 
 
@@ -77,14 +91,18 @@ class LutronLed(LutronKeypad, SwitchEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         area_name: str,
         keypad: Keypad,
         scene_device: Button,
         led_device: Led,
         controller: Lutron,
+        config_entry_id: str,
     ) -> None:
         """Initialize the switch."""
-        super().__init__(area_name, led_device, controller, keypad)
+        super().__init__(
+            hass, area_name, led_device, controller, keypad, config_entry_id
+        )
         self._keypad_name = keypad.name
         self._attr_name = scene_device.name
 

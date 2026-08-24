@@ -7,12 +7,13 @@ from aioaquarite import AquariteError
 
 from homeassistant.components.select import SelectEntity, SelectEntityDescription
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
-from .const import DOMAIN
+from .const import DOMAIN, SIGNAL_NEW_POOL
 from .coordinator import VistapoolDataUpdateCoordinator
 from .entity import VistapoolEntity
 
@@ -60,6 +61,24 @@ SELECT_DESCRIPTIONS: tuple[VistapoolSelectEntityDescription, ...] = (
 )
 
 
+def _build_select_entities(
+    coordinator: VistapoolDataUpdateCoordinator,
+) -> list[SelectEntity]:
+    """Build the select entities for a single pool."""
+    entities: list[SelectEntity] = []
+    for description in SELECT_DESCRIPTIONS:
+        if description.exists_path is not None:
+            required = (
+                (description.exists_path,)
+                if isinstance(description.exists_path, str)
+                else description.exists_path
+            )
+            if not all(coordinator.get_value(path) for path in required):
+                continue
+        entities.append(VistapoolSelect(coordinator, description))
+    return entities
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: VistapoolConfigEntry,
@@ -67,20 +86,19 @@ async def async_setup_entry(
 ) -> None:
     """Set up Vistapool select entities for every pool on the account."""
     entities: list[SelectEntity] = []
-
     for coordinator in entry.runtime_data.coordinators.values():
-        for description in SELECT_DESCRIPTIONS:
-            if description.exists_path is not None:
-                required = (
-                    (description.exists_path,)
-                    if isinstance(description.exists_path, str)
-                    else description.exists_path
-                )
-                if not all(coordinator.get_value(path) for path in required):
-                    continue
-            entities.append(VistapoolSelect(coordinator, description))
-
+        entities.extend(_build_select_entities(coordinator))
     async_add_entities(entities)
+
+    @callback
+    def _async_add_pool(coordinator: VistapoolDataUpdateCoordinator) -> None:
+        async_add_entities(_build_select_entities(coordinator))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", _async_add_pool
+        )
+    )
 
 
 def _to_index(raw: Any) -> int | None:

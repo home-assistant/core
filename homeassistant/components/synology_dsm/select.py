@@ -15,6 +15,7 @@ from .coordinator import SynologyDSMCentralUpdateCoordinator, SynologyDSMConfigE
 from .entity import SynologyDSMBaseEntity, SynologyDSMEntityDescription
 
 FAN_SPEED_MAP = {
+    FanSpeed.QUIET_STOP: "low_power",
     FanSpeed.QUIET: "quiet",
     FanSpeed.COOL: "cool",
     FanSpeed.FULL: "full_speed",
@@ -47,7 +48,6 @@ class SynologyDSMFanSpeedMode(
 ):
     """Represent a Synology DSM fan speed mode select entity."""
 
-    _attr_options = list(FAN_SPEED_MAP.values())
     entity_description: SynologyDSMSelectEntityDescription
 
     def __init__(
@@ -62,6 +62,11 @@ class SynologyDSMFanSpeedMode(
             translation_key="fan_speed_mode",
             entity_category=EntityCategory.CONFIG,
         )
+        self._attr_options = [
+            val
+            for fs, val in FAN_SPEED_MAP.items()
+            if fs in api.dsm.hardware.supported_fan_speeds
+        ]
         super().__init__(api, coordinator, description)
 
     @property

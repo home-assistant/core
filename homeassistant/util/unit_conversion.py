@@ -23,6 +23,7 @@ from homeassistant.const import (
     UnitOfMass,
     UnitOfPower,
     UnitOfPressure,
+    UnitOfRadiationConcentration,
     UnitOfRatio,
     UnitOfReactiveEnergy,
     UnitOfReactivePower,
@@ -104,6 +105,9 @@ _NITROGEN_DIOXIDE_MOLAR_MASS = 46.0055
 _NITROGEN_MONOXIDE_MOLAR_MASS = 30.0061
 _OZONE_MOLAR_MASS = 48.00
 _SULPHUR_DIOXIDE_MOLAR_MASS = 64.066
+
+# Radiation concentration conversion constant
+_PICOCURIES_PER_LITER_TO_BECQUEREL_PER_CUBIC_METER = 37  # 1 pCi/L = 37 Bq/m³
 
 
 class BaseUnitConverter:
@@ -610,6 +614,19 @@ class PressureConverter(BaseUnitConverter):
         UnitOfPressure.PSI,
         UnitOfPressure.MMHG,
     }
+
+
+class RadiationConcentrationConverter(BaseUnitConverter):
+    """Utility to convert radiation concentration values."""
+
+    UNIT_CLASS = "radiation_concentration"
+    _UNIT_CONVERSION: dict[str | None, float] = {
+        UnitOfRadiationConcentration.BECQUEREL_PER_CUBIC_METER: 1,
+        UnitOfRadiationConcentration.PICOCURIES_PER_LITER: (
+            1 / _PICOCURIES_PER_LITER_TO_BECQUEREL_PER_CUBIC_METER
+        ),
+    }
+    VALID_UNITS = set(UnitOfRadiationConcentration)
 
 
 class ReactiveEnergyConverter(BaseUnitConverter):

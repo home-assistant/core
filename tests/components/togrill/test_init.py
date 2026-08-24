@@ -30,8 +30,8 @@ async def test_setup_device_present(
     await setup_entry(hass, mock_entry, [])
     assert mock_entry.state is ConfigEntryState.LOADED
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_BLUETOOTH, TOGRILL_SERVICE_INFO.address)}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_BLUETOOTH, TOGRILL_SERVICE_INFO.address), mock_entry.entry_id
     )
     assert device == snapshot
 

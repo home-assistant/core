@@ -28,6 +28,7 @@ def mock_hunterdouglas_hub(
     firmware_json: str,
     rooms_json: str,
     scenes_json: str,
+    scenemembers_json: str,
     shades_json: str,
 ) -> Generator[None]:
     """Return a mocked Powerview Hub with all data populated."""
@@ -63,6 +64,10 @@ def mock_hunterdouglas_hub(
             "homeassistant.components.hunterdouglas_powerview.cover.BaseShade.current_position",
             new_callable=PropertyMock,
             return_value=ShadePosition(primary=0, secondary=0, tilt=0, velocity=0),
+        ),
+        patch(
+            "aiopvapi.scenes.SceneMembers.get_resources",
+            return_value=load_json_value_fixture(scenemembers_json, DOMAIN),
         ),
     ):
         yield
@@ -128,6 +133,20 @@ def scenes_json(api_version: int) -> str:
     if api_version == 2:
         return "gen2/scenes.json"
     if api_version == 3:
+        return "gen3/home/scenes.json"
+    # Add more conditions for different api_versions if needed
+    raise ValueError(f"Unsupported api_version: {api_version}")
+
+
+@pytest.fixture
+def scenemembers_json(api_version: int) -> str:
+    """Return the get_resources fixture for a specific device."""
+    if api_version == 1:
+        return "gen1/scenemembers.json"
+    if api_version == 2:
+        return "gen2/scenemembers.json"
+    if api_version == 3:
+        # gen3 does not have scenemembers endpoint
         return "gen3/home/scenes.json"
     # Add more conditions for different api_versions if needed
     raise ValueError(f"Unsupported api_version: {api_version}")

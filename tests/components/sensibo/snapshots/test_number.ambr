@@ -38,7 +38,7 @@
     'supported_features': 0,
     'translation_key': 'calibration_humidity',
     'unique_id': 'BBZZBBZZ-calibration_hum',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_number[load_platforms0][number.bedroom_bedroom_humidity_calibration-state]
@@ -50,7 +50,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.bedroom_bedroom_humidity_calibration',
@@ -160,7 +160,7 @@
     'supported_features': 0,
     'translation_key': 'calibration_humidity',
     'unique_id': 'ABC999111-calibration_hum',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_number[load_platforms0][number.hallway_hallway_humidity_calibration-state]
@@ -172,7 +172,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.hallway_hallway_humidity_calibration',
@@ -282,7 +282,7 @@
     'supported_features': 0,
     'translation_key': 'calibration_humidity',
     'unique_id': 'AAZZAAZZ-calibration_hum',
-    'unit_of_measurement': '%',
+    'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
 # ---
 # name: test_number[load_platforms0][number.kitchen_kitchen_humidity_calibration-state]
@@ -294,7 +294,7 @@
       <NumberEntityCapabilityAttribute.MIN: 'min'>: -10,
       <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
       <NumberEntityCapabilityAttribute.STEP: 'step'>: 0.1,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PERCENTAGE: '%'>,
     }),
     'context': <ANY>,
     'entity_id': 'number.kitchen_kitchen_humidity_calibration',

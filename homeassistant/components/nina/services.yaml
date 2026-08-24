@@ -1,0 +1,5 @@
+get_details:
+  target:
+    entity:
+      domain: binary_sensor
+      integration: nina

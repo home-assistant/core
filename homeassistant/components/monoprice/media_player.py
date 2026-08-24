@@ -3,7 +3,7 @@
 import logging
 from typing import override
 
-from serial import SerialException
+from serialx import SerialException
 
 from homeassistant import core
 from homeassistant.components.media_player import (

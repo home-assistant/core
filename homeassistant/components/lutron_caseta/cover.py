@@ -183,7 +183,7 @@ async def async_setup_entry(
         # default to standard LutronCasetaCover type if the
         # pylutron type is not yet mapped
         PYLUTRON_TYPE_TO_CLASSES.get(cover_device["type"], LutronCasetaShade)(
-            cover_device, data
+            hass, cover_device, data
         )
         for cover_device in cover_devices
     )
