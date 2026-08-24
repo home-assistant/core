@@ -126,7 +126,7 @@ async def test_form_duplicate_serial_port(hass: HomeAssistant) -> None:
 async def test_form_cannot_connect(
     hass: HomeAssistant,
     connect_error: OSError | None,
-    answer_power: bool,
+    answer_power: bool | None,
 ) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
