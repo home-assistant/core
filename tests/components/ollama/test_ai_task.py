@@ -199,6 +199,7 @@ async def test_generate_structured_data(
         "type": "object",
         "properties": {"characters": {"items": {"type": "string"}, "type": "array"}},
         "required": ["characters"],
+        "additionalProperties": False,
     }
 
 

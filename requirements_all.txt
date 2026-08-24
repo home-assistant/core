@@ -27,6 +27,9 @@ HueBLE==2.2.3
 # homeassistant.components.mastodon
 Mastodon.py==2.2.1
 
+# homeassistant.components.netio
+Netio==2.0.1
+
 # homeassistant.components.playstation_network
 PSNAWP==3.0.3
 
@@ -190,7 +193,7 @@ aioairzone-cloud==0.7.2
 aioairzone==1.0.5
 
 # homeassistant.components.alexa_devices
-aioamazondevices==14.2.2
+aioamazondevices==15.1.0
 
 # homeassistant.components.ambient_network
 # homeassistant.components.ambient_station
@@ -212,7 +215,7 @@ aioaseko==1.0.0
 aioasuswrt==1.5.4
 
 # homeassistant.components.husqvarna_automower
-aioautomower==2.7.6
+aioautomower==2.8.1
 
 # homeassistant.components.azure_devops
 aioazuredevops==2.2.2
@@ -257,7 +260,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.12.0
+aioesphomeapi==46.1.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1195,7 +1198,7 @@ greenplanet-energy-api==0.1.10
 gridnet==5.0.1
 
 # homeassistant.components.growatt_server
-growattServer==2.1.0
+growattServer==2.2.0
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
@@ -1365,7 +1368,7 @@ imgw_pib==2.5.1
 incomfort-client==0.7.1
 
 # homeassistant.components.indevolt
-indevolt-api==1.8.7
+indevolt-api==1.8.8
 
 # homeassistant.components.influxdb
 influxdb-client==1.50.0
@@ -1607,7 +1610,7 @@ mitsubishi-comfort==0.5.2
 moat-ble==0.1.1
 
 # homeassistant.components.modbus
-modbus-connection[tmodbus]==4.8.1
+modbus-connection[tmodbus]==4.9.0
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -2041,7 +2044,7 @@ pyairobotrest==0.4.0
 pyairvisual==2023.08.1
 
 # homeassistant.components.anglian_water
-pyanglianwater==3.2.4
+pyanglianwater==3.3.0
 
 # homeassistant.components.aprilaire
 pyaprilaire==0.9.1
@@ -2276,7 +2279,7 @@ pyinsteon==1.6.4
 pyintelliclima==0.4.1
 
 # homeassistant.components.intesishome
-pyintesishome==2.0.3
+pyintesishome==2.5.0
 
 # homeassistant.components.ipma
 pyipma==3.0.10
@@ -2414,7 +2417,7 @@ pynina==1.0.2
 pynintendoauth==1.0.3
 
 # homeassistant.components.nintendo_parental_controls
-pynintendoparental==2.5.0
+pynintendoparental==2.6.2
 
 # homeassistant.components.nobo_hub
 pynobo==1.9.0
@@ -2928,7 +2931,7 @@ renault-api==0.5.12
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.10
+reolink-aio==0.21.11
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -2974,6 +2977,9 @@ ruuvitag-ble==0.4.0
 
 # homeassistant.components.yamaha
 rxv==0.7.0
+
+# homeassistant.components.samsung_exlink
+samsung-exlink==1.1.0
 
 # homeassistant.components.samsungtv
 samsungctl[websocket]==0.7.1
@@ -3213,6 +3219,9 @@ tilt-pi==0.2.1
 # homeassistant.components.tmb
 tmb==0.0.4
 
+# homeassistant.components.modbus
+tmodbus==0.5.2
+
 # homeassistant.components.todoist
 todoist-api-python==3.1.0
 
@@ -3221,6 +3230,9 @@ togrill-bluetooth==0.9.0
 
 # homeassistant.components.tolo
 tololib==1.2.2
+
+# homeassistant.components.tonewinner
+tonewinner-rs232==1.1.0
 
 # homeassistant.components.toon
 toonapi==0.3.0
@@ -3268,7 +3280,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==15.14.2
+uiprotect==16.1.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1
@@ -3339,7 +3351,7 @@ vizaio==0.5.0
 vobject==0.9.9
 
 # homeassistant.components.voip
-voip-utils==0.4.0
+voip-utils==0.4.3
 
 # homeassistant.components.volkszaehler
 volkszaehler==0.4.0

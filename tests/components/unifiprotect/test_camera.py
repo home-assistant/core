@@ -451,6 +451,7 @@ async def test_public_only_camera(
     assert device.via_device_id == nvr_device.id
     assert device.name == camera.display_name
     assert device.model == camera.type
+    assert device.model_id == camera.type
 
     assert (
         await async_get_stream_source(hass, entity_id)
