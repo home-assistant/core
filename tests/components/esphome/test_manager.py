@@ -36,6 +36,7 @@ from aioesphomeapi import (
     UserServiceArgType,
     ZWaveProxyRequest,
     ZWaveProxyRequestType,
+    build_device_unique_id,
 )
 import aiohttp
 import pytest
@@ -371,6 +372,82 @@ async def test_corrupt_stored_state_skipped(
     state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+async def test_deep_sleep_device_persists_same_key_on_sub_devices(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """States with the same key on different sub devices persist independently."""
+    sub_devices = [
+        SubDeviceInfo(device_id=11111111, name="Sub Device 1", area_id=0),
+        SubDeviceInfo(device_id=22222222, name="Sub Device 2", area_id=0),
+    ]
+    entity_info = [
+        SensorInfo(object_id="temp", key=1, name="Temp", device_id=11111111),
+        SensorInfo(object_id="temp", key=1, name="Temp", device_id=22222222),
+    ]
+    states = [
+        SensorState(key=1, state=11, device_id=11111111),
+        SensorState(key=1, state=22, device_id=22222222),
+    ]
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=entity_info,
+        states=states,
+        device_info={"has_deep_sleep": True, "devices": sub_devices},
+    )
+    entry = device.entry
+
+    await device.mock_disconnect(expected_disconnect=True)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    stored = hass_storage[f"esphome.{entry.entry_id}"]["data"]["states"]["sensor"]
+    assert sorted(stored, key=lambda state: state["device_id"]) == [
+        state.to_dict() for state in states
+    ]
+
+
+async def test_cold_start_restores_same_key_on_sub_devices(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Restored states with the same key land on their own sub device entity."""
+    entry = _seed_deep_sleep_storage(hass, hass_storage, expected_disconnect=True)
+    storage_key = f"{DOMAIN}.{entry.entry_id}"
+    data = hass_storage[storage_key]["data"]
+    data["device_info"]["devices"] = [
+        SubDeviceInfo(device_id=11111111, name="Sub Device 1", area_id=0).to_dict(),
+        SubDeviceInfo(device_id=22222222, name="Sub Device 2", area_id=0).to_dict(),
+    ]
+    infos = [
+        SensorInfo(object_id="temp", key=1, name="Temp", device_id=11111111),
+        SensorInfo(object_id="temp", key=1, name="Temp", device_id=22222222),
+    ]
+    data["sensor"] = [info.to_dict() for info in infos]
+    data["states"] = {
+        "sensor": [
+            SensorState(key=1, state=11, device_id=11111111).to_dict(),
+            SensorState(key=1, state=22, device_id=22222222).to_dict(),
+        ]
+    }
+
+    await _async_setup_without_connecting(hass, mock_client, entry)
+
+    mac = data["device_info"]["mac_address"]
+    for info, expected in zip(infos, ("11", "22"), strict=True):
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, build_device_unique_id(mac, info)
+        )
+        assert entity_id is not None
+        state = hass.states.get(entity_id)
+        assert state is not None
+        assert state.state == expected
 
 
 async def test_non_deep_sleep_device_does_not_persist_states(

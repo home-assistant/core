@@ -1,6 +1,7 @@
 """Support for esphome entities."""
 
 from collections.abc import Awaitable, Callable, Coroutine
+from dataclasses import replace
 import functools
 import logging
 import math
@@ -148,13 +149,17 @@ def async_static_info_updated(
             )
         old_info = current_infos.pop(candidates.pop(idx))
 
-        # A cached state at the mover's destination key is only the
-        # mover's own if it was written from the mover's old slot;
-        # anything else is foreign and must not be adopted on re-add
-        if (cached_state := states.get(info.key)) is not None and (
-            cached_state.device_id != old_info.device_id or info.key != old_info.key
+        # Carry the mover's own cached state to its new slot; anything
+        # already there is foreign and must not be adopted on re-add
+        new_slot = (info.device_id, info.key)
+        if (
+            info.key == old_info.key
+            and (own_state := states.pop((old_info.device_id, old_info.key), None))
+            is not None
         ):
-            del states[info.key]
+            states[new_slot] = replace(own_state, device_id=info.device_id)  # type: ignore[type-var]
+        else:
+            states.pop(new_slot, None)
 
         # Entity has switched devices, need to migrate unique_id
         # and handle state subscriptions
@@ -266,10 +271,9 @@ def async_static_info_updated(
     # occupied by the same entity; anything else is stale and must not
     # be adopted by another entity through a reused key
     if not first_infos and (rekeys or current_infos or new_entity_slots):
-        for cached_key, cached_state in list(states.items()):
-            slot = (cached_state.device_id, cached_key)
+        for slot in list(states):
             if slot not in new_infos or slot in new_entity_slots:
-                del states[cached_key]
+                del states[slot]
         entry_data.stale_state -= {
             stale_key
             for stale_key in entry_data.stale_state
@@ -459,7 +463,9 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
     ) -> None:
         """Initialize."""
         self._entry_data = entry_data
-        self._states = cast(dict[int, _StateT], entry_data.state[state_type])
+        self._states = cast(
+            dict[DeviceEntityKey, _StateT], entry_data.state[state_type]
+        )
         assert entry_data.device_info is not None
         device_info = entry_data.device_info
         self._on_entry_data_changed()
@@ -579,9 +585,9 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
     @callback
     def _update_state_from_entry_data(self) -> None:
         """Update state from entry data."""
-        key = self._key
-        if has_state := key in self._states:
-            self._state = self._states[key]
+        state_key = (self._static_info.device_id, self._key)
+        if has_state := state_key in self._states:
+            self._state = self._states[state_key]
         self._has_state = has_state
 
     @callback

@@ -163,7 +163,7 @@ class RuntimeEntryData:
     title: str
     client: APIClient
     store: ESPHomeStorage
-    state: defaultdict[type[EntityState], dict[int, EntityState]] = field(
+    state: defaultdict[type[EntityState], dict[DeviceEntityKey, EntityState]] = field(
         default_factory=lambda: defaultdict(dict)
     )
     # When the disconnect callback is called, we mark all states
@@ -441,11 +441,13 @@ class RuntimeEntryData:
     def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
         key = state.key
+        device_id = state.device_id
         state_type = type(state)
         stale_state = self.stale_state
         current_state_by_type = self.state[state_type]
-        current_state = current_state_by_type.get(key, _SENTINEL)
-        subscription_key = (state_type, state.device_id, key)
+        state_key = (device_id, key)
+        current_state = current_state_by_type.get(state_key, _SENTINEL)
+        subscription_key = (state_type, device_id, key)
         if (
             current_state == state
             and subscription_key not in stale_state
@@ -453,13 +455,13 @@ class RuntimeEntryData:
             and not (
                 state_type is SensorState
                 and (platform_info := self.info.get(SensorInfo))
-                and (entity_info := platform_info.get((state.device_id, state.key)))
+                and (entity_info := platform_info.get(state_key))
                 and (cast(SensorInfo, entity_info)).force_update
             )
         ):
             return
         stale_state.discard(subscription_key)
-        current_state_by_type[key] = state
+        current_state_by_type[state_key] = state
         if subscription := self.state_subscriptions.get(subscription_key):
             try:
                 subscription()
@@ -500,7 +502,7 @@ class RuntimeEntryData:
                     except ValueError, TypeError, KeyError:
                         _LOGGER.debug("Skipping corrupt stored %s state", comp_type)
                         continue
-                    self.state[state_cls][obj.key] = obj
+                    self.state[state_cls][(obj.device_id, obj.key)] = obj
                     # Seed stale_state so the first real update after the
                     # device wakes is always dispatched, even if the value
                     # is identical to the restored one.

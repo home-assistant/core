@@ -776,9 +776,9 @@ class ESPHomeManager:
         # Mark state as stale so that we will always dispatch
         # the next state update of that type when the device reconnects
         entry_data.stale_state = {
-            (type(entity_state), entity_state.device_id, key)
+            (type(entity_state), entity_state.device_id, entity_state.key)
             for state_dict in entry_data.state.values()
-            for key, entity_state in state_dict.items()
+            for entity_state in state_dict.values()
         }
         if entry_data.device_info and entry_data.device_info.has_deep_sleep:
             # States are only known once the device has connected and sent
