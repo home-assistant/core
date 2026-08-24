@@ -12,13 +12,14 @@ import voluptuous as vol
 from homeassistant.components import cloud, mqtt, webhook
 from homeassistant.components.device_tracker import TrackerEntityStateAttribute
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_WEBHOOK_ID, EntityStateAttribute, Platform
+from homeassistant.const import CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.dispatcher import (
     async_dispatcher_connect,
     async_dispatcher_send,
 )
+from homeassistant.helpers.location import get_state_coordinates
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_when_setup
 from homeassistant.util import slugify
@@ -189,14 +190,13 @@ async def handle_webhook(
     response = [
         {
             "_type": "location",
-            "lat": person.attributes[EntityStateAttribute.LATITUDE],
-            "lon": person.attributes[EntityStateAttribute.LONGITUDE],
+            "lat": coordinates.latitude,
+            "lon": coordinates.longitude,
             "tid": "".join(p[0] for p in person.name.split(" ")[:2]),
             "tst": int(person.last_updated.timestamp()),
         }
         for person in hass.states.async_all("person")
-        if EntityStateAttribute.LATITUDE in person.attributes
-        and EntityStateAttribute.LONGITUDE in person.attributes
+        if (coordinates := get_state_coordinates(person)) is not None
     ]
 
     if message["_type"] == "encrypted" and context.secret:
@@ -293,15 +293,11 @@ class OwnTracksContext:
         device_tracker_state = hass.states.get(f"device_tracker.{dev_id}")
 
         if device_tracker_state is not None:
-            acc = device_tracker_state.attributes.get(
-                TrackerEntityStateAttribute.GPS_ACCURACY
-            )
-            lat = device_tracker_state.attributes.get(EntityStateAttribute.LATITUDE)
-            lon = device_tracker_state.attributes.get(EntityStateAttribute.LONGITUDE)
-
-            if lat is not None and lon is not None:
-                kwargs["gps"] = (lat, lon)
-                kwargs["gps_accuracy"] = acc
+            if (coordinates := get_state_coordinates(device_tracker_state)) is not None:
+                kwargs["gps"] = (coordinates.latitude, coordinates.longitude)
+                kwargs["gps_accuracy"] = device_tracker_state.attributes.get(
+                    TrackerEntityStateAttribute.GPS_ACCURACY
+                )
             else:
                 kwargs["gps"] = None
                 kwargs["gps_accuracy"] = None
