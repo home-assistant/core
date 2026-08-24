@@ -248,14 +248,23 @@ class GazetteerFallback:
             self._previous_targets.popitem(last=False)
 
     async def _async_get_matcher(self) -> GazetteerMatcher:
-        """Return the matcher, over a home built or refreshed from the registries."""
+        """Return the matcher, over a home built or refreshed from the registries.
+
+        Reading the registries has to happen here, since that is where they are safe
+        to touch, but it is only assembling a dictionary. Building the tagger around
+        that dictionary is the expensive half and grows with the home -- tens of
+        milliseconds at a few hundred entities, and a fifth of a second at a few
+        thousand -- so it goes to the executor whether the matcher is new or not.
+        """
         async with self._build_lock:
             if self._matcher is None:
                 self._matcher = await self.hass.async_add_executor_job(
                     partial(GazetteerMatcher, home=async_build_home(self.hass))
                 )
             elif self._stale:
-                self._matcher.set_home(async_build_home(self.hass))
+                await self.hass.async_add_executor_job(
+                    self._matcher.set_home, async_build_home(self.hass)
+                )
             self._stale = False
 
         return self._matcher
