@@ -1,9 +1,11 @@
 """Test the Remember The Milk integration."""
 
 from collections.abc import Callable
+from datetime import timedelta
 from unittest.mock import MagicMock
 
 from aiortm import AioRTMError, AuthError
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.remember_the_milk.const import (
@@ -18,7 +20,7 @@ from homeassistant.setup import async_setup_component
 
 from .const import CREATE_ENTRY_DATA, PROFILE
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 LIST_ID = 42
 SUBENTRY_ID = "test-subentry-id"
@@ -392,3 +394,68 @@ async def test_coordinator_lists_fetch_errors(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
     assert config_entry.state is expected_state
+
+
+@pytest.mark.usefixtures("storage")
+async def test_coordinator_does_not_delete_server_removed_list(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a list removed from the server on a subsequent poll is not deleted.
+
+    The update listener computes lists to delete by comparing the current subentries
+    against the coordinator's last-known server data. If it runs before coordinator.data
+    is updated with the fresh (shorter) list, a server-side removal looks like a
+    user-initiated deletion and the list would be permanently deleted on the server.
+    """
+    rtm_list_mock(LIST_ID, "Shopping")
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(config_entry.subentries) == 1
+
+    # List disappears from the server (e.g. archived) on the next poll.
+    lists_response = MagicMock()
+    lists_response.lists = []
+    client.rtm.lists.get_list.return_value = lists_response
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(config_entry.subentries) == 0
+    client.rtm.lists.delete.assert_not_called()
+
+
+@pytest.mark.usefixtures("client", "storage")
+async def test_coordinator_polls_when_no_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that the coordinator keeps polling even when there are no todo entities.
+
+    When there are no eligible RTM lists there are no subentries and therefore no
+    CoordinatorEntity listeners. Without a permanent listener the coordinator stops
+    scheduling refreshes after the first one, so lists created later in RTM are
+    never discovered.
+    """
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(config_entry.subentries) == 0
+
+    # A new list appears on the server.
+    rtm_list_mock(LIST_ID, "Shopping")
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(config_entry.subentries) == 1
+    subentry = next(iter(config_entry.subentries.values()))
+    assert subentry.data[CONF_LIST_ID] == LIST_ID

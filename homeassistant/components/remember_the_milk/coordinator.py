@@ -9,7 +9,7 @@ from aiortm import AioRTMClient, AioRTMError, AuthError
 
 from homeassistant.components.todo import TodoItem, TodoItemStatus
 from homeassistant.config_entries import ConfigEntry, ConfigSubentry
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
@@ -117,11 +117,15 @@ class RtmTodoCoordinator(DataUpdateCoordinator[dict[int, RtmList]]):
                         ),
                         note_id=note_id,
                     )
-        self._async_sync_subentries(result)
+        # Schedule after return so self.data is set before the sync runs.
+        # The update listener fired by subentry mutations reads coordinator.data,
+        # and eager task start means it can run mid-callback synchronously.
+        self.hass.async_create_task(
+            self._async_sync_subentries(result), eager_start=False
+        )
         return result
 
-    @callback
-    def _async_sync_subentries(self, lists: dict[int, RtmList]) -> None:
+    async def _async_sync_subentries(self, lists: dict[int, RtmList]) -> None:
         """Add, update, or remove list subentries to match the fetched lists."""
         entry = self.config_entry
         existing = {
