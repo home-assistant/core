@@ -57,16 +57,23 @@ def get_operational_instance_id(
     return f"{fabric_id_hex}-{node_id_hex}"
 
 
+def get_device_endpoint(endpoint: MatterEndpoint) -> MatterEndpoint:
+    """Return the endpoint the HA device for the given MatterEndpoint is derived from.
+
+    All endpoints of a composed device are represented by a single HA device, derived
+    from the compose parent.
+    Example: Philips Hue motion sensor on Hue Hub (bridged to Matter).
+    """
+    return endpoint.node.get_compose_parent(endpoint.endpoint_id) or endpoint
+
+
 def get_device_id(
     server_info: ServerInfoMessage,
     endpoint: MatterEndpoint,
 ) -> str:
     """Return HA device_id for the given MatterEndpoint."""
     operational_instance_id = get_operational_instance_id(server_info, endpoint.node)
-    # if this is a composed device we need to get the compose parent
-    # example: Philips Hue motion sensor on Hue Hub (bridged to Matter)
-    if compose_parent := endpoint.node.get_compose_parent(endpoint.endpoint_id):
-        endpoint = compose_parent
+    endpoint = get_device_endpoint(endpoint)
     if endpoint.is_bridged_device:
         # Append endpoint ID if this endpoint is a bridged device
         postfix = str(endpoint.endpoint_id)
@@ -74,6 +81,18 @@ def get_device_id(
         # this should be compatible with previous versions
         postfix = "MatterNodeDevice"
     return f"{operational_instance_id}-{postfix}"
+
+
+def get_node_device_identifier(
+    server_info: ServerInfoMessage, node_id: int
+) -> tuple[str, str]:
+    """Return the device registry identifier for the node-level device of a node."""
+    fabric_id_hex = f"{server_info.compressed_fabric_id:016X}"
+    node_id_hex = f"{node_id:016X}"
+    return (
+        DOMAIN,
+        f"{ID_TYPE_DEVICE_ID}_{fabric_id_hex}-{node_id_hex}-MatterNodeDevice",
+    )
 
 
 @callback

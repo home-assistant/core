@@ -98,6 +98,41 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "arofene_link": {
+        "name": "Methanal"
+      },
+      "fall_asleep_status": {
+        "name": "Fall asleep"
+      },
+      "filter_cleaning_reminder": {
+        "name": "Filter cleaning"
+      },
+      "full_dust": {
+        "name": "Full dust"
+      },
+      "header_exist": {
+        "name": "Header"
+      },
+      "led_status": {
+        "name": "LED"
+      },
+      "night_mode": {
+        "name": "Night mode"
+      },
+      "rinse_aid": {
+        "name": "Rinse aid"
+      },
+      "salt": {
+        "name": "Salt"
+      },
+      "screen_status": {
+        "name": "Screen"
+      },
+      "tank_full": {
+        "name": "Tank full"
+      }
+    },
     "climate": {
       "climate_zone1": {
         "name": "Zone 1 thermostat"
@@ -105,9 +140,226 @@
       "climate_zone2": {
         "name": "Zone 2 thermostat"
       }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "Baby",
+              "circulation": "Circulation",
+              "comfort": "Comfort",
+              "customize": "Customize",
+              "eco": "Eco",
+              "induction": "Induction",
+              "natural": "Natural",
+              "silent": "Silent",
+              "sleep": "Sleep",
+              "smart": "Smart",
+              "soft": "Soft",
+              "strong": "Strong",
+              "warm": "Warm"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "cinema": "Cinema",
+              "living": "Living",
+              "mildly": "Mildly",
+              "night": "Night",
+              "reading": "Reading"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "dry_level": {
+        "name": "Dry level"
+      },
+      "flushing_days": {
+        "name": "Flushing days"
+      },
+      "heating_level": {
+        "name": "Heating level"
+      },
+      "leak_water_protection_value": {
+        "name": "Leak water protection value"
+      },
+      "seat_temp_level": {
+        "name": "Seat temperature level"
+      },
+      "vacation_days": {
+        "name": "Vacation days"
+      },
+      "water_hardness": {
+        "name": "Water hardness"
+      },
+      "water_temp_level": {
+        "name": "Water temperature level"
+      }
+    },
+    "select": {
+      "detect_mode": {
+        "name": "Detect mode",
+        "state": {
+          "methanal": "Formaldehyde",
+          "off": "Off",
+          "pm_25": "PM2.5"
+        }
+      },
+      "direction": {
+        "name": "Direction",
+        "state": {
+          "oscillate": "Oscillate"
+        }
+      },
+      "fan_speed": {
+        "name": "Fan speed",
+        "state": {
+          "auto": "Auto",
+          "high": "High",
+          "low": "Low",
+          "lowest": "Lowest",
+          "medium": "Medium",
+          "off": "Off",
+          "standby": "Standby"
+        }
+      },
+      "mode": {
+        "name": "Mode",
+        "state": {
+          "auto": "Auto",
+          "fast": "Fast",
+          "manual": "Manual",
+          "sleep": "Sleep",
+          "smoke": "Smoke",
+          "standby": "Standby"
+        }
+      },
+      "oscillation_angle": {
+        "name": "Oscillation angle",
+        "state": {
+          "off": "Off"
+        }
+      },
+      "oscillation_mode": {
+        "name": "Oscillation mode",
+        "state": {
+          "both": "Both",
+          "curve_8": "Curve 8",
+          "curve_w": "Curve W",
+          "off": "Off",
+          "oscillation": "Oscillation",
+          "reserved": "Reserved",
+          "tilting": "Tilting"
+        }
+      },
+      "rate_select": {
+        "name": "Power rate limit"
+      },
+      "screen_display": {
+        "name": "Screen display",
+        "state": {
+          "bright": "Bright",
+          "dim": "Dim",
+          "off": "Off"
+        }
+      },
+      "silent_level": {
+        "name": "Silent level",
+        "state": {
+          "off": "Off",
+          "silent": "Silent",
+          "super_silent": "Super silent"
+        }
+      },
+      "tilting_angle": {
+        "name": "Tilting angle",
+        "state": {
+          "minus_60": "Minus 60",
+          "off": "Off",
+          "plus_60": "Plus 60"
+        }
+      },
+      "water_level_set": {
+        "name": "Water level setting"
+      },
+      "wind_lr_angle": {
+        "name": "Airflow horizontal",
+        "state": {
+          "left": "Left",
+          "left_mid": "Left middle",
+          "middle": "Middle",
+          "off": "Off",
+          "right": "Right",
+          "right_mid": "Right middle"
+        }
+      },
+      "wind_ud_angle": {
+        "name": "Airflow vertical",
+        "state": {
+          "down": "Down",
+          "down_mid": "Down middle",
+          "middle": "Middle",
+          "off": "Off",
+          "up": "Up",
+          "up_mid": "Up middle"
+        }
+      }
+    },
+    "switch": {
+      "anion": {
+        "name": "Anion"
+      },
+      "aux_heating": {
+        "name": "Auxiliary heating"
+      },
+      "disinfect": {
+        "name": "Disinfect"
+      },
+      "night_light": {
+        "name": "Night light"
+      },
+      "out_silent": {
+        "name": "Outdoor silent mode"
+      },
+      "prompt_tone": {
+        "name": "Prompt tone"
+      },
+      "screen_display": {
+        "name": "Screen display"
+      },
+      "self_clean": {
+        "name": "Self clean"
+      },
+      "smart_eye": {
+        "name": "Smart eye"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "tbh": {
+        "name": "TBH"
+      },
+      "zone1_curve": {
+        "name": "Zone 1 curve"
+      },
+      "zone2_curve": {
+        "name": "Zone 2 curve"
+      }
     }
   },
   "exceptions": {
+    "device_communication_error": {
+      "message": "Error communicating with the device: {error}"
+    },
     "unsupported_hvac_mode": {
       "message": "HVAC mode {hvac_mode} is not supported by this device."
     }
