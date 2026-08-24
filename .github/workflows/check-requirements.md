@@ -310,7 +310,8 @@ Locate the source from `package.repo_url`.
 - GitLab: equivalent REST calls (`/api/v4/projects/{id}/repository/tree`).
 - Codeberg (Forgejo): `GET /api/v1/repos/{owner}/{repo}` for the default
   branch, `GET /api/v1/repos/{owner}/{repo}/git/trees/{branch}?recursive=1`
-  for the tree, then each file's `download_url`.
+  for the tree, then `/api/v1/repos/{owner}/{repo}/contents/{path}?ref={branch}`
+  per file for its `download_url` — tree entries carry no `download_url`.
 - Other hosts: `web-fetch` raw file URLs.
 
 Fetch the **raw contents** of `setup.py` (install-time code runs on every

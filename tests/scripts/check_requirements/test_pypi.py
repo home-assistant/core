@@ -158,9 +158,20 @@ def test_fetch_package_info_no_files_yields_no_provenance_url(
             id="repository-key-gitlab",
         ),
         pytest.param(
-            {"Codeberg": "https://codeberg.org/foo/bar"},
+            {
+                "Homepage": "https://github.com/foo/baz",
+                "GitLab": "https://gitlab.com/foo/bar",
+            },
+            "https://gitlab.com/foo/bar",
+            id="gitlab-key-outranks-homepage",
+        ),
+        pytest.param(
+            {
+                "Homepage": "https://github.com/foo/baz",
+                "Codeberg": "https://codeberg.org/foo/bar",
+            },
             "https://codeberg.org/foo/bar",
-            id="codeberg-key-codeberg",
+            id="codeberg-key-outranks-homepage",
         ),
         pytest.param(
             {
