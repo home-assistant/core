@@ -8,7 +8,7 @@ import pytest
 
 from homeassistant.components.frontier_silicon.media_player import AFSAPIMediaPlayer
 from homeassistant.components.media_player import MediaPlayerEntityFeature
-from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.const import STATE_IDLE, STATE_OFF, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -123,6 +123,7 @@ async def test_media_player_on(
     fake_afsapi_dev.has_power = True
     # get hass to do an update
     await async_update_entity(hass, entities[0].entity_id)
+    assert hass.states.get(entities[0].entity_id).state == STATE_IDLE
 
 
 async def test_async_update_disconnect(
