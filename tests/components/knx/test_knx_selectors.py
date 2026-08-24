@@ -2,7 +2,7 @@
 
 from typing import Any
 
-import probatio as prb
+import probatio
 import pytest
 
 from homeassistant.components.knx.const import ColorTempModes
@@ -176,7 +176,7 @@ def test_ga_selector_invalid(
 ) -> None:
     """Test GASelector."""
     selector = GASelector(**selector_config)
-    with pytest.raises(prb.Invalid, match=error_str):
+    with pytest.raises(probatio.Invalid, match=error_str):
         selector(data)
 
 
@@ -185,10 +185,10 @@ def test_sync_state_selector() -> None:
     selector = SyncStateSelector()
     assert selector("expire 50") == "expire 50"
 
-    with pytest.raises(prb.Invalid):
+    with pytest.raises(probatio.Invalid):
         selector("invalid")
 
-    with pytest.raises(prb.Invalid, match="Sync state cannot be False"):
+    with pytest.raises(probatio.Invalid, match="Sync state cannot be False"):
         selector(False)
 
     false_allowed = SyncStateSelector(allow_false=True)
@@ -264,7 +264,9 @@ def test_ga_selector_serialization(
     ("schema", "serialized"),
     [
         (
-            AllSerializeFirst(prb.Schema({"key": int}), prb.Schema({"ignored": str})),
+            AllSerializeFirst(
+                probatio.Schema({"key": int}), probatio.Schema({"ignored": str})
+            ),
             [{"name": "key", "required": False, "type": "integer"}],
         ),
         (
@@ -323,10 +325,10 @@ def test_ga_selector_serialization(
             },
         ),
         (  # in a dict schema `name` and `required` keys are added
-            prb.Schema(
+            probatio.Schema(
                 {
                     "section_test": KNXSectionFlat(),
-                    prb.Optional("key"): selector.BooleanSelector(),
+                    probatio.Optional("key"): selector.BooleanSelector(),
                 }
             ),
             [
@@ -349,4 +351,6 @@ def test_ga_selector_serialization(
 )
 def test_serialization(schema: Any, serialized: dict[str, Any]) -> None:
     """Test serialization of the selector."""
-    assert prb.to_field_list(schema, custom_serializer=knx_serializer) == serialized
+    assert (
+        probatio.to_field_list(schema, custom_serializer=knx_serializer) == serialized
+    )

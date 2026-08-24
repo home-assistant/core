@@ -2,7 +2,7 @@
 
 from typing import Any, NotRequired, TypedDict
 
-import probatio as prb
+import probatio
 from xknx import XKNX
 from xknx.dpt import DPTBase
 from xknx.telegram.address import parse_device_group_address
@@ -52,7 +52,7 @@ def validate_expose_template_no_coerce(value: str) -> str:
     """Validate an expose template without coercing to Template."""
     temp = cv.template(value)  # validate template
     if temp.is_static:
-        raise prb.Invalid(
+        raise probatio.Invalid(
             "Static templates are not supported."
             " Template should start with '{{'"
             " and end with '}}'"
@@ -60,34 +60,36 @@ def validate_expose_template_no_coerce(value: str) -> str:
     return value  # return original string for storage and later template creation
 
 
-EXPOSE_OPTION_SCHEMA = prb.Schema(
+EXPOSE_OPTION_SCHEMA = probatio.Schema(
     {
-        prb.Required("ga"): GASelector(
+        probatio.Required("ga"): GASelector(
             state=False,
             passive=False,
             write_required=True,
             dpt=["numeric", "enum", "complex", "string"],
         ),
-        prb.Optional("attribute"): str,
-        prb.Optional("default"): object,
-        prb.Optional("cooldown"): cv.positive_float,  # frontend renders to duration
-        prb.Optional("periodic_send"): cv.positive_float,
-        prb.Optional("respond_to_read"): bool,
-        prb.Optional("value_template"): validate_expose_template_no_coerce,
+        probatio.Optional("attribute"): str,
+        probatio.Optional("default"): object,
+        probatio.Optional(
+            "cooldown"
+        ): cv.positive_float,  # frontend renders to duration
+        probatio.Optional("periodic_send"): cv.positive_float,
+        probatio.Optional("respond_to_read"): bool,
+        probatio.Optional("value_template"): validate_expose_template_no_coerce,
     }
 )
 
-EXPOSE_CONFIG_SCHEMA = prb.Schema(
+EXPOSE_CONFIG_SCHEMA = probatio.Schema(
     {
-        prb.Required("entity_id"): selector.EntitySelector(),
-        prb.Required("data"): prb.Schema(
+        probatio.Required("entity_id"): selector.EntitySelector(),
+        probatio.Required("data"): probatio.Schema(
             {
-                prb.Required("options"): [EXPOSE_OPTION_SCHEMA],
-                prb.Optional("notes"): str,
+                probatio.Required("options"): [EXPOSE_OPTION_SCHEMA],
+                probatio.Optional("notes"): str,
             }
         ),
     },
-    extra=prb.REMOVE_EXTRA,
+    extra=probatio.REMOVE_EXTRA,
 )
 
 

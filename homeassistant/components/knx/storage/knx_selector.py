@@ -4,7 +4,7 @@ from collections.abc import Iterable
 from enum import Enum
 from typing import Any, override
 
-import probatio as prb
+import probatio
 
 from homeassistant.const import CONF_PAYLOAD
 
@@ -15,7 +15,7 @@ from .const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
 from .util import dpt_string_to_dict
 
 
-class AllSerializeFirst(prb.All):
+class AllSerializeFirst(probatio.All):
     """Use the first validated value for serialization.
 
     This is a version of probatio.All with custom error handling to
@@ -26,7 +26,7 @@ class AllSerializeFirst(prb.All):
 class KNXSelectorBase:
     """Base class for KNX selectors supporting optional nested schemas."""
 
-    schema: prb.Schema | prb.Any | prb.All | GroupSelectSchema
+    schema: probatio.Schema | probatio.Any | probatio.All | GroupSelectSchema
     selector_type: str
     # mark if self.schema should be serialized to `schema` key
     serialize_subschema: bool = False
@@ -49,7 +49,7 @@ class KNXSectionFlat(KNXSelectorBase):
     """Generate a schema-neutral section with title and description."""
 
     selector_type = "knx_section_flat"
-    schema = prb.Schema(None)
+    schema = probatio.Schema(None)
 
     def __init__(
         self,
@@ -75,12 +75,12 @@ class KNXSection(KNXSelectorBase):
 
     def __init__(
         self,
-        schema: dict[str | prb.Marker, prb.Schemable],
+        schema: dict[str | probatio.Marker, probatio.Schemable],
         collapsible: bool = True,
     ) -> None:
         """Initialize the section."""
         self.collapsible = collapsible
-        self.schema = prb.Schema(schema)
+        self.schema = probatio.Schema(schema)
 
     @override
     def serialize(self) -> dict[str, Any]:
@@ -97,10 +97,10 @@ class GroupSelectOption(KNXSelectorBase):
     selector_type = "knx_group_select_option"
     serialize_subschema: bool = True
 
-    def __init__(self, schema: prb.Schemable, translation_key: str) -> None:
+    def __init__(self, schema: probatio.Schemable, translation_key: str) -> None:
         """Initialize the group select option schema."""
         self.translation_key = translation_key
-        self.schema = prb.Schema(schema)
+        self.schema = probatio.Schema(schema)
 
     @override
     def serialize(self) -> dict[str, Any]:
@@ -111,10 +111,10 @@ class GroupSelectOption(KNXSelectorBase):
         }
 
 
-def _has_extra_keys_error(exc: prb.Invalid) -> bool:
+def _has_extra_keys_error(exc: probatio.Invalid) -> bool:
     """Check if any of the errors is about extra keys."""
-    errors = exc.errors if isinstance(exc, prb.MultipleInvalid) else [exc]
-    return any(isinstance(error, prb.ExtraKeysInvalid) for error in errors)
+    errors = exc.errors if isinstance(exc, probatio.MultipleInvalid) else [exc]
+    return any(isinstance(error, probatio.ExtraKeysInvalid) for error in errors)
 
 
 class GroupSelectSchema:
@@ -126,19 +126,19 @@ class GroupSelectSchema:
     first) so the UI marks a real problem instead of an extra key.
     """
 
-    def __init__(self, *options: prb.Schemable, msg: str | None = None) -> None:
+    def __init__(self, *options: probatio.Schemable, msg: str | None = None) -> None:
         """Store the options to try in order."""
         self.validators = options
         self.msg = msg
-        self._compiled = [prb.Schema(option) for option in options]
+        self._compiled = [probatio.Schema(option) for option in options]
 
     def __call__(self, data: Any) -> Any:
         """Return the first option that validates, else raise the best error."""
-        errors: list[prb.Invalid] = []
+        errors: list[probatio.Invalid] = []
         for option in self._compiled:
             try:
                 return option(data)
-            except prb.Invalid as err:
+            except probatio.Invalid as err:
                 errors.append(err)
         if errors:
             # an option is only reported when it matches the given keys;
@@ -148,7 +148,7 @@ class GroupSelectSchema:
                 (err for err in errors if not _has_extra_keys_error(err)),
                 errors[0],
             )
-        raise prb.AnyInvalid(self.msg or "no valid value found")
+        raise probatio.AnyInvalid(self.msg or "no valid value found")
 
 
 class GroupSelect(KNXSelectorBase):
@@ -237,73 +237,73 @@ class GASelector(KNXSelectorBase):
             "options": options,
         }
 
-    def build_schema(self) -> prb.Schema:
+    def build_schema(self) -> probatio.Schema:
         """Create the schema based on configuration."""
-        schema: dict[prb.Marker, Any] = {}  # will be modified in-place
+        schema: dict[probatio.Marker, Any] = {}  # will be modified in-place
         self._add_group_addresses(schema)
         self._add_passive(schema)
         self._add_dpt(schema)
-        return prb.Schema(
-            prb.All(
+        return probatio.Schema(
+            probatio.All(
                 schema,
-                prb.Schema(  # one group address shall be included
-                    prb.Any(
-                        {prb.Required(CONF_GA_WRITE): prb.IsTrue()},
-                        {prb.Required(CONF_GA_STATE): prb.IsTrue()},
-                        {prb.Required(CONF_GA_PASSIVE): prb.IsTrue()},
+                probatio.Schema(  # one group address shall be included
+                    probatio.Any(
+                        {probatio.Required(CONF_GA_WRITE): probatio.IsTrue()},
+                        {probatio.Required(CONF_GA_STATE): probatio.IsTrue()},
+                        {probatio.Required(CONF_GA_PASSIVE): probatio.IsTrue()},
                         msg="At least one group address must be set",
                     ),
-                    extra=prb.ALLOW_EXTRA,
+                    extra=probatio.ALLOW_EXTRA,
                 ),
             )
         )
 
-    def _add_group_addresses(self, schema: dict[prb.Marker, Any]) -> None:
+    def _add_group_addresses(self, schema: dict[probatio.Marker, Any]) -> None:
         """Add basic group address items to the schema."""
 
         def add_ga_item(key: str, allowed: bool, required: bool) -> None:
             """Add a group address item validator to the schema."""
             if not allowed:
-                schema[prb.Remove(key)] = object
+                schema[probatio.Remove(key)] = object
                 return
             if required:
-                schema[prb.Required(key)] = ga_validator
+                schema[probatio.Required(key)] = ga_validator
             else:
-                schema[prb.Optional(key, default=None)] = maybe_ga_validator
+                schema[probatio.Optional(key, default=None)] = maybe_ga_validator
 
         add_ga_item(CONF_GA_WRITE, self.write, self.write_required)
         add_ga_item(CONF_GA_STATE, self.state, self.state_required)
 
-    def _add_passive(self, schema: dict[prb.Marker, Any]) -> None:
+    def _add_passive(self, schema: dict[probatio.Marker, Any]) -> None:
         """Add passive group addresses validator to the schema."""
         if self.passive:
-            schema[prb.Optional(CONF_GA_PASSIVE, default=list)] = prb.Any(
+            schema[probatio.Optional(CONF_GA_PASSIVE, default=list)] = probatio.Any(
                 [ga_validator],
-                prb.All(  # Coerce `None` to an empty list if passive is allowed
-                    prb.IsFalse(), prb.SetTo(list)
+                probatio.All(  # Coerce `None` to an empty list if passive is allowed
+                    probatio.IsFalse(), probatio.SetTo(list)
                 ),
             )
         else:
-            schema[prb.Remove(CONF_GA_PASSIVE)] = object
+            schema[probatio.Remove(CONF_GA_PASSIVE)] = object
 
-    def _add_dpt(self, schema: dict[prb.Marker, Any]) -> None:
+    def _add_dpt(self, schema: dict[probatio.Marker, Any]) -> None:
         """Add DPT validator to the schema."""
         if self.dpt is not None:
             if isinstance(self.dpt, list):
-                marker = prb.Required if self.dpt_required else prb.Optional
-                schema[marker(CONF_DPT)] = prb.In(get_supported_dpts())
+                marker = probatio.Required if self.dpt_required else probatio.Optional
+                schema[marker(CONF_DPT)] = probatio.In(get_supported_dpts())
             else:
-                schema[prb.Required(CONF_DPT)] = prb.In(
+                schema[probatio.Required(CONF_DPT)] = probatio.In(
                     {item.value for item in self.dpt}
                 )
         else:
-            schema[prb.Remove(CONF_DPT)] = object
+            schema[probatio.Remove(CONF_DPT)] = object
 
 
 class SyncStateSelector(KNXSelectorBase):
     """Selector for knx sync state validation."""
 
-    schema = prb.Schema(sync_state_validator)
+    schema = probatio.Schema(sync_state_validator)
     selector_type = "knx_sync_state"
 
     def __init__(self, allow_false: bool = False) -> None:
@@ -322,7 +322,7 @@ class SyncStateSelector(KNXSelectorBase):
     def __call__(self, data: Any) -> Any:
         """Validate the passed data."""
         if not self.allow_false and not data:
-            raise prb.Invalid(f"Sync state cannot be {data}")
+            raise probatio.Invalid(f"Sync state cannot be {data}")
         return self.schema(data)
 
 
@@ -332,13 +332,15 @@ class KnxPayloadSelector(KNXSelectorBase):
     Raw payloads are stored as hex strings.
     """
 
-    schema = prb.Any(
+    schema = probatio.Any(
         {
-            prb.Required(CONF_VALUE): object,
+            probatio.Required(CONF_VALUE): object,
         },
         {
-            prb.Required(CONF_PAYLOAD): str,
-            prb.Required(CONF_PAYLOAD_LENGTH): prb.All(int, prb.Range(min=0, max=14)),
+            probatio.Required(CONF_PAYLOAD): str,
+            probatio.Required(CONF_PAYLOAD_LENGTH): probatio.All(
+                int, probatio.Range(min=0, max=14)
+            ),
         },
     )
     selector_type = "knx_payload"
@@ -365,21 +367,21 @@ class KnxPayloadSelector(KNXSelectorBase):
             try:
                 int_payload = int(payload, 16)
             except ValueError as ex:
-                raise prb.Invalid(f"Invalid payload format: {payload}") from ex
+                raise probatio.Invalid(f"Invalid payload format: {payload}") from ex
             validated[CONF_PAYLOAD] = hex(int_payload)  # prepends "0x" if not present
 
             if int_payload < 0:
-                raise prb.Invalid(f"Payload cannot be negative: {payload}")
+                raise probatio.Invalid(f"Payload cannot be negative: {payload}")
             if payload_length == 0:
                 # DPT 1,2,3 is marked length 0, has 6 bit size
                 if int_payload > 63:
-                    raise prb.Invalid(
+                    raise probatio.Invalid(
                         f"Payload exceeds DPT 1,2,3 limit of 0x3f (63): {payload}"
                     )
             else:
                 max_payload = (1 << (payload_length * 8)) - 1
                 if int_payload > max_payload:
-                    raise prb.Invalid(
+                    raise probatio.Invalid(
                         f"Payload {payload} exceeds possible maximum for "
                         f"length {payload_length}: {hex(max_payload)}"
                     )
@@ -401,7 +403,7 @@ class KnxSelectOptionsSelector(KNXSelectorBase):
         """Initialize the options selector."""
         self.ga_path = ga_path
         self._payload_selector = KnxPayloadSelector(ga_path=ga_path)
-        self.schema = prb.Schema([self._validate_option])
+        self.schema = probatio.Schema([self._validate_option])
 
     @override
     def serialize(self) -> dict[str, Any]:
@@ -418,10 +420,10 @@ class KnxSelectOptionsSelector(KNXSelectorBase):
         sub-validator.
         """
         if not isinstance(data, dict):
-            raise prb.Invalid("Each option must be a dictionary")
+            raise probatio.Invalid("Each option must be a dictionary")
         option = data.get(SelectConf.OPTION)
         if not isinstance(option, str) or not option:
-            raise prb.Invalid("Option name is required", path=[SelectConf.OPTION])
+            raise probatio.Invalid("Option name is required", path=[SelectConf.OPTION])
         payload = {
             key: value for key, value in data.items() if key != SelectConf.OPTION
         }

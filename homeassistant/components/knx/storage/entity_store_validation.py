@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from typing import Any, Literal, TypedDict
 
-import probatio as prb
+import probatio
 
 from .entity_store_schema import ENTITY_STORE_DATA_SCHEMA
 
@@ -33,7 +33,7 @@ class EntityStoreValidationSuccess(TypedDict):
     entity_id: str | None
 
 
-def parse_invalid(exc: prb.Invalid) -> _ErrorDescription:
+def parse_invalid(exc: probatio.Invalid) -> _ErrorDescription:
     """Parse a probatio.Invalid exception."""
     description = exc.as_dict()
     # path items are str or probatio.Marker; the frontend matches them against config keys
@@ -51,8 +51,8 @@ def validate_config_store_data(
     try:
         # return so defaults are applied
         return schema(entity_data)
-    except prb.Invalid as exc:
-        errors = exc.errors if isinstance(exc, prb.MultipleInvalid) else [exc]
+    except probatio.Invalid as exc:
+        errors = exc.errors if isinstance(exc, probatio.MultipleInvalid) else [exc]
         raise EntityStoreValidationException(
             validation_error={
                 "success": False,
