@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_switch_state_snapshot[ed][time.bedroom_ac-entry]
+# name: test_switch_state_snapshot[ed][time.bedroom_ac_regeneration_time-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'time',
     'entity_category': None,
-    'entity_id': 'time.bedroom_ac',
+    'entity_id': 'time.bedroom_ac_regeneration_time',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': None,
+    'object_id_base': 'Regeneration time',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': None,
+    'original_name': 'Regeneration time',
     'platform': 'midea',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,13 +36,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_switch_state_snapshot[ed][time.bedroom_ac-state]
+# name: test_switch_state_snapshot[ed][time.bedroom_ac_regeneration_time-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Regeneration time',
     }),
     'context': <ANY>,
-    'entity_id': 'time.bedroom_ac',
+    'entity_id': 'time.bedroom_ac_regeneration_time',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
