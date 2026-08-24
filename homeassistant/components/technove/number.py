@@ -4,7 +4,7 @@ from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
 from typing import Any, override
 
-from technove import MIN_CURRENT, TechnoVE
+from technove import MIN_CURRENT, Station as TechnoVEStation
 
 from homeassistant.components.number import (
     NumberDeviceClass,
@@ -29,8 +29,8 @@ PARALLEL_UPDATES = 1
 class TechnoVENumberDescription(NumberEntityDescription):
     """Describes TechnoVE number entity."""
 
-    native_max_value_fn: Callable[[TechnoVE], float]
-    native_value_fn: Callable[[TechnoVE], float]
+    native_max_value_fn: Callable[[TechnoVEStation], float]
+    native_value_fn: Callable[[TechnoVEStation], float]
     set_value_fn: Callable[
         [TechnoVEDataUpdateCoordinator, float], Coroutine[Any, Any, None]
     ]
@@ -43,7 +43,8 @@ async def _set_max_current(
         raise ServiceValidationError(
             translation_domain=DOMAIN, translation_key="max_current_in_sharing_mode"
         )
-    await coordinator.technove.set_max_current(value)
+    await coordinator.technove.set_max_current(int(value))
+    await coordinator.async_request_refresh()
 
 
 NUMBERS = [

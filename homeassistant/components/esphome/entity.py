@@ -17,7 +17,7 @@ from aioesphomeapi import (
 import voluptuous as vol
 
 from homeassistant.const import EntityCategory
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import CALLBACK_TYPE, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import (
     config_validation as cv,
@@ -32,7 +32,12 @@ from homeassistant.helpers.entity_platform import AddEntitiesCallback
 from .const import DOMAIN
 
 # Import config flow so that it's added to the registry
-from .entry_data import DeviceEntityKey, ESPHomeConfigEntry, RuntimeEntryData
+from .entry_data import (
+    DeviceEntityKey,
+    ESPHomeConfigEntry,
+    RuntimeEntryData,
+    async_migrate_unique_id,
+)
 from .enum_mapper import EsphomeEnumMapper
 
 _LOGGER = logging.getLogger(__name__)
@@ -40,6 +45,34 @@ _LOGGER = logging.getLogger(__name__)
 _InfoT = TypeVar("_InfoT", bound=EntityInfo)
 _EntityT = TypeVar("_EntityT", bound="EsphomeEntity[Any,Any]")
 _StateT = TypeVar("_StateT", bound=EntityState)
+
+
+def _build_identity_indexes(
+    current_infos: dict[DeviceEntityKey, EntityInfo],
+    mac: str,
+    new_unique_ids: set[str],
+) -> tuple[dict[str, DeviceEntityKey], dict[str, list[DeviceEntityKey]]]:
+    """Index old infos by unique_id and by name for identity matching.
+
+    ESPHome validates that names are unique per device_id, so
+    unique_ids are unique. The key derives from the name (hash of the
+    name, or of the object_id which derives from the name), so a key
+    can never disambiguate entities the name cannot. Entities whose
+    unique_id is still present are matched by unique_id and are not
+    move candidates.
+    """
+    old_info_by_unique_id: dict[str, DeviceEntityKey] = {}
+    movable_by_name: dict[str, list[DeviceEntityKey]] = {}
+    for dict_key, existing_info in current_infos.items():
+        old_unique_id = build_device_unique_id(mac, existing_info)
+        old_info_by_unique_id[old_unique_id] = dict_key
+        if old_unique_id not in new_unique_ids:
+            # Unnamed entities use the device derived object_id as
+            # their identity so they cannot pair across devices
+            movable_by_name.setdefault(
+                existing_info.name or existing_info.object_id, []
+            ).append(dict_key)
+    return old_info_by_unique_id, movable_by_name
 
 
 @callback
@@ -58,43 +91,70 @@ def async_static_info_updated(
     device_info = entry_data.device_info
     if TYPE_CHECKING:
         assert device_info is not None
-    new_infos: dict[DeviceEntityKey, EntityInfo] = {}
+    new_infos: dict[DeviceEntityKey, EntityInfo] = {
+        (info.device_id, info.key): info for info in infos
+    }
     add_entities: list[_EntityT] = []
 
     ent_reg = er.async_get(hass)
     dev_reg = dr.async_get(hass)
 
-    # Track info by (info.device_id, info.key) to properly handle entities
-    # moving between devices and support sub-devices with overlapping keys
-    for info in infos:
-        info_key = (info.device_id, info.key)
-        new_infos[info_key] = info
+    # The key is only session stable, so match by identity first
+    mac = device_info.mac_address
+    unique_ids = [build_device_unique_id(mac, info) for info in infos]
+    new_unique_ids = set(unique_ids)
+    old_info_by_unique_id, movable_by_name = _build_identity_indexes(
+        current_infos, mac, new_unique_ids
+    )
+    rekeys: list[tuple[EntityInfo, EntityInfo]] = []
+    deferred: list[tuple[EntityInfo, str]] = []
+    # Slots of brand new entities; movers are deliberately not
+    # tracked, though a mover's cached state under its old slot is
+    # still dropped whenever the sweep below runs
+    new_entity_slots: set[DeviceEntityKey] = set()
+    states = entry_data.state[state_type]
 
-        # Try to find existing entity - first with current device_id
-        old_info = current_infos.pop(info_key, None)
-
-        # If not found, search for entity with same key but different device_id
-        # This handles the case where entity moved between devices
-        if not old_info:
-            for existing_device_id, existing_key in list(current_infos):
-                if existing_key == info.key:
-                    # Found entity with same key but different device_id
-                    old_info = current_infos.pop((existing_device_id, existing_key))
-                    break
-
-        # Create new entity if it doesn't exist
-        if not old_info:
-            entity = entity_type(entry_data, info, state_type)
-            add_entities.append(entity)
+    # First pass: unique_id matches and moves between devices. All
+    # moves resolve before any rename so a rename candidate cannot be
+    # mistaken for a mover.
+    for info, unique_id in zip(infos, unique_ids, strict=True):
+        # Identity match by unique_id; survives key re-derivation
+        if (old_dict_key := old_info_by_unique_id.pop(unique_id, None)) is not None:
+            matched_info = current_infos.pop(old_dict_key)
+            if matched_info.key != info.key:
+                # Same entity, new key: re-point subscriptions after
+                # the loop; the registry entry is untouched
+                rekeys.append((matched_info, info))
+            # Equal unique_ids imply equal device_ids
             continue
 
-        # Entity exists - check if device_id has changed
-        if old_info.device_id == info.device_id:
+        # Name match: the entity moved between devices. Prefer a
+        # candidate whose (device_id, key) slot has no incoming info,
+        # since that slot's info is an in place rename of the candidate
+        if not (candidates := movable_by_name.get(info.name or info.object_id)):
+            deferred.append((info, unique_id))
             continue
+        idx = next((i for i, key in enumerate(candidates) if key not in new_infos), -1)
+        if idx == -1:
+            idx = 0
+            _LOGGER.debug(
+                "Ambiguous move for %s: every candidate slot is occupied, "
+                "taking the first candidate",
+                info.name or info.object_id,
+            )
+        old_info = current_infos.pop(candidates.pop(idx))
+
+        # A cached state at the mover's destination key is only the
+        # mover's own if it was written from the mover's old slot;
+        # anything else is foreign and must not be adopted on re-add
+        if (cached_state := states.get(info.key)) is not None and (
+            cached_state.device_id != old_info.device_id or info.key != old_info.key
+        ):
+            del states[info.key]
 
         # Entity has switched devices, need to migrate unique_id
         # and handle state subscriptions
-        old_unique_id = build_device_unique_id(device_info.mac_address, old_info)
+        old_unique_id = build_device_unique_id(mac, old_info)
         entity_id = ent_reg.async_get_entity_id(platform.domain, DOMAIN, old_unique_id)
 
         # If entity not found in registry, re-add it
@@ -111,33 +171,41 @@ def async_static_info_updated(
             add_entities.append(entity)
             continue
 
-        updates: dict[str, Any] = {}
-        new_unique_id = build_device_unique_id(device_info.mac_address, info)
-
-        # Update unique_id if it changed
-        if old_unique_id != new_unique_id:
-            updates["new_unique_id"] = new_unique_id
-
-        # Update device assignment in registry
-        if info.device_id:
-            # Entity now belongs to a sub device
-            new_device = dev_reg.async_get_device_by_identifier(
-                (DOMAIN, f"{device_info.mac_address}_{info.device_id}"),
-                entry_data.entry_id,
+        # Leave the entry untouched when the new unique_id is claimed;
+        # it cannot follow the move, so a partial update helps nothing
+        if old_unique_id != unique_id and ent_reg.async_get_entity_id(
+            platform.domain, DOMAIN, unique_id
+        ):
+            _LOGGER.warning(
+                "Cannot migrate unique_id %s -> %s: already claimed",
+                old_unique_id,
+                unique_id,
             )
         else:
-            # Entity now belongs to the main device
-            new_device = dev_reg.async_get_device_by_connection(
-                (dr.CONNECTION_NETWORK_MAC, device_info.mac_address),
-                entry_data.entry_id,
-            )
+            updates: dict[str, Any] = {}
+            if old_unique_id != unique_id:
+                updates["new_unique_id"] = unique_id
 
-        if new_device:
-            updates["device_id"] = new_device.id
+            # Update device assignment in registry
+            if info.device_id:
+                # Entity now belongs to a sub device
+                new_device = dev_reg.async_get_device_by_identifier(
+                    (DOMAIN, f"{mac}_{info.device_id}"),
+                    entry_data.entry_id,
+                )
+            else:
+                # Entity now belongs to the main device
+                new_device = dev_reg.async_get_device_by_connection(
+                    (dr.CONNECTION_NETWORK_MAC, mac),
+                    entry_data.entry_id,
+                )
 
-        # Apply all registry updates at once
-        if updates:
-            ent_reg.async_update_entity(entity_id, **updates)
+            if new_device:
+                updates["device_id"] = new_device.id
+
+            # Apply all registry updates at once
+            if updates:
+                ent_reg.async_update_entity(entity_id, **updates)
 
         # IMPORTANT: The entity's device assignment in Home
         # Assistant is only read when the entity is first added.
@@ -157,17 +225,53 @@ def async_static_info_updated(
         )
 
         # Signal the existing entity to remove itself
-        # The entity is registered with the old device_id, so we signal with that
-        entry_data.async_signal_entity_removal(info_type, old_info.device_id, info.key)
+        # The entity is registered with the old device_id and old key,
+        # so we signal with those
+        entry_data.async_signal_entity_removal(
+            info_type, old_info.device_id, old_info.key
+        )
 
         # Create new entity with the new device_id
         add_entities.append(entity_type(entry_data, info, state_type))
 
+    # Second pass: anything left at an incoming (device_id, key) slot
+    # is a rename with a stable key; the registry entry follows the
+    # new unique_id. Everything else is a new entity.
+    for info, unique_id in deferred:
+        if (
+            renamed_info := current_infos.pop((info.device_id, info.key), None)
+        ) is None:
+            new_entity_slots.add((info.device_id, info.key))
+            add_entities.append(entity_type(entry_data, info, state_type))
+            continue
+        async_migrate_unique_id(
+            ent_reg,
+            platform.domain,
+            build_device_unique_id(mac, renamed_info),
+            unique_id,
+        )
+
+    if rekeys:
+        entry_data.async_update_entity_keys(info_type, rekeys)
+
     # Anything still in current_infos is now gone
     if current_infos:
-        entry_data.async_remove_entities(
-            hass, current_infos.values(), device_info.mac_address
-        )
+        entry_data.async_remove_entities(hass, current_infos.values(), mac)
+
+    # A cached state is only valid while its (device_id, key) slot is
+    # occupied by the same entity; anything else is stale and must not
+    # be adopted by another entity through a reused key
+    if rekeys or current_infos or new_entity_slots:
+        for cached_key, cached_state in list(states.items()):
+            slot = (cached_state.device_id, cached_key)
+            if slot not in new_infos or slot in new_entity_slots:
+                del states[cached_key]
+        entry_data.stale_state -= {
+            stale_key
+            for stale_key in entry_data.stale_state
+            if stale_key[0] is state_type
+            and (stale_key[1], stale_key[2]) not in new_infos
+        }
 
     # Then update the actual info
     entry_data.info[info_type] = new_infos
@@ -357,6 +461,7 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
         self._on_entry_data_changed()
         self._key = entity_info.key
         self._state_type = state_type
+        self._key_unsubs: list[CALLBACK_TYPE] = []
         self._on_static_info_update(entity_info)
 
         # Determine the device connection based on whether this
@@ -383,30 +488,41 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
                 self._on_device_update,
             )
         )
-        self.async_on_remove(
+        self._subscribe_key_updates()
+        self.async_on_remove(self._unsubscribe_key_updates)
+        self._update_state_from_entry_data()
+
+    @callback
+    def _subscribe_key_updates(self) -> None:
+        """Subscribe to updates that are keyed by the session stable key."""
+        entry_data = self._entry_data
+        static_info = self._static_info
+        self._key_unsubs = [
             entry_data.async_subscribe_state_update(
-                self._static_info.device_id,
+                static_info.device_id,
                 self._state_type,
                 self._key,
                 self._on_state_update,
-            )
-        )
-        self.async_on_remove(
+            ),
             entry_data.async_register_key_static_info_updated_callback(
-                self._static_info, self._on_static_info_update
-            )
-        )
-        # Register to be notified when this entity should remove itself
-        # This happens when the entity moves to a different device
-        self.async_on_remove(
+                static_info, self._on_static_info_update
+            ),
+            # Register to be notified when this entity should remove itself
+            # This happens when the entity moves to a different device
             entry_data.async_register_entity_removal_callback(
-                type(self._static_info),
-                self._static_info.device_id,
+                type(static_info),
+                static_info.device_id,
                 self._key,
                 self._on_removal_signal,
-            )
-        )
-        self._update_state_from_entry_data()
+            ),
+        ]
+
+    @callback
+    def _unsubscribe_key_updates(self) -> None:
+        """Unsubscribe from updates that are keyed by the session stable key."""
+        for unsub in self._key_unsubs:
+            unsub()
+        self._key_unsubs = []
 
     @callback
     def _on_removal_signal(self) -> None:
@@ -430,10 +546,16 @@ class EsphomeEntity(EsphomeBaseEntity, Generic[_InfoT, _StateT]):  # noqa: UP046
         if TYPE_CHECKING:
             static_info = cast(_InfoT, static_info)
             assert device_info
+        unique_id = build_device_unique_id(device_info.mac_address, static_info)
         self._static_info = static_info
-        self._attr_unique_id = build_device_unique_id(
-            device_info.mac_address, static_info
-        )
+        if static_info.key != self._key:
+            # The key is only stable for a session; a firmware update may
+            # re-derive it. Move the key based subscriptions to the new key.
+            self._key = static_info.key
+            if self._key_unsubs:
+                self._unsubscribe_key_updates()
+                self._subscribe_key_updates()
+        self._attr_unique_id = unique_id
         self._attr_entity_registry_enabled_default = not static_info.disabled_by_default
         # https://github.com/home-assistant/core/issues/132532
         # If the name is "", we need to set it to None since otherwise
