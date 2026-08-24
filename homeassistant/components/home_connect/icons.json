@@ -245,6 +245,9 @@
     "change_setting": {
       "service": "mdi:cog"
     },
+    "download_images": {
+      "service": "mdi:download"
+    },
     "set_program_and_options": {
       "service": "mdi:form-select"
     },

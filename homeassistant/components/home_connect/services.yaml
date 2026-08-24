@@ -804,3 +804,23 @@ start_selected_program:
           step: 1
           mode: box
           unit_of_measurement: s
+
+download_images:
+  target:
+    entity:
+      integration: home_connect
+      domain: image
+  fields:
+    folder_name:
+      required: true
+      example: "/tmp/fridge_interior"
+      selector:
+        text:
+    from:
+      example: "2023-01-01T00:00:00Z"
+      selector:
+        datetime:
+    to:
+      example: "2023-01-31T23:59:59Z"
+      selector:
+        datetime:

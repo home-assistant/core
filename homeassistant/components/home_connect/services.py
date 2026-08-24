@@ -1,8 +1,10 @@
 """Custom actions (previously known as services) for the Home Connect integration."""
 
 from collections.abc import Awaitable, Callable
+from datetime import datetime
 from functools import partial
 import logging
+import os
 from typing import Any, cast
 
 from aiohomeconnect.client import Client as HomeConnectClient
@@ -17,18 +19,26 @@ from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
 from aiohomeconnect.model.program import Program, ProgramDefinition
 import voluptuous as vol
 
+from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
 from homeassistant.const import ATTR_DEVICE_ID, UnitOfTemperature
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.helpers import (
+    config_validation as cv,
+    device_registry as dr,
+    service,
+)
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from .const import (
     AFFECTS_TO_ACTIVE_PROGRAM,
     AFFECTS_TO_SELECTED_PROGRAM,
     ATTR_AFFECTS_TO,
+    ATTR_FOLDER_NAME,
+    ATTR_FROM,
     ATTR_KEY,
     ATTR_PROGRAM,
+    ATTR_TO,
     ATTR_VALUE,
     DOMAIN,
     PROGRAM_ENUM_OPTIONS,
@@ -38,6 +48,7 @@ from .const import (
     TRANSLATION_KEYS_PROGRAMS_MAP,
 )
 from .coordinator import HomeConnectConfigEntry
+from .image import HomeConnectImageEntity
 from .utils import bsh_key_to_translation_key, get_dict_from_home_connect_error
 
 LOGGER = logging.getLogger(__name__)
@@ -422,6 +433,63 @@ async def async_service_start_selected_program(call: ServiceCall) -> None:
         ) from err
 
 
+async def async_handle_download_images_service(
+    image_entity: HomeConnectImageEntity, service_call: ServiceCall
+) -> None:
+    """Handle download images services calls."""
+    hass = image_entity.hass
+    folder_name: str = service_call.data[ATTR_FOLDER_NAME]
+    from_time: datetime | None = service_call.data.get(ATTR_FROM)
+    to_time: datetime | None = service_call.data.get(ATTR_TO)
+
+    # check if we allow to access to that file
+    if not hass.config.is_allowed_path(folder_name):
+        raise HomeAssistantError(
+            translation_domain=DOMAIN,
+            translation_key="no_access_to_path",
+            translation_placeholders={"target": folder_name},
+        )
+
+    def _write_image(to_file: str, image_data: bytes) -> None:
+        """Executor helper to write image."""
+        os.makedirs(os.path.dirname(to_file), exist_ok=True)
+        with open(to_file, "wb") as img_file:
+            img_file.write(image_data)
+
+    client = image_entity.appliance_coordinator.client
+    for image_info in (
+        await client.get_images(image_entity.appliance.info.ha_id)
+    ).images:
+        if image_info.key != image_entity.entity_description.key:
+            continue
+        timestamp = datetime.fromtimestamp(image_info.timestamp / 1000)
+        if from_time and timestamp < from_time:
+            continue
+        if to_time and timestamp > to_time:
+            continue
+        try:
+            image_data = await client.get_image(
+                image_entity.appliance.info.ha_id, image_key=image_info.image_key
+            )
+        except HomeConnectError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="fetch_image_error",
+                translation_placeholders=get_dict_from_home_connect_error(err),
+            ) from err
+        try:
+            await hass.async_add_executor_job(
+                _write_image,
+                f"{folder_name}/{timestamp.strftime('%Y%m%d_%H%M%S')}.jpg",
+                image_data,
+            )
+        except OSError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="cannot_write",
+            ) from err
+
+
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Register custom actions."""
@@ -440,4 +508,16 @@ def async_setup_services(hass: HomeAssistant) -> None:
         SERVICE_START_SELECTED_PROGRAM,
         async_service_start_selected_program,
         schema=SERVICE_START_SELECTED_PROGRAM_SCHEMA,
+    )
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "download_images",
+        func=async_handle_download_images_service,
+        entity_domain=IMAGE_DOMAIN,
+        schema={
+            vol.Required(ATTR_FOLDER_NAME): cv.string,
+            vol.Optional(ATTR_FROM): cv.datetime,
+            vol.Optional(ATTR_TO): cv.datetime,
+        },
     )

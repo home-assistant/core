@@ -1602,6 +1602,9 @@
     "auth_error": {
       "message": "Authentication error: {error}. Please, re-authenticate your account"
     },
+    "cannot_write": {
+      "message": "Can't write to file, check logs for details."
+    },
     "config_entry_not_found": {
       "message": "Config entry for device ID {device_id} not found"
     },
@@ -1619,6 +1622,9 @@
     },
     "fetch_program_error": {
       "message": "Error obtaining the selected or active program: {error}"
+    },
+    "no_access_to_path": {
+      "message": "Can't write to directory {target}, no access to path!"
     },
     "no_program_to_start": {
       "message": "No program to start"
@@ -2209,6 +2215,24 @@
         "value": { "description": "Value of the setting.", "name": "Value" }
       },
       "name": "Change setting"
+    },
+    "download_images": {
+      "description": "Downloads images from the appliance. Files names will contain the date of the image.",
+      "fields": {
+        "folder_name": {
+          "description": "Name of the folder to save the images to.",
+          "name": "Folder name"
+        },
+        "from": {
+          "description": "Start time for the image range (UTC).",
+          "name": "From"
+        },
+        "to": {
+          "description": "End time for the image range (UTC).",
+          "name": "To"
+        }
+      },
+      "name": "Download images"
     },
     "set_program_and_options": {
       "description": "Starts or selects a program with options or sets the options for the active or the selected program.",

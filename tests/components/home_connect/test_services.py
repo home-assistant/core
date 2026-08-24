@@ -1,8 +1,10 @@
 """Tests for the Home Connect actions."""
 
 from collections.abc import Awaitable, Callable
+from datetime import datetime
+from pathlib import Path
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiohomeconnect.model import (
     HomeAppliance,
@@ -14,6 +16,7 @@ from aiohomeconnect.model import (
     SettingKey,
 )
 from aiohomeconnect.model.error import HomeConnectError, NoProgramActiveError
+from aiohomeconnect.model.image import ArrayOfImages, Image
 from aiohomeconnect.model.program import ProgramDefinitionOption
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -28,6 +31,7 @@ from homeassistant.components.home_connect.const import (
 from homeassistant.components.home_connect.services import PROGRAM_OPTIONS
 from homeassistant.components.home_connect.utils import bsh_key_to_translation_key
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -56,6 +60,16 @@ SERVICE_APPLIANCE_METHOD_MAPPING = {
 SERVICE_VALIDATION_ERROR_MAPPING = {
     "change_setting": r"Error.*assigning.*value.*setting.*",
 }
+
+IMAGE_ENTITY_ID = "image.fridgefreezer_interior_right_camera"
+
+
+@pytest.fixture
+def platforms(request: pytest.FixtureRequest) -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    if hasattr(request, "param") and request.param:
+        return request.param
+    return []
 
 
 SERVICES_SET_PROGRAM_AND_OPTIONS = [
@@ -1072,3 +1086,268 @@ async def test_temperature_options_convert_api_error(
         kwargs.get("options") or kwargs["array_of_options"].options
     )
     assert call_options[0].value == 35
+
+
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]], indirect=True)
+@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+async def test_download_images_service(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    tmp_path: Path,
+) -> None:
+    """Test downloading images for matching image entity key."""
+    images = [
+        Image(
+            key="Refrigeration.Common.EnumType.Compartment.Type.InteriorRightRC",
+            image_key="image_key_1",
+            preview_image_key="preview_image_key_1",
+            timestamp=1785974400000,
+            quality="good",
+        ),
+        Image(
+            key="Refrigeration.Common.EnumType.Compartment.Type.DoorRightRC",
+            image_key="image_key_2",
+            preview_image_key="preview_image_key_2",
+            timestamp=1785978000000,
+            quality="good",
+        ),
+        Image(
+            key="Refrigeration.Common.EnumType.Compartment.Type.InteriorRightRC",
+            image_key="image_key_3",
+            preview_image_key="preview_image_key_3",
+            timestamp=1785981600000,
+            quality="good",
+        ),
+    ]
+    image_data = {
+        "image_key_1": b"image_data_1",
+        "image_key_3": b"image_data_3",
+    }
+
+    async def mock_get_image(_: str, *, image_key: str) -> bytes:
+        return image_data[image_key]
+
+    client.get_images = AsyncMock(return_value=ArrayOfImages(images))
+    client.get_image = AsyncMock(wraps=mock_get_image)
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    client.get_images.reset_mock()
+    client.get_image.reset_mock()
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_images",
+            {
+                "entity_id": IMAGE_ENTITY_ID,
+                "folder_name": str(tmp_path),
+            },
+            blocking=True,
+        )
+
+    client.get_images.assert_awaited_once_with(appliance.ha_id)
+    assert client.get_image.await_count == 2
+    client.get_image.assert_any_call(appliance.ha_id, image_key="image_key_1")
+    client.get_image.assert_any_call(appliance.ha_id, image_key="image_key_3")
+
+    expected_files = {
+        f"{datetime.fromtimestamp(image.timestamp / 1000).strftime('%Y%m%d_%H%M%S')}.jpg"
+        for image in images
+        if image.key == "Refrigeration.Common.EnumType.Compartment.Type.InteriorRightRC"
+    }
+    assert {path.name for path in tmp_path.glob("*.jpg")} == expected_files
+
+
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]], indirect=True)
+@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+async def test_download_images_service_with_time_filters(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    appliance: HomeAppliance,
+    tmp_path: Path,
+) -> None:
+    """Test downloading images with from/to filters."""
+    images = [
+        Image(
+            key="Refrigeration.Common.EnumType.Compartment.Type.InteriorRightRC",
+            image_key="image_key_1",
+            preview_image_key="preview_image_key_1",
+            timestamp=1785974400000,
+            quality="good",
+        ),
+        Image(
+            key="Refrigeration.Common.EnumType.Compartment.Type.InteriorRightRC",
+            image_key="image_key_2",
+            preview_image_key="preview_image_key_2",
+            timestamp=1785978000000,
+            quality="good",
+        ),
+    ]
+
+    client.get_images = AsyncMock(return_value=ArrayOfImages(images))
+    client.get_image = AsyncMock(return_value=b"image_data_2")
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    client.get_images.reset_mock()
+    client.get_image.reset_mock()
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_images",
+            {
+                "entity_id": IMAGE_ENTITY_ID,
+                "folder_name": str(tmp_path),
+                "from": datetime.fromtimestamp(images[1].timestamp / 1000),
+                "to": datetime.fromtimestamp(images[1].timestamp / 1000),
+            },
+            blocking=True,
+        )
+
+    client.get_images.assert_awaited_once_with(appliance.ha_id)
+    client.get_image.assert_awaited_once_with(appliance.ha_id, image_key="image_key_2")
+
+    expected_filename = f"{datetime.fromtimestamp(images[1].timestamp / 1000).strftime('%Y%m%d_%H%M%S')}.jpg"
+    assert {path.name for path in tmp_path.glob("*.jpg")} == {expected_filename}
+
+
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]], indirect=True)
+@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+async def test_download_images_service_no_access_to_path(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+) -> None:
+    """Test download_images fails when target path is not allowlisted."""
+    images = [
+        Image(
+            key="Refrigeration.Common.EnumType.Compartment.Type.InteriorRightRC",
+            image_key="image_key_1",
+            preview_image_key="preview_image_key_1",
+            timestamp=1785974400000,
+            quality="good",
+        )
+    ]
+
+    client.get_images = AsyncMock(return_value=ArrayOfImages(images))
+    client.get_image = AsyncMock(return_value=b"image_data_1")
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    client.get_images.reset_mock()
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=False),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_images",
+            {
+                "entity_id": IMAGE_ENTITY_ID,
+                "folder_name": "/forbidden",
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "no_access_to_path"
+    client.get_images.assert_not_awaited()
+
+
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]], indirect=True)
+@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+async def test_download_images_service_get_image_error(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    tmp_path: Path,
+) -> None:
+    """Test download_images handles API errors when fetching image bytes."""
+    images = [
+        Image(
+            key="Refrigeration.Common.EnumType.Compartment.Type.InteriorRightRC",
+            image_key="image_key_1",
+            preview_image_key="preview_image_key_1",
+            timestamp=1785974400000,
+            quality="good",
+        )
+    ]
+
+    client.get_images = AsyncMock(return_value=ArrayOfImages(images))
+    client.get_image = AsyncMock(side_effect=HomeConnectError("error.key"))
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    client.get_images.reset_mock()
+    client.get_image.reset_mock()
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_images",
+            {
+                "entity_id": IMAGE_ENTITY_ID,
+                "folder_name": str(tmp_path),
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "fetch_image_error"
+
+
+@pytest.mark.parametrize("platforms", [[Platform.IMAGE]], indirect=True)
+@pytest.mark.parametrize("appliance", ["FridgeFreezer"], indirect=True)
+async def test_download_images_service_cannot_write(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    tmp_path: Path,
+) -> None:
+    """Test download_images handles filesystem write errors."""
+    images = [
+        Image(
+            key="Refrigeration.Common.EnumType.Compartment.Type.InteriorRightRC",
+            image_key="image_key_1",
+            preview_image_key="preview_image_key_1",
+            timestamp=1785974400000,
+            quality="good",
+        )
+    ]
+
+    client.get_images = AsyncMock(return_value=ArrayOfImages(images))
+    client.get_image = AsyncMock(return_value=b"image_data_1")
+
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    client.get_images.reset_mock()
+    client.get_image.reset_mock()
+
+    with (
+        patch.object(hass.config, "is_allowed_path", return_value=True),
+        patch.object(hass, "async_add_executor_job", side_effect=OSError),
+        pytest.raises(HomeAssistantError) as exc_info,
+    ):
+        await hass.services.async_call(
+            DOMAIN,
+            "download_images",
+            {
+                "entity_id": IMAGE_ENTITY_ID,
+                "folder_name": str(tmp_path),
+            },
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_key == "cannot_write"

@@ -1,5 +1,7 @@
 """Constants for the Home Connect integration."""
 
+from typing import Final
+
 from aiohomeconnect.model import EventKey, OptionKey, ProgramKey, SettingKey, StatusKey
 
 from homeassistant.const import UnitOfTemperature, UnitOfTime, UnitOfVolume
@@ -70,6 +72,9 @@ ATTR_AFFECTS_TO = "affects_to"
 ATTR_KEY = "key"
 ATTR_PROGRAM = "program"
 ATTR_VALUE = "value"
+ATTR_FOLDER_NAME: Final = "folder_name"
+ATTR_FROM: Final = "from"
+ATTR_TO: Final = "to"
 
 AFFECTS_TO_ACTIVE_PROGRAM = "active_program"
 AFFECTS_TO_SELECTED_PROGRAM = "selected_program"
