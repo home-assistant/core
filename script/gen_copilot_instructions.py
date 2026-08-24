@@ -5,6 +5,7 @@ Necessary until copilot can handle skills.
 """
 
 from pathlib import Path
+import re
 import sys
 
 GENERATED_MESSAGE = (
@@ -18,6 +19,23 @@ INTEGRATION_PATH_SPECIFIC_OUTPUT_FILE = Path(
     ".github/instructions/integrations.instructions.md"
 )
 PR_TEMPLATE_FILE = Path(".github/PULL_REQUEST_TEMPLATE.md")
+
+# The skill loader resolves relative links against the checked-out companion
+# files, so SKILL.md keeps them relative. The generated Copilot instructions
+# file has no companion files next to it, so its copy needs absolute URLs.
+INTEGRATION_SKILL_BLOB_URL = (
+    "https://github.com/home-assistant/core/blob/dev/"
+    f"{INTEGRATION_SKILL_FILE.parent.as_posix()}/"
+)
+_RELATIVE_MD_LINK_RE = re.compile(r"\]\((?!https?://)([^)]+\.md)\)")
+
+
+def _absolutize_relative_links(text: str) -> str:
+    """Rewrite relative links to skill companion files as absolute GitHub URLs."""
+    return _RELATIVE_MD_LINK_RE.sub(
+        lambda match: f"]({INTEGRATION_SKILL_BLOB_URL}{match.group(1)})", text
+    )
+
 
 COPILOT_SPECIFIC_INSTRUCTIONS = """
 # Copilot code review instructions
@@ -62,7 +80,9 @@ def generate_integration_path_specific_instructions() -> str:
         print(f"Error: {INTEGRATION_SKILL_FILE} not found")
         sys.exit(1)
 
-    skill_content = _strip_frontmatter(INTEGRATION_SKILL_FILE.read_text())
+    skill_content = _absolutize_relative_links(
+        _strip_frontmatter(INTEGRATION_SKILL_FILE.read_text())
+    )
 
     return (
         INTEGRATION_PATH_SPECIFIC_INSTRUCTIONS
