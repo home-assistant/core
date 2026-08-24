@@ -100,6 +100,29 @@ async def test_recorder_bad_execute(hass: HomeAssistant, setup_recorder: None) -
     assert e_mock.call_count == 2
 
 
+def test_validate_sqlite_database_closes_corrupt_database(tmp_path: Path) -> None:
+    """Test a corrupt database does not leave its connection open."""
+    test_db_file = f"{tmp_path}/broken.db"
+    with open(test_db_file, "w", encoding="utf8") as fhandle:
+        fhandle.write("I am not a database")
+
+    opened: list[sqlite3.Connection] = []
+    real_connect = sqlite3.connect
+
+    def track_connect(*args: Any, **kwargs: Any) -> sqlite3.Connection:
+        conn = real_connect(*args, **kwargs)
+        opened.append(conn)
+        return conn
+
+    with patch("sqlite3.connect", side_effect=track_connect):
+        assert util.validate_sqlite_database(test_db_file) is False
+
+    assert opened
+    for conn in opened:
+        with pytest.raises(sqlite3.ProgrammingError):
+            conn.execute("SELECT 1")
+
+
 def test_validate_or_move_away_sqlite_database(
     hass: HomeAssistant, tmp_path: Path, caplog: pytest.LogCaptureFixture
 ) -> None:
