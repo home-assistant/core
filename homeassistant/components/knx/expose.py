@@ -210,16 +210,20 @@ class KnxExposeEntity:
             if expose_value is None:
                 continue
 
-            if not self._initialize_expose_value(xknx_expose, expose_value):
-                continue
-
             if option.send_on_init:
                 self.hass.async_create_task(
                     self._async_set_knx_value(
                         xknx_expose,
                         expose_value,
-                        skip_unchanged=False,
                     )
+                return
+            try:
+                xknx_expose.initialize_value(expose_value)
+            except ConversionError:
+                _LOGGER.exception(
+                    "Error setting value %s for expose sensor %s",
+                    expose_value,
+                    xknx_expose.name,
                 )
 
     @callback
