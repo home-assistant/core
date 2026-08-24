@@ -1,15 +1,29 @@
 """Test the gazetteer fallback in the default agent."""
 
+from typing import Any
+from unittest.mock import patch
+
+from gazetteer_matcher import GazetteerMatcher, TargetReference
 import pytest
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.chat_log import async_get_chat_log
-from homeassistant.components.conversation.gazetteer import join_speech
+from homeassistant.components.conversation.gazetteer import (
+    _PREVIOUS_TARGETS_CAPACITY,
+    GazetteerFallback,
+    join_speech,
+)
 from homeassistant.components.conversation.models import ConversationInput
+from homeassistant.components.lock import LockState
+from homeassistant.components.media_player import (
+    MediaPlayerEntityFeature,
+    MediaPlayerState,
+)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
@@ -18,6 +32,8 @@ from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
     chat_session,
+    config_validation as cv,
+    device_registry as dr,
     entity_registry as er,
     intent,
 )
@@ -25,7 +41,7 @@ from homeassistant.setup import async_setup_component
 
 from . import expose_entity
 
-from tests.common import async_mock_service
+from tests.common import MockConfigEntry, async_mock_service
 
 KITCHEN_LIGHT = "light.kitchen_ceiling"
 BEDROOM_BLINDS = "cover.bedroom_blinds"
@@ -551,3 +567,214 @@ async def test_a_coordinated_command_is_answered_as_sentences(
     assert (
         result.response.speech["plain"]["speech"] == "Turned off the lights. Opening."
     )
+
+
+def test_previous_targets_are_bounded() -> None:
+    """Test old conversations are forgotten rather than kept for ever.
+
+    Home Assistant retires a conversation id after its session times out and issues a
+    fresh one, so an entry old enough to be evicted is one nothing will ask for again.
+    """
+    fallback = GazetteerFallback(None)  # type: ignore[arg-type]
+    target = TargetReference.for_entity(KITCHEN_LIGHT)
+
+    for index in range(_PREVIOUS_TARGETS_CAPACITY + 1):
+        fallback.async_remember(f"conversation-{index}", (target,))
+
+    remembered = list(fallback._previous_targets)
+    assert len(remembered) == _PREVIOUS_TARGETS_CAPACITY
+    assert "conversation-0" not in remembered
+    assert remembered[-1] == f"conversation-{_PREVIOUS_TARGETS_CAPACITY}"
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_an_area_that_vanished_mid_request_is_retried_unplaced(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a sentence still gets its chance when the speaker's room went away.
+
+    The home is a snapshot, so an area deleted between building it and interpreting
+    makes the matcher reject the context outright. The sentence is still worth trying
+    without a room; only the shapes that need one refuse.
+    """
+    calls = async_mock_service(hass, "light", "turn_on")
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    entry = MockConfigEntry(domain="test")
+    entry.add_to_hass(hass)
+    device = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id, identifiers={("test", "satellite")}
+    )
+    device_registry.async_update_device(
+        device.id, area_id=area_registry.async_get_or_create("ghost_id").id
+    )
+
+    real_interpret = GazetteerMatcher.interpret
+    placed: list[str | None] = []
+
+    def interpret(self, text, *, context_area=None, **kwargs):
+        """Refuse the context once, as the matcher does for an unknown area."""
+        placed.append(context_area)
+        if context_area is not None:
+            raise ValueError(f"unknown context area {context_area!r}")
+        return real_interpret(self, text, **kwargs)
+
+    with patch.object(GazetteerMatcher, "interpret", interpret):
+        result = await conversation.async_converse(
+            hass,
+            "turn on the kichen lights",
+            None,
+            Context(),
+            None,
+            device_id=device.id,
+        )
+
+    assert placed == ["ghost_id", None]
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    assert calls[0].data["entity_id"] == [KITCHEN_LIGHT]
+
+
+# The entities gazetteer-matcher's own tests/home.yaml gives these sentences, with the
+# same names and aliases, so the cases below are its fixtures run through the agent.
+MATCHER_HOME = (
+    (
+        "light.kitchen_ceiling",
+        "Kitchen Ceiling Lights",
+        ["ceiling lights"],
+        "kitchen_id",
+    ),
+    ("light.bedroom_lamp", "Bedroom Lamp", ["bedside lamp"], "bedroom_id"),
+    ("lock.front_door", "Front Door", ["front door lock"], "hallway_id"),
+    (
+        "media_player.living_room",
+        "Living Room Speakers",
+        ["sonos", "stereo", "tv", "television"],
+        "living_room_id",
+    ),
+)
+
+
+@pytest.fixture
+async def matcher_home(
+    hass: HomeAssistant,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Set up the part of gazetteer-matcher's test home its fuzzy cases use."""
+    assert await async_setup_component(hass, "media_player", {})
+
+    for area_id, name in (
+        ("kitchen_id", "Kitchen"),
+        ("bedroom_id", "Bedroom"),
+        ("hallway_id", "Hallway"),
+        ("living_room_id", "Living Room"),
+    ):
+        area_registry.async_update(
+            area_registry.async_get_or_create(area_id).id, name=name
+        )
+
+    for entity_id, name, aliases, area_id in MATCHER_HOME:
+        domain, object_id = entity_id.split(".")
+        # A media player is only pausable while it is playing and says it can.
+        state = {
+            "lock": LockState.LOCKED,
+            "media_player": MediaPlayerState.PLAYING,
+        }.get(domain, STATE_OFF)
+        attributes: dict[str, Any] = {ATTR_FRIENDLY_NAME: name}
+        if domain == "media_player":
+            attributes[ATTR_SUPPORTED_FEATURES] = MediaPlayerEntityFeature.PAUSE
+        entry = entity_registry.async_get_or_create(
+            domain, "demo", object_id, suggested_object_id=object_id
+        )
+        assert entry.entity_id == entity_id
+        entity_registry.async_update_entity(
+            entity_id,
+            name=name,
+            area_id=area_id,
+            aliases=[er.COMPUTED_NAME, *aliases],
+        )
+        hass.states.async_set(entity_id, state, attributes=attributes)
+        # Locks are not in DEFAULT_EXPOSED_DOMAINS, and an unexposed entity is not a
+        # target for either recognizer.
+        expose_entity(hass, entity_id, True)
+
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("init_components", "matcher_home")
+@pytest.mark.parametrize(
+    ("text", "domain", "service", "entity_id"),
+    [
+        ("illumanate the bedroom lamp", "light", "turn_on", "light.bedroom_lamp"),
+        ("turn on the kitchn lights", "light", "turn_on", "light.kitchen_ceiling"),
+        ("turn on the bedrom lamp", "light", "turn_on", "light.bedroom_lamp"),
+        (
+            "pause televsion",  # codespell:ignore televsion
+            "media_player",
+            "media_pause",
+            "media_player.living_room",
+        ),
+    ],
+    ids=["fuzzy_action", "fuzzy_area", "fuzzy_name", "fuzzy_alias"],
+)
+async def test_matchers_are_complementary(
+    hass: HomeAssistant, text: str, domain: str, service: str, entity_id: str
+) -> None:
+    """Test sentences hassil cannot answer but the gazetteer can.
+
+    These are gazetteer-matcher's own fuzzy fixtures, which are plausible
+    transcription errors: a misheard verb hassil has no template for, and misheard
+    area, entity and alias names it cannot resolve. Each one asserts hassil declining
+    as well, since a sentence hassil handles never reaches the gazetteer at all.
+    """
+    calls = async_mock_service(hass, domain, service)
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    user_input = ConversationInput(
+        text=text,
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language="en",
+        agent_id=conversation.HOME_ASSISTANT_AGENT,
+    )
+    hassil_result = await agent.async_recognize_intent(user_input)
+    assert hassil_result is None or hassil_result.unmatched_entities
+
+    result = await conversation.async_converse(hass, text, None, Context(), None)
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    # Some handlers target one entity as a string, others as a list of one.
+    assert cv.ensure_list(calls[0].data["entity_id"]) == [entity_id]
+
+
+@pytest.mark.usefixtures("init_components", "matcher_home")
+async def test_a_misheard_name_in_a_question(hass: HomeAssistant) -> None:
+    """Test a question about a misheard name, from the matcher's own fixtures."""
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    user_input = ConversationInput(
+        text="is the frnt door locked",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language="en",
+        agent_id=conversation.HOME_ASSISTANT_AGENT,
+    )
+    assert await agent.async_recognize_intent(user_input) is None
+
+    result = await conversation.async_converse(
+        hass, "is the frnt door locked", None, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
+    assert result.response.speech["plain"]["speech"] == "Yes"

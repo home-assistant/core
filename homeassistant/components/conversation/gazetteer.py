@@ -129,9 +129,6 @@ def async_build_home(hass: HomeAssistant) -> Home:
 
         entry = entity_registry.async_get(state.entity_id)
         names = _names(hass, state, entry)
-        if not names:
-            continue
-
         spec: EntitySpec = {
             "name": names[0],
             "aliases": names[1:],
@@ -155,10 +152,11 @@ def _names(
 ) -> list[str]:
     """Every name an entity answers to, the displayed one first.
 
-    The displayed name is the whole name and the only base name taken: a registry
-    `name`/`original_name` may have had its device prefix stripped, and registering the
-    remaining "Blinds" would let a bare device-class word capture commands meant for
-    every blind in the house.
+    Never empty: a state's name falls back to its object id. The displayed name is the
+    whole name and the only base name taken, because a registry `name`/`original_name`
+    may have had its device prefix stripped, and registering the remaining "Blinds"
+    would let a bare device-class word capture commands meant for every blind in the
+    house.
     """
     seen: set[str] = set()
     names: list[str] = []
