@@ -1,6 +1,6 @@
 """Test the my-PV water heater."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 from my_pv.exceptions import MyPVAuthenticationError, MyPVConnectionError
 import pytest
@@ -26,19 +26,15 @@ from homeassistant.exceptions import ConfigEntryAuthFailed, HomeAssistantError
 from tests.common import MockConfigEntry
 
 
+@pytest.mark.usefixtures("mock_my_pv_client")
 async def test_water_heater(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_my_pv_client: AsyncMock,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test successful setup of a water heater."""
 
     mock_config_entry.add_to_hass(hass)
-
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -55,10 +51,6 @@ async def test_water_heater_turn_off(
     """Test turning the water heater off."""
 
     mock_config_entry.add_to_hass(hass)
-
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -90,10 +82,6 @@ async def test_water_heater_turn_off_false(
     """Test turning off returns false."""
 
     mock_config_entry.add_to_hass(hass)
-
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -129,9 +117,6 @@ async def test_water_heater_turn_on(
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
     mock_my_pv_client.is_on = False
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -165,9 +150,6 @@ async def test_water_heater_turn_on_false(
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
     mock_my_pv_client.is_on = False
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -204,10 +186,6 @@ async def test_water_heater_set_operation_off(
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
-
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -240,9 +218,6 @@ async def test_water_heater_set_operation_electric(
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
     mock_my_pv_client.is_on = False
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -277,10 +252,6 @@ async def test_water_heater_set_temp(
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
-
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -312,10 +283,6 @@ async def test_water_heater_set_temp_false(
     """Test setting the target temperature returns false."""
 
     mock_config_entry.add_to_hass(hass)
-
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -349,10 +316,6 @@ async def test_water_heater_set_temp_connection_error(
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
-
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -384,10 +347,6 @@ async def test_water_heater_set_temp_authentication_error(
     """Test authentication error when setting the target temperature."""
 
     mock_config_entry.add_to_hass(hass)
-
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()

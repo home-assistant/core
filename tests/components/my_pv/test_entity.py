@@ -1,6 +1,6 @@
 """Test the my-PV entity."""
 
-from unittest.mock import AsyncMock, Mock
+from unittest.mock import AsyncMock
 
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
@@ -17,9 +17,6 @@ async def test_entity_unavailable_not_connected(
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
     mock_my_pv_client.connected = False
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -38,9 +35,6 @@ async def test_entity_unavailable_data_value_none(
 
     mock_config_entry.add_to_hass(hass)
 
-    mock_my_pv_client.get_setup_configuration = Mock(
-        return_value={"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
-    )
     mock_my_pv_client.get_data_value.return_value = None
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)

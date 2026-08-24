@@ -1,7 +1,7 @@
 """Common fixtures for the my-PV tests."""
 
 from collections.abc import Generator
-from unittest.mock import AsyncMock, patch
+from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
 
@@ -11,6 +11,14 @@ from homeassistant.const import CONF_HOST, CONF_PASSWORD
 from . import ELWA2_SERIAL_NUMBER
 
 from tests.common import MockConfigEntry
+
+SETUP_CONFIGURATION = {
+    "ww1target": {"step": 0.1, "unit": "°C", "min": 5.0, "max": 95.0}
+}
+
+
+def _setup_configuration_lookup(key):
+    return SETUP_CONFIGURATION.get(key)
 
 
 @pytest.fixture
@@ -65,5 +73,6 @@ def mock_my_pv_client() -> Generator[AsyncMock]:
         client.firmware_version = "e0002200"
         client.current_temperature = 54.3
         client.target_temperature = 62.1
+        client.get_setup_configuration = Mock(side_effect=_setup_configuration_lookup)
 
         yield client
