@@ -20,6 +20,7 @@ been handled, and what the previous turn targeted so "turn them back on" has an 
 
 import asyncio
 from collections import OrderedDict
+from collections.abc import Sequence
 from dataclasses import dataclass
 from functools import partial
 from typing import Any
@@ -153,6 +154,58 @@ def _names(
             seen.add(name.casefold())
             names.append(name)
     return names
+
+
+_TARGET_SCOPES = (
+    (intent.IntentResponseTargetType.FLOOR, "floor", "floor"),
+    (intent.IntentResponseTargetType.AREA, "area", "area"),
+    (intent.IntentResponseTargetType.ENTITY, "name", "entity"),
+)
+"""Target kinds a pronoun can refer back to, widest selector first.
+
+"turn them off" after "turn on the kitchen lights" means the kitchen lights, not the
+one entity that happened to match, so the area the sentence named wins over what it
+resolved to.
+"""
+
+
+@callback
+def async_targets_from_intent(
+    slots: dict[str, Any], intent_response: intent.IntentResponse
+) -> tuple[TargetReference, ...]:
+    """Return what a sentence hassil recognized selected, for a later "it"/"them".
+
+    The matcher is stateless: it resolves a follow-up pronoun only against targets it
+    is handed. hassil answers most sentences and never reaches the matcher, so without
+    this the turn that named the thing goes by unseen and "open it" has no antecedent.
+
+    A handled intent reports what it acted on as typed, id-bearing results, which is
+    the same selector shape the matcher builds from its own frames.
+    """
+    resolved: dict[str, list[str]] = {}
+    for target in intent_response.success_results:
+        if target.id:
+            resolved.setdefault(target.type, []).append(target.id)
+
+    # Carried alongside the selector, as the matcher's own targets carry them: "turn
+    # them off" should mean the lights it was just told about, not the whole area.
+    values = {
+        slot: slots[slot]["value"]
+        for slot in ("domain", "device_class")
+        if slot in slots
+    }
+
+    for target_type, slot, scope in _TARGET_SCOPES:
+        ids = resolved.get(target_type)
+        if not ids:
+            continue
+        if len(ids) > 1:
+            # Several rooms, or several entities named at once: nothing a pronoun
+            # picks out, and the matcher only reuses a single selector.
+            return ()
+        return (TargetReference(slots={**values, slot: ids[0]}, scope=scope),)
+
+    return ()
 
 
 @dataclass(frozen=True)
@@ -309,16 +362,24 @@ class GazetteerFallback:
             # still worth trying unplaced; the shapes needing a room refuse on their own.
             result = await self.hass.async_add_executor_job(interpret)
 
-        if result.accepted:
-            # This turn is now the one a pronoun refers back to, whether or not it left
-            # anything referrable behind: "them" should mean the command just given or
-            # no command at all, never reach past it to an older one.
-            self._previous_targets.pop(conversation_id, None)
-            self._previous_targets[conversation_id] = result.targets
-            while len(self._previous_targets) > _PREVIOUS_TARGETS_CAPACITY:
-                self._previous_targets.popitem(last=False)
-
         return result
+
+    @callback
+    def async_remember(
+        self, conversation_id: str, targets: Sequence[TargetReference] = ()
+    ) -> None:
+        """Make this turn the one a pronoun refers back to.
+
+        Every turn that succeeded replaces the one before it, including a turn with
+        nothing referrable in it: "it" should mean the command just given or no command
+        at all, never reach past it to an older one that is still in the cache. A turn
+        that failed leaves the entry alone, so "mumble" between two commands does not
+        strand the pronoun after it.
+        """
+        self._previous_targets.pop(conversation_id, None)
+        self._previous_targets[conversation_id] = tuple(targets)
+        while len(self._previous_targets) > _PREVIOUS_TARGETS_CAPACITY:
+            self._previous_targets.popitem(last=False)
 
     async def _async_get_matcher(self) -> GazetteerMatcher:
         """Return the matcher, rebuilding it around a fresh home if needed."""

@@ -9,7 +9,7 @@ from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.chat_log import async_get_chat_log
 from homeassistant.components.conversation.gazetteer import GazetteerResponses
 from homeassistant.components.conversation.models import ConversationInput
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
+from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_CLOSED, STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -24,6 +24,7 @@ from tests.common import async_mock_service
 
 KITCHEN_LIGHT = "light.kitchen_ceiling"
 BEDROOM_BLINDS = "cover.bedroom_blinds"
+GARAGE_DOOR = "cover.garage_door"
 
 
 @pytest.fixture
@@ -32,17 +33,21 @@ def home(
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> ar.AreaEntry:
-    """Set up a kitchen with a light and a bedroom with blinds."""
+    """Set up a kitchen with a light, a bedroom with blinds and a garage door."""
     kitchen = area_registry.async_update(
         area_registry.async_get_or_create("kitchen_id").id, name="Kitchen"
     )
     bedroom = area_registry.async_update(
         area_registry.async_get_or_create("bedroom_id").id, name="Bedroom"
     )
+    garage = area_registry.async_update(
+        area_registry.async_get_or_create("garage_id").id, name="Garage"
+    )
 
-    for entity_id, name, area in (
-        (KITCHEN_LIGHT, "Kitchen Ceiling Lights", kitchen),
-        (BEDROOM_BLINDS, "Bedroom Blinds", bedroom),
+    for entity_id, name, area, state in (
+        (KITCHEN_LIGHT, "Kitchen Ceiling Lights", kitchen, STATE_OFF),
+        (BEDROOM_BLINDS, "Bedroom Blinds", bedroom, STATE_OFF),
+        (GARAGE_DOOR, "Garage Door", garage, STATE_CLOSED),
     ):
         domain, object_id = entity_id.split(".")
         entry = entity_registry.async_get_or_create(
@@ -52,9 +57,7 @@ def home(
         entity_registry.async_update_entity(
             entity_id, name=name, area_id=area.id, aliases=[er.COMPUTED_NAME]
         )
-        hass.states.async_set(
-            entity_id, STATE_OFF, attributes={ATTR_FRIENDLY_NAME: name}
-        )
+        hass.states.async_set(entity_id, state, attributes={ATTR_FRIENDLY_NAME: name})
 
     return kitchen
 
@@ -341,3 +344,103 @@ def test_response_key_must_name_a_template(
     )
 
     assert responses.key_for(_frame(combination, response_key), "light") == expected
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_pronoun_follows_a_turn_hassil_answered(hass: HomeAssistant) -> None:
+    """Test "open it" refers to what the previous hassil turn was about.
+
+    The matcher resolves a pronoun only against targets it is handed, and hassil
+    answers most sentences without ever reaching it, so the turn that named the thing
+    has to be recorded from there too.
+    """
+    calls = async_mock_service(hass, "cover", "open_cover")
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    result = await conversation.async_converse(
+        hass, "is the garage door closed", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
+    # Nothing built the matcher, so that turn was hassil's alone.
+    assert agent._gazetteer._matcher is None
+
+    result = await conversation.async_converse(
+        hass, "open it", result.conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+    assert calls[0].data["entity_id"] == GARAGE_DOOR
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_pronoun_follows_the_area_a_turn_named(hass: HomeAssistant) -> None:
+    """Test "them" reuses the area a command scoped to, not what it resolved to."""
+    async_mock_service(hass, "light", "turn_on")
+    turn_off = async_mock_service(hass, "light", "turn_off")
+
+    result = await conversation.async_converse(
+        hass, "turn on the kitchen lights", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    result = await conversation.async_converse(
+        hass, "turn them off", result.conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(turn_off) == 1
+    assert turn_off[0].data["entity_id"] == [KITCHEN_LIGHT]
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_a_failed_turn_leaves_the_antecedent_alone(hass: HomeAssistant) -> None:
+    """Test a sentence nobody recognized does not strand a following pronoun."""
+    calls = async_mock_service(hass, "cover", "open_cover")
+
+    result = await conversation.async_converse(
+        hass, "is the garage door closed", None, Context(), None
+    )
+    conversation_id = result.conversation_id
+
+    result = await conversation.async_converse(
+        hass, "asdfgh", conversation_id, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+
+    result = await conversation.async_converse(
+        hass, "open it", conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(calls) == 1
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_a_turn_with_no_target_clears_the_antecedent(
+    hass: HomeAssistant,
+) -> None:
+    """Test a pronoun means the turn just given, or none at all.
+
+    "What time is it" succeeds and targets nothing, so it replaces the garage door
+    rather than letting "it" reach back past it.
+    """
+    calls = async_mock_service(hass, "cover", "open_cover")
+
+    result = await conversation.async_converse(
+        hass, "is the garage door closed", None, Context(), None
+    )
+    conversation_id = result.conversation_id
+
+    result = await conversation.async_converse(
+        hass, "what time is it", conversation_id, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    result = await conversation.async_converse(
+        hass, "open it", conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert not calls
