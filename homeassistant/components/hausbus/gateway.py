@@ -39,9 +39,10 @@ async def async_get_home_server(hass: HomeAssistant) -> HomeServer:
     loop, and shared between the config flow and the gateway.
     """
     domain_data = hass.data.setdefault(DOMAIN, {})
-    if "home_server" not in domain_data:
-        domain_data["home_server"] = await hass.async_add_executor_job(HomeServer)
-    return domain_data["home_server"]
+    async with domain_data.setdefault("home_server_lock", asyncio.Lock()):
+        if "home_server" not in domain_data:
+            domain_data["home_server"] = await hass.async_add_executor_job(HomeServer)
+        return domain_data["home_server"]
 
 
 class HausbusGateway(IBusDataListener):

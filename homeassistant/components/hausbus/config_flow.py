@@ -58,8 +58,9 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         try:
             await self._search_task
         except TimeoutError:
-            if self._search_task:
-                self._search_task.cancel()
+            return self.async_show_progress_done(next_step_id="search_timeout")
+        except OSError:
+            _LOGGER.exception("Haus-Bus network error during device discovery")
             return self.async_show_progress_done(next_step_id="search_timeout")
         finally:
             self._search_task = None

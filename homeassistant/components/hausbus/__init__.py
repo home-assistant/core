@@ -30,7 +30,12 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
 
     entry.runtime_data = gateway
 
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    try:
+        await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    except Exception:
+        gateway.home_server.removeBusEventListener(gateway)
+        gateway.home_server.removeBusDeviceListener(gateway)
+        raise
 
     # start device discovery
     hass.async_create_task(gateway.start_discovery())
