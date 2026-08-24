@@ -41,7 +41,7 @@ async def test_get_tools_no_exposed_todo(hass: HomeAssistant) -> None:
     """Test no todo tool is offered when no to-do list is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
-    assert "todo_get_items" not in [tool.name for tool in result.tools]
+    assert "todo__get_items" not in [tool.name for tool in result.tools]
     assert todo_llm.async_get_tools(hass, _llm_context(), "assist") is None
 
 
@@ -54,7 +54,7 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
     """Test the todo get items tool is exposed and works via the platform."""
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context, "assist")
-    tool = next((tool for tool in result.tools if tool.name == "todo_get_items"), None)
+    tool = next((tool for tool in result.tools if tool.name == "todo__get_items"), None)
     assert tool is not None
     assert tool.parameters.schema["todo_list"].container == ["Mock Todo List Name"]
 
@@ -74,7 +74,7 @@ async def test_todo_get_items_tool(hass: HomeAssistant) -> None:
 
     result = await tool.async_call(
         hass,
-        llm.ToolInput("todo_get_items", {"todo_list": "Mock Todo List Name"}),
+        llm.ToolInput("todo__get_items", {"todo_list": "Mock Todo List Name"}),
         llm_context,
     )
 
@@ -101,7 +101,7 @@ async def test_todo_get_items_status_filter(
     """Test the status filter is translated into the service call."""
     llm_context = _llm_context()
     result = await llm_component.async_get_tools(hass, llm_context, "assist")
-    tool = next(tool for tool in result.tools if tool.name == "todo_get_items")
+    tool = next(tool for tool in result.tools if tool.name == "todo__get_items")
 
     calls = async_mock_service(
         hass,
@@ -113,7 +113,7 @@ async def test_todo_get_items_status_filter(
     await tool.async_call(
         hass,
         llm.ToolInput(
-            "todo_get_items", {"todo_list": "Mock Todo List Name", "status": status}
+            "todo__get_items", {"todo_list": "Mock Todo List Name", "status": status}
         ),
         llm_context,
     )
@@ -124,6 +124,6 @@ async def test_todo_list_intents_exposed(hass: HomeAssistant) -> None:
     """Test the todo list intents are exposed as tools when a list is exposed."""
     result = await llm_component.async_get_tools(hass, _llm_context(), "assist")
     names = {tool.name for tool in result.tools}
-    assert "HassListAddItem" in names
-    assert "HassListCompleteItem" in names
-    assert "HassListRemoveItem" in names
+    assert "todo__HassListAddItem" in names
+    assert "todo__HassListCompleteItem" in names
+    assert "todo__HassListRemoveItem" in names
