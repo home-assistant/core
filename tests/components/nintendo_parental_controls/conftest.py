@@ -88,7 +88,6 @@ def mock_nintendo_device(
     mock.applications = applications
     mock.players = players
     mock.get_player = MagicMock(side_effect=players.get_player)
-    mock.get_player.return_value = mock_nintendo_player
     return mock
 
 
