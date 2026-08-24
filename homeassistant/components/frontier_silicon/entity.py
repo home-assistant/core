@@ -82,7 +82,7 @@ class FrontierSiliconEntity(Entity):
                     self.name or self.fs_device.webfsapi_endpoint,
                 )
                 self._attr_available = True
-        except FSApiError, FSConnectionError:
+        except FSConnectionError:
             if self.available:
                 _LOGGER.warning(
                     "Could not connect to %s. Did it go offline?",
