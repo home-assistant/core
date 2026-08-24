@@ -222,9 +222,21 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
 
     @callback
     def _async_coordinator_updated(self) -> None:
-        """Update the entity state from coordinator data."""
+        """Skip coordinator updates that changed a different object."""
         coordinator = self.coordinator
         assert coordinator is not None
+        changed_obj_id = coordinator.data
+        own_obj_id = self._obj_id.partition("_")[0]
+        if changed_obj_id is not None and changed_obj_id not in (
+            self._obj_id,
+            own_obj_id,
+        ):
+            return
+        self._async_process_update()
+
+    @callback
+    def _async_process_update(self) -> None:
+        """Update the entity state from the handler."""
         handler = self.entity_description.api_handler_fn(self.api)
         if self._obj_id not in handler:
             self.hass.async_create_task(self.remove_item({self._obj_id}))
@@ -246,7 +258,7 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
             self.hass.async_create_task(self.remove_item({obj_id}))
             return
 
-        self._async_coordinator_updated()
+        self._async_process_update()
 
     @callback
     def async_signal_reachable_callback(self) -> None:

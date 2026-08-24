@@ -16,7 +16,9 @@ if TYPE_CHECKING:
 POLL_INTERVAL = timedelta(seconds=10)
 
 
-class UnifiDataUpdateCoordinator[HandlerT: APIHandler](DataUpdateCoordinator[None]):
+class UnifiDataUpdateCoordinator[HandlerT: APIHandler](
+    DataUpdateCoordinator[str | None]
+):
     """Coordinator managing websocket or polling updates for a UniFi API handler."""
 
     def __init__(
@@ -49,5 +51,5 @@ class UnifiDataUpdateCoordinator[HandlerT: APIHandler](DataUpdateCoordinator[Non
 
     @callback
     def _async_handle_update(self, event: ItemEvent, obj_id: str) -> None:
-        """Notify listeners when the handler receives a websocket update."""
-        self.async_set_updated_data(None)
+        """Notify listeners which object changed on a websocket update."""
+        self.async_set_updated_data(obj_id)

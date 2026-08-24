@@ -9,13 +9,13 @@ import aiounifi
 from aiounifi.models.message import MessageKey
 import pytest
 
-from homeassistant.components.unifi.const import DOMAIN
+from homeassistant.components.unifi.const import CONF_BLOCK_CLIENT, DOMAIN
 from homeassistant.components.unifi.coordinator import POLL_INTERVAL
 from homeassistant.components.unifi.errors import AuthenticationRequired, CannotConnect
 from homeassistant.components.unifi.hub import get_unifi_api
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import CONF_HOST, EVENT_STATE_REPORTED, Platform
+from homeassistant.core import Event, EventStateReportedData, HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.util import dt as dt_util
 
@@ -116,7 +116,78 @@ async def test_websocket_updates_notify_coordinator(
             },
         )
 
-    set_updated_data.assert_called_once_with(None)
+    set_updated_data.assert_called_once_with("00:00:00:00:00:01")
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [{CONF_BLOCK_CLIENT: ["00:00:00:00:00:01", "00:00:00:00:00:02"]}],
+)
+@pytest.mark.parametrize(
+    "client_payload",
+    [
+        [
+            {
+                "blocked": True,
+                "hostname": "client_1",
+                "ip": "10.0.0.1",
+                "is_wired": True,
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:00:01",
+                "name": "Client 1",
+            },
+            {
+                "blocked": True,
+                "hostname": "client_2",
+                "ip": "10.0.0.2",
+                "is_wired": True,
+                "last_seen": 1562600145,
+                "mac": "00:00:00:00:00:02",
+                "name": "Client 2",
+            },
+        ]
+    ],
+)
+async def test_coordinator_update_only_refreshes_changed_entity(
+    hass: HomeAssistant,
+    config_entry_setup: MockConfigEntry,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Ensure a coordinator update for one object does not refresh unrelated entities."""
+    changed_entity_id = "switch.client_1_blocked"
+    other_entity_id = "switch.client_2_blocked"
+    assert hass.states.get(changed_entity_id) is not None
+    assert hass.states.get(other_entity_id) is not None
+
+    written_entity_ids: list[str] = []
+
+    @callback
+    def track_state_reported(event: Event[EventStateReportedData]) -> None:
+        written_entity_ids.append(event.data["entity_id"])
+
+    @callback
+    def filter_tracked_entities(data: EventStateReportedData) -> bool:
+        return data["entity_id"] in (changed_entity_id, other_entity_id)
+
+    hass.bus.async_listen(
+        EVENT_STATE_REPORTED, track_state_reported, filter_tracked_entities
+    )
+
+    mock_websocket_message(
+        message=MessageKey.CLIENT,
+        data={
+            "hostname": "client_1",
+            "ip": "10.0.0.1",
+            "is_wired": True,
+            "last_seen": 1562600146,
+            "mac": "00:00:00:00:00:01",
+            "name": "Client 1",
+        },
+    )
+    await hass.async_block_till_done()
+
+    assert changed_entity_id in written_entity_ids
+    assert other_entity_id not in written_entity_ids
 
 
 async def test_reset_after_successful_setup(
