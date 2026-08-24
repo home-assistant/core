@@ -90,12 +90,6 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
             self.home_server = await async_get_home_server(self.hass)
 
         await self.hass.async_add_executor_job(self.home_server.searchDevices)
-        # wait for up to 5 seconds to find devices
-        await asyncio.wait_for(self._check_device_found(), 5)
-
-    async def _check_device_found(self) -> bool:
-        """Check if a device was found periodically."""
-        assert self.home_server is not None
-        while not self.home_server.is_any_device_found():
-            await asyncio.sleep(0.1)  # Poll every 0.1 seconds
-        return True
+        async with asyncio.timeout(5):
+            while not self.home_server.is_any_device_found():
+                await asyncio.sleep(0.1)  # Poll every 0.1 seconds
