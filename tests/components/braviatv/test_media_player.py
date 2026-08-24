@@ -33,9 +33,8 @@ BRAVIA_SYSTEM_INFO = {
     "cid": "very_unique_string",
 }
 
-# "title" is the generic connector name, "label" the name set on the TV itself.
-# The TV leaves the label empty when unset, allows the same label on several
-# inputs, and does not stop a label from matching another input's generic name.
+# The TV leaves "label" empty when unset, allows the same label on several
+# inputs, and does not stop one matching another input's "title".
 INPUTS = [
     {
         "uri": "extInput:hdmi?port=1",
@@ -151,9 +150,8 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_ID)
 
     assert state is not None
-    # "HDMI 1" has an empty label and "HDMI 6" no label key at all, so both keep
-    # the generic name. "HDMI 2" was renamed, and "HDMI 3" repeats the same
-    # label, so it falls back to the generic name to stay reachable.
+    # "HDMI 3" repeats "HDMI 2"'s label, so it falls back to its own generic
+    # name to stay reachable.
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
         "HDMI 1",
         "Game console",
@@ -173,27 +171,17 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
 @pytest.mark.parametrize(
     ("source", "expected_uri"),
     [
-        pytest.param("Game console", "extInput:hdmi?port=2", id="label"),
-        pytest.param("HDMI 2", "extInput:hdmi?port=2", id="generic_name_of_labelled"),
-        pytest.param("HDMI 3", "extInput:hdmi?port=3", id="shared_label"),
-        pytest.param("HDMI 1", "extInput:hdmi?port=1", id="generic_name_not_stolen"),
-        pytest.param("HDMI 4", "extInput:hdmi?port=4", id="label_of_another_input"),
-        pytest.param("HDMI 5", "extInput:hdmi?port=5", id="label_differing_in_case"),
-        pytest.param("HDMI 6", "extInput:hdmi?port=6", id="no_label_key"),
-        pytest.param(
-            "Streaming box", "extInput:cec?type=player&port=1", id="label_without_title"
-        ),
-        pytest.param(
-            "Streaming box (3)",
-            "extInput:cec?type=player&port=2",
-            id="generated_name_avoids_generic_name",
-        ),
-        pytest.param(
-            "Streaming box (2)",
-            "extInput:composite?port=1",
-            id="generic_name_kept_by_its_own_input",
-        ),
-        pytest.param("STRASSE", "extInput:scart?port=1", id="unicode_case_folding"),
+        ("Game console", "extInput:hdmi?port=2"),
+        ("HDMI 2", "extInput:hdmi?port=2"),
+        ("HDMI 3", "extInput:hdmi?port=3"),
+        ("HDMI 1", "extInput:hdmi?port=1"),
+        ("HDMI 4", "extInput:hdmi?port=4"),
+        ("HDMI 5", "extInput:hdmi?port=5"),
+        ("HDMI 6", "extInput:hdmi?port=6"),
+        ("Streaming box", "extInput:cec?type=player&port=1"),
+        ("Streaming box (3)", "extInput:cec?type=player&port=2"),
+        ("Streaming box (2)", "extInput:composite?port=1"),
+        ("STRASSE", "extInput:scart?port=1"),
     ],
 )
 async def test_select_source(

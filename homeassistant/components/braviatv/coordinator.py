@@ -142,17 +142,13 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
         """Extend source map and source list."""
         if sort_by:
             sources = sorted(sources, key=lambda d: d.get(sort_by, ""))
-        # Reserve every generic connector name up front, so that a custom label
-        # can never shadow another input and leave it unreachable. Names are
-        # compared casefolded, like async_source_find does.
+        # A label may repeat another input's generic name and hide it.
         reserved = {item["title"].casefold() for item in sources if item.get("title")}
         taken = {name.casefold() for name in self.source_list} if add_to_list else set()
         for item in sources:
             title = item.get("title")
             uri = item.get("uri")
-            # Sony TVs report the generic connector name in "title" and the name
-            # the user configured on the TV itself in "label". Prefer the latter,
-            # unless it is already used or belongs to a different input.
+            # "label" is the name set on the TV, "title" the connector name.
             label = item.get("label")
             name = None
             if label:
@@ -165,9 +161,6 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 name = title or label
             if not name or not uri:
                 continue
-            # The fallback can collide as well, so make it unique instead of
-            # dropping the input. A generated name may not take a generic name
-            # that belongs to another input either.
             own = title.casefold() if title else None
             base = name
             suffix = 2
@@ -177,12 +170,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                 name = f"{base} ({suffix})"
                 suffix += 1
             taken.add(name.casefold())
-            # "title" is kept untouched so that select_source keeps working with
-            # the generic name for anyone already using it.
+            # "title" stays untouched so select_source still takes the generic name.
             self.source_map[uri] = {**item, "name": name, "type": source_type}
             if add_to_list:
-                # `taken` starts from source_list, so the loop above already
-                # guarantees the name is not in it.
                 self.source_list.append(name)
 
     @override
@@ -334,8 +324,7 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
                     if num and int(query) == int(num):
                         return await self.async_source_start(uri, source_type)
                 else:
-                    # Both names are matched so that automations written
-                    # before an input was renamed keep working.
+                    # Both names match, so automations written before a rename work.
                     folded_query = query.casefold()
                     for name in (item.get("name"), item.get("title")):
                         if not name:
