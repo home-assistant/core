@@ -31,6 +31,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -51,11 +52,13 @@ SWITCH_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(device_class=True)
+
 SWITCH_YAML_SCHEMA = SWITCH_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
     make_template_entity_common_schema(
-        SWITCH_DOMAIN, DEFAULT_NAME, block_device_class=True
+        SWITCH_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -123,6 +126,7 @@ class AbstractTemplateSwitch(AbstractTemplateEntity, SwitchEntity, RestoreEntity
     _optimistic_entity = True
     _state_option = CONF_STATE
     _restore_state_properties = ("_attr_is_on",)
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

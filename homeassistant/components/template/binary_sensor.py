@@ -43,6 +43,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -65,6 +66,8 @@ BINARY_SENSOR_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
+
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(device_class=True)
 
 BINARY_SENSOR_YAML_SCHEMA = BINARY_SENSOR_COMMON_SCHEMA.extend(
     make_template_entity_common_schema(BINARY_SENSOR_DOMAIN, DEFAULT_NAME).schema
@@ -126,6 +129,7 @@ class AbstractTemplateBinarySensor(
     _entity_id_format = ENTITY_ID_FORMAT
     _state_option = CONF_STATE
     _restore_state_properties = ("_attr_is_on",)
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

@@ -25,6 +25,7 @@ from .const import CONF_PRESS, DOMAIN
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -36,6 +37,8 @@ DEFAULT_OPTIMISTIC = False
 
 SCRIPT_FIELDS = (CONF_PRESS,)
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(device_class=True)
+
 BUTTON_YAML_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
@@ -43,7 +46,7 @@ BUTTON_YAML_SCHEMA = vol.Schema(
     }
 ).extend(
     make_template_entity_common_schema(
-        BUTTON_DOMAIN, DEFAULT_NAME, block_device_class=True
+        BUTTON_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -95,6 +98,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
 
     _attr_should_poll = False
     _entity_id_format = ENTITY_ID_FORMAT
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     def __init__(
         self,

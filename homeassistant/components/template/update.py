@@ -34,6 +34,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -75,12 +76,13 @@ UPDATE_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(
+    UpdateEntityStateAttribute, device_class=True
+)
+
 UPDATE_YAML_SCHEMA = UPDATE_COMMON_SCHEMA.extend(
     make_template_entity_common_schema(
-        UPDATE_DOMAIN,
-        DEFAULT_NAME,
-        UpdateEntityStateAttribute,
-        block_device_class=True,
+        UPDATE_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -143,6 +145,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _restore_state_properties = ("_attr_installed_version", "_attr_latest_version")
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

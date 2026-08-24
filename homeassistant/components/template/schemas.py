@@ -1,9 +1,11 @@
 """Shared schemas for config entry and YAML config items."""
 
 from collections.abc import Callable
+from dataclasses import dataclass
 from enum import StrEnum
 from itertools import chain
-from typing import TypeVar
+import logging
+from typing import Any
 
 import voluptuous as vol
 
@@ -16,6 +18,7 @@ from homeassistant.const import (
     CONF_VARIABLES,
 )
 from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.template import Template
 
 from .const import (
     CONF_ATTRIBUTES,
@@ -23,8 +26,6 @@ from .const import (
     CONF_DEFAULT_ENTITY_ID,
     CONF_PICTURE,
 )
-
-_AttributeEnum = TypeVar("_AttributeEnum", bound=type[StrEnum])
 
 TEMPLATE_ENTITY_AVAILABILITY_SCHEMA = vol.Schema(
     {
@@ -45,30 +46,67 @@ TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA = {
 }
 
 
-def _blocked_attributes(
-    default_name: str,
-    blocked_attributes: tuple[_AttributeEnum, ...] | _AttributeEnum | None,
-    block_device_class: bool,
+@dataclass
+class BlockedTemplateAttributes:
+    """Blocked template attributes."""
+
+    attributes: tuple[type[StrEnum], ...] | type[StrEnum] | None = None
+    device_class: bool = False
+
+
+def log_validation_error(
+    result: Any,
+    template: Template,
+    attribute: str,
+    entity_id: str,
+    exception: vol.Invalid,
+):
+    """Log template entity validation error."""
+    logging.getLogger(f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}").error(
+        (
+            "Error validating template result '%s' "
+            "from template '%s' "
+            "for attribute '%s' in entity %s "
+            "validation message '%s'"
+        ),
+        result,
+        template,
+        attribute,
+        entity_id,
+        exception.msg,
+    )
+
+
+def validate_attributes(
+    breadcrumb: str,
+    blocked_attributes: BlockedTemplateAttributes | None,
 ) -> Callable[[dict], dict]:
+    """Validate entity attributes."""
 
     def validate(obj: dict):
-        if blocked_attributes is None and not block_device_class:
+        if blocked_attributes is None:
+            return obj
+
+        if (
+            blocked_attributes.attributes is None
+            and not blocked_attributes.device_class
+        ):
             return obj
 
         _blocked_attributes: set[str]
-        if blocked_attributes is None:
+        if (attributes := blocked_attributes.attributes) is None:
             _blocked_attributes = set()
-        elif isinstance(blocked_attributes, tuple):
-            _blocked_attributes = set(chain(*blocked_attributes))
+        elif isinstance(attributes, tuple):
+            _blocked_attributes = set(chain(*attributes))
         else:
-            _blocked_attributes = set(blocked_attributes)
+            _blocked_attributes = set(attributes)
 
-        if block_device_class:
+        if blocked_attributes.device_class:
             _blocked_attributes.add("device_class")
 
         if blocked := (_blocked_attributes.intersection(set(obj.keys()))):
             raise vol.Invalid(
-                f"Unsupported attribute(s) found for {default_name}: {', '.join(blocked)}"
+                f"Unsupported attribute(s) found for {breadcrumb}: {', '.join(blocked)}"
             )
 
         return obj
@@ -79,8 +117,7 @@ def _blocked_attributes(
 def make_template_entity_common_schema(
     domain: str,
     default_name: str,
-    blocked_attributes: tuple[_AttributeEnum, ...] | _AttributeEnum | None = None,
-    block_device_class: bool = False,
+    blocked_attributes: BlockedTemplateAttributes | None = None,
 ) -> vol.Schema:
     """Return a schema with default name."""
     return vol.Schema(
@@ -95,11 +132,12 @@ def make_template_entity_common_schema(
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
             vol.Optional(CONF_ATTRIBUTES): vol.Schema(
-                vol.All(
-                    {cv.string: cv.template},
-                    _blocked_attributes(
-                        default_name, blocked_attributes, block_device_class
+                vol.Any(
+                    vol.All(
+                        {cv.string: cv.template},
+                        validate_attributes(default_name, blocked_attributes),
                     ),
+                    cv.template,
                 )
             ),
         }

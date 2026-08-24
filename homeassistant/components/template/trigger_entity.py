@@ -3,6 +3,8 @@
 from collections.abc import Callable
 from typing import Any, override
 
+import voluptuous as vol
+
 from homeassistant.const import CONF_VARIABLES
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import TemplateError
@@ -18,7 +20,9 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from . import TriggerUpdateCoordinator
+from .const import CONF_ATTRIBUTES
 from .entity import AbstractTemplateEntity
+from .schemas import log_validation_error, validate_attributes
 
 
 class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
@@ -227,6 +231,7 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
             rendered, variables, [state_option] if state_option else []
         )
 
+        # Handle attributes as a dictionary.
         if self._attribute_templates:
             attributes = {}
             for attribute, template in self._attribute_templates.items():
@@ -239,6 +244,29 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                         self.entity_id, err, attribute=attribute
                     )
             self._attr_extra_state_attributes = attributes
+
+        # Handle attributes as a template.
+        elif attributes_template := self._attributes_template:
+            validated = {}
+            try:
+                result = template_render_complex(attributes_template, variables)
+                validated = vol.All(
+                    dict,
+                    validate_attributes(
+                        self.entity_id,
+                        self._blocked_attributes,
+                    ),
+                )(result)
+
+            except TemplateError as err:
+                log_triggered_template_error(
+                    self.entity_id, err, attribute=CONF_ATTRIBUTES
+                )
+            except vol.Invalid as err:
+                log_validation_error(
+                    result, attributes_template, CONF_ATTRIBUTES, self.entity_id, err
+                )
+            self._attr_extra_state_attributes = validated
 
         self._rendered = rendered
 

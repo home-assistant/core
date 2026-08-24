@@ -66,6 +66,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -219,6 +220,8 @@ WEATHER_COMMON_MODERN_SCHEMA = vol.Schema(
     }
 )
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(WeatherEntityStateAttribute)
+
 
 WEATHER_YAML_SCHEMA = (
     vol.Schema(
@@ -229,14 +232,14 @@ WEATHER_YAML_SCHEMA = (
     .extend(WEATHER_COMMON_LEGACY_SCHEMA.schema)
     .extend(
         make_template_entity_common_schema(
-            WEATHER_DOMAIN, DEFAULT_NAME, WeatherEntityStateAttribute
+            WEATHER_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
         ).schema
     )
 )
 
 WEATHER_MODERN_YAML_SCHEMA = WEATHER_COMMON_MODERN_SCHEMA.extend(
     make_template_entity_common_schema(
-        WEATHER_DOMAIN, DEFAULT_NAME, WeatherEntityStateAttribute
+        WEATHER_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -477,6 +480,7 @@ class AbstractTemplateWeather(AbstractTemplateEntity, WeatherEntity, RestoreEnti
     _optimistic_entity = True
     _restore_state_extra_data = WeatherExtraStoredData
     _restore_state_properties = ("_attr_condition",)
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

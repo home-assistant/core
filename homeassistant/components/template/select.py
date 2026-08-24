@@ -34,6 +34,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -55,11 +56,13 @@ SELECT_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(SelectEntityCapabilityAttribute)
+
 SELECT_YAML_SCHEMA = SELECT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
     make_template_entity_common_schema(
-        SELECT_DOMAIN, DEFAULT_NAME, SelectEntityCapabilityAttribute
+        SELECT_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -145,6 +148,7 @@ class AbstractTemplateSelect(AbstractTemplateEntity, SelectEntity, RestoreEntity
     _state_option = CONF_STATE
     _restore_state_extra_data = SelectExtraStoredData
     _restore_state_properties = ("_attr_current_option",)
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

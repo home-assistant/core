@@ -39,6 +39,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -69,6 +70,8 @@ SENSOR_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
     }
 )
+
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(device_class=True)
 
 SENSOR_YAML_SCHEMA = vol.All(
     vol.Schema(
@@ -179,6 +182,7 @@ class AbstractTemplateSensor(AbstractTemplateEntity, RestoreSensor):
     _state_option = CONF_STATE
     _restore_state_extra_data = SensorExtraStoredData
     _restore_state_properties = ("_attr_native_value",)
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

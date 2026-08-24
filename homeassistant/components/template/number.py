@@ -41,6 +41,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -65,14 +66,15 @@ NUMBER_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(
+    NumberEntityCapabilityAttribute, device_class=True
+)
+
 NUMBER_YAML_SCHEMA = NUMBER_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
     make_template_entity_common_schema(
-        NUMBER_DOMAIN,
-        DEFAULT_NAME,
-        NumberEntityCapabilityAttribute,
-        block_device_class=True,
+        NUMBER_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -134,6 +136,7 @@ class AbstractTemplateNumber(AbstractTemplateEntity, RestoreNumber):
     _state_option = CONF_STATE
     _restore_state_extra_data = NumberExtraStoredData
     _restore_state_properties = ("_attr_native_value",)
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

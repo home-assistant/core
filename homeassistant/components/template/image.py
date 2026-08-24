@@ -28,6 +28,7 @@ from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -39,6 +40,8 @@ DEFAULT_NAME = "Template Image"
 
 GET_IMAGE_TIMEOUT = 10
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(ImageEntityStateAttribute)
+
 IMAGE_YAML_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): cv.template,
@@ -46,7 +49,7 @@ IMAGE_YAML_SCHEMA = vol.Schema(
     }
 ).extend(
     make_template_entity_common_schema(
-        IMAGE_DOMAIN, DEFAULT_NAME, ImageEntityStateAttribute
+        IMAGE_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -97,6 +100,7 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_image_url: str | None = None
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

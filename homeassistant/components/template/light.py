@@ -59,6 +59,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -134,13 +135,15 @@ LIGHT_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(
+    (LightEntityCapabilityAttribute, LightEntityStateAttribute),
+)
+
 LIGHT_YAML_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
     make_template_entity_common_schema(
-        LIGHT_DOMAIN,
-        DEFAULT_NAME,
-        (LightEntityCapabilityAttribute, LightEntityStateAttribute),
+        LIGHT_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -379,6 +382,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     _state_option = CONF_STATE
     _restore_state_extra_data = LightExtraStoredData
     _restore_state_properties = ("_attr_is_on",)
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

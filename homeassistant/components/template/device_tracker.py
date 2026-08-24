@@ -35,6 +35,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -116,6 +117,13 @@ TRACKER_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(
+    (
+        DeviceTrackerEntityCapabilityAttribute,
+        DeviceTrackerEntityStateAttribute,
+        TrackerEntityStateAttribute,
+    )
+)
 
 TRACKER_YAML_SCHEMA = vol.All(
     _validate_in_zones_or_lat_and_lon,
@@ -123,11 +131,7 @@ TRACKER_YAML_SCHEMA = vol.All(
         make_template_entity_common_schema(
             DEVICE_TRACKER_DOMAIN,
             DEFAULT_NAME,
-            (
-                DeviceTrackerEntityCapabilityAttribute,
-                DeviceTrackerEntityStateAttribute,
-                TrackerEntityStateAttribute,
-            ),
+            BLOCKED_ATTRIBUTES,
         ).schema
     ),
 )
@@ -219,6 +223,7 @@ class AbstractTemplateTracker(AbstractTemplateEntity, TrackerEntity, RestoreEnti
     _entity_id_format = ENTITY_ID_FORMAT
     _restore_state_extra_data = TrackerExtraStoredData
     _restore_state_properties = ("_attr_in_zones",)
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

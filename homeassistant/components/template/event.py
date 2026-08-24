@@ -10,6 +10,8 @@ from homeassistant.components.event import (
     ENTITY_ID_FORMAT,
     EventDeviceClass,
     EventEntity,
+    EventEntityCapabilityAttribute,
+    EventEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS
@@ -31,6 +33,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -51,6 +54,13 @@ EVENT_COMMON_SCHEMA = vol.Schema(
         vol.Required(CONF_EVENT_TYPE): cv.template,
         vol.Required(CONF_EVENT_TYPES): cv.template,
     }
+)
+
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(
+    (
+        EventEntityCapabilityAttribute,
+        EventEntityStateAttribute,
+    )
 )
 
 EVENT_YAML_SCHEMA = EVENT_COMMON_SCHEMA.extend(
@@ -115,6 +125,7 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     """Representation of a template event features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

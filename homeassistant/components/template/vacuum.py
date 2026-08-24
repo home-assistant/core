@@ -19,7 +19,9 @@ from homeassistant.components.vacuum import (
     Segment,
     StateVacuumEntity,
     VacuumActivity,
+    VacuumEntityCapabilityAttribute,
     VacuumEntityFeature,
+    VacuumEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STATE, CONF_UNIQUE_ID
@@ -43,6 +45,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -98,6 +101,9 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(
+    (VacuumEntityCapabilityAttribute, VacuumEntityStateAttribute)
+)
 
 VACUUM_YAML_SCHEMA = vol.All(
     VACUUM_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
@@ -253,6 +259,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     _state_option = CONF_STATE
     _restore_state_extra_data = VacuumExtraStoredData
     _restore_state_properties = ("_attr_activity",)
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

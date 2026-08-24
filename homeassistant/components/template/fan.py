@@ -40,6 +40,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
+    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -92,11 +93,13 @@ FAN_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(
+    (FanEntityStateAttribute, FanEntityCapabilityAttribute),
+)
+
 FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
     make_template_entity_common_schema(
-        FAN_DOMAIN,
-        DEFAULT_NAME,
-        (FanEntityStateAttribute, FanEntityCapabilityAttribute),
+        FAN_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -201,6 +204,7 @@ class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):
     _state_option = CONF_STATE
     _restore_state_extra_data = FanExtraStoredData
     _restore_state_properties = ("_attr_is_on",)
+    _blocked_attributes = BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
