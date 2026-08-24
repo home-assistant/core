@@ -245,10 +245,7 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_reauth_mfa()
                 errors["base"] = validation_response
             else:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={CONF_ACCESS_TOKEN: self.authenticator.refresh_token},
-                )
+                return await self._async_finish_reauth()
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
@@ -265,10 +262,26 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             if error:
                 errors["base"] = error
             else:
-                return self.async_update_reload_and_abort(
-                    self._get_reauth_entry(),
-                    data_updates={CONF_ACCESS_TOKEN: self.authenticator.refresh_token},
-                )
+                return await self._async_finish_reauth()
         return self.async_show_form(
             step_id="reauth_mfa", data_schema=STEP_MFA_DATA_SCHEMA, errors=errors
+        )
+
+    async def _async_finish_reauth(self) -> ConfigFlowResult:
+        """Verify the account and update its access token."""
+        if TYPE_CHECKING:
+            assert self.authenticator
+        entry = self._get_reauth_entry()
+        accounts = await get_accounts(self.authenticator)
+        if not any(
+            account["value"] == entry.data[CONF_ACCOUNT_NUMBER] for account in accounts
+        ):
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors={"base": "account_not_found"},
+            )
+        return self.async_update_reload_and_abort(
+            entry,
+            data_updates={CONF_ACCESS_TOKEN: self.authenticator.refresh_token},
         )

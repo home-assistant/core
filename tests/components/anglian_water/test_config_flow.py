@@ -492,6 +492,59 @@ async def test_reauth_flow_invalid_credentials(
     assert result["reason"] == "reauth_successful"
 
 
+async def test_reauth_flow_account_not_found(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+) -> None:
+    """Test that reauth does not update an entry for another account."""
+    mock_config_entry.add_to_hass(hass)
+    original_data = dict(mock_config_entry.data)
+    mock_anglian_water_client.api.get_associated_accounts.return_value = {
+        "result": {"active": []}
+    }
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+    assert result is not None
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": "account_not_found"}
+    assert mock_config_entry.data == original_data
+
+    mock_anglian_water_client.api.get_associated_accounts.return_value = (
+        await async_load_json_object_fixture(
+            hass, "multi_associated_accounts.json", DOMAIN
+        )
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
 async def test_reauth_flow_mfa_required(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

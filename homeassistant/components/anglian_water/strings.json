@@ -5,6 +5,7 @@
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
+      "account_not_found": "These credentials do not have access to the configured billing account.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "consent_required": "You need to accept the terms and conditions for your Anglian Water account before using this integration. Log in to their website for further information.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
