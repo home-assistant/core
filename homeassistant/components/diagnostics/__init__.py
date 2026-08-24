@@ -308,12 +308,11 @@ class DownloadDiagnosticsView(http.HomeAssistantView):
         if sub_id is None:
             return web.Response(status=HTTPStatus.BAD_REQUEST)
 
-        if (device := dev_reg.async_get(sub_id)) is None:
-            return web.Response(status=HTTPStatus.NOT_FOUND)
-
-        # A composite device spans multiple config entries and has no single
-        # owner; not supported.
-        if dev_reg.async_is_composite_device_id(sub_id):
+        # Reject unknown and composite device which spans multiple config entries and
+        # has no single owner; not supported.
+        if (
+            device := dev_reg.async_get(sub_id, include_composite_devices=False)
+        ) is None:
             return web.Response(status=HTTPStatus.NOT_FOUND)
 
         # Reject a device not owned by this config entry; without this a foreign

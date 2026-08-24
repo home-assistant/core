@@ -460,7 +460,11 @@ async def test_download_diagnostics_composite_device_rejected(
     device_registry.devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=composite_id
     )
-    assert device_registry.async_is_composite_device_id(composite_id) is True
+    # Check the device is a composite device id, which is not supported for diagnostics
+    assert device_registry.async_get(composite_id) is not None
+    assert (
+        device_registry.async_get(composite_id, include_composite_devices=False) is None
+    )
 
     handler = (
         hass.data[_DIAGNOSTICS_DATA].platforms["fake_integration"].device_diagnostics
