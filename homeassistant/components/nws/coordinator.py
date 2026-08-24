@@ -49,14 +49,14 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         nws: SimpleNWS,
         *,
         location_entity_id: str | None = None,
-        initial_position: Coordinates | None = None,
+        initial_coordinates: Coordinates | None = None,
     ) -> None:
         """Initialize."""
         self.nws = nws
         self.last_api_success_time: datetime | None = None
         self.initialized: bool = False
         self._location_entity_id = location_entity_id
-        self._previous_position = initial_position
+        self._previous_coordinates = initial_coordinates
         self._location_state_warned = False
 
         super().__init__(
@@ -84,20 +84,20 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
             return
         self._location_state_warned = False
 
-        if (location := get_state_coordinates(state)) is None:
+        if (coordinates := get_state_coordinates(state)) is None:
             _LOGGER.debug(
                 "Location entity %s has no location attributes; skipping location update",
                 self._location_entity_id,
             )
             return
-        if (previous := self._previous_position) is not None:
-            if location == previous:
+        if (previous_coordinates := self._previous_coordinates) is not None:
+            if coordinates == previous_coordinates:
                 return
             dist = location_util.distance(
-                previous.latitude,
-                previous.longitude,
-                location.latitude,
-                location.longitude,
+                previous_coordinates.latitude,
+                previous_coordinates.longitude,
+                coordinates.latitude,
+                coordinates.longitude,
             )
             if dist is not None and dist <= LOCATION_CHANGE_THRESHOLD:
                 return
@@ -106,7 +106,7 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         station = self.config_entry.data.get(CONF_STATION)
         try:
             new_nws = SimpleNWS(
-                location.latitude, location.longitude, api_key, client_session
+                coordinates.latitude, coordinates.longitude, api_key, client_session
             )
             await new_nws.set_station(station)
         except aiohttp.ClientError, NwsError:
@@ -118,16 +118,16 @@ class NWSObservationDataUpdateCoordinator(TimestampDataUpdateCoordinator[None]):
         _LOGGER.info(
             "NWS API updated: station %s at (%.4f, %.4f)",
             new_nws.station,
-            location.latitude,
-            location.longitude,
+            coordinates.latitude,
+            coordinates.longitude,
         )
         self.nws = new_nws
         self.name = f"NWS observation station {new_nws.station}"
         runtime_data = self.config_entry.runtime_data
         runtime_data.api = new_nws
-        runtime_data.latitude = location.latitude
-        runtime_data.longitude = location.longitude
-        self._previous_position = location
+        runtime_data.latitude = coordinates.latitude
+        runtime_data.longitude = coordinates.longitude
+        self._previous_coordinates = coordinates
         self.initialized = False
         self.last_api_success_time = None
         runtime_data.coordinator_forecast.name = (
