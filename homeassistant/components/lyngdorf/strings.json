@@ -76,6 +76,14 @@
         "name": "Trim treble"
       }
     },
+    "select": {
+      "room_perfect_position": {
+        "name": "RoomPerfect position"
+      },
+      "voicing": {
+        "name": "Voicing"
+      }
+    },
     "sensor": {
       "audio_information": {
         "name": "Audio information"
