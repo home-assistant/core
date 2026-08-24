@@ -14,8 +14,15 @@ for arg in "$@"; do
 done
 
 if [ "$core_path_provided" = false ]; then
-    # Enable recursive globbing using find
-    for manifest in $(find . -name "manifest.json"); do
+    # Manifest discovery is limited to the two documented custom-integration
+    # locations rather than anywhere in the repo, to avoid misvalidating
+    # unrelated files that happen to share the filename.
+    manifests=$(
+        { [ -d custom_components ] && find custom_components -mindepth 2 -maxdepth 2 -name "manifest.json"
+          find . -maxdepth 1 -name "manifest.json"; } 2>/dev/null
+    )
+
+    for manifest in $manifests; do
         manifest_path=$(realpath "${manifest}")
         integrations="$integrations --integration-path ${manifest_path%/*}"
     done

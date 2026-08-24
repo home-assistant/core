@@ -4,7 +4,14 @@ import copy
 import logging
 from typing import Any, override
 
-from vizaio import AppRecord, PairChallenge, Vizio, VizioError, async_is_tv
+from vizaio import (
+    AppRecord,
+    PairChallenge,
+    Vizio,
+    VizioError,
+    async_is_tv,
+    async_resolve_host,
+)
 from vizaio.apps import APP_HOME, BUNDLED_APPS
 import voluptuous as vol
 
@@ -35,7 +42,6 @@ from .const import (
     CONF_APPS_TO_INCLUDE_OR_EXCLUDE,
     CONF_INCLUDE_OR_EXCLUDE,
     CONF_VOLUME_STEP,
-    DEFAULT_DEVICE_CLASS,
     DEFAULT_NAME,
     DEFAULT_VOLUME_STEP,
     DEVICE_ID,
@@ -64,14 +70,6 @@ def _get_config_schema(input_dict: dict[str, Any] | None = None) -> vol.Schema:
                 CONF_NAME, default=input_dict.get(CONF_NAME, DEFAULT_NAME)
             ): str,
             vol.Required(CONF_HOST, default=input_dict.get(CONF_HOST)): str,
-            vol.Required(
-                CONF_DEVICE_CLASS,
-                default=input_dict.get(CONF_DEVICE_CLASS, DEFAULT_DEVICE_CLASS),
-            ): vol.All(
-                str,
-                vol.Lower,
-                vol.In([MediaPlayerDeviceClass.TV, MediaPlayerDeviceClass.SPEAKER]),
-            ),
             vol.Optional(
                 CONF_ACCESS_TOKEN, default=input_dict.get(CONF_ACCESS_TOKEN, "")
             ): str,
@@ -106,6 +104,17 @@ def _get_device(
         device_type=VIZIO_DEVICE_CLASSES[MediaPlayerDeviceClass(device_class)],
         auth_token=auth_token,
         session=async_get_clientsession(hass, False),
+    )
+
+
+async def _async_detect_device_class(
+    hass: HomeAssistant, host: str
+) -> MediaPlayerDeviceClass:
+    """Detect whether the device at host is a TV or a speaker."""
+    return (
+        MediaPlayerDeviceClass.TV
+        if await async_is_tv(host, session=async_get_clientsession(hass, False))
+        else MediaPlayerDeviceClass.SPEAKER
     )
 
 
@@ -209,6 +218,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Vizio config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -225,18 +235,6 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         self._must_show_form: bool | None = None
         self._pair_challenge: PairChallenge | None = None
         self._data: dict[str, Any] | None = None
-        self._apps: dict[str, list] = {}
-
-    async def _create_entry(self, input_dict: dict[str, Any]) -> ConfigFlowResult:
-        """Create vizio config entry."""
-        # Remove extra keys that will not be used by entry setup
-        input_dict.pop(CONF_APPS_TO_INCLUDE_OR_EXCLUDE, None)
-        input_dict.pop(CONF_INCLUDE_OR_EXCLUDE, None)
-
-        if self._apps:
-            input_dict[CONF_APPS] = self._apps
-
-        return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
     @override
     async def async_step_user(
@@ -248,6 +246,22 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
             self._user_schema = _get_config_schema(user_input)
+            # A host entered without a port would target 443; probe for the
+            # API port. No-op for a host that already carries one.
+            try:
+                user_input[CONF_HOST] = await async_resolve_host(
+                    user_input[CONF_HOST],
+                    session=async_get_clientsession(self.hass, False),
+                )
+            except VizioError:
+                errors[CONF_HOST] = "cannot_determine_port"
+
+        if user_input is not None and not errors:
+            # Zeroconf discovery provides the device class; detect it otherwise
+            if CONF_DEVICE_CLASS not in user_input:
+                user_input[CONF_DEVICE_CLASS] = await _async_detect_device_class(
+                    self.hass, user_input[CONF_HOST]
+                )
             if self.unique_id is None:
                 unique_id = await _async_get_unique_id(
                     self.hass, user_input[CONF_HOST], user_input[CONF_DEVICE_CLASS]
@@ -285,7 +299,9 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors["base"] = "cannot_connect"
 
                     if not errors:
-                        return await self._create_entry(user_input)
+                        return self.async_create_entry(
+                            title=user_input[CONF_NAME], data=user_input
+                        )
                 else:
                     self._data = copy.deepcopy(user_input)
                     return await self.async_step_pair_tv()
@@ -300,19 +316,23 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         host = discovery_info.host
         # If host already has port, no need to add it again
-        if ":" not in host:
+        if ":" not in host and discovery_info.port:
             host = f"{host}:{discovery_info.port}"
+        # Discovery doesn't always advertise a port; probe for the API port so
+        # we don't build a host that targets 443. No-op if one was appended.
+        try:
+            host = await async_resolve_host(
+                host, session=async_get_clientsession(self.hass, False)
+            )
+        except VizioError:
+            return self.async_abort(reason="cannot_connect")
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`
         num_chars_to_strip = len(discovery_info.type) + 1
         name = discovery_info.name[:-num_chars_to_strip]
 
-        device_class = (
-            MediaPlayerDeviceClass.TV
-            if await async_is_tv(host)
-            else MediaPlayerDeviceClass.SPEAKER
-        )
+        device_class = await _async_detect_device_class(self.hass, host)
 
         # Set unique ID early for discovery flow so we can abort if needed
         unique_id = await _async_get_unique_id(self.hass, host, device_class)
@@ -386,33 +406,13 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _pairing_complete(self, step_id: str) -> ConfigFlowResult:
-        """Handle config flow completion."""
-        assert self._data
-        if not self._must_show_form:
-            return await self._create_entry(self._data)
-
-        self._must_show_form = False
-        return self.async_show_form(
-            step_id=step_id,
-            description_placeholders={"access_token": self._data[CONF_ACCESS_TOKEN]},
-        )
-
     async def async_step_pairing_complete(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Complete non-import sourced config flow.
+        """Display final message to user confirming pairing."""
+        assert self._data
+        if not self._must_show_form:
+            return self.async_create_entry(title=self._data[CONF_NAME], data=self._data)
 
-        Display final message to user confirming pairing.
-        """
-        return await self._pairing_complete("pairing_complete")
-
-    async def async_step_pairing_complete_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Complete import sourced config flow.
-
-        Display final message to user confirming pairing and displaying
-        access token.
-        """
-        return await self._pairing_complete("pairing_complete_import")
+        self._must_show_form = False
+        return self.async_show_form(step_id="pairing_complete")

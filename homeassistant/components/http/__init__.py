@@ -33,7 +33,7 @@ from homeassistant.setup import (
 )
 from homeassistant.util.async_ import create_eager_task
 
-from .config import async_get_and_load_store, async_load_config, default_server_port
+from .config import async_get_and_load_store, async_load_config
 from .const import (  # noqa: F401
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
@@ -77,7 +77,10 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_SERVER_HOST): vol.All(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
-            vol.Optional(CONF_SERVER_PORT, default=default_server_port): cv.port,
+            # No default: the YAML migration needs to tell an explicitly
+            # configured port apart from an omitted one, which it keeps on the
+            # previous default port instead of the Supervisor default.
+            vol.Optional(CONF_SERVER_PORT): cv.port,
             vol.Optional(CONF_BASE_URL): cv.string,
             vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
             vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,

@@ -1,6 +1,6 @@
 """Fixtures and test data for UniFi Protect methods."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Generator, Iterator
 from datetime import datetime, timedelta
 from functools import partial
 from ipaddress import IPv4Address
@@ -23,6 +23,7 @@ from uiprotect.data import (
     Liveview,
     ModelType,
     ProtectModelWithId,
+    PublicBootstrap,
     Sensor,
     SmartDetectObjectType,
     StateType,
@@ -173,24 +174,37 @@ def mock_ufp_client(bootstrap: Bootstrap):
     # them in ``update_public()``; the integration reads them synchronously. Start
     # with empty collections; the ``update_public`` side effect (see ``mock_entry``)
     # primes the cameras from the private bootstrap.
-    client.public_bootstrap = Mock()
+    client.public_bootstrap = Mock(spec=PublicBootstrap)
     client.public_bootstrap.cameras = {}
+    client.public_bootstrap.lights = {}
     client.public_bootstrap.relays = {}
     client.public_bootstrap.sirens = {}
     client.public_bootstrap.arm_profiles = {}
     client.public_bootstrap.arm_mode = None
 
-    # Cameras resolve to their primed public model (see ``update_public`` in
-    # ``mock_entry``); other device types opt in via the ``setup_public_*``
-    # helpers, so they default to no paired public object.
+    # Cameras and lights resolve to their primed public model (see
+    # ``update_public`` in ``mock_entry`` / ``setup_public_light``); other
+    # device types opt in via the ``setup_public_*`` helpers, so they default
+    # to no paired public object.
     def _public_bootstrap_get(
         model: ModelType, obj_id: str
     ) -> ProtectModelWithId | None:
         if model is ModelType.CAMERA:
             return client.public_bootstrap.cameras.get(obj_id)
+        if model is ModelType.LIGHT:
+            return client.public_bootstrap.lights.get(obj_id)
         return None
 
     client.public_bootstrap.get = Mock(side_effect=_public_bootstrap_get)
+
+    def _public_all_devices() -> Iterator[Mock]:
+        pb = client.public_bootstrap
+        yield from pb.cameras.values()
+        yield from pb.lights.values()
+        yield from pb.relays.values()
+        yield from pb.sirens.values()
+
+    client.public_bootstrap.all_devices = _public_all_devices
 
     async def get_camera_rtsps_streams(
         camera_id: str, *args: Any, **kwargs: Any
@@ -254,11 +268,18 @@ def mock_entry(
             ufp.devices_ws_state_subscription = ws_state_subscription
             return Mock()
 
+        def subscribe_events_websocket_state(
+            ws_state_subscription: Callable[[WebsocketState], None],
+        ) -> Any:
+            ufp.events_ws_state_subscription = ws_state_subscription
+            return Mock()
+
         ufp_client.subscribe_websocket = subscribe
         ufp_client.subscribe_websocket_state = subscribe_websocket_state
         ufp_client.subscribe_devices_websocket = subscribe_devices_websocket
         ufp_client.subscribe_events = subscribe_events
         ufp_client.subscribe_devices_websocket_state = subscribe_devices_websocket_state
+        ufp_client.subscribe_events_websocket_state = subscribe_events_websocket_state
 
         async def update_public() -> Any:
             # Mirror the library prime: build each camera's public model from the
