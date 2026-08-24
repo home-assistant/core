@@ -106,21 +106,6 @@
         "name": "Zone 2 thermostat"
       }
     },
-    "light": {
-      "light": {
-        "state_attributes": {
-          "effect": {
-            "state": {
-              "cinema": "Cinema",
-              "living": "Living",
-              "mildly": "Mildly",
-              "night": "Night",
-              "reading": "Reading"
-            }
-          }
-        }
-      }
-    },
     "fan": {
       "fan": {
         "state_attributes": {
@@ -139,6 +124,21 @@
               "soft": "Soft",
               "strong": "Strong",
               "warm": "Warm"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "cinema": "Cinema",
+              "living": "Living",
+              "mildly": "Mildly",
+              "night": "Night",
+              "reading": "Reading"
             }
           }
         }
