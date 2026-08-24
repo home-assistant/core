@@ -34,10 +34,6 @@ async def async_setup_entry(
     @callback
     def _async_add_new_entities() -> None:
         """Add number entities for discovered bypass temperature targets."""
-        box_node = coordinator.data.nodes.get(BOX_NODE_ID)
-        if box_node is None:
-            return
-
         new_entities = []
         for zone_id in BYPASS_SUPPLY_TARGET_ZONE_IDS:
             if zone_id in known_zone_ids:
@@ -47,22 +43,23 @@ async def async_setup_entry(
             if target is None:
                 continue
 
-            minimum = target.minimum
-            maximum = target.maximum
-            increment = target.increment
             # Skip incomplete metadata because guessing valid limits would expose an invalid control.
-            if minimum is None or maximum is None or increment is None:
+            if (
+                target.minimum is None
+                or target.maximum is None
+                or target.increment is None
+            ):
                 continue
 
             known_zone_ids.add(zone_id)
             new_entities.append(
                 DucoBypassSupplyTemperatureTargetNumber(
                     coordinator,
-                    box_node,
+                    coordinator.data.nodes[BOX_NODE_ID],
                     zone_id,
-                    minimum,
-                    maximum,
-                    increment,
+                    target.minimum,
+                    target.maximum,
+                    target.increment,
                 )
             )
 
@@ -124,21 +121,17 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
 
     def _validate_step(self, value: float) -> None:
         """Validate the value follows the API-provided increment metadata."""
-        minimum = self.native_min_value
-        increment = self.native_step
-
-        decimal_value = Decimal(str(value))
-        decimal_minimum = Decimal(str(minimum))
-        decimal_increment = Decimal(str(increment))
-
-        if ((decimal_value - decimal_minimum) / decimal_increment) % 1 != 0:
+        if (
+            (Decimal(str(value)) - Decimal(str(self.native_min_value)))
+            / Decimal(str(self.native_step))
+        ) % 1 != 0:
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="invalid_bypass_supply_temperature_target_step",
                 translation_placeholders={
                     "value": str(value),
-                    "minimum": str(minimum),
-                    "increment": str(increment),
+                    "minimum": str(self.native_min_value),
+                    "increment": str(self.native_step),
                 },
             )
 
@@ -147,16 +140,16 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
         if self.unit_of_measurement == self.native_unit_of_measurement:
             return value
 
-        decimal_minimum = Decimal(str(self.native_min_value))
-        decimal_increment = Decimal(str(self.native_step))
-        decimal_value = Decimal(str(value))
-
         # Home Assistant converts service values from the configured temperature
         # unit first, which can land between valid Duco Celsius increments.
         steps = (
-            (decimal_value - decimal_minimum) / decimal_increment
+            (Decimal(str(value)) - Decimal(str(self.native_min_value)))
+            / Decimal(str(self.native_step))
         ).to_integral_value(rounding=ROUND_HALF_UP)
-        return float(decimal_minimum + (steps * decimal_increment))
+        return float(
+            Decimal(str(self.native_min_value))
+            + (steps * Decimal(str(self.native_step)))
+        )
 
     @override
     async def async_set_native_value(self, value: float) -> None:
@@ -183,4 +176,4 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
                 translation_key="failed_to_set_bypass_supply_temperature_target",
             ) from err
 
-        await self.coordinator.async_refresh()
+        await self.coordinator.async_request_refresh()
