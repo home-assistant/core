@@ -2,7 +2,8 @@
 
 from collections.abc import Generator
 from pathlib import Path
-from unittest.mock import AsyncMock, Mock, patch
+from typing import Any
+from unittest.mock import AsyncMock, Mock, create_autospec, patch
 
 from awesomeversion import AwesomeVersion
 from go2rtc_client.rest import (
@@ -11,6 +12,7 @@ from go2rtc_client.rest import (
     _StreamClient,
     _WebRTCClient,
 )
+from go2rtc_client.ws import Go2RtcWsClient
 import pytest
 
 from homeassistant.components.camera import DOMAIN as CAMERA_DOMAIN
@@ -80,6 +82,19 @@ def ws_client() -> Generator[Mock]:
         "homeassistant.components.go2rtc.Go2RtcWsClient", autospec=True
     ) as ws_client_mock:
         yield ws_client_mock.return_value
+
+
+@pytest.fixture
+def ws_clients() -> Generator[list[Mock]]:
+    """Mock go2rtc websocket clients with a separate mock per created client."""
+    clients: list[Mock] = []
+
+    def create_client(*args: Any, **kwargs: Any) -> Mock:
+        clients.append(client := create_autospec(Go2RtcWsClient, instance=True))
+        return client
+
+    with patch(f"{GO2RTC_PATH}.Go2RtcWsClient", side_effect=create_client):
+        yield clients
 
 
 @pytest.fixture
@@ -198,13 +213,12 @@ def camera_unique_id() -> str | None:
     return "camera_unique_id"
 
 
-@pytest.fixture
-async def init_test_integration(
+async def _setup_test_integration(
     hass: HomeAssistant,
     integration_config_entry: ConfigEntry,
-    camera_unique_id: str | None,
-) -> MockCamera:
-    """Initialize components."""
+    cameras: list[MockCamera],
+) -> None:
+    """Set up the test integration with the given cameras."""
 
     async def async_setup_entry_init(
         hass: HomeAssistant, config_entry: ConfigEntry
@@ -232,17 +246,38 @@ async def init_test_integration(
             async_unload_entry=async_unload_entry_init,
         ),
     )
-    test_camera = MockCamera(camera_unique_id)
-    setup_test_component_platform(
-        hass, CAMERA_DOMAIN, [test_camera], from_config_entry=True
-    )
+    setup_test_component_platform(hass, CAMERA_DOMAIN, cameras, from_config_entry=True)
     mock_platform(hass, f"{TEST_DOMAIN}.config_flow", Mock())
 
     with mock_config_flow(TEST_DOMAIN, ConfigFlow):
         assert await hass.config_entries.async_setup(integration_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    return test_camera
+
+@pytest.fixture
+async def init_test_integration(
+    hass: HomeAssistant,
+    integration_config_entry: ConfigEntry,
+    camera_unique_id: str | None,
+) -> MockCamera:
+    """Initialize components."""
+    camera = MockCamera(camera_unique_id)
+    await _setup_test_integration(hass, integration_config_entry, [camera])
+    return camera
+
+
+@pytest.fixture
+async def init_test_integration_two_cameras(
+    hass: HomeAssistant,
+    integration_config_entry: ConfigEntry,
+) -> tuple[MockCamera, MockCamera]:
+    """Initialize components with two cameras."""
+    cameras = (
+        MockCamera("camera_unique_id_1"),
+        MockCamera("camera_unique_id_2", "Test 2"),
+    )
+    await _setup_test_integration(hass, integration_config_entry, list(cameras))
+    return cameras
 
 
 @pytest.fixture

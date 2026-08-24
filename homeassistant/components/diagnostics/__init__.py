@@ -19,7 +19,6 @@ from homeassistant.helpers import (
     integration_platform,
     issue_registry as ir,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
@@ -62,7 +61,7 @@ class DiagnosticsPlatformData:
     )
     device_diagnostics: (
         Callable[
-            [HomeAssistant, ConfigEntry, DeviceEntry],
+            [HomeAssistant, ConfigEntry, dr.AnyDeviceEntry],
             Coroutine[Any, Any, Mapping[str, Any]],
         ]
         | None
@@ -100,9 +99,12 @@ class DiagnosticsProtocol(Protocol):
         """Return diagnostics for a config entry."""
 
     async def async_get_device_diagnostics(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
+        self, hass: HomeAssistant, config_entry: ConfigEntry, device: dr.AnyDeviceEntry
     ) -> Mapping[str, Any]:
-        """Return diagnostics for a device."""
+        """Return diagnostics for a device.
+
+        Only integrations that register child devices can receive a child device.
+        """
 
 
 @callback

@@ -51,6 +51,7 @@ from .const import (
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
 )
+from .device import async_register_parent_devices, netatmo_module_parents
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -85,6 +86,8 @@ DEFAULT_INTERVALS = {
     EVENT: 600,
 }
 SCAN_INTERVAL = 60
+UNAVAILABLE_AFTER_ERRORS = 3
+MAX_ERROR_BACKOFF = 3600
 
 type NetatmoConfigEntry = ConfigEntry[NetatmoDataHandler]
 
@@ -136,6 +139,8 @@ class NetatmoPublisher:
     method: str
     kwargs: dict
     available: bool = True
+    error_count: int = 0
+    unavailable_logged: bool = False
 
 
 class NetatmoDataHandler:
@@ -170,6 +175,8 @@ class NetatmoDataHandler:
         self.device_ids: dict[str, str] = {}
         self.cameras: dict[str, str] = {}
         self.events: dict[str, dict] = {}
+        self.parent_device_ids: dict[str, str] = {}
+        self.module_parents: dict[str, str] = {}
 
     async def async_setup(self) -> None:
         """Set up the Netatmo data handler."""
@@ -191,6 +198,12 @@ class NetatmoDataHandler:
 
         await self.subscribe(ACCOUNT, ACCOUNT, None)
 
+        # Parents must exist before a platform links a child to one
+        self.module_parents = netatmo_module_parents(self.account)
+        self.parent_device_ids = async_register_parent_devices(
+            self.hass, self.config_entry, self.account, self.module_parents
+        )
+
         await self.hass.config_entries.async_forward_entry_setups(
             self.config_entry, PLATFORMS
         )
@@ -210,8 +223,9 @@ class NetatmoDataHandler:
                 error = await self.async_fetch_data(publisher)
 
                 if error:
-                    self.publisher[publisher].next_scan = (
-                        time() + data_class.interval * 10
+                    self.publisher[publisher].next_scan = time() + min(
+                        data_class.interval * 2 ** (data_class.error_count - 1),
+                        MAX_ERROR_BACKOFF,
                     )
                 else:
                     self.publisher[publisher].next_scan = time() + data_class.interval
@@ -249,11 +263,10 @@ class NetatmoDataHandler:
     async def async_fetch_data(self, signal_name: str) -> bool:
         """Fetch data and notify."""
         self.poll_count += 1
+        publisher = self.publisher[signal_name]
         has_error = False
         try:
-            await getattr(self.account, self.publisher[signal_name].method)(
-                **self.publisher[signal_name].kwargs
-            )
+            await getattr(self.account, publisher.method)(**publisher.kwargs)
 
         except (
             pyatmo.NoDeviceError,
@@ -261,10 +274,24 @@ class NetatmoDataHandler:
             TimeoutError,
             aiohttp.ClientConnectorError,
         ) as err:
-            _LOGGER.debug(err)
             has_error = True
+            if not publisher.unavailable_logged:
+                _LOGGER.info("Error while fetching %s data: %s", signal_name, err)
+                publisher.unavailable_logged = True
+            else:
+                _LOGGER.debug(err)
+        else:
+            if publisher.unavailable_logged:
+                _LOGGER.info("Fetching %s data recovered", signal_name)
+                publisher.unavailable_logged = False
 
-        self.publisher[signal_name].available = not has_error
+        if has_error:
+            publisher.error_count += 1
+        else:
+            publisher.error_count = 0
+
+        # Tolerate transient backend errors before marking entities unavailable
+        publisher.available = publisher.error_count < UNAVAILABLE_AFTER_ERRORS
         self._notify_subscribers(signal_name)
         return has_error
 
