@@ -1,5 +1,6 @@
 """The tests for Z-Wave JS automation triggers."""
 
+import copy
 from unittest.mock import patch
 
 import pytest
@@ -1320,6 +1321,105 @@ async def test_server_reconnect_value_updated(
 
     # Make sure the old listener is no longer referenced
     assert old_listener not in new_node._listeners.get(event_name, [])
+
+
+async def test_server_reconnect_value_updated_missing_value(
+    hass: HomeAssistant,
+    client,
+    lock_schlage_be469,
+    lock_schlage_be469_state,
+    integration,
+) -> None:
+    """Test value_updated trigger re-registers when value is absent at reconnect."""
+    trigger_type = f"{DOMAIN}.value_updated"
+
+    no_value_filter = async_capture_events(hass, "no_value_filter")
+
+    assert await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: [
+                {
+                    "trigger": {
+                        "platform": trigger_type,
+                        "options": {
+                            "entity_id": SCHLAGE_BE469_LOCK_ENTITY,
+                            "command_class": CommandClass.DOOR_LOCK.value,
+                            "property": "latchStatus",
+                        },
+                    },
+                    "action": {
+                        "event": "no_value_filter",
+                    },
+                },
+            ]
+        },
+    )
+
+    # Remove the node so we can re-add it without the target value, simulating the
+    # reconnect race where node.values is not yet fully populated when
+    # _create_zwave_listeners runs.
+    node_removed_event = Event(
+        type="node removed",
+        data={
+            "source": "controller",
+            "event": "node removed",
+            "reason": 0,
+            "node": lock_schlage_be469_state,
+        },
+    )
+    client.driver.controller.receive_event(node_removed_event)
+    assert 20 not in client.driver.controller.nodes
+    await hass.async_block_till_done()
+
+    partial_state = copy.deepcopy(lock_schlage_be469_state)
+    partial_state["values"] = [
+        v for v in partial_state["values"] if v.get("propertyName") != "latchStatus"
+    ]
+    node_added_event = Event(
+        type="node added",
+        data={
+            "source": "controller",
+            "event": "node added",
+            "node": partial_state,
+            "result": {},
+        },
+    )
+    client.driver.controller.receive_event(node_added_event)
+    await hass.async_block_till_done()
+
+    # Reload the integration, which fires the connected_to_server signal that causes
+    # _create_zwave_listeners to re-register listeners on the new node. With the old
+    # code the missing latchStatus value would raise a KeyError and leave the trigger
+    # without a listener.
+    await hass.config_entries.async_reload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    # Fire a value updated event on the new node — the trigger must fire even though
+    # the value was absent when _create_zwave_listeners ran.
+    new_node = client.driver.controller.nodes[20]
+    value_updated_event = Event(
+        type="value updated",
+        data={
+            "source": "node",
+            "event": "value updated",
+            "nodeId": new_node.node_id,
+            "args": {
+                "commandClassName": "Door Lock",
+                "commandClass": CommandClass.DOOR_LOCK.value,
+                "endpoint": 0,
+                "property": "latchStatus",
+                "newValue": "boo",
+                "prevValue": "hiss",
+                "propertyName": "latchStatus",
+            },
+        },
+    )
+    new_node.receive_event(value_updated_event)
+    await hass.async_block_till_done()
+
+    assert len(no_value_filter) == 1
 
 
 async def test_zwave_js_old_syntax(
