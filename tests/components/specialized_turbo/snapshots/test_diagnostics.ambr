@@ -1,0 +1,75 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'entry': dict({
+      'data': dict({
+        'address': 'DC:DD:BB:4A:D6:55',
+        'hmi_hardware': '**REDACTED**',
+        'hmi_serial': '**REDACTED**',
+        'key_source': 'manual',
+        'wrapped_key': '**REDACTED**',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'specialized_turbo',
+      'minor_version': 1,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock title',
+      'unique_id': 'dc:dd:bb:4a:d6:55',
+      'version': 3,
+    }),
+    'snapshot': dict({
+      'battery': dict({
+        'capacity_wh': 700,
+        'charge_cycles': 12,
+        'charge_pct': 85,
+        'current_a': -3.4,
+        'health_pct': 95,
+        'remaining_wh': 500,
+        'temp_c': 24,
+        'voltage_v': 48.2,
+      }),
+      'message_count': 1,
+      'motor': dict({
+        'assist_level': 2,
+        'cadence_rpm': 82,
+        'max_speed_limit_kmh': None,
+        'motor_power_w': 250,
+        'motor_temp_c': 42,
+        'odometer_km': 1234.5,
+        'peak_assist': None,
+        'rider_power_w': 120,
+        'shuttle': None,
+        'speed_kmh': 25.5,
+      }),
+      'settings': dict({
+        'acceleration_pct': None,
+        'assist_lev1_pct': 35,
+        'assist_lev2_pct': 70,
+        'assist_lev3_pct': 100,
+        'fake_channel': None,
+        'wheel_circumference_mm': None,
+      }),
+      'system': dict({
+        'altitude_descent_m': None,
+        'altitude_gain_m': 456,
+        'altitude_m': 123,
+        'consumption_wh_km': 8.2,
+        'gradient_pct': 3.5,
+        'kcal': 640,
+        'range_long_km': 80,
+        'range_short_km': 35,
+        'range_trend': None,
+        'system_state': None,
+        'system_temp_c': 31,
+      }),
+    }),
+  })
+# ---
