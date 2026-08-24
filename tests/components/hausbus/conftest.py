@@ -8,13 +8,7 @@ import pytest
 
 @pytest.fixture
 def mock_home_server() -> Generator[MagicMock]:
-    """Mock the pyhausbus HomeServer used by the config flow and gateway.
-
-    HomeServer opens a real UDP broadcast socket and starts background
-    threads, so it must never be instantiated for real in tests. Both the
-    config flow and the gateway obtain it through
-    gateway.async_get_home_server, so patching it there covers both.
-    """
+    """Mock the pyhausbus HomeServer to avoid a real UDP socket and threads."""
     with patch(
         "homeassistant.components.hausbus.gateway.HomeServer"
     ) as mock_home_server_cls:

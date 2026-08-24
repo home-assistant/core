@@ -54,14 +54,9 @@ async def _setup_cover(
 ) -> tuple[str, MagicMock]:
     """Set up a config entry and simulate one discovered Rollladen channel.
 
-    This exercises the real discovery path end to end: HausbusGateway.
-    newDeviceDetected registers the device and dispatches the channel,
-    cover.py's dispatcher-connected _handle_channel_added filters on
-    isinstance(.., Rollladen) and constructs the real HausbusCover via the
-    normal AddConfigEntryEntitiesCallback. _handle_channel_added must stay
-    marked @callback: undecorated, the dispatcher runs it on an executor
-    thread and calling async_add_entities() from there breaks - confirmed
-    both here and, against real hardware, in production.
+    Regression guard: _handle_channel_added must stay marked @callback.
+    Undecorated, the dispatcher runs it on an executor thread, where
+    async_add_entities() breaks.
     """
     mock_home_server.is_any_device_found.return_value = True
     entry = MockConfigEntry(domain=DOMAIN)
