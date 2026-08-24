@@ -1145,6 +1145,10 @@
         "section_advanced_options": {
           "title": "Additional settings"
         },
+        "send_on_init": {
+          "description": "Send the first valid value to the KNX bus when the expose is initialized.",
+          "label": "Send on initialization"
+        },
         "show_raw_values": "Show raw values",
         "title": "Add exposure",
         "value_template": {
