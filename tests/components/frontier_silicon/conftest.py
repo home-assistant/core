@@ -79,7 +79,7 @@ class FakeAFSAPIDevice:
             """Internal helper function to convert data to Preset."""
             return Preset(int(key), preset_fields.get("type"), preset_fields["name"])
 
-        presets_data = [(0, {"id": "mocked_eqpreset0", "label": "MockedPreset"})]
+        presets_data = [(0, {"type": "mocked_eqpreset_type0", "name": "MockedPreset"})]
 
         return [_to_preset(key, preset_fields) for key, preset_fields in presets_data]
 
@@ -98,7 +98,7 @@ class FakeAFSAPIDevice:
 
 @pytest.fixture
 def fake_afsapi_dev(config_entry: MockConfigEntry):
-    """Return a test FakeAFSAPIDevice, creating it for an endpoing if needed."""
+    """Return a test FakeAFSAPIDevice, creating it for an endpoint if needed."""
     webfsapi_endpoint = config_entry.data[CONF_WEBFSAPI_URL]
     pin = config_entry.data[CONF_PIN]
     return FakeAFSAPIDevice(webfsapi_endpoint, pin)
