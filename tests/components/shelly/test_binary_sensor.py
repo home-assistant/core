@@ -961,13 +961,10 @@ async def test_rpc_wall_display_xl_motion(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     """Test RPC motion binary sensor for Shelly Wall Display XL."""
-    status: dict[str, dict[str, int]] = {
-        "motion:0": {
-            "id": 0,
-            "motion": False,
-        }
-    }
+    status = {"motion:0": {"id": 0, "motion": False}}
+    config = {"motion:0": {"enable": True}}
     monkeypatch.setattr(mock_rpc_device, "status", status)
+    monkeypatch.setattr(mock_rpc_device, "config", config)
     await init_integration(hass, 2, model=MODEL_WALL_DISPLAY_XL)
 
     entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_motion"
