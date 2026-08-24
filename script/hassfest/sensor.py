@@ -6,6 +6,7 @@ from homeassistant.components.sensor import (
     DEVICE_CLASS_UNITS,
     NON_NUMERIC_DEVICE_CLASSES,
     STATE_CLASS_UNITS,
+    UNIT_CONVERTERS,
     SensorDeviceClass,
     SensorStateClass,
 )
@@ -22,16 +23,25 @@ def _generate() -> str:
         for device_class in set(SensorDeviceClass) - NON_NUMERIC_DEVICE_CLASSES
     )
     device_class_units = {
-        device_class: sorted(units, key=lambda u: (u is None, u or ""))
+        device_class: sorted(units, key=lambda u: (str.casefold(str(u)), u or ""))
         for device_class, units in DEVICE_CLASS_UNITS.items()
+    }
+    convertible_units = {
+        device_class: sorted(
+            DEVICE_CLASS_UNITS[device_class],
+            key=lambda u: (str.casefold(str(u)), u or ""),
+        )
+        for device_class in numeric_device_classes
+        if device_class in UNIT_CONVERTERS and device_class in DEVICE_CLASS_UNITS
     }
     state_classes = sorted(state_class.value for state_class in SensorStateClass)
     state_class_units = {
-        state_class: sorted(units, key=lambda u: (u is None, u or ""))
+        state_class: sorted(units, key=lambda u: (str.casefold(str(u)), u or ""))
         for state_class, units in STATE_CLASS_UNITS.items()
     }
     return json.dumps(
         {
+            "convertible_units": convertible_units,
             "device_class_units": device_class_units,
             "numeric_device_classes": numeric_device_classes,
             "state_class_units": state_class_units,
