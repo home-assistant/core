@@ -38,6 +38,29 @@ clear_lock_user:
           mode: box
       required: true
 
+clear_week_day_schedule:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    week_day_index:
+      selector:
+        number:
+          min: 1
+          max: 254
+          step: 1
+          mode: box
+      required: true
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 65534
+          step: 1
+          mode: box
+      required: true
+
 get_lock_credential_status:
   target:
     entity:
@@ -78,6 +101,29 @@ get_lock_users:
     entity:
       domain: lock
       integration: matter
+
+get_week_day_schedule:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    week_day_index:
+      selector:
+        number:
+          min: 1
+          max: 253
+          step: 1
+          mode: box
+      required: true
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 254
+          step: 1
+          mode: box
+      required: true
 
 set_lock_credential:
   target:
@@ -171,6 +217,50 @@ set_lock_user:
             - single
             - dual
             - tri
+
+set_week_day_schedule:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    week_day_index:
+      selector:
+        number:
+          min: 1
+          max: 253
+          step: 1
+          mode: box
+      required: true
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 254
+          step: 1
+          mode: box
+      required: true
+    days:
+      selector:
+        select:
+          multiple: true
+          options:
+            - monday
+            - tuesday
+            - wednesday
+            - thursday
+            - friday
+            - saturday
+            - sunday
+      required: true
+    start_time:
+      selector:
+        time:
+      required: true
+    end_time:
+      selector:
+        time:
+      required: true
 
 water_heater_boost:
   target:

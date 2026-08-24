@@ -212,6 +212,9 @@
     "clear_lock_user": {
       "service": "mdi:account-remove"
     },
+    "clear_week_day_schedule": {
+      "service": "mdi:calendar-remove"
+    },
     "get_lock_credential_status": {
       "service": "mdi:key-chain"
     },
@@ -221,11 +224,17 @@
     "get_lock_users": {
       "service": "mdi:account-multiple"
     },
+    "get_week_day_schedule": {
+      "service": "mdi:calendar-search"
+    },
     "set_lock_credential": {
       "service": "mdi:key-plus"
     },
     "set_lock_user": {
       "service": "mdi:account-lock"
+    },
+    "set_week_day_schedule": {
+      "service": "mdi:calendar-clock"
     },
     "water_heater_boost": {
       "service": "mdi:water-boiler"

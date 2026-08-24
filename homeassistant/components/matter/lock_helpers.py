@@ -4,6 +4,7 @@ Provides DoorLock cluster endpoint resolution, feature detection, and
 business logic for lock user/credential management.
 """
 
+from datetime import time
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters
@@ -26,11 +27,13 @@ from .const import (
     USER_STATUS_REVERSE_MAP,
     USER_TYPE_MAP,
     USER_TYPE_REVERSE_MAP,
+    WEEKDAY_MAP,
 )
 
 # Error translation keys (used in ServiceValidationError/HomeAssistantError)
 ERR_CREDENTIAL_TYPE_NOT_SUPPORTED = "credential_type_not_supported"
 ERR_INVALID_CREDENTIAL_DATA = "invalid_credential_data"
+ERR_INVALID_SCHEDULE_TIME = "invalid_schedule_time"
 
 # SetCredential response status mapping (Matter DlStatus)
 _DlStatus = clusters.DoorLock.Enums.DlStatus
@@ -47,6 +50,12 @@ if TYPE_CHECKING:
 
 # DoorLock Feature bitmap from Matter SDK
 DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
+
+# GetWeekDaySchedule response status mapping (Matter DlStatus)
+GET_SCHEDULE_STATUS_MAP: dict[int, str] = {
+    _DlStatus.kSuccess: "success",
+    _DlStatus.kNotFound: "not_found",
+}
 
 
 # --- TypedDicts for service action responses ---
@@ -120,6 +129,15 @@ class GetLockCredentialStatusResult(TypedDict):
     next_credential_index: int | None
 
 
+class WeekDayScheduleData(TypedDict):
+    """Result of get_week_day_schedule service action."""
+
+    exists: bool
+    days: list[str]
+    start_time: str | None
+    end_time: str | None
+
+
 def _get_lock_endpoint_from_node(node: MatterNode) -> MatterEndpoint | None:
     """Get the DoorLock endpoint from a node.
 
@@ -149,6 +167,14 @@ def _lock_supports_usr_feature(endpoint: MatterEndpoint) -> bool:
     if feature_map is None:
         return False
     return bool(feature_map & DoorLockFeature.kUser)
+
+
+def _lock_supports_wdsch_feature(endpoint: MatterEndpoint) -> bool:
+    """Check if lock endpoint supports WDSCH (Week Day Schedule) feature."""
+    feature_map = _get_feature_map(endpoint)
+    if feature_map is None:
+        return False
+    return bool(feature_map & DoorLockFeature.kWeekDayAccessSchedules)
 
 
 # --- Pure utility functions ---
@@ -253,6 +279,18 @@ class SetCredentialFailedError(HomeAssistantError):
     """SetCredential command returned a non-success status."""
 
 
+class WdschFeatureNotSupportedError(ServiceValidationError):
+    """Lock does not support WDSCH (week day schedule) feature."""
+
+
+class ScheduleTimeInvalidError(ServiceValidationError):
+    """Schedule end time is not after start time."""
+
+
+class GetScheduleFailedError(HomeAssistantError):
+    """Get*Schedule command returned a non-success, non-not-found status."""
+
+
 def _get_lock_endpoint_or_raise(node: MatterNode) -> MatterEndpoint:
     """Get the DoorLock endpoint from a node or raise an error."""
     lock_endpoint = _get_lock_endpoint_from_node(node)
@@ -270,6 +308,15 @@ def _ensure_usr_support(lock_endpoint: MatterEndpoint) -> None:
         raise UsrFeatureNotSupportedError(
             "Lock does not support user/credential management"
         )
+
+
+def _ensure_wdsch_support(lock_endpoint: MatterEndpoint) -> None:
+    """Ensure the lock endpoint supports WDSCH (week day schedule) feature.
+
+    Raises WdschFeatureNotSupportedError if the lock doesn't support it.
+    """
+    if not _lock_supports_wdsch_feature(lock_endpoint):
+        raise WdschFeatureNotSupportedError("Lock does not support week day schedules")
 
 
 # --- High-level business logic functions ---
@@ -677,6 +724,35 @@ def _credential_data_to_bytes(credential_type: str, credential_data: str) -> byt
     return credential_data.encode()
 
 
+# --- Schedule (WDSCH) validation and conversion helpers ---
+
+
+def _days_to_mask(days: list[str]) -> int:
+    """Convert a list of weekday strings to a Matter DaysMaskBitmap value."""
+    mask = 0
+    for day in days:
+        mask |= WEEKDAY_MAP[day]
+    return mask
+
+
+def _mask_to_days(mask: int) -> list[str]:
+    """Convert a Matter DaysMaskBitmap value to a list of weekday strings."""
+    return [day for day, bit in WEEKDAY_MAP.items() if mask & bit]
+
+
+def _validate_schedule_times(start_time: time, end_time: time) -> None:
+    """Validate that a schedule's end time is after its start time.
+
+    The Matter spec does not support schedules that wrap past midnight.
+    Raises ScheduleTimeInvalidError on failure.
+    """
+    if end_time <= start_time:
+        raise ScheduleTimeInvalidError(
+            translation_domain="matter",
+            translation_key=ERR_INVALID_SCHEDULE_TIME,
+        )
+
+
 # --- Credential business logic functions ---
 
 
@@ -856,4 +932,120 @@ async def get_lock_credential_status(
         creator_fabric_index=_get_attr(response, "creatorFabricIndex"),
         last_modified_fabric_index=_get_attr(response, "lastModifiedFabricIndex"),
         next_credential_index=_get_attr(response, "nextCredentialIndex"),
+    )
+
+
+# --- Schedule (WDSCH) business logic functions ---
+
+
+async def set_week_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    week_day_index: int,
+    user_index: int,
+    days: list[str],
+    start_time: time,
+    end_time: time,
+) -> None:
+    """Add or replace a week day schedule for a user.
+
+    Raises ServiceValidationError for validation failures.
+    Raises HomeAssistantError for device communication failures.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_wdsch_support(lock_endpoint)
+    _validate_schedule_times(start_time, end_time)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.SetWeekDaySchedule(
+            weekDayIndex=week_day_index,
+            userIndex=user_index,
+            daysMask=_days_to_mask(days),
+            startHour=start_time.hour,
+            startMinute=start_time.minute,
+            endHour=end_time.hour,
+            endMinute=end_time.minute,
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+async def get_week_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    week_day_index: int,
+    user_index: int,
+) -> WeekDayScheduleData:
+    """Get a week day schedule for a user.
+
+    Returns a typed dict with exists=False if the schedule slot is empty.
+    Raises HomeAssistantError on device communication or status failures.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_wdsch_support(lock_endpoint)
+
+    response = await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.GetWeekDaySchedule(
+            weekDayIndex=week_day_index,
+            userIndex=user_index,
+        ),
+    )
+
+    status_code = _get_attr(response, "status")
+    status_str = GET_SCHEDULE_STATUS_MAP.get(status_code)
+    if status_str == "not_found":
+        return WeekDayScheduleData(
+            exists=False, days=[], start_time=None, end_time=None
+        )
+    if status_str != "success":
+        raise GetScheduleFailedError(
+            translation_domain="matter",
+            translation_key="get_schedule_failed",
+            translation_placeholders={"status": f"unknown({status_code})"},
+        )
+
+    days_mask = _get_attr(response, "daysMask") or 0
+    start_hour = _get_attr(response, "startHour") or 0
+    start_minute = _get_attr(response, "startMinute") or 0
+    end_hour = _get_attr(response, "endHour") or 0
+    end_minute = _get_attr(response, "endMinute") or 0
+
+    return WeekDayScheduleData(
+        exists=True,
+        days=_mask_to_days(days_mask),
+        start_time=f"{start_hour:02d}:{start_minute:02d}",
+        end_time=f"{end_hour:02d}:{end_minute:02d}",
+    )
+
+
+async def clear_week_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    week_day_index: int,
+    user_index: int,
+) -> None:
+    """Clear a week day schedule for a user.
+
+    Use week_day_index 0xFE to clear all schedules for the user, and/or
+    user_index 0xFFFE (CLEAR_ALL_INDEX) to clear schedules for all users.
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_wdsch_support(lock_endpoint)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.ClearWeekDaySchedule(
+            weekDayIndex=week_day_index,
+            userIndex=user_index,
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
     )

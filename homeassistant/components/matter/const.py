@@ -147,6 +147,30 @@ SERVICE_CREDENTIAL_TYPES = [
     CRED_TYPE_FACE,
 ]
 
+# --- Lock schedule (WDSCH) constants ---
+
+ATTR_WEEK_DAY_INDEX = "week_day_index"
+ATTR_DAYS = "days"
+ATTR_START_TIME = "start_time"
+ATTR_END_TIME = "end_time"
+
+# Matter spec: pass to Clear*Schedule as the schedule index to clear all
+# schedules of that type for the given user. Distinct from CLEAR_ALL_INDEX,
+# which is the 16-bit sentinel used for user/credential indices.
+SCHEDULE_CLEAR_ALL_INDEX = 0xFE
+
+# Day-of-week mapping (Matter DoorLock DaysMaskBitmap)
+_DaysMaskBitmap = clusters.DoorLock.Bitmaps.DaysMaskBitmap
+WEEKDAY_MAP: dict[str, int] = {
+    "monday": _DaysMaskBitmap.kMonday,
+    "tuesday": _DaysMaskBitmap.kTuesday,
+    "wednesday": _DaysMaskBitmap.kWednesday,
+    "thursday": _DaysMaskBitmap.kThursday,
+    "friday": _DaysMaskBitmap.kFriday,
+    "saturday": _DaysMaskBitmap.kSaturday,
+    "sunday": _DaysMaskBitmap.kSunday,
+}
+
 CONCENTRATION_BECQUERELS_PER_CUBIC_METER: Final = "Bq/m³"
 
 # Seconds from Matter 2000 epoch to Unix epoch

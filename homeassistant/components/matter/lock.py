@@ -18,7 +18,15 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import LOCK_TIMED_REQUEST_TIMEOUT_MS, LOGGER, MatterServiceArgument
+from .const import (
+    ATTR_DAYS,
+    ATTR_END_TIME,
+    ATTR_START_TIME,
+    ATTR_WEEK_DAY_INDEX,
+    LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    LOGGER,
+    MatterServiceArgument,
+)
 from .entity import MatterEntity, MatterEntityDescription
 from .helpers import MatterConfigEntry
 from .lock_helpers import (
@@ -27,13 +35,17 @@ from .lock_helpers import (
     GetLockInfoResult,
     GetLockUsersResult,
     SetLockCredentialResult,
+    WeekDayScheduleData,
     clear_lock_credential,
     clear_lock_user,
+    clear_week_day_schedule,
     get_lock_credential_status,
     get_lock_info,
     get_lock_users,
+    get_week_day_schedule,
     set_lock_credential,
     set_lock_user,
+    set_week_day_schedule,
 )
 from .models import MatterDiscoverySchema
 
@@ -372,6 +384,51 @@ class MatterLock(MatterEntity, LockEntity):
         except MatterError as err:
             raise HomeAssistantError(
                 f"Failed to get credential status for {self.entity_id}: {err}"
+            ) from err
+
+    async def async_set_week_day_schedule(self, **kwargs: Any) -> None:
+        """Set a week day schedule for a lock user."""
+        try:
+            await set_week_day_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                week_day_index=kwargs[ATTR_WEEK_DAY_INDEX],
+                user_index=kwargs[MatterServiceArgument.USER_INDEX],
+                days=kwargs[ATTR_DAYS],
+                start_time=kwargs[ATTR_START_TIME],
+                end_time=kwargs[ATTR_END_TIME],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to set week day schedule on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_get_week_day_schedule(self, **kwargs: Any) -> WeekDayScheduleData:
+        """Get a week day schedule for a lock user."""
+        try:
+            return await get_week_day_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                week_day_index=kwargs[ATTR_WEEK_DAY_INDEX],
+                user_index=kwargs[MatterServiceArgument.USER_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to get week day schedule for {self.entity_id}: {err}"
+            ) from err
+
+    async def async_clear_week_day_schedule(self, **kwargs: Any) -> None:
+        """Clear a week day schedule for a lock user."""
+        try:
+            await clear_week_day_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                week_day_index=kwargs[ATTR_WEEK_DAY_INDEX],
+                user_index=kwargs[MatterServiceArgument.USER_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to clear week day schedule on {self.entity_id}: {err}"
             ) from err
 
 
