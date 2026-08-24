@@ -402,7 +402,7 @@ jobs:
             type=semver,pattern={{major}}.{{minor}},value=${{ needs.init.outputs.version }},enable=${{ !contains(needs.init.outputs.version, 'd') && !contains(needs.init.outputs.version, 'b') }}
 
       - name: Set up Docker Buildx
-        uses: docker/setup-buildx-action@bb05f3f5519dd87d3ba754cc423b652a5edd6d2c # v3.7.1
+        uses: docker/setup-buildx-action@37fe631027851001ddb9b187196cc803df7f5f0e # v3.7.1
 
       - name: Copy architecture images to DockerHub
         if: matrix.registry == 'docker.io/homeassistant'
