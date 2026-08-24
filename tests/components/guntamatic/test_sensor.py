@@ -19,6 +19,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.translation import async_get_translations
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import MOCK_PARSE_DATA
@@ -196,3 +197,30 @@ async def test_heating_circuit_devices(
         )
         is None
     )
+
+
+async def test_key_disappearing_makes_entity_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_heater: MagicMock,
+) -> None:
+    """Test an individual sensor becoming unavailable when its key disappears."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = "sensor.mock_title_boiler_temperature"
+    assert hass.states.get(entity_id).state == "14.09"
+
+    # Simulate the heater no longer reporting this key
+    reduced = {k: v for k, v in MOCK_PARSE_DATA.items() if k != "boiler_temperature"}
+    mock_heater.parse_data.return_value = reduced
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "unavailable"
+
+    # Restore the key and verify the entity recovers
+    mock_heater.parse_data.return_value = MOCK_PARSE_DATA.copy()
+    async_fire_time_changed(hass, dt_util.utcnow() + SCAN_INTERVAL)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "14.09"
