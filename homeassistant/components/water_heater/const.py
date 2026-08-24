@@ -20,8 +20,7 @@ class WaterHeaterStateAttribute(
     StrEnum,
     metaclass=EnumWithDeprecatedMembers,
     deprecated={
-        "TEMPERATURE": ("ClimateEntityStateAttribute.TARGET_TEMPERATURE", "2027.2.0"),
-        "HUMIDITY": ("ClimateEntityStateAttribute.TARGET_HUMIDITY", "2027.2.0"),
+        "TEMPERATURE": ("ClimateEntityStateAttribute.TARGET_TEMPERATURE", "2027.3.0"),
     },
 ):
     """State attributes for water heater entities."""
