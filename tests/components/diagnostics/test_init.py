@@ -454,10 +454,10 @@ async def test_download_diagnostics_composite_device_rejected(
     )
     composite_id = "composite00000000000000000000ab"
     # Simulate a migration split: both devices carry the pre-migration composite id
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=composite_id
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=composite_id
     )
     # Check the device is a composite device id, which is not supported for diagnostics
