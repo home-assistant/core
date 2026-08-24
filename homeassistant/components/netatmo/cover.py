@@ -17,7 +17,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import CONF_URL_CONTROL, NETATMO_CREATE_COVER
 from .coordinator import HOME, SIGNAL_NAME, NetatmoConfigEntry, NetatmoDevice
-from .entity import NetatmoModuleEntity
+from .entity import NetatmoReachabilityEntity
 from .helper import device_type_to_str
 
 _LOGGER = logging.getLogger(__name__)
@@ -43,7 +43,7 @@ async def async_setup_entry(
     )
 
 
-class NetatmoCover(NetatmoModuleEntity, CoverEntity):
+class NetatmoCover(NetatmoReachabilityEntity, CoverEntity):
     """Representation of a Netatmo cover device."""
 
     _attr_supported_features = (
@@ -105,5 +105,7 @@ class NetatmoCover(NetatmoModuleEntity, CoverEntity):
     @override
     def async_update_callback(self) -> None:
         """Update the entity's state."""
-        self._attr_is_closed = self.device.current_position == 0
-        self._attr_current_cover_position = self.device.current_position
+        if self.device.reachable is not False:
+            self._attr_is_closed = self.device.current_position == 0
+            self._attr_current_cover_position = self.device.current_position
+        self.async_write_ha_state()

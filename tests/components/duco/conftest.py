@@ -23,6 +23,7 @@ from duco_connectivity import (
     NodeMotorStateInfo,
     NodeSensorInfo,
     NodeVentilationInfo,
+    VentilationTemperatureInfo,
 )
 import pytest
 
@@ -179,6 +180,17 @@ def mock_lan_info() -> LanInfo:
 
 
 @pytest.fixture
+def mock_ventilation_temperature_info() -> VentilationTemperatureInfo:
+    """Return mock ventilation temperatures in Celsius."""
+    return VentilationTemperatureInfo(
+        temp_oda=5.5,
+        temp_sup=18.2,
+        temp_eta=21.4,
+        temp_eha=8.1,
+    )
+
+
+@pytest.fixture
 def mock_nodes() -> list[Node]:
     """Return a list of nodes covering all supported types."""
     return load_nodes_fixture("nodes.json")
@@ -235,6 +247,7 @@ def mock_duco_client(
     mock_lan_info: LanInfo,
     mock_nodes: list[Node],
     mock_node_actions: NodeListActionItemList,
+    mock_ventilation_temperature_info: VentilationTemperatureInfo,
 ) -> Generator[AsyncMock]:
     """Return a mocked DucoClient used by both the integration and config flow."""
     with (
@@ -255,6 +268,9 @@ def mock_duco_client(
         client.async_get_node_configs.return_value = node_configs_from_nodes(mock_nodes)
         client.async_get_node_actions.return_value = mock_node_actions
         client.async_get_time_filter_remaining.return_value = 180
+        client.async_get_ventilation_temperature_info.return_value = (
+            mock_ventilation_temperature_info
+        )
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
         ]
