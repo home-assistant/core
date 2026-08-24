@@ -20,10 +20,8 @@ from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 from .api import TrueNASAPI
 from .const import (
     ALLOWED_DATA_UNITS,
-    CONF_CRONJOB_SKIP_DISABLED,
     CONF_DATA_UNIT,
     CONF_SYSTEM_ID,
-    DEFAULT_CRONJOB_SKIP_DISABLED,
     DEFAULT_DATA_UNIT,
     DEFAULT_DEVICE_NAME,
     DEFAULT_HOST,
@@ -66,12 +64,6 @@ def _base_schema(truenas_config: Mapping[str, Any]) -> vol.Schema:
         vol.Required(
             CONF_VERIFY_SSL,
             default=truenas_config.get(CONF_VERIFY_SSL, DEFAULT_SSL_VERIFY),
-        ): bool,
-        vol.Required(
-            CONF_CRONJOB_SKIP_DISABLED,
-            default=truenas_config.get(
-                CONF_CRONJOB_SKIP_DISABLED, DEFAULT_CRONJOB_SKIP_DISABLED
-            ),
         ): bool,
         vol.Required(
             CONF_DATA_UNIT,

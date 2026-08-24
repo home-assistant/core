@@ -50,10 +50,17 @@ def test_format_unique_id_without_reference() -> None:
     assert format_unique_id("TrueNAS", "system_uptime") == "truenas-system_uptime"
 
 
-def test_format_unique_id_with_reference_slugifies() -> None:
-    """A reference value is slugified and appended to the unique id."""
+def test_format_unique_id_with_reference_lowercases_only() -> None:
+    """A reference value is lowercased, not slugified, and appended to the unique id."""
     result = format_unique_id("TrueNAS", "disk_temp", "Disk One!")
-    assert result == "truenas-disk_temp-disk_one"
+    assert result == "truenas-disk_temp-disk one!"
+
+
+def test_format_unique_id_distinguishes_slash_and_dash_variants() -> None:
+    """Distinct dataset references must not collapse to the same unique id."""
+    assert format_unique_id("TrueNAS", "dataset", "tank/a-b") != format_unique_id(
+        "TrueNAS", "dataset", "tank/a_b"
+    )
 
 
 def test_format_device_identifier() -> None:

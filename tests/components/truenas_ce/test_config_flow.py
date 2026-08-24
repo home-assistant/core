@@ -16,10 +16,8 @@ import pytest
 from homeassistant import config_entries
 from homeassistant.components.truenas_ce import config_flow
 from homeassistant.components.truenas_ce.const import (
-    CONF_CRONJOB_SKIP_DISABLED,
     CONF_DATA_UNIT,
     CONF_SYSTEM_ID,
-    DEFAULT_CRONJOB_SKIP_DISABLED,
     DEFAULT_DATA_UNIT,
     DEFAULT_HOST,
     DOMAIN,
@@ -41,7 +39,6 @@ def _user_input(**overrides: object) -> dict[str, object]:
         CONF_HOST: "truenas.example.com",
         CONF_API_KEY: "test-key",
         CONF_VERIFY_SSL: False,
-        CONF_CRONJOB_SKIP_DISABLED: DEFAULT_CRONJOB_SKIP_DISABLED,
         CONF_DATA_UNIT: DEFAULT_DATA_UNIT,
     } | overrides
     return data

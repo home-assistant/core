@@ -18,7 +18,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.service import async_register_platform_entity_service
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
-from homeassistant.util import slugify
 
 from .api import _summarize_payload
 from .const import (
@@ -59,11 +58,16 @@ def format_unique_id(identity: str, key: str, reference: object = None) -> str:
 
     ``identity`` must be a stable per-entry identity (see
     ``resolve_entry_identity``), not the user-editable display name.
+
+    ``reference`` is lowercased but not slugified: unique_id has no character
+    restrictions in HA, and slugify's lossy '/'/'-'/'_' collapsing would let
+    distinct references (e.g. ZFS datasets "tank/a-b" and "tank/a_b") collide
+    and silently drop one entity as a duplicate.
     """
     base = f"{identity.lower()}-{key}"
     if reference is None:
         return base
-    return f"{base}-{slugify(str(reference).lower())}"
+    return f"{base}-{str(reference).lower()}"
 
 
 def format_device_identifier(identity: str, hostname: str) -> str:

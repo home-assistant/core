@@ -58,7 +58,6 @@ KNOWN_DOMAINS = [
 
 DEFAULT_DEVICE_NAME = "TrueNAS"
 DEFAULT_SSL_VERIFY = False
-DEFAULT_CRONJOB_SKIP_DISABLED = True
 DEFAULT_DATA_UNIT = "GiB"
 ALLOWED_DATA_UNITS = ["GB", "GiB"]
 
@@ -80,7 +79,6 @@ TO_REDACT = {
     "dataset_passphrases",
 }
 
-CONF_CRONJOB_SKIP_DISABLED = "cronjob_skip_disabled"
 CONF_DATA_UNIT = "data_unit"
 
 # system.global.id UUID; lets zeroconf rediscovery under a new IP match this device without a pre-auth probe.
