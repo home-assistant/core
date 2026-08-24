@@ -4,13 +4,14 @@ from typing import Any
 from unittest.mock import AsyncMock, Mock
 
 import pytest
-from uiprotect.data import DeviceState, Light, Permission, WSAction
+from uiprotect.data import DeviceState, Light, ModelType, Permission, WSAction
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
 from homeassistant.components.unifiprotect.const import (
     DEFAULT_ATTRIBUTION,
     DEFAULT_BRAND,
+    DOMAIN,
 )
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
@@ -325,8 +326,20 @@ async def test_light_added_during_gap_public_only(
     assert "already exists" not in caplog.text
 
 
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param("turn_off", {}, id="turn_off"),
+        pytest.param("turn_on", {}, id="turn_on"),
+        pytest.param("turn_on", {ATTR_BRIGHTNESS: 128}, id="turn_on_with_brightness"),
+    ],
+)
 async def test_light_command_when_public_object_vanishes(
-    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+    hass: HomeAssistant,
+    ufp: MockUFPFixture,
+    light: Light,
+    service: str,
+    service_data: dict[str, Any],
 ) -> None:
     """A light deleted mid-call raises a translated error, not AttributeError.
 
@@ -348,7 +361,13 @@ async def test_light_command_when_public_object_vanishes(
     assert_entity_counts(hass, Platform.LIGHT, 2, 2)
 
     def _delete_on_command(victim: Mock, result: Mock) -> AsyncMock:
-        """Delete ``victim`` while the other light's command is running."""
+        """Delete ``victim`` while the other light's command is running.
+
+        Neither the deletion nor the WS dispatch below awaits, so this always
+        finishes before the other entity's deferred coroutine gets a turn -
+        that is what makes the outcome independent of which light HA runs
+        first, not the mutual-delete shape by itself.
+        """
 
         async def _run(*args: Any, **kwargs: Any) -> Mock:
             ufp.api.public_bootstrap.lights.pop(victim.id, None)
@@ -360,18 +379,93 @@ async def test_light_command_when_public_object_vanishes(
 
         return AsyncMock(side_effect=_run)
 
-    # Each light deletes the other, so whichever entity runs first, the second
-    # one meets a missing public object regardless of scheduling order.
     first.set_light = _delete_on_command(second, first)
     second.set_light = _delete_on_command(first, second)
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            "light",
+            service,
+            {
+                ATTR_ENTITY_ID: ["light.test_light", "light.vanishing_light"],
+                **service_data,
+            },
+            blocking=True,
+        )
+
+    # Which of the two runs first is HA's scheduling choice, not something
+    # this test controls, so this resolves the real outcome rather than a
+    # parametrized case.
+    ran, missed = (first, second) if first.set_light.call_count else (second, first)
+    assert ran.set_light.call_count == 1
+    assert missed.set_light.call_count == 0
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "light_not_available"
+    assert err.value.translation_placeholders == {"light_name": missed.display_name}
+
+
+async def test_light_command_when_public_object_vanishes_hybrid(
+    hass: HomeAssistant, ufp: MockUFPFixture, light: Light
+) -> None:
+    """The hybrid guard names the light from the private object, not the public one.
+
+    ``self.device`` is the private object in hybrid mode, whose ``display_name``
+    fallback (``name or market_name or type``) differs from the public
+    object's (``name or type``) - pin that the error uses it correctly here
+    rather than assuming the public-only case above is equivalent.
+    """
+
+    second_light = light.model_copy()
+    second_light.id = "vanishing-light"
+    second_light.mac = "FFEEDDCCBB04"
+    second_light.name = "Vanishing Light"
+
+    setup_public_light(ufp)
+    await init_entry(hass, ufp, [light, second_light])
+    assert_entity_counts(hass, Platform.LIGHT, 2, 2)
+
+    pb = ufp.api.public_bootstrap
+    first = pb.get(ModelType.LIGHT, light.id)
+    second = pb.get(ModelType.LIGHT, second_light.id)
+    # setup_public_light()'s lookup re-creates a public mirror from the
+    # private object whenever it's missing, which would silently heal the
+    # delete below; the real bootstrap has no such fallback, so drop it here
+    # to actually exercise a gone-for-good public object.
+    pb.get = lambda model, obj_id: (
+        pb.lights.get(obj_id) if model is ModelType.LIGHT else None
+    )
+
+    def _delete_on_command(victim: Mock, result: Mock) -> AsyncMock:
+        """Delete ``victim``'s public mirror while the other light's command runs."""
+
+        async def _run(*args: Any, **kwargs: Any) -> Mock:
+            pb.lights.pop(victim.id, None)
+            msg = public_device_ws_message(victim)
+            msg.new_obj = None
+            msg.old_obj = victim
+            ufp.devices_ws_subscription(msg)
+            return result
+
+        return AsyncMock(side_effect=_run)
+
+    first.set_light = _delete_on_command(second, first)
+    second.set_light = _delete_on_command(first, second)
+
+    with pytest.raises(HomeAssistantError) as err:
         await hass.services.async_call(
             "light",
             "turn_off",
             {ATTR_ENTITY_ID: ["light.test_light", "light.vanishing_light"]},
             blocking=True,
         )
+
+    # Same non-parametrized-order reasoning as the public-only test above.
+    missed_private = second_light if first.set_light.call_count else light
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "light_not_available"
+    assert err.value.translation_placeholders == {
+        "light_name": missed_private.display_name
+    }
 
 
 async def test_light_turn_on_with_brightness_public_only(

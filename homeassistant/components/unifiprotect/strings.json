@@ -739,6 +739,9 @@
     "global_alarm_manager": {
       "message": "The alarm manager on this UniFi Protect NVR is set to Global mode and cannot be controlled locally."
     },
+    "light_not_available": {
+      "message": "Light {light_name} is no longer available"
+    },
     "motion_detection_public_only": {
       "message": "Motion detection cannot be changed over the public API; configure it in the UniFi Protect app"
     },
@@ -765,9 +768,6 @@
     },
     "public_bootstrap_failed": {
       "message": "Could not load the public API bootstrap for camera streams"
-    },
-    "public_device_unavailable": {
-      "message": "{name} is no longer available on the UniFi Protect controller"
     },
     "relay_not_available": {
       "message": "Relay is no longer available"

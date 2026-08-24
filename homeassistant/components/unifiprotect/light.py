@@ -147,8 +147,8 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         if (public := self._ufp_public_obj) is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
-                translation_key="public_device_unavailable",
-                translation_placeholders={"name": self.device.display_name},
+                translation_key="light_not_available",
+                translation_placeholders={"light_name": self.device.display_name},
             )
         return cast(PublicLight, public)
 
@@ -168,8 +168,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         else:
             _LOGGER.debug("Turning on light")
 
-        # The setter validates the level and writes through the light's own
-        # settings.
+        # led_level is range-checked by the setter, not by HA.
         await self._public_or_raise().set_light(True, led_level)
 
     @async_ufp_instance_command
