@@ -165,3 +165,26 @@ async def test_sensor_missing_status_code(
     state = hass.states.get("sensor.backend_service_status_code")
     assert state is not None
     assert state.state == STATE_UNKNOWN
+
+
+async def test_sensor_missing_last_event(
+    hass: HomeAssistant,
+    mock_gatus_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that an endpoint missing events evaluates to STATE_UNKNOWN for last_event sensor."""
+    mock_gatus_client.get_endpoints_statuses.return_value = [
+        EndpointStatus(
+            key="backend_service",
+            name="Backend Service",
+            group=None,
+            results=[Result(success=True, status=200, duration=12500000)],
+            events=[],
+        )
+    ]
+
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.backend_service_last_event")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
