@@ -839,7 +839,7 @@ CLAUDE.md @home-assistant/core
 /tests/components/hypontech/ @jcisio
 /homeassistant/components/ialarm/ @RyuzakiKK
 /tests/components/ialarm/ @RyuzakiKK
-/homeassistant/components/iammeter/ @lewei50
+/homeassistant/components/iammeter/ @lewei50 @IAMMETER @miwyf
 /homeassistant/components/iaqualink/ @flz
 /tests/components/iaqualink/ @flz
 /homeassistant/components/icloud/ @Quentame @nzapponi
