@@ -5,6 +5,7 @@ import pytest
 from homeassistant.components import conversation
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.chat_log import async_get_chat_log
+from homeassistant.components.conversation.gazetteer import join_speech
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -503,3 +504,50 @@ async def test_a_custom_sentence_still_leaves_an_antecedent(
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(turn_off) == 1
     assert turn_off[0].data["entity_id"] == [KITCHEN_LIGHT]
+
+
+@pytest.mark.parametrize(
+    ("parts", "expected"),
+    [
+        (["Unlocking", "Opening"], "Unlocking. Opening."),
+        (
+            ["Turned off the lights", "Garage door is closed"],
+            "Turned off the lights. Garage door is closed.",
+        ),
+        (
+            ["Hello from Home Assistant.", "Opening"],
+            "Hello from Home Assistant. Opening.",
+        ),
+        (["Opening", "", "  "], "Opening."),
+    ],
+    ids=["two_acknowledgements", "mixed_with_a_query", "already_punctuated", "empties"],
+)
+def test_join_speech(parts: list[str], expected: str) -> None:
+    """Test the frames of one command are spoken as sentences, not one clause.
+
+    "and" would read better for two short acknowledgements, but a coordinated command
+    can pair one with a whole sentence, which "and" would run into bad grammar.
+    """
+    assert join_speech(parts) == expected
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_a_coordinated_command_is_answered_as_sentences(
+    hass: HomeAssistant,
+) -> None:
+    """Test both halves of a coordinated command are spoken, with a stop between."""
+    async_mock_service(hass, "light", "turn_off")
+    async_mock_service(hass, "cover", "open_cover")
+
+    result = await conversation.async_converse(
+        hass,
+        "switch off the kichen lights and open the bedrom blinds",
+        None,
+        Context(),
+        None,
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert (
+        result.response.speech["plain"]["speech"] == "Turned off the lights. Opening."
+    )

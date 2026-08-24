@@ -76,7 +76,12 @@ from .const import (
     IntentSource,
 )
 from .entity import ConversationEntity
-from .gazetteer import GazetteerFallback, async_refusal, async_targets_from_intent
+from .gazetteer import (
+    GazetteerFallback,
+    async_refusal,
+    async_targets_from_intent,
+    join_speech,
+)
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
@@ -823,7 +828,7 @@ class DefaultAgent(ConversationEntity):
 
         assert intent_response is not None
         if len(frames) > 1:
-            intent_response.async_set_speech(" ".join(speech))
+            intent_response.async_set_speech(join_speech(speech))
 
         return intent_response
 
