@@ -55,6 +55,7 @@ def _mock_tag() -> MagicMock:
 async def test_binary_sensor_receives_push_update(
     hass: HomeAssistant,
     event_type: str,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test binary sensors update from push events for every event type.
 
@@ -72,7 +73,7 @@ async def test_binary_sensor_receives_push_update(
         assert await async_setup_component(hass, "binary_sensor", CONFIG)
         await hass.async_block_till_done()
 
-    entity_id = er.async_get(hass).async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         "binary_sensor", "wirelesstag", f"{UUID}_{event_type}"
     )
     assert entity_id is not None
