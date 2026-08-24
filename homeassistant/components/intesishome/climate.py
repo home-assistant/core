@@ -149,9 +149,6 @@ class IntesisAC(ClimateEntity):
     """Represents an Intesishome air conditioning device."""
 
     _attr_preset_modes = [PRESET_ECO, PRESET_COMFORT, PRESET_BOOST]
-    # Availability depends on how long since the library's poller last got
-    # through, so it changes with the clock rather than with any event.
-    _attr_should_poll = True
     _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
