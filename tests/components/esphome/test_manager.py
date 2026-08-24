@@ -62,7 +62,10 @@ from homeassistant.components.esphome.const import (
 from homeassistant.components.esphome.encryption_key_storage import (
     ENCRYPTION_KEY_STORAGE_KEY,
 )
-from homeassistant.components.esphome.entry_data import SAVE_DELAY
+from homeassistant.components.esphome.entry_data import (
+    SAVE_DELAY,
+    STATE_TYPE_TO_COMPONENT_TYPE,
+)
 from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.const import (
@@ -625,6 +628,39 @@ async def test_deep_sleep_states_persisted_on_shutdown_while_connected(
     data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
     assert data["expected_disconnect"] is True
     assert data["states"] == {"sensor": [SensorState(key=1, state=50).to_dict()]}
+
+
+@pytest.mark.parametrize(
+    ("component_type", "state_cls"),
+    [
+        pytest.param(component_type, state_cls, id=component_type)
+        for state_cls, component_type in STATE_TYPE_TO_COMPONENT_TYPE.items()
+    ],
+)
+async def test_every_persisted_state_type_round_trips(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+    component_type: str,
+    state_cls: type[EntityState],
+) -> None:
+    """Every persisted state type survives the store and loads back unchanged."""
+    device = await mock_esphome_device(
+        mock_client=mock_client, device_info={"has_deep_sleep": True}
+    )
+    entry = device.entry
+    state = state_cls(key=1)
+    device.set_state(state)
+    await hass.async_block_till_done()
+
+    await device.mock_disconnect(expected_disconnect=True)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    stored = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]["states"]
+    assert stored == {component_type: [state.to_dict()]}
+    assert state_cls.from_dict(stored[component_type][0]) == state
 
 
 async def test_non_deep_sleep_device_does_not_persist_states(

@@ -108,8 +108,8 @@ def async_static_info_updated(
 ) -> None:
     """Update entities of this platform when entities are listed."""
     current_infos = entry_data.info[info_type]
-    # First listing: the cache can only hold states restored from the store,
-    # which are always dispatched with their infos before any live listing
+    # With no previous listing nothing in the cache can be stale relative to
+    # it; the states belong to these entities, restored or received live
     first_infos = not current_infos
     device_info = entry_data.device_info
     if TYPE_CHECKING:
