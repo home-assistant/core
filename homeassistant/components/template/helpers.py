@@ -135,7 +135,7 @@ async def validate_actions_and_conditions_config(
     hass: HomeAssistant,
     config: ConfigType,
     script_options: tuple[str, ...] | None = None,
-) -> None:
+) -> bool:
     """Validate template entity actions and conditions."""
 
     def _humanize(err: Exception, data: Any) -> str:
@@ -158,9 +158,10 @@ async def validate_actions_and_conditions_config(
                 breadcrumb,
                 _humanize(err, condition_config),
             )
+            return False
 
     if not script_options:
-        return
+        return True
 
     for script_option in script_options:
         if (script_config := config.pop(script_option, None)) is not None:
@@ -177,6 +178,9 @@ async def validate_actions_and_conditions_config(
                     breadcrumb,
                     _humanize(err, script_config),
                 )
+                return False
+
+    return True
 
 
 def async_create_platform_template_not_supported_issue(
@@ -216,17 +220,15 @@ async def async_setup_template_platform(
     # Trigger Configuration
     if "coordinator" in discovery_info:
         if trigger_entity_cls:
-            entities = []
-            for entity_config in discovery_info["entities"]:
-                await validate_actions_and_conditions_config(
+            trigger_entities = [
+                trigger_entity_cls(hass, discovery_info["coordinator"], entity_config)
+                for entity_config in discovery_info["entities"]
+                if await validate_actions_and_conditions_config(
                     hass, entity_config, script_options
                 )
-                entities.append(
-                    trigger_entity_cls(
-                        hass, discovery_info["coordinator"], entity_config
-                    )
-                )
-            async_add_entities(entities)
+            ]
+            if trigger_entities:
+                async_add_entities(trigger_entities)
         else:
             raise PlatformNotReady(
                 f"The template {domain} platform doesn't support trigger entities"
@@ -234,18 +236,20 @@ async def async_setup_template_platform(
         return
 
     # Modern Configuration
-    for entity_config in discovery_info["entities"]:
-        await validate_actions_and_conditions_config(
+    if state_entities := [
+        entity_config
+        for entity_config in discovery_info["entities"]
+        if await validate_actions_and_conditions_config(
             hass, entity_config, script_options
         )
-
-    async_create_template_tracking_entities(
-        state_entity_cls,
-        async_add_entities,
-        hass,
-        discovery_info["entities"],
-        discovery_info["unique_id"],
-    )
+    ]:
+        async_create_template_tracking_entities(
+            state_entity_cls,
+            async_add_entities,
+            hass,
+            state_entities,
+            discovery_info["unique_id"],
+        )
 
 
 async def async_setup_template_entry(
@@ -268,11 +272,12 @@ async def async_setup_template_entry(
         options[CONF_STATE] = options.pop(CONF_VALUE_TEMPLATE)
 
     validated_config = config_schema(options)
-    await validate_actions_and_conditions_config(hass, validated_config, script_options)
-
-    async_add_entities(
-        [state_entity_cls(hass, validated_config, config_entry.entry_id)]
-    )
+    if await validate_actions_and_conditions_config(
+        hass, validated_config, script_options
+    ):
+        async_add_entities(
+            [state_entity_cls(hass, validated_config, config_entry.entry_id)]
+        )
 
 
 def async_setup_template_preview[T: TemplateEntity](

@@ -112,11 +112,12 @@ def _identify_entity_config_requires_trigger(
     if option not in entity_config:
         return
 
-    identifier = f"{CONF_NAME}: {_DEFAULT_NAMES.get(platform, _DEFAULT_NAME)}"
+    _default_name = _DEFAULT_NAMES.get(platform, _DEFAULT_NAME)
+    identifier = f"{CONF_NAME}: {_default_name}"
     if (
         (name := entity_config.get(CONF_NAME))
         and isinstance(name, Template)
-        and name.template != _DEFAULT_NAMES.get(platform, _DEFAULT_NAME)
+        and name.template != _default_name
     ):
         identifier = f"{CONF_NAME}: {name.template}"
     elif default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
