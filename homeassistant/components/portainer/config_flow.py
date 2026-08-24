@@ -13,9 +13,9 @@ from pyportainer import (
 from pyportainer.models.portainer import PortainerSystemStatus
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
     BooleanSelector,
@@ -24,9 +24,17 @@ from homeassistant.helpers.selector import (
     TextSelectorType,
 )
 
-from .const import DOMAIN
+from .const import CONF_DISK_SPACE_SENSORS, DOMAIN
+from .coordinator import PortainerConfigEntry
 
 _LOGGER = logging.getLogger(__name__)
+
+OPTIONS_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_DISK_SPACE_SENSORS, default=True): bool,
+    }
+)
+
 STEP_USER_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): TextSelector(
@@ -67,6 +75,15 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Portainer."""
 
     VERSION = 5
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: PortainerConfigEntry,
+    ) -> PortainerOptionsFlow:
+        """Create the options flow."""
+        return PortainerOptionsFlow()
 
     @override
     async def async_step_user(
@@ -194,6 +211,25 @@ class PortainerConfigFlow(ConfigFlow, domain=DOMAIN):
                 suggested_values=user_input or suggested_values,
             ),
             errors=errors,
+        )
+
+
+class PortainerOptionsFlow(OptionsFlow):
+    """Handle Portainer options."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Manage the options."""
+        if user_input is not None:
+            return self.async_create_entry(data=user_input)
+
+        return self.async_show_form(
+            step_id="init",
+            data_schema=self.add_suggested_values_to_schema(
+                OPTIONS_SCHEMA,
+                self.config_entry.options or {CONF_DISK_SPACE_SENSORS: True},
+            ),
         )
 
 

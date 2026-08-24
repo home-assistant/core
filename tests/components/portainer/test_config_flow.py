@@ -10,7 +10,7 @@ from pyportainer.exceptions import (
 from pyportainer.models.portainer import PortainerSystemStatus
 import pytest
 
-from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.components.portainer.const import CONF_DISK_SPACE_SENSORS, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -281,6 +281,44 @@ async def test_full_flow_reconfigure_unique_id_mismatch(
     assert mock_config_entry.data[CONF_API_TOKEN] == "test_api_token"
     assert mock_config_entry.data[CONF_URL] == "https://127.0.0.1:9000/"
     assert len(mock_setup_entry.mock_calls) == 0
+
+
+@pytest.mark.parametrize(
+    ("user_input", "expected_options"),
+    [
+        pytest.param(
+            {CONF_DISK_SPACE_SENSORS: True},
+            {CONF_DISK_SPACE_SENSORS: True},
+            id="enable_disk_space",
+        ),
+        pytest.param(
+            {CONF_DISK_SPACE_SENSORS: False},
+            {CONF_DISK_SPACE_SENSORS: False},
+            id="disable_disk_space",
+        ),
+    ],
+)
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_options_flow(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    user_input: dict[str, bool],
+    expected_options: dict[str, bool],
+) -> None:
+    """Test the options flow."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "init"
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input=user_input,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == expected_options
 
 
 @pytest.mark.parametrize(
