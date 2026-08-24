@@ -149,6 +149,7 @@ async def test_generate_structured_data(
                 },
                 "required": ["characters"],
                 "type": "object",
+                "additionalProperties": False,
             },
             "strict": True,
         },

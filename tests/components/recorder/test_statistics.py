@@ -4535,7 +4535,7 @@ async def test_get_statistics_service_missing_mandatory_keys(
 
     with pytest.raises(
         vol.error.MultipleInvalid,
-        match=re.escape(f"required key not provided @ data['{missing_key}']"),
+        match=re.escape(f"required key not provided at '{missing_key}'"),
     ):
         await hass.services.async_call(
             DOMAIN,

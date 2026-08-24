@@ -25,7 +25,7 @@ if TYPE_CHECKING:
     from . import TeslemetryConfigEntry
 
 from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER
-from .helpers import flatten
+from .helpers import async_update_device_sw_version, flatten
 
 RETRY_EXCEPTIONS = (
     InvalidResponse,
@@ -115,6 +115,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
     config_entry: TeslemetryConfigEntry
+    vin: str
 
     def __init__(
         self,
@@ -135,6 +136,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.update_interval = VEHICLE_INTERVAL
 
         self.api = api
+        self.vin = product["vin"]
         self.data = flatten(product)
 
     @override
@@ -164,7 +166,15 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"message": e.message},
             ) from e
 
-        return flatten(data)
+        data = flatten(data)
+        if version := data.get("vehicle_state_car_version"):
+            # Consume firmware opportunistically rather than through a listener
+            # that would keep this coordinator polling after every entity is
+            # disabled. Drop the build suffix (e.g. "2024.44.25 x" -> "2024.44.25").
+            async_update_device_sw_version(
+                self.hass, self.vin, self.config_entry.entry_id, version.split(" ")[0]
+            )
+        return data
 
 
 def _index_wall_connectors(data: dict[str, Any]) -> dict[str, Any]:

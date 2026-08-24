@@ -14,6 +14,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityCategory,
     Platform,
     UnitOfPressure,
 )
@@ -22,9 +23,25 @@ from homeassistant.helpers import entity_registry as er
 from homeassistant.util.unit_conversion import PressureConverter
 
 from . import assert_entities, assert_entities_alt, setup_platform
-from .const import ENERGY_HISTORY_EMPTY, LIVE_STATUS, VEHICLE_DATA_ALT
+from .const import (
+    ENERGY_HISTORY_EMPTY,
+    LIVE_STATUS,
+    METADATA,
+    PRODUCTS,
+    VEHICLE_DATA_ALT,
+)
 
 from tests.common import async_fire_time_changed
+
+# VIN used across the Teslemetry test fixtures.
+VEHICLE_VIN = "LRW3F7EK4NC700000"
+
+
+def _products_with_driver_assist(driver_assist: str) -> dict:
+    """Return a products response with the vehicle's driver-assist capability set."""
+    products = deepcopy(PRODUCTS)
+    products["response"][0]["vehicle_config"]["driver_assist"] = driver_assist
+    return products
 
 
 def _live_status(**overrides: object) -> dict:
@@ -111,13 +128,19 @@ async def test_sensors(
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_sensors_streaming(
     hass: HomeAssistant,
+    snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
     freezer: FrozenDateTimeFactory,
     mock_vehicle_data: AsyncMock,
+    mock_products: AsyncMock,
     mock_add_listener: AsyncMock,
 ) -> None:
     """Tests that the sensor entities with streaming are correct."""
 
     freezer.move_to("2024-01-01 00:00:00+00:00")
+
+    # miles_since_reset and self_driving_miles_since_reset are HW4-only fields.
+    mock_products.return_value = _products_with_driver_assist("TeslaAP4")
 
     entry = await setup_platform(hass, [Platform.SENSOR])
 
@@ -133,6 +156,9 @@ async def test_sensors_streaming(
                 Signal.CHARGING_CABLE_TYPE: None,
                 Signal.TIME_TO_FULL_CHARGE: 0.166666667,
                 Signal.MINUTES_TO_ARRIVAL: None,
+                Signal.LIFETIME_ENERGY_GAINED_REGEN: 1234.5,
+                Signal.MILES_SINCE_RESET: 678.9,
+                Signal.SELF_DRIVING_MILES_SINCE_RESET: 123.4,
             },
             "credits": {
                 "type": "wake_up",
@@ -175,6 +201,116 @@ async def test_sensors_streaming(
     assert hass.states.get("sensor.teslemetry_command_credits").state == "1980"
     assert (quota_state := hass.states.get("sensor.teslemetry_command_quota_used"))
     assert quota_state.state == "21.2"
+
+    assert (regen := hass.states.get("sensor.test_lifetime_energy_gained_regen"))
+    assert regen.state == "1234.5"
+    assert regen.attributes["device_class"] == "energy"
+    assert regen.attributes["state_class"] == "total_increasing"
+    assert regen.attributes["unit_of_measurement"] == "kWh"
+
+    # Distance sensors are declared in native miles, HA displays them in the
+    # hass unit system's default (km in tests).
+    assert (miles := hass.states.get("sensor.test_miles_since_reset"))
+    assert miles.state == "1092.5836416"
+    assert miles.attributes["device_class"] == "distance"
+    assert miles.attributes["state_class"] == "total_increasing"
+    assert miles.attributes["unit_of_measurement"] == "km"
+
+    assert (fsd_miles := hass.states.get("sensor.test_self_driving_miles_since_reset"))
+    assert fsd_miles.state == "198.5930496"
+    assert fsd_miles.attributes["device_class"] == "distance"
+    assert fsd_miles.attributes["state_class"] == "total_increasing"
+    assert fsd_miles.attributes["unit_of_measurement"] == "km"
+
+    assert [
+        entity_registry.async_get(entity_id)
+        for entity_id in (
+            "sensor.test_lifetime_energy_gained_regen",
+            "sensor.test_miles_since_reset",
+            "sensor.test_self_driving_miles_since_reset",
+        )
+    ] == snapshot
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        pytest.param(
+            "sensor.test_lifetime_energy_gained_regen",
+            id="lifetime_energy_gained_regen",
+        ),
+        pytest.param("sensor.test_miles_since_reset", id="miles_since_reset"),
+        pytest.param(
+            "sensor.test_self_driving_miles_since_reset",
+            id="self_driving_miles_since_reset",
+        ),
+    ],
+)
+async def test_new_streaming_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_products: AsyncMock,
+    mock_add_listener: AsyncMock,
+    entity_id: str,
+) -> None:
+    """Test the new firmware-2025.44 streaming sensors are disabled-by-default diagnostics."""
+
+    # miles_since_reset and self_driving_miles_since_reset are HW4-only fields.
+    mock_products.return_value = _products_with_driver_assist("TeslaAP4")
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+    assert entry.entity_category is EntityCategory.DIAGNOSTIC
+
+
+@pytest.mark.parametrize(
+    "entity_id",
+    [
+        "sensor.test_miles_since_reset",
+        "sensor.test_self_driving_miles_since_reset",
+    ],
+    ids=["miles_since_reset", "self_driving_miles_since_reset"],
+)
+@pytest.mark.parametrize(
+    ("firmware", "driver_assist", "expected"),
+    [
+        ("2025.44.25.5", "TeslaAP4", True),
+        ("2025.44.25.5", "TeslaAP3", False),
+        ("2025.44.25.4", "TeslaAP4", False),
+        ("2025.44.25.4", "TeslaAP3", False),
+    ],
+    ids=[
+        "hw4_at_threshold",
+        "hw3_at_threshold",
+        "hw4_below_threshold",
+        "hw3_below_threshold",
+    ],
+)
+async def test_hw4_mileage_sensors_gating(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_metadata: AsyncMock,
+    mock_products: AsyncMock,
+    mock_add_listener: AsyncMock,
+    entity_id: str,
+    firmware: str,
+    driver_assist: str,
+    expected: bool,
+) -> None:
+    """Test HW4 mileage sensors need both AP4 hardware and qualifying firmware."""
+
+    metadata = deepcopy(METADATA)
+    metadata["vehicles"][VEHICLE_VIN]["firmware"] = firmware
+    mock_metadata.return_value = metadata
+
+    mock_products.return_value = _products_with_driver_assist(driver_assist)
+
+    await setup_platform(hass, [Platform.SENSOR])
+
+    assert (entity_registry.async_get(entity_id) is not None) is expected
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")

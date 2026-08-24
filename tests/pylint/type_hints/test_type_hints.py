@@ -5,6 +5,7 @@ import re
 from unittest.mock import patch
 
 import astroid
+from astroid import nodes
 from pylint.checkers import BaseChecker
 import pylint.testutils
 from pylint.testutils.unittest_linter import UnittestLinter
@@ -440,7 +441,7 @@ def test_invalid_flow_step(
     type_hint_checker: BaseChecker,
     code: str,
     expected_messages_fn: Callable[
-        [astroid.NodeNG], tuple[pylint.testutils.MessageTest, ...]
+        [nodes.NodeNG], tuple[pylint.testutils.MessageTest, ...]
     ],
 ) -> None:
     """Ensure invalid hints are rejected for flow step."""

@@ -121,6 +121,12 @@
           "on": "mdi:package-variant-closed-check"
         }
       },
+      "tamper": {
+        "default": "mdi:shield-check",
+        "state": {
+          "on": "mdi:shield-alert"
+        }
+      },
       "vehicle": {
         "default": "mdi:car-off",
         "state": {
@@ -634,6 +640,12 @@
       },
       "siren_on_event": {
         "default": "mdi:alarm-light"
+      },
+      "tamper_enabled": {
+        "default": "mdi:shield-check",
+        "state": {
+          "off": "mdi:shield"
+        }
       }
     },
     "time": {

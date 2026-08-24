@@ -51,7 +51,7 @@ from .const import (
     WEBHOOK_DEACTIVATION,
     WEBHOOK_PUSH_TYPE,
 )
-from .device import async_register_parent_devices
+from .device import async_register_parent_devices, netatmo_module_parents
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -140,6 +140,7 @@ class NetatmoPublisher:
     kwargs: dict
     available: bool = True
     error_count: int = 0
+    unavailable_logged: bool = False
 
 
 class NetatmoDataHandler:
@@ -175,6 +176,7 @@ class NetatmoDataHandler:
         self.cameras: dict[str, str] = {}
         self.events: dict[str, dict] = {}
         self.parent_device_ids: dict[str, str] = {}
+        self.module_parents: dict[str, str] = {}
 
     async def async_setup(self) -> None:
         """Set up the Netatmo data handler."""
@@ -197,8 +199,9 @@ class NetatmoDataHandler:
         await self.subscribe(ACCOUNT, ACCOUNT, None)
 
         # Parents must exist before a platform links a child to one
+        self.module_parents = netatmo_module_parents(self.account)
         self.parent_device_ids = async_register_parent_devices(
-            self.hass, self.config_entry, self.account
+            self.hass, self.config_entry, self.account, self.module_parents
         )
 
         await self.hass.config_entries.async_forward_entry_setups(
@@ -260,11 +263,10 @@ class NetatmoDataHandler:
     async def async_fetch_data(self, signal_name: str) -> bool:
         """Fetch data and notify."""
         self.poll_count += 1
+        publisher = self.publisher[signal_name]
         has_error = False
         try:
-            await getattr(self.account, self.publisher[signal_name].method)(
-                **self.publisher[signal_name].kwargs
-            )
+            await getattr(self.account, publisher.method)(**publisher.kwargs)
 
         except (
             pyatmo.NoDeviceError,
@@ -272,10 +274,17 @@ class NetatmoDataHandler:
             TimeoutError,
             aiohttp.ClientConnectorError,
         ) as err:
-            _LOGGER.debug(err)
             has_error = True
+            if not publisher.unavailable_logged:
+                _LOGGER.info("Error while fetching %s data: %s", signal_name, err)
+                publisher.unavailable_logged = True
+            else:
+                _LOGGER.debug(err)
+        else:
+            if publisher.unavailable_logged:
+                _LOGGER.info("Fetching %s data recovered", signal_name)
+                publisher.unavailable_logged = False
 
-        publisher = self.publisher[signal_name]
         if has_error:
             publisher.error_count += 1
         else:

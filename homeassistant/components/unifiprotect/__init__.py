@@ -163,7 +163,7 @@ async def _async_setup_entry(
     # streams depend on it, so a failed prime retries instead of building
     # streamless cameras.
     try:
-        await data_service.api.update_public()
+        await data_service.async_update_public()
     except NotAuthorized as err:
         # A public 401 means a bad/revoked API key (independent of the private
         # session); route to reauth instead of retrying forever.
@@ -237,9 +237,12 @@ async def async_remove_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> None
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: UFPConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, config_entry: UFPConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove ufp config entry from a device."""
+    if not isinstance(device_entry, dr.DeviceEntry):
+        # This integration does not create child devices.
+        return False
     unifi_macs = {
         _async_unifi_mac_from_hass(connection[1])
         for connection in device_entry.connections
