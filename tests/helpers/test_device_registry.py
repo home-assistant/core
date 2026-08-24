@@ -10614,7 +10614,7 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
     # A legacy deleted device carries no recorded disabled_by (UNDEFINED), so restore
     # returns the caller's disabled_by verbatim - no config-entry reconciliation clears
     # a DEVICE value.
-    device_registry.deleted_devices[device_id] = attr.evolve(
+    device_registry._deleted_devices[device_id] = attr.evolve(
         _mock_deleted_device(device_id, mock_config_entry.entry_id, identifiers),
         disabled_by=UNDEFINED,
     )
