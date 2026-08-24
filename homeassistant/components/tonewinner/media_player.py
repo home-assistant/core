@@ -85,7 +85,10 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
         """Subscribe to state changes when entity is added."""
         await super().async_added_to_hass()
         self.async_on_remove(self._receiver.subscribe(self._on_state_change))
-        self._apply_state(self._receiver.state)
+        if self._receiver.connected:
+            self._apply_state(self._receiver.state)
+        else:
+            self.hass.config_entries.async_schedule_reload(self._entry.entry_id)
 
     @callback
     def _on_state_change(self, state: ReceiverState | None) -> None:
