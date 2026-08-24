@@ -50,6 +50,7 @@ from homeassistant.helpers.issue_registry import (
     async_delete_issue,
 )
 from homeassistant.helpers.translation import (
+    LOCALE_EN,
     async_get_cached_translations,
     async_load_integrations,
 )
@@ -195,18 +196,17 @@ def presentable_issue_suggestions(
 ) -> list[Suggestion]:
     """Return the issue's suggestions the repair fix flow can present.
 
-    A newer Supervisor may offer suggestions this Core version has no fix
-    flow translation for; those would show up as empty menu entries. They
-    stay applicable via the Supervisor API and CLI. A single suggestion
-    needs no menu translation — it is shown as a form with generic
-    fallback texts.
+    Filters out suggestions this Core version has no fix flow translation
+    for; an empty result means the repair is not fixable here. Filtered
+    suggestions stay applicable via the Supervisor API and CLI.
     """
     if not issue.suggestions:
         return []
 
-    translations = async_get_cached_translations(
-        hass, hass.config.language, "issues", DOMAIN
-    )
+    # Key availability is language independent — check against English,
+    # which is always cached, unlike the configured language right after
+    # a language switch
+    translations = async_get_cached_translations(hass, LOCALE_EN, "issues", DOMAIN)
     prefix = f"component.{DOMAIN}.issues.{issue.key}.fix_flow.step"
     if not any(key.startswith(prefix) for key in translations):
         # This version of Core shipped an unfixable repair for this issue
