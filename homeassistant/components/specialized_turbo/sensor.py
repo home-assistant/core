@@ -1,9 +1,8 @@
 """Sensor platform for Specialized Turbo integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from specialized_turbo import AssistLevel, TelemetrySnapshot
 
@@ -334,6 +333,7 @@ class SpecializedTurboSensor(
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True when the bike is connected and has sent data."""
         return (
@@ -341,6 +341,7 @@ class SpecializedTurboSensor(
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value from the coordinator's snapshot."""
         return self.entity_description.value_fn(self.coordinator.snapshot)

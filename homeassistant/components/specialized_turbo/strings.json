@@ -2,25 +2,85 @@
   "config": {
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
-      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]"
+      "no_devices_found": "[%key:common::config_flow::abort::no_devices_found%]",
+      "not_encrypted": "This bike has no stored encryption key to reconfigure.",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]"
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "invalid_wrapped_key": "The wrapped key is invalid.",
+      "key_unavailable": "The Specialized encryption key could not be retrieved."
     },
     "step": {
+      "account": {
+        "data": {
+          "email": "[%key:common::config_flow::data::email%]",
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "data_description": {
+          "email": "The email address for your Specialized account.",
+          "password": "The password is sent to Specialized only to retrieve the bike key."
+        },
+        "description": "Your password is used only to retrieve this bike's encryption key. Home Assistant stores the per-bike wrapped key, not your password or account tokens.",
+        "title": "Sign in to Specialized"
+      },
       "bluetooth_confirm": {
-        "description": "A Specialized Turbo bike was found at {address} ({name}).",
-        "title": "Discovered Specialized Turbo Bike"
+        "data": {
+          "key_source": "Encryption key source"
+        },
+        "data_description": {
+          "key_source": "Use your Specialized account to retrieve the bike key automatically, or enter a wrapped key manually."
+        },
+        "description": "A Specialized Turbo bike was found at {address} ({name}). Pairing prompts are handled by the active Bluetooth backend.",
+        "title": "Discovered Specialized Turbo bike"
+      },
+      "key_source": {
+        "data": {
+          "key_source": "Encryption key source"
+        },
+        "data_description": {
+          "key_source": "Choose account retrieval or manual wrapped-key entry."
+        },
+        "description": "Use your Specialized account to retrieve the bike key automatically, or enter a wrapped key manually.",
+        "title": "Choose encryption key source"
+      },
+      "manual_key": {
+        "data": {
+          "wrapped_key": "Wrapped key"
+        },
+        "data_description": {
+          "wrapped_key": "The 64-character wrapped key for this bike."
+        },
+        "description": "Enter the 64-character wrapped key returned by the Specialized keystore service.",
+        "title": "Enter wrapped bike key"
+      },
+      "reauth_confirm": {
+        "data": {
+          "key_source": "Encryption key source"
+        },
+        "data_description": {
+          "key_source": "Choose account retrieval or manual wrapped-key entry."
+        },
+        "description": "This bike requires an encryption key. Choose how to retrieve it.",
+        "title": "Encryption key required"
+      },
+      "reconfigure": {
+        "description": "Replace the encryption key for your Specialized Turbo bike.",
+        "title": "Reconfigure Specialized Turbo"
       },
       "user": {
         "data": {
-          "address": "Bike"
+          "address": "Bike",
+          "key_source": "Encryption key source"
         },
         "data_description": {
-          "address": "Select the Specialized Turbo bike you want to add."
+          "address": "Select the Specialized Turbo bike you want to add.",
+          "key_source": "Use your Specialized account to retrieve the bike key automatically, or enter a wrapped key manually."
         },
         "description": "Select your Specialized Turbo bike from the discovered devices.",
-        "title": "Add Specialized Turbo Bike"
+        "title": "Add Specialized Turbo bike"
       }
     }
   },

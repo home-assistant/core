@@ -16,6 +16,29 @@
       "connectable": true,
       "local_name": "SPECIALIZED",
       "manufacturer_id": 525
+    },
+    {
+      "connectable": true,
+      "manufacturer_id": 89,
+      "service_uuid": "00000001-3731-3032-494d-484f42525554"
+    },
+    {
+      "connectable": true,
+      "manufacturer_id": 89,
+      "service_uuid": "00000002-3731-3032-494d-484f42525554"
+    },
+    {
+      "connectable": true,
+      "manufacturer_id": 89,
+      "service_uuid": "00000003-3731-3032-494d-484f42525554"
+    },
+    {
+      "connectable": true,
+      "local_name": "WSBC*"
+    },
+    {
+      "connectable": true,
+      "local_name": "SPECIALIZED*"
     }
   ],
   "codeowners": ["@JamieMagee"],
@@ -26,5 +49,5 @@
   "iot_class": "local_push",
   "loggers": ["specialized_turbo"],
   "quality_scale": "silver",
-  "requirements": ["specialized-turbo==0.4.0"]
+  "requirements": ["specialized-turbo[cloud]==0.8.1"]
 }

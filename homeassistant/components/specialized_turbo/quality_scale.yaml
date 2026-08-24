@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: Integration does not have service actions.
+  docs-conditions:
+    status: exempt
+    comment: Integration does not provide conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: Integration does not provide triggers.
   entity-event-setup:
     status: exempt
     comment: Integration does not subscribe to events.
@@ -42,15 +48,11 @@ rules:
   integration-owner: done
   log-when-unavailable: done
   parallel-updates: done
-  reauthentication-flow:
-    status: exempt
-    comment: >-
-      No authentication is performed by the integration. Pairing, when
-      required, is handled at the operating system level.
+  reauthentication-flow: done
   test-coverage: done
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
     comment: Device is not connected to an IP network.
@@ -73,7 +75,7 @@ rules:
     status: exempt
     comment: Integration does not raise exceptions with translatable messages.
   icon-translations: done
-  reconfiguration-flow: todo
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: No repair issues needed.
@@ -83,7 +85,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession:
-    status: exempt
-    comment: BLE integration, no HTTP requests.
-  strict-typing: todo
+  inject-websession: done
+  strict-typing: done

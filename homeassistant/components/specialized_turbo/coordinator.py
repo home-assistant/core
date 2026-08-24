@@ -1,32 +1,22 @@
-"""BLE coordinator for Specialized Turbo bikes.
+"""BLE coordinator for Specialized Turbo bikes."""
 
-Connects over BLE, subscribes to GATT notifications, and delegates
-protocol-specific parsing, polling, and identification to the
-specialized-turbo library.
-"""
-
-from __future__ import annotations
-
+from collections.abc import Callable
 import logging
 
-from bleak import BleakClient, BleakError
-from bleak.backends.characteristic import BleakGATTCharacteristic
+from bleak import BleakClient
+from bleak.backends.device import BLEDevice
 from bleak_retry_connector import establish_connection
 from specialized_turbo import (
-    CHAR_NOTIFY,
-    BLEProfile,
-    ProtocolSession,
-    TCU1Session,
+    BikeAdvertisement,
+    BikeInfo,
+    DecryptionError,
+    EncryptionKeyProviderError,
+    EncryptionKeyRequiredError,
+    SpecializedConnection,
+    TelemetryMonitor,
     TelemetrySnapshot,
-    detect_generation,
-    get_char_notify,
-    get_char_request_read,
-    get_char_request_write,
-    identify_tcx,
-    is_framed_packet,
-    parse_notification,
-    poll_tcu1,
-    poll_tcx,
+    parse_bike_advertisement,
+    parse_bike_info,
 )
 
 from homeassistant.components import bluetooth
@@ -35,14 +25,13 @@ from homeassistant.components.bluetooth.active_update_coordinator import (
 )
 from homeassistant.core import HomeAssistant, callback
 
-_LOGGER = logging.getLogger(__name__)
-
-# How often to re-poll fields via request-read (seconds).
 _POLL_INTERVAL = 60
 
 
-class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
-    """Manage the BLE connection and notification subscription for one bike."""
+class SpecializedTurboCoordinator(
+    ActiveBluetoothDataUpdateCoordinator[TelemetrySnapshot]
+):
+    """Manage one Specialized Turbo bike through the upstream library."""
 
     def __init__(
         self,
@@ -50,6 +39,9 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
         logger: logging.Logger,
         *,
         address: str,
+        wrapped_key: str | None = None,
+        advertisement: BikeAdvertisement | None = None,
+        reauth_callback: Callable[[BikeAdvertisement], None] | None = None,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -62,196 +54,195 @@ class SpecializedTurboCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
             connectable=True,
         )
         self._address = address
-        self.snapshot = TelemetrySnapshot()
-        self._client: BleakClient | None = None
+        self._wrapped_key = wrapped_key
+        self._advertisement = advertisement
+        self._bike_info: BikeInfo | None = None
+        self._connection: SpecializedConnection | None = None
+        self._monitor: TelemetryMonitor | None = None
+        self._snapshot = TelemetrySnapshot()
+        self._reauth_callback = reauth_callback
+        self._reauth_requested = False
         self._was_unavailable = False
-        self._generation: BLEProfile | None = None
-        self._session: ProtocolSession = TCU1Session()
-        self._char_notify: str = CHAR_NOTIFY
-        self._char_request_write: str | None = None
-        self._char_request_read: str | None = None
-        self._uses_tcx_messages: bool | None = None
-        self._logged_unresolved_chars = False
+        self.data = self._snapshot
+
+    @property
+    def snapshot(self) -> TelemetrySnapshot:
+        """Return the current telemetry snapshot."""
+        return self._snapshot
 
     @callback
     def _needs_poll(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,
-        seconds_since_last_update: float | None,
+        seconds_since_last_poll: float | None,
     ) -> bool:
-        """Return True if we need to (re)connect or re-poll fields."""
-        if self._generation is None:
-            gen = detect_generation(service_info.manufacturer_data)
-            if gen is not None:
-                self._generation = gen
-
-        if self._client is None or not self._client.is_connected:
-            return True
-
+        """Return whether the bike needs a connection or periodic poll."""
+        self._update_protocol_metadata(service_info)
         return (
-            seconds_since_last_update is None
-            or seconds_since_last_update >= _POLL_INTERVAL
+            not self.connected
+            or seconds_since_last_poll is None
+            or seconds_since_last_poll >= _POLL_INTERVAL
         )
 
     async def _do_poll(
         self,
-        service_info: bluetooth.BluetoothServiceInfoBleak | None = None,
-    ) -> None:
-        """Connect to the bike and poll fields via request-read."""
-        try:
-            await self._ensure_connected(service_info)
-        except BleakError:
-            self._client = None
-            raise
-
-        # Derive char UUIDs if generation was detected (from advertisements)
-        # after the initial connection was made without it.
-        if self._generation is not None and self._char_request_write is None:
-            self._char_request_write = get_char_request_write(self._generation)
-            self._char_request_read = get_char_request_read(self._generation)
-
-        if (
-            self._client is None
-            or not self._client.is_connected
-            or self._char_request_write is None
-            or self._char_request_read is None
-        ):
-            if (
-                self._client is not None
-                and self._client.is_connected
-                and self._char_request_write is None
-                and not self._logged_unresolved_chars
-            ):
-                _LOGGER.warning(
-                    (
-                        "Connected to Specialized Turbo at %s but could not"
-                        " determine the bike generation from advertisements;"
-                        " no telemetry will be polled until the generation is"
-                        " detected"
-                    ),
-                    self._address,
-                )
-                self._logged_unresolved_chars = True
-            return
-
-        self._logged_unresolved_chars = False
-
-        if self._uses_tcx_messages is True:
-            await poll_tcx(
-                self._client,
-                self._session,
-                self._char_request_write,
-                self._char_request_read,
-                self.snapshot,
-            )
-        else:
-            await poll_tcu1(
-                self._client,
-                self._char_request_write,
-                self._char_request_read,
-                self.snapshot,
-            )
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+    ) -> TelemetrySnapshot:
+        """Connect if needed and poll the active protocol."""
+        await self._ensure_connected(service_info)
+        if self._monitor is not None:
+            await self._monitor.poll()
+        return self._snapshot
 
     async def _ensure_connected(
         self,
-        service_info: bluetooth.BluetoothServiceInfoBleak | None = None,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
     ) -> None:
-        """Establish BLE connection and subscribe to notifications."""
-        if self._client and self._client.is_connected:
+        """Create the upstream connection and telemetry monitor."""
+        if self.connected:
             return
 
-        ble_device = (
-            service_info.device
-            if service_info is not None
-            else bluetooth.async_ble_device_from_address(
-                self.hass, self._address, connectable=True
+        self._update_protocol_metadata(service_info)
+        ble_device = service_info.device
+
+        async def client_factory(
+            address_or_device: str | BLEDevice,
+            disconnected_callback: Callable[[BleakClient], None] | None,
+        ) -> BleakClient:
+            assert isinstance(address_or_device, BLEDevice)
+            return await establish_connection(
+                BleakClient,
+                address_or_device,
+                self._address,
+                disconnected_callback=disconnected_callback,
             )
-        )
 
-        if ble_device is None:
-            if not self._was_unavailable:
-                _LOGGER.info("Specialized Turbo at %s is unavailable", self._address)
-                self._was_unavailable = True
-            return
-
-        client = await establish_connection(
-            BleakClient,
+        connection = SpecializedConnection(
             ble_device,
-            self._address,
-            disconnected_callback=self._on_disconnect,
+            advertisement=self._advertisement,
+            bike_info=self._bike_info,
+            wrapped_key=self._wrapped_key,
+            discovery_timeout=0,
+            disconnect_callback=self._on_disconnect,
+            client_factory=client_factory,
         )
-        self._client = client
+        try:
+            await connection.connect()
+        except (
+            DecryptionError,
+            EncryptionKeyProviderError,
+            EncryptionKeyRequiredError,
+        ):
+            self._request_reauth()
+            raise
+
+        monitor = TelemetryMonitor(
+            connection,
+            notification_loop=self.hass.loop,
+        )
+        monitor.on_update = self._handle_monitor_update
+        try:
+            await monitor.start(prime=False)
+        except Exception:
+            await connection.disconnect()
+            raise
+
+        self._connection = connection
+        self._monitor = monitor
+        self._snapshot = monitor.snapshot
+        self.data = self._snapshot
 
         if self._was_unavailable:
-            _LOGGER.info("Specialized Turbo at %s is available again", self._address)
+            self.logger.info(
+                "Specialized Turbo at %s is available again", self._address
+            )
             self._was_unavailable = False
 
-        if self._generation is not None:
-            self._char_notify = get_char_notify(self._generation)
-            self._char_request_write = get_char_request_write(self._generation)
-            self._char_request_read = get_char_request_read(self._generation)
-
-        if (
-            self._generation == BLEProfile.TCX
-            and self._char_request_write is not None
-            and self._char_request_read is not None
-        ):
-            self._session = await identify_tcx(
-                client, self._char_request_write, self._char_request_read
-            )
-        else:
-            self._session = TCU1Session()
-
-        await client.start_notify(self._char_notify, self._notification_handler)
-
-    def _notification_handler(
-        self, sender: BleakGATTCharacteristic | int, data: bytearray
+    def _update_protocol_metadata(
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
     ) -> None:
-        """Handle a BLE notification (called from Bleak's BLE thread)."""
-        self.hass.loop.call_soon_threadsafe(self._handle_notification, bytes(data))
+        """Retain the most complete advertisement and bike metadata."""
+        advertisement = parse_bike_advertisement(
+            service_info.manufacturer_data,
+            local_name=service_info.name,
+            service_uuids=service_info.service_uuids,
+        )
+        current_has_hmi = (
+            self._advertisement is not None
+            and self._advertisement.hmi_hardware is not None
+            and self._advertisement.hmi_serial is not None
+        )
+        new_has_hmi = (
+            advertisement is not None
+            and advertisement.hmi_hardware is not None
+            and advertisement.hmi_serial is not None
+        )
+        if advertisement is not None and (new_has_hmi or not current_has_hmi):
+            self._advertisement = advertisement
 
-    @callback
-    def _handle_notification(self, data: bytes) -> None:
-        """Parse a BLE notification and push the update to HA."""
-        if self._uses_tcx_messages is None:
-            self._uses_tcx_messages = is_framed_packet(data)
+        bike_info = parse_bike_info(
+            service_info.name or "",
+            service_info.manufacturer_data,
+        )
+        if bike_info.complete or self._bike_info is None:
+            self._bike_info = bike_info
 
-        try:
-            msg = parse_notification(self._session, data)
-        except Exception:  # noqa: BLE001
-            _LOGGER.debug("Failed to parse notification: %s", data.hex(), exc_info=True)
+    def _request_reauth(self) -> None:
+        """Start reauthentication once when complete HMI metadata is available."""
+        if (
+            self._reauth_requested
+            or self._reauth_callback is None
+            or self._advertisement is None
+            or self._advertisement.hmi_hardware is None
+            or self._advertisement.hmi_serial is None
+        ):
             return
+        self._reauth_requested = True
+        self._reauth_callback(self._advertisement)
 
-        self.snapshot.update_from_message(msg)
+    def _handle_monitor_update(
+        self,
+        _message: object,
+        snapshot: TelemetrySnapshot,
+    ) -> None:
+        """Publish an upstream notification update to Home Assistant."""
+        self._snapshot = snapshot
+        self.data = snapshot
         self.async_update_listeners()
 
     @property
     def connected(self) -> bool:
-        """Return True if the BLE client is connected."""
-        return self._client is not None and self._client.is_connected
+        """Return whether the upstream BLE connection is active."""
+        return self._connection is not None and self._connection.is_connected
 
-    def _on_disconnect(self, client: BleakClient) -> None:
-        """Handle unexpected disconnection (called from Bleak's BLE thread)."""
+    def _on_disconnect(self, _client: BleakClient) -> None:
+        """Schedule disconnect handling on the Home Assistant event loop."""
         self.hass.loop.call_soon_threadsafe(self._handle_disconnect)
 
     @callback
     def _handle_disconnect(self) -> None:
-        """Process disconnection on the HA event loop."""
+        """Clear connection state and publish unavailability."""
         if not self._was_unavailable:
-            _LOGGER.info("Disconnected from Specialized Turbo at %s", self._address)
+            self.logger.info("Disconnected from Specialized Turbo at %s", self._address)
             self._was_unavailable = True
-        self._client = None
+        self._connection = None
+        self._monitor = None
         self.async_update_listeners()
 
     async def async_shutdown(self) -> None:
-        """Clean up BLE connection on unload."""
-        if self._client and self._client.is_connected:
+        """Stop monitoring and close the upstream connection."""
+        monitor = self._monitor
+        connection = self._connection
+        self._monitor = None
+        self._connection = None
+        if monitor is not None:
             try:
-                await self._client.stop_notify(self._char_notify)
-            except Exception:  # noqa: BLE001
-                _LOGGER.debug("Error stopping notifications", exc_info=True)
+                await monitor.stop()
+            except Exception:
+                self.logger.debug("Error stopping telemetry monitor", exc_info=True)
+        if connection is not None:
             try:
-                await self._client.disconnect()
-            except Exception:  # noqa: BLE001
-                _LOGGER.debug("Error disconnecting", exc_info=True)
-        self._client = None
+                await connection.disconnect()
+            except Exception:
+                self.logger.debug("Error disconnecting", exc_info=True)

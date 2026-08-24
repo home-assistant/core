@@ -795,6 +795,34 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "manufacturer_id": 525,
     },
     {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_id": 89,
+        "service_uuid": "00000001-3731-3032-494d-484f42525554",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_id": 89,
+        "service_uuid": "00000002-3731-3032-494d-484f42525554",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_id": 89,
+        "service_uuid": "00000003-3731-3032-494d-484f42525554",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "local_name": "WSBC*",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "local_name": "SPECIALIZED*",
+    },
+    {
         "connectable": False,
         "domain": "switchbot",
         "service_data_uuid": "00000d00-0000-1000-8000-00805f9b34fb",
