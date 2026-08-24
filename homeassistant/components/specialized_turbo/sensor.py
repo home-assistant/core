@@ -337,7 +337,9 @@ class SpecializedTurboSensor(
     def available(self) -> bool:
         """Return True when the bike is connected and has sent data."""
         return (
-            self.coordinator.connected and self.coordinator.snapshot.message_count > 0
+            super().available
+            and self.coordinator.connected
+            and self.coordinator.snapshot.message_count > 0
         )
 
     @property

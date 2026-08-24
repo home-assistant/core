@@ -1,15 +1,21 @@
 """Tests for Specialized Turbo sensor entities."""
 
+from datetime import timedelta
+import time
 from unittest.mock import MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.bluetooth import (
+    FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.specialized_turbo.const import DOMAIN
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import (
@@ -19,7 +25,11 @@ from .conftest import (
     make_populated_snapshot,
 )
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.components.bluetooth import (
+    patch_all_discovered_devices,
+    patch_bluetooth_time,
+)
 
 
 def _entity_id(entity_registry: er.EntityRegistry, key: str) -> str:
@@ -117,6 +127,36 @@ async def test_disconnect_marks_entities_unavailable(
     battery = hass.states.get(battery_entity_id)
     assert battery is not None
     assert battery.state == STATE_UNAVAILABLE
+
+
+async def test_stale_advertisement_marks_entities_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_library: MockLibrary,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test Bluetooth advertisement expiry marks entities unavailable."""
+    start_monotonic = time.monotonic()
+    mock_library.monitor.snapshot = make_populated_snapshot()
+    await setup_integration(hass, mock_config_entry, TCX_SERVICE_INFO)
+    battery_entity_id = _entity_id(entity_registry, "battery_charge_percent")
+
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+    with (
+        patch_bluetooth_time(monotonic_now),
+        patch_all_discovered_devices([]),
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
+        await hass.async_block_till_done()
+
+    battery = hass.states.get(battery_entity_id)
+    assert battery is not None
+    assert battery.state == STATE_UNAVAILABLE
+    assert mock_library.connection.is_connected is True
 
 
 async def test_unknown_assist_level(
