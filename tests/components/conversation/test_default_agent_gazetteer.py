@@ -9,7 +9,13 @@ from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.chat_log import async_get_chat_log
 from homeassistant.components.conversation.gazetteer import GazetteerResponses
 from homeassistant.components.conversation.models import ConversationInput
-from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_CLOSED, STATE_OFF, STATE_ON
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_FRIENDLY_NAME,
+    STATE_CLOSED,
+    STATE_OFF,
+    STATE_ON,
+)
 from homeassistant.core import Context, HomeAssistant
 from homeassistant.helpers import (
     area_registry as ar,
@@ -17,6 +23,7 @@ from homeassistant.helpers import (
     entity_registry as er,
     intent,
 )
+from homeassistant.setup import async_setup_component
 
 from . import expose_entity
 
@@ -25,6 +32,7 @@ from tests.common import async_mock_service
 KITCHEN_LIGHT = "light.kitchen_ceiling"
 BEDROOM_BLINDS = "cover.bedroom_blinds"
 GARAGE_DOOR = "cover.garage_door"
+GARAGE_SHUTTERS = "cover.garage_shutters"
 
 
 @pytest.fixture
@@ -33,7 +41,7 @@ def home(
     area_registry: ar.AreaRegistry,
     entity_registry: er.EntityRegistry,
 ) -> ar.AreaEntry:
-    """Set up a kitchen with a light, a bedroom with blinds and a garage door."""
+    """Set up a kitchen with a light, a bedroom with blinds and a garage with covers."""
     kitchen = area_registry.async_update(
         area_registry.async_get_or_create("kitchen_id").id, name="Kitchen"
     )
@@ -44,10 +52,13 @@ def home(
         area_registry.async_get_or_create("garage_id").id, name="Garage"
     )
 
-    for entity_id, name, area, state in (
-        (KITCHEN_LIGHT, "Kitchen Ceiling Lights", kitchen, STATE_OFF),
-        (BEDROOM_BLINDS, "Bedroom Blinds", bedroom, STATE_OFF),
-        (GARAGE_DOOR, "Garage Door", garage, STATE_CLOSED),
+    # The garage covers carry a device class so an area can be addressed by it
+    # ("the garage shutters") without colliding with any one entity's name.
+    for entity_id, name, area, state, device_class in (
+        (KITCHEN_LIGHT, "Kitchen Ceiling Lights", kitchen, STATE_OFF, None),
+        (BEDROOM_BLINDS, "Bedroom Blinds", bedroom, STATE_OFF, None),
+        (GARAGE_DOOR, "Garage Door", garage, STATE_CLOSED, "garage"),
+        (GARAGE_SHUTTERS, "Side Window", garage, STATE_CLOSED, "shutter"),
     ):
         domain, object_id = entity_id.split(".")
         entry = entity_registry.async_get_or_create(
@@ -57,7 +68,10 @@ def home(
         entity_registry.async_update_entity(
             entity_id, name=name, area_id=area.id, aliases=[er.COMPUTED_NAME]
         )
-        hass.states.async_set(entity_id, state, attributes={ATTR_FRIENDLY_NAME: name})
+        attributes: dict[str, str] = {ATTR_FRIENDLY_NAME: name}
+        if device_class:
+            attributes[ATTR_DEVICE_CLASS] = device_class
+        hass.states.async_set(entity_id, state, attributes=attributes)
 
     return kitchen
 
@@ -444,3 +458,91 @@ async def test_a_turn_with_no_target_clears_the_antecedent(
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
     assert not calls
+
+
+@pytest.mark.usefixtures("init_components", "home")
+@pytest.mark.parametrize(
+    ("command", "follow_up", "service"),
+    [
+        ("close the garage shutters", "open them", "open_cover"),
+        ("open the garage shutters", "close them", "close_cover"),
+    ],
+    ids=["open_them", "close_them"],
+)
+async def test_them_reopens_the_area_a_cover_command_named(
+    hass: HomeAssistant, command: str, follow_up: str, service: str
+) -> None:
+    """Test "open them" after an area command acts on that area again."""
+    async_mock_service(hass, "cover", "open_cover")
+    async_mock_service(hass, "cover", "close_cover")
+    calls = async_mock_service(hass, "cover", service)
+
+    result = await conversation.async_converse(hass, command, None, Context(), None)
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    result = await conversation.async_converse(
+        hass, follow_up, result.conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert [call.data["entity_id"] for call in calls] == [GARAGE_SHUTTERS]
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_a_reused_target_still_has_to_suit_the_action(
+    hass: HomeAssistant,
+) -> None:
+    """Test "open them" is refused when the remembered target cannot be opened.
+
+    Reuse does not bypass an action's own constraints: "open" is for covers and
+    valves, and the previous turn was about lights.
+    """
+    async_mock_service(hass, "light", "turn_on")
+    calls = async_mock_service(hass, "cover", "open_cover")
+
+    result = await conversation.async_converse(
+        hass, "turn on the kitchen lights", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    result = await conversation.async_converse(
+        hass, "open them", result.conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert not calls
+
+
+@pytest.mark.usefixtures("home")
+async def test_a_custom_sentence_still_leaves_an_antecedent(
+    hass: HomeAssistant,
+) -> None:
+    """Test a phrasing only hassil knows is still something "it" can refer to.
+
+    The matcher validates against the packaged intent catalog, so it can never
+    recognize a user's own sentence. Reading the target off the handled intent
+    instead of re-running the matcher over the utterance is what keeps this working.
+    """
+    assert await async_setup_component(hass, "homeassistant", {})
+    assert await async_setup_component(
+        hass,
+        conversation.DOMAIN,
+        {"conversation": {"intents": {"HassTurnOn": ["give the {name} some juice"]}}},
+    )
+    assert await async_setup_component(hass, "intent", {})
+
+    async_mock_service(hass, "light", "turn_on")
+    turn_off = async_mock_service(hass, "light", "turn_off")
+
+    result = await conversation.async_converse(
+        hass, "give the kitchen ceiling lights some juice", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+    result = await conversation.async_converse(
+        hass, "turn it off", result.conversation_id, Context(), None
+    )
+
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(turn_off) == 1
+    assert turn_off[0].data["entity_id"] == [KITCHEN_LIGHT]
