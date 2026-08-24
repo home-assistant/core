@@ -772,11 +772,7 @@ class ESPHomeManager:
             expected_disconnect,
         )
         entry_data.async_on_disconnect()
-        entry_data.expected_disconnect = expected_disconnect
-        entry_data.async_mark_states_stale()
-        if entry_data.device_info and entry_data.device_info.has_deep_sleep:
-            # States arrive after the _on_connect save, so persist them here
-            entry_data.async_save_to_store()
+        entry_data.async_record_disconnect(expected_disconnect)
         if not hass.is_stopping:
             # Avoid marking every esphome entity as unavailable on shutdown
             # since it generates a lot of state changed events and database
@@ -1144,10 +1140,10 @@ class ESPHomeManager:
         )
         entry_data.cleanup_callbacks.extend(cleanups)
 
-        infos, services, states = await entry_data.async_load_from_store()
+        infos, services = await entry_data.async_load_from_store(
+            restore_states=bool(entry.unique_id)
+        )
         if entry.unique_id:
-            # Restored states are only valid alongside the restored infos
-            entry_data.async_restore_states(states)
             await entry_data.async_update_static_infos(
                 hass, entry, infos, entry.unique_id.upper()
             )
@@ -1576,11 +1572,10 @@ async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
     await data.client.disconnect()
-    if was_connected and data.device_info and data.device_info.has_deep_sleep:
+    if was_connected:
         # on_disconnect runs in a background task that may not have
         # persisted yet; the connection was closed by us, so it is expected
-        data.expected_disconnect = True
-        data.async_save_to_store()
+        data.async_record_disconnect(expected_disconnect=True)
     await data.async_cleanup()
     return data
 

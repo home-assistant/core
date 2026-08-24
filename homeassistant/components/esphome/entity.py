@@ -81,10 +81,8 @@ def _move_cached_states(
 ) -> None:
     """Move each mover's cached state to its new slot.
 
-    Sources are taken before any destination is written so movers that
-    swap slots do not read each other's state; a mover whose key also
-    changed drops its state, and anything left at a destination is
-    foreign and must not be adopted on re-add.
+    Sources are read before any destination is written so swaps stay
+    correct; anything left at a destination is foreign and dropped.
     """
     carried: dict[DeviceEntityKey, EntityState] = {}
     for old_slot, new_slot in moves:
@@ -110,7 +108,8 @@ def async_static_info_updated(
 ) -> None:
     """Update entities of this platform when entities are listed."""
     current_infos = entry_data.info[info_type]
-    # First listing: cached states were restored with these infos and must survive
+    # First listing: the cache can only hold states restored from the store,
+    # which are always dispatched with their infos before any live listing
     first_infos = not current_infos
     device_info = entry_data.device_info
     if TYPE_CHECKING:
@@ -134,9 +133,7 @@ def async_static_info_updated(
     deferred: list[tuple[EntityInfo, str]] = []
     # (old_slot, new_slot) of entities that moved between devices
     moves: list[tuple[DeviceEntityKey, DeviceEntityKey]] = []
-    # Slots of brand new entities; movers are deliberately not
-    # tracked, though a mover's cached state under its old slot is
-    # still dropped whenever the sweep below runs
+    # Slots of brand new entities
     new_entity_slots: set[DeviceEntityKey] = set()
     states = entry_data.state[state_type]
 
@@ -254,8 +251,7 @@ def async_static_info_updated(
         # Create new entity with the new device_id
         add_entities.append(entity_type(entry_data, info, state_type))
 
-    if moves:
-        _move_cached_states(states, moves)
+    _move_cached_states(states, moves)
 
     # Second pass: anything left at an incoming (device_id, key) slot
     # is a rename with a stable key; the registry entry follows the

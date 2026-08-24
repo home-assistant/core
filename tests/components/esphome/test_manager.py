@@ -230,7 +230,6 @@ async def test_reconnect_logic_seeds_deep_sleep_from_restored_device_info(
 
 
 _DEEP_SLEEP_SENSOR_INFOS = [SensorInfo(object_id="mysensor", key=1, name="my sensor")]
-_DEEP_SLEEP_INFOS: dict[str, list[EntityInfo]] = {"sensor": _DEEP_SLEEP_SENSOR_INFOS}
 _DEEP_SLEEP_SENSOR_STATES = {"sensor": [SensorState(key=1, state=42).to_dict()]}
 _SUB_DEVICES = [
     SubDeviceInfo(device_id=11111111, name="Sub Device 1", area_id=0),
@@ -280,7 +279,9 @@ def _seed_deep_sleep_storage(
         "api_version": APIVersion(99, 99).to_dict(),
         "services": [],
     }
-    for comp_type, comp_infos in (infos or _DEEP_SLEEP_INFOS).items():
+    for comp_type, comp_infos in (
+        infos or {"sensor": _DEEP_SLEEP_SENSOR_INFOS}
+    ).items():
         data[comp_type] = [info.to_dict() for info in comp_infos]
     if expected_disconnect is not None:
         data["states"] = states or _DEEP_SLEEP_SENSOR_STATES
@@ -298,19 +299,12 @@ def _seed_deep_sleep_storage(
 async def _async_setup_without_connecting(
     hass: HomeAssistant, mock_client: APIClient, entry: MockConfigEntry
 ) -> None:
-    """Set up the entry while blocking the device from ever connecting."""
-    connect_event = asyncio.Event()
-
-    async def _never_returns() -> tuple[DeviceInfo, list[Any], list[Any]]:
-        await connect_event.wait()
-        raise APIConnectionError("blocked for test")
-
-    mock_client.device_info_and_list_entities = _never_returns
+    """Set up the entry while the device is unreachable."""
+    mock_client.device_info_and_list_entities = AsyncMock(
+        side_effect=APIConnectionError("offline for test")
+    )
 
     assert await hass.config_entries.async_setup(entry.entry_id) is True
-    await hass.async_block_till_done()
-
-    connect_event.set()
     await hass.async_block_till_done()
 
 
@@ -393,43 +387,79 @@ async def test_deep_sleep_device_persists_states_on_disconnect(
 
 
 @pytest.mark.parametrize(
-    ("states", "stored_expected_disconnect", "expected_state"),
+    ("infos", "states", "stored_expected_disconnect", "entity_id", "expected_state"),
     [
         pytest.param(
+            None,
             _DEEP_SLEEP_SENSOR_STATES,
             True,
+            "sensor.test_my_sensor",
             "42",
             id="expected_disconnect_restores_available",
         ),
         pytest.param(
+            None,
             _DEEP_SLEEP_SENSOR_STATES,
             False,
+            "sensor.test_my_sensor",
             STATE_UNAVAILABLE,
             id="unexpected_disconnect_stays_unavailable",
         ),
         pytest.param(
+            None,
             _DEEP_SLEEP_SENSOR_STATES,
             None,
+            "sensor.test_my_sensor",
             STATE_UNAVAILABLE,
             id="legacy_payload_without_new_keys",
         ),
         pytest.param(
+            None,
             {**_DEEP_SLEEP_SENSOR_STATES, "unknown_component": [{"key": 1}]},
             True,
+            "sensor.test_my_sensor",
             "42",
             id="unknown_component_type_skipped",
         ),
         pytest.param(
+            None,
             {"sensor": [SensorState(key=1).to_dict() | {"state": None}]},
             True,
+            "sensor.test_my_sensor",
             STATE_UNKNOWN,
             id="null_state_restores_unknown",
         ),
         pytest.param(
+            None,
             {"sensor": [SensorState(key=2, state=42).to_dict()]},
             True,
+            "sensor.test_my_sensor",
             STATE_UNKNOWN,
             id="state_without_entity_dropped",
+        ),
+        pytest.param(
+            {"binary_sensor": [BinarySensorInfo(object_id="door", key=1, name="Door")]},
+            {
+                "binary_sensor": [
+                    BinarySensorState(key=1, state=True, missing_state=False).to_dict()
+                ]
+            },
+            True,
+            "binary_sensor.test_door",
+            STATE_ON,
+            id="binary_sensor_restores_on",
+        ),
+        pytest.param(
+            {"binary_sensor": [BinarySensorInfo(object_id="door", key=1, name="Door")]},
+            {
+                "binary_sensor": [
+                    BinarySensorState(key=1, state=False, missing_state=False).to_dict()
+                ]
+            },
+            True,
+            "binary_sensor.test_door",
+            STATE_OFF,
+            id="binary_sensor_restores_off",
         ),
     ],
 )
@@ -437,60 +467,24 @@ async def test_cold_start_offline_restores_deep_sleep_entities(
     hass: HomeAssistant,
     mock_client: APIClient,
     hass_storage: dict[str, Any],
+    infos: dict[str, list[EntityInfo]] | None,
     states: dict[str, list[Any]],
     stored_expected_disconnect: bool | None,
+    entity_id: str,
     expected_state: str,
 ) -> None:
     """A deep-sleep device restores its entities before ever reconnecting."""
     entry = _seed_deep_sleep_storage(
         hass,
         hass_storage,
+        infos=infos,
         states=states,
         expected_disconnect=stored_expected_disconnect,
     )
 
     await _async_setup_without_connecting(hass, mock_client, entry)
 
-    state = hass.states.get("sensor.test_my_sensor")
-    assert state is not None
-    assert state.state == expected_state
-
-
-@pytest.mark.parametrize(
-    ("stored_state", "expected_state"),
-    [
-        pytest.param(True, STATE_ON, id="on"),
-        pytest.param(False, STATE_OFF, id="off"),
-    ],
-)
-async def test_cold_start_restores_binary_sensor(
-    hass: HomeAssistant,
-    mock_client: APIClient,
-    hass_storage: dict[str, Any],
-    stored_state: bool,
-    expected_state: str,
-) -> None:
-    """Restore goes through entry data so every platform benefits, not only sensor."""
-    entry = _seed_deep_sleep_storage(
-        hass,
-        hass_storage,
-        infos={
-            "binary_sensor": [
-                BinarySensorInfo(object_id="door", key=1, name="Door"),
-            ]
-        },
-        states={
-            "binary_sensor": [
-                BinarySensorState(
-                    key=1, state=stored_state, missing_state=False
-                ).to_dict()
-            ]
-        },
-    )
-
-    await _async_setup_without_connecting(hass, mock_client, entry)
-
-    state = hass.states.get("binary_sensor.test_door")
+    state = hass.states.get(entity_id)
     assert state is not None
     assert state.state == expected_state
 

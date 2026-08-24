@@ -485,12 +485,21 @@ class RuntimeEntryData:
         for callback_ in self.device_update_subscriptions.copy():
             callback_()
 
+    @property
+    def has_deep_sleep(self) -> bool:
+        """Return if the device is known to use deep sleep."""
+        return bool(self.device_info and self.device_info.has_deep_sleep)
+
     async def async_load_from_store(
-        self,
-    ) -> tuple[list[EntityInfo], list[UserService], list[EntityState]]:
-        """Load the retained data from store and return de-serialized data."""
+        self, *, restore_states: bool
+    ) -> tuple[list[EntityInfo], list[UserService]]:
+        """Load the retained data from store and return de-serialized data.
+
+        Deep sleep states are only seeded when restore_states is set, since
+        they are only valid alongside the restored entity infos.
+        """
         if (restored := await self.store.async_load()) is None:
-            return [], [], []
+            return [], []
         self._storage_contents = restored.copy()
 
         self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
@@ -509,29 +518,31 @@ class RuntimeEntryData:
         services = [
             UserService.from_dict(service) for service in restored.pop("services", [])
         ]
-        states: list[EntityState] = []
-        if self.device_info.has_deep_sleep:
+        if restore_states and self.has_deep_sleep:
             self.expected_disconnect = expected_disconnect
-            # Only states owned by a restored entity are returned
+            # Only states owned by a restored entity are seeded
             slots = {(type(info), info.device_id, info.key) for info in infos}
             for comp_type, comp_states in restored_states.items():
                 if (state_cls := COMPONENT_TYPE_TO_STATE_TYPE.get(comp_type)) is None:
                     _LOGGER.debug("Skipping unknown stored state type %s", comp_type)
                     continue
-                info_type = STATE_TYPE_TO_INFO_TYPE[state_cls]
+                info_type = COMPONENT_TYPE_TO_INFO[comp_type]
                 for state in comp_states:
                     obj = state_cls.from_dict(state)
                     if (info_type, obj.device_id, obj.key) in slots:
-                        states.append(obj)
-        return infos, services, states
+                        self.state[state_cls][(obj.device_id, obj.key)] = obj
+            # The device is disconnected until it wakes, same as after a disconnect
+            self.async_mark_states_stale()
+        return infos, services
 
     @callback
-    def async_restore_states(self, states: Iterable[EntityState]) -> None:
-        """Seed the state cache from the store before the entities are built."""
-        for state in states:
-            self.state[type(state)][(state.device_id, state.key)] = state
-        # The device is disconnected until it wakes, same as after a disconnect
+    def async_record_disconnect(self, expected_disconnect: bool) -> None:
+        """Remember how the session ended and persist deep sleep state."""
+        self.expected_disconnect = expected_disconnect
         self.async_mark_states_stale()
+        if self.has_deep_sleep:
+            # States arrive after the connect-time save, so persist them here
+            self.async_save_to_store()
 
     def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
@@ -552,7 +563,7 @@ class RuntimeEntryData:
         store_data["services"] = [
             service.to_dict() for service in self.services.values()
         ]
-        if self.device_info.has_deep_sleep:
+        if self.has_deep_sleep:
             store_data["expected_disconnect"] = self.expected_disconnect
             store_data["states"] = {
                 STATE_TYPE_TO_COMPONENT_TYPE[state_type]: [

@@ -1751,24 +1751,23 @@ async def test_entity_move_between_devices_carries_cached_state(
         states=_MOVE_INITIAL_STATES,
     )
     mac = device.device_info.mac_address
-    for info, expected in zip(_MOVE_INITIAL_INFOS, (STATE_ON, STATE_OFF), strict=True):
-        entity_id = entity_registry.async_get_entity_id(
-            Platform.BINARY_SENSOR, DOMAIN, build_device_unique_id(mac, info)
-        )
-        assert entity_id is not None
-        assert hass.states.get(entity_id).state == expected
+
+    def _assert_states(infos: list[BinarySensorInfo], expected: list[str]) -> None:
+        for info, expected_state in zip(infos, expected, strict=True):
+            entity_id = entity_registry.async_get_entity_id(
+                Platform.BINARY_SENSOR, DOMAIN, build_device_unique_id(mac, info)
+            )
+            assert entity_id is not None
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == expected_state
+
+    _assert_states(_MOVE_INITIAL_INFOS, [STATE_ON, STATE_OFF])
 
     # No states are replayed on connect so only the carried state is observable
     await reconnect_with_updated_entity_info(hass, device, new_infos, states=[])
 
-    for info, expected in zip(new_infos, expected_states, strict=True):
-        entity_id = entity_registry.async_get_entity_id(
-            Platform.BINARY_SENSOR, DOMAIN, build_device_unique_id(mac, info)
-        )
-        assert entity_id is not None
-        state = hass.states.get(entity_id)
-        assert state is not None
-        assert state.state == expected
+    _assert_states(new_infos, expected_states)
 
 
 @pytest.mark.parametrize(
