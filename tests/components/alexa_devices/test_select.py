@@ -24,13 +24,7 @@ from homeassistant.helpers import entity_registry as er
 from . import setup_integration
 from .const import TEST_DEVICE_1, TEST_DEVICE_1_SN, TEST_DEVICE_2, TEST_DEVICE_2_SN
 
-from tests.common import (
-    MockConfigEntry,
-    State,
-    async_fire_time_changed,
-    mock_restore_cache,
-    snapshot_platform,
-)
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 ENTITY_ID = "select.echo_test_drop_in"
 ENTITY_ID_2 = "select.fake_email_gmail_com_default_device"
@@ -122,7 +116,6 @@ async def test_service_select_option(
         TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1),
         TEST_DEVICE_2_SN: deepcopy(TEST_DEVICE_2),
     }
-    mock_amazon_devices_client.default_device = deepcopy(TEST_DEVICE_1)
 
     await setup_integration(hass, mock_config_entry)
 
@@ -138,9 +131,8 @@ async def test_service_select_option(
 
     assert (state := hass.states.get(ENTITY_ID_2))
     assert state.state == TEST_DEVICE_2.account_name
-    assert (
-        mock_amazon_devices_client.default_device.account_name
-        == TEST_DEVICE_2.account_name
+    mock_amazon_devices_client.set_default_device.assert_awaited_once_with(
+        mock_amazon_devices_client.get_devices_data.return_value[TEST_DEVICE_2_SN]
     )
 
 
@@ -155,7 +147,6 @@ async def test_service_select_option_state_persists_after_coordinator_update(
         TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1),
         TEST_DEVICE_2_SN: deepcopy(TEST_DEVICE_2),
     }
-    mock_amazon_devices_client.default_device = deepcopy(TEST_DEVICE_1)
 
     await setup_integration(hass, mock_config_entry)
 
@@ -201,7 +192,6 @@ async def test_service_select_entity_invalid_option_raises_home_assistant_error(
     coordinator = Mock(
         config_entry=Mock(unique_id="amzn1.account.fake_user_id"),
         data={TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)},
-        api=Mock(default_device=deepcopy(TEST_DEVICE_1)),
     )
     entity = AmazonSelectServiceEntity(coordinator, SERVICE_SELECTS[0])
 
@@ -212,39 +202,19 @@ async def test_service_select_entity_invalid_option_raises_home_assistant_error(
     assert excinfo.value.translation_placeholders == {"option": "Nonexistent Device"}
 
 
-async def test_service_select_restore_state(
+async def test_service_select_option_loaded_from_library(
     hass: HomeAssistant,
     mock_amazon_devices_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Test that last known option is restored on startup."""
+    """Test that the current option is loaded from the library on startup."""
     mock_amazon_devices_client.get_devices_data.return_value = {
         TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1),
         TEST_DEVICE_2_SN: deepcopy(TEST_DEVICE_2),
     }
-    mock_amazon_devices_client.default_device = deepcopy(TEST_DEVICE_1)
-
-    mock_restore_cache(hass, (State(ENTITY_ID_2, TEST_DEVICE_2.account_name),))
+    mock_amazon_devices_client.get_default_device.return_value = deepcopy(TEST_DEVICE_2)
 
     await setup_integration(hass, mock_config_entry)
 
     assert (state := hass.states.get(ENTITY_ID_2))
     assert state.state == TEST_DEVICE_2.account_name
-    assert (
-        mock_amazon_devices_client.default_device.account_name
-        == TEST_DEVICE_2.account_name
-    )
-
-
-async def test_service_select_restore_state_unknown_option_ignored(
-    hass: HomeAssistant,
-    mock_amazon_devices_client: AsyncMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that a restored state with an unknown option is ignored."""
-    mock_restore_cache(hass, (State(ENTITY_ID_2, "Nonexistent Device"),))
-
-    await setup_integration(hass, mock_config_entry)
-
-    assert (state := hass.states.get(ENTITY_ID_2))
-    assert state.state == TEST_DEVICE_1.account_name
