@@ -8,6 +8,7 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from aiohttp import ClientError
+from multidict import CIMultiDict
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
@@ -1431,3 +1432,33 @@ async def test_async_get_config_entry_implementation_missing_provider(
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
         )
+
+
+@pytest.mark.parametrize(
+    "header_name",
+    [
+        pytest.param("Authorization", id="canonical_casing"),
+        pytest.param("authorization", id="lowercase"),
+    ],
+)
+async def test_oauth2_request_replaces_caller_authorization_header(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+    header_name: str,
+) -> None:
+    """Test the token replaces a caller supplied Authorization header."""
+    aioclient_mock.post("https://example.com", status=201)
+
+    await config_entry_oauth2_flow.async_oauth2_request(
+        hass,
+        {"access_token": ACCESS_TOKEN_1},
+        "post",
+        "https://example.com",
+        headers={header_name: "Bearer caller supplied"},
+    )
+
+    assert len(aioclient_mock.mock_calls) == 1
+    headers = CIMultiDict(aioclient_mock.mock_calls[0][3])
+
+    # The token must not be sent as a second Authorization header
+    assert headers.getall("Authorization") == [f"Bearer {ACCESS_TOKEN_1}"]

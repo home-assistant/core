@@ -19,9 +19,10 @@ import secrets
 import time
 from typing import Any, cast, override
 
-from aiohttp import ClientError, ClientResponseError, client, web
+from aiohttp import ClientError, ClientResponseError, client, hdrs, web
 from habluetooth import BluetoothServiceInfoBleak
 import jwt
+from multidict import CIMultiDict
 import voluptuous as vol
 from yarl import URL
 
@@ -791,16 +792,9 @@ async def async_oauth2_request(
     This method will not refresh tokens. Use OAuth2 session for that.
     """
     session = async_get_clientsession(hass)
-    headers = kwargs.pop("headers", {})
-    return await session.request(
-        method,
-        url,
-        **kwargs,
-        headers={
-            **headers,
-            "authorization": f"Bearer {token['access_token']}",
-        },
-    )
+    headers = CIMultiDict(kwargs.pop("headers", {}))
+    headers[hdrs.AUTHORIZATION] = f"Bearer {token['access_token']}"
+    return await session.request(method, url, **kwargs, headers=headers)
 
 
 @callback

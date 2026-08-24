@@ -5,6 +5,7 @@ from contextlib import contextmanager
 from datetime import timedelta
 from functools import partial
 from itertools import pairwise
+import logging
 from time import time
 from typing import Any
 from unittest.mock import AsyncMock, patch
@@ -18,6 +19,7 @@ from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import cloud, webhook
 from homeassistant.components.netatmo import DOMAIN, coordinator
+from homeassistant.components.netatmo.coordinator import ACCOUNT
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
     CONF_WEBHOOK_ID,
@@ -1197,3 +1199,44 @@ async def test_failed_updates_are_retried_with_escalating_backoff(
     # scheduled update), the delay then doubles per consecutive error until the
     # patched cap of 600s is reached
     assert gaps == [180, 300, 600, 600]
+
+
+async def test_log_when_unavailable(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test that unavailability and recovery are each logged exactly once."""
+    with (
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+            return_value=AsyncMock(),
+        ),
+        patch("homeassistant.components.netatmo.webhook.webhook_generate_url"),
+    ):
+        post_request = mock_auth.return_value.async_post_api_request
+        post_request.side_effect = partial(fake_post_request, hass)
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    data_handler = config_entry.runtime_data
+
+    with caplog.at_level(
+        logging.INFO, logger="homeassistant.components.netatmo.coordinator"
+    ):
+        post_request.side_effect = pyatmo.ApiError("boom")
+        await data_handler.async_fetch_data(ACCOUNT)
+        await data_handler.async_fetch_data(ACCOUNT)
+
+        assert caplog.text.count("Error while fetching") == 1
+
+        post_request.side_effect = partial(fake_post_request, hass)
+        await data_handler.async_fetch_data(ACCOUNT)
+        await data_handler.async_fetch_data(ACCOUNT)
+
+        assert caplog.text.count("recovered") == 1
