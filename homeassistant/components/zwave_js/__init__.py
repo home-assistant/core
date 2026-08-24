@@ -1106,21 +1106,9 @@ class NodeEvents:
             disc_info.platform, DOMAIN, unique_id
         )
 
-        # Use the device the entity belongs to, which may be an endpoint child device,
-        # so the event's device_id matches where the entity lives.
-        device = None
-        if (
-            entity_id
-            and (entity_entry := self.ent_reg.async_get(entity_id))
-            and entity_entry.device_id
-        ):
-            device = self.dev_reg.async_get(entity_entry.device_id)
-        # Fall back to the node device when the value has no entity (e.g. a discovery
-        # collision), so the event payload always carries a device id.
-        if device is None:
-            device = self.dev_reg.async_get_device_by_identifier(
-                get_device_id(driver, value.node), self.config_entry.entry_id
-            )
+        device = self.dev_reg.async_get_device_by_identifier(
+            get_device_id(driver, value.node), self.config_entry.entry_id
+        )
 
         raw_value = value_ = value.value
         if value.metadata.states:

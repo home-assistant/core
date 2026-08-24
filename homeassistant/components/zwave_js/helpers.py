@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Callable, Coroutine
 from dataclasses import astuple, dataclass
 import logging
-from typing import Any, cast
+from typing import Any, cast, overload
 
 import aiohttp
 import voluptuous as vol
@@ -635,6 +635,22 @@ def get_value_state_schema(
         vol.Coerce(int),
         vol.Range(min=value.metadata.min, max=value.metadata.max),
     )
+
+
+@overload
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+) -> DeviceInfo: ...
+
+
+@overload
+def get_device_info(
+    driver: Driver,
+    node: ZwaveNode,
+    endpoint: Endpoint,
+    parent_device_id: str,
+) -> ChildDeviceInfo: ...
 
 
 def get_device_info(

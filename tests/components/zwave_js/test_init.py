@@ -25,6 +25,7 @@ from zwave_js_server.model.version import VersionInfo
 from homeassistant.components.persistent_notification import async_dismiss
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id, get_device_id_ext
+from homeassistant.components.zwave_js.switch import ZWaveSwitch
 from homeassistant.config_entries import ConfigEntryDisabler, ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import CoreState, HomeAssistant
@@ -438,7 +439,7 @@ async def test_new_entity_on_value_added(
     """Test we create a new entity if a value is added after the fact."""
     node: Node = multisensor_6
 
-    # Add a value on a random endpoint so we can be sure we should get a new entity
+    # Add a value for a property that doesn't exist yet on this node.
     event = Event(
         type="value added",
         data={
@@ -448,15 +449,16 @@ async def test_new_entity_on_value_added(
             "args": {
                 "commandClassName": "Multilevel Sensor",
                 "commandClass": 49,
-                "endpoint": 10,
-                "property": "Ultraviolet",
-                "propertyName": "Ultraviolet",
+                "endpoint": 0,
+                "property": "Power",
+                "propertyName": "Power",
                 "metadata": {
                     "type": "number",
                     "readable": True,
                     "writeable": False,
-                    "label": "Ultraviolet",
-                    "ccSpecific": {"sensorType": 27, "scale": 0},
+                    "label": "Power",
+                    "unit": "W",
+                    "ccSpecific": {"sensorType": 4, "scale": 0},
                 },
                 "value": 0,
             },
@@ -464,7 +466,7 @@ async def test_new_entity_on_value_added(
     )
     node.receive_event(event)
     await hass.async_block_till_done()
-    assert hass.states.get("sensor.multisensor_6_ultraviolet_2") is not None
+    assert hass.states.get("sensor.multisensor_6_power") is not None
 
 
 async def test_on_node_added_ready(
@@ -1652,6 +1654,78 @@ async def test_endpoint_child_device_pruned_on_reinterview(
     endpoint_1_switch = entity_registry.async_get("switch.endpoint_1")
     assert endpoint_1_switch is not None
     assert endpoint_1_switch.device_id == node_device.id
+    # The live state is still present — the ready handler re-discovered the value on the
+    # parent node device.
+    assert hass.states.get("switch.endpoint_1") is not None
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SWITCH]])
+async def test_child_device_entity_metadata_rediscovery(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    client: MagicMock,
+    vision_security_zl7432: Node,
+    integration: MockConfigEntry,
+) -> None:
+    """Test that entities on endpoint child devices are re-created after rediscovery.
+
+    The P1 bug: discovered_value_ids was keyed by the child device id instead of the
+    node device id, so the discard in _async_remove_and_rediscover was a no-op and
+    async_on_value_added early-returned, leaving the entity gone until reload.
+    """
+    node = vision_security_zl7432
+
+    endpoint_1_device = device_registry.async_get_child_device_by_identifier(
+        get_device_id(client.driver, node, 1), integration.entry_id
+    )
+    assert endpoint_1_device
+
+    # switch.endpoint_1 lives on the endpoint 1 child device.
+    switch_entry = entity_registry.async_get("switch.endpoint_1")
+    assert switch_entry is not None
+    assert switch_entry.device_id == endpoint_1_device.id
+    assert hass.states.get("switch.endpoint_1") is not None
+
+    # Trigger metadata-based rediscovery for the endpoint 1 currentValue.
+    # ZWaveSwitch.should_rediscover_on_metadata_update normally returns False; patch
+    # it to True so the rediscovery path is exercised without needing a real metadata
+    # change that qualifies.
+    with patch.object(
+        ZWaveSwitch, "should_rediscover_on_metadata_update", return_value=True
+    ):
+        node.receive_event(
+            Event(
+                "metadata updated",
+                {
+                    "source": "node",
+                    "event": "metadata updated",
+                    "nodeId": node.node_id,
+                    "args": {
+                        "commandClassName": "Switch Binary",
+                        "commandClass": 37,
+                        "endpoint": 1,
+                        "property": "currentValue",
+                        "propertyName": "currentValue",
+                        "metadata": {
+                            "type": "boolean",
+                            "readable": True,
+                            "writeable": False,
+                            "label": "Current value",
+                            "stateful": True,
+                            "secret": False,
+                        },
+                    },
+                },
+            )
+        )
+        await hass.async_block_till_done()
+
+    # The entity must be re-created on the same child device (not gone until reload).
+    assert hass.states.get("switch.endpoint_1") is not None
+    new_entry = entity_registry.async_get("switch.endpoint_1")
+    assert new_entry is not None
+    assert new_entry.device_id == endpoint_1_device.id
 
 
 async def test_replace_same_node(

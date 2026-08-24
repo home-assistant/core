@@ -19,6 +19,7 @@ from homeassistant.components.zwave_js.helpers import (
     get_device_id,
     get_value_id_from_unique_id,
 )
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -270,3 +271,33 @@ async def test_device_diagnostics_secret_value(
     diagnostics_node_state = cast(dict[str, Any], diagnostics_data["state"])
     test_value = _find_ultraviolet_val(diagnostics_node_state)
     assert test_value["value"] == REDACTED
+
+
+@pytest.mark.parametrize("platforms", [[Platform.SWITCH]])
+async def test_device_diagnostics_includes_child_device_entities(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client,
+    vision_security_zl7432,
+    integration,
+    hass_client: ClientSessionGenerator,
+) -> None:
+    """Test device diagnostics includes entities on endpoint child devices.
+
+    When a node has colliding endpoint values, those entities live on endpoint child
+    devices. They must still appear in the node device's diagnostics dump.
+    """
+    node_device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, vision_security_zl7432), integration.entry_id
+    )
+    assert node_device
+
+    diagnostics_data = await get_diagnostics_for_device(
+        hass, hass_client, integration, node_device
+    )
+
+    diagnostics_entities = cast(list[dict[str, Any]], diagnostics_data["entities"])
+    entity_ids = [e["entity_id"] for e in diagnostics_entities]
+    # Both colliding endpoint switches (living on child devices) appear in the dump.
+    assert "switch.endpoint_1" in entity_ids
+    assert "switch.endpoint_2" in entity_ids

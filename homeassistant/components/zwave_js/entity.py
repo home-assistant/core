@@ -102,7 +102,7 @@ class ZWaveBaseEntity(Entity):
         if (
             endpoint_idx := primary_value.endpoint
         ) is not None and value_requires_endpoint_device(info.node, primary_value):
-            self._endpoint_device = info.node.endpoints.get(endpoint_idx)
+            self._endpoint_device = info.node.endpoints[endpoint_idx]
 
     @property
     @override
@@ -360,11 +360,14 @@ class ZWaveBaseEntity(Entity):
         # Remove entity first so the unique_id is freed up
         await self.async_remove()
 
-        # Now clear from discovered_value_ids and trigger re-discovery
-        # using the existing discovery info dict
-        controller_events.discovered_value_ids[self.device_entry.id].discard(
-            value.value_id
+        # discovered_value_ids is keyed by the node device id, not the child device id.
+        node_device_id = dr.async_get_device_id_by_identifier(
+            self.hass,
+            get_device_id(self.driver, self.info.node),
+            config_entry_id=self.config_entry.entry_id,
         )
+        assert node_device_id is not None
+        controller_events.discovered_value_ids[node_device_id].discard(value.value_id)
         node_events = controller_events.node_events
         value_updates_disc_info = node_events.value_updates_disc_info[
             value.node.node_id

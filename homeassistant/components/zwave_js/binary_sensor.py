@@ -29,7 +29,7 @@ from homeassistant.components.binary_sensor import (
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -43,6 +43,7 @@ from homeassistant.helpers.start import async_at_started
 from .const import DOMAIN
 from .entity import NewZwaveDiscoveryInfo, ZWaveBaseEntity
 from .helpers import (
+    get_device_id,
     get_opening_state_notification_value,
     is_opening_state_notification_value,
 )
@@ -791,9 +792,14 @@ class ZWaveOpeningStateBinarySensor(ZWaveBaseEntity, BinarySensorEntity):
 
         # Unlike the base implementation, keep this entity in place so its
         # registry entry and user customizations survive metadata rediscovery.
-        controller_events.discovered_value_ids[self.device_entry.id].discard(
-            value.value_id
+        # discovered_value_ids is keyed by the node device id, not the child device id.
+        node_device_id = dr.async_get_device_id_by_identifier(
+            self.hass,
+            get_device_id(self.driver, self.info.node),
+            config_entry_id=self.config_entry.entry_id,
         )
+        assert node_device_id is not None
+        controller_events.discovered_value_ids[node_device_id].discard(value.value_id)
         node_events = controller_events.node_events
         value_updates_disc_info = node_events.value_updates_disc_info[
             value.node.node_id
