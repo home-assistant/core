@@ -97,10 +97,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
         )
 
     async def async_disconnect(self) -> bool:
-        """Disconnect from my-PV.
-
-        To be called when coordinator is unloaded, e.g. when device is removed or HA is shut down.
-        """
+        """Disconnect from my-PV."""
         return await self.device.disconnect()
 
     @override
