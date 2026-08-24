@@ -1,0 +1,13 @@
+{
+  "services": {
+    "clear_brightness": {
+      "service": "mdi:brightness-6"
+    },
+    "set_brightness": {
+      "service": "mdi:brightness-6"
+    },
+    "set_color": {
+      "service": "mdi:palette"
+    }
+  }
+}

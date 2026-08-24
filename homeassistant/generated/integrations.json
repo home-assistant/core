@@ -8431,6 +8431,11 @@
     }
   },
   "helper": {
+    "color": {
+      "integration_type": "helper",
+      "config_flow": true,
+      "iot_class": "calculated"
+    },
     "counter": {
       "integration_type": "helper",
       "config_flow": false
@@ -8570,6 +8575,7 @@
     "alert",
     "aurora",
     "cert_expiry",
+    "color",
     "counter",
     "cpuspeed",
     "demo",

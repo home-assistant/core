@@ -2008,6 +2008,7 @@ NO_QUALITY_SCALE = [
     "blueprint",
     "brands",
     "config",
+    "color",
     "configurator",
     "counter",
     "default_config",
