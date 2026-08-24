@@ -3,14 +3,7 @@
 import logging
 from typing import Any, override
 
-from afsapi import (
-    AFSAPI,
-    FSConnectionError,
-    FSNotImplementedError,
-    PlayCaps,
-    PlayRepeatMode,
-    PlayState,
-)
+from afsapi import AFSAPI, FSNotImplementedError, PlayCaps, PlayRepeatMode, PlayState
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -122,40 +115,22 @@ class AFSAPIMediaPlayer(FrontierSiliconEntity, MediaPlayerEntity):
         return features
 
     @override
-    async def async_update(self) -> None:
+    async def _fs_update(self) -> None:
         """Get the latest date and update device state."""
         afsapi = self.fs_device
-        try:
-            if await afsapi.get_power():
-                status = await afsapi.get_play_status()
-                self._attr_state = {
-                    PlayState.IDLE: MediaPlayerState.IDLE,
-                    PlayState.BUFFERING: MediaPlayerState.BUFFERING,
-                    PlayState.PLAYING: MediaPlayerState.PLAYING,
-                    PlayState.PAUSED: MediaPlayerState.PAUSED,
-                    PlayState.REBUFFERING: MediaPlayerState.BUFFERING,
-                    PlayState.STOPPED: MediaPlayerState.IDLE,
-                }.get(status, MediaPlayerState.IDLE)
-            else:
-                self._attr_state = MediaPlayerState.OFF
-        except FSConnectionError:
-            if self._attr_available:
-                _LOGGER.warning(
-                    "Could not connect to %s. Did it go offline?",
-                    self.name or afsapi.webfsapi_endpoint,
-                )
-                self._attr_available = False
 
-            # Device is not available, stop the update
-            return
-
-        if not self._attr_available:
-            _LOGGER.warning(
-                "Reconnected to %s",
-                self.name or afsapi.webfsapi_endpoint,
-            )
-
-            self._attr_available = True
+        if await afsapi.get_power():
+            status = await afsapi.get_play_status()
+            self._attr_state = {
+                PlayState.IDLE: MediaPlayerState.IDLE,
+                PlayState.BUFFERING: MediaPlayerState.BUFFERING,
+                PlayState.PLAYING: MediaPlayerState.PLAYING,
+                PlayState.PAUSED: MediaPlayerState.PAUSED,
+                PlayState.REBUFFERING: MediaPlayerState.BUFFERING,
+                PlayState.STOPPED: MediaPlayerState.IDLE,
+            }.get(status, MediaPlayerState.IDLE)
+        else:
+            self._attr_state = MediaPlayerState.OFF
 
         if not self._attr_source_list:
             self.__modes_by_label = {

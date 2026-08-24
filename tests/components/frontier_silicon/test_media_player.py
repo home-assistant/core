@@ -1,15 +1,24 @@
 """Test the Frontier Silicon media player entity."""
 
-from unittest.mock import AsyncMock
+import logging
+from unittest.mock import AsyncMock, patch
 
 from afsapi import FSConnectionError, FSNotImplementedError, PlayCaps
 import pytest
 
 from homeassistant.components.frontier_silicon.media_player import AFSAPIMediaPlayer
 from homeassistant.components.media_player import MediaPlayerEntityFeature
+from homeassistant.const import STATE_OFF, STATE_UNAVAILABLE
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.entity_component import async_update_entity
+
+from .conftest import FakeAFSAPIDevice
 
 from tests.common import MockConfigEntry
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @pytest.mark.parametrize(
@@ -81,3 +90,49 @@ async def test_async_media_caps() -> None:
         | MediaPlayerEntityFeature.SEEK
         | MediaPlayerEntityFeature.SELECT_SOUND_MODE
     )
+
+
+@pytest.mark.parametrize("raise_error", [True, False])
+async def test_async_update_disconnect(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_afsapi_dev: FakeAFSAPIDevice,
+    raise_error: bool,
+) -> None:
+    """Test that an update with a disconnect can change device availability."""
+
+    # Connect device
+    with patch(
+        "homeassistant.components.frontier_silicon.AFSAPI",
+        FakeAFSAPIDevice,
+    ):
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify device exists
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert len(devices) == 1
+    device_entry = devices[0]
+
+    # Verify device has the expected number of entities
+    expected_num_entities = 1
+    entities = er.async_entries_for_device(entity_registry, device_entry.id)
+    assert len(entities) == expected_num_entities
+
+    # Make the fake device raise a connection error next time get_power is called
+    fake_afsapi_dev.fail_get_power = raise_error
+    # get hass to do an update
+    await async_update_entity(hass, entities[0].entity_id)
+
+    # Check device availability based on raise_error flag
+    assert (
+        hass.states.get(entities[0].entity_id).state == STATE_UNAVAILABLE
+        if raise_error
+        else STATE_OFF
+    )
+
+    # Reset device error state
+    fake_afsapi_dev.fail_get_power = False

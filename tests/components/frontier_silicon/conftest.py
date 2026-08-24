@@ -3,7 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
 
-from afsapi import Equaliser, PlayCaps, PlayerMode, Preset
+from afsapi import Equaliser, FSConnectionError, PlayCaps, PlayerMode, Preset
 from afsapi.nodes import PresetsListItem
 import pytest
 
@@ -16,10 +16,24 @@ from tests.common import MockConfigEntry
 class FakeAFSAPIDevice:
     """A fake Frontier Silicon Device."""
 
+    # registry of fake AFSAPI devices
+    afsapi_device_map = {}
+
+    def __new__(cls, webfsapi_endpoint: str, pin: str | int, timeout: int = 2):
+        """Create...."""
+
+        if webfsapi_endpoint not in cls.afsapi_device_map:
+            cls.afsapi_device_map[webfsapi_endpoint] = super().__new__(cls)
+        return cls.afsapi_device_map[webfsapi_endpoint]
+
     def __init__(
         self, webfsapi_endpoint: str, pin: str | int, timeout: int = 2
     ) -> None:
         """Constructor."""
+        if not hasattr(self, "init_done"):
+            self.webfsapi_endpoint = webfsapi_endpoint
+            self.fail_get_power = False
+            self.init_done = True
 
     async def get_radio_id(self) -> str:
         """Mock get_radio_id AFSAPI function."""
@@ -27,6 +41,8 @@ class FakeAFSAPIDevice:
 
     async def get_power(self) -> bool:
         """Mock get_power AFSAPI function."""
+        if self.fail_get_power:
+            raise FSConnectionError
         return False
 
     async def get_play_status(self) -> int:
@@ -78,6 +94,14 @@ class FakeAFSAPIDevice:
     async def get_volume_steps(self) -> int:
         """Mock get_volume_steps AFSAPI function."""
         return 2
+
+
+@pytest.fixture
+def fake_afsapi_dev(config_entry: MockConfigEntry):
+    """Return a test FakeAFSAPIDevice, creating it for an endpoing if needed."""
+    webfsapi_endpoint = config_entry.data[CONF_WEBFSAPI_URL]
+    pin = config_entry.data[CONF_PIN]
+    return FakeAFSAPIDevice(webfsapi_endpoint, pin)
 
 
 @pytest.fixture

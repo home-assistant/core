@@ -76,9 +76,19 @@ class FrontierSiliconEntity(Entity):
 
         try:
             await self._fs_update()
-            self._attr_available = True
+            if not self.available:
+                _LOGGER.warning(
+                    "Reconnected to %s",
+                    self.name or self.fs_device.webfsapi_endpoint,
+                )
+                self._attr_available = True
         except FSApiError, FSConnectionError:
-            self._attr_available = False
+            if self.available:
+                _LOGGER.warning(
+                    "Could not connect to %s. Did it go offline?",
+                    self.name or self.fs_device.webfsapi_endpoint,
+                )
+                self._attr_available = False
 
     async def _fs_update(self) -> None:
         """Update Frontier Silicon entity."""
