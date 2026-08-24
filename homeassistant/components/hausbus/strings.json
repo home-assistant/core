@@ -5,7 +5,7 @@
     },
     "step": {
       "search_timeout": {
-        "description": "Device discovery timeout. Click Submit to try again."
+        "description": "Device discovery timed out or failed. Click Submit to try again."
       },
       "user": {
         "description": "Perform auto-discovery of Haus-Bus devices."

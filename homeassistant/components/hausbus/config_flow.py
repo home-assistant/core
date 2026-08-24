@@ -57,10 +57,12 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._search_task
-        except TimeoutError:
-            return self.async_show_progress_done(next_step_id="search_timeout")
-        except OSError:
-            _LOGGER.exception("Haus-Bus network error during device discovery")
+        except (TimeoutError, OSError):
+            # OSError covers HomeServer construction and searchDevices()
+            # failing to send on the network socket - treat it the same as
+            # a timeout: a recoverable error the user can retry from.
+            if self._search_task:
+                self._search_task.cancel()
             return self.async_show_progress_done(next_step_id="search_timeout")
         finally:
             self._search_task = None
@@ -90,6 +92,12 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
             self.home_server = await async_get_home_server(self.hass)
 
         await self.hass.async_add_executor_job(self.home_server.searchDevices)
-        async with asyncio.timeout(5):
-            while not self.home_server.is_any_device_found():
-                await asyncio.sleep(0.1)  # Poll every 0.1 seconds
+        # wait for up to 5 seconds to find devices
+        await asyncio.wait_for(self._check_device_found(), 5)
+
+    async def _check_device_found(self) -> bool:
+        """Check if a device was found periodically."""
+        assert self.home_server is not None
+        while not self.home_server.is_any_device_found():
+            await asyncio.sleep(0.1)  # Poll every 0.1 seconds
+        return True

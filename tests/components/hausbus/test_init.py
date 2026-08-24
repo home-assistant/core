@@ -20,6 +20,11 @@ async def test_setup_and_unload_listener_symmetry(
     (now-unloaded) gateway instance would stay registered as a device
     listener forever - a real leak given HomeServer is a process-wide
     singleton whose side effects persist across config entry reload cycles.
+
+    Unload must also shut down the HomeServer itself and drop it from
+    hass.data: manifest.json sets single_config_entry, so this entry is
+    always the only one using it, and leaving it running would leak its
+    UDP listener plus worker/collector threads indefinitely after unload.
     """
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -29,7 +34,8 @@ async def test_setup_and_unload_listener_symmetry(
     assert entry.state is ConfigEntryState.LOADED
 
     gateway = entry.runtime_data
-    assert gateway.home_server is mock_home_server
+    # HomeServer() is patched separately for gateway.py by the fixture,
+    # so gateway.home_server is its own MagicMock instance.
     gateway.home_server.addBusEventListener.assert_called_once_with(gateway)
     gateway.home_server.addBusDeviceListener.assert_called_once_with(gateway)
 
@@ -39,3 +45,5 @@ async def test_setup_and_unload_listener_symmetry(
 
     gateway.home_server.removeBusEventListener.assert_called_once_with(gateway)
     gateway.home_server.removeBusDeviceListener.assert_called_once_with(gateway)
+    gateway.home_server.shutdown.assert_called_once()
+    assert "home_server" not in hass.data[DOMAIN]
