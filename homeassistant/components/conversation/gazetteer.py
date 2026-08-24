@@ -75,6 +75,29 @@ def async_refusal(interpretation: Interpretation) -> str | None:
     return interpretation.response
 
 
+_SENTENCE_END = (".", "!", "?")
+
+
+def join_speech(parts: Sequence[str]) -> str:
+    """Join what the frames of one coordinated command said into one answer.
+
+    Every response in the corpus is written to stand alone and starts capitalized, so
+    they are run together as sentences rather than joined into one. "Unlocking and
+    Opening" reads better than "Unlocking. Opening." for two short acknowledgements,
+    but a coordinated command does not always produce two of those: "turn off the
+    kitchen lights and what is the state of the garage door" answers "Turned off the
+    lights" and "Garage door is closed", which "and" would run into bad grammar.
+
+    A few responses punctuate themselves, so only the ones that do not get a stop.
+    """
+    sentences = [
+        part if part.endswith(_SENTENCE_END) else f"{part}."
+        for part in (part.strip() for part in parts)
+        if part
+    ]
+    return " ".join(sentences)
+
+
 @callback
 def async_build_home(hass: HomeAssistant) -> Home:
     """Build the matcher's gazetteer of the home from the registries.
