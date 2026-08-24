@@ -168,12 +168,16 @@ async def test_resume_partial_unique_id_migration(
         config_entry_id=mock_config_entry.entry_id,
         identifiers={(DOMAIN, "1000-1101")},
     )
-    entity_registry.async_get_or_create(
+    partially_migrated_entity = entity_registry.async_get_or_create(
         Platform.LIGHT,
         DOMAIN,
-        "1000-1",
+        "1000-1111",
         config_entry=mock_config_entry,
         device_id=device_entry.id,
+    )
+    entity_registry.async_update_entity(
+        partially_migrated_entity.entity_id,
+        new_unique_id="1000-1",
     )
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
@@ -210,27 +214,23 @@ async def test_migrate_overlapping_unique_ids(
             "mesh_unique_ids_migration_pending": True,
         },
     )
-    chained_device = device_registry.async_get_or_create(
+    merged_device = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1111")},
+        identifiers={(DOMAIN, "1000-1111"), (DOMAIN, "1000-1101")},
     )
     chained_entity = entity_registry.async_get_or_create(
         Platform.LIGHT,
         DOMAIN,
         "1000-1111",
         config_entry=mock_config_entry,
-        device_id=chained_device.id,
-    )
-    first_device = device_registry.async_get_or_create(
-        config_entry_id=mock_config_entry.entry_id,
-        identifiers={(DOMAIN, "1000-1101")},
+        device_id=merged_device.id,
     )
     first_entity = entity_registry.async_get_or_create(
         Platform.LIGHT,
         DOMAIN,
         "1000-1101",
         config_entry=mock_config_entry,
-        device_id=first_device.id,
+        device_id=merged_device.id,
     )
 
     original_update_device = device_registry.async_update_device
@@ -270,12 +270,12 @@ async def test_migrate_overlapping_unique_ids(
     assert migrated_first_entity is not None
     assert migrated_first_entity.unique_id == "1000-1"
     assert migrated_first_entity.previous_unique_id == "1000-1101"
-    migrated_chained_device = device_registry.async_get(chained_device.id)
-    assert migrated_chained_device is not None
-    assert (DOMAIN, "1000-1101") in migrated_chained_device.identifiers
-    migrated_first_device = device_registry.async_get(first_device.id)
-    assert migrated_first_device is not None
-    assert (DOMAIN, "1000-1") in migrated_first_device.identifiers
+    migrated_device = device_registry.async_get(merged_device.id)
+    assert migrated_device is not None
+    assert migrated_device.identifiers == {
+        (DOMAIN, "1000-1101"),
+        (DOMAIN, "1000-1"),
+    }
     assert "mesh_unique_ids_migration_pending" not in mock_config_entry.data
 
 
