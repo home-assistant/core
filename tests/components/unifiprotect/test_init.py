@@ -744,9 +744,11 @@ async def test_public_only_setup(
     # The private bootstrap is never fetched in this mode.
     ufp_public_only.api.get_bootstrap.assert_not_called()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIFI_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
     assert device is not None
-    assert device.sw_version == "7.1.83"
+    assert device.sw_version == "7.2.105"
     # Name always, model on firmware newer than 7.1.
     assert device.name == "Test NVR"
     assert device.model == "UNVR4"
@@ -898,7 +900,9 @@ async def test_public_only_device_removal(
     """
     await setup_public_only()
 
-    nvr_device = device_registry.async_get_device(identifiers={(DOMAIN, UNIFI_MAC)})
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
     assert nvr_device is not None
     assert not await async_remove_config_entry_device(
         hass, ufp_public_only.entry, nvr_device

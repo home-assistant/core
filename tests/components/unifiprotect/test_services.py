@@ -556,11 +556,14 @@ async def test_ptz_goto_home_preset_client_error(
 async def test_public_only_action_rejected(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
+    ufp_public_only: MockUFPFixture,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
     """Actions require full access; a public-only device raises cleanly."""
     await setup_public_only()
-    device = device_registry.async_get_device(identifiers={(DOMAIN, UNIFI_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, UNIFI_MAC), ufp_public_only.entry.entry_id
+    )
     assert device is not None
 
     with pytest.raises(HomeAssistantError, match="requires full access"):

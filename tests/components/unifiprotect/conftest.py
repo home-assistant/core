@@ -187,7 +187,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
     # ``is_public_only`` on this client); a valid version and NVR mac let
     # that path complete instead of requiring per-test setup.
     meta = Mock()
-    meta.version = Version("7.1.83")
+    meta.version = Version("7.2.105")
     client.get_meta_info = AsyncMock(return_value=meta)
 
     # The library owns RTSPS streams on ``PublicCamera.rtsps_streams`` and primes
@@ -634,7 +634,7 @@ def mock_ufp_public_only_client() -> Mock:
     client.has_public_bootstrap = True
 
     meta = Mock()
-    meta.version = Version("7.1.83")
+    meta.version = Version("7.2.105")
     client.get_meta_info = AsyncMock(return_value=meta)
     client.update_public = AsyncMock()
     client.update = AsyncMock(side_effect=PublicOnlyModeError("public-only"))

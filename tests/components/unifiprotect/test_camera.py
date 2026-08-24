@@ -444,8 +444,8 @@ async def test_public_only_camera(
         (dr.CONNECTION_NETWORK_MAC, public.mac), ufp.entry.entry_id
     )
     assert device is not None
-    nvr_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, ufp.api.public_bootstrap.nvr.mac)}
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ufp.api.public_bootstrap.nvr.mac), ufp.entry.entry_id
     )
     assert nvr_device is not None
     assert device.via_device_id == nvr_device.id

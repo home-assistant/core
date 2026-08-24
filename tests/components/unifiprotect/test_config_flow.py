@@ -2160,7 +2160,7 @@ async def _start_api_key_flow(hass: HomeAssistant) -> ConfigFlowResult:
     return await _advance_menu(hass, result, "api_key")
 
 
-def _meta_info(version: str = "7.1.83") -> Mock:
+def _meta_info(version: str = "7.2.105") -> Mock:
     """Build a MetaInfo-like mock with a parsed version."""
     meta = Mock()
     meta.version = Version(version)
