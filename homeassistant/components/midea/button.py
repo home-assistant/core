@@ -80,7 +80,9 @@ class MideaButton(MideaEntity, ButtonEntity):
         return super().available and self.entity_description.available_fn(self._device)
 
     @override
-    def press(self) -> None:
+    async def async_press(self) -> None:
         """Press the button."""
         with midea_api_call():
-            self.entity_description.press_fn(self._device)
+            await self.hass.async_add_executor_job(
+                self.entity_description.press_fn, self._device
+            )
