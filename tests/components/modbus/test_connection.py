@@ -4,10 +4,12 @@ from collections.abc import Callable, Generator
 from unittest.mock import AsyncMock, patch
 
 from modbus_connection import ModbusSerialParams, ModbusTcpParams
+from modbus_connection.tmodbus import ModbusConnection
 import pytest
 
 from homeassistant.components.modbus.connection import (
     DATA_MODBUS_CONNECTIONS,
+    async_get_temporary_unit,
     async_get_unit,
 )
 from homeassistant.config_entries import ConfigFlow
@@ -188,3 +190,70 @@ async def test_reloading_an_entry_reopens_the_connection(
     [second] = hass.data[DATA_MODBUS_CONNECTIONS].values()
 
     assert second.connection is not first.connection
+
+
+async def test_a_temporary_unit_closes_the_connection_on_exit(
+    hass: HomeAssistant,
+) -> None:
+    """A config flow's hold ends with the context, not with a config entry."""
+    with patch.object(ModbusConnection, "close") as close:
+        async with async_get_temporary_unit(
+            hass, ModbusTcpParams(host="1.2.3.4", port=502), 1
+        ):
+            [shared] = hass.data[DATA_MODBUS_CONNECTIONS].values()
+            assert shared.consumers == 1
+
+    assert close.called
+    assert not hass.data[DATA_MODBUS_CONNECTIONS]
+
+
+async def test_a_temporary_unit_releases_when_the_context_raises(
+    hass: HomeAssistant,
+) -> None:
+    """A flow step failing must not leak the connection it probed over."""
+    with patch.object(ModbusConnection, "close") as close, pytest.raises(ValueError):
+        async with async_get_temporary_unit(
+            hass, ModbusTcpParams(host="1.2.3.4", port=502), 1
+        ):
+            raise ValueError
+
+    assert close.called
+    assert not hass.data[DATA_MODBUS_CONNECTIONS]
+
+
+async def test_a_temporary_unit_shares_a_connection_an_entry_holds(
+    hass: HomeAssistant, consumer: ConsumerFactory
+) -> None:
+    """A flow probing a device an entry already talks to joins its connection.
+
+    The connection outlives the flow because the entry still holds it.
+    """
+    entry = consumer()
+    await hass.config_entries.async_setup(entry.entry_id)
+    params = ModbusTcpParams(host="1.2.3.4", port=502)
+    async_get_unit(hass, entry, params, 1)
+    [shared] = hass.data[DATA_MODBUS_CONNECTIONS].values()
+
+    async with async_get_temporary_unit(hass, params, 2):
+        assert shared.consumers == 2
+
+    assert shared.consumers == 1
+    assert hass.data[DATA_MODBUS_CONNECTIONS]
+
+
+async def test_a_temporary_unit_cannot_clash_with_held_link_settings(
+    hass: HomeAssistant, consumer: ConsumerFactory
+) -> None:
+    """A flow gets told about a link settings clash when entering the context."""
+    entry = consumer()
+    await hass.config_entries.async_setup(entry.entry_id)
+    async_get_unit(hass, entry, ModbusTcpParams(host="1.2.3.4", port=502), 1)
+
+    with pytest.raises(HomeAssistantError, match="different link settings"):
+        async with async_get_temporary_unit(
+            hass, ModbusTcpParams(host="1.2.3.4", port=502, framer="rtu"), 2
+        ):
+            pass
+
+    [shared] = hass.data[DATA_MODBUS_CONNECTIONS].values()
+    assert shared.consumers == 1
