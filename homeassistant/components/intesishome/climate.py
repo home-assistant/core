@@ -25,9 +25,10 @@ from homeassistant.const import (
     CONF_DEVICE,
     CONF_PASSWORD,
     CONF_USERNAME,
+    EVENT_HOMEASSISTANT_STOP,
     UnitOfTemperature,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant
 from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
@@ -113,7 +114,7 @@ async def async_setup_platform(
         device_type=device_type,
     )
     try:
-        await controller.poll_status()
+        await controller.connect()
     except IHAuthenticationError:
         _LOGGER.error("Invalid username or password")
         return
@@ -122,6 +123,12 @@ async def async_setup_platform(
         raise PlatformNotReady from ex
 
     if ih_devices := controller.get_devices():
+        # The controller is shared by every entity, so it outlives any one of
+        # them and is only torn down with Home Assistant itself.
+        async def _async_stop_controller(event: Event) -> None:
+            await controller.stop()
+
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _async_stop_controller)
         async_add_entities(
             [
                 IntesisAC(ih_device_id, device, controller)
@@ -209,11 +216,6 @@ class IntesisAC(ClimateEntity):
         """Subscribe to event updates."""
         _LOGGER.debug("Added climate device with state: %s", repr(self._ih_device))
         self._controller.add_update_callback(self.async_update_callback)
-        try:
-            await self._controller.connect()
-        except IHConnectionError as ex:
-            _LOGGER.error("Exception connecting to IntesisHome: %s", ex)
-            raise PlatformNotReady from ex
 
     @property
     @override
@@ -344,11 +346,6 @@ class IntesisAC(ClimateEntity):
         self._power_consumption_cool = self._controller.get_cool_power_consumption(
             self._device_id
         )
-
-    @override
-    async def async_will_remove_from_hass(self) -> None:
-        """Shutdown the controller when the device is being removed."""
-        await self._controller.stop()
 
     @property
     @override

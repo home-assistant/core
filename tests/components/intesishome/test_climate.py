@@ -16,6 +16,7 @@ from homeassistant.const import (
     STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.entity_platform import PLATFORM_NOT_READY_BASE_WAIT_TIME
 from homeassistant.setup import async_setup_component
 
@@ -115,14 +116,34 @@ async def test_setup_platform_retries_on_connection_error(
     hass: HomeAssistant, mock_controller: MagicMock, freezer: FrozenDateTimeFactory
 ) -> None:
     """Test an unreachable API leaves the platform to be set up again later."""
-    mock_controller.poll_status.side_effect = IHConnectionError
+    mock_controller.connect.side_effect = IHConnectionError
 
     await setup_platform(hass)
     assert hass.states.get(ENTITY_ID) is None
 
-    mock_controller.poll_status.side_effect = None
+    mock_controller.connect.side_effect = None
     freezer.tick(timedelta(seconds=PLATFORM_NOT_READY_BASE_WAIT_TIME))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID) is not None
+
+
+async def test_removing_one_entity_keeps_controller_running(
+    hass: HomeAssistant,
+    mock_controller: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test the shared controller outlives the removal of a single entity."""
+    mock_controller.get_devices.return_value = {
+        "device-id": {"name": "Office"},
+        "other-device-id": {"name": "Lounge"},
+    }
+    await setup_platform(hass)
+
+    entity_registry.async_remove(ENTITY_ID)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(ENTITY_ID) is None
+    mock_controller.stop.assert_not_awaited()
+    assert hass.states.get("climate.lounge").state != STATE_UNAVAILABLE
