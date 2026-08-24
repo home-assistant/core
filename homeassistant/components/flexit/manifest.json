@@ -9,5 +9,5 @@
   "iot_class": "local_polling",
   "loggers": ["modbus_connection", "flexit_modbus"],
   "quality_scale": "bronze",
-  "requirements": ["flexit-modbus==0.0.0"]
+  "requirements": ["flexit-modbus==0.1.0"]
 }
