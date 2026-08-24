@@ -317,7 +317,7 @@ class KnxExposeEntity:
                 if xknx_expose.sensor_value.value is None and not option.send_on_init:
                     self._initialize_expose_value(xknx_expose, expose_value)
                     continue
-                
+
                 tg.create_task(self._async_set_knx_value(xknx_expose, expose_value))
 
     async def _async_set_knx_value(
@@ -327,7 +327,7 @@ class KnxExposeEntity:
     ) -> None:
         """Set new value on xknx ExposeSensor."""
         try:
-            await xknx_expose.set(value, skip_unchanged=True)            
+            await xknx_expose.set(value, skip_unchanged=True)
         except ConversionError as err:
             _LOGGER.warning(
                 'Could not expose %s value "%s" to KNX: %s',
