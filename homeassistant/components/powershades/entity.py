@@ -13,8 +13,5 @@ class PowerShadesEntity(CoordinatorEntity[PowerShadesCoordinator]):
     def __init__(self, coordinator: PowerShadesCoordinator, key: str) -> None:
         """Initialize the entity."""
         super().__init__(coordinator)
-        if coordinator.serial_number:
-            self._attr_unique_id = f"{coordinator.serial_number}_{key}"
-        else:
-            self._attr_unique_id = f"{coordinator.entry_id}_{key}"
+        self._attr_unique_id = f"{coordinator.serial_number}_{key}"
         self._attr_device_info = coordinator.device_info

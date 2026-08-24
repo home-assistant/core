@@ -11,6 +11,7 @@ from homeassistant.config_entries import (
     SOURCE_INTEGRATION_DISCOVERY,
     SOURCE_USER,
 )
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
@@ -31,12 +32,12 @@ async def test_manual_flow_success(
     assert result["step_id"] == "manual"
 
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"ip": TEST_IP}
+        result["flow_id"], {CONF_HOST: TEST_IP}
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "PowerShade Bedroom Shade"
     assert result["data"] == {
-        "ip": TEST_IP,
+        CONF_HOST: TEST_IP,
         "serial": 12345,
         "name": "Bedroom Shade",
         "model": 1,
@@ -55,7 +56,7 @@ async def test_manual_flow_cannot_connect(
             DOMAIN, context={"source": SOURCE_USER}
         )
         result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"ip": TEST_IP}
+            result["flow_id"], {CONF_HOST: TEST_IP}
         )
 
     assert result["type"] is FlowResultType.FORM
@@ -71,12 +72,12 @@ async def test_manual_flow_invalid_ip(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"ip": "not-an-ip"}
+        result["flow_id"], {CONF_HOST: "not-an-ip"}
     )
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual"
-    assert result["errors"] == {"ip": "invalid_ip"}
+    assert result["errors"] == {CONF_HOST: "invalid_ip"}
 
 
 async def test_manual_flow_duplicate(
@@ -85,7 +86,7 @@ async def test_manual_flow_duplicate(
     """A shade that's already configured (by serial) cannot be added again."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"ip": TEST_IP, "serial": 12345, "name": "Bedroom Shade", "model": 1},
+        data={CONF_HOST: TEST_IP, "serial": 12345, "name": "Bedroom Shade", "model": 1},
         unique_id="12345",
     )
     entry.add_to_hass(hass)
@@ -94,7 +95,7 @@ async def test_manual_flow_duplicate(
         DOMAIN, context={"source": SOURCE_USER}
     )
     result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"ip": TEST_IP}
+        result["flow_id"], {CONF_HOST: TEST_IP}
     )
 
     assert result["type"] is FlowResultType.ABORT
@@ -121,7 +122,7 @@ async def test_discovery_pick_device(
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "PowerShade Bedroom Shade"
-    assert result["data"]["ip"] == TEST_IP
+    assert result["data"][CONF_HOST] == TEST_IP
     assert result["data"]["serial"] == 12345
 
 
@@ -131,7 +132,7 @@ async def test_discovery_hides_already_configured_devices(
     """Devices that already have a config entry are not offered again."""
     configured = MockConfigEntry(
         domain=DOMAIN,
-        data={"ip": TEST_IP, "serial": 12345, "name": "Bedroom Shade", "model": 1},
+        data={CONF_HOST: TEST_IP, "serial": 12345, "name": "Bedroom Shade", "model": 1},
         unique_id="12345",
     )
     configured.add_to_hass(hass)
@@ -150,8 +151,12 @@ async def test_discovery_hides_already_configured_devices(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "pick_device"
-    assert new_ip in result["data_schema"].schema["device"].container
-    assert TEST_IP not in result["data_schema"].schema["device"].container
+    offered_ips = {
+        option["value"]
+        for option in result["data_schema"].schema["device"].config["options"]
+    }
+    assert new_ip in offered_ips
+    assert TEST_IP not in offered_ips
 
 
 async def test_pick_device_manual_entry(
@@ -261,7 +266,7 @@ async def test_dhcp_discovery(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "PowerShade Bedroom Shade"
     assert result["data"] == {
-        "ip": TEST_IP,
+        CONF_HOST: TEST_IP,
         "serial": 12345,
         "name": "Bedroom Shade",
         "mac": "d8:3a:f5:11:22:33",
@@ -275,7 +280,7 @@ async def test_background_discovery_already_configured(
     """Background discovery of an already-configured device aborts."""
     configured = MockConfigEntry(
         domain=DOMAIN,
-        data={"ip": TEST_IP, "serial": 12345, "name": "Bedroom Shade", "model": 1},
+        data={CONF_HOST: TEST_IP, "serial": 12345, "name": "Bedroom Shade", "model": 1},
         unique_id="12345",
     )
     configured.add_to_hass(hass)

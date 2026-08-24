@@ -16,10 +16,10 @@
       },
       "manual": {
         "data": {
-          "ip": "IP address"
+          "host": "[%key:common::config_flow::data::ip%]"
         },
         "data_description": {
-          "ip": "The IP address of your PowerShades device."
+          "host": "The IP address of your PowerShades device."
         },
         "description": "Enter the IP address of your PowerShades device.",
         "title": "Connect to a PowerShades device"
@@ -32,6 +32,13 @@
           "device": "The PowerShades device to set up, discovered on your network."
         },
         "title": "Select your PowerShades device"
+      }
+    }
+  },
+  "selector": {
+    "device": {
+      "options": {
+        "manual": "Enter IP address manually"
       }
     }
   },

@@ -12,6 +12,7 @@ from pyowershades import (
 import pytest
 
 from homeassistant.components.powershades.const import DOMAIN
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -103,7 +104,7 @@ async def config_entry(hass: HomeAssistant, mock_connection):
     entry = MockConfigEntry(
         domain=DOMAIN,
         data={
-            "ip": TEST_IP,
+            CONF_HOST: TEST_IP,
             "serial": TEST_SERIAL,
             "name": TEST_NAME,
             "model": 1,
