@@ -20,6 +20,11 @@
         }
       }
     },
+    "number": {
+      "flow_temperature": {
+        "default": "mdi:thermometer"
+      }
+    },
     "select": {
       "operation_mode": {
         "default": "mdi:sun-thermometer"

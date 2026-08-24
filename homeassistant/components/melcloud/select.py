@@ -17,7 +17,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .coordinator import MelCloudConfigEntry, MelCloudDeviceUpdateCoordinator
-from .entity import MelCloudEntity
+from .entity import AtwZoneEntity
 
 OPTION_ROOM = "room"
 OPTION_FLOW = "flow"
@@ -59,7 +59,7 @@ async def async_setup_entry(
     )
 
 
-class AtwZoneOperationModeSelect(MelCloudEntity, SelectEntity):
+class AtwZoneOperationModeSelect(AtwZoneEntity, SelectEntity):
     """Select for the temperature control method of an Air-to-Water zone."""
 
     _attr_translation_key = "operation_mode"
@@ -70,12 +70,10 @@ class AtwZoneOperationModeSelect(MelCloudEntity, SelectEntity):
         zone: Zone,
     ) -> None:
         """Initialize the operation mode select."""
-        super().__init__(coordinator)
-        self._zone = zone
+        super().__init__(coordinator, zone)
         self._attr_unique_id = (
             f"{coordinator.device.serial}-{zone.zone_index}-operation_mode"
         )
-        self._attr_device_info = coordinator.zone_device_info(zone)
         available = {
             MODE_TO_OPTION[mode]
             for mode in zone.operation_modes

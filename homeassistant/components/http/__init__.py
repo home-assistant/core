@@ -17,7 +17,6 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
-from homeassistant.helpers.hassio import is_hassio
 from homeassistant.helpers.http import (  # noqa: F401
     KEY_ALLOW_CONFIGURED_CORS,
     KEY_AUTHENTICATED,
@@ -34,7 +33,7 @@ from homeassistant.setup import (
 )
 from homeassistant.util.async_ import create_eager_task
 
-from .config import async_get_and_load_store, async_load_config, default_server_port
+from .config import async_get_and_load_store, async_load_config
 from .const import (  # noqa: F401
     CONF_BASE_URL,
     CONF_CORS_ORIGINS,
@@ -60,6 +59,7 @@ from .const import (  # noqa: F401
 from .decorators import require_admin  # noqa: F401
 from .server import (
     DEFAULT_BIND,
+    HassioHTTPConfigView,
     HomeAssistantHTTP,  # noqa: F401
     HomeAssistantRequest,  # noqa: F401
     StaticPathConfig,  # noqa: F401
@@ -77,7 +77,10 @@ HTTP_SCHEMA: Final = vol.All(
             vol.Optional(CONF_SERVER_HOST): vol.All(
                 cv.ensure_list, vol.Length(min=1), [cv.string]
             ),
-            vol.Optional(CONF_SERVER_PORT, default=default_server_port): cv.port,
+            # No default: the YAML migration needs to tell an explicitly
+            # configured port apart from an omitted one, which it keeps on the
+            # previous default port instead of the Supervisor default.
+            vol.Optional(CONF_SERVER_PORT): cv.port,
             vol.Optional(CONF_BASE_URL): cv.string,
             vol.Optional(CONF_SSL_CERTIFICATE): cv.isfile,
             vol.Optional(CONF_SSL_PEER_CERTIFICATE): cv.isfile,
@@ -184,18 +187,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     # or the recovery boot cannot bind the same address again.
     hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, stop_server)
 
-    if CONF_SERVER_HOST in conf and is_hassio(hass):
-        issue_id = "server_host_deprecated_hassio"
-        ir.async_create_issue(
-            hass,
-            DOMAIN,
-            issue_id,
-            breaks_in_ha_version="2026.6.0",
-            is_fixable=False,
-            severity=ir.IssueSeverity.ERROR,
-            translation_key=issue_id,
-        )
-
     server_host = conf.get(CONF_SERVER_HOST, DEFAULT_BIND)
     server_port = conf[CONF_SERVER_PORT]
     ssl_certificate = conf.get(CONF_SSL_CERTIFICATE)
@@ -216,6 +207,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     async_when_setup_or_start(hass, "frontend", start_server)
 
     if server.supervisor_unix_socket_path is not None:
+        # Let Supervisor pull its connection parameters over the socket instead
+        # of relying on the hassio integration having pushed them first.
+        server.register_view(HassioHTTPConfigView)
 
         async def start_supervisor_unix_socket(*_: Any) -> None:
             """Start the Unix socket after the Supervisor user is available."""

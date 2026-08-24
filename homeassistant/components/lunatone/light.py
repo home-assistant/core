@@ -15,6 +15,7 @@ from homeassistant.components.light import (
     brightness_supported,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -96,10 +97,14 @@ class LunatoneLight(
         assert self.unique_id
         return DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
-            name=self._device.name,
-            via_device=(
-                DOMAIN,
-                f"{self._config_entry_unique_id}-line{self._device.data.line}",
+            name=self._device.data.name,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.hass,
+                (
+                    DOMAIN,
+                    f"{self._config_entry_unique_id}-line{self._device.data.line}",
+                ),
+                config_entry_id=self.coordinator.config_entry.entry_id,
             ),
         )
 
@@ -261,7 +266,11 @@ class LunatoneLineBroadcastLight(
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, self.unique_id)},
             name=f"DALI Line {line}",
-            via_device=(DOMAIN, config_entry_unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, config_entry_unique_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            ),
             **extra_info,
         )
 

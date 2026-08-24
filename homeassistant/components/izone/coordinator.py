@@ -53,8 +53,14 @@ class IZoneCoordinator(DataUpdateCoordinator[pizone.Controller]):
             await self.controller.refresh_all()
         except ConnectionError as err:
             raise UpdateFailed(
-                f"Error communicating with iZone controller: {err}"
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"error": str(err)},
             ) from err
         except pizone.ControllerCommandError as err:
-            raise UpdateFailed(f"iZone controller rejected refresh: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="refresh_rejected",
+                translation_placeholders={"error": str(err)},
+            ) from err
         return self.controller

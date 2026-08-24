@@ -101,6 +101,25 @@ async def test_sensors_added_when_key_appears_in_later_packet(
     assert gas.state == "1234.567"
 
 
+async def test_unload_after_all_sensors_added(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_listener: MagicMock,
+) -> None:
+    """Test unloading after every sensor has been added.
+
+    Once all described keys have been seen, the setup listener unsubscribes
+    itself; unloading afterwards must not attempt a second unsubscribe.
+    """
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    trigger_callback(mock_listener)
+    await hass.async_block_till_done()
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+
+
 async def test_wifi_rssi_disabled_by_default(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
