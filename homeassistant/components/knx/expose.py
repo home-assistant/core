@@ -315,7 +315,7 @@ class KnxExposeEntity:
                 if expose_value is None:
                     continue
 
-                if xknx_expose.sensor_value.value is None:
+                if xknx_expose.sensor_value.value is None and not option.send_on_init:
                     if not self._initialize_expose_value(xknx_expose, expose_value):
                         continue
 
