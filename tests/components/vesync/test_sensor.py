@@ -87,8 +87,8 @@ async def test_fan_level_in_self_driven_mode(
     assert state is not None
     assert state.state == "2"
 
-    # The fan entity deliberately reports no percentage outside manual and normal
-    # modes, so in auto this sensor is the only place the running level appears.
+    # The fan entity deliberately reports no percentage in auto, which is why
+    # this sensor exists.
     fan_state = hass.states.get(ENTITY_AIR_PURIFIER)
     assert fan_state is not None
     assert fan_state.attributes[ATTR_PERCENTAGE] is None

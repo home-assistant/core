@@ -53,11 +53,8 @@ class VeSyncSensorEntityDescription(SensorEntityDescription):
 def fan_level(device: VeSyncBaseDevice) -> StateType:
     """Return the fan level the device is running at.
 
-    Unlike the fan entity's percentage, this is reported in every mode, including
-    auto and sleep, where the device chooses the level itself. Levels outside the
-    device's supported range are reported as unknown rather than passed through --
-    the same guard the fan platform applies, for the same reason: a device can
-    report a placeholder level such as -1 when no speed applies.
+    Reported in every mode, unlike the fan entity's percentage. A level outside
+    the device's supported range is reported as unknown.
     """
     level = device.state.fan_level
     supported = getattr(device, "fan_levels", None)
