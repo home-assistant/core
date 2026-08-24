@@ -216,6 +216,7 @@ class KnxExposeEntity:
                         xknx_expose,
                         expose_value,
                     )
+                )
                 continue
             try:
                 xknx_expose.initialize_value(expose_value)
