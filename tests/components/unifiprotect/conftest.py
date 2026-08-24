@@ -204,6 +204,7 @@ def mock_ufp_client(bootstrap: Bootstrap):
         yield from pb.lights.values()
         yield from pb.relays.values()
         yield from pb.sirens.values()
+        yield from pb.fobs.values()
 
     client.public_bootstrap.all_devices = _public_all_devices
 

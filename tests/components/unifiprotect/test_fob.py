@@ -86,6 +86,9 @@ def _make_public_bootstrap(fob: Mock | None) -> Mock:
     pb.sirens = {}
     pb.arm_mode = None
     pb.arm_profiles = {}
+    # The baseline and reconnect resync enumerate all_devices(); a fob missing
+    # from it would be redispatched as new on every reconnect.
+    pb.all_devices = lambda: list(pb.fobs.values())
     return pb
 
 
@@ -305,6 +308,47 @@ async def test_fob_unavailable_on_public_ws_disconnect(
     await hass.async_block_till_done()
 
     assert hass.states.get(BATTERY_SENSOR).state == STATE_UNAVAILABLE
+
+
+async def test_fob_present_at_startup_not_added_twice(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    ufp: MockUFPFixture,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A fob known at setup is not added a second time by a later add frame.
+
+    The startup baseline is taken from ``all_devices()``; a fob missing from it
+    is treated as new when any add frame for it arrives (a re-delivered frame,
+    or a re-pair), which would clash on unique_id.
+    """
+    fob = _make_fob()
+    ufp.api.is_public_only = True
+    ufp.api.has_public_bootstrap = True
+    pb = _make_public_bootstrap(fob)
+    ufp.api.public_bootstrap = pb
+    ufp.api.update_public = AsyncMock(return_value=pb)
+
+    await init_entry(hass, ufp, [])
+    assert hass.states.get(BATTERY_SENSOR).state == "80"
+
+    msg = public_device_ws_message(fob)
+    msg.action = WSAction.ADD
+    assert ufp.devices_ws_subscription is not None
+    ufp.devices_ws_subscription(msg)
+    await hass.async_block_till_done()
+
+    assert "already exists" not in caplog.text
+    assert (
+        len(
+            [
+                entry
+                for entry in entity_registry.entities.values()
+                if entry.unique_id.startswith(FOB_MAC)
+            ]
+        )
+        == 5
+    )
 
 
 async def test_fob_button_dedup_across_dispatches(
@@ -543,7 +587,6 @@ async def test_fob_added_at_runtime(
     ufp.api.is_public_only = True
     ufp.api.has_public_bootstrap = True
     pb = _make_public_bootstrap(None)
-    pb.all_devices = lambda: list(pb.fobs.values())
     ufp.api.public_bootstrap = pb
     ufp.api.update_public = AsyncMock(return_value=pb)
 
