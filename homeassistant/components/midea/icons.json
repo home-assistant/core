@@ -1,0 +1,32 @@
+{
+  "entity": {
+    "binary_sensor": {
+      "header_exist": {
+        "default": "mdi:air-filter"
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "mdi:baby-face-outline",
+              "circulation": "mdi:autorenew",
+              "comfort": "mdi:sofa",
+              "customize": "mdi:tune",
+              "eco": "mdi:leaf",
+              "induction": "mdi:weather-windy",
+              "natural": "mdi:tailwind",
+              "silent": "mdi:volume-off",
+              "sleep": "mdi:power-sleep",
+              "smart": "mdi:brain",
+              "soft": "mdi:feather",
+              "strong": "mdi:fan-speed-3",
+              "warm": "mdi:heat-wave"
+            }
+          }
+        }
+      }
+    }
+  }
+}

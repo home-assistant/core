@@ -14,6 +14,9 @@ CONF_TIMEFRAME = "timeframe"
 SUPPORTED_COUNTRY_CODES = ["NL", "BE"]
 DEFAULT_COUNTRY = "NL"
 
+SERVICE_TIME_ZONE = "Europe/Amsterdam"
+"""Time zone of the buienradar.nl service, which updates around local midnight."""
+
 SCHEDULE_OK = 10
 """Schedule next call after (minutes)."""
 SCHEDULE_NOK = 2
