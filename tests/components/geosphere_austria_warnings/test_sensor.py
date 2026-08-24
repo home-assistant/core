@@ -8,12 +8,13 @@ from pygeosphere_warnings import GeoSphereConnectionError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
+from homeassistant.components.geosphere_austria_warnings.const import DOMAIN
 from homeassistant.components.geosphere_austria_warnings.coordinator import (
     UPDATE_INTERVAL,
 )
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant, State
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_integration
 
@@ -50,6 +51,7 @@ async def test_sensor_set_and_active_warning(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the complete sensor set while a warning is active."""
@@ -87,6 +89,12 @@ async def test_sensor_set_and_active_warning(
     assert state.state == "5"
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "30740"), mock_config_entry.entry_id
+    )
+    assert device_entry
+    assert device_entry == snapshot
 
 
 @pytest.mark.freeze_time("2023-03-28 00:00:00+00:00")
