@@ -8,7 +8,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from .const import LOGGER
-from .entity import MideaConfigEntry, MideaDevice, MideaEntity
+from .entity import MideaConfigEntry, MideaDevice, MideaEntity, midea_api_call
 
 PARALLEL_UPDATES = 0
 
@@ -70,5 +70,6 @@ class MideaTime(MideaEntity, TimeEntity):
     @override
     def set_value(self, value: time) -> None:
         """Set entity value."""
-        self._device.set_attribute(self._hour_attr, value.hour)
-        self._device.set_attribute(self._min_attr, value.minute)
+        with midea_api_call():
+            self._device.set_attribute(self._hour_attr, value.hour)
+            self._device.set_attribute(self._min_attr, value.minute)
