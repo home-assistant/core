@@ -281,29 +281,31 @@ async def test_unsupported_bypass_temperature_capabilities_are_not_repolled(
             return target
         raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
 
-    mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
-        async_get_bypass_supply_temperature_target
-    )
-    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        mock_duco_client,
+        "async_get_bypass_supply_temperature_target",
+        side_effect=async_get_bypass_supply_temperature_target,
+    ):
+        mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert hass.states.get("number.living_bypass_target_1") is not None
-    assert hass.states.get("number.living_bypass_target_2") is None
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert hass.states.get("number.living_bypass_target_1") is not None
+        assert hass.states.get("number.living_bypass_target_2") is None
 
-    poll_count_after_setup = poll_count.copy()
+        poll_count_after_setup = poll_count.copy()
 
-    freezer.tick(timedelta(days=1))
-    async_fire_time_changed(hass)
-    await hass.async_block_till_done(wait_background_tasks=True)
+        freezer.tick(timedelta(days=1))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert hass.states.get("number.living_bypass_target_1") is not None
-    assert hass.states.get("number.living_bypass_target_2") is None
-    assert poll_count[2] == poll_count_after_setup[2]
-    for zone_id in (1, 3, 4, 5, 6, 7, 8):
-        assert poll_count[zone_id] > poll_count_after_setup[zone_id]
+        assert hass.states.get("number.living_bypass_target_1") is not None
+        assert hass.states.get("number.living_bypass_target_2") is None
+        assert poll_count[2] == poll_count_after_setup[2]
+        for zone_id in (1, 3, 4, 5, 6, 7, 8):
+            assert poll_count[zone_id] > poll_count_after_setup[zone_id]
 
 
 async def test_bypass_temperature_connection_failure_stops_remaining_zone_polls(
@@ -326,18 +328,20 @@ async def test_bypass_temperature_connection_failure_stops_remaining_zone_polls(
             return target
         raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
 
-    mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
-        async_get_bypass_supply_temperature_target
-    )
-    mock_config_entry.add_to_hass(hass)
+    with patch.object(
+        mock_duco_client,
+        "async_get_bypass_supply_temperature_target",
+        side_effect=async_get_bypass_supply_temperature_target,
+    ):
+        mock_config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-    assert poll_count[1] == 1
-    for zone_id in range(2, 9):
-        assert poll_count[zone_id] == 0
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert poll_count[1] == 1
+        for zone_id in range(2, 9):
+            assert poll_count[zone_id] == 0
 
 
 async def test_missing_bypass_temperature_targets_are_retried(

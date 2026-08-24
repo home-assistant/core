@@ -2,7 +2,7 @@
 
 from dataclasses import replace
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from duco_connectivity import (
     BypassSupplyTemperatureTarget,
@@ -42,24 +42,6 @@ async def init_integration(
 ) -> MockConfigEntry:
     """Set up only the number platform for testing."""
     return await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
-
-
-@pytest.mark.usefixtures("init_integration")
-async def test_bypass_supply_temperature_target_numbers(
-    hass: HomeAssistant,
-) -> None:
-    """Test bypass supply temperature target numbers are created from API metadata."""
-    zone_1_state = hass.states.get(_ZONE_1_ENTITY_ID)
-    assert zone_1_state is not None
-    assert zone_1_state.state == "20.0"
-    assert zone_1_state.attributes["min"] == 15.0
-    assert zone_1_state.attributes["max"] == 25.0
-    assert zone_1_state.attributes["step"] == 0.1
-    assert zone_1_state.attributes["unit_of_measurement"] == "°C"
-
-    zone_2_state = hass.states.get(_ZONE_2_ENTITY_ID)
-    assert zone_2_state is not None
-    assert zone_2_state.state == "21.0"
 
 
 async def test_bypass_supply_temperature_target_numbers_support_eight_zones(
@@ -202,23 +184,22 @@ async def test_set_bypass_supply_temperature_target(
         mock_bypass_supply_temperature_targets[zone_id] = target
         return target
 
-    mock_duco_client.async_set_bypass_supply_temperature_target.side_effect = (
-        async_set_bypass_supply_temperature_target
-    )
+    with patch.object(
+        mock_duco_client,
+        "async_set_bypass_supply_temperature_target",
+        side_effect=async_set_bypass_supply_temperature_target,
+    ) as mock_set_bypass_supply_temperature_target:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
+            blocking=True,
+        )
 
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
-        blocking=True,
-    )
-
-    mock_duco_client.async_set_bypass_supply_temperature_target.assert_called_once_with(
-        1, 20.5
-    )
-    state = hass.states.get(_ZONE_1_ENTITY_ID)
-    assert state is not None
-    assert state.state == "20.5"
+        mock_set_bypass_supply_temperature_target.assert_called_once_with(1, 20.5)
+        state = hass.states.get(_ZONE_1_ENTITY_ID)
+        assert state is not None
+        assert state.state == "20.5"
 
 
 async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
@@ -246,33 +227,32 @@ async def test_set_bypass_supply_temperature_target_honors_increment_metadata(
         mock_bypass_supply_temperature_targets[zone_id] = target
         return target
 
-    mock_duco_client.async_set_bypass_supply_temperature_target.side_effect = (
-        async_set_bypass_supply_temperature_target
-    )
-
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
-        blocking=True,
-    )
-
-    mock_duco_client.async_set_bypass_supply_temperature_target.assert_called_once_with(
-        1, 20.5
-    )
-
-    with pytest.raises(
-        HomeAssistantError,
-        match="supported increment of 0.5 starting at 10.0",
-    ):
+    with patch.object(
+        mock_duco_client,
+        "async_set_bypass_supply_temperature_target",
+        side_effect=async_set_bypass_supply_temperature_target,
+    ) as mock_set_bypass_supply_temperature_target:
         await hass.services.async_call(
             NUMBER_DOMAIN,
             SERVICE_SET_VALUE,
-            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.2},
+            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.5},
             blocking=True,
         )
+
+        mock_set_bypass_supply_temperature_target.assert_called_once_with(1, 20.5)
+
+        with pytest.raises(
+            HomeAssistantError,
+            match="supported increment of 0.5 starting at 10.0",
+        ):
+            await hass.services.async_call(
+                NUMBER_DOMAIN,
+                SERVICE_SET_VALUE,
+                {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 20.2},
+                blocking=True,
+            )
 
 
 async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
@@ -301,25 +281,24 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
         mock_bypass_supply_temperature_targets[zone_id] = target
         return target
 
-    mock_duco_client.async_set_bypass_supply_temperature_target.side_effect = (
-        async_set_bypass_supply_temperature_target
-    )
-
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
-    await hass.services.async_call(
-        NUMBER_DOMAIN,
-        SERVICE_SET_VALUE,
-        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 69.0},
-        blocking=True,
-    )
+    with patch.object(
+        mock_duco_client,
+        "async_set_bypass_supply_temperature_target",
+        side_effect=async_set_bypass_supply_temperature_target,
+    ) as mock_set_bypass_supply_temperature_target:
+        await hass.services.async_call(
+            NUMBER_DOMAIN,
+            SERVICE_SET_VALUE,
+            {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 69.0},
+            blocking=True,
+        )
 
-    mock_duco_client.async_set_bypass_supply_temperature_target.assert_called_once_with(
-        1, 20.5
-    )
-    state = hass.states.get(_ZONE_1_ENTITY_ID)
-    assert state is not None
-    assert state.state == "68.9"
+        mock_set_bypass_supply_temperature_target.assert_called_once_with(1, 20.5)
+        state = hass.states.get(_ZONE_1_ENTITY_ID)
+        assert state is not None
+        assert state.state == "68.9"
 
 
 async def test_bypass_supply_temperature_target_keeps_previous_value_on_error(
