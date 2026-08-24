@@ -892,6 +892,20 @@
       },
       "name": "Clear week day schedule"
     },
+    "clear_year_day_schedule": {
+      "description": "Deletes a year day schedule from a lock user. Use year day index 254 to clear all schedules for the user, and/or user index 65534 to clear schedules for all users.",
+      "fields": {
+        "user_index": {
+          "description": "The user slot index (1-based), or 65534 to clear all users.",
+          "name": "User index"
+        },
+        "year_day_index": {
+          "description": "The year day schedule slot index (1-based), or 254 to clear all schedules for the user.",
+          "name": "Year day index"
+        }
+      },
+      "name": "Clear year day schedule"
+    },
     "get_lock_credential_status": {
       "description": "Returns the status of a credential slot on a lock.",
       "fields": {
@@ -927,6 +941,20 @@
         }
       },
       "name": "Get week day schedule"
+    },
+    "get_year_day_schedule": {
+      "description": "Returns a year day schedule for a lock user.",
+      "fields": {
+        "user_index": {
+          "description": "The user slot index (1-based) to query.",
+          "name": "User index"
+        },
+        "year_day_index": {
+          "description": "The year day schedule slot index (1-based) to query.",
+          "name": "Year day index"
+        }
+      },
+      "name": "Get year day schedule"
     },
     "open_commissioning_window": {
       "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",
@@ -1015,6 +1043,28 @@
         }
       },
       "name": "Set week day schedule"
+    },
+    "set_year_day_schedule": {
+      "description": "Adds or replaces a year day schedule for a lock user.",
+      "fields": {
+        "end_date_time": {
+          "description": "The date and time the access window ends.",
+          "name": "End date/time"
+        },
+        "start_date_time": {
+          "description": "The date and time the access window starts.",
+          "name": "Start date/time"
+        },
+        "user_index": {
+          "description": "The user slot index (1-based) to set the schedule for.",
+          "name": "User index"
+        },
+        "year_day_index": {
+          "description": "The year day schedule slot index (1-based).",
+          "name": "Year day index"
+        }
+      },
+      "name": "Set year day schedule"
     },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",

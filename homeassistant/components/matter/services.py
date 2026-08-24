@@ -9,9 +9,12 @@ from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
     ATTR_DAYS,
+    ATTR_END_DATE_TIME,
     ATTR_END_TIME,
+    ATTR_START_DATE_TIME,
     ATTR_START_TIME,
     ATTR_WEEK_DAY_INDEX,
+    ATTR_YEAR_DAY_INDEX,
     CLEAR_ALL_INDEX,
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
@@ -218,4 +221,57 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
         },
         func="async_clear_week_day_schedule",
+    )
+
+    # Lock services - Year day schedule management
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "set_year_day_schedule",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(ATTR_YEAR_DAY_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=253)
+            ),
+            vol.Required(ATTR_USER_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=254)
+            ),
+            vol.Required(ATTR_START_DATE_TIME): cv.datetime,
+            vol.Required(ATTR_END_DATE_TIME): cv.datetime,
+        },
+        func="async_set_year_day_schedule",
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "get_year_day_schedule",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(ATTR_YEAR_DAY_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=253)
+            ),
+            vol.Required(ATTR_USER_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=254)
+            ),
+        },
+        func="async_get_year_day_schedule",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "clear_year_day_schedule",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(ATTR_YEAR_DAY_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=SCHEDULE_CLEAR_ALL_INDEX)
+            ),
+            vol.Required(ATTR_USER_INDEX): vol.All(
+                vol.Coerce(int),
+                vol.Any(vol.Range(min=1, max=254), CLEAR_ALL_INDEX),
+            ),
+        },
+        func="async_clear_year_day_schedule",
     )

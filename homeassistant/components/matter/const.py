@@ -147,12 +147,16 @@ SERVICE_CREDENTIAL_TYPES = [
     CRED_TYPE_FACE,
 ]
 
-# --- Lock schedule (WDSCH) constants ---
+# --- Lock schedule (WDSCH/YDSCH) constants ---
 
 ATTR_WEEK_DAY_INDEX = "week_day_index"
 ATTR_DAYS = "days"
 ATTR_START_TIME = "start_time"
 ATTR_END_TIME = "end_time"
+
+ATTR_YEAR_DAY_INDEX = "year_day_index"
+ATTR_START_DATE_TIME = "start_date_time"
+ATTR_END_DATE_TIME = "end_date_time"
 
 # Matter spec: pass to Clear*Schedule as the schedule index to clear all
 # schedules of that type for the given user. Distinct from CLEAR_ALL_INDEX,

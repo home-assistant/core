@@ -215,6 +215,9 @@
     "clear_week_day_schedule": {
       "service": "mdi:calendar-remove"
     },
+    "clear_year_day_schedule": {
+      "service": "mdi:calendar-remove"
+    },
     "get_lock_credential_status": {
       "service": "mdi:key-chain"
     },
@@ -227,6 +230,9 @@
     "get_week_day_schedule": {
       "service": "mdi:calendar-search"
     },
+    "get_year_day_schedule": {
+      "service": "mdi:calendar-search"
+    },
     "set_lock_credential": {
       "service": "mdi:key-plus"
     },
@@ -234,6 +240,9 @@
       "service": "mdi:account-lock"
     },
     "set_week_day_schedule": {
+      "service": "mdi:calendar-clock"
+    },
+    "set_year_day_schedule": {
       "service": "mdi:calendar-clock"
     },
     "water_heater_boost": {

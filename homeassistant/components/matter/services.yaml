@@ -61,6 +61,29 @@ clear_week_day_schedule:
           mode: box
       required: true
 
+clear_year_day_schedule:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    year_day_index:
+      selector:
+        number:
+          min: 1
+          max: 254
+          step: 1
+          mode: box
+      required: true
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 65534
+          step: 1
+          mode: box
+      required: true
+
 get_lock_credential_status:
   target:
     entity:
@@ -109,6 +132,29 @@ get_week_day_schedule:
       integration: matter
   fields:
     week_day_index:
+      selector:
+        number:
+          min: 1
+          max: 253
+          step: 1
+          mode: box
+      required: true
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 254
+          step: 1
+          mode: box
+      required: true
+
+get_year_day_schedule:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    year_day_index:
       selector:
         number:
           min: 1
@@ -260,6 +306,37 @@ set_week_day_schedule:
     end_time:
       selector:
         time:
+      required: true
+
+set_year_day_schedule:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    year_day_index:
+      selector:
+        number:
+          min: 1
+          max: 253
+          step: 1
+          mode: box
+      required: true
+    user_index:
+      selector:
+        number:
+          min: 1
+          max: 254
+          step: 1
+          mode: box
+      required: true
+    start_date_time:
+      selector:
+        datetime:
+      required: true
+    end_date_time:
+      selector:
+        datetime:
       required: true
 
 water_heater_boost:

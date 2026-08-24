@@ -4,7 +4,7 @@ Provides DoorLock cluster endpoint resolution, feature detection, and
 business logic for lock user/credential management.
 """
 
-from datetime import time
+from datetime import datetime, time, timedelta
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters
@@ -51,11 +51,17 @@ if TYPE_CHECKING:
 # DoorLock Feature bitmap from Matter SDK
 DoorLockFeature = clusters.DoorLock.Bitmaps.Feature
 
-# GetWeekDaySchedule response status mapping (Matter DlStatus)
+# GetWeekDaySchedule/GetYearDaySchedule response status mapping (Matter DlStatus)
 GET_SCHEDULE_STATUS_MAP: dict[int, str] = {
     _DlStatus.kSuccess: "success",
     _DlStatus.kNotFound: "not_found",
 }
+
+# Matter "local time" epoch-s fields (e.g. YearDaySchedule Local{Start,End}Time)
+# count seconds from 2000-01-01 00:00:00, interpreted as wall-clock local time
+# rather than UTC. Distinct from matter_epoch_seconds_to_utc() in sensor.py,
+# which converts true UTC instants.
+_MATTER_LOCAL_EPOCH = datetime(2000, 1, 1)
 
 
 # --- TypedDicts for service action responses ---
@@ -138,6 +144,14 @@ class WeekDayScheduleData(TypedDict):
     end_time: str | None
 
 
+class YearDayScheduleData(TypedDict):
+    """Result of get_year_day_schedule service action."""
+
+    exists: bool
+    start_date_time: str | None
+    end_date_time: str | None
+
+
 def _get_lock_endpoint_from_node(node: MatterNode) -> MatterEndpoint | None:
     """Get the DoorLock endpoint from a node.
 
@@ -175,6 +189,14 @@ def _lock_supports_wdsch_feature(endpoint: MatterEndpoint) -> bool:
     if feature_map is None:
         return False
     return bool(feature_map & DoorLockFeature.kWeekDayAccessSchedules)
+
+
+def _lock_supports_ydsch_feature(endpoint: MatterEndpoint) -> bool:
+    """Check if lock endpoint supports YDSCH (Year Day Schedule) feature."""
+    feature_map = _get_feature_map(endpoint)
+    if feature_map is None:
+        return False
+    return bool(feature_map & DoorLockFeature.kYearDayAccessSchedules)
 
 
 # --- Pure utility functions ---
@@ -283,6 +305,10 @@ class WdschFeatureNotSupportedError(ServiceValidationError):
     """Lock does not support WDSCH (week day schedule) feature."""
 
 
+class YdschFeatureNotSupportedError(ServiceValidationError):
+    """Lock does not support YDSCH (year day schedule) feature."""
+
+
 class ScheduleTimeInvalidError(ServiceValidationError):
     """Schedule end time is not after start time."""
 
@@ -317,6 +343,15 @@ def _ensure_wdsch_support(lock_endpoint: MatterEndpoint) -> None:
     """
     if not _lock_supports_wdsch_feature(lock_endpoint):
         raise WdschFeatureNotSupportedError("Lock does not support week day schedules")
+
+
+def _ensure_ydsch_support(lock_endpoint: MatterEndpoint) -> None:
+    """Ensure the lock endpoint supports YDSCH (year day schedule) feature.
+
+    Raises YdschFeatureNotSupportedError if the lock doesn't support it.
+    """
+    if not _lock_supports_ydsch_feature(lock_endpoint):
+        raise YdschFeatureNotSupportedError("Lock does not support year day schedules")
 
 
 # --- High-level business logic functions ---
@@ -741,7 +776,7 @@ def _mask_to_days(mask: int) -> list[str]:
 
 
 def _validate_schedule_times(start_time: time, end_time: time) -> None:
-    """Validate that a schedule's end time is after its start time.
+    """Validate that a week day schedule's end time is after its start time.
 
     The Matter spec does not support schedules that wrap past midnight.
     Raises ScheduleTimeInvalidError on failure.
@@ -751,6 +786,28 @@ def _validate_schedule_times(start_time: time, end_time: time) -> None:
             translation_domain="matter",
             translation_key=ERR_INVALID_SCHEDULE_TIME,
         )
+
+
+def _validate_schedule_datetimes(start: datetime, end: datetime) -> None:
+    """Validate that a year day schedule's end is after its start.
+
+    Raises ScheduleTimeInvalidError on failure.
+    """
+    if end <= start:
+        raise ScheduleTimeInvalidError(
+            translation_domain="matter",
+            translation_key=ERR_INVALID_SCHEDULE_TIME,
+        )
+
+
+def _local_datetime_to_epoch_s(value: datetime) -> int:
+    """Convert a naive local datetime to a Matter local-time epoch-s value."""
+    return int((value - _MATTER_LOCAL_EPOCH).total_seconds())
+
+
+def _epoch_s_to_local_datetime(value: int) -> datetime:
+    """Convert a Matter local-time epoch-s value to a naive local datetime."""
+    return _MATTER_LOCAL_EPOCH + timedelta(seconds=value)
 
 
 # --- Credential business logic functions ---
@@ -1045,6 +1102,116 @@ async def clear_week_day_schedule(
         endpoint_id=lock_endpoint.endpoint_id,
         command=clusters.DoorLock.Commands.ClearWeekDaySchedule(
             weekDayIndex=week_day_index,
+            userIndex=user_index,
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+# --- Schedule (YDSCH) business logic functions ---
+
+
+async def set_year_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    year_day_index: int,
+    user_index: int,
+    start_date_time: datetime,
+    end_date_time: datetime,
+) -> None:
+    """Add or replace a year day schedule for a user.
+
+    start_date_time and end_date_time are interpreted as local wall-clock
+    time, matching the Matter spec's Local{Start,End}Time semantics.
+    Raises ServiceValidationError for validation failures.
+    Raises HomeAssistantError for device communication failures.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_ydsch_support(lock_endpoint)
+    _validate_schedule_datetimes(start_date_time, end_date_time)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.SetYearDaySchedule(
+            yearDayIndex=year_day_index,
+            userIndex=user_index,
+            localStartTime=_local_datetime_to_epoch_s(start_date_time),
+            localEndTime=_local_datetime_to_epoch_s(end_date_time),
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+async def get_year_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    year_day_index: int,
+    user_index: int,
+) -> YearDayScheduleData:
+    """Get a year day schedule for a user.
+
+    Returns a typed dict with exists=False if the schedule slot is empty.
+    Raises HomeAssistantError on device communication or status failures.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_ydsch_support(lock_endpoint)
+
+    response = await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.GetYearDaySchedule(
+            yearDayIndex=year_day_index,
+            userIndex=user_index,
+        ),
+    )
+
+    status_code = _get_attr(response, "status")
+    status_str = GET_SCHEDULE_STATUS_MAP.get(status_code)
+    if status_str == "not_found":
+        return YearDayScheduleData(
+            exists=False, start_date_time=None, end_date_time=None
+        )
+    if status_str != "success":
+        raise GetScheduleFailedError(
+            translation_domain="matter",
+            translation_key="get_schedule_failed",
+            translation_placeholders={"status": f"unknown({status_code})"},
+        )
+
+    local_start_time = _get_attr(response, "localStartTime") or 0
+    local_end_time = _get_attr(response, "localEndTime") or 0
+
+    return YearDayScheduleData(
+        exists=True,
+        start_date_time=_epoch_s_to_local_datetime(local_start_time).isoformat(),
+        end_date_time=_epoch_s_to_local_datetime(local_end_time).isoformat(),
+    )
+
+
+async def clear_year_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    year_day_index: int,
+    user_index: int,
+) -> None:
+    """Clear a year day schedule for a user.
+
+    Use year_day_index 0xFE to clear all schedules for the user, and/or
+    user_index 0xFFFE (CLEAR_ALL_INDEX) to clear schedules for all users.
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_ydsch_support(lock_endpoint)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.ClearYearDaySchedule(
+            yearDayIndex=year_day_index,
             userIndex=user_index,
         ),
         timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
