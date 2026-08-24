@@ -304,6 +304,11 @@
       "zone2_curve": {
         "name": "Zone 2 curve"
       }
+    },
+    "time": {
+      "timing_regeneration": {
+        "name": "Regeneration time"
+      }
     }
   },
   "exceptions": {
