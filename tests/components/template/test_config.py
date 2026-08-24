@@ -596,7 +596,7 @@ async def test_trigger_schema_with_invalid_actions(
     breadcrumb: str,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test trigger schema with valid actions configurations."""
+    """Test trigger schema with invalid actions."""
 
     await setup_entity(
         hass,

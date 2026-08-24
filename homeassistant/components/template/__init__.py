@@ -224,11 +224,11 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
 
     for conf_section in hass_config[DOMAIN]:
         if CONF_TRIGGERS in conf_section:
-            # Actions only exist with triggers, validate them when a trigger is
-            # found
             if actions_config := conf_section.get(CONF_ACTIONS):
                 try:
-                    await async_validate_actions_config(hass, actions_config)
+                    conf_section[CONF_ACTIONS] = await async_validate_actions_config(
+                        hass, actions_config
+                    )
                     coordinator_tasks.append(init_coordinator(hass, conf_section))
                 except (vol.Invalid, HomeAssistantError) as err:
                     breadcrumb = "template section"
