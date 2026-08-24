@@ -41,7 +41,11 @@ from homeassistant.components.climate import (
     ClimateEntityFeature,
     ClimateEntityStateAttribute,
 )
-from homeassistant.components.cover import DOMAIN as COVER_DOMAIN, CoverEntityFeature
+from homeassistant.components.cover import (
+    DOMAIN as COVER_DOMAIN,
+    CoverEntityFeature,
+    CoverEntityStateAttribute,
+)
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
@@ -79,11 +83,18 @@ from homeassistant.components.media_player import (
 )
 from homeassistant.components.scene import DOMAIN as SCENE_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
-from homeassistant.components.select import DOMAIN as SELECT_DOMAIN
+from homeassistant.components.select import (
+    DOMAIN as SELECT_DOMAIN,
+    SelectEntityCapabilityAttribute,
+)
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import DOMAIN as VACUUM_DOMAIN, VacuumEntityFeature
-from homeassistant.components.valve import DOMAIN as VALVE_DOMAIN, ValveEntityFeature
+from homeassistant.components.valve import (
+    DOMAIN as VALVE_DOMAIN,
+    ValveEntityFeature,
+    ValveEntityStateAttribute,
+)
 from homeassistant.components.water_heater import (
     DOMAIN as WATER_HEATER_DOMAIN,
     WaterHeaterCapabilityAttribute,
@@ -255,8 +266,8 @@ SERVICE_SET_POSITION_COVER_VALVE = {
 }
 
 COVER_VALVE_CURRENT_POSITION = {
-    COVER_DOMAIN: cover.ATTR_CURRENT_POSITION,
-    VALVE_DOMAIN: valve.ATTR_CURRENT_POSITION,
+    COVER_DOMAIN: CoverEntityStateAttribute.CURRENT_POSITION,
+    VALVE_DOMAIN: ValveEntityStateAttribute.CURRENT_POSITION,
 }
 
 COVER_VALVE_POSITION = {
@@ -2162,13 +2173,25 @@ class ModesTrait(_Trait):
         modes = []
 
         for domain, attr, name in (
-            (FAN_DOMAIN, fan.ATTR_PRESET_MODES, "preset mode"),
-            (MEDIA_PLAYER_DOMAIN, media_player.ATTR_SOUND_MODE_LIST, "sound mode"),
-            (INPUT_SELECT_DOMAIN, input_select.ATTR_OPTIONS, "option"),
-            (SELECT_DOMAIN, select.ATTR_OPTIONS, "option"),
-            (HUMIDIFIER_DOMAIN, humidifier.ATTR_AVAILABLE_MODES, "mode"),
-            (LIGHT_DOMAIN, light.ATTR_EFFECT_LIST, "effect"),
-            (WATER_HEATER_DOMAIN, water_heater.ATTR_OPERATION_LIST, "operation mode"),
+            (FAN_DOMAIN, FanEntityCapabilityAttribute.PRESET_MODES, "preset mode"),
+            (
+                MEDIA_PLAYER_DOMAIN,
+                MediaPlayerEntityCapabilityAttribute.SOUND_MODE_LIST,
+                "sound mode",
+            ),
+            (INPUT_SELECT_DOMAIN, SelectEntityCapabilityAttribute.OPTIONS, "option"),
+            (SELECT_DOMAIN, SelectEntityCapabilityAttribute.OPTIONS, "option"),
+            (
+                HUMIDIFIER_DOMAIN,
+                HumidifierEntityCapabilityAttribute.AVAILABLE_MODES,
+                "mode",
+            ),
+            (LIGHT_DOMAIN, LightEntityCapabilityAttribute.EFFECT_LIST, "effect"),
+            (
+                WATER_HEATER_DOMAIN,
+                WaterHeaterCapabilityAttribute.OPERATION_LIST,
+                "operation mode",
+            ),
         ):
             if self.state.domain != domain:
                 continue
@@ -2857,7 +2880,7 @@ class TransportControlTrait(_Trait):
             service = media_player.SERVICE_SHUFFLE_SET
 
             # Google Assistant only supports enabling shuffle
-            service_attrs[MediaPlayerEntityStateAttribute.MEDIA_SHUFFLE] = True
+            service_attrs[media_player.ATTR_MEDIA_SHUFFLE] = True
         elif command == COMMAND_MEDIA_STOP:
             service = media_player.SERVICE_MEDIA_STOP
         else:
