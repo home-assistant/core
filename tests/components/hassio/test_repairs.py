@@ -878,6 +878,52 @@ async def test_mount_failed_repair_flow_hides_untranslated_suggestion(
 
 
 @pytest.mark.usefixtures("all_setup_requests")
+async def test_unfixable_issue_with_new_suggestion_stays_unfixable(
+    hass: HomeAssistant,
+    supervisor_client: AsyncMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a suggestion on an issue without fix flow strings is dropped.
+
+    This Core version shipped the issue as a never-fixable repair; a newer
+    Supervisor adding suggestions must not turn it into a fixable repair
+    that has no fix flow translations.
+    """
+    mock_resolution_info(
+        supervisor_client,
+        issues=[
+            Issue(
+                type=IssueType.DISK_LIFETIME,
+                context=ContextType.SYSTEM,
+                reference=None,
+                uuid=(issue_uuid := uuid4()),
+                reference_extra=None,
+            ),
+        ],
+        suggestions_by_issue={
+            issue_uuid: [
+                Suggestion(
+                    type="suggestion_from_the_future",
+                    context=ContextType.SYSTEM,
+                    reference=None,
+                    uuid=uuid4(),
+                    auto=False,
+                    reference_extra=None,
+                ),
+            ]
+        },
+    )
+
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    repair_issue = issue_registry.async_get_issue(
+        domain="hassio", issue_id=issue_uuid.hex
+    )
+    assert repair_issue
+    assert repair_issue.is_fixable is False
+
+
+@pytest.mark.usefixtures("all_setup_requests")
 async def test_mount_failed_repair_all_untranslated_suggestions_kept(
     hass: HomeAssistant,
     supervisor_client: AsyncMock,

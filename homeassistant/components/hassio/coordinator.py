@@ -201,13 +201,22 @@ def presentable_issue_suggestions(
     needs no menu translation — it is shown as a form with generic
     fallback texts.
     """
-    if len(issue.suggestions) <= 1:
-        return issue.suggestions
+    if not issue.suggestions:
+        return []
 
     translations = async_get_cached_translations(
         hass, hass.config.language, "issues", DOMAIN
     )
     prefix = f"component.{DOMAIN}.issues.{issue.key}.fix_flow.step"
+    if not any(key.startswith(prefix) for key in translations):
+        # This version of Core shipped an unfixable repair for this issue
+        # (a repair is either always or never fixable per issue key) —
+        # drop all suggestions, including any would break the repair
+        return []
+
+    if len(issue.suggestions) == 1:
+        return issue.suggestions
+
     presentable = [
         suggestion
         for suggestion in issue.suggestions
@@ -217,10 +226,10 @@ def presentable_issue_suggestions(
         if f"{prefix}.fix_menu.menu_options.{suggestion.key}" in translations
         or f"{prefix}.{suggestion.key}.description" in translations
     ]
-    # If nothing is presentable, keep everything: a repair is either always
-    # fixable or never fixable (per-issue-key, enforced by hassfest), so an
-    # unfixable state cannot be expressed here — and an unlabeled menu still
-    # beats a dead end. The frontend falls back to the raw option keys.
+    # If nothing is presentable, keep everything: the fix flow strings for
+    # this issue exist, so the repair must stay fixable — and an unlabeled
+    # menu still beats a dead end. The frontend falls back to the raw
+    # option keys.
     return presentable or issue.suggestions
 
 
@@ -379,7 +388,12 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
         if issue.key not in ISSUE_KEYS_FOR_REPAIRS:
             return
 
-        if not issue.suggestions and issue.key in EXTRA_PLACEHOLDERS:
+        presentable = presentable_issue_suggestions(self.hass, issue)
+
+        # A non-fixable repair renders the issue description, which may
+        # use the extra placeholders; a fixable one uses the fix flow,
+        # which computes its own placeholders
+        if not presentable and issue.key in EXTRA_PLACEHOLDERS:
             placeholders: dict[str, str] = EXTRA_PLACEHOLDERS[issue.key].copy()
         else:
             placeholders = {}
@@ -421,7 +435,7 @@ class SupervisorIssuesCoordinator(DataUpdateCoordinator[SupervisorIssuesData]):
             self.hass,
             DOMAIN,
             issue.uuid.hex,
-            is_fixable=bool(issue.suggestions),
+            is_fixable=bool(presentable),
             severity=IssueSeverity.WARNING,
             translation_key=issue.key,
             translation_placeholders=placeholders or None,
