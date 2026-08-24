@@ -52,14 +52,6 @@ class ShoppingTodoListEntity(TodoListEntity):
         )
 
     @override
-    async def async_create_todo_item_from_intent(self, item: TodoItem) -> None:
-        """Add an item to the To-do list from an intent."""
-        if item.summary is None:
-            await self.async_create_todo_item(item)
-            return
-        await self._data.async_add_or_reactivate(item.summary)
-
-    @override
     async def async_update_todo_item(self, item: TodoItem) -> None:
         """Update an item in the To-do list."""
         data = {

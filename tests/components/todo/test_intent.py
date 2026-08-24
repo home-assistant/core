@@ -181,6 +181,37 @@ async def test_add_item_intent_errors(
         )
 
 
+@pytest.mark.parametrize(
+    "status",
+    [
+        pytest.param(TodoItemStatus.NEEDS_ACTION, id="active"),
+        pytest.param(TodoItemStatus.COMPLETED, id="completed"),
+    ],
+)
+async def test_add_item_intent_allows_duplicate_item(
+    hass: HomeAssistant, status: TodoItemStatus
+) -> None:
+    """Test adding a duplicate item to a generic to-do list."""
+    entity = MockTodoListEntity([TodoItem(summary="Beer", uid="1", status=status)])
+    entity._attr_name = "List 1"
+    entity.entity_id = "todo.list_1"
+    await create_mock_platform(hass, [entity])
+
+    response = await intent.async_handle(
+        hass,
+        "test",
+        todo_intent.INTENT_LIST_ADD_ITEM,
+        {ATTR_ITEM: {"value": "beer"}, ATTR_NAME: {"value": "list 1"}},
+        assistant=conversation.DOMAIN,
+    )
+
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
+    assert len(entity.items) == 2
+    assert entity.items[0].status == status
+    assert entity.items[1].summary == "Beer"
+    assert entity.items[1].status == TodoItemStatus.NEEDS_ACTION
+
+
 async def test_complete_item_intent(
     hass: HomeAssistant,
 ) -> None:

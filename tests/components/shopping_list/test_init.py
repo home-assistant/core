@@ -66,19 +66,6 @@ async def test_add_item(
     assert_shopping_list_data(hass, snapshot)
 
 
-async def test_add_or_reactivate_skips_non_string_names(
-    hass: HomeAssistant, sl_setup: None
-) -> None:
-    """Test that async_add_or_reactivate skips items with non-string names."""
-    shopping_data = _get_shopping_data(hass)
-    shopping_data.items.append({"name": 42, "id": "corrupt", "complete": False})
-
-    result = await shopping_data.async_add_or_reactivate("42")
-    assert len(shopping_data.items) == 2
-    assert result["name"] == "42"
-    assert result["id"] != "corrupt"
-
-
 async def test_remove_item(
     hass: HomeAssistant, sl_setup: None, snapshot: SnapshotAssertion
 ) -> None:

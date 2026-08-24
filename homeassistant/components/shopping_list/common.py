@@ -59,33 +59,6 @@ class ShoppingData:
         )
         return item
 
-    async def async_add_or_reactivate(
-        self, name: str, context: Context | None = None
-    ) -> dict[str, JsonValueType]:
-        """Add an item or reactivate a matching completed item."""
-        completed_match: dict[str, JsonValueType] | None = None
-        normalized_name = name.casefold()
-        for item in self.items:
-            item_name = item["name"]
-            if (
-                not isinstance(item_name, str)
-                or item_name.casefold() != normalized_name
-            ):
-                continue
-            if not item["complete"]:
-                return item
-            if completed_match is None:
-                completed_match = item
-
-        if completed_match is None:
-            return await self.async_add(name, context=context)
-
-        return await self.async_update(
-            cast(str, completed_match["id"]),
-            {"name": cast(str, completed_match["name"]), "complete": False},
-            context=context,
-        )
-
     async def async_remove(
         self, item_id: str, context: Context | None = None
     ) -> dict[str, JsonValueType] | None:
@@ -126,13 +99,8 @@ class ShoppingData:
         self, name: str, context: Context | None = None
     ) -> list[dict[str, JsonValueType]]:
         """Mark all incomplete shopping list items with the given name as complete."""
-        normalized_name = name.casefold()
         complete_items = [
-            item
-            for item in self.items
-            if isinstance(item["name"], str)
-            and item["name"].casefold() == normalized_name
-            and not item["complete"]
+            item for item in self.items if item["name"] == name and not item["complete"]
         ]
 
         if len(complete_items) == 0:

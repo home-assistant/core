@@ -1,5 +1,6 @@
 """Intents for the todo integration."""
 
+from dataclasses import replace
 from typing import override
 
 import voluptuous as vol
@@ -93,8 +94,31 @@ class ListAddItemIntentHandler(ListBaseIntentHandler):
         # Format item summary with first letter capitalized and rest as-is
         summary = item[:1].upper() + item[1:] if item else item
 
+        if (
+            target_list.platform is not None
+            and target_list.platform.platform_name == "shopping_list"
+        ):
+            completed_match = None
+            normalized_summary = summary.casefold()
+            for todo_item in target_list.todo_items or ():
+                if (todo_item.summary or "").casefold() != normalized_summary:
+                    continue
+                if todo_item.status == TodoItemStatus.NEEDS_ACTION:
+                    return
+                if (
+                    todo_item.status == TodoItemStatus.COMPLETED
+                    and completed_match is None
+                ):
+                    completed_match = todo_item
+
+            if completed_match is not None:
+                await target_list.async_update_todo_item(
+                    replace(completed_match, status=TodoItemStatus.NEEDS_ACTION)
+                )
+                return
+
         # Add to list
-        await target_list.async_create_todo_item_from_intent(
+        await target_list.async_create_todo_item(
             TodoItem(summary=summary, status=TodoItemStatus.NEEDS_ACTION)
         )
 
