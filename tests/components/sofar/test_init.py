@@ -4,7 +4,7 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import ModbusConnectionError, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 
 from homeassistant.components.sofar.const import DOMAIN
@@ -76,6 +76,33 @@ async def test_setup_entry_unreachable_link_retries_and_recovers(
         await hass.async_block_till_done(wait_background_tasks=True)
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_settings_failure_does_not_block_reading_sensors(
+    hass: HomeAssistant,
+    mock_connection: MockModbusConnection,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a settings-block failure still lets reading sensors set up."""
+    mock_config_entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.sofar.async_get_unit",
+            side_effect=lambda hass, entry, params, unit_id: mock_connection.for_unit(
+                unit_id
+            ),
+        ),
+        patch(
+            "sofar_modbus.modern.device.SofarInverter.async_update_settings",
+            side_effect=ModbusConnectionError("settings unreachable"),
+        ),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert hass.states.async_entity_ids("sensor")
 
 
 async def test_sensor_platform_is_forwarded(
