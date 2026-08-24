@@ -14,7 +14,6 @@ from pyowershades import (
     PowerShadesConnection,
     PowerShadesTimeoutError,
     StatusReply,
-    battery_percentage,
     build_set_position_payload,
     parse_status_reply,
 )
@@ -44,8 +43,6 @@ class PowerShadesData:
     """State of one PowerShades device."""
 
     position: int | None = None
-    battery_mv: int | None = None
-    battery_percentage: int | None = None
     target_position: int | None = None
 
 
@@ -135,8 +132,6 @@ class PowerShadesCoordinator(DataUpdateCoordinator[PowerShadesData]):
         self._last_position = position
         return PowerShadesData(
             position=position,
-            battery_mv=status.battery_mv,
-            battery_percentage=battery_percentage(status.battery_mv),
             target_position=self._target_position,
         )
 

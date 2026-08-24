@@ -35,13 +35,6 @@
       }
     }
   },
-  "selector": {
-    "device": {
-      "options": {
-        "manual": "Enter IP address manually"
-      }
-    }
-  },
   "exceptions": {
     "command_not_acknowledged": {
       "message": "Shade at {ip_address} did not acknowledge the command."
@@ -51,6 +44,13 @@
     },
     "update_timeout": {
       "message": "Shade at {ip_address} did not reply: {error}"
+    }
+  },
+  "selector": {
+    "device": {
+      "options": {
+        "manual": "Enter IP address manually"
+      }
     }
   }
 }
