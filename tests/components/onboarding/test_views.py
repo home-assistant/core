@@ -8,13 +8,21 @@ import os
 from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
+from aiohasupervisor import SupervisorBadRequestError
 import pytest
 
-from homeassistant.components import onboarding
+from homeassistant import bootstrap
+from homeassistant.components import hassio, onboarding
 from homeassistant.components.onboarding import DOMAIN, const, views
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EVENT_COMPONENT_LOADED
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers import area_registry as ar
-from homeassistant.setup import async_set_domains_to_be_loaded, async_setup_component
+from homeassistant.helpers.typing import ConfigType
+from homeassistant.setup import (
+    EventComponentLoaded,
+    async_set_domains_to_be_loaded,
+    async_setup_component,
+)
 
 from . import mock_storage
 
@@ -648,6 +656,70 @@ async def test_onboarding_installation_type_no_hassio(
     assert resp.status == 200
     resp_content = await resp.json()
     assert resp_content["installation_type"] == "Home Assistant Container"
+
+
+@pytest.mark.usefixtures("mock_supervisor", "homeassistant_info")
+async def test_onboarding_installation_type_during_bootstrap(
+    hass: HomeAssistant,
+    hass_storage: dict[str, Any],
+    hass_client_no_auth: ClientSessionGenerator,
+    supervisor_client: AsyncMock,
+) -> None:
+    """Test installation type detection with the real bootstrap setup order.
+
+    Bootstrap serves onboarding as a frontend dependency in stage 0, while
+    hassio, added to the domains to set up from the SUPERVISOR environment
+    variable, only loads in stage 1. The installation type must not be
+    reported before hassio is set up.
+    """
+    mock_storage(hass_storage, {"done": []})
+    # No Supervisor update is available during the onboarding update check
+    supervisor_client.supervisor.update.side_effect = SupervisorBadRequestError
+
+    onboarding_loaded = asyncio.Event()
+
+    @callback
+    def _onboarding_loaded(event: Event[EventComponentLoaded]) -> None:
+        onboarding_loaded.set()
+
+    @callback
+    def _filter_onboarding(event_data: EventComponentLoaded) -> bool:
+        return event_data["component"] == DOMAIN
+
+    hass.bus.async_listen(
+        EVENT_COMPONENT_LOADED, _onboarding_loaded, event_filter=_filter_onboarding
+    )
+
+    hassio_setup_gate = asyncio.Event()
+    real_hassio_setup = hassio.async_setup
+
+    async def gated_hassio_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+        await hassio_setup_gate.wait()
+        return await real_hassio_setup(hass, config)
+
+    with (
+        patch("homeassistant.bootstrap.DEFAULT_INTEGRATIONS", set()),
+        patch("homeassistant.components.hassio.async_setup", gated_hassio_setup),
+    ):
+        bootstrap_task = asyncio.create_task(
+            bootstrap._async_set_up_integrations(hass, {"frontend": {}})
+        )
+        await onboarding_loaded.wait()
+        assert "hassio" not in hass.config.components
+
+        client = await hass_client_no_auth()
+        req_task = asyncio.create_task(client.get("/api/onboarding/installation_type"))
+        await asyncio.sleep(0.01)
+        # The response must not be produced while hassio is still pending
+        assert not req_task.done()
+
+        hassio_setup_gate.set()
+        resp = await req_task
+        await bootstrap_task
+
+    assert resp.status == 200
+    resp_content = await resp.json()
+    assert resp_content["installation_type"] == "Home Assistant OS"
 
 
 @pytest.mark.parametrize(
