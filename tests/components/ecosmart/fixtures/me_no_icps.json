@@ -1,0 +1,11 @@
+{
+  "keyPrefix": "ecos_live_abcd1234",
+  "label": "redacted",
+  "accountRef": "ACC-000001",
+  "allowedIcps": [],
+  "rateLimitPerMinute": 120,
+  "createdAt": "2026-08-17T07:10:41.786117Z",
+  "lastUsedAt": "2026-08-24T12:25:45.540615Z",
+  "gstRatePercent": 15.0,
+  "pricesAre": "Wholesale energy prices at the grid exit point. Not a retail price: lines charges, metering, levies and retailer margin are not included."
+}
