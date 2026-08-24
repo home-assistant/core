@@ -29,7 +29,6 @@ class VistapoolTimeEntityDescription(TimeEntityDescription):
     """Describes a Vistapool time entity."""
 
     value_path: str
-    translation_placeholders: dict[str, str]
 
 
 TIME_DESCRIPTIONS: tuple[VistapoolTimeEntityDescription, ...] = tuple(
@@ -90,7 +89,6 @@ class VistapoolTime(VistapoolEntity, TimeEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = self.build_unique_id(description.key)
-        self._attr_translation_placeholders = description.translation_placeholders
 
     @property
     @override
