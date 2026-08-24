@@ -406,6 +406,9 @@ RPC_SENSORS: Final = {
         key="motion",
         sub_key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
+        removal_condition=lambda config, _, key: (
+            config[key].get("enable", True) is False
+        ),
     ),
 }
 
