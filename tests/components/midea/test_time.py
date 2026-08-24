@@ -53,6 +53,66 @@ async def _assert_service_call(
             ),
             id="ed",
         ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.ED,
+                attributes={
+                    EDAttributes.timing_regeneration_hour: 25,
+                    EDAttributes.timing_regeneration_min: 45,
+                },
+            ),
+            id="ed_invalid_hour",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.ED,
+                attributes={
+                    EDAttributes.timing_regeneration_hour: -3,
+                    EDAttributes.timing_regeneration_min: 8,
+                },
+            ),
+            id="ed_negative_hour",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.ED,
+                attributes={
+                    EDAttributes.timing_regeneration_hour: None,
+                    EDAttributes.timing_regeneration_min: 53,
+                },
+            ),
+            id="ed_none_hour",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.ED,
+                attributes={
+                    EDAttributes.timing_regeneration_hour: 13,
+                    EDAttributes.timing_regeneration_min: 88,
+                },
+            ),
+            id="ed_invalid_minute",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.ED,
+                attributes={
+                    EDAttributes.timing_regeneration_hour: 8,
+                    EDAttributes.timing_regeneration_min: -12,
+                },
+            ),
+            id="ed_negative_minute",
+        ),
+        pytest.param(
+            DummyDevice(
+                DeviceType.ED,
+                attributes={
+                    EDAttributes.timing_regeneration_hour: 4,
+                    EDAttributes.timing_regeneration_min: None,
+                },
+            ),
+            id="ed_none_minute",
+        ),
     ],
 )
 async def test_switch_state_snapshot(
