@@ -57,7 +57,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
 
         try:
             await self._search_task
-        except (TimeoutError, OSError):
+        except TimeoutError, OSError:
             # OSError covers HomeServer construction and searchDevices()
             # failing to send on the network socket - treat it the same as
             # a timeout: a recoverable error the user can retry from.
