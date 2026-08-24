@@ -1,11 +1,8 @@
 """TrueNAS API."""
 
 import asyncio
-from collections.abc import Iterator
-import contextlib
-import contextvars
-from logging import DEBUG, ERROR, Filter, LogRecord, getLogger
-from typing import Any, override
+from logging import DEBUG, ERROR, getLogger
+from typing import Any
 
 from aiotruenas import TrueNASClient
 from aiotruenas.exceptions import (
@@ -52,46 +49,6 @@ _LOGGER = getLogger(__name__)
 
 # Debug payloads (e.g. pool.query) can be huge, so they get truncated.
 _LOG_PAYLOAD_LIMIT = 5000
-
-# ContextVar (not a module-level flag) so a real connect racing a zeroconf
-# probe doesn't have its warning filtering leak into the concurrent one.
-_quiet_insecure_tls_warning: contextvars.ContextVar[bool] = contextvars.ContextVar(
-    "_quiet_insecure_tls_warning", default=False
-)
-
-# aiotruenas logs this at WARNING for every verify_ssl=False connect,
-# including each zeroconf probe candidate (issue #46 follow-up); only
-# filtered while probing quietly.
-_INSECURE_TLS_WARNING_PREFIX = "TrueNASClient configured with verify_ssl=False"
-
-
-class _QuietInsecureTlsWarningFilter(Filter):
-    """Drop aiotruenas's insecure-TLS warning while probing quietly."""
-
-    @override
-    def filter(self, record: LogRecord) -> bool:
-        return not (
-            _quiet_insecure_tls_warning.get()
-            and record.getMessage().startswith(_INSECURE_TLS_WARNING_PREFIX)
-        )
-
-
-getLogger("aiotruenas.client").addFilter(_QuietInsecureTlsWarningFilter())
-
-
-@contextlib.contextmanager
-def _quiet_insecure_tls_warnings(active: bool) -> Iterator[None]:
-    """Drop aiotruenas's insecure-TLS warning for the duration of the block."""
-    if not active:
-        yield
-        return
-
-    token = _quiet_insecure_tls_warning.set(True)
-    try:
-        yield
-    finally:
-        _quiet_insecure_tls_warning.reset(token)
-
 
 # aiotruenas exception -> ERR_* mapping (see const.py). Checked via
 # isinstance() in order, so subclasses must precede their base classes.
@@ -207,8 +164,7 @@ class TrueNASAPI:
             return True
 
         try:
-            with _quiet_insecure_tls_warnings(quiet):
-                await self._client.connect()
+            await self._client.connect(quiet=quiet)
         except TrueNASError as exc:
             self._error = _classify_exception(exc, during_call=False)
             _LOGGER.log(

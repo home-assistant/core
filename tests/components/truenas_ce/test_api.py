@@ -9,7 +9,6 @@ network I/O happens.
 
 from __future__ import annotations
 
-import logging
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aiotruenas.exceptions import (
@@ -261,52 +260,22 @@ async def test_connect_quiet_logs_debug_not_error(
     assert connect_debug_records[0].exc_info is None
 
 
-async def test_connect_quiet_suppresses_insecure_tls_warning(
-    api: TrueNASAPI,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """Regression test for the second issue #46 follow-up.
+async def test_connect_forwards_quiet_to_client(api: TrueNASAPI) -> None:
+    """``quiet`` is forwarded to aiotruenas's own ``connect()``.
 
-    aiotruenas's own ``TrueNASClient`` logs a "verify_ssl=False" warning
-    unconditionally, from inside ``connect()`` -- including for every
-    zeroconf-probed candidate, most of which are unrelated devices on the
-    network. During a quiet probe that warning must not leak out either.
+    aiotruenas >=1.2.0 owns TLS-warning suppression itself (downgrading its
+    "verify_ssl=False" warning to DEBUG when ``quiet=True``, see its own
+    ``test_client.py``); this integration only needs to pass the flag
+    through.
     """
-
-    async def _connect_and_warn() -> None:
-        logging.getLogger("aiotruenas.client").warning(
-            "TrueNASClient configured with verify_ssl=False for '%s'.",
-            "1.2.3.4",
-        )
-
-    api._client.connect.side_effect = _connect_and_warn
-    with caplog.at_level("WARNING", logger="aiotruenas.client"):
-        assert await api.connect(quiet=True) is True
-    assert not caplog.records
+    assert await api.connect(quiet=True) is True
+    api._client.connect.assert_awaited_once_with(quiet=True)
 
 
-async def test_connect_non_quiet_keeps_insecure_tls_warning(
-    api: TrueNASAPI,
-    caplog: pytest.LogCaptureFixture,
-) -> None:
-    """A real (non-probing) connection must still surface the warning."""
-
-    async def _connect_and_warn() -> None:
-        logging.getLogger("aiotruenas.client").warning(
-            "TrueNASClient configured with verify_ssl=False for '%s'.",
-            "truenas.local",
-        )
-
-    api._client.connect.side_effect = _connect_and_warn
-    with caplog.at_level("WARNING", logger="aiotruenas.client"):
-        assert await api.connect() is True
-    assert any(
-        record.levelname == "WARNING"
-        and record.getMessage().startswith(
-            "TrueNASClient configured with verify_ssl=False"
-        )
-        for record in caplog.records
-    )
+async def test_connect_defaults_to_non_quiet_client_connect(api: TrueNASAPI) -> None:
+    """A real (non-probing) connect does not request quiet mode."""
+    assert await api.connect() is True
+    api._client.connect.assert_awaited_once_with(quiet=False)
 
 
 # ---------------------------
@@ -373,7 +342,7 @@ async def test_connection_test_fails_when_query_returns_none(
 async def test_connection_test_connects_before_querying(api: TrueNASAPI) -> None:
     """From a disconnected state, connection_test connects, then queries."""
 
-    def _mark_connected() -> None:
+    def _mark_connected(*, quiet: bool = False) -> None:
         api._client.connected = True
 
     api._client.connect.side_effect = _mark_connected
