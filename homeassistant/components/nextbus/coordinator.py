@@ -68,8 +68,6 @@ class NextBusDataUpdateCoordinator(
             # But only if we have a reset time to unthrottle
             and self.client.rate_limit_reset is not None
             # Unless we are after the reset time
-            # py_nextbus builds rate_limit_reset with datetime.fromtimestamp and
-            # no tzinfo, so it is a naive local time and needs one to compare to.
             and dt_util.naive_now() < self.client.rate_limit_reset
         ):
             self.logger.debug(
