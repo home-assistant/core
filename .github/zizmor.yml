@@ -14,4 +14,5 @@ rules:
   unsound-condition:
     ignore:
       # gh-aw emits an unsound folded fork guard; remove after it is fixed upstream.
+      # Re-review this finding and update the locator if the lock file is regenerated.
       - check-requirements.lock.yml:74:5
