@@ -266,13 +266,6 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             for vmid, nodes in candidates.items()
         }
 
-    @override
-    def async_set_updated_data(self, data: dict[str, ProxmoxNodeData]) -> None:
-        """Update data, track new nodes/VMs and rebuild ID-to-node maps."""
-        self._build_id_node_maps(data)
-        self._async_add_remove_nodes(data)
-        super().async_set_updated_data(data)
-
     def _init_proxmox(self) -> None:
         """Initialize ProxmoxAPI instance."""
         data = sanitize_config_entry(self.config_entry.data)

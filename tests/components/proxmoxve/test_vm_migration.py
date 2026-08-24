@@ -2,11 +2,14 @@
 
 from __future__ import annotations
 
+from typing import Any
 from unittest.mock import MagicMock, patch
 
+import pytest
+
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.components.proxmoxve.const import DOMAIN
-from homeassistant.components.proxmoxve.coordinator import ProxmoxNodeData
-from homeassistant.const import STATE_ON, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
@@ -15,10 +18,10 @@ from . import setup_integration
 from tests.common import MockConfigEntry
 
 
-def _full_node(node_name: str, node_id: str) -> dict:
-    """Return a complete node dict suitable for ProxmoxNodeData.node."""
+def _full_node(node_name: str) -> dict[str, Any]:
+    """Return a complete Proxmox node response."""
     return {
-        "id": node_id,
+        "id": f"node/{node_name}",
         "node": node_name,
         "status": "online",
         "level": "",
@@ -87,305 +90,262 @@ _CT_201 = {
 }
 
 
+def _set_cluster_data(
+    mock_proxmox_client: MagicMock,
+    resources: dict[str, tuple[list[dict[str, Any]], list[dict[str, Any]]]],
+    node_order: tuple[str, ...] | None = None,
+) -> dict[str, MagicMock]:
+    """Configure the mocked API responses for each node."""
+    node_mocks: dict[str, MagicMock] = {}
+    for node_name, (vms, containers) in resources.items():
+        node_mock = MagicMock()
+        node_mock.qemu.get.return_value = vms
+        node_mock.lxc.get.return_value = containers
+        node_mock.storage.get.return_value = []
+        node_mock.tasks.get.return_value = []
+        node_mocks[node_name] = node_mock
+
+    mock_proxmox_client._nodes_mock.side_effect = node_mocks.__getitem__
+    mock_proxmox_client.nodes.get.return_value = [
+        _full_node(node_name) for node_name in node_order or tuple(resources)
+    ]
+    return node_mocks
+
+
 def _get_entity_id(
     entity_registry: er.EntityRegistry, entry_id: str, unique_id_suffix: str
 ) -> str:
-    """Look up entity_id by unique_id suffix, independent of entity naming."""
+    """Look up an entity ID by unique ID suffix."""
     for entry in er.async_entries_for_config_entry(entity_registry, entry_id):
         if entry.unique_id.endswith(unique_id_suffix):
             return entry.entity_id
-    raise AssertionError(f"No entity found with unique_id ending in {unique_id_suffix}")
+    raise AssertionError(f"No entity found with unique ID ending in {unique_id_suffix}")
 
 
-async def test_vm_migration_updates_entity(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that a VM migrated to another node keeps entities working."""
-    with patch(
-        "homeassistant.components.proxmoxve.PLATFORMS",
-        [Platform.BINARY_SENSOR],
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    entity_id = _get_entity_id(
-        entity_registry, mock_config_entry.entry_id, "100_status"
-    )
+def _state_value(hass: HomeAssistant, entity_id: str) -> str:
+    """Return an entity state after proving that it exists."""
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.state == STATE_ON
+    return state.state
 
-    # VM 100 moves from pve1 to pve2
-    new_data = {
-        "pve1": ProxmoxNodeData(
-            node=_full_node("pve1", "node/pve1"),
-            vms={101: _VM_101},
-            containers={200: _CT_200, 201: _CT_201},
-        ),
-        "pve2": ProxmoxNodeData(
-            node=_full_node("pve2", "node/pve2"),
-            vms={100: {**_VM_100, "cpu": 0.30, "uptime": 172800}},
-            containers={},
-        ),
+
+def _resource_entity_identity(
+    entity_registry: er.EntityRegistry, entry_id: str, resource_id: int
+) -> dict[str, tuple[str, str]]:
+    """Return the public registry identity of every entity for a resource."""
+    unique_id_prefix = f"{entry_id}_{resource_id}_"
+    return {
+        entry.unique_id: (entry.entity_id, entry.id)
+        for entry in er.async_entries_for_config_entry(entity_registry, entry_id)
+        if entry.unique_id.startswith(unique_id_prefix)
     }
 
-    coordinator = mock_config_entry.runtime_data
-    coordinator.async_set_updated_data(new_data)
-    await hass.async_block_till_done()
 
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_ON
-
-
-async def test_container_migration_updates_entity(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that a container migrated to another node keeps entities working."""
-    with patch(
-        "homeassistant.components.proxmoxve.PLATFORMS",
-        [Platform.BINARY_SENSOR],
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    entity_id = _get_entity_id(
-        entity_registry, mock_config_entry.entry_id, "200_status"
-    )
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_ON
-
-    # Container 200 moves from pve1 to pve2
-    new_data = {
-        "pve1": ProxmoxNodeData(
-            node=_full_node("pve1", "node/pve1"),
-            vms={100: _VM_100, 101: _VM_101},
-            containers={201: _CT_201},
-        ),
-        "pve2": ProxmoxNodeData(
-            node=_full_node("pve2", "node/pve2"),
-            vms={},
-            containers={200: {**_CT_200, "cpu": 0.10, "uptime": 86400}},
-        ),
-    }
-
-    coordinator = mock_config_entry.runtime_data
-    coordinator.async_set_updated_data(new_data)
-    await hass.async_block_till_done()
-
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_ON
-
-
-async def test_dual_node_during_migration_prefers_source(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that a VM visible on two nodes during migration stays on the source."""
-    with patch(
-        "homeassistant.components.proxmoxve.PLATFORMS",
-        [Platform.BINARY_SENSOR],
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.vmid_node_map[100] == "pve1"
-
-    # Mid-migration: VM 100 appears on both pve1 (source) and pve2 (target)
-    mid_migration_data = {
-        "pve1": ProxmoxNodeData(
-            node=_full_node("pve1", "node/pve1"),
-            vms={100: _VM_100, 101: _VM_101},
-            containers={200: _CT_200, 201: _CT_201},
-        ),
-        "pve2": ProxmoxNodeData(
-            node=_full_node("pve2", "node/pve2"),
-            vms={100: {**_VM_100, "cpu": 0.30}},
-            containers={},
-        ),
-    }
-    coordinator.async_set_updated_data(mid_migration_data)
-    await hass.async_block_till_done()
-
-    # Source node (pve1) should be preferred
-    assert coordinator.vmid_node_map[100] == "pve1"
-
-    entity_id = _get_entity_id(
-        entity_registry, mock_config_entry.entry_id, "100_status"
-    )
-    state = hass.states.get(entity_id)
-    assert state is not None
-    assert state.state == STATE_ON
-
-
-async def test_dual_node_does_not_duplicate_entities(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Test that a VMID visible on two nodes results in a single entity."""
-    with patch(
-        "homeassistant.components.proxmoxve.PLATFORMS",
-        [Platform.BINARY_SENSOR],
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    coordinator = mock_config_entry.runtime_data
-
-    # Mid-migration snapshot: VM 100 and container 200 appear on both nodes.
-    dual_node_data = {
-        "pve1": ProxmoxNodeData(
-            node=_full_node("pve1", "node/pve1"),
-            vms={100: _VM_100, 101: _VM_101},
-            containers={200: _CT_200, 201: _CT_201},
-        ),
-        "pve2": ProxmoxNodeData(
-            node=_full_node("pve2", "node/pve2"),
-            vms={100: {**_VM_100, "cpu": 0.30}},
-            containers={200: {**_CT_200, "cpu": 0.10}},
-        ),
-    }
-    coordinator.async_set_updated_data(dual_node_data)
-    await hass.async_block_till_done()
-
-    # Exactly one entity per VMID/CTID, regardless of dual-node visibility.
-    vm_status_entries = [
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entry.unique_id.endswith("100_status")
-    ]
-    assert len(vm_status_entries) == 1
-
-    ct_status_entries = [
-        entry
-        for entry in er.async_entries_for_config_entry(
-            entity_registry, mock_config_entry.entry_id
-        )
-        if entry.unique_id.endswith("200_status")
-    ]
-    assert len(ct_status_entries) == 1
-
-
-async def test_id_node_map_is_deterministic_on_first_resolution(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that a new VMID seen on multiple nodes resolves deterministically."""
-    with patch(
-        "homeassistant.components.proxmoxve.PLATFORMS",
-        [Platform.BINARY_SENSOR],
-    ):
-        await setup_integration(hass, mock_config_entry)
-
-    coordinator = mock_config_entry.runtime_data
-
-    # A brand new VMID (999) appears on two nodes at once, with no prior
-    # entry in vmid_node_map. The chosen node must not depend on dict
-    # iteration order.
-    new_vm = {**_VM_100, "vmid": 999, "name": "vm-new"}
-    new_ct = {**_CT_200, "vmid": 888, "name": "ct-new"}
-
-    data_order_a = {
-        "pve2": ProxmoxNodeData(
-            node=_full_node("pve2", "node/pve2"),
-            vms={999: new_vm},
-            containers={888: new_ct},
-        ),
-        "pve1": ProxmoxNodeData(
-            node=_full_node("pve1", "node/pve1"),
-            vms={100: _VM_100, 999: new_vm},
-            containers={200: _CT_200, 888: new_ct},
-        ),
-    }
-    coordinator.vmid_node_map = {}
-    coordinator.ctid_node_map = {}
-    coordinator._build_id_node_maps(data_order_a)
-    choice_a_vm = coordinator.vmid_node_map[999]
-    choice_a_ct = coordinator.ctid_node_map[888]
-
-    data_order_b = {
-        "pve1": ProxmoxNodeData(
-            node=_full_node("pve1", "node/pve1"),
-            vms={100: _VM_100, 999: new_vm},
-            containers={200: _CT_200, 888: new_ct},
-        ),
-        "pve2": ProxmoxNodeData(
-            node=_full_node("pve2", "node/pve2"),
-            vms={999: new_vm},
-            containers={888: new_ct},
-        ),
-    }
-    coordinator.vmid_node_map = {}
-    coordinator.ctid_node_map = {}
-    coordinator._build_id_node_maps(data_order_b)
-    choice_b_vm = coordinator.vmid_node_map[999]
-    choice_b_ct = coordinator.ctid_node_map[888]
-
-    assert choice_a_vm == choice_b_vm == "pve1"
-    assert choice_a_ct == choice_b_ct == "pve1"
-
-
-async def test_new_dual_node_entities_use_canonical_node(
-    hass: HomeAssistant,
-    mock_proxmox_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+def _get_child_device(
     device_registry: dr.DeviceRegistry,
+    entry_id: str,
+    resource_kind: str,
+    resource_id: int,
+) -> dr.DeviceEntry:
+    """Return a VM/container device from the registry."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_{resource_kind}_{resource_id}"), entry_id
+    )
+    assert device is not None
+    return device
+
+
+def _matching_device_count(
+    device_registry: dr.DeviceRegistry,
+    entry_id: str,
+    resource_kind: str,
+    resource_id: int,
+) -> int:
+    """Count registry devices matching one Proxmox resource identifier."""
+    identifier = (DOMAIN, f"{entry_id}_{resource_kind}_{resource_id}")
+    return sum(
+        identifier in device.identifiers
+        for device in dr.async_entries_for_config_entry(device_registry, entry_id)
+    )
+
+
+@pytest.mark.parametrize(
+    ("resource_kind", "resource_id", "endpoint"),
+    [("vm", 100, "qemu"), ("container", 200, "lxc")],
+)
+async def test_migration_source_dual_target(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    resource_kind: str,
+    resource_id: int,
+    endpoint: str,
 ) -> None:
-    """Test that newly discovered dual-node VMIDs use the canonical node."""
+    """Test migration uses public polling and keeps registry identity stable."""
+    initial_vms = [_VM_100, _VM_101]
+    initial_containers = [_CT_200, _CT_201]
+    _set_cluster_data(
+        mock_proxmox_client,
+        {"pve1": (initial_vms, initial_containers)},
+    )
+
+    with patch(
+        "homeassistant.components.proxmoxve.PLATFORMS",
+        [Platform.BINARY_SENSOR, Platform.BUTTON],
+    ):
+        await setup_integration(hass, mock_config_entry)
+
+    entry_id = mock_config_entry.entry_id
+    status_entity_id = _get_entity_id(
+        entity_registry, entry_id, f"{resource_id}_status"
+    )
+    button_entity_id = _get_entity_id(
+        entity_registry, entry_id, f"{resource_id}_restart"
+    )
+    assert _state_value(hass, status_entity_id) == STATE_ON
+
+    initial_entity_identity = _resource_entity_identity(
+        entity_registry, entry_id, resource_id
+    )
+    assert initial_entity_identity
+    source_node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_node_node/pve1"), entry_id
+    )
+    assert source_node_device is not None
+    child_device = _get_child_device(
+        device_registry, entry_id, resource_kind, resource_id
+    )
+    child_device_id = child_device.id
+    assert child_device.via_device_id == source_node_device.id
+
+    target_resource = {
+        **(_VM_100 if resource_kind == "vm" else _CT_200),
+        "status": "stopped",
+    }
+    target_vms = [target_resource] if resource_kind == "vm" else []
+    target_containers = [target_resource] if resource_kind == "container" else []
+    _set_cluster_data(
+        mock_proxmox_client,
+        {
+            "pve1": (initial_vms, initial_containers),
+            "pve2": (target_vms, target_containers),
+        },
+    )
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert _state_value(hass, status_entity_id) == STATE_ON
+    assert (
+        _resource_entity_identity(entity_registry, entry_id, resource_id)
+        == initial_entity_identity
+    )
+    assert (
+        _get_child_device(device_registry, entry_id, resource_kind, resource_id).id
+        == child_device_id
+    )
+
+    source_vms = [_VM_101] if resource_kind == "vm" else initial_vms
+    source_containers = (
+        [_CT_201] if resource_kind == "container" else initial_containers
+    )
+    target_node_mocks = _set_cluster_data(
+        mock_proxmox_client,
+        {
+            "pve1": (source_vms, source_containers),
+            "pve2": (target_vms, target_containers),
+        },
+    )
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert _state_value(hass, status_entity_id) == STATE_OFF
+    assert (
+        _resource_entity_identity(entity_registry, entry_id, resource_id)
+        == initial_entity_identity
+    )
+    assert (
+        _get_child_device(device_registry, entry_id, resource_kind, resource_id).id
+        == child_device_id
+    )
+    assert (
+        _matching_device_count(device_registry, entry_id, resource_kind, resource_id)
+        == 1
+    )
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: button_entity_id},
+        blocking=True,
+    )
+
+    target_endpoint = getattr(target_node_mocks["pve2"], endpoint)
+    target_endpoint.assert_called_once_with(resource_id)
+    target_endpoint.return_value.status.reboot.post.assert_called_once_with()
+
+
+@pytest.mark.parametrize("node_order", [("pve1", "pve2"), ("pve2", "pve1")])
+async def test_new_dual_node_resources_choose_node_deterministically(
+    hass: HomeAssistant,
+    mock_proxmox_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    node_order: tuple[str, str],
+) -> None:
+    """Test new dual-node resources choose the same observable parent device."""
+    _set_cluster_data(
+        mock_proxmox_client,
+        {"pve1": ([_VM_100, _VM_101], [_CT_200, _CT_201])},
+    )
+
     with patch(
         "homeassistant.components.proxmoxve.PLATFORMS",
         [Platform.BINARY_SENSOR],
     ):
         await setup_integration(hass, mock_config_entry)
 
+    new_vm_source = {**_VM_100, "vmid": 999, "name": "vm-new"}
+    new_vm_target = {**new_vm_source, "status": "stopped"}
+    new_container_source = {**_CT_200, "vmid": 888, "name": "ct-new"}
+    new_container_target = {**new_container_source, "status": "stopped"}
+    _set_cluster_data(
+        mock_proxmox_client,
+        {
+            "pve1": (
+                [_VM_100, _VM_101, new_vm_source],
+                [_CT_200, _CT_201, new_container_source],
+            ),
+            "pve2": ([new_vm_target], [new_container_target]),
+        },
+        node_order,
+    )
+
     coordinator = mock_config_entry.runtime_data
-
-    new_vm = {**_VM_100, "vmid": 999, "name": "vm-new"}
-    new_ct = {**_CT_200, "vmid": 888, "name": "ct-new"}
-    data = {
-        "pve2": ProxmoxNodeData(
-            node=_full_node("pve2", "node/pve2"),
-            vms={999: new_vm},
-            containers={888: new_ct},
-        ),
-        "pve1": ProxmoxNodeData(
-            node=_full_node("pve1", "node/pve1"),
-            vms={100: _VM_100, 101: _VM_101, 999: new_vm},
-            containers={200: _CT_200, 201: _CT_201, 888: new_ct},
-        ),
-    }
-
-    coordinator.async_set_updated_data(data)
+    await coordinator.async_refresh()
     await hass.async_block_till_done()
 
-    assert coordinator.vmid_node_map[999] == "pve1"
-    assert coordinator.ctid_node_map[888] == "pve1"
-
-    pve1_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_node_node/pve1")}
+    entry_id = mock_config_entry.entry_id
+    source_node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_node_node/pve1"), entry_id
     )
-    assert pve1_device is not None
+    assert source_node_device is not None
 
-    vm_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_vm_999")}
-    )
-    assert vm_device is not None
-    assert vm_device.via_device_id == pve1_device.id
-
-    container_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_container_888")}
-    )
-    assert container_device is not None
-    assert container_device.via_device_id == pve1_device.id
+    for resource_kind, resource_id in (("vm", 999), ("container", 888)):
+        status_entity_id = _get_entity_id(
+            entity_registry, entry_id, f"{resource_id}_status"
+        )
+        assert _state_value(hass, status_entity_id) == STATE_ON
+        child_device = _get_child_device(
+            device_registry, entry_id, resource_kind, resource_id
+        )
+        assert child_device.via_device_id == source_node_device.id
+        assert (
+            _matching_device_count(
+                device_registry, entry_id, resource_kind, resource_id
+            )
+            == 1
+        )
