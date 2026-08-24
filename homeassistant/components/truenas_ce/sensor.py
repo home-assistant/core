@@ -10,7 +10,6 @@ from typing import Any, cast, override
 from homeassistant.components.sensor import SensorEntity
 from homeassistant.const import UnitOfInformation, UnitOfTime
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers import entity_platform as ep
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import (
@@ -20,7 +19,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import StateType
 from homeassistant.util.dt import utc_from_timestamp
 
-from .const import CONF_DATA_UNIT, DEFAULT_DATA_UNIT, DOMAIN, SIGNAL_UPDATE_SENSORS
+from .const import CONF_DATA_UNIT, DEFAULT_DATA_UNIT, SIGNAL_UPDATE_SENSORS
 from .coordinator import TrueNASConfigEntry, TrueNASCoordinator, get_truenas_coordinator
 from .entity import (
     TrueNASEntity,
@@ -28,7 +27,7 @@ from .entity import (
     format_unique_id,
     resolve_entry_identity,
 )
-from .helper import alert_action, scaled_data_unit
+from .helper import scaled_data_unit
 from .sensor_types import (  # noqa: F401
     SENSOR_SERVICES,
     SENSOR_TYPES,
@@ -377,25 +376,11 @@ class TrueNASUptimeSensor(TrueNASSensor):
 
 
 class TrueNASAlertSensor(TrueNASSensor):
-    """Define a TrueNAS Alert sensor with dismiss/restore actions."""
+    """Define a TrueNAS Alert sensor.
 
-    async def dismiss(self, **kwargs: Any) -> None:
-        """Dismiss a TrueNAS alert by its UUID."""
-        if uuid := kwargs.get("uuid"):
-            await alert_action(self.coordinator, uuid, "dismiss")
-        else:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="missing_uuid"
-            )
-
-    async def restore(self, **kwargs: Any) -> None:
-        """Restore (un-dismiss) a previously dismissed TrueNAS alert by UUID."""
-        if uuid := kwargs.get("uuid"):
-            await alert_action(self.coordinator, uuid, "restore")
-        else:
-            raise ServiceValidationError(
-                translation_domain=DOMAIN, translation_key="missing_uuid"
-            )
+    Dismiss/restore actions are part of the HACS-distributed edition; this
+    Bronze-scope submission is read-only, so they're not included here.
+    """
 
 
 class TrueNASDatasetSensor(TrueNASSensor):

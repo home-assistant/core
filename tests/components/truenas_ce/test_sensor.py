@@ -11,7 +11,6 @@ import pytest
 from homeassistant.components.truenas_ce import sensor as sensor_mod
 from homeassistant.components.truenas_ce.const import CONF_DATA_UNIT
 from homeassistant.components.truenas_ce.sensor import (
-    TrueNASAlertSensor,
     TrueNASAppStatsSensor,
     TrueNASCertExpirySensor,
     TrueNASDiskSensor,
@@ -30,7 +29,6 @@ from homeassistant.components.truenas_ce.sensor_types import (
     TrueNASSensorEntityDescription,
 )
 from homeassistant.const import UnitOfInformation
-from homeassistant.exceptions import ServiceValidationError
 
 from ._fakes import make_config_entry, make_coordinator
 
@@ -395,41 +393,6 @@ def test_uptime_native_value_zero_is_none() -> None:
     """An uptime value of zero yields native_value of None."""
     sensor = _make_sensor(TrueNASUptimeSensor, {"value": 0})
     assert sensor.native_value is None
-
-
-# ---------------------------
-#   TrueNASAlertSensor
-# ---------------------------
-async def test_alert_dismiss_without_uuid_raises() -> None:
-    """dismiss() without a uuid raises ServiceValidationError(missing_uuid)."""
-    sensor = _make_sensor(TrueNASAlertSensor, {})
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await sensor.dismiss()
-    assert exc_info.value.translation_key == "missing_uuid"
-
-
-async def test_alert_dismiss_with_uuid_calls_query_and_refreshes() -> None:
-    """dismiss() with a uuid calls alert.dismiss and refreshes the coordinator."""
-    sensor = _make_sensor(TrueNASAlertSensor, {})
-    await sensor.dismiss(uuid="u1")
-    sensor.coordinator.api.query.assert_awaited_once_with("alert.dismiss", ["u1"])
-    sensor.coordinator.async_refresh.assert_awaited_once()
-
-
-async def test_alert_restore_without_uuid_raises() -> None:
-    """restore() without a uuid raises ServiceValidationError(missing_uuid)."""
-    sensor = _make_sensor(TrueNASAlertSensor, {})
-    with pytest.raises(ServiceValidationError) as exc_info:
-        await sensor.restore()
-    assert exc_info.value.translation_key == "missing_uuid"
-
-
-async def test_alert_restore_with_uuid_calls_query_and_refreshes() -> None:
-    """restore() with a uuid calls alert.restore and refreshes the coordinator."""
-    sensor = _make_sensor(TrueNASAlertSensor, {})
-    await sensor.restore(uuid="u2")
-    sensor.coordinator.api.query.assert_awaited_once_with("alert.restore", ["u2"])
-    sensor.coordinator.async_refresh.assert_awaited_once()
 
 
 # ---------------------------

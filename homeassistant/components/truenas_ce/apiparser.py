@@ -178,7 +178,7 @@ def parse_api(
         source = None
 
     if not source:
-        return _empty_source_result(data, key, key_search, vals)
+        return _empty_source_result(data, key, key_search, vals, source is None)
 
     keymap = generate_keymap(data, key_search)
     for entry in source:
@@ -207,9 +207,22 @@ def _empty_source_result(
     key: str | None,
     key_search: str | None,
     vals: list[ApiValueSpec] | None,
+    source_was_none: bool,
 ) -> dict[str, Any]:
-    """Return data for an empty source, filling defaults when keyless."""
-    return fill_defaults(data, vals) if not key and not key_search else data
+    """Return data for an empty/missing source.
+
+    Keyless (single-object) data always falls back to its declared defaults
+    -- ``fill_defaults`` only fills keys not already present, so this can
+    never overwrite good values, whether the source failed outright or
+    genuinely came back empty. Keyed data is different: a ``None`` source
+    means the query itself failed or returned malformed data, so the
+    previous snapshot is kept untouched rather than wiping out good state on
+    a transient error; an explicit empty list is a genuine "nothing left"
+    result (e.g. the last disk/pool/app was removed), so it's pruned.
+    """
+    if not key and not key_search:
+        return fill_defaults(data, vals)
+    return data if source_was_none else {}
 
 
 # ---------------------------

@@ -570,21 +570,25 @@ def test_store_stat_value_unknown_type_stores_raw_key() -> None:
 # ---------------------------
 #   get_alerts
 # ---------------------------
-async def test_get_alerts_malformed_response_resets_to_defaults() -> None:
-    """A non-list alerts response resets the alerts dict to its defaults."""
+async def test_get_alerts_malformed_response_keeps_previous_state() -> None:
+    """A non-list alerts response preserves the last known alert state.
+
+    A permission/transport error must not masquerade as "no active alerts".
+    """
     coord = _bare_coordinator()
-    coord.ds = {"alerts": {}}
+    previous = {
+        "count": 2,
+        "messages": ["Pool full"],
+        "critical": 1,
+        "warning": 1,
+        "info": 0,
+        "disk_issues": True,
+    }
+    coord.ds = {"alerts": dict(previous)}
     coord.api = MagicMock()
     coord.api.query = AsyncMock(return_value={"not": "a list"})
     await coord.get_alerts()
-    assert coord.ds["alerts"] == {
-        "count": 0,
-        "messages": [],
-        "critical": 0,
-        "warning": 0,
-        "info": 0,
-        "disk_issues": False,
-    }
+    assert coord.ds["alerts"] == previous
 
 
 async def test_get_alerts_filters_dismissed_and_counts_levels() -> None:
@@ -678,14 +682,17 @@ async def test_get_smb_counts_dict_with_sessions() -> None:
     assert coord.ds["system_info"]["smb_connections"] == 3
 
 
-async def test_get_smb_defaults_to_zero_for_unexpected_shape() -> None:
-    """An unexpected (non-list, non-dict) SMB response defaults the count to zero."""
+async def test_get_smb_keeps_previous_count_for_unexpected_shape() -> None:
+    """An unexpected (non-list, non-dict) SMB response keeps the last known count.
+
+    A permission/transport error must not masquerade as "0 connections".
+    """
     coord = _bare_coordinator()
-    coord.ds = {"system_info": {}}
+    coord.ds = {"system_info": {"smb_connections": 3}}
     coord.api = MagicMock()
     coord.api.query = AsyncMock(return_value=None)
     await coord.get_smb()
-    assert coord.ds["system_info"]["smb_connections"] == 0
+    assert coord.ds["system_info"]["smb_connections"] == 3
 
 
 # ---------------------------
@@ -1535,11 +1542,8 @@ def _stub_all_jobs(coord: TrueNASCoordinator) -> None:
     for name in (
         "get_systeminfo",
         "get_systemstats",
-        "get_service",
         "get_disk",
         "get_dataset",
-        "get_vm",
-        "get_container",
         "get_directoryservices",
         "get_cloudsync",
         "get_replication",
@@ -1548,7 +1552,6 @@ def _stub_all_jobs(coord: TrueNASCoordinator) -> None:
         "get_scrub",
         "get_app",
         "get_app_stats",
-        "get_cronjob",
         "get_alerts",
         "get_certificates",
         "get_arc",
@@ -1601,7 +1604,7 @@ async def test_async_update_data_swallows_job_exceptions() -> None:
     coord._async_ensure_connected = AsyncMock()
     coord.last_updatecheck_update = dt_util.utcnow()
     _stub_all_jobs(coord)
-    coord.get_service = AsyncMock(side_effect=Exception("boom"))
+    coord.get_disk = AsyncMock(side_effect=Exception("boom"))
     coord.ds = {"system_info": {"hostname": "truenas"}}
 
     result = await coord._async_update_data()  # must not raise

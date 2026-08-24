@@ -1,15 +1,8 @@
 """Helper functions."""
 
 import re
-from typing import TYPE_CHECKING
 
 from homeassistant.const import UnitOfInformation
-from homeassistant.exceptions import HomeAssistantError
-
-from .const import DOMAIN
-
-if TYPE_CHECKING:
-    from .coordinator import TrueNASCoordinator
 
 # Strip a leading URL scheme (e.g. "https://" or "http://") from the host.
 _SCHEME_RE = re.compile(r"^[a-zA-Z][a-zA-Z0-9+.-]*://")
@@ -71,20 +64,3 @@ def format_attribute(attr: str) -> str:
     attr = attr.replace("Vmware ", "VMware ")
     attr = attr.replace("Ip4 ", "IP4 ")
     return attr.replace("Ip6 ", "IP6 ")
-
-
-async def alert_action(coordinator: TrueNASCoordinator, uuid: str, action: str) -> None:
-    """Execute alert dismiss/restore action (shared helper)."""
-    await coordinator.api.query(f"alert.{action}", [uuid])
-    if coordinator.api.error:
-        raise HomeAssistantError(
-            translation_domain=DOMAIN,
-            translation_key="alert_action_failed",
-            translation_placeholders={
-                "action": action,
-                "uuid": uuid,
-                "host": coordinator.host,
-                "error": str(coordinator.api.error),
-            },
-        )
-    await coordinator.async_refresh()

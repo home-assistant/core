@@ -180,9 +180,6 @@
     "action_failed": {
       "message": "TrueNAS action {action} failed on {host}: {error}"
     },
-    "alert_action_failed": {
-      "message": "Failed to {action} alert {uuid} on {host}: {error}"
-    },
     "app_update_failed": {
       "message": "Failed to start TrueNAS app update for {app} on {host}: {error}"
     },
@@ -194,9 +191,6 @@
     },
     "invalid_api_key": {
       "message": "Invalid TrueNAS API key for {host}"
-    },
-    "missing_uuid": {
-      "message": "Missing required parameter: uuid"
     },
     "run_task_failed": {
       "message": "TrueNAS action failed on {host}: {error}"

@@ -302,9 +302,16 @@ def test_parse_api_empty_source_fills_defaults() -> None:
     assert ap.parse_api(source=None, vals=vals) == {"label": "n/a"}
 
 
-def test_parse_api_empty_source_with_key_returns_data_unchanged() -> None:
-    """An empty source list with an existing data dict leaves the data unchanged."""
-    assert ap.parse_api(data={"existing": {}}, source=[], key="id") == {"existing": {}}
+def test_parse_api_none_source_with_key_returns_data_unchanged() -> None:
+    """A None source (a failed/malformed query) preserves the existing keyed data."""
+    assert ap.parse_api(data={"existing": {}}, source=None, key="id") == {
+        "existing": {}
+    }
+
+
+def test_parse_api_empty_list_source_with_key_prunes_data() -> None:
+    """An explicit empty list (a genuine "nothing left") prunes keyed data."""
+    assert ap.parse_api(data={"existing": {}}, source=[], key="id") == {}
 
 
 def test_parse_api_single_dict_source_is_wrapped() -> None:

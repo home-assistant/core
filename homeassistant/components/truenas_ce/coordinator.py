@@ -454,13 +454,13 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
         await self._async_ensure_connected()
 
+        # This Bronze-scope PR ships sensor entities only; get_service/get_vm/
+        # get_container/get_cronjob poll data no entity here consumes yet, so
+        # they're left out until the platforms exposing them follow up.
         jobs = [
             self.get_systemstats,
-            self.get_service,
             self.get_disk,
             self.get_dataset,
-            self.get_vm,
-            self.get_container,
             self.get_directoryservices,
             self.get_cloudsync,
             self.get_replication,
@@ -469,7 +469,6 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.get_scrub,
             self.get_app,
             self.get_app_stats,
-            self.get_cronjob,
             self.get_alerts,
             self.get_certificates,
             self.get_arc,
@@ -1638,14 +1637,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 "Unexpected response from alert.list (expected list, got %s)",
                 type(alerts).__name__,
             )
-            self.ds["alerts"] = {
-                "count": 0,
-                "messages": [],
-                "critical": 0,
-                "warning": 0,
-                "info": 0,
-                "disk_issues": False,
-            }
+            # Keep the last known alert state instead of reporting a false
+            # "no active alerts" on a permission/transport error.
             return
 
         active_alerts = [alert for alert in alerts if not alert.get("dismissed", False)]
@@ -1720,8 +1713,8 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.ds["system_info"]["smb_connections"] = len(
                 smb_status.get("sessions", [])
             )
-        else:
-            self.ds["system_info"]["smb_connections"] = 0
+        # else: query failed/unexpected shape -- keep the last known count
+        # instead of reporting a false "0 connections".
 
     async def get_ups(self) -> None:
         """Get UPS readings from the netdata UPS graphs, if a UPS is present."""
