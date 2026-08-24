@@ -48,6 +48,16 @@ MOCK_SSDP_DATA = {
             ATTR_UPNP_PRESENTATION_URL: "http://10.0.0.1",
         },
     ),
+    "ip4_ssdp_fallback": SsdpServiceInfo(
+        ssdp_usn="mock_usn",
+        ssdp_st="mock_st",
+        ssdp_location="http://10.0.0.1:49000/fboxdesc.xml",
+        upnp={
+            ATTR_UPNP_FRIENDLY_NAME: CONF_FAKE_NAME,
+            ATTR_UPNP_UDN: "uuid:only-a-test",
+            ATTR_UPNP_PRESENTATION_URL: "",
+        },
+    ),
     "ip6_valid": SsdpServiceInfo(
         ssdp_usn="mock_usn",
         ssdp_st="mock_st",
@@ -318,17 +328,19 @@ async def test_reconfigure_failed(hass: HomeAssistant, fritz: Mock) -> None:
 
 
 @pytest.mark.parametrize(
-    ("test_data", "expected_result"),
+    ("test_data", "expected_host", "expected_result"),
     [
-        (MOCK_SSDP_DATA["ip4_valid"], FlowResultType.FORM),
-        (MOCK_SSDP_DATA["ip6_valid"], FlowResultType.FORM),
-        (MOCK_SSDP_DATA["ip6_invalid"], FlowResultType.ABORT),
+        (MOCK_SSDP_DATA["ip4_valid"], "http://10.0.0.1", FlowResultType.FORM),
+        (MOCK_SSDP_DATA["ip4_ssdp_fallback"], "http://10.0.0.1", FlowResultType.FORM),
+        (MOCK_SSDP_DATA["ip6_valid"], "http://[1234::1]", FlowResultType.FORM),
+        (MOCK_SSDP_DATA["ip6_invalid"], None, FlowResultType.ABORT),
     ],
 )
 async def test_ssdp(
     hass: HomeAssistant,
     fritz: Mock,
     test_data: SsdpServiceInfo,
+    expected_host: str | None,
     expected_result: str,
 ) -> None:
     """Test starting a flow from discovery."""
@@ -348,7 +360,7 @@ async def test_ssdp(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == CONF_FAKE_NAME
-    assert result["data"][CONF_HOST] == test_data.upnp[ATTR_UPNP_PRESENTATION_URL]
+    assert result["data"][CONF_HOST] == expected_host
     assert result["data"][CONF_PASSWORD] == "fake_pass"
     assert result["data"][CONF_USERNAME] == "fake_user"
     assert result["data"][CONF_VERIFY_SSL] is True

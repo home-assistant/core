@@ -142,7 +142,13 @@ class FritzboxConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
         """Handle a flow initialized by discovery."""
-        self._url = discovery_info.upnp[ATTR_UPNP_PRESENTATION_URL]
+        if upnp_repr_udl := discovery_info.upnp.get(ATTR_UPNP_PRESENTATION_URL):
+            self._url = upnp_repr_udl
+        else:
+            assert isinstance(discovery_info.ssdp_location, str)
+            host = URL(discovery_info.ssdp_location).host
+            assert isinstance(host, str)
+            self._url = f"http://{host}"
         representation_url = URL(self._url)
 
         if TYPE_CHECKING:
