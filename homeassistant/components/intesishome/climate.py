@@ -1,7 +1,6 @@
 """Support for IntesisHome and airconwithme Smart AC Controllers."""
 
 import logging
-from random import randrange
 from typing import Any, NamedTuple, override
 
 from pyintesishome import IHAuthenticationError, IHConnectionError, IntesisHome
@@ -33,7 +32,6 @@ from homeassistant.exceptions import PlatformNotReady
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.entity_platform import AddEntitiesCallback
-from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 _LOGGER = logging.getLogger(__name__)
@@ -144,7 +142,9 @@ class IntesisAC(ClimateEntity):
     """Represents an Intesishome air conditioning device."""
 
     _attr_preset_modes = [PRESET_ECO, PRESET_COMFORT, PRESET_BOOST]
-    _attr_should_poll = False
+    # Availability depends on how long since the library's poller last got
+    # through, so it changes with the clock rather than with any event.
+    _attr_should_poll = True
     _attr_target_temperature_step = 1
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
 
@@ -155,7 +155,6 @@ class IntesisAC(ClimateEntity):
         self._ih_device = ih_device
         self._attr_name = ih_device.get("name")
         self._device_type = controller.device_type
-        self._connected = None
         self._attr_hvac_modes = []
         self._outdoor_temp = None
         self._hvac_mode = None
@@ -313,7 +312,6 @@ class IntesisAC(ClimateEntity):
     async def async_update(self) -> None:
         """Copy values from controller dictionary to climate device."""
         # Update values from controller's device dictionary
-        self._connected = self._controller.is_connected
         self._attr_current_temperature = self._controller.get_temperature(
             self._device_id
         )
@@ -362,28 +360,6 @@ class IntesisAC(ClimateEntity):
 
     async def async_update_callback(self, device_id=None):
         """Let HA know there has been an update from the controller."""
-        # Track changes in connection state
-        if not self._controller.is_connected and self._connected:
-            # Connection has dropped
-            self._connected = False
-            reconnect_minutes = 1 + randrange(10)
-            _LOGGER.error(
-                "Connection to %s API was lost. Reconnecting in %i minutes",
-                self._device_type,
-                reconnect_minutes,
-            )
-            # Schedule reconnection
-
-            async def try_connect(_now):
-                await self._controller.connect()
-
-            async_call_later(self.hass, reconnect_minutes * 60, try_connect)
-
-        if self._controller.is_connected and not self._connected:
-            # Connection has been restored
-            self._connected = True
-            _LOGGER.debug("Connection to %s API was restored", self._device_type)
-
         if not device_id or self._device_id == device_id:
             # Update all devices if no device_id was specified
             _LOGGER.debug(
@@ -410,8 +386,8 @@ class IntesisAC(ClimateEntity):
     @property
     @override
     def available(self) -> bool:
-        """If the device hasn't been able to connect, mark as unavailable."""
-        return self._connected or self._connected is None
+        """Return whether the controller still has a path to the device."""
+        return self._controller.is_available
 
     @property
     @override

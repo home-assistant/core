@@ -3373,7 +3373,7 @@
       "name": "IntesisHome",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "iometer": {
       "name": "IOmeter",
