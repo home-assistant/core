@@ -69,6 +69,7 @@ async def test_switch_port_refresh_failure_skips_port_sensors(
 
     assert hass.states.get("sensor.test_poe_switch_device_status") is not None
     assert "Error while setting up tplink_omada platform for sensor" not in caplog.text
+    assert "Failed to register entities" not in caplog.text
 
 
 @patch("homeassistant.components.tplink_omada.PLATFORMS", ["sensor"])

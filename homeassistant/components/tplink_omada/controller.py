@@ -8,6 +8,7 @@ from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
@@ -92,6 +93,9 @@ class OmadaSiteController:
             for device in devices_to_process:
                 try:
                     await entity_callback(device)
+                except UpdateFailed:
+                    # Device not yet queryable; retried on the next devices update
+                    pass
                 except Exception:
                     _LOGGER.exception("Failed to register entities for %s", device.name)
                 else:

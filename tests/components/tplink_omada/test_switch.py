@@ -100,6 +100,7 @@ async def test_switch_port_refresh_failure_skips_port_entities(
     assert hass.states.get("switch.test_router_port_4_internet_connected") is not None
     assert hass.states.get("switch.test_poe_switch_port_1_poe") is None
     assert "Error while setting up tplink_omada platform for switch" not in caplog.text
+    assert "Failed to register entities" not in caplog.text
 
 
 @patch("homeassistant.components.tplink_omada.PLATFORMS", ["switch"])
