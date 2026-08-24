@@ -103,7 +103,7 @@ class WatercrystStateUpdateCoordinator(WatercrystDataUpdateCoordinator[StateResp
 
 
 class WatercrystMeasurementsUpdateCoordinator(
-    WatercrystDataUpdateCoordinator[MeasurementResponse]
+    WatercrystDataUpdateCoordinator[MeasurementResponse | None]
 ):
     """Measurements data update coordinator."""
 
@@ -126,7 +126,7 @@ class WatercrystMeasurementsUpdateCoordinator(
         self._state = state
 
     @override
-    async def _async_fetch_data(self) -> MeasurementResponse:
+    async def _async_fetch_data(self) -> MeasurementResponse | None:
         if self._state.data is None or not self._state.data.online:
             return None
         return await self._client.get_measurements()
