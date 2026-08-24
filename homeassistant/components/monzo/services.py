@@ -88,7 +88,7 @@ TRANSFER_SCHEMA = vol.Schema(
 
 
 @callback
-def _async_get_device(call: ServiceCall, field: str) -> dr.DeviceEntry:
+def _async_get_device(call: ServiceCall, field: str) -> dr.AnyDeviceEntry:
     """Get a selected device."""
     if (device := dr.async_get(call.hass).async_get(call.data[field])) is None:
         raise ServiceValidationError(
@@ -99,7 +99,7 @@ def _async_get_device(call: ServiceCall, field: str) -> dr.DeviceEntry:
 
 
 @callback
-def _async_get_resource_id(device: dr.DeviceEntry) -> str:
+def _async_get_resource_id(device: dr.AnyDeviceEntry) -> str:
     """Get the Monzo resource ID represented by a device."""
     for domain, resource_id in device.identifiers:
         if domain == DOMAIN:
@@ -110,7 +110,7 @@ def _async_get_resource_id(device: dr.DeviceEntry) -> str:
     )
 
 
-def _device_name(device: dr.DeviceEntry) -> str:
+def _device_name(device: dr.AnyDeviceEntry) -> str:
     """Return the best available name for a device."""
     return device.name_by_user or device.name or device.id
 
@@ -212,7 +212,7 @@ async def _async_transfer(
             ) from err
         raise HomeAssistantError(
             translation_domain=DOMAIN,
-            translation_key="transfer_failed",
+            translation_key="transfer_status_unknown",
         ) from err
     except (ClientError, TimeoutError) as err:
         raise HomeAssistantError(
