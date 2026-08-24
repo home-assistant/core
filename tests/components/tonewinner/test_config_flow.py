@@ -2,6 +2,8 @@
 
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
 from homeassistant import config_entries
 from homeassistant.components.tonewinner.const import CONF_SERIAL_PORT, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
@@ -113,15 +115,27 @@ async def test_form_duplicate_serial_port(hass: HomeAssistant) -> None:
     mock_receiver_cls.assert_not_called()
 
 
-async def test_form_cannot_connect(hass: HomeAssistant) -> None:
+@pytest.mark.parametrize(
+    ("connect_error", "answer_power"),
+    [
+        (OSError("Permission denied"), True),
+        (None, None),
+    ],
+    ids=["refused", "silent"],
+)
+async def test_form_cannot_connect(
+    hass: HomeAssistant,
+    connect_error: OSError | None,
+    answer_power: bool,
+) -> None:
     """Test we handle cannot connect error."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
-    mock_receiver = MagicMock()
-    mock_receiver.connect = AsyncMock(side_effect=OSError("Permission denied"))
-    mock_receiver.disconnect = AsyncMock()
+    mock_receiver = _mock_receiver(power=answer_power)
+    if connect_error is not None:
+        mock_receiver.connect = AsyncMock(side_effect=connect_error)
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
