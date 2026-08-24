@@ -288,20 +288,20 @@ class KnxExposeEntity:
         await self._async_handle_state(event.data["new_state"])
 
     async def _async_handle_state(self, state: State | None) -> None:
-    """Handle a Home Assistant state for all exposures."""
-    async with TaskGroup() as tg:
-        for option, xknx_expose in self._exposures:
-            expose_value = self._get_expose_value(state, option)
-            if expose_value is None:
-                continue
-
-            if xknx_expose.sensor_value.value is None and not option.send_on_init:
-                self._initialize_expose_value(xknx_expose, expose_value)
-                continue
-
-            tg.create_task(
-                self._async_set_knx_value(xknx_expose, expose_value)
-            )
+        """Handle a Home Assistant state for all exposures."""
+        async with TaskGroup() as tg:
+            for option, xknx_expose in self._exposures:
+                expose_value = self._get_expose_value(state, option)
+                if expose_value is None:
+                    continue
+    
+                if xknx_expose.sensor_value.value is None and not option.send_on_init:
+                    self._initialize_expose_value(xknx_expose, expose_value)
+                    continue
+    
+                tg.create_task(
+                    self._async_set_knx_value(xknx_expose, expose_value)
+                )
 
     async def _async_set_knx_value(
         self,
