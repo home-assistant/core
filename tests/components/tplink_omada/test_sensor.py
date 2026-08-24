@@ -7,7 +7,11 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 from tplink_omada_client.definitions import DeviceStatus, DeviceStatusCategory
-from tplink_omada_client.devices import OmadaListDevice, OmadaSwitchPortDetails
+from tplink_omada_client.devices import (
+    OmadaListDevice,
+    OmadaSwitch,
+    OmadaSwitchPortDetails,
+)
 from tplink_omada_client.exceptions import OmadaClientException
 
 from homeassistant.components.tplink_omada.const import DOMAIN
@@ -17,6 +21,7 @@ from homeassistant.components.tplink_omada.coordinator import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util.dt import utcnow
 
 from tests.common import (
     MockConfigEntry,
@@ -62,9 +67,43 @@ async def test_switch_port_refresh_failure_skips_port_sensors(
         assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    # Device sensors are still set up
     assert hass.states.get("sensor.test_poe_switch_device_status") is not None
     assert "Error while setting up tplink_omada platform for sensor" not in caplog.text
+
+
+@patch("homeassistant.components.tplink_omada.PLATFORMS", ["sensor"])
+@pytest.mark.usefixtures("mock_omada_client")
+async def test_switch_port_sensors_registered_after_refresh_failure_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+) -> None:
+    """Test switch port sensors are registered once port data is available."""
+    calls = 0
+    switch_ports = mock_omada_site_client.get_switch_ports.return_value
+
+    async def get_switch_ports(
+        network_switch: OmadaSwitch,
+    ) -> list[OmadaSwitchPortDetails]:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise OmadaClientException("mock failure")
+        return switch_ports
+
+    mock_omada_site_client.get_switch_ports.side_effect = get_switch_ports
+    mock_config_entry.add_to_hass(hass)
+
+    with patch("homeassistant.components.tplink_omada.PLATFORMS", ["sensor"]):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_poe_switch_port_1_poe_power") is None
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=POLL_DEVICES + 10))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.test_poe_switch_port_1_poe_power") is not None
 
 
 async def test_entities(

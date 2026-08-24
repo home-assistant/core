@@ -3,7 +3,7 @@
 import asyncio
 from datetime import timedelta
 from typing import Any
-from unittest.mock import AsyncMock, MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -21,7 +21,7 @@ from tplink_omada_client.exceptions import InvalidDevice, OmadaClientException
 
 from homeassistant.components import switch
 from homeassistant.components.tplink_omada.const import DOMAIN
-from homeassistant.components.tplink_omada.coordinator import POLL_GATEWAY
+from homeassistant.components.tplink_omada.coordinator import POLL_DEVICES, POLL_GATEWAY
 from homeassistant.const import ATTR_ENTITY_ID
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.helpers import entity_registry as er
@@ -97,11 +97,43 @@ async def test_switch_port_refresh_failure_skips_port_entities(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Gateway switch entities are still set up
     assert hass.states.get("switch.test_router_port_4_internet_connected") is not None
-    # Port entities are skipped while port data is unavailable
     assert hass.states.get("switch.test_poe_switch_port_1_poe") is None
     assert "Error while setting up tplink_omada platform for switch" not in caplog.text
+
+
+@patch("homeassistant.components.tplink_omada.PLATFORMS", ["switch"])
+@pytest.mark.usefixtures("mock_omada_client")
+async def test_switch_port_entities_registered_after_refresh_failure_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+) -> None:
+    """Test switch port entities are registered once port data is available."""
+    calls = 0
+    switch_ports = mock_omada_site_client.get_switch_ports.return_value
+
+    async def get_switch_ports(
+        network_switch: OmadaSwitch,
+    ) -> list[OmadaSwitchPortDetails]:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise OmadaClientException("mock failure")
+        return switch_ports
+
+    mock_omada_site_client.get_switch_ports.side_effect = get_switch_ports
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_poe_switch_port_1_poe") is None
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=POLL_DEVICES + 10))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_poe_switch_port_1_poe") is not None
 
 
 async def test_poe_switches(

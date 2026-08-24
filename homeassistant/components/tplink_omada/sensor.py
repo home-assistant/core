@@ -22,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import OmadaConfigEntry
 from .const import OmadaDeviceStatus
@@ -95,7 +96,7 @@ async def async_setup_entry(
         coordinator = controller.get_switch_port_coordinator(switch)
         await coordinator.async_refresh()
         if not coordinator.data:
-            return
+            raise UpdateFailed(f"Failed to fetch port data for {switch.name}")
 
         entities: list[Entity] = [
             OmadaSwitchPortSensor(
