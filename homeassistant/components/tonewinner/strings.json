@@ -1,0 +1,42 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "reconfigure_unload_failed": "The existing configuration could not be unloaded. Please try again."
+    },
+    "error": {
+      "cannot_connect": "Cannot connect to the serial port. Please check the port and permissions.",
+      "unknown": "An unknown error occurred"
+    },
+    "step": {
+      "reconfigure": {
+        "data": {
+          "serial_port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "serial_port": "[%key:component::tonewinner::config::step::user::data_description::serial_port%]"
+        },
+        "description": "Update the serial port for your Tonewinner AV receiver.",
+        "title": "Reconfigure Tonewinner"
+      },
+      "user": {
+        "data": {
+          "serial_port": "[%key:common::config_flow::data::port%]"
+        },
+        "data_description": {
+          "serial_port": "Serial port path to connect to"
+        },
+        "description": "Enter the serial port of your Tonewinner AV receiver.",
+        "title": "Set up Tonewinner"
+      }
+    }
+  },
+  "entity": {
+    "media_player": {
+      "tonewinner": {
+        "name": "Tonewinner"
+      }
+    }
+  }
+}

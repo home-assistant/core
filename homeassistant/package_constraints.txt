@@ -24,7 +24,7 @@ bleak-retry-connector==4.6.3
 bleak==3.0.2
 bluetooth-adapters==2.4.0
 bluetooth-auto-recovery==1.6.4
-bluetooth-data-tools==1.29.18
+bluetooth-data-tools==1.29.21
 cached-ipaddress==1.1.2
 certifi>=2021.5.30
 ciso8601==2.3.3
@@ -35,8 +35,8 @@ file-read-backwards==2.0.0
 fnv-hash-fast==2.0.3
 go2rtc-client==0.4.0
 ha-ffmpeg==3.2.2
-habluetooth==6.26.5
-hass-nabucasa==2.2.0
+habluetooth==6.26.7
+hass-nabucasa==2.3.0
 hassil==3.11.0
 home-assistant-bluetooth==2.0.0
 home-assistant-frontend==20260729.7
@@ -47,10 +47,11 @@ Jinja2==3.1.6
 lru-dict==1.4.1
 mutagen==1.48.1
 openai==2.45.0
-orjson==3.11.9
+orjson==3.12.0
 packaging>=23.1
 paho-mqtt==2.1.0
 Pillow==12.3.0
+probatio==0.11.2
 propcache==0.5.2
 psutil-home-assistant==0.0.1
 PyJWT==2.13.0
@@ -64,16 +65,13 @@ PyYAML==6.0.3
 requests==2.34.2
 securetar==2026.4.1
 serialx==1.8.2
-SQLAlchemy==2.0.51
+SQLAlchemy==2.0.52
 standard-aifc==3.13.0
 standard-telnetlib==3.13.0
 typing-extensions>=4.16.0,<5.0
 ulid-transform==2.2.9
 urllib3>=2.0
-uv==0.12.3
-voluptuous-openapi==0.4.1
-voluptuous-serialize==2.7.0
-voluptuous==0.15.2
+uv==0.12.5
 webrtc-models==0.3.0
 yarl==1.24.5
 zeroconf==0.150.0
@@ -131,7 +129,7 @@ httpcore==1.0.9
 hyperframe>=5.2.0
 
 # Ensure we run compatible with musllinux build env
-numpy==2.3.2
+numpy==2.5.2
 pandas==2.3.3
 
 # Constrain multidict to avoid typing issues

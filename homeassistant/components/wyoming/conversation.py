@@ -272,6 +272,7 @@ class WyomingConversationEntity(
                                     intent_slots,
                                     text_input=user_input.text,
                                     language=user_input.language,
+                                    assistant=conversation.DOMAIN,
                                     satellite_id=user_input.satellite_id,
                                     device_id=user_input.device_id,
                                 )
