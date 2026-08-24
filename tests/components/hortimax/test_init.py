@@ -97,9 +97,12 @@ async def test_renamed_source_follows(
 ) -> None:
     """Test renaming a source in HortiMaX Pro renames its device."""
     await setup_integration(hass, mock_config_entry)
-    identifiers = {(DOMAIN, f"{DEVICE}::WeatherStation::Weather station 001")}
     assert (
-        device_registry.async_get_device(identifiers=identifiers).name == "Weerstation"
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{DEVICE}::WeatherStation::Weather station 001"),
+            mock_config_entry.entry_id,
+        ).name
+        == "Weerstation"
     )
 
     readouts = load_readouts()
@@ -113,7 +116,11 @@ async def test_renamed_source_follows(
     await hass.async_block_till_done()
 
     assert (
-        device_registry.async_get_device(identifiers=identifiers).name == "Weerhuisje"
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{DEVICE}::WeatherStation::Weather station 001"),
+            mock_config_entry.entry_id,
+        ).name
+        == "Weerhuisje"
     )
 
 
@@ -126,14 +133,17 @@ async def test_devices(
     """Test the controller and its sources become linked devices."""
     await setup_integration(hass, mock_config_entry)
 
-    controller = device_registry.async_get_device(identifiers={(DOMAIN, DEVICE)})
+    controller = device_registry.async_get_device_by_identifier(
+        (DOMAIN, DEVICE), mock_config_entry.entry_id
+    )
     assert controller is not None
     assert controller.name == DEVICE_LABEL
     assert controller.manufacturer == "Ridder"
     assert controller.via_device_id is None
 
-    weather_station = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{DEVICE}::WeatherStation::Weather station 001")}
+    weather_station = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{DEVICE}::WeatherStation::Weather station 001"),
+        mock_config_entry.entry_id,
     )
     assert weather_station is not None
     # The user-defined name wins, with its trailing whitespace stripped.
@@ -143,11 +153,12 @@ async def test_devices(
 
     # Two sources share the user-defined name 'OV1 Tropen', so both get their
     # source type appended.
-    screen = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{DEVICE}::Screen::Screen 001")}
+    screen = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{DEVICE}::Screen::Screen 001"), mock_config_entry.entry_id
     )
-    ventilation = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{DEVICE}::VentilationGroup::Ventilation group 001")}
+    ventilation = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{DEVICE}::VentilationGroup::Ventilation group 001"),
+        mock_config_entry.entry_id,
     )
     assert screen is not None
     assert ventilation is not None

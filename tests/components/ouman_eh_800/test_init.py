@@ -15,9 +15,15 @@ from homeassistant.components.ouman_eh_800.const import (
     DOMAIN,
     OumanDevice,
 )
-from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import STATE_UNAVAILABLE
+from homeassistant.components.select import (
+    ATTR_OPTION,
+    DOMAIN as SELECT_DOMAIN,
+    SERVICE_SELECT_OPTION,
+)
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -66,15 +72,19 @@ async def test_setup_unload_entry(
 
 
 @pytest.mark.parametrize(
-    ("error", "expected_state"),
+    ("error", "expected_state", "expected_reauth_flows"),
     [
-        (
+        pytest.param(
             OumanClientCommunicationError("Connection failed"),
             ConfigEntryState.SETUP_RETRY,
+            0,
+            id="communication_error",
         ),
-        (
+        pytest.param(
             OumanClientAuthenticationError("Invalid credentials"),
             ConfigEntryState.SETUP_ERROR,
+            1,
+            id="authentication_error",
         ),
     ],
 )
@@ -84,6 +94,7 @@ async def test_setup_error(
     mock_ouman_client: AsyncMock,
     error: Exception,
     expected_state: ConfigEntryState,
+    expected_reauth_flows: int,
 ) -> None:
     """Test that setup raises the correct config-entry exception on client errors."""
     mock_ouman_client.login.side_effect = error
@@ -92,6 +103,11 @@ async def test_setup_error(
     assert not await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is expected_state
+
+    reauth_flows = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
+    assert len(reauth_flows) == expected_reauth_flows
 
 
 @pytest.mark.usefixtures("init_integration")
@@ -112,3 +128,38 @@ async def test_update_failed(
     await hass.async_block_till_done()
 
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize("init_integration", [Platform.SELECT], indirect=True)
+@pytest.mark.usefixtures("init_integration")
+async def test_reauth_started_on_action_auth_failure(
+    hass: HomeAssistant,
+    mock_ouman_client: AsyncMock,
+) -> None:
+    """Test that an auth failure when setting a value starts a reauth flow.
+
+    All platforms set values through the same coordinator method, which
+    reloads the config entry on an authentication failure; setup then
+    re-validates the credentials and starts the reauth flow. The select
+    entity here is just one arbitrary way to trigger that shared path.
+    """
+    error = OumanClientAuthenticationError("Wrong username or password")
+    mock_ouman_client.set_endpoint_value.side_effect = error
+    mock_ouman_client.login.side_effect = error
+
+    with pytest.raises(HomeAssistantError, match="Authentication failed"):
+        await hass.services.async_call(
+            SELECT_DOMAIN,
+            SERVICE_SELECT_OPTION,
+            {
+                ATTR_ENTITY_ID: "select.ouman_eh_800_home_away_mode",
+                ATTR_OPTION: "away",
+            },
+            blocking=True,
+        )
+
+    await hass.async_block_till_done()
+    reauth_flows = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": SOURCE_REAUTH}
+    )
+    assert len(reauth_flows) == 1

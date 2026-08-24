@@ -4,7 +4,14 @@ import copy
 import logging
 from typing import Any, override
 
-from vizaio import AppRecord, PairChallenge, Vizio, VizioError, async_is_tv
+from vizaio import (
+    AppRecord,
+    PairChallenge,
+    Vizio,
+    VizioError,
+    async_is_tv,
+    async_resolve_host,
+)
 from vizaio.apps import APP_HOME, BUNDLED_APPS
 import voluptuous as vol
 
@@ -211,6 +218,7 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a Vizio config flow."""
 
     VERSION = 1
+    MINOR_VERSION = 2
 
     @staticmethod
     @callback
@@ -227,18 +235,6 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         self._must_show_form: bool | None = None
         self._pair_challenge: PairChallenge | None = None
         self._data: dict[str, Any] | None = None
-        self._apps: dict[str, list] = {}
-
-    async def _create_entry(self, input_dict: dict[str, Any]) -> ConfigFlowResult:
-        """Create vizio config entry."""
-        # Remove extra keys that will not be used by entry setup
-        input_dict.pop(CONF_APPS_TO_INCLUDE_OR_EXCLUDE, None)
-        input_dict.pop(CONF_INCLUDE_OR_EXCLUDE, None)
-
-        if self._apps:
-            input_dict[CONF_APPS] = self._apps
-
-        return self.async_create_entry(title=input_dict[CONF_NAME], data=input_dict)
 
     @override
     async def async_step_user(
@@ -250,6 +246,17 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             # Store current values in case setup fails and user needs to edit
             self._user_schema = _get_config_schema(user_input)
+            # A host entered without a port would target 443; probe for the
+            # API port. No-op for a host that already carries one.
+            try:
+                user_input[CONF_HOST] = await async_resolve_host(
+                    user_input[CONF_HOST],
+                    session=async_get_clientsession(self.hass, False),
+                )
+            except VizioError:
+                errors[CONF_HOST] = "cannot_determine_port"
+
+        if user_input is not None and not errors:
             # Zeroconf discovery provides the device class; detect it otherwise
             if CONF_DEVICE_CLASS not in user_input:
                 user_input[CONF_DEVICE_CLASS] = await _async_detect_device_class(
@@ -292,7 +299,9 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
                         errors["base"] = "cannot_connect"
 
                     if not errors:
-                        return await self._create_entry(user_input)
+                        return self.async_create_entry(
+                            title=user_input[CONF_NAME], data=user_input
+                        )
                 else:
                     self._data = copy.deepcopy(user_input)
                     return await self.async_step_pair_tv()
@@ -307,8 +316,16 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle zeroconf discovery."""
         host = discovery_info.host
         # If host already has port, no need to add it again
-        if ":" not in host:
+        if ":" not in host and discovery_info.port:
             host = f"{host}:{discovery_info.port}"
+        # Discovery doesn't always advertise a port; probe for the API port so
+        # we don't build a host that targets 443. No-op if one was appended.
+        try:
+            host = await async_resolve_host(
+                host, session=async_get_clientsession(self.hass, False)
+            )
+        except VizioError:
+            return self.async_abort(reason="cannot_connect")
 
         # Set default name to discovered device name by stripping zeroconf service
         # (`type`) from `name`
@@ -389,33 +406,13 @@ class VizioConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _pairing_complete(self, step_id: str) -> ConfigFlowResult:
-        """Handle config flow completion."""
-        assert self._data
-        if not self._must_show_form:
-            return await self._create_entry(self._data)
-
-        self._must_show_form = False
-        return self.async_show_form(
-            step_id=step_id,
-            description_placeholders={"access_token": self._data[CONF_ACCESS_TOKEN]},
-        )
-
     async def async_step_pairing_complete(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Complete non-import sourced config flow.
+        """Display final message to user confirming pairing."""
+        assert self._data
+        if not self._must_show_form:
+            return self.async_create_entry(title=self._data[CONF_NAME], data=self._data)
 
-        Display final message to user confirming pairing.
-        """
-        return await self._pairing_complete("pairing_complete")
-
-    async def async_step_pairing_complete_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Complete import sourced config flow.
-
-        Display final message to user confirming pairing and displaying
-        access token.
-        """
-        return await self._pairing_complete("pairing_complete_import")
+        self._must_show_form = False
+        return self.async_show_form(step_id="pairing_complete")

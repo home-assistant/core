@@ -20,7 +20,7 @@ from .discovery import (
     yaml_excluded_uids,
 )
 
-PLATFORMS = [Platform.CLIMATE]
+PLATFORMS = [Platform.CLIMATE, Platform.SENSOR]
 
 CONFIG_SCHEMA = vol.Schema(
     {

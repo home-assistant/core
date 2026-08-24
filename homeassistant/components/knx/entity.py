@@ -6,7 +6,13 @@ from typing import TYPE_CHECKING, Any, override
 from xknx.devices import Device as XknxDevice
 from xknx.telegram.address import DeviceGroupAddress, GroupAddress
 
-from homeassistant.const import CONF_ENTITY_CATEGORY, CONF_NAME, EntityCategory
+from homeassistant.const import (
+    CONF_DEVICE,
+    CONF_ENTITY_CATEGORY,
+    CONF_ID,
+    CONF_NAME,
+    EntityCategory,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -115,6 +121,7 @@ class KnxUiEntityPlatformController(PlatformControllerBase):
 class _KnxEntityBase(Entity):
     """Representation of a KNX entity."""
 
+    _attr_has_entity_name = True
     _attr_should_poll = False
 
     _attr_unique_id: str
@@ -195,6 +202,18 @@ class KnxYamlEntity(_KnxEntityBase):
         self._attr_unique_id = new_unique_id
         self._attr_entity_category = entity_config.get(CONF_ENTITY_CATEGORY)
 
+        if device := entity_config.get(CONF_DEVICE):
+            # Entities sharing the same `device` `id` are grouped into one
+            # device. `id` is normalized in the schema (`_device_id`), which
+            # also lets YAML entities join a UI-created device by referencing
+            # its identifier verbatim.
+            self._attr_device_info = DeviceInfo(
+                identifiers={(DOMAIN, device[CONF_ID])},
+                manufacturer="KNX",
+            )
+            if device_name := device.get(CONF_NAME):
+                self._attr_device_info["name"] = device_name
+
         default_entity_id: str | None
         if (default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID)) is not None:
             self.entity_id = default_entity_id
@@ -202,8 +221,6 @@ class KnxYamlEntity(_KnxEntityBase):
 
 class KnxUiEntity(_KnxEntityBase):
     """Representation of a KNX UI entity."""
-
-    _attr_has_entity_name = True
 
     def __init__(
         self, knx_module: KNXModule, unique_id: str, entity_config: dict[str, Any]

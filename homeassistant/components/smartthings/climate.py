@@ -64,6 +64,7 @@ OPERATING_STATE_TO_ACTION = {
 
 AC_MODE_TO_STATE = {
     "auto": HVACMode.AUTO,
+    "aIComfort": HVACMode.AUTO,
     "cool": HVACMode.COOL,
     "dry": HVACMode.DRY,
     "coolClean": HVACMode.COOL,
@@ -453,6 +454,20 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
             tasks.append(self.async_turn_on())
 
         mode = STATE_TO_AC_MODE[hvac_mode]
+
+        # If new hvac_mode is HVACMode.AUTO and
+        # AirConditioner doesn't support "auto"
+        # but supports "aIComfort", change mode to "aIComfort"
+        if hvac_mode == HVACMode.AUTO:
+            supported_modes = (
+                self.get_attribute_value(
+                    Capability.AIR_CONDITIONER_MODE, Attribute.SUPPORTED_AC_MODES
+                )
+                or []
+            )
+            if "auto" not in supported_modes and "aIComfort" in supported_modes:
+                mode = "aIComfort"
+
         # If new hvac_mode is HVAC_MODE_FAN_ONLY and
         # AirConditioner supports "wind" or "fan" mode,
         # the AirConditioner new mode has to be "wind" or "fan"
@@ -581,6 +596,39 @@ class SmartThingsAirConditioner(SmartThingsEntity, ClimateEntity):
         return self.get_attribute_value(
             Capability.THERMOSTAT_COOLING_SETPOINT, Attribute.COOLING_SETPOINT
         )
+
+    def _get_setpoint_range_value(self, key: str) -> float | None:
+        """Return a value from the cooling setpoint range, if the device reports it."""
+        if (
+            setpoint_range := self.get_attribute_value(
+                Capability.THERMOSTAT_COOLING_SETPOINT,
+                Attribute.COOLING_SETPOINT_RANGE,
+            )
+        ) is None:
+            return None
+        return setpoint_range.get(key)
+
+    @property
+    @override
+    def target_temperature_step(self) -> float | None:
+        """Return the supported step of target temperature."""
+        return self._get_setpoint_range_value("step")
+
+    @property
+    @override
+    def min_temp(self) -> float:
+        """Return the minimum temperature."""
+        if (minimum := self._get_setpoint_range_value("minimum")) is None:
+            return DEFAULT_MIN_TEMP
+        return minimum
+
+    @property
+    @override
+    def max_temp(self) -> float:
+        """Return the maximum temperature."""
+        if (maximum := self._get_setpoint_range_value("maximum")) is None:
+            return DEFAULT_MAX_TEMP
+        return maximum
 
     @property
     @override

@@ -66,7 +66,6 @@ ATTR_VERSION = "version"
 DOMAIN = "api"
 STREAM_PING_PAYLOAD = "ping"
 STREAM_PING_INTERVAL = 50  # seconds
-SERVICE_WAIT_TIMEOUT = 10
 
 CONFIG_SCHEMA = cv.empty_config_schema(DOMAIN)
 
@@ -440,14 +439,18 @@ class APIDomainServicesView(HomeAssistantView):
 
         try:
             # shield the service call from cancellation on connection drop
+            # and track the task so it cannot be garbage collected mid-run
             response = await shield(
-                hass.services.async_call(
-                    domain,
-                    service,
-                    data,  # type: ignore[arg-type]
-                    blocking=True,
-                    context=context,
-                    return_response=response_requested,
+                hass.async_create_task(
+                    hass.services.async_call(
+                        domain,
+                        service,
+                        data,  # type: ignore[arg-type]
+                        blocking=True,
+                        context=context,
+                        return_response=response_requested,
+                    ),
+                    f"api service call {domain}.{service}",
                 )
             )
         except (vol.Invalid, ServiceNotFound) as ex:

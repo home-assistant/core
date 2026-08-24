@@ -295,8 +295,43 @@ async def test_camera_stream_source_propagates_api_error(
     )
 
     entity_id = _camera_entity_id(entity_registry, mock_config_entry)
-    with pytest.raises(HomeAssistantError, match="stream failure"):
+    with pytest.raises(
+        HomeAssistantError,
+        match="Could not get the live stream URL from Imou: stream failure",
+    ):
         await async_get_stream_source(hass, entity_id)
+
+
+@pytest.mark.parametrize(
+    "imou_mock_devices",
+    [
+        [
+            create_online_device(
+                "d1",
+                "Device 1",
+                channel_id="1",
+                button_keys=(),
+            )
+        ]
+    ],
+    indirect=True,
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "init_integration")
+async def test_camera_image_propagates_api_error(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    init_integration: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Imou API errors from snapshot fetch surface to the caller."""
+    init_integration.async_get_device_image.side_effect = ImouException("image failure")
+
+    entity_id = _camera_entity_id(entity_registry, mock_config_entry)
+    with pytest.raises(
+        HomeAssistantError,
+        match="Could not get a snapshot from Imou: image failure",
+    ):
+        await async_get_image(hass, entity_id)
 
 
 @pytest.mark.parametrize(

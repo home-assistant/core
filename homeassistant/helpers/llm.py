@@ -230,8 +230,10 @@ class IntentTool(Tool):
     ) -> None:
         """Init the class."""
         self.name = name
+        self.intent_type = intent_handler.intent_type
         self.description = (
-            intent_handler.description or f"Execute Home Assistant {self.name} intent"
+            intent_handler.description
+            or f"Execute Home Assistant {self.intent_type} intent"
         )
         self.extra_slots = None
         if not (slot_schema := intent_handler.slot_schema):
@@ -264,7 +266,9 @@ class IntentTool(Tool):
             floor: fr.FloorEntry | None = None
             if device:
                 area_reg = ar.async_get(hass)
-                if device.area_id and (area := area_reg.async_get_area(device.area_id)):
+                if (
+                    device_area_id := dr.async_get_effective_area_id(hass, device)
+                ) and (area := area_reg.async_get_area(device_area_id)):
                     if area.floor_id:
                         floor_reg = fr.async_get(hass)
                         floor = floor_reg.async_get_floor(area.floor_id)
@@ -279,7 +283,7 @@ class IntentTool(Tool):
         intent_response = await intent.async_handle(
             hass=hass,
             platform=llm_context.platform,
-            intent_type=self.name,
+            intent_type=self.intent_type,
             slots=slots,
             text_input=None,
             context=llm_context.context,

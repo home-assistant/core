@@ -46,8 +46,8 @@ class ElectricKiwiAccountSensorEntityDescription(SensorEntityDescription):
 def _get_hop_percentage(account_balance: AccountSummary) -> float:
     """Return the hop percentage from account summary."""
     if power := account_balance.services.get("power"):
-        if connection := power.connections[0]:
-            return float(connection.hop_percentage)
+        if connections := power.connections:
+            return float(connections[0].hop_percentage)
     return 0.0
 
 

@@ -129,13 +129,13 @@ async def _setup_integration_with_nodes(
     hass: HomeAssistant,
     client: MagicMock,
     nodes: list[MatterNode],
-) -> MatterNode:
+) -> None:
     """Set up Matter integration with nodes."""
     client.get_nodes.return_value = nodes
 
     def _get_node(node_id: int) -> MatterNode:
         try:
-            next(node for node in nodes if node.node_id == node_id)
+            return next(node for node in nodes if node.node_id == node_id)
         except StopIteration as err:
             raise KeyError(f"Node with id {node_id} not found") from err
 
