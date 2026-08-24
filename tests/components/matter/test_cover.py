@@ -603,3 +603,31 @@ async def test_cover_full_features(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+    ],
+)
+async def test_cover_moving_status_with_unobservable_axis(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test operational status is trusted when a supported axis has no position."""
+
+    # a covering that tilts without being position aware on tilt: the lift
+    # sitting at its target says nothing about whether the tilt is moving
+    set_node_attribute(matter_node, 1, 258, 65532, 0b111)
+    set_node_attribute(matter_node, 1, 258, 11, 10000)
+    set_node_attribute(matter_node, 1, 258, 14, 10000)
+    set_node_attribute(matter_node, 1, 258, 10, 0b100010)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING

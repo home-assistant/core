@@ -127,12 +127,39 @@ class MatterCover(MatterEntity, CoverEntity):
         )
 
     @callback
+    def _has_unobservable_axis(self) -> bool:
+        """Return whether a supported axis cannot report its position.
+
+        Lift and tilt are independently position aware (PA_LF conformance
+        `[LF]`, PA_TL conformance `[TL]`), so a covering may support an axis
+        while being unable to report where that axis is.
+        """
+        feature_map = self.get_matter_attribute_value(
+            clusters.WindowCovering.Attributes.FeatureMap
+        )
+        features = clusters.WindowCovering.Bitmaps.Feature
+        return bool(
+            (
+                feature_map & features.kLift
+                and not feature_map & features.kPositionAwareLift
+            )
+            or (
+                feature_map & features.kTilt
+                and not feature_map & features.kPositionAwareTilt
+            )
+        )
+
+    @callback
     def _positions_at_target(self) -> bool | None:
         """Return whether all supported positions match their target position.
 
         Returns None if the positions cannot be compared, e.g. the device is
         not position aware or a position is (still) unknown.
         """
+        # An axis that is supported but not position aware cannot be checked,
+        # and the remaining axis says nothing about whether it is moving.
+        if self._has_unobservable_axis():
+            return None
         at_target: bool | None = None
         for current_attribute, target_attribute in (
             (
