@@ -2,7 +2,7 @@
 
 from datetime import timedelta
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
@@ -102,8 +102,6 @@ async def test_total_sensor_restore_data_parsing(
     )
     await sensor.async_added_to_hass()
     assert sensor.native_value == 555.5
-    assert sensor._total_increasing_high_water == 555.5
-    assert sensor._smoothed_total_increasing(555.4) == 555.5
 
     invalid_sensor = SofarTotalSensor(runtime_data, description)
     invalid_sensor.hass = hass
@@ -111,7 +109,7 @@ async def test_total_sensor_restore_data_parsing(
         return_value=SimpleNamespace(native_value="not_a_number")
     )
     await invalid_sensor.async_added_to_hass()
-    assert invalid_sensor._total_increasing_high_water is None
+    assert invalid_sensor.native_value is None
 
     device.energy.load_consumption_total = 120.0
     total_sensor = SofarTotalSensor(runtime_data, description)
@@ -122,27 +120,26 @@ async def test_total_sensor_restore_data_parsing(
     assert unset_sensor.native_value is None
 
 
-async def test_smoothed_total_increasing_dip_tolerance(
-    init_integration: MockConfigEntry,
+async def test_total_sensor_seeds_high_water_from_restored_value(
+    hass: HomeAssistant, init_integration: MockConfigEntry
 ) -> None:
-    """Test small total_increasing dips are ignored, large drops pass through."""
+    """Test a restored value seeds the library's high-water mark."""
     runtime_data = init_integration.runtime_data
+    device = runtime_data.readings.device
     description = SofarSensorDescription(
         key="load_consumption_total",
         component="energy",
         translation_key="load_consumption_total",
+        state_class=SensorStateClass.TOTAL_INCREASING,
     )
     sensor = SofarTotalSensor(runtime_data, description)
-    sensor._attr_native_value = 1000.0
-    sensor._total_increasing_high_water = 1000.0
-
-    assert sensor._smoothed_total_increasing(999.9) == 1000.0
-
-    assert sensor._smoothed_total_increasing(1005.0) == 1005.0
-    assert sensor._total_increasing_high_water == 1005.0
-
-    assert sensor._smoothed_total_increasing(10.0) == 10.0
-    assert sensor._total_increasing_high_water == 10.0
+    sensor.hass = hass
+    sensor.async_get_last_sensor_data = AsyncMock(
+        return_value=SimpleNamespace(native_value="555.5")
+    )
+    with patch.object(device.energy, "seed_high_water") as mock_seed:
+        await sensor.async_added_to_hass()
+    mock_seed.assert_called_once_with("load_consumption_total", 555.5)
 
 
 async def test_sensor_dead_link_unavailable(init_integration: MockConfigEntry) -> None:
@@ -203,10 +200,10 @@ async def test_sofar_sensor_enum_native_value(
     assert sensor.native_value == "Grid Connected"
 
 
-async def test_total_sensor_total_increasing_uses_smoothing(
+async def test_total_sensor_total_increasing_uses_corrected_value(
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test a TOTAL_INCREASING description routes through the dip smoother."""
+    """Test a TOTAL_INCREASING description reads corrected() from the library."""
     runtime_data = init_integration.runtime_data
     description = SofarSensorDescription(
         key="load_consumption_total",
@@ -214,8 +211,9 @@ async def test_total_sensor_total_increasing_uses_smoothing(
         translation_key="load_consumption_total",
         state_class=SensorStateClass.TOTAL_INCREASING,
     )
-    runtime_data.readings.device.energy.load_consumption_total = 42.0
+    device = runtime_data.readings.device
     sensor = SofarTotalSensor(runtime_data, description)
-    assert sensor.native_value == 42.0
-    assert sensor._total_increasing_high_water == 42.0
+    with patch.object(device.energy, "corrected", return_value=42.0) as mock_corrected:
+        assert sensor.native_value == 42.0
+    mock_corrected.assert_called_once_with("load_consumption_total")
     assert sensor.available

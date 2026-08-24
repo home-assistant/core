@@ -16,18 +16,13 @@ from homeassistant.const import UnitOfEnergy, UnitOfPower
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .coordinator import SofarConfigEntry, SofarRuntimeData
+from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
 
 def _enum_label(member_name: str) -> str:
     """Format an IntEnum member name to match an ENUM sensor option."""
     return " ".join(word.capitalize() for word in member_name.split("_"))
-
-
-# How far below the high-water mark counts as a torn read (~0.003%
-# observed here) vs a genuine reset — well under HA's 90% threshold.
-_TOTAL_INCREASING_DIP_TOLERANCE = 0.01
 
 
 async def async_setup_entry(
@@ -74,15 +69,6 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
 
     entity_description: SofarSensorDescription
 
-    def __init__(
-        self,
-        runtime_data: SofarRuntimeData,
-        description: SofarSensorDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(runtime_data, description)
-        self._total_increasing_high_water: float | None = None
-
     @property
     @override
     def available(self) -> bool:
@@ -96,39 +82,32 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
             if last_data.native_value is not None:
                 try:
                     val = float(str(last_data.native_value))
-                    self._attr_native_value = val
-                    self._total_increasing_high_water = val
                 except ValueError, TypeError:
                     pass
+                else:
+                    self._attr_native_value = val
+                    if (
+                        self.entity_description.state_class
+                        is SensorStateClass.TOTAL_INCREASING
+                    ):
+                        component = getattr(
+                            self.coordinator.device, self.entity_description.component
+                        )
+                        component.seed_high_water(self.entity_description.key, val)
 
     @property
     @override
     def native_value(self) -> int | float | None:
         component = getattr(self.coordinator.device, self.entity_description.component)
-        value = getattr(component, self.entity_description.key)
-        if value is not None:
-            if (
-                self.entity_description.state_class is SensorStateClass.TOTAL_INCREASING
-                and isinstance(value, (int, float))
-            ):
-                self._attr_native_value = self._smoothed_total_increasing(float(value))
-            elif isinstance(value, (int, float)):
-                self._attr_native_value = value
+        if self.entity_description.state_class is SensorStateClass.TOTAL_INCREASING:
+            value = component.corrected(self.entity_description.key)
+        else:
+            value = getattr(component, self.entity_description.key)
+        if isinstance(value, (int, float)):
+            self._attr_native_value = value
         if isinstance(self._attr_native_value, (int, float)):
             return self._attr_native_value
         return None
-
-    def _smoothed_total_increasing(self, value: float) -> float:
-        """Hold at the high-water mark through a torn read; let a reset through."""
-        high_water = self._total_increasing_high_water
-        if (
-            high_water is None
-            or value >= high_water
-            or value < high_water * (1 - _TOTAL_INCREASING_DIP_TOLERANCE)
-        ):
-            self._total_increasing_high_water = value
-            return value
-        return high_water
 
 
 @dataclass(frozen=True, kw_only=True)
