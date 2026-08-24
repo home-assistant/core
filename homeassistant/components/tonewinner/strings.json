@@ -28,7 +28,7 @@
           "serial_port": "Serial port path to connect to"
         },
         "description": "Enter the serial port of your Tonewinner AV receiver.",
-        "title": "Setup Tonewinner"
+        "title": "Set up Tonewinner"
       }
     }
   },
