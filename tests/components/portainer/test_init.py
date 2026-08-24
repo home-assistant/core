@@ -353,8 +353,9 @@ async def test_docker_system_df_refresh_runs_on_ha_start(
     """Test docker system df coordinator refreshes DF data on HA start."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.my_environment_image_disk_usage_total_size")
-    assert state is not None
+    assert (
+        state := hass.states.get("sensor.my_environment_image_disk_usage_total_size")
+    )
     assert state.state != STATE_UNAVAILABLE
 
 
