@@ -32,7 +32,13 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
+from .const import (
+    DOMAIN,
+    VIZIO_AUDIO_SETTINGS,
+    VIZIO_MUTE,
+    VIZIO_SOUND_MODE,
+    VIZIO_VOLUME,
+)
 
 type VizioConfigEntry = ConfigEntry[VizioRuntimeData]
 
@@ -95,6 +101,11 @@ class VizioDeviceData:
 
     # Audio settings from get_settings("audio")
     audio_settings: dict[str, SettingInfo] | None = None
+
+    # Volume and mute, read individually when the audio settings
+    # collection does not carry them.
+    volume: int | None = None
+    is_muted: bool | None = None
 
     # Sound mode options from get_setting("audio", "eq")
     sound_mode_list: list[str] | None = None
@@ -193,6 +204,17 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         # Device is on - fetch all data
         audio_settings = await _optional(self.device.get_settings(VIZIO_AUDIO_SETTINGS))
 
+        # Some firmware omits volume and mute from the audio settings
+        # collection even though the individual settings still work, and
+        # there is no way to tell in advance. Read them directly only when
+        # they are missing, so unaffected devices cost nothing extra.
+        volume: int | None = None
+        is_muted: bool | None = None
+        if audio_settings is None or VIZIO_VOLUME not in audio_settings:
+            volume = await _optional(self.device.get_volume())
+        if audio_settings is None or VIZIO_MUTE not in audio_settings:
+            is_muted = await _optional(self.device.is_muted())
+
         sound_mode_list = None
         if audio_settings and VIZIO_SOUND_MODE in audio_settings:
             sound_mode = await _optional(
@@ -231,6 +253,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         return VizioDeviceData(
             is_on=True,
             audio_settings=audio_settings,
+            volume=volume,
+            is_muted=is_muted,
             sound_mode_list=sound_mode_list,
             current_input=current_input,
             input_list=input_list,
