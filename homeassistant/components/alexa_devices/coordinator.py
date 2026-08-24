@@ -132,8 +132,8 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
         device_registry = dr.async_get(hass)
         self.previous_devices: set[str] = {
             identifier
-            for device in device_registry.devices.get_devices_for_config_entry_id(
-                entry.entry_id
+            for device in dr.async_entries_for_config_entry(
+                device_registry, entry.entry_id
             )
             if device.entry_type != dr.DeviceEntryType.SERVICE
             for identifier_domain, identifier in device.identifiers
