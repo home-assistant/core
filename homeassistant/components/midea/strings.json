@@ -106,6 +106,29 @@
         "name": "Zone 2 thermostat"
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "Baby",
+              "circulation": "Circulation",
+              "comfort": "Comfort",
+              "customize": "Customize",
+              "eco": "Eco",
+              "induction": "Induction",
+              "natural": "Natural",
+              "silent": "Silent",
+              "sleep": "Sleep",
+              "smart": "Smart",
+              "soft": "Soft",
+              "strong": "Strong",
+              "warm": "Warm"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "dry_level": {
         "name": "Dry level"
