@@ -199,7 +199,7 @@ class KnxExposeEntity:
         )
         for _option, xknx_expose in self._exposures:
             self.xknx.devices.async_add(xknx_expose)
-        
+
         self.hass.async_create_task(
             self._async_handle_state(self.hass.states.get(self.entity_id))
         )
@@ -281,9 +281,7 @@ class KnxExposeEntity:
                 return None
         return value  # type: ignore[no-any-return]
 
-    async def _async_entity_changed(
-        self, event: Event[EventStateChangedData]
-    ) -> None:
+    async def _async_entity_changed(self, event: Event[EventStateChangedData]) -> None:
         """Handle entity change."""
         await self._async_handle_state(event.data["new_state"])
 
@@ -294,14 +292,12 @@ class KnxExposeEntity:
                 expose_value = self._get_expose_value(state, option)
                 if expose_value is None:
                     continue
-    
+
                 if xknx_expose.sensor_value.value is None and not option.send_on_init:
                     self._initialize_expose_value(xknx_expose, expose_value)
                     continue
-    
-                tg.create_task(
-                    self._async_set_knx_value(xknx_expose, expose_value)
-                )
+
+                tg.create_task(self._async_set_knx_value(xknx_expose, expose_value))
 
     async def _async_set_knx_value(
         self,
