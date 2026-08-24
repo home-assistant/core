@@ -738,6 +738,16 @@
     }
   },
   "services": {
+    "clear_holiday_schedule": {
+      "description": "Removes a holiday schedule from a lock. Use index 254 to clear all holiday schedules.",
+      "fields": {
+        "holiday_index": {
+          "description": "The holiday schedule index (1-based) to clear, or 254 to clear all.",
+          "name": "Holiday index"
+        }
+      },
+      "name": "Clear holiday schedule"
+    },
     "clear_lock_credential": {
       "description": "Removes a credential from a lock.",
       "fields": {
@@ -762,6 +772,44 @@
       },
       "name": "Clear lock user"
     },
+    "clear_week_day_schedule": {
+      "description": "Removes a week day schedule from a lock user. Use index 254 to clear all week day schedules for the user, and/or user index 65534 to target all users.",
+      "fields": {
+        "user_index": {
+          "description": "The user slot index (1-based) to clear the schedule for, or 65534 for all users.",
+          "name": "User index"
+        },
+        "week_day_index": {
+          "description": "The week day schedule index (1-based) to clear, or 254 to clear all.",
+          "name": "Week day index"
+        }
+      },
+      "name": "Clear week day schedule"
+    },
+    "clear_year_day_schedule": {
+      "description": "Removes a year day schedule from a lock user. Use index 254 to clear all year day schedules for the user, and/or user index 65534 to target all users.",
+      "fields": {
+        "user_index": {
+          "description": "The user slot index (1-based) to clear the schedule for, or 65534 for all users.",
+          "name": "User index"
+        },
+        "year_day_index": {
+          "description": "The year day schedule index (1-based) to clear, or 254 to clear all.",
+          "name": "Year day index"
+        }
+      },
+      "name": "Clear year day schedule"
+    },
+    "get_holiday_schedule": {
+      "description": "Returns a holiday schedule from a lock.",
+      "fields": {
+        "holiday_index": {
+          "description": "The holiday schedule index to query.",
+          "name": "Holiday index"
+        }
+      },
+      "name": "Get holiday schedule"
+    },
     "get_lock_credential_status": {
       "description": "Returns the status of a credential slot on a lock.",
       "fields": {
@@ -784,6 +832,34 @@
       "description": "Returns all users configured on a lock with their credentials.",
       "name": "Get lock users"
     },
+    "get_week_day_schedule": {
+      "description": "Returns a week day schedule from a lock user.",
+      "fields": {
+        "user_index": {
+          "description": "The user slot index to query the schedule for.",
+          "name": "User index"
+        },
+        "week_day_index": {
+          "description": "The week day schedule index to query.",
+          "name": "Week day index"
+        }
+      },
+      "name": "Get week day schedule"
+    },
+    "get_year_day_schedule": {
+      "description": "Returns a year day schedule from a lock user.",
+      "fields": {
+        "user_index": {
+          "description": "The user slot index to query the schedule for.",
+          "name": "User index"
+        },
+        "year_day_index": {
+          "description": "The year day schedule index to query.",
+          "name": "Year day index"
+        }
+      },
+      "name": "Get year day schedule"
+    },
     "open_commissioning_window": {
       "description": "Allows adding one of your devices to another Matter network by opening the commissioning window for this Matter device for 60 seconds.",
       "fields": {
@@ -793,6 +869,28 @@
         }
       },
       "name": "Open commissioning window"
+    },
+    "set_holiday_schedule": {
+      "description": "Creates or updates a lock-wide holiday schedule with an associated operating mode.",
+      "fields": {
+        "end_time": {
+          "description": "The end date and time of the holiday period.",
+          "name": "End time"
+        },
+        "holiday_index": {
+          "description": "The holiday schedule index (1-based).",
+          "name": "Holiday index"
+        },
+        "operating_mode": {
+          "description": "The operating mode the lock uses during the holiday period.",
+          "name": "Operating mode"
+        },
+        "start_time": {
+          "description": "The start date and time of the holiday period.",
+          "name": "Start time"
+        }
+      },
+      "name": "Set holiday schedule"
     },
     "set_lock_credential": {
       "description": "Adds or updates a credential on a lock.",
@@ -845,6 +943,62 @@
         }
       },
       "name": "Set lock user"
+    },
+    "set_week_day_schedule": {
+      "description": "Creates or updates a recurring weekly access schedule for a lock user.",
+      "fields": {
+        "days": {
+          "description": "The days of the week the schedule applies to.",
+          "name": "Days"
+        },
+        "end_hour": {
+          "description": "The hour (0-23) the access window ends.",
+          "name": "End hour"
+        },
+        "end_minute": {
+          "description": "The minute (0-59) the access window ends.",
+          "name": "End minute"
+        },
+        "start_hour": {
+          "description": "The hour (0-23) the access window starts.",
+          "name": "Start hour"
+        },
+        "start_minute": {
+          "description": "The minute (0-59) the access window starts.",
+          "name": "Start minute"
+        },
+        "user_index": {
+          "description": "The user slot index (1-based) to set the schedule for.",
+          "name": "User index"
+        },
+        "week_day_index": {
+          "description": "The week day schedule index (1-based).",
+          "name": "Week day index"
+        }
+      },
+      "name": "Set week day schedule"
+    },
+    "set_year_day_schedule": {
+      "description": "Creates or updates a fixed date-range access schedule for a lock user.",
+      "fields": {
+        "end_time": {
+          "description": "The end date and time of the access period.",
+          "name": "End time"
+        },
+        "start_time": {
+          "description": "The start date and time of the access period.",
+          "name": "Start time"
+        },
+        "user_index": {
+          "description": "The user slot index (1-based) to set the schedule for.",
+          "name": "User index"
+        },
+        "year_day_index": {
+          "description": "The year day schedule index (1-based).",
+          "name": "Year day index"
+        }
+      },
+      "name": "Set year day schedule"
     },
     "water_heater_boost": {
       "description": "Enables water heater boost for a specific duration.",

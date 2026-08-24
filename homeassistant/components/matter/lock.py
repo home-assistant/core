@@ -23,10 +23,21 @@ from .const import (
     ATTR_CREDENTIAL_INDEX,
     ATTR_CREDENTIAL_RULE,
     ATTR_CREDENTIAL_TYPE,
+    ATTR_DAYS,
+    ATTR_END_HOUR,
+    ATTR_END_MINUTE,
+    ATTR_END_TIME,
+    ATTR_HOLIDAY_INDEX,
+    ATTR_OPERATING_MODE,
+    ATTR_START_HOUR,
+    ATTR_START_MINUTE,
+    ATTR_START_TIME,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
     ATTR_USER_STATUS,
     ATTR_USER_TYPE,
+    ATTR_WEEK_DAY_INDEX,
+    ATTR_YEAR_DAY_INDEX,
     LOCK_TIMED_REQUEST_TIMEOUT_MS,
     LOGGER,
 )
@@ -37,14 +48,26 @@ from .lock_helpers import (
     GetLockCredentialStatusResult,
     GetLockInfoResult,
     GetLockUsersResult,
+    HolidayScheduleResult,
     SetLockCredentialResult,
+    WeekDayScheduleResult,
+    YearDayScheduleResult,
+    clear_holiday_schedule,
     clear_lock_credential,
     clear_lock_user,
+    clear_week_day_schedule,
+    clear_year_day_schedule,
+    get_holiday_schedule,
     get_lock_credential_status,
     get_lock_info,
     get_lock_users,
+    get_week_day_schedule,
+    get_year_day_schedule,
+    set_holiday_schedule,
     set_lock_credential,
     set_lock_user,
+    set_week_day_schedule,
+    set_year_day_schedule,
 )
 from .models import MatterDiscoverySchema
 
@@ -383,6 +406,139 @@ class MatterLock(MatterEntity, LockEntity):
         except MatterError as err:
             raise HomeAssistantError(
                 f"Failed to get credential status for {self.entity_id}: {err}"
+            ) from err
+
+    async def async_set_week_day_schedule(self, **kwargs: Any) -> None:
+        """Set a week day schedule on the lock."""
+        try:
+            await set_week_day_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                week_day_index=kwargs[ATTR_WEEK_DAY_INDEX],
+                user_index=kwargs[ATTR_USER_INDEX],
+                days=kwargs[ATTR_DAYS],
+                start_hour=kwargs[ATTR_START_HOUR],
+                start_minute=kwargs[ATTR_START_MINUTE],
+                end_hour=kwargs[ATTR_END_HOUR],
+                end_minute=kwargs[ATTR_END_MINUTE],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to set week day schedule on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_get_week_day_schedule(self, **kwargs: Any) -> WeekDayScheduleResult:
+        """Get a week day schedule from the lock."""
+        try:
+            return await get_week_day_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                week_day_index=kwargs[ATTR_WEEK_DAY_INDEX],
+                user_index=kwargs[ATTR_USER_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to get week day schedule for {self.entity_id}: {err}"
+            ) from err
+
+    async def async_clear_week_day_schedule(self, **kwargs: Any) -> None:
+        """Clear a week day schedule from the lock."""
+        try:
+            await clear_week_day_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                week_day_index=kwargs[ATTR_WEEK_DAY_INDEX],
+                user_index=kwargs[ATTR_USER_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to clear week day schedule on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_set_year_day_schedule(self, **kwargs: Any) -> None:
+        """Set a year day schedule on the lock."""
+        try:
+            await set_year_day_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                year_day_index=kwargs[ATTR_YEAR_DAY_INDEX],
+                user_index=kwargs[ATTR_USER_INDEX],
+                start_time=kwargs[ATTR_START_TIME],
+                end_time=kwargs[ATTR_END_TIME],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to set year day schedule on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_get_year_day_schedule(self, **kwargs: Any) -> YearDayScheduleResult:
+        """Get a year day schedule from the lock."""
+        try:
+            return await get_year_day_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                year_day_index=kwargs[ATTR_YEAR_DAY_INDEX],
+                user_index=kwargs[ATTR_USER_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to get year day schedule for {self.entity_id}: {err}"
+            ) from err
+
+    async def async_clear_year_day_schedule(self, **kwargs: Any) -> None:
+        """Clear a year day schedule from the lock."""
+        try:
+            await clear_year_day_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                year_day_index=kwargs[ATTR_YEAR_DAY_INDEX],
+                user_index=kwargs[ATTR_USER_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to clear year day schedule on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_set_holiday_schedule(self, **kwargs: Any) -> None:
+        """Set a holiday schedule on the lock."""
+        try:
+            await set_holiday_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                holiday_index=kwargs[ATTR_HOLIDAY_INDEX],
+                start_time=kwargs[ATTR_START_TIME],
+                end_time=kwargs[ATTR_END_TIME],
+                operating_mode=kwargs[ATTR_OPERATING_MODE],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to set holiday schedule on {self.entity_id}: {err}"
+            ) from err
+
+    async def async_get_holiday_schedule(self, **kwargs: Any) -> HolidayScheduleResult:
+        """Get a holiday schedule from the lock."""
+        try:
+            return await get_holiday_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                holiday_index=kwargs[ATTR_HOLIDAY_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to get holiday schedule for {self.entity_id}: {err}"
+            ) from err
+
+    async def async_clear_holiday_schedule(self, **kwargs: Any) -> None:
+        """Clear a holiday schedule from the lock."""
+        try:
+            await clear_holiday_schedule(
+                self.matter_client,
+                self._endpoint.node,
+                holiday_index=kwargs[ATTR_HOLIDAY_INDEX],
+            )
+        except MatterError as err:
+            raise HomeAssistantError(
+                f"Failed to clear holiday schedule on {self.entity_id}: {err}"
             ) from err
 
 

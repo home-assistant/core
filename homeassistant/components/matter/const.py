@@ -35,10 +35,26 @@ ATTR_USER_TYPE = "user_type"
 
 # Magic values
 CLEAR_ALL_INDEX = 0xFFFE  # Matter spec: pass to ClearUser/ClearCredential to clear all
+# Matter spec: pass to Clear*Schedule commands to clear all schedules of that
+# type for the given user (or all holiday schedules, which are lock-wide).
+CLEAR_ALL_SCHEDULE_INDEX = 0xFE
 
 # Timed request timeout for lock commands that modify state.
 # 10 seconds accounts for Thread network latency and retransmissions.
 LOCK_TIMED_REQUEST_TIMEOUT_MS = 10000
+
+# Schedule field keys (Week Day / Year Day / Holiday access schedules)
+ATTR_DAYS = "days"
+ATTR_END_HOUR = "end_hour"
+ATTR_END_MINUTE = "end_minute"
+ATTR_END_TIME = "end_time"
+ATTR_HOLIDAY_INDEX = "holiday_index"
+ATTR_OPERATING_MODE = "operating_mode"
+ATTR_START_HOUR = "start_hour"
+ATTR_START_MINUTE = "start_minute"
+ATTR_START_TIME = "start_time"
+ATTR_WEEK_DAY_INDEX = "week_day_index"
+ATTR_YEAR_DAY_INDEX = "year_day_index"
 
 # Credential field keys
 ATTR_CREDENTIAL_DATA = "credential_data"
@@ -76,6 +92,31 @@ USER_TYPE_MAP: dict[int, str] = {
     _UserType.kRemoteOnlyUser: "remote_only_user",
 }
 USER_TYPE_REVERSE_MAP: dict[str, int] = {v: k for k, v in USER_TYPE_MAP.items()}
+
+# Day-of-week mapping (Matter DoorLock DaysMaskBitmap), used by week day schedules
+_DaysMask = clusters.DoorLock.Bitmaps.DaysMaskBitmap
+DAY_OF_WEEK_MAP: dict[str, int] = {
+    "sunday": _DaysMask.kSunday,
+    "monday": _DaysMask.kMonday,
+    "tuesday": _DaysMask.kTuesday,
+    "wednesday": _DaysMask.kWednesday,
+    "thursday": _DaysMask.kThursday,
+    "friday": _DaysMask.kFriday,
+    "saturday": _DaysMask.kSaturday,
+}
+
+# Operating mode mapping (Matter DoorLock OperatingModeEnum), used by holiday schedules
+_OperatingMode = clusters.DoorLock.Enums.OperatingModeEnum
+OPERATING_MODE_MAP: dict[int, str] = {
+    _OperatingMode.kNormal: "normal",
+    _OperatingMode.kVacation: "vacation",
+    _OperatingMode.kPrivacy: "privacy",
+    _OperatingMode.kNoRemoteLockUnlock: "no_remote_lock_unlock",
+    _OperatingMode.kPassage: "passage",
+}
+OPERATING_MODE_REVERSE_MAP: dict[str, int] = {
+    v: k for k, v in OPERATING_MODE_MAP.items()
+}
 
 # Credential type mapping (Matter DoorLock CredentialTypeEnum)
 _CredentialType = clusters.DoorLock.Enums.CredentialTypeEnum

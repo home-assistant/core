@@ -4,12 +4,14 @@ Provides DoorLock cluster endpoint resolution, feature detection, and
 business logic for lock user/credential management.
 """
 
+from datetime import datetime
 from typing import TYPE_CHECKING, Any, TypedDict
 
 from chip.clusters import Objects as clusters
 from chip.clusters.Types import NullValue
 
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
+from homeassistant.util import dt as dt_util
 
 from .const import (
     CRED_TYPE_FACE,
@@ -21,7 +23,10 @@ from .const import (
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
+    DAY_OF_WEEK_MAP,
     LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    OPERATING_MODE_MAP,
+    OPERATING_MODE_REVERSE_MAP,
     USER_STATUS_MAP,
     USER_STATUS_REVERSE_MAP,
     USER_TYPE_MAP,
@@ -120,6 +125,39 @@ class GetLockCredentialStatusResult(TypedDict):
     next_credential_index: int | None
 
 
+class WeekDayScheduleResult(TypedDict):
+    """Result of get_week_day_schedule service action."""
+
+    schedule_exists: bool
+    week_day_index: int
+    user_index: int
+    days: list[str] | None
+    start_hour: int | None
+    start_minute: int | None
+    end_hour: int | None
+    end_minute: int | None
+
+
+class YearDayScheduleResult(TypedDict):
+    """Result of get_year_day_schedule service action."""
+
+    schedule_exists: bool
+    year_day_index: int
+    user_index: int
+    start_time: datetime | None
+    end_time: datetime | None
+
+
+class HolidayScheduleResult(TypedDict):
+    """Result of get_holiday_schedule service action."""
+
+    schedule_exists: bool
+    holiday_index: int
+    start_time: datetime | None
+    end_time: datetime | None
+    operating_mode: str | None
+
+
 def _get_lock_endpoint_from_node(node: MatterNode) -> MatterEndpoint | None:
     """Get the DoorLock endpoint from a node.
 
@@ -149,6 +187,30 @@ def _lock_supports_usr_feature(endpoint: MatterEndpoint) -> bool:
     if feature_map is None:
         return False
     return bool(feature_map & DoorLockFeature.kUser)
+
+
+def _lock_supports_week_day_schedule_feature(endpoint: MatterEndpoint) -> bool:
+    """Check if lock endpoint supports the WDSCH (Week Day Schedule) feature."""
+    feature_map = _get_feature_map(endpoint)
+    if feature_map is None:
+        return False
+    return bool(feature_map & DoorLockFeature.kWeekDayAccessSchedules)
+
+
+def _lock_supports_year_day_schedule_feature(endpoint: MatterEndpoint) -> bool:
+    """Check if lock endpoint supports the YDSCH (Year Day Schedule) feature."""
+    feature_map = _get_feature_map(endpoint)
+    if feature_map is None:
+        return False
+    return bool(feature_map & DoorLockFeature.kYearDayAccessSchedules)
+
+
+def _lock_supports_holiday_schedule_feature(endpoint: MatterEndpoint) -> bool:
+    """Check if lock endpoint supports the HDSCH (Holiday Schedule) feature."""
+    feature_map = _get_feature_map(endpoint)
+    if feature_map is None:
+        return False
+    return bool(feature_map & DoorLockFeature.kHolidaySchedules)
 
 
 # --- Pure utility functions ---
@@ -233,6 +295,18 @@ class UsrFeatureNotSupportedError(ServiceValidationError):
     """Lock does not support USR (user management) feature."""
 
 
+class WeekDayScheduleFeatureNotSupportedError(ServiceValidationError):
+    """Lock does not support WDSCH (week day schedule) feature."""
+
+
+class YearDayScheduleFeatureNotSupportedError(ServiceValidationError):
+    """Lock does not support YDSCH (year day schedule) feature."""
+
+
+class HolidayScheduleFeatureNotSupportedError(ServiceValidationError):
+    """Lock does not support HDSCH (holiday schedule) feature."""
+
+
 class UserSlotEmptyError(ServiceValidationError):
     """User slot is empty."""
 
@@ -270,6 +344,63 @@ def _ensure_usr_support(lock_endpoint: MatterEndpoint) -> None:
         raise UsrFeatureNotSupportedError(
             "Lock does not support user/credential management"
         )
+
+
+def _ensure_week_day_schedule_support(lock_endpoint: MatterEndpoint) -> None:
+    """Ensure the lock endpoint supports the WDSCH feature, or raise."""
+    if not _lock_supports_week_day_schedule_feature(lock_endpoint):
+        raise WeekDayScheduleFeatureNotSupportedError(
+            "Lock does not support week day schedules"
+        )
+
+
+def _ensure_year_day_schedule_support(lock_endpoint: MatterEndpoint) -> None:
+    """Ensure the lock endpoint supports the YDSCH feature, or raise."""
+    if not _lock_supports_year_day_schedule_feature(lock_endpoint):
+        raise YearDayScheduleFeatureNotSupportedError(
+            "Lock does not support year day schedules"
+        )
+
+
+def _ensure_holiday_schedule_support(lock_endpoint: MatterEndpoint) -> None:
+    """Ensure the lock endpoint supports the HDSCH feature, or raise."""
+    if not _lock_supports_holiday_schedule_feature(lock_endpoint):
+        raise HolidayScheduleFeatureNotSupportedError(
+            "Lock does not support holiday schedules"
+        )
+
+
+# --- Schedule time conversion helpers ---
+
+# Seconds between the Matter epoch (2000-01-01T00:00:00Z) and the Unix epoch.
+_MATTER_EPOCH_OFFSET = 946684800
+
+
+def _datetime_to_matter_epoch_s(value: datetime) -> int:
+    """Convert a datetime to Matter epoch-s (seconds since 2000-01-01)."""
+    return int(dt_util.as_utc(value).timestamp()) - _MATTER_EPOCH_OFFSET
+
+
+def _matter_epoch_s_to_datetime(value: int | None) -> datetime | None:
+    """Convert Matter epoch-s (seconds since 2000-01-01) to a UTC datetime."""
+    if value is None:
+        return None
+    return dt_util.utc_from_timestamp(value + _MATTER_EPOCH_OFFSET)
+
+
+def _days_mask_to_list(days_mask: int | None) -> list[str] | None:
+    """Convert a Matter DaysMaskBitmap value to a list of day-of-week strings."""
+    if days_mask is None:
+        return None
+    return [day for day, bit in DAY_OF_WEEK_MAP.items() if days_mask & bit]
+
+
+def _days_list_to_mask(days: list[str]) -> int:
+    """Convert a list of day-of-week strings to a Matter DaysMaskBitmap value."""
+    mask = 0
+    for day in days:
+        mask |= DAY_OF_WEEK_MAP[day]
+    return mask
 
 
 # --- High-level business logic functions ---
@@ -539,6 +670,297 @@ async def clear_lock_user(
         endpoint_id=lock_endpoint.endpoint_id,
         command=clusters.DoorLock.Commands.ClearUser(
             userIndex=user_index,
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+# --- Week day / year day / holiday schedule business logic functions ---
+
+
+async def set_week_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    week_day_index: int,
+    user_index: int,
+    days: list[str],
+    start_hour: int,
+    start_minute: int,
+    end_hour: int,
+    end_minute: int,
+) -> None:
+    """Add or replace a recurring weekly access schedule for a lock user.
+
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_week_day_schedule_support(lock_endpoint)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.SetWeekDaySchedule(
+            weekDayIndex=week_day_index,
+            userIndex=user_index,
+            daysMask=_days_list_to_mask(days),
+            startHour=start_hour,
+            startMinute=start_minute,
+            endHour=end_hour,
+            endMinute=end_minute,
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+async def get_week_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    week_day_index: int,
+    user_index: int,
+) -> WeekDayScheduleResult:
+    """Get a week day schedule from the lock.
+
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_week_day_schedule_support(lock_endpoint)
+
+    response = await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.GetWeekDaySchedule(
+            weekDayIndex=week_day_index,
+            userIndex=user_index,
+        ),
+    )
+
+    exists = _get_attr(response, "status") == clusters.Globals.Enums.status.kSuccess
+
+    return WeekDayScheduleResult(
+        schedule_exists=exists,
+        week_day_index=week_day_index,
+        user_index=user_index,
+        days=_days_mask_to_list(_get_attr(response, "daysMask")) if exists else None,
+        start_hour=_get_attr(response, "startHour") if exists else None,
+        start_minute=_get_attr(response, "startMinute") if exists else None,
+        end_hour=_get_attr(response, "endHour") if exists else None,
+        end_minute=_get_attr(response, "endMinute") if exists else None,
+    )
+
+
+async def clear_week_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    week_day_index: int,
+    user_index: int,
+) -> None:
+    """Clear a week day schedule from the lock.
+
+    Use week_day_index 0xFE (CLEAR_ALL_SCHEDULE_INDEX) to clear all week day
+    schedules for the user, and/or user_index 0xFFFE (CLEAR_ALL_INDEX) to
+    target all users.
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_week_day_schedule_support(lock_endpoint)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.ClearWeekDaySchedule(
+            weekDayIndex=week_day_index,
+            userIndex=user_index,
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+async def set_year_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    year_day_index: int,
+    user_index: int,
+    start_time: datetime,
+    end_time: datetime,
+) -> None:
+    """Add or replace a fixed date-range access schedule for a lock user.
+
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_year_day_schedule_support(lock_endpoint)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.SetYearDaySchedule(
+            yearDayIndex=year_day_index,
+            userIndex=user_index,
+            localStartTime=_datetime_to_matter_epoch_s(start_time),
+            localEndTime=_datetime_to_matter_epoch_s(end_time),
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+async def get_year_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    year_day_index: int,
+    user_index: int,
+) -> YearDayScheduleResult:
+    """Get a year day schedule from the lock.
+
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_year_day_schedule_support(lock_endpoint)
+
+    response = await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.GetYearDaySchedule(
+            yearDayIndex=year_day_index,
+            userIndex=user_index,
+        ),
+    )
+
+    exists = _get_attr(response, "status") == clusters.Globals.Enums.status.kSuccess
+
+    return YearDayScheduleResult(
+        schedule_exists=exists,
+        year_day_index=year_day_index,
+        user_index=user_index,
+        start_time=_matter_epoch_s_to_datetime(_get_attr(response, "localStartTime"))
+        if exists
+        else None,
+        end_time=_matter_epoch_s_to_datetime(_get_attr(response, "localEndTime"))
+        if exists
+        else None,
+    )
+
+
+async def clear_year_day_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    year_day_index: int,
+    user_index: int,
+) -> None:
+    """Clear a year day schedule from the lock.
+
+    Use year_day_index 0xFE (CLEAR_ALL_SCHEDULE_INDEX) to clear all year day
+    schedules for the user, and/or user_index 0xFFFE (CLEAR_ALL_INDEX) to
+    target all users.
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_year_day_schedule_support(lock_endpoint)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.ClearYearDaySchedule(
+            yearDayIndex=year_day_index,
+            userIndex=user_index,
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+async def set_holiday_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    holiday_index: int,
+    start_time: datetime,
+    end_time: datetime,
+    operating_mode: str,
+) -> None:
+    """Add or replace a lock-wide holiday schedule.
+
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_holiday_schedule_support(lock_endpoint)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.SetHolidaySchedule(
+            holidayIndex=holiday_index,
+            localStartTime=_datetime_to_matter_epoch_s(start_time),
+            localEndTime=_datetime_to_matter_epoch_s(end_time),
+            operatingMode=OPERATING_MODE_REVERSE_MAP[operating_mode],
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+async def get_holiday_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    holiday_index: int,
+) -> HolidayScheduleResult:
+    """Get a holiday schedule from the lock.
+
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_holiday_schedule_support(lock_endpoint)
+
+    response = await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.GetHolidaySchedule(
+            holidayIndex=holiday_index,
+        ),
+    )
+
+    exists = _get_attr(response, "status") == clusters.Globals.Enums.status.kSuccess
+    operating_mode = _get_attr(response, "operatingMode") if exists else None
+
+    return HolidayScheduleResult(
+        schedule_exists=exists,
+        holiday_index=holiday_index,
+        start_time=_matter_epoch_s_to_datetime(_get_attr(response, "localStartTime"))
+        if exists
+        else None,
+        end_time=_matter_epoch_s_to_datetime(_get_attr(response, "localEndTime"))
+        if exists
+        else None,
+        operating_mode=OPERATING_MODE_MAP.get(operating_mode)
+        if operating_mode is not None
+        else None,
+    )
+
+
+async def clear_holiday_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    holiday_index: int,
+) -> None:
+    """Clear a holiday schedule from the lock.
+
+    Use holiday_index 0xFE (CLEAR_ALL_SCHEDULE_INDEX) to clear all holiday
+    schedules on the lock.
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_holiday_schedule_support(lock_endpoint)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.ClearHolidaySchedule(
+            holidayIndex=holiday_index,
         ),
         timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
     )

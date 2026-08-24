@@ -1,5 +1,6 @@
 """Test Matter locks."""
 
+from datetime import UTC, datetime
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call
 
@@ -17,11 +18,23 @@ from homeassistant.components.matter.const import (
     ATTR_CREDENTIAL_INDEX,
     ATTR_CREDENTIAL_RULE,
     ATTR_CREDENTIAL_TYPE,
+    ATTR_DAYS,
+    ATTR_END_HOUR,
+    ATTR_END_MINUTE,
+    ATTR_END_TIME,
+    ATTR_HOLIDAY_INDEX,
+    ATTR_OPERATING_MODE,
+    ATTR_START_HOUR,
+    ATTR_START_MINUTE,
+    ATTR_START_TIME,
     ATTR_USER_INDEX,
     ATTR_USER_NAME,
     ATTR_USER_STATUS,
     ATTR_USER_TYPE,
+    ATTR_WEEK_DAY_INDEX,
+    ATTR_YEAR_DAY_INDEX,
     CLEAR_ALL_INDEX,
+    CLEAR_ALL_SCHEDULE_INDEX,
     DOMAIN,
 )
 from homeassistant.const import ATTR_CODE, ATTR_ENTITY_ID, STATE_UNKNOWN, Platform
@@ -39,11 +52,26 @@ from .common import (
 _FEATURE_PIN = 1  # kPinCredential (bit 0)
 _FEATURE_RFID = 2  # kRfidCredential (bit 1)
 _FEATURE_FINGER = 4  # kFingerCredentials (bit 2)
+_FEATURE_WDSCH = 0x10  # kWeekDayAccessSchedules (bit 4)
 _FEATURE_USR = 256  # kUser (bit 8)
+_FEATURE_YDSCH = 0x400  # kYearDayAccessSchedules (bit 10)
+_FEATURE_HDSCH = 0x800  # kHolidaySchedules (bit 11)
 _FEATURE_USR_PIN = _FEATURE_USR | _FEATURE_PIN  # 257
 _FEATURE_USR_RFID = _FEATURE_USR | _FEATURE_RFID  # 258
 _FEATURE_USR_PIN_RFID = _FEATURE_USR | _FEATURE_PIN | _FEATURE_RFID  # 259
 _FEATURE_USR_FINGER = _FEATURE_USR | _FEATURE_FINGER  # 260
+
+# Matter epoch-s (seconds since 2000-01-01) for 2024-06-01 08:00 and 18:00 UTC.
+_YEAR_DAY_START_EPOCH_S = 770544000
+_YEAR_DAY_END_EPOCH_S = 770580000
+_YEAR_DAY_START = datetime(2024, 6, 1, 8, 0, tzinfo=UTC)
+_YEAR_DAY_END = datetime(2024, 6, 1, 18, 0, tzinfo=UTC)
+
+# Matter epoch-s for 2024-12-24 and 2025-01-02, both 00:00 UTC.
+_HOLIDAY_START_EPOCH_S = 788313600
+_HOLIDAY_END_EPOCH_S = 789091200
+_HOLIDAY_START = datetime(2024, 12, 24, tzinfo=UTC)
+_HOLIDAY_END = datetime(2025, 1, 2, tzinfo=UTC)
 
 
 @pytest.mark.usefixtures("matter_devices")
@@ -2681,3 +2709,568 @@ async def test_set_lock_user_update_with_explicit_type_and_rule(
         ),
         timed_request_timeout_ms=10000,
     )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_WDSCH}])
+async def test_set_week_day_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_week_day_schedule entity service."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_week_day_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_WEEK_DAY_INDEX: 1,
+            ATTR_USER_INDEX: 2,
+            ATTR_DAYS: ["monday", "wednesday"],
+            ATTR_START_HOUR: 8,
+            ATTR_START_MINUTE: 0,
+            ATTR_END_HOUR: 17,
+            ATTR_END_MINUTE: 30,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.SetWeekDaySchedule(
+            weekDayIndex=1,
+            userIndex=2,
+            daysMask=clusters.DoorLock.Bitmaps.DaysMaskBitmap.kMonday
+            | clusters.DoorLock.Bitmaps.DaysMaskBitmap.kWednesday,
+            startHour=8,
+            startMinute=0,
+            endHour=17,
+            endMinute=30,
+        ),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_WDSCH}])
+async def test_get_week_day_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_week_day_schedule returns an existing schedule."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "weekDayIndex": 1,
+            "userIndex": 2,
+            "status": clusters.Globals.Enums.status.kSuccess,
+            "daysMask": clusters.DoorLock.Bitmaps.DaysMaskBitmap.kMonday
+            | clusters.DoorLock.Bitmaps.DaysMaskBitmap.kWednesday,
+            "startHour": 8,
+            "startMinute": 0,
+            "endHour": 17,
+            "endMinute": 30,
+        }
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_week_day_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_WEEK_DAY_INDEX: 1,
+            ATTR_USER_INDEX: 2,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetWeekDaySchedule(
+            weekDayIndex=1,
+            userIndex=2,
+        ),
+    )
+    assert result["lock.mock_door_lock"] == {
+        "schedule_exists": True,
+        "week_day_index": 1,
+        "user_index": 2,
+        "days": ["monday", "wednesday"],
+        "start_hour": 8,
+        "start_minute": 0,
+        "end_hour": 17,
+        "end_minute": 30,
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_WDSCH}])
+async def test_get_week_day_schedule_service_not_found(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_week_day_schedule for an empty schedule slot."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "weekDayIndex": 3,
+            "userIndex": 2,
+            "status": clusters.Globals.Enums.status.kNotFound,
+            "daysMask": None,
+            "startHour": None,
+            "startMinute": None,
+            "endHour": None,
+            "endMinute": None,
+        }
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_week_day_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_WEEK_DAY_INDEX: 3,
+            ATTR_USER_INDEX: 2,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result["lock.mock_door_lock"] == {
+        "schedule_exists": False,
+        "week_day_index": 3,
+        "user_index": 2,
+        "days": None,
+        "start_hour": None,
+        "start_minute": None,
+        "end_hour": None,
+        "end_minute": None,
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_WDSCH}])
+async def test_clear_week_day_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clear_week_day_schedule entity service."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_week_day_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_WEEK_DAY_INDEX: 1,
+            ATTR_USER_INDEX: 2,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearWeekDaySchedule(
+            weekDayIndex=1,
+            userIndex=2,
+        ),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_WDSCH}])
+async def test_clear_week_day_schedule_clear_all(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clear_week_day_schedule with the clear-all sentinels."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_week_day_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_WEEK_DAY_INDEX: CLEAR_ALL_SCHEDULE_INDEX,
+            ATTR_USER_INDEX: CLEAR_ALL_INDEX,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearWeekDaySchedule(
+            weekDayIndex=CLEAR_ALL_SCHEDULE_INDEX,
+            userIndex=CLEAR_ALL_INDEX,
+        ),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_YDSCH}])
+async def test_set_year_day_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_year_day_schedule entity service."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_year_day_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_YEAR_DAY_INDEX: 1,
+            ATTR_USER_INDEX: 2,
+            ATTR_START_TIME: _YEAR_DAY_START,
+            ATTR_END_TIME: _YEAR_DAY_END,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.SetYearDaySchedule(
+            yearDayIndex=1,
+            userIndex=2,
+            localStartTime=_YEAR_DAY_START_EPOCH_S,
+            localEndTime=_YEAR_DAY_END_EPOCH_S,
+        ),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_YDSCH}])
+async def test_get_year_day_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_year_day_schedule returns an existing schedule."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "yearDayIndex": 1,
+            "userIndex": 2,
+            "status": clusters.Globals.Enums.status.kSuccess,
+            "localStartTime": _YEAR_DAY_START_EPOCH_S,
+            "localEndTime": _YEAR_DAY_END_EPOCH_S,
+        }
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_year_day_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_YEAR_DAY_INDEX: 1,
+            ATTR_USER_INDEX: 2,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetYearDaySchedule(
+            yearDayIndex=1,
+            userIndex=2,
+        ),
+    )
+    assert result["lock.mock_door_lock"] == {
+        "schedule_exists": True,
+        "year_day_index": 1,
+        "user_index": 2,
+        "start_time": _YEAR_DAY_START,
+        "end_time": _YEAR_DAY_END,
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_YDSCH}])
+async def test_get_year_day_schedule_service_not_found(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_year_day_schedule for an empty schedule slot."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "yearDayIndex": 5,
+            "userIndex": 2,
+            "status": clusters.Globals.Enums.status.kNotFound,
+            "localStartTime": None,
+            "localEndTime": None,
+        }
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_year_day_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_YEAR_DAY_INDEX: 5,
+            ATTR_USER_INDEX: 2,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result["lock.mock_door_lock"] == {
+        "schedule_exists": False,
+        "year_day_index": 5,
+        "user_index": 2,
+        "start_time": None,
+        "end_time": None,
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_YDSCH}])
+async def test_clear_year_day_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clear_year_day_schedule entity service."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_year_day_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_YEAR_DAY_INDEX: 1,
+            ATTR_USER_INDEX: 2,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearYearDaySchedule(
+            yearDayIndex=1,
+            userIndex=2,
+        ),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_set_holiday_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_holiday_schedule entity service."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_holiday_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_HOLIDAY_INDEX: 1,
+            ATTR_START_TIME: _HOLIDAY_START,
+            ATTR_END_TIME: _HOLIDAY_END,
+            ATTR_OPERATING_MODE: "vacation",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.SetHolidaySchedule(
+            holidayIndex=1,
+            localStartTime=_HOLIDAY_START_EPOCH_S,
+            localEndTime=_HOLIDAY_END_EPOCH_S,
+            operatingMode=clusters.DoorLock.Enums.OperatingModeEnum.kVacation,
+        ),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_get_holiday_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_holiday_schedule returns an existing schedule."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "holidayIndex": 1,
+            "status": clusters.Globals.Enums.status.kSuccess,
+            "localStartTime": _HOLIDAY_START_EPOCH_S,
+            "localEndTime": _HOLIDAY_END_EPOCH_S,
+            "operatingMode": clusters.DoorLock.Enums.OperatingModeEnum.kVacation,
+        }
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_holiday_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_HOLIDAY_INDEX: 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.GetHolidaySchedule(
+            holidayIndex=1,
+        ),
+    )
+    assert result["lock.mock_door_lock"] == {
+        "schedule_exists": True,
+        "holiday_index": 1,
+        "start_time": _HOLIDAY_START,
+        "end_time": _HOLIDAY_END,
+        "operating_mode": "vacation",
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_get_holiday_schedule_service_not_found(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_holiday_schedule for an empty schedule slot."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "holidayIndex": 9,
+            "status": clusters.Globals.Enums.status.kNotFound,
+            "localStartTime": None,
+            "localEndTime": None,
+            "operatingMode": None,
+        }
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_holiday_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_HOLIDAY_INDEX: 9,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result["lock.mock_door_lock"] == {
+        "schedule_exists": False,
+        "holiday_index": 9,
+        "start_time": None,
+        "end_time": None,
+        "operating_mode": None,
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_clear_holiday_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clear_holiday_schedule entity service."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_holiday_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_HOLIDAY_INDEX: 1,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearHolidaySchedule(
+            holidayIndex=1,
+        ),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+async def test_schedule_services_without_feature_support(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test schedule services raise an error without their supporting feature."""
+    # Default door_lock fixture has featuremap=0, no schedule support.
+    with pytest.raises(ServiceValidationError, match="does not support"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_week_day_schedule",
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_WEEK_DAY_INDEX: 1,
+                ATTR_USER_INDEX: 2,
+                ATTR_DAYS: ["monday"],
+                ATTR_START_HOUR: 8,
+                ATTR_START_MINUTE: 0,
+                ATTR_END_HOUR: 17,
+                ATTR_END_MINUTE: 30,
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError, match="does not support"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_year_day_schedule",
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_YEAR_DAY_INDEX: 1,
+                ATTR_USER_INDEX: 2,
+                ATTR_START_TIME: _YEAR_DAY_START,
+                ATTR_END_TIME: _YEAR_DAY_END,
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError, match="does not support"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_holiday_schedule",
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_HOLIDAY_INDEX: 1,
+                ATTR_START_TIME: _HOLIDAY_START,
+                ATTR_END_TIME: _HOLIDAY_END,
+                ATTR_OPERATING_MODE: "vacation",
+            },
+            blocking=True,
+        )
