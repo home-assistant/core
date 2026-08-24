@@ -106,6 +106,29 @@
         "name": "Zone 2 thermostat"
       }
     },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "Baby",
+              "circulation": "Circulation",
+              "comfort": "Comfort",
+              "customize": "Customize",
+              "eco": "Eco",
+              "induction": "Induction",
+              "natural": "Natural",
+              "silent": "Silent",
+              "sleep": "Sleep",
+              "smart": "Smart",
+              "soft": "Soft",
+              "strong": "Strong",
+              "warm": "Warm"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "dry_level": {
         "name": "Dry level"
@@ -239,6 +262,47 @@
           "up": "Up",
           "up_mid": "Up middle"
         }
+      }
+    },
+    "switch": {
+      "anion": {
+        "name": "Anion"
+      },
+      "aux_heating": {
+        "name": "Auxiliary heating"
+      },
+      "disinfect": {
+        "name": "Disinfect"
+      },
+      "night_light": {
+        "name": "Night light"
+      },
+      "out_silent": {
+        "name": "Outdoor silent mode"
+      },
+      "prompt_tone": {
+        "name": "Prompt tone"
+      },
+      "screen_display": {
+        "name": "Screen display"
+      },
+      "self_clean": {
+        "name": "Self clean"
+      },
+      "smart_eye": {
+        "name": "Smart eye"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "tbh": {
+        "name": "TBH"
+      },
+      "zone1_curve": {
+        "name": "Zone 1 curve"
+      },
+      "zone2_curve": {
+        "name": "Zone 2 curve"
       }
     }
   },
