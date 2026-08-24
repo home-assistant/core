@@ -105,6 +105,7 @@ def test_run_does_not_block_forever_with_shielded_task(
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
     tasks = []
+    shielded_tasks: list[asyncio.Task] = []
 
     async def _async_create_tasks(*_):
         async def async_raise(*_):
@@ -114,6 +115,7 @@ def test_run_does_not_block_forever_with_shielded_task(
                 raise Exception  # noqa: TRY002
 
         async def async_shielded(*_):
+            shielded_tasks.append(asyncio.current_task())
             try:
                 await asyncio.sleep(2)
             except asyncio.CancelledError:
@@ -137,6 +139,13 @@ def test_run_does_not_block_forever_with_shielded_task(
     assert (
         "Task could not be canceled and was still running after shutdown" in caplog.text
     )
+
+    # The shielded task is still pending when the loop closes. When it is
+    # garbage collected later, possibly during an unrelated test, it would log
+    # "Task was destroyed but it is pending!" as an error and make that test
+    # flaky. Suppress the message like asyncio.gather does for its children.
+    assert len(shielded_tasks) == 1
+    shielded_tasks[0]._log_destroy_pending = False
 
 
 async def test_unhandled_exception_traceback(
