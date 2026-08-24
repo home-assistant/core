@@ -40,6 +40,7 @@ def mock_controller() -> Generator[MagicMock]:
         controller.get_fan_speed_list.return_value = []
         controller.get_mode_list.return_value = []
         controller.add_update_callback = MagicMock()
+        controller.remove_update_callback = MagicMock()
         controller.is_available = True
         controller.get_temperature.return_value = 22
         controller.get_fan_speed.return_value = None
@@ -141,9 +142,21 @@ async def test_removing_one_entity_keeps_controller_running(
     }
     await setup_platform(hass)
 
+    registered_callbacks = [
+        call.args[0] for call in mock_controller.add_update_callback.call_args_list
+    ]
+    assert len(registered_callbacks) == 2
+
     entity_registry.async_remove(ENTITY_ID)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID) is None
     mock_controller.stop.assert_not_awaited()
     assert hass.states.get("climate.lounge").state != STATE_UNAVAILABLE
+
+    # Only the removed entity detaches; the other keeps receiving updates.
+    removed_callbacks = [
+        call.args[0] for call in mock_controller.remove_update_callback.call_args_list
+    ]
+    assert len(removed_callbacks) == 1
+    assert removed_callbacks[0] in registered_callbacks

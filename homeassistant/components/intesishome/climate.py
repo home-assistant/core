@@ -217,6 +217,11 @@ class IntesisAC(ClimateEntity):
         _LOGGER.debug("Added climate device with state: %s", repr(self._ih_device))
         self._controller.add_update_callback(self.async_update_callback)
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Unsubscribe from event updates."""
+        self._controller.remove_update_callback(self.async_update_callback)
+
     @property
     @override
     def extra_state_attributes(self) -> dict[str, Any]:
