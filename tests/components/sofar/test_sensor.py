@@ -194,20 +194,6 @@ async def test_sensor_availability_on_component_failure(
     assert sensor.available
 
 
-async def test_sofar_sensor_enum_native_value(
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test SofarSensor translates an IntEnum value to its label."""
-    runtime_data = init_integration.runtime_data
-    description = SofarSensorDescription(
-        key="system_state",
-        component="state",
-        translation_key="system_state",
-    )
-    sensor = SofarSensor(runtime_data, description)
-    assert sensor.native_value == "Grid Connected"
-
-
 async def test_total_sensor_total_increasing_uses_corrected_value(
     init_integration: MockConfigEntry,
 ) -> None:

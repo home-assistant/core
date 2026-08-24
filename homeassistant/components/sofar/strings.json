@@ -38,5 +38,16 @@
         "name": "Solar generation total"
       }
     }
+  },
+  "exceptions": {
+    "modbus_error": {
+      "message": "{error}"
+    },
+    "no_component_answered": {
+      "message": "{name}: no component answered."
+    },
+    "unrecognized_inverter_model": {
+      "message": "Unrecognized Sofar inverter model for {title}."
+    }
   }
 }

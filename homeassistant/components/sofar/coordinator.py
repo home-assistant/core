@@ -74,14 +74,24 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             if not report.updated:
                 errors = list(report.failed.values())
                 if not errors:
-                    raise UpdateFailed(f"{self.name}: no component answered")
+                    raise UpdateFailed(
+                        translation_domain=DOMAIN,
+                        translation_key="no_component_answered",
+                        translation_placeholders={"name": self.name},
+                    )
                 raise UpdateFailed(
-                    f"{self.name}: no component answered"
+                    translation_domain=DOMAIN,
+                    translation_key="no_component_answered",
+                    translation_placeholders={"name": self.name},
                 ) from ExceptionGroup("all components failed to refresh", errors)
         except ModbusError as err:
             # ModbusConnectionError (dead link) and ModbusTimeoutError reach
             # here; per-block failures once alive land in report.failed instead.
-            raise UpdateFailed(str(err)) from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="modbus_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         else:
             return report
 
@@ -112,7 +122,8 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
                     cause,
                 )
         for name in report.updated:
-            self._consecutive_failures.pop(name, None)
+            if self._consecutive_failures.pop(name, None) is not None:
+                _LOGGER.info("%s: %s is available again", self.name, name)
 
         return report
 

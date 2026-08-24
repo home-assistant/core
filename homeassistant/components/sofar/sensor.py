@@ -2,7 +2,6 @@
 
 from dataclasses import dataclass
 from datetime import date
-from enum import IntEnum
 from typing import cast, override
 
 from homeassistant.components.sensor import (
@@ -19,10 +18,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .coordinator import SofarConfigEntry
 from .entity import SofarEntity, SofarEntityDescription
 
-
-def _enum_label(member_name: str) -> str:
-    """Format an IntEnum member name to match an ENUM sensor option."""
-    return " ".join(word.capitalize() for word in member_name.split("_"))
+PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
@@ -57,10 +53,6 @@ class SofarSensor(SofarEntity, SensorEntity):
     def native_value(self) -> str | int | float | date | None:
         component = getattr(self.coordinator.device, self.entity_description.component)
         value = getattr(component, self.entity_description.key)
-        # IntEnum.__str__ prints just the int since Python 3.11 — translate
-        # to the label the ENUM sensor's options declared.
-        if isinstance(value, IntEnum):
-            return _enum_label(value.name)
         return cast(str | int | float | date | None, value)
 
 

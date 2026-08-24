@@ -11,7 +11,7 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .const import CONF_UNIT_ID, DEFAULT_SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
+from .const import CONF_UNIT_ID, DEFAULT_SCAN_INTERVAL, DOMAIN, SETTINGS_SCAN_INTERVAL
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,7 +25,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
     assert serial is not None
     inverter_type, model = identify(serial)
     if not inverter_type:
-        raise ConfigEntryError(f"Unrecognized Sofar inverter model for {entry.title}")
+        raise ConfigEntryError(
+            translation_domain=DOMAIN,
+            translation_key="unrecognized_inverter_model",
+            translation_placeholders={"title": entry.title},
+        )
 
     unit = async_get_unit(
         hass,
