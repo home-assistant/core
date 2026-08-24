@@ -35,9 +35,9 @@ from homeassistant.components.climate import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 from homeassistant.util.percentage import percentage_to_ordered_list_item
@@ -112,7 +112,7 @@ class HomeKitClimateAccessory(HomeAccessory):
         state = self.hass.states.get(self.entity_id)
         assert state
         attributes = state.attributes
-        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         # ``fan_modes`` maps lowercased names to their original casing;
         # ``ordered_fan_speeds`` holds the predefined speeds in HomeKit order.
