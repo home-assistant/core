@@ -12,12 +12,21 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-def _mock_receiver(model: str | None = "AT-500") -> MagicMock:
-    """Return a mock receiver that answers info queries."""
+def _mock_receiver(
+    model: str | None = "AT-500", power: bool | None = True
+) -> MagicMock:
+    """Return a mock receiver that answers info and power queries."""
     mock_receiver = MagicMock()
     mock_receiver.connect = AsyncMock()
     mock_receiver.disconnect = AsyncMock()
-    mock_receiver.query_info = AsyncMock(return_value=MagicMock(model=model))
+    if model is None:
+        # A standby receiver ignores the identity query.
+        mock_receiver.query_info = AsyncMock(
+            side_effect=ConnectionError("No response for VER query")
+        )
+    else:
+        mock_receiver.query_info = AsyncMock(return_value=MagicMock(model=model))
+    mock_receiver.query_power = AsyncMock(return_value=power)
     return mock_receiver
 
 
@@ -57,14 +66,14 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
 async def test_form_unknown_model(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
-    """Test setup falls back to a generic title when no model is reported."""
+    """Test setup falls back to a generic title for a standby receiver."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
-        return_value=_mock_receiver(model=None),
+        return_value=_mock_receiver(model=None, power=False),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
@@ -394,7 +403,7 @@ async def test_reconfigure_unknown_model(
 
     with patch(
         "homeassistant.components.tonewinner.config_flow.TonewinnerReceiver",
-        return_value=_mock_receiver(model=None),
+        return_value=_mock_receiver(model=None, power=False),
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
