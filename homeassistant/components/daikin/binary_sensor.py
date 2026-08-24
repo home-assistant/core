@@ -1,6 +1,8 @@
 """Support for Daikin binary sensors."""
 
-from typing import Any, override
+from typing import Any
+
+from typing_extensions import override
 
 from homeassistant.components.binary_sensor import BinarySensorEntity
 from homeassistant.core import HomeAssistant
