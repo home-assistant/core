@@ -90,7 +90,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: LitterRobotConfigEntry) 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator
 
-    # Entries are not unloaded at shutdown, so the account is only reachable here.
+    # Entries are not unloaded at shutdown, so async_unload_entry does not run there.
     async def _async_disconnect_account(event: Event) -> None:
         await coordinator.account.disconnect()
 

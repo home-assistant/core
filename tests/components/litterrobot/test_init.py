@@ -53,12 +53,7 @@ async def test_unload_entry(hass: HomeAssistant, mock_account: MagicMock) -> Non
 async def test_shutdown_disconnects_account(
     hass: HomeAssistant, mock_account: MagicMock
 ) -> None:
-    """Home Assistant stopping disconnects the account.
-
-    Entries are not unloaded at shutdown, so the stop event is the only place
-    the account is reached. An account left connected keeps its WebSocket
-    monitor running until the shared session is detached under it.
-    """
+    """Test the account is disconnected when Home Assistant stops."""
     await setup_integration(hass, mock_account, VACUUM_DOMAIN)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
