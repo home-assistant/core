@@ -15,7 +15,8 @@ there would take work away from the better answer. That fast path is
 
 The matcher itself is stateless, and this module owns the three things it therefore
 cannot: the home it resolves names against, which response to speak once a command has
-been handled, and what the previous turn targeted so "turn them back on" has an it.
+been handled, and what the previous turn targeted so "turn them back on" knows what to
+do.
 """
 
 import asyncio
@@ -62,14 +63,7 @@ stale is one that will never be asked for again.
 
 @callback
 def async_refusal(interpretation: Interpretation) -> str | None:
-    """Return wording for a refusal that says more than "I didn't understand".
-
-    The matcher writes a response for every rejection, but most of them explain
-    nothing, because noise resolves nothing: "asdfgh" and "do something" both come back
-    as "Sorry, I don't know what action to take". Home Assistant's own error is the
-    better answer there, not least because it is translated. It is only worth
-    displacing when the matcher named what it was aimed at.
-    """
+    """Return wording for a refusal that says more than "I didn't understand"."""
     if not interpretation.refusal_target:
         return None
     return interpretation.response
@@ -79,17 +73,7 @@ _SENTENCE_END = (".", "!", "?")
 
 
 def join_speech(parts: Sequence[str]) -> str:
-    """Join what the frames of one coordinated command said into one answer.
-
-    Every response in the corpus is written to stand alone and starts capitalized, so
-    they are run together as sentences rather than joined into one. "Unlocking and
-    Opening" reads better than "Unlocking. Opening." for two short acknowledgements,
-    but a coordinated command does not always produce two of those: "turn off the
-    kitchen lights and what is the state of the garage door" answers "Turned off the
-    lights" and "Garage door is closed", which "and" would run into bad grammar.
-
-    A few responses punctuate themselves, so only the ones that do not get a stop.
-    """
+    """Join what the frames of one coordinated command said into one answer."""
     sentences = [
         part if part.endswith(_SENTENCE_END) else f"{part}."
         for part in (part.strip() for part in parts)
@@ -100,13 +84,7 @@ def join_speech(parts: Sequence[str]) -> str:
 
 @callback
 def async_build_home(hass: HomeAssistant) -> Home:
-    """Build the matcher's gazetteer of the home from the registries.
-
-    The shape is the `home.yaml` gazetteer-matcher documents: areas and floors with
-    their aliases, and every entity exposed to conversation with the names it answers
-    to. Entities carry no floor of their own because the matcher takes an entity's floor
-    from its area, which is the only way Home Assistant assigns one.
-    """
+    """Build the matcher's gazetteer of the home from the registries."""
     entity_registry = er.async_get(hass)
 
     floors: dict[str, FloorSpec] = {
@@ -150,14 +128,7 @@ def async_build_home(hass: HomeAssistant) -> Home:
 def _names(
     hass: HomeAssistant, state: State, entry: er.RegistryEntry | None
 ) -> list[str]:
-    """Every name an entity answers to, the displayed one first.
-
-    Never empty: a state's name falls back to its object id. The displayed name is the
-    whole name and the only base name taken, because a registry `name`/`original_name`
-    may have had its device prefix stripped, and registering the remaining "Blinds"
-    would let a bare device-class word capture commands meant for every blind in the
-    house.
-    """
+    """Every name an entity answers to, the displayed one first."""
     seen: set[str] = set()
     names: list[str] = []
     for name in (
@@ -188,15 +159,7 @@ resolved to.
 def async_targets_from_intent(
     slots: dict[str, Any], intent_response: intent.IntentResponse
 ) -> tuple[TargetReference, ...]:
-    """Return what a sentence hassil recognized selected, for a later "it"/"them".
-
-    The matcher is stateless: it resolves a follow-up pronoun only against targets it
-    is handed. hassil answers most sentences and never reaches the matcher, so without
-    this the turn that named the thing goes by unseen and "open it" has no antecedent.
-
-    A handled intent reports what it acted on as typed, id-bearing results, which is
-    the same selector shape the matcher builds from its own frames.
-    """
+    """Return what a sentence hassil recognized selected, for a later "it"/"them"."""
     resolved: dict[str, list[str]] = {}
     for target in intent_response.success_results:
         if target.id:
@@ -238,11 +201,7 @@ class GazetteerFallback:
 
     @callback
     def async_invalidate(self) -> None:
-        """Note that a registry or exposure change has outdated the home.
-
-        Rebuilt on the next use rather than now, since most changes are not followed
-        by a sentence the matcher ever sees.
-        """
+        """Note that a registry or exposure change has outdated the home."""
         self._stale = True
 
     def supports(self, language: str) -> bool:
@@ -255,12 +214,7 @@ class GazetteerFallback:
         conversation_id: str,
         area: ar.AreaEntry | None,
     ) -> tuple[GazetteerMatcher, Interpretation]:
-        """Interpret text, returning it with the matcher that read it.
-
-        The matcher comes back because answering needs it too, to name what the frames
-        resolved. Handing back the one that produced them means a home swapped in
-        between still describes the entity that was actually acted on.
-        """
+        """Interpret text, returning it with the matcher that read it."""
         matcher = await self._async_get_matcher()
         interpret = partial(
             matcher.interpret,
@@ -287,26 +241,14 @@ class GazetteerFallback:
     def async_remember(
         self, conversation_id: str, targets: Sequence[TargetReference] = ()
     ) -> None:
-        """Make this turn the one a pronoun refers back to.
-
-        Every turn that succeeded replaces the one before it, including a turn with
-        nothing referrable in it: "it" should mean the command just given or no command
-        at all, never reach past it to an older one that is still in the cache. A turn
-        that failed leaves the entry alone, so "mumble" between two commands does not
-        strand the pronoun after it.
-        """
+        """Make this turn the one a pronoun refers back to (it/them)."""
         self._previous_targets.pop(conversation_id, None)
         self._previous_targets[conversation_id] = tuple(targets)
         while len(self._previous_targets) > _PREVIOUS_TARGETS_CAPACITY:
             self._previous_targets.popitem(last=False)
 
     async def _async_get_matcher(self) -> GazetteerMatcher:
-        """Return the matcher, over a home built or refreshed from the registries.
-
-        Building the first one reads the matcher's data files and spells every number
-        in the language, so it goes to the executor. Swapping the home afterwards
-        touches neither and is fast enough to do here.
-        """
+        """Return the matcher, over a home built or refreshed from the registries."""
         async with self._build_lock:
             if self._matcher is None:
                 self._matcher = await self.hass.async_add_executor_job(
@@ -322,13 +264,7 @@ class GazetteerFallback:
     def async_intent_slots(
         self, matcher: GazetteerMatcher, frame: FrameCandidate
     ) -> dict[str, Any]:
-        """Return a frame's slots in the form intent handlers take.
-
-        The values are the ids the matcher resolved -- `name` an entity id, `area` and
-        `floor` their registry ids -- which Home Assistant matches by as readily as by
-        name. The display name rides along as the slot's text, which is what the intent
-        handler substitutes back in for the response template to speak.
-        """
+        """Return a frame's slots in the form intent handlers take."""
         return {
             slot: {"value": value, "text": matcher.display_name(slot, value)}
             for slot, value in frame.slots.items()
