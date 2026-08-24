@@ -260,7 +260,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.12.0
+aioesphomeapi==46.1.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1198,7 +1198,7 @@ greenplanet-energy-api==0.1.10
 gridnet==5.0.1
 
 # homeassistant.components.growatt_server
-growattServer==2.1.0
+growattServer==2.2.0
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
