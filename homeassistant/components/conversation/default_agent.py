@@ -10,7 +10,7 @@ from pathlib import Path
 import time
 from typing import IO, Any, cast, override
 
-from gazetteer_matcher import FrameCandidate
+from gazetteer_matcher import FrameCandidate, GazetteerMatcher
 from hassil.expression import Expression, Group, ListReference, TextChunk
 from hassil.intents import (
     Intents,
@@ -76,12 +76,7 @@ from .const import (
     IntentSource,
 )
 from .entity import ConversationEntity
-from .gazetteer import (
-    GazetteerFallback,
-    GazetteerResponses,
-    async_refusal,
-    async_targets_from_intent,
-)
+from .gazetteer import GazetteerFallback, async_refusal, async_targets_from_intent
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
@@ -254,7 +249,6 @@ class DefaultAgent(ConversationEntity):
 
         # Second recognizer, tried only when hassil does not match
         self._gazetteer = GazetteerFallback(hass)
-        self._gazetteer_responses: dict[str, GazetteerResponses] = {}
 
     @override
     async def async_added_to_hass(self) -> None:
@@ -733,7 +727,7 @@ class DefaultAgent(ConversationEntity):
         satellite_area, _ = self._get_satellite_area_and_device(
             user_input.satellite_id, user_input.device_id
         )
-        interpretation = await self._gazetteer.async_interpret(
+        matcher, interpretation = await self._gazetteer.async_interpret(
             user_input.text, chat_log.conversation_id, satellite_area
         )
 
@@ -758,19 +752,12 @@ class DefaultAgent(ConversationEntity):
                 refusal,
             )
 
-        responses = self._gazetteer_responses.get(language)
-        if responses is None:
-            responses = GazetteerResponses(
-                lang_intents.intents_dict, lang_intents.intent_responses
-            )
-            self._gazetteer_responses[language] = responses
-
-        # Only take over a sentence we can also answer. Acting on one mutely is worse
-        # than leaving it to hassil's own error.
-        keyed: list[tuple[FrameCandidate, str]] = []
+        # Only take over a sentence we can also answer. The matcher leaves the key
+        # unset where the corpus answers a shape more than one way and the wording
+        # does not say which was meant; acting on that mutely is worse than leaving
+        # the sentence to hassil's own error.
         for frame in interpretation.frames:
-            key = responses.key_for(frame, self._gazetteer.async_domain(frame))
-            if key is None:
+            if frame.response_key is None:
                 _LOGGER.debug(
                     "Gazetteer matched '%s' as %s/%s, which has no single response",
                     user_input.text,
@@ -778,10 +765,9 @@ class DefaultAgent(ConversationEntity):
                     frame.combination,
                 )
                 return None
-            keyed.append((frame, key))
 
         intent_response = await self._async_process_frames(
-            keyed, user_input, chat_log, lang_intents, language
+            matcher, interpretation.frames, user_input, chat_log, lang_intents, language
         )
 
         if intent_response.response_type is not intent.IntentResponseType.ERROR:
@@ -793,7 +779,8 @@ class DefaultAgent(ConversationEntity):
 
     async def _async_process_frames(
         self,
-        frames: list[tuple[FrameCandidate, str]],
+        matcher: GazetteerMatcher,
+        frames: list[FrameCandidate],
         user_input: ConversationInput,
         chat_log: ChatLog,
         lang_intents: LanguageIntents,
@@ -812,15 +799,15 @@ class DefaultAgent(ConversationEntity):
 
         intent_response: intent.IntentResponse | None = None
         speech: list[str] = []
-        for frame, response_key in frames:
+        for frame in frames:
             intent_response = await self._async_execute_intent(
                 frame.intent,
-                self._gazetteer.async_intent_slots(frame),
+                self._gazetteer.async_intent_slots(matcher, frame),
                 {
-                    slot: self._gazetteer.async_display_text(slot, value)
+                    slot: matcher.display_name(slot, value)
                     for slot, value in frame.slots.items()
                 },
-                response_key,
+                frame.response_key,
                 user_input,
                 chat_log,
                 lang_intents,
@@ -1186,11 +1173,9 @@ class DefaultAgent(ConversationEntity):
         """Clear cached intents for a language."""
         if language is None:
             self._lang_intents.clear()
-            self._gazetteer_responses.clear()
             _LOGGER.debug("Cleared intents for all languages")
         else:
             self._lang_intents.pop(language, None)
-            self._gazetteer_responses.pop(language, None)
             _LOGGER.debug("Cleared intents for language: %s", language)
 
         # Intents have changed, so we must clear the cache

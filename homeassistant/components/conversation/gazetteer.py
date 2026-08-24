@@ -21,17 +21,19 @@ been handled, and what the previous turn targeted so "turn them back on" has an 
 import asyncio
 from collections import OrderedDict
 from collections.abc import Sequence
-from dataclasses import dataclass
 from functools import partial
 from typing import Any
 
 from gazetteer_matcher import (
+    AreaSpec,
+    EntitySpec,
+    FloorSpec,
     FrameCandidate,
     GazetteerMatcher,
+    Home,
     Interpretation,
     TargetReference,
 )
-from gazetteer_matcher.config import MatcherConfig
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
 from homeassistant.const import ATTR_DEVICE_CLASS
@@ -57,12 +59,6 @@ No expiry to go with it: Home Assistant retires a conversation id after
 stale is one that will never be asked for again.
 """
 
-DISPLAY_SLOTS = ("name", "area", "floor")
-"""Slots carrying a registry id, which a response template would read out loud."""
-
-TARGET_TAGS = frozenset({"area", "device_class", "domain", "floor", "name"})
-"""Span tags that mean the matcher resolved something in the home."""
-
 
 @callback
 def async_refusal(interpretation: Interpretation) -> str | None:
@@ -72,17 +68,15 @@ def async_refusal(interpretation: Interpretation) -> str | None:
     nothing, because noise resolves nothing: "asdfgh" and "do something" both come back
     as "Sorry, I don't know what action to take". Home Assistant's own error is the
     better answer there, not least because it is translated. It is only worth
-    displacing when the matcher got as far as something in the home, and can say so.
+    displacing when the matcher named what it was aimed at.
     """
-    if not interpretation.response:
-        return None
-    if not any(span.tag in TARGET_TAGS for span in interpretation.spans):
+    if not interpretation.refusal_target:
         return None
     return interpretation.response
 
 
 @callback
-def async_build_home(hass: HomeAssistant) -> dict[str, Any]:
+def async_build_home(hass: HomeAssistant) -> Home:
     """Build the matcher's gazetteer of the home from the registries.
 
     The shape is the `home.yaml` gazetteer-matcher documents: areas and floors with
@@ -92,11 +86,11 @@ def async_build_home(hass: HomeAssistant) -> dict[str, Any]:
     """
     entity_registry = er.async_get(hass)
 
-    floors = {
+    floors: dict[str, FloorSpec] = {
         floor.floor_id: {"name": floor.name, "aliases": list(floor.aliases)}
         for floor in fr.async_get(hass).async_list_floors()
     }
-    areas = {
+    areas: dict[str, AreaSpec] = {
         area.id: {
             "name": area.name,
             "aliases": list(area.aliases),
@@ -105,7 +99,7 @@ def async_build_home(hass: HomeAssistant) -> dict[str, Any]:
         for area in ar.async_get(hass).async_list_areas()
     }
 
-    entities: dict[str, dict[str, Any]] = {}
+    entities: dict[str, EntitySpec] = {}
     for state in hass.states.async_all():
         if not async_should_expose(hass, DOMAIN, state.entity_id):
             continue
@@ -115,7 +109,7 @@ def async_build_home(hass: HomeAssistant) -> dict[str, Any]:
         if not names:
             continue
 
-        spec: dict[str, Any] = {
+        spec: EntitySpec = {
             "name": names[0],
             "aliases": names[1:],
             "domain": state.domain,
@@ -157,9 +151,9 @@ def _names(
 
 
 _TARGET_SCOPES = (
-    (intent.IntentResponseTargetType.FLOOR, "floor", "floor"),
-    (intent.IntentResponseTargetType.AREA, "area", "area"),
-    (intent.IntentResponseTargetType.ENTITY, "name", "entity"),
+    (intent.IntentResponseTargetType.FLOOR, TargetReference.for_floor),
+    (intent.IntentResponseTargetType.AREA, TargetReference.for_area),
+    (intent.IntentResponseTargetType.ENTITY, TargetReference.for_entity),
 )
 """Target kinds a pronoun can refer back to, widest selector first.
 
@@ -195,7 +189,7 @@ def async_targets_from_intent(
         if slot in slots
     }
 
-    for target_type, slot, scope in _TARGET_SCOPES:
+    for target_type, build in _TARGET_SCOPES:
         ids = resolved.get(target_type)
         if not ids:
             continue
@@ -203,108 +197,9 @@ def async_targets_from_intent(
             # Several rooms, or several entities named at once: nothing a pronoun
             # picks out, and the matcher only reuses a single selector.
             return ()
-        return (TargetReference(slots={**values, slot: ids[0]}, scope=scope),)
+        return (build(ids[0], **values),)
 
     return ()
-
-
-@dataclass(frozen=True)
-class _ResponseKey:
-    """One sentence block's response key, and the domains it was written for."""
-
-    key: str
-    domains: frozenset[str]
-
-    def fits(self, domain: str | None) -> bool:
-        """Return whether this key can answer for a target in `domain`."""
-        return not self.domains or domain is None or domain in self.domains
-
-
-class GazetteerResponses:
-    """Which response answers a recognized frame.
-
-    The matcher writes wording for refusals only, so a successful command is answered
-    from the same intents data hassil was loaded from: each sentence block declares a
-    response key alongside the slot combination the matcher validated against. That
-    makes a key a lookup on (intent, combination), narrowed by the target's domain
-    where a combination spells several -- `HassTurnOn/domain_only` answers "Turned on
-    the lights" for `light` and "Turned on the fans" for `fan`.
-
-    A frame may name its own key, and that one wins. It is drawn from the words that
-    were actually said, so it separates questions the slots cannot: "how many lights
-    are on" and "are any lights on" are both `HassGetState/domain_state`, and the
-    shape lookup can only decline between them.
-    """
-
-    def __init__(
-        self, intents_dict: dict[str, Any], intent_responses: dict[str, Any]
-    ) -> None:
-        """Index the response key of every sentence block by the shape it answers."""
-        self._templates = intent_responses
-        keys: dict[tuple[str, str], list[_ResponseKey]] = {}
-        for intent_name, intent_data in (intents_dict.get("intents") or {}).items():
-            for block in (intent_data or {}).get("data") or []:
-                response = block.get("response")
-                combination = (block.get("metadata") or {}).get("slot_combination")
-                if not response or not combination:
-                    continue
-
-                domains = _domains((block.get("slots") or {}).get("domain")) | _domains(
-                    (block.get("requires_context") or {}).get("domain")
-                )
-                keys.setdefault((intent_name, str(combination)), []).append(
-                    _ResponseKey(str(response), domains)
-                )
-
-        self._keys = {
-            shape: tuple(dict.fromkeys(found)) for shape, found in keys.items()
-        }
-
-    def key_for(self, frame: FrameCandidate, domain: str | None) -> str | None:
-        """Return the response key to speak for a frame, or None to say nothing.
-
-        Each candidate has to name a template that exists. The matcher carries its own
-        vocabulary of key names, and it is versioned separately from this corpus, so a
-        name that has moved on must fall through rather than answer mutely.
-        """
-        for key in (
-            frame.response_key,
-            self._shape_key(frame.intent, frame.combination, domain),
-        ):
-            if key and key in self._templates.get(frame.intent, {}):
-                return key
-        return None
-
-    def _shape_key(
-        self, intent_name: str, combination: str, domain: str | None
-    ) -> str | None:
-        """Return the one key the corpus writes for this shape, if it writes one.
-
-        A key written for a domain beats a generic one, and what is left has to be
-        unanimous: a shape the corpus answers two ways is one the slots cannot choose
-        between, and answering "how many lights are on" with "Yes" is worse than
-        saying nothing.
-        """
-        candidates = self._keys.get((intent_name, combination), ())
-        fitting = [key for key in candidates if key.fits(domain)]
-        preferred = [key for key in fitting if key.domains] or fitting
-        distinct = list(dict.fromkeys(key.key for key in preferred))
-        return distinct[0] if len(distinct) == 1 else None
-
-
-def _domains(block: Any) -> frozenset[str]:
-    """Flatten however a domain list is written: one domain, a list, or tiers."""
-    if not block:
-        return frozenset()
-    if isinstance(block, str):
-        return frozenset([block])
-    if isinstance(block, list):
-        return frozenset(block)
-    return frozenset(
-        domain
-        for value in block.values()
-        for domain in (value if isinstance(value, list) else [value])
-    )
 
 
 class GazetteerFallback:
@@ -315,21 +210,19 @@ class GazetteerFallback:
         self.hass = hass
         self._matcher: GazetteerMatcher | None = None
         self._build_lock = asyncio.Lock()
-
-        # Data files, loaded once and reused by every rebuild.
-        self._data: MatcherConfig | None = None
-
-        # Kept past invalidation so a response can still name what it just acted on.
-        self._home: dict[str, Any] = {}
-
+        self._stale = False
         self._previous_targets: OrderedDict[str, tuple[TargetReference, ...]] = (
             OrderedDict()
         )
 
     @callback
     def async_invalidate(self) -> None:
-        """Drop the home snapshot after a registry or exposure change."""
-        self._matcher = None
+        """Note that a registry or exposure change has outdated the home.
+
+        Rebuilt on the next use rather than now, since most changes are not followed
+        by a sentence the matcher ever sees.
+        """
+        self._stale = True
 
     def supports(self, language: str) -> bool:
         """Return whether the matcher has a vocabulary for this language."""
@@ -340,8 +233,13 @@ class GazetteerFallback:
         text: str,
         conversation_id: str,
         area: ar.AreaEntry | None,
-    ) -> Interpretation:
-        """Interpret text against the current home."""
+    ) -> tuple[GazetteerMatcher, Interpretation]:
+        """Interpret text, returning it with the matcher that read it.
+
+        The matcher comes back because answering needs it too, to name what the frames
+        resolved. Handing back the one that produced them means a home swapped in
+        between still describes the entity that was actually acted on.
+        """
         matcher = await self._async_get_matcher()
         interpret = partial(
             matcher.interpret,
@@ -362,7 +260,7 @@ class GazetteerFallback:
             # still worth trying unplaced; the shapes needing a room refuse on their own.
             result = await self.hass.async_add_executor_job(interpret)
 
-        return result
+        return matcher, result
 
     @callback
     def async_remember(
@@ -382,41 +280,27 @@ class GazetteerFallback:
             self._previous_targets.popitem(last=False)
 
     async def _async_get_matcher(self) -> GazetteerMatcher:
-        """Return the matcher, rebuilding it around a fresh home if needed."""
-        if self._matcher is not None:
-            return self._matcher
+        """Return the matcher, over a home built or refreshed from the registries.
 
+        Building the first one reads the matcher's data files and spells every number
+        in the language, so it goes to the executor. Swapping the home afterwards
+        touches neither and is fast enough to do here.
+        """
         async with self._build_lock:
             if self._matcher is None:
-                home = async_build_home(self.hass)
                 self._matcher = await self.hass.async_add_executor_job(
-                    self._build_matcher, home
+                    partial(GazetteerMatcher, home=async_build_home(self.hass))
                 )
-                self._home = home
+            elif self._stale:
+                self._matcher.set_home(async_build_home(self.hass))
+            self._stale = False
 
         return self._matcher
 
-    def _build_matcher(self, home: dict[str, Any]) -> GazetteerMatcher:
-        """Build a matcher over `home` (run inside executor).
-
-        Only the home changes between rebuilds, so the vocabulary, intent catalog and
-        refusal wording of the first matcher are handed to every one after it rather
-        than being read off disk again.
-        """
-        if self._data is None:
-            matcher = GazetteerMatcher(home=home)
-            self._data = matcher.config
-            return matcher
-
-        return GazetteerMatcher(
-            home=home,
-            vocabulary=self._data.vocabulary,
-            intents=self._data.intents,
-            responses=self._data.responses,
-        )
-
     @callback
-    def async_intent_slots(self, frame: FrameCandidate) -> dict[str, Any]:
+    def async_intent_slots(
+        self, matcher: GazetteerMatcher, frame: FrameCandidate
+    ) -> dict[str, Any]:
         """Return a frame's slots in the form intent handlers take.
 
         The values are the ids the matcher resolved -- `name` an entity id, `area` and
@@ -425,31 +309,6 @@ class GazetteerFallback:
         handler substitutes back in for the response template to speak.
         """
         return {
-            slot: {"value": value, "text": self.async_display_text(slot, value)}
+            slot: {"value": value, "text": matcher.display_name(slot, value)}
             for slot, value in frame.slots.items()
         }
-
-    @callback
-    def async_display_text(self, slot: str, value: Any) -> str:
-        """Return what a response template should say for a slot value."""
-        if slot in DISPLAY_SLOTS:
-            collection = {"name": "entities", "area": "areas", "floor": "floors"}[slot]
-            spec = (self._home.get(collection) or {}).get(str(value))
-            if spec and spec.get("name"):
-                return str(spec["name"])
-        return str(value)
-
-    @callback
-    def async_domain(self, frame: FrameCandidate) -> str | None:
-        """Return what a frame acts on, which picks between phrasings.
-
-        A named target's own domain is the more specific answer, so it wins over the
-        slot. A `domain` slot holding several is no answer at all.
-        """
-        if entity_id := frame.slots.get("name"):
-            return str(entity_id).split(".", maxsplit=1)[0]
-
-        domain = frame.slots.get("domain")
-        if isinstance(domain, (list, tuple)):
-            return str(domain[0]) if len(domain) == 1 else None
-        return str(domain) if domain else None
