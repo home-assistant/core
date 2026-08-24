@@ -28,6 +28,7 @@ class NexiaEntity(CoordinatorEntity[NexiaDataUpdateCoordinator]):
     """Base class for nexia entities."""
 
     _attr_attribution = ATTRIBUTION
+    _attr_device_info: DeviceInfo | None = None
 
     def __init__(self, coordinator: NexiaDataUpdateCoordinator, unique_id: str) -> None:
         """Initialize the entity."""

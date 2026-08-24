@@ -129,7 +129,7 @@ def _resolve_config_entry(
     device_id: str = service_call.data[ATTR_DEVICE_ID]
 
     device_registry = dr.async_get(service_call.hass)
-    device_entry = device_registry.async_get(device_id)
+    device_entry = device_registry.async_get(device_id, include_child_devices=False)
 
     if device_entry is None:
         raise ServiceValidationError(

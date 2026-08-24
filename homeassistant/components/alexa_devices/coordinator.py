@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import timedelta
+from pathlib import Path
 from typing import override
 
 from aioamazondevices.api import AmazonEchoApi
@@ -17,6 +18,7 @@ from aioamazondevices.structures import (
     AmazonListEventType,
     AmazonListItem,
     AmazonMediaState,
+    AmazonSaveDataConfig,
     AmazonVocalRecord,
     AmazonVolumeState,
 )
@@ -127,13 +129,16 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             session,
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
-            entry.data[CONF_LOGIN_DATA],
+            login_data=entry.data[CONF_LOGIN_DATA],
+            save_data=AmazonSaveDataConfig(
+                path=Path(hass.config.path(DOMAIN)),
+            ),
         )
         device_registry = dr.async_get(hass)
         self.previous_devices: set[str] = {
             identifier
-            for device in device_registry.devices.get_devices_for_config_entry_id(
-                entry.entry_id
+            for device in dr.async_entries_for_config_entry(
+                device_registry, entry.entry_id
             )
             if device.entry_type != dr.DeviceEntryType.SERVICE
             for identifier_domain, identifier in device.identifiers

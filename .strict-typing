@@ -217,6 +217,7 @@ homeassistant.components.firefly_iii.*
 homeassistant.components.fitbit.*
 homeassistant.components.flexit.*
 homeassistant.components.flexit_bacnet.*
+homeassistant.components.flow_it.*
 homeassistant.components.flux_led.*
 homeassistant.components.folder_watcher.*
 homeassistant.components.forecast_solar.*
@@ -286,6 +287,7 @@ homeassistant.components.homekit_controller.utils
 homeassistant.components.homewizard.*
 homeassistant.components.homeworks.*
 homeassistant.components.hortimax.*
+homeassistant.components.hotspring.*
 homeassistant.components.hr_energy_qube.*
 homeassistant.components.http.*
 homeassistant.components.huawei_lte.*
@@ -507,6 +509,7 @@ homeassistant.components.rss_feed_template.*
 homeassistant.components.russound_rio.*
 homeassistant.components.ruuvi_gateway.*
 homeassistant.components.ruuvitag_ble.*
+homeassistant.components.samsung_exlink.*
 homeassistant.components.samsung_infrared.*
 homeassistant.components.samsungtv.*
 homeassistant.components.saunum.*
@@ -594,6 +597,7 @@ homeassistant.components.timer.*
 homeassistant.components.tod.*
 homeassistant.components.todo.*
 homeassistant.components.tolo.*
+homeassistant.components.tonewinner.*
 homeassistant.components.tplink.*
 homeassistant.components.tplink_omada.*
 homeassistant.components.trace.*
