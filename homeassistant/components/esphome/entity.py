@@ -111,6 +111,8 @@ def async_static_info_updated(
     )
     rekeys: list[tuple[EntityInfo, EntityInfo]] = []
     deferred: list[tuple[EntityInfo, str]] = []
+    # (old_slot, new_slot) of entities that moved between devices
+    moves: list[tuple[DeviceEntityKey, DeviceEntityKey]] = []
     # Slots of brand new entities; movers are deliberately not
     # tracked, though a mover's cached state under its old slot is
     # still dropped whenever the sweep below runs
@@ -147,17 +149,7 @@ def async_static_info_updated(
             )
         old_info = current_infos.pop(candidates.pop(idx))
 
-        # Carry the mover's own cached state to its new slot; anything
-        # already there is foreign and must not be adopted on re-add
-        new_slot = (info.device_id, info.key)
-        if (
-            info.key == old_info.key
-            and (own_state := states.pop((old_info.device_id, old_info.key), None))
-            is not None
-        ):
-            states[new_slot] = replace(own_state, device_id=info.device_id)  # type: ignore[type-var]
-        else:
-            states.pop(new_slot, None)
+        moves.append(((old_info.device_id, old_info.key), (info.device_id, info.key)))
 
         # Entity has switched devices, need to migrate unique_id
         # and handle state subscriptions
@@ -240,6 +232,21 @@ def async_static_info_updated(
 
         # Create new entity with the new device_id
         add_entities.append(entity_type(entry_data, info, state_type))
+
+    # Carry each mover's own cached state to its new slot. Sources are
+    # taken before any destination is written so movers that swap slots
+    # do not read each other's state; anything left at a destination is
+    # foreign and must not be adopted on re-add.
+    if moves:
+        carried = {
+            new_slot: states.pop(old_slot)
+            for old_slot, new_slot in moves
+            if old_slot[1] == new_slot[1] and old_slot in states
+        }
+        for _, new_slot in moves:
+            states.pop(new_slot, None)
+        for new_slot, own_state in carried.items():
+            states[new_slot] = replace(own_state, device_id=new_slot[0])  # type: ignore[type-var]
 
     # Second pass: anything left at an incoming (device_id, key) slot
     # is a rename with a stable key; the registry entry follows the

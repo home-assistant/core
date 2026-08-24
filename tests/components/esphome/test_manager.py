@@ -15,6 +15,8 @@ from aioesphomeapi import (
     APIConnectionError,
     APIVersion,
     AreaInfo,
+    BinarySensorInfo,
+    BinarySensorState,
     BluetoothProxyFeature,
     CameraState,
     DeviceInfo,
@@ -66,6 +68,8 @@ from homeassistant.const import (
     CONF_PASSWORD,
     CONF_PORT,
     EVENT_HOMEASSISTANT_CLOSE,
+    STATE_OFF,
+    STATE_ON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
@@ -223,6 +227,7 @@ async def test_reconnect_logic_seeds_deep_sleep_from_restored_device_info(
 
 
 _DEEP_SLEEP_SENSOR_INFOS = [SensorInfo(object_id="mysensor", key=1, name="my sensor")]
+_DEEP_SLEEP_INFOS: dict[str, list[EntityInfo]] = {"sensor": _DEEP_SLEEP_SENSOR_INFOS}
 _DEEP_SLEEP_SENSOR_STATES = {"sensor": [SensorState(key=1, state=42).to_dict()]}
 _SUB_DEVICES = [
     SubDeviceInfo(device_id=11111111, name="Sub Device 1", area_id=0),
@@ -242,7 +247,7 @@ def _seed_deep_sleep_storage(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     *,
-    infos: list[SensorInfo] | None = None,
+    infos: dict[str, list[EntityInfo]] | None = None,
     states: dict[str, list[Any]] | None = None,
     expected_disconnect: bool | None = True,
     sub_devices: list[SubDeviceInfo] | None = None,
@@ -271,8 +276,9 @@ def _seed_deep_sleep_storage(
         "device_info": device_info.to_dict(),
         "api_version": APIVersion(99, 99).to_dict(),
         "services": [],
-        "sensor": [info.to_dict() for info in infos or _DEEP_SLEEP_SENSOR_INFOS],
     }
+    for comp_type, comp_infos in (infos or _DEEP_SLEEP_INFOS).items():
+        data[comp_type] = [info.to_dict() for info in comp_infos]
     if expected_disconnect is not None:
         data["states"] = states or _DEEP_SLEEP_SENSOR_STATES
         data["expected_disconnect"] = expected_disconnect
@@ -447,6 +453,45 @@ async def test_cold_start_offline_restores_deep_sleep_entities(
     assert state.state == expected_state
 
 
+@pytest.mark.parametrize(
+    ("stored_state", "expected_state"),
+    [
+        pytest.param(True, STATE_ON, id="on"),
+        pytest.param(False, STATE_OFF, id="off"),
+    ],
+)
+async def test_cold_start_restores_binary_sensor(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    stored_state: bool,
+    expected_state: str,
+) -> None:
+    """Restore goes through entry data so every platform benefits, not only sensor."""
+    entry = _seed_deep_sleep_storage(
+        hass,
+        hass_storage,
+        infos={
+            "binary_sensor": [
+                BinarySensorInfo(object_id="door", key=1, name="Door"),
+            ]
+        },
+        states={
+            "binary_sensor": [
+                BinarySensorState(
+                    key=1, state=stored_state, missing_state=False
+                ).to_dict()
+            ]
+        },
+    )
+
+    await _async_setup_without_connecting(hass, mock_client, entry)
+
+    state = hass.states.get("binary_sensor.test_door")
+    assert state is not None
+    assert state.state == expected_state
+
+
 async def test_cold_start_restores_same_key_on_sub_devices(
     hass: HomeAssistant,
     mock_client: APIClient,
@@ -457,7 +502,7 @@ async def test_cold_start_restores_same_key_on_sub_devices(
     entry = _seed_deep_sleep_storage(
         hass,
         hass_storage,
-        infos=_SUB_DEVICE_SENSOR_INFOS,
+        infos={"sensor": _SUB_DEVICE_SENSOR_INFOS},
         states={"sensor": [state.to_dict() for state in _SUB_DEVICE_SENSOR_STATES]},
         sub_devices=_SUB_DEVICES,
     )
