@@ -1,6 +1,6 @@
 """Support for Guntamatic sensors in Home Assistant."""
 
-from datetime import timedelta
+from datetime import date, timedelta
 import re
 from typing import override
 
@@ -763,7 +763,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | date:
         """Return the current value of the sensor."""
         value = self.coordinator.data[self.entity_description.key][0]
         if self.entity_description.device_class is SensorDeviceClass.DATE:
