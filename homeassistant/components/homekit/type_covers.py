@@ -23,13 +23,13 @@ from homeassistant.components.cover import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_CLOSE_COVER,
     SERVICE_OPEN_COVER,
     SERVICE_SET_COVER_POSITION,
     SERVICE_SET_COVER_TILT_POSITION,
     SERVICE_STOP_COVER,
     STATE_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     Event,
@@ -217,7 +217,9 @@ class OpeningDeviceBase(HomeAccessory):
         super().__init__(*args, category=category)
         state = self.hass.states.get(self.entity_id)
         assert state
-        self.features: int = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        self.features: int = state.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         self._supports_stop = self.features & CoverEntityFeature.STOP
         self.chars = []
         if self._supports_stop:

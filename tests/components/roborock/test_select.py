@@ -2,7 +2,7 @@
 
 import copy
 from typing import Any
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from roborock import CleanTypeMapping, RoborockCommand
@@ -87,6 +87,7 @@ async def test_update_success(
         ("select.roborock_s7_maxv_selected_map", "Downstairs"),
     ],
 )
+@patch("homeassistant.components.roborock.select.MAP_SLEEP", 0)
 async def test_update_success_selected_map(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,

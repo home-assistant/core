@@ -1,4 +1,48 @@
 {
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_service%]",
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "timeout_token": "Timeout getting access token",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "auth": {
+        "description": "Follow the link to authorize Home Assistant to access your Remember The Milk account. When done, click on the button below to continue.\n\n[Authorize]({url})"
+      },
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]",
+          "shared_secret": "Shared secret"
+        },
+        "data_description": {
+          "api_key": "The API key of your Remember The Milk API application.",
+          "shared_secret": "The shared secret of your Remember The Milk API application."
+        },
+        "description": "Enter the API key and shared secret from a Remember The Milk API application. You can request these credentials using your Remember The Milk account."
+      }
+    }
+  },
+  "issues": {
+    "deprecated_yaml_import_issue_cannot_connect": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a connection error occurred. Please restart Home Assistant to try again, or remove the {domain} configuration from your YAML and set the integration up via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_invalid_auth": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, a stored authentication token could not be found or was invalid. Please remove the {domain} configuration from your YAML and set the integration up via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    },
+    "deprecated_yaml_import_issue_unknown": {
+      "description": "Configuring {integration_title} via YAML is deprecated and will be removed in a future release. While importing your configuration, an unknown error occurred. Please remove the {domain} configuration from your YAML and set the integration up via the UI.",
+      "title": "The {integration_title} YAML configuration is being removed"
+    }
+  },
   "services": {
     "complete_task": {
       "description": "Completes a task that was previously created.",
