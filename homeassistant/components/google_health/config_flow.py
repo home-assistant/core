@@ -8,7 +8,8 @@ from google_health_api import GoogleHealthApi
 from google_health_api.const import HealthApiScope
 from google_health_api.exceptions import (
     GoogleHealthApiError,
-    HealthApiForbiddenException,
+    HealthApiScopeInsufficientException,
+    HealthApiServiceDisabledException,
 )
 
 from homeassistant.config_entries import (
@@ -81,19 +82,22 @@ class OAuth2FlowHandler(
 
         try:
             identity = await api.get_identity()
-        except HealthApiForbiddenException as err:
+        except HealthApiServiceDisabledException as err:
             _LOGGER.error("Error getting Google Health identity: %s", err)
             return self.async_abort(
                 reason="api_not_enabled",
                 description_placeholders={"url": API_CONSOLE_URL},
             )
+        except HealthApiScopeInsufficientException as err:
+            _LOGGER.error("Error getting Google Health identity: %s", err)
+            return self.async_abort(reason="missing_profile_scope")
         except GoogleHealthApiError as err:
             _LOGGER.error("Error getting Google Health identity: %s", err)
             return self.async_abort(reason="cannot_connect")
 
         if not identity.health_user_id:
             _LOGGER.error("Google Health identity has no health_user_id")
-            return self.async_abort(reason="cannot_connect")
+            return self.async_abort(reason="missing_profile_scope")
 
         await self.async_set_unique_id(identity.health_user_id)
         if self.source in (SOURCE_REAUTH, SOURCE_RECONFIGURE):
@@ -110,7 +114,7 @@ class OAuth2FlowHandler(
             try:
                 userinfo = await api.get_user_info()
                 display_name = userinfo.given_name or userinfo.name
-            except Exception as err:  # pylint: disable=broad-except # noqa: BLE001
+            except GoogleHealthApiError as err:
                 _LOGGER.warning("Error fetching user profile name: %s", err)
 
         return self.async_create_entry(

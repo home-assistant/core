@@ -603,7 +603,7 @@
         'uptime': 1191516000,
         'vaultCameras': list([
         ]),
-        'version': '7.1.0',
+        'version': '7.2.105',
         'wanIp': None,
       }),
       'ringtones': list([
