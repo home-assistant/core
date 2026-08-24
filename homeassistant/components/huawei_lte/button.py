@@ -1,6 +1,7 @@
 """Huawei LTE buttons."""
 
 import logging
+from typing import override
 
 from huawei_lte_api.enums.device import ControlModeEnum
 
@@ -37,13 +38,16 @@ class BaseButton(HuaweiLteBaseEntityWithDevice, ButtonEntity):
     """Huawei LTE button base class."""
 
     @property
+    @override
     def _device_unique_id(self) -> str:
         """Return unique ID for entity within a router."""
         return f"button-{self.entity_description.key}"
 
+    @override
     async def async_update(self) -> None:
         """Update is not necessary for button entities."""
 
+    @override
     def press(self) -> None:
         """Press button."""
         if self.router.suspended:
@@ -71,6 +75,7 @@ class ClearTrafficStatisticsButton(BaseButton):
         entity_category=EntityCategory.CONFIG,
     )
 
+    @override
     def _press(self) -> str:
         """Call clear traffic statistics endpoint."""
         return self.router.client.monitoring.set_clear_traffic()
@@ -88,6 +93,7 @@ class RestartButton(BaseButton):
         entity_category=EntityCategory.CONFIG,
     )
 
+    @override
     def _press(self) -> str:
         """Call restart endpoint."""
         return self.router.client.device.set_control(ControlModeEnum.REBOOT)

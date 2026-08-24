@@ -43,13 +43,13 @@
       device_class: battery
   primary_entities_only: false
 
-low:
+became_low:
   fields:
     behavior: *trigger_behavior
     for: *trigger_for
   target: *trigger_target_battery
 
-not_low:
+no_longer_low:
   fields:
     behavior: *trigger_behavior
     for: *trigger_for

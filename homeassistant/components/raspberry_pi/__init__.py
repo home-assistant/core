@@ -2,9 +2,12 @@
 
 from homeassistant.components.hassio import HassioNotReadyError, get_os_info
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.hassio import is_hassio
+
+PLATFORMS = [Platform.UPDATE]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
@@ -29,4 +32,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         "rpi_power", context={"source": "onboarding"}
     )
 
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+
     return True
+
+
+async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
+    """Unload a config entry."""
+    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)

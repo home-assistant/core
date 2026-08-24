@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from datetime import datetime, timedelta
 import logging
+from typing import override
 
 import voluptuous as vol
 
@@ -17,6 +18,8 @@ from homeassistant.components.sensor import (
     STATE_CLASSES_SCHEMA,
     RestoreSensor,
     SensorDeviceClass,
+    SensorEntityCapabilityAttribute,
+    SensorEntityStateAttribute,
     SensorExtraStoredData,
     SensorStateClass,
 )
@@ -59,8 +62,8 @@ PARALLEL_UPDATES = 0
 
 MQTT_SENSOR_ATTRIBUTES_BLOCKED = frozenset(
     {
-        sensor.ATTR_LAST_RESET,
-        sensor.ATTR_STATE_CLASS,
+        SensorEntityStateAttribute.LAST_RESET,
+        SensorEntityCapabilityAttribute.STATE_CLASS,
     }
 )
 
@@ -199,6 +202,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         None
     )
 
+    @override
     async def mqtt_async_added_to_hass(self) -> None:
         """Restore state for entities with expire_after set."""
         last_state: State | None
@@ -236,6 +240,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
                 remain_seconds,
             )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Remove expire triggers."""
         if self._expiration_trigger:
@@ -243,13 +248,15 @@ class MqttSensor(MqttEntity, RestoreSensor):
             self._expiration_trigger()
             self._expiration_trigger = None
             self._expired = False
-        await MqttEntity.async_will_remove_from_hass(self)
+        await super().async_will_remove_from_hass()
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
@@ -370,6 +377,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             self._update_last_reset(msg)
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         self.add_subscription(
@@ -378,6 +386,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
             {"_attr_native_value", "_attr_last_reset", "_expired"},
         )
 
+    @override
     async def _subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         subscription.async_subscribe_topics_internal(self.hass, self._sub_state)
@@ -390,6 +399,7 @@ class MqttSensor(MqttEntity, RestoreSensor):
         self.async_write_ha_state()
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if the device is available and value has not expired."""
         # mypy doesn't know about fget: https://github.com/python/mypy/issues/6185

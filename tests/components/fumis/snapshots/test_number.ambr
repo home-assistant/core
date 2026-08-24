@@ -6,10 +6,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 5,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -44,11 +44,11 @@
 # name: test_numbers[number][number.clou_duo_fan_speed-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Clou Duo Fan speed',
-      'max': 5,
-      'min': 0,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clou Duo Fan speed',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 0,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.clou_duo_fan_speed',
@@ -65,10 +65,10 @@
     ]),
     'area_id': None,
     'capabilities': dict({
-      'max': 5,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
@@ -103,11 +103,11 @@
 # name: test_numbers[number][number.clou_duo_power_level-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Clou Duo Power level',
-      'max': 5,
-      'min': 1,
-      'mode': <NumberMode.AUTO: 'auto'>,
-      'step': 1,
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Clou Duo Power level',
+      <NumberEntityCapabilityAttribute.MAX: 'max'>: 5,
+      <NumberEntityCapabilityAttribute.MIN: 'min'>: 1,
+      <NumberEntityCapabilityAttribute.MODE: 'mode'>: <NumberMode.AUTO: 'auto'>,
+      <NumberEntityCapabilityAttribute.STEP: 'step'>: 1,
     }),
     'context': <ANY>,
     'entity_id': 'number.clou_duo_power_level',

@@ -1,7 +1,7 @@
 """Support for VeSync humidifiers."""
 
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pyvesync.base_devices.humidifier_base import VeSyncHumidifier
 
@@ -133,11 +133,13 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
         return self._ha_to_vs_mode_map[ha_mode]
 
     @property
+    @override
     def available_modes(self) -> list[str]:
         """Return the available mist modes."""
         return self._available_modes
 
     @property
+    @override
     def current_humidity(self) -> int:
         """Return the current humidity."""
         if TYPE_CHECKING:
@@ -145,6 +147,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
         return self.device.state.humidity
 
     @property
+    @override
     def target_humidity(self) -> int:
         """Return the humidity we try to reach."""
         if TYPE_CHECKING:
@@ -152,6 +155,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
         return self.device.state.auto_humidity
 
     @property
+    @override
     def mode(self) -> str | None:
         """Get the current preset mode."""
         return (
@@ -160,6 +164,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
             else _get_ha_mode(self.device.state.mode)
         )
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidity of the device."""
         if not await self.device.set_humidity(humidity):
@@ -167,6 +172,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
                 raise HomeAssistantError(self.device.last_response.message)
             raise HomeAssistantError("Failed to set humidity.")
 
+    @override
     async def async_set_mode(self, mode: str) -> None:
         """Set the mode of the device."""
         if mode not in self.available_modes:
@@ -188,6 +194,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         success = await self.device.turn_on()
@@ -198,6 +205,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
 
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         success = await self.device.turn_off()
@@ -209,6 +217,7 @@ class VeSyncHumidifierHA(VeSyncBaseEntity[VeSyncHumidifier], HumidifierEntity):
         self.async_write_ha_state()
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if device is on."""
         return self.device.state.device_status == "on"

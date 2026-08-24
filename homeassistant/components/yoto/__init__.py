@@ -19,7 +19,15 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
 from .const import DOMAIN
 from .coordinator import YotoConfigEntry, YotoDataUpdateCoordinator
 
-PLATFORMS: list[Platform] = [Platform.MEDIA_PLAYER]
+PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
+    Platform.MEDIA_PLAYER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SENSOR,
+    Platform.SWITCH,
+    Platform.TIME,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: YotoConfigEntry) -> bool:

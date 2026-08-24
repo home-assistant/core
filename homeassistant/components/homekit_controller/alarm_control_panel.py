@@ -1,6 +1,6 @@
 """Support for Homekit Alarm Control Panel."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohomekit.model.characteristics import CharacteristicsTypes
 from aiohomekit.model.services import Service, ServicesTypes
@@ -69,6 +69,7 @@ class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
     )
     _attr_code_arm_required = False
 
+    @override
     def get_characteristic_types(self) -> list[str]:
         """Define the homekit characteristics the entity cares about."""
         return [
@@ -78,24 +79,29 @@ class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
         ]
 
     @property
+    @override
     def alarm_state(self) -> AlarmControlPanelState:
         """Return the state of the device."""
         return CURRENT_STATE_MAP[
             self.service.value(CharacteristicsTypes.SECURITY_SYSTEM_STATE_CURRENT)
         ]
 
+    @override
     async def async_alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         await self.set_alarm_state(AlarmControlPanelState.DISARMED, code)
 
+    @override
     async def async_alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm command."""
         await self.set_alarm_state(AlarmControlPanelState.ARMED_AWAY, code)
 
+    @override
     async def async_alarm_arm_home(self, code: str | None = None) -> None:
         """Send stay command."""
         await self.set_alarm_state(AlarmControlPanelState.ARMED_HOME, code)
 
+    @override
     async def async_alarm_arm_night(self, code: str | None = None) -> None:
         """Send night command."""
         await self.set_alarm_state(AlarmControlPanelState.ARMED_NIGHT, code)
@@ -109,6 +115,7 @@ class HomeKitAlarmControlPanelEntity(HomeKitEntity, AlarmControlPanelEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the optional state attributes."""
         battery_level = self.service.value(CharacteristicsTypes.BATTERY_LEVEL)

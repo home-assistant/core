@@ -1,6 +1,6 @@
 """Cover integration microBees."""
 
-from typing import Any
+from typing import Any, override
 
 from microBeesPy import Actuator
 
@@ -62,6 +62,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
         self._attr_is_closed = None
 
     @property
+    @override
     def name(self) -> str:
         """Name of the cover."""
         return self.bee.name
@@ -82,6 +83,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         send_command = await self.coordinator.microbees.sendCommand(
@@ -99,6 +101,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
             self._reset_open_close,
         )
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         send_command = await self.coordinator.microbees.sendCommand(
@@ -115,6 +118,7 @@ class MBCover(MicroBeesEntity, CoverEntity):
             self._reset_open_close,
         )
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover."""
         if self.is_opening:

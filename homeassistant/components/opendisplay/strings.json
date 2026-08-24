@@ -86,6 +86,9 @@
     "media_download_error": {
       "message": "Failed to download media: {error}"
     },
+    "setup_connection_error": {
+      "message": "Failed to connect to OpenDisplay device."
+    },
     "upload_error": {
       "message": "Failed to upload image to the display."
     }

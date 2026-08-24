@@ -1,6 +1,6 @@
 """Support for Aidot lights."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
@@ -78,16 +78,19 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
         self._attr_rgbw_color = self.coordinator.data.rgbw
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return super().available and self.coordinator.data.online
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update."""
         self._update_status()
         super()._handle_coordinator_update()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on, applying brightness, color temperature, RGBW, or plain on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -114,6 +117,7 @@ class AidotLight(CoordinatorEntity[AidotDeviceUpdateCoordinator], LightEntity):
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         await self.coordinator.device_client.async_turn_off()

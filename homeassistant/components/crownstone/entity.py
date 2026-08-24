@@ -1,5 +1,7 @@
 """Base classes for Crownstone devices."""
 
+from typing import override
+
 from crownstone_cloud.cloud_models.crownstones import Crownstone
 
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -27,6 +29,7 @@ class CrownstoneEntity(Entity):
         return str(self.device.cloud_id)
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info."""
         return DeviceInfo(

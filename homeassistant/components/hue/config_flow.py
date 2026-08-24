@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiohue import LinkButtonNotPressed, create_app_key
@@ -51,6 +51,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: HueConfigEntry,
     ) -> HueV1OptionsFlowHandler | HueV2OptionsFlowHandler:
@@ -64,6 +65,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
         self.bridge: DiscoveredHueBridge | None = None
         self.discovered_bridges: dict[str, DiscoveredHueBridge] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -225,6 +227,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             },
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -261,6 +264,7 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_link()
 
+    @override
     async def async_step_homekit(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -330,8 +334,8 @@ class HueFlowHandler(ConfigFlow, domain=DOMAIN):
             )
             # also update the bridge device
             dev_reg = dr.async_get(self.hass)
-            if bridge_device := dev_reg.async_get_device(
-                identifiers={(DOMAIN, old_bridge_id)}
+            if bridge_device := dev_reg.async_get_device_by_identifier(
+                (DOMAIN, old_bridge_id), conf_entry.entry_id
             ):
                 dev_reg.async_update_device(
                     bridge_device.id,

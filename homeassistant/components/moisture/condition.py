@@ -14,23 +14,21 @@ from homeassistant.helpers.condition import (
     make_entity_state_condition,
 )
 
-_MOISTURE_BINARY_DOMAIN_SPECS = {
-    BINARY_SENSOR_DOMAIN: DomainSpec(
-        device_class=BinarySensorDeviceClass.MOISTURE,
-    )
+MOISTURE_BINARY_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    BINARY_SENSOR_DOMAIN: DomainSpec(device_class=BinarySensorDeviceClass.MOISTURE),
 }
 
-_MOISTURE_NUMERICAL_DOMAIN_SPECS = {
+MOISTURE_NUMERICAL_DOMAIN_SPECS: dict[str, DomainSpec] = {
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.MOISTURE),
 }
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_detected": make_entity_state_condition(_MOISTURE_BINARY_DOMAIN_SPECS, STATE_ON),
+    "is_detected": make_entity_state_condition(MOISTURE_BINARY_DOMAIN_SPECS, STATE_ON),
     "is_not_detected": make_entity_state_condition(
-        _MOISTURE_BINARY_DOMAIN_SPECS, STATE_OFF
+        MOISTURE_BINARY_DOMAIN_SPECS, STATE_OFF
     ),
     "is_value": make_entity_numerical_condition(
-        _MOISTURE_NUMERICAL_DOMAIN_SPECS, PERCENTAGE
+        MOISTURE_NUMERICAL_DOMAIN_SPECS, PERCENTAGE
     ),
 }
 

@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -165,6 +166,7 @@ class IntellifireBinarySensor(IntellifireEntity, BinarySensorEntity):
     entity_description: IntellifireBinarySensorEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Use this to get the correct value."""
         return self.entity_description.value_fn(self.coordinator)

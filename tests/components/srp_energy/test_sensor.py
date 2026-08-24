@@ -4,6 +4,7 @@ from unittest.mock import patch
 
 from requests.models import HTTPError
 
+from homeassistant.components.recorder import Recorder
 from homeassistant.components.sensor import SensorDeviceClass, SensorStateClass
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import (
@@ -17,7 +18,9 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-async def test_loading_sensors(hass: HomeAssistant, init_integration) -> None:
+async def test_loading_sensors(
+    recorder_mock: Recorder, hass: HomeAssistant, init_integration
+) -> None:
     """Test the srp energy sensors."""
     # Validate the Config Entry was initialized
     assert init_integration.state is ConfigEntryState.LOADED
@@ -26,10 +29,12 @@ async def test_loading_sensors(hass: HomeAssistant, init_integration) -> None:
     assert len(hass.states.async_all()) == 1
 
 
-async def test_srp_entity(hass: HomeAssistant, init_integration) -> None:
+async def test_srp_entity(
+    recorder_mock: Recorder, hass: HomeAssistant, init_integration
+) -> None:
     """Test the SrpEntity."""
     usage_state = hass.states.get("sensor.srp_energy_mock_title_energy_usage")
-    assert usage_state.state == "150.8"
+    assert usage_state.state == "67.4"
 
     # Validate attributions
     assert (
@@ -45,6 +50,7 @@ async def test_srp_entity(hass: HomeAssistant, init_integration) -> None:
 
 
 async def test_srp_entity_update_failed(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
@@ -66,6 +72,7 @@ async def test_srp_entity_update_failed(
 
 
 async def test_srp_entity_timeout(
+    recorder_mock: Recorder,
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:

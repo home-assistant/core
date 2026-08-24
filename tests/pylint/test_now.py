@@ -3,10 +3,9 @@
 import astroid
 from pylint.checkers import BaseChecker
 from pylint.testutils.unittest_linter import UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 import pytest
 
-from . import assert_no_messages
+from . import assert_no_messages, walk_checker
 
 
 @pytest.mark.parametrize(
@@ -136,11 +135,9 @@ def test_enforce_now_good(
 ) -> None:
     """Good test cases -- no message expected."""
     root_node = astroid.parse(code, "homeassistant.components.pylint_test")
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_now_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_now_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -201,6 +198,26 @@ def test_enforce_now_good(
         """,
             id="kwarg_variable_tz",
         ),
+        pytest.param(
+            # The ``datetime`` class reached through ``homeassistant.util.dt``
+            # (which does ``import datetime as dt``) is still the stdlib class.
+            """
+        from homeassistant.util import dt as dt_util
+        from zoneinfo import ZoneInfo
+
+        now = dt_util.dt.datetime.now(ZoneInfo("Europe/Stockholm"))
+        """,
+            id="util_dt_datetime_class",
+        ),
+        pytest.param(
+            """
+        import homeassistant.util.dt as dt_util
+        from zoneinfo import ZoneInfo
+
+        now = dt_util.dt.datetime.now(ZoneInfo("Europe/Stockholm"))
+        """,
+            id="import_util_dt_datetime_class",
+        ),
     ],
 )
 def test_enforce_now_bad(
@@ -210,29 +227,44 @@ def test_enforce_now_bad(
 ) -> None:
     """Bad test cases -- one message expected per call."""
     root_node = astroid.parse(code, "homeassistant.components.pylint_test")
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_now_checker)
 
-    walker.walk(root_node)
+    walk_checker(linter, enforce_now_checker, root_node)
     messages = linter.release_messages()
     assert len(messages) == 1
     assert messages[0].msg_id == "home-assistant-enforce-now"
 
 
-def test_enforce_now_skips_util_dt(
-    linter: UnittestLinter,
-    enforce_now_checker: BaseChecker,
-) -> None:
-    """``homeassistant.util.dt`` defines ``now`` itself, so it is skipped."""
-    code = """
+@pytest.mark.parametrize(
+    "code",
+    [
+        pytest.param(
+            """
         from datetime import datetime
         from zoneinfo import ZoneInfo
 
         now = datetime.now(ZoneInfo("Europe/Stockholm"))
-        """
+        """,
+            id="from_import_datetime",
+        ),
+        pytest.param(
+            # The form actually used in ``homeassistant/util/dt.py``.
+            """
+        import datetime as dt
+
+        def now(time_zone: dt.tzinfo | None = None) -> dt.datetime:
+            return dt.datetime.now(time_zone or DEFAULT_TIME_ZONE)
+        """,
+            id="util_dt_source_form",
+        ),
+    ],
+)
+def test_enforce_now_skips_util_dt(
+    linter: UnittestLinter,
+    enforce_now_checker: BaseChecker,
+    code: str,
+) -> None:
+    """``homeassistant.util.dt`` defines ``now`` itself, so it is skipped."""
     root_node = astroid.parse(code, "homeassistant.util.dt")
-    walker = ASTWalker(linter)
-    walker.add_checker(enforce_now_checker)
 
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, enforce_now_checker, root_node)

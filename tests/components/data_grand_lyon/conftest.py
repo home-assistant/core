@@ -5,6 +5,7 @@ from datetime import datetime
 from unittest.mock import AsyncMock, patch
 
 from data_grand_lyon_ha import (
+    TclParkAndRide,
     TclPassage,
     TclPassageType,
     TclStop,
@@ -17,9 +18,11 @@ import pytest
 
 from homeassistant.components.data_grand_lyon.const import (
     CONF_LINE,
+    CONF_PARK_ID,
     CONF_STATION_ID,
     CONF_STOP_ID,
     DOMAIN,
+    SUBENTRY_TYPE_PARK_AND_RIDE,
     SUBENTRY_TYPE_STOP,
     SUBENTRY_TYPE_VELOV_STATION,
 )
@@ -109,6 +112,64 @@ MOCK_VELOV_STATION = VelovStation(
     ),
 )
 
+MOCK_VELOV_STATIONS = [
+    MOCK_VELOV_STATION,
+    VelovStation(
+        number=2002,
+        name="Hôtel de Ville",
+        address="",
+        commune="",
+        status=VelovStationStatus.OPEN,
+        availability=VelovAvailabilityLevel.GREEN,
+        lat=45.767,
+        lng=4.835,
+        bike_stands=15,
+        available_bikes=10,
+        available_bike_stands=5,
+        banking=True,
+        last_update=datetime(2026, 4, 10, 14, 0),
+        total_stands=VelovBikeStandAvailability(
+            bikes=10,
+            electrical_bikes=3,
+            electrical_internal_battery_bikes=2,
+            electrical_removable_battery_bikes=1,
+            mechanical_bikes=7,
+            stands=5,
+            capacity=15,
+        ),
+    ),
+]
+
+
+MOCK_PARK_AND_RIDE = TclParkAndRide(
+    id="P+R Gorge de Loup",
+    gid=10,
+    nom="Gorge de Loup",
+    capacite=240,
+    place_handi=6,
+    horaires="24h/24",
+    p_surv=True,
+    nb_tot_place_dispo=42,
+    last_update=datetime(2026, 4, 10, 14, 0),
+    last_update_fme=datetime(2026, 4, 10, 13, 55),
+)
+
+MOCK_PARK_AND_RIDES = [
+    MOCK_PARK_AND_RIDE,
+    TclParkAndRide(
+        id="P+R Oullins La Saulaie",
+        gid=20,
+        nom="Oullins La Saulaie",
+        capacite=420,
+        place_handi=10,
+        horaires="5h-1h",
+        p_surv=False,
+        nb_tot_place_dispo=120,
+        last_update=datetime(2026, 4, 10, 14, 0),
+        last_update_fme=datetime(2026, 4, 10, 13, 55),
+    ),
+]
+
 
 @pytest.fixture
 def mock_setup_entry() -> Generator[AsyncMock]:
@@ -148,6 +209,20 @@ def mock_velov_subentries() -> list[ConfigSubentryData]:
 
 
 @pytest.fixture
+def mock_park_and_ride_subentries() -> list[ConfigSubentryData]:
+    """Mock park-and-ride subentries."""
+    return [
+        ConfigSubentryData(
+            data={CONF_PARK_ID: "P+R Gorge de Loup"},
+            subentry_id="park_1",
+            subentry_type=SUBENTRY_TYPE_PARK_AND_RIDE,
+            title="Gorge de Loup",
+            unique_id="park_and_ride_P+R Gorge de Loup",
+        )
+    ]
+
+
+@pytest.fixture
 def mock_config_entry(
     mock_subentries: list[ConfigSubentryData],
 ) -> MockConfigEntry:
@@ -174,13 +249,34 @@ def mock_velov_config_entry(
 
 
 @pytest.fixture
+def mock_park_and_ride_config_entry(
+    mock_park_and_ride_subentries: list[ConfigSubentryData],
+) -> MockConfigEntry:
+    """Create a mock config entry with park-and-ride subentries."""
+    return MockConfigEntry(
+        domain=DOMAIN,
+        title="Data Grand Lyon",
+        data={CONF_USERNAME: "user", CONF_PASSWORD: "pass"},
+        subentries_data=mock_park_and_ride_subentries,
+    )
+
+
+@pytest.fixture
 def mock_tcl_client() -> Generator[AsyncMock]:
-    """Mock DataGrandLyonClient for coordinator."""
-    with patch(
-        "homeassistant.components.data_grand_lyon.DataGrandLyonClient", autospec=True
-    ) as mock_cls:
+    """Mock DataGrandLyonClient for coordinator and config flow."""
+    with (
+        patch(
+            "homeassistant.components.data_grand_lyon.DataGrandLyonClient",
+            autospec=True,
+        ) as mock_cls,
+        patch(
+            "homeassistant.components.data_grand_lyon.config_flow.DataGrandLyonClient",
+            new=mock_cls,
+        ),
+    ):
         client = mock_cls.return_value
         client.get_tcl_passages.return_value = MOCK_DEPARTURES
         client.get_tcl_stops.return_value = MOCK_TCL_STOPS
-        client.get_velov_stations.return_value = [MOCK_VELOV_STATION]
+        client.get_velov_stations.return_value = MOCK_VELOV_STATIONS
+        client.get_tcl_park_and_rides.return_value = MOCK_PARK_AND_RIDES
         yield client

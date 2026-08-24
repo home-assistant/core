@@ -7,6 +7,7 @@ from freezegun.api import FrozenDateTimeFactory
 from pyoverkiz.enums import DataType, EventName, ExecutionState
 from pyoverkiz.models import (
     DeviceAvailableEvent,
+    DeviceCreatedEvent,
     DeviceRemovedEvent,
     DeviceStateChangedEvent,
     DeviceUnavailableEvent,
@@ -41,6 +42,29 @@ def assert_command_call(
     assert actions[0].commands[0].parameters == (parameters or [])
 
 
+def assert_commands_call(
+    mock_client: MockOverkizClient,
+    *,
+    device_url: str,
+    commands: list[tuple[str, list[Any] | None]],
+) -> None:
+    """Assert the latest batch of commands sent through the mocked client.
+
+    A batch is a single action group holding one action for the device with
+    its commands in order. Each entry in commands is a
+    (command_name, parameters) tuple.
+    """
+    assert mock_client.execute_action_group.await_count == 1
+    kwargs = mock_client.execute_action_group.await_args.kwargs
+    assert kwargs["label"] == "Home Assistant"
+    actions = kwargs["actions"]
+    assert len(actions) == 1
+    assert actions[0].device_url == device_url
+    assert [
+        (command.name, command.parameters or []) for command in actions[0].commands
+    ] == [(name, parameters or []) for name, parameters in commands]
+
+
 def device_state_changed_event(
     device_url: str, device_states: list[dict[str, Any]]
 ) -> DeviceStateChangedEvent:
@@ -72,6 +96,11 @@ def device_unavailable_event(device_url: str) -> DeviceUnavailableEvent:
 def device_removed_event(device_url: str) -> DeviceRemovedEvent:
     """Build a DEVICE_REMOVED event for the given device."""
     return DeviceRemovedEvent(name=EventName.DEVICE_REMOVED, device_url=device_url)
+
+
+def device_created_event(device_url: str) -> DeviceCreatedEvent:
+    """Build a DEVICE_CREATED event for the given device."""
+    return DeviceCreatedEvent(name=EventName.DEVICE_CREATED, device_url=device_url)
 
 
 def execution_state_changed_event(

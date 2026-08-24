@@ -137,6 +137,12 @@
       "boombox": {
         "name": "Play fart"
       },
+      "disable_keep_accessory_power_mode": {
+        "name": "Disable keep accessory power"
+      },
+      "enable_keep_accessory_power_mode": {
+        "name": "Enable keep accessory power"
+      },
       "enable_keyless_driving": {
         "name": "Keyless driving"
       },
@@ -154,6 +160,9 @@
       }
     },
     "climate": {
+      "climate_state_cabin_overheat_protection": {
+        "name": "Cabin overheat protection"
+      },
       "primary": {
         "name": "[%key:component::climate::title%]",
         "state_attributes": {
@@ -610,6 +619,11 @@
       },
       "vehicle_state_valet_mode": {
         "name": "Valet mode"
+      }
+    },
+    "text": {
+      "navigation_destination": {
+        "name": "Navigation destination"
       }
     },
     "update": {

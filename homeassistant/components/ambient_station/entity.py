@@ -1,5 +1,7 @@
 """Base entity Ambient Weather Station Service."""
 
+from typing import override
+
 from aioambient.util import get_public_device_id
 
 from homeassistant.core import callback
@@ -52,6 +54,7 @@ class AmbientWeatherEntity(Entity):
         self.update_from_latest_data()
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

@@ -4,7 +4,7 @@ from collections.abc import Iterable
 import dataclasses
 from dataclasses import dataclass
 from datetime import datetime
-from typing import Any, Literal, TypedDict
+from typing import Any, Literal, TypedDict, override
 
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.util.dt import utc_from_timestamp, utcnow
@@ -70,6 +70,7 @@ class LabelEntry(NormalizedNameBaseRegistryEntry):
 class LabelRegistryStore(Store[LabelRegistryStoreData]):
     """Store label registry data."""
 
+    @override
     async def _async_migrate_func(
         self,
         old_major_version: int,
@@ -183,9 +184,9 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         self,
         label_id: str,
         *,
-        color: str | None | UndefinedType = UNDEFINED,
-        description: str | None | UndefinedType = UNDEFINED,
-        icon: str | None | UndefinedType = UNDEFINED,
+        color: str | UndefinedType | None = UNDEFINED,
+        description: str | UndefinedType | None = UNDEFINED,
+        icon: str | UndefinedType | None = UNDEFINED,
         name: str | UndefinedType = UNDEFINED,
     ) -> LabelEntry:
         """Update name of label."""
@@ -222,6 +223,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
 
         return new
 
+    @override
     async def _async_load(self) -> None:
         """Load the label registry."""
         data = await self._store.async_load()
@@ -243,6 +245,7 @@ class LabelRegistry(BaseRegistry[LabelRegistryStoreData]):
         self._label_data = labels.data
 
     @callback
+    @override
     def _data_to_save(self) -> LabelRegistryStoreData:
         """Return data of label registry to store in a file."""
         return {

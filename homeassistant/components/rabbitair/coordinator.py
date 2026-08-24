@@ -3,7 +3,7 @@
 from collections.abc import Coroutine
 from datetime import timedelta
 import logging
-from typing import Any, cast
+from typing import Any, cast, override
 
 from rabbitair import Client, State
 
@@ -31,6 +31,7 @@ class RabbitAirDebouncer(Debouncer[Coroutine[Any, Any, None]]):
         # one-second intervals.
         super().__init__(hass, _LOGGER, cooldown=2.0, immediate=False)
 
+    @override
     async def async_call(self) -> None:
         """Call the function."""
         # Restart the timer.
@@ -61,9 +62,11 @@ class RabbitAirDataUpdateCoordinator(DataUpdateCoordinator[State]):
             request_refresh_debouncer=RabbitAirDebouncer(hass),
         )
 
+    @override
     async def _async_update_data(self) -> State:
         return await self.device.get_state()
 
+    @override
     async def _async_refresh(
         self,
         log_failures: bool = True,
