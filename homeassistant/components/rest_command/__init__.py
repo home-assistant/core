@@ -63,7 +63,10 @@ COMMAND_SCHEMA = vol.Schema(
         vol.Optional(CONF_AUTHENTICATION): vol.In(
             [HTTP_BASIC_AUTHENTICATION, HTTP_DIGEST_AUTHENTICATION]
         ),
-        vol.Inclusive(CONF_USERNAME, "authentication"): cv.string,
+        # A colon cannot be encoded into basic credentials, RFC 7617#section-2
+        vol.Inclusive(CONF_USERNAME, "authentication"): vol.All(
+            cv.string, vol.Match(r"^[^:]*$")
+        ),
         vol.Inclusive(CONF_PASSWORD, "authentication"): cv.string,
         vol.Optional(CONF_PAYLOAD): cv.template,
         vol.Optional(CONF_TIMEOUT, default=DEFAULT_TIMEOUT): vol.Coerce(int),
@@ -77,14 +80,6 @@ COMMAND_SCHEMA = vol.Schema(
 CONFIG_SCHEMA = vol.Schema(
     {DOMAIN: cv.schema_with_slug_keys(COMMAND_SCHEMA)}, extra=vol.ALLOW_EXTRA
 )
-
-
-def _validated_credentials(username: str, password: str) -> tuple[str, str]:
-    """Return credentials for the handler to encode when the command runs."""
-    # encode_basic_auth runs per call, so it would only reject this much later
-    if ":" in username:
-        raise ValueError('A ":" is not allowed in login (RFC 7617#section-2)')
-    return (username, password)
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
@@ -133,7 +128,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
                 digest_auth = (username, password)
             else:
-                basic_auth = _validated_credentials(username, password)
+                basic_auth = (username, password)
 
         template_payload = None
         if CONF_PAYLOAD in command_config:
