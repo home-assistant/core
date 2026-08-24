@@ -137,6 +137,40 @@ async def test_switch_port_entities_registered_after_refresh_failure_recovers(
     assert hass.states.get("switch.test_poe_switch_port_1_poe") is not None
 
 
+@patch("homeassistant.components.tplink_omada.PLATFORMS", ["switch"])
+@pytest.mark.usefixtures("mock_omada_client")
+async def test_switch_port_entities_registered_after_unexpected_error_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_omada_site_client: MagicMock,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test switch port entities are retried after an unexpected registration error."""
+    calls = 0
+    switch = mock_omada_site_client.get_switch.return_value
+
+    async def get_switch(device: OmadaListDevice) -> OmadaSwitch:
+        nonlocal calls
+        calls += 1
+        if calls == 1:
+            raise InvalidDevice("mock failure")
+        return switch
+
+    mock_omada_site_client.get_switch.side_effect = get_switch
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_poe_switch_port_1_poe") is None
+    assert "Failed to register entities" in caplog.text
+
+    async_fire_time_changed(hass, utcnow() + timedelta(seconds=POLL_DEVICES + 10))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("switch.test_poe_switch_port_1_poe") is not None
+
+
 async def test_poe_switches(
     hass: HomeAssistant,
     mock_omada_site_client: MagicMock,
