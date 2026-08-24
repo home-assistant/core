@@ -9,7 +9,7 @@ from pyheos import HeosError
 from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 
 from .const import ATTR_PASSWORD, ATTR_USERNAME, DOMAIN
 from .coordinator import HeosConfigEntry
@@ -66,7 +66,7 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, config_entry: HeosConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, config_entry: HeosConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device."""
     entity_registry = er.async_get(hass)

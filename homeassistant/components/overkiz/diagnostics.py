@@ -1,12 +1,12 @@
 """Provides diagnostics for Overkiz."""
 
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from pyoverkiz.enums import APIType
 from pyoverkiz.obfuscate import obfuscate_id
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 
 from . import OverkizDataConfigEntry
 from .const import CONF_API_TYPE, CONF_HUB
@@ -35,9 +35,13 @@ async def async_get_config_entry_diagnostics(
 
 
 async def async_get_device_diagnostics(
-    hass: HomeAssistant, entry: OverkizDataConfigEntry, device: DeviceEntry
+    hass: HomeAssistant, entry: OverkizDataConfigEntry, device: AnyDeviceEntry
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
+    if TYPE_CHECKING:
+        # overkiz does not create child devices
+        assert isinstance(device, DeviceEntry)
+
     client = entry.runtime_data.coordinator.client
 
     device_url = min(device.identifiers)[1]

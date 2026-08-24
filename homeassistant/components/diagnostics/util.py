@@ -6,7 +6,7 @@ from typing import Any, cast, overload
 import attr
 
 from homeassistant.core import callback
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_registry import RegistryEntry
 
 from .const import REDACTED
@@ -65,7 +65,7 @@ def _device_entry_filter(a: attr.Attribute, _: Any) -> bool:
 
 
 @callback
-def device_entry_as_dict(entry: DeviceEntry) -> dict[str, Any]:
+def device_entry_as_dict(entry: AnyDeviceEntry) -> dict[str, Any]:
     """Convert a device registry entry to a dict for diagnostics.
 
     This excludes internal fields that should not be exposed in diagnostics.
