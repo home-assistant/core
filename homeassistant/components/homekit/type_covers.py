@@ -13,12 +13,11 @@ from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
 from homeassistant.components.cover import (
-    ATTR_CURRENT_POSITION,
-    ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from homeassistant.const import (
@@ -273,7 +272,9 @@ class OpeningDeviceBase(HomeAccessory):
         # update tilt
         if not self._supports_tilt:
             return
-        current_tilt = new_state.attributes.get(ATTR_CURRENT_TILT_POSITION)
+        current_tilt = new_state.attributes.get(
+            CoverEntityStateAttribute.CURRENT_TILT_POSITION
+        )
         if not isinstance(current_tilt, (float, int)):
             return
         # HomeKit sends values between -90 and 90.
@@ -332,7 +333,9 @@ class OpeningDevice(OpeningDeviceBase, HomeAccessory):
     @override
     def async_update_state(self, new_state: State) -> None:
         """Update cover position and tilt after state changed."""
-        current_position = new_state.attributes.get(ATTR_CURRENT_POSITION)
+        current_position = new_state.attributes.get(
+            CoverEntityStateAttribute.CURRENT_POSITION
+        )
         if isinstance(current_position, (float, int)):
             current_position = int(current_position)
             self.char_current_position.set_value(current_position)
