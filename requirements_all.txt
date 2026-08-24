@@ -2240,7 +2240,7 @@ pygeosphere-warnings==0.1.1
 pygtfs==0.1.11
 
 # homeassistant.components.hausbus
-pyhausbus==1.0.53
+pyhausbus==1.0.55
 
 # homeassistant.components.hvv_departures
 pygti==1.1.1
