@@ -92,6 +92,39 @@ async def test_async_media_caps() -> None:
     )
 
 
+async def test_media_player_on(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    fake_afsapi_dev: FakeAFSAPIDevice,
+) -> None:
+    """Test update of a device which is powered on."""
+    # Connect device
+    with patch(
+        "homeassistant.components.frontier_silicon.AFSAPI",
+        FakeAFSAPIDevice,
+    ):
+        config_entry.add_to_hass(hass)
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    # Verify device exists
+    devices = dr.async_entries_for_config_entry(device_registry, config_entry.entry_id)
+    assert len(devices) == 1
+    device_entry = devices[0]
+
+    # Verify device has the expected number of entities
+    expected_num_entities = 1
+    entities = er.async_entries_for_device(entity_registry, device_entry.id)
+    assert len(entities) == expected_num_entities
+
+    # Power on the fake device
+    fake_afsapi_dev.has_power = True
+    # get hass to do an update
+    await async_update_entity(hass, entities[0].entity_id)
+
+
 async def test_async_update_disconnect(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,

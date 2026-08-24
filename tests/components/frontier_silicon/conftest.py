@@ -32,8 +32,13 @@ class FakeAFSAPIDevice:
         """Constructor."""
         if not hasattr(self, "init_done"):
             self.webfsapi_endpoint = webfsapi_endpoint
-            self.fail_get_power = False
+            self.reset()
             self.init_done = True
+
+    def reset(self):
+        """Reset the state of the device, ready for the next test."""
+        self.fail_get_power = False
+        self.has_power = False
 
     async def get_radio_id(self) -> str:
         """Mock get_radio_id AFSAPI function."""
@@ -43,11 +48,44 @@ class FakeAFSAPIDevice:
         """Mock get_power AFSAPI function."""
         if self.fail_get_power:
             raise FSConnectionError
-        return False
+        return self.has_power
+
+    async def get_play_name(self) -> str:
+        """Mock get_play_name AFSAPI function."""
+        return "Something Playing"
+
+    async def get_play_text(self) -> str:
+        """Mock get_play_text AFSAPI function."""
+        return "Something Playing Extra Text"
+
+    async def get_play_artist(self) -> str:
+        """Mock get_play_artist AFSAPI function."""
+        return "Artist Name"
+
+    async def get_play_album(self) -> str:
+        """Mock get_play_album AFSAPI function."""
+        return "Album Name"
 
     async def get_play_status(self) -> int:
         """Mock get_play_status AFSAPI function."""
         return 0
+
+    async def get_mode(self) -> PlayerMode:
+        """Mock get_mode AFSAPI function."""
+        available_modes = await self.get_modes()
+        return available_modes[0]
+
+    async def get_mute(self) -> bool:
+        """Mock get_mute AFSAPI function."""
+        return False
+
+    async def get_volume(self) -> int:
+        """Mock get_volume AFSAPI function."""
+        return 3
+
+    async def get_play_graphic(self) -> str:
+        """Mock get_play_graphic AFSAPI function."""
+        return "https://1.1.1.1/graphic_url"
 
     async def get_modes(self) -> list[PlayerMode]:
         """Mock get_modes AFSAPI function."""
@@ -83,6 +121,11 @@ class FakeAFSAPIDevice:
 
         return [_to_preset(key, preset_fields) for key, preset_fields in presets_data]
 
+    async def get_eq_preset(self) -> Equaliser:
+        """Mock get_eq_preset AFSAPI function."""
+        available_equalisers = await self.get_equalisers()
+        return available_equalisers[0]
+
     async def get_equalisers(self) -> list[Equaliser]:
         """Mock get_equalisers AFSAPI function."""
         equalisers_data = [(0, {"label": "MockedEq"})]
@@ -101,7 +144,9 @@ def fake_afsapi_dev(config_entry: MockConfigEntry):
     """Return a test FakeAFSAPIDevice, creating it for an endpoint if needed."""
     webfsapi_endpoint = config_entry.data[CONF_WEBFSAPI_URL]
     pin = config_entry.data[CONF_PIN]
-    return FakeAFSAPIDevice(webfsapi_endpoint, pin)
+    fake_dev = FakeAFSAPIDevice(webfsapi_endpoint, pin)
+    yield fake_dev
+    fake_dev.reset()
 
 
 @pytest.fixture
