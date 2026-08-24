@@ -125,7 +125,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
                 digest_auth = (username, password)
             else:
-                basic_auth = aiohttp.encode_basic_auth(username, password)
+                basic_auth = aiohttp.encode_basic_auth(
+                    username, password, encoding="latin1"
+                )
 
         template_payload = None
         if CONF_PAYLOAD in command_config:
