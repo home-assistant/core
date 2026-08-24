@@ -26,6 +26,7 @@ _PLATFORMS: list[Platform] = [
     Platform.HUMIDIFIER,
     Platform.NUMBER,
     Platform.SELECT,
+    Platform.SWITCH,
 ]
 
 
