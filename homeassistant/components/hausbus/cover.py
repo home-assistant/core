@@ -100,6 +100,9 @@ class HausbusCover(HausbusEntity, CoverEntity):
         """Stop the cover movement."""
         _LOGGER.debug("stop cover %s", self._debug_identifier)
         await self.hass.async_add_executor_job(self._channel.stop)
+        self._attr_is_opening = False
+        self._attr_is_closing = False
+        self.async_write_ha_state()
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move cover to the given position."""

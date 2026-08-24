@@ -9,7 +9,11 @@ rules:
     comment: |
       This is a local_push integration; entities are updated from Haus-Bus
       events, there is no polling.
-  brands: done
+  brands:
+    status: todo
+    comment: |
+      Branding assets must be submitted to core_integrations/hausbus in the
+      home-assistant/brands repository before this rule can be marked done.
   common-modules: done
   config-flow-test-coverage:
     status: done
