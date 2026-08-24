@@ -10628,8 +10628,8 @@ async def test_get_or_create_disabled_by_device_does_not_restore_deleted_device(
 
     # Nothing was restored: no main device exists and the deleted entry is untouched
     assert len(device_registry.devices) == 0
-    assert device_id in device_registry.deleted_devices
-    assert device_registry.deleted_devices[device_id].disabled_by is UNDEFINED
+    assert device_id in device_registry._deleted_devices
+    assert device_registry._deleted_devices[device_id].disabled_by is UNDEFINED
 
 
 @pytest.mark.usefixtures("hass")
@@ -10803,8 +10803,8 @@ async def test_restore_child_deleted_via_parent_cascade(
 
     device_registry.async_remove_device(parent.id)
     assert device_registry.async_get(child_device.id) is None
-    assert child_device.id in device_registry.deleted_devices
-    assert parent.id in device_registry.deleted_devices
+    assert child_device.id in device_registry._deleted_devices
+    assert parent.id in device_registry._deleted_devices
 
     restored_parent = device_registry.async_get_or_create(
         config_entry_id=mock_config_entry.entry_id,
@@ -10825,7 +10825,7 @@ async def test_restore_child_deleted_via_parent_cascade(
     assert restored_child.name_by_user == "Lamp"
     assert restored_child.parent_device_id == restored_parent.id
     assert device_registry.async_get(child_device.id) is restored_child
-    assert child_device.id not in device_registry.deleted_devices
+    assert child_device.id not in device_registry._deleted_devices
 
 
 @pytest.mark.usefixtures("hass")
