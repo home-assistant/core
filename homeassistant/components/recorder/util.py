@@ -284,7 +284,6 @@ def validate_sqlite_database(dbpath: str) -> bool:
     import sqlite3  # noqa: PLC0415
 
     try:
-        # closing() so a corrupt database does not leak the connection
         with contextlib.closing(sqlite3.connect(dbpath)) as conn:
             run_checks_on_open_db(dbpath, conn.cursor())
     except sqlite3.DatabaseError:
