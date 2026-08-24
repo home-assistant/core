@@ -4,7 +4,7 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
     },
     "error": {
-      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "cannot_connect": "Failed to connect: {error}",
       "unrecognized_inverter": "The device answered, but its serial number doesn't match a known Sofar model."
     },
     "step": {

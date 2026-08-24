@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -51,6 +52,7 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle the initial connection step."""
         errors: dict[str, str] = {}
+        description_placeholders: dict[str, str] = {}
         if user_input is not None:
             params = ModbusTcpParams(
                 host=user_input[CONF_HOST], port=user_input[CONF_PORT]
@@ -61,8 +63,9 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
                 ) as unit:
                     device = SofarInverter(unit)
                     await device.async_update()
-            except ModbusError:
+            except (ModbusError, HomeAssistantError) as err:
                 errors["base"] = "cannot_connect"
+                description_placeholders["error"] = str(err)
             else:
                 assert device.serial_number is not None
                 if not device.inverter_type:
@@ -76,5 +79,8 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
 
         return self.async_show_form(
-            step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+            step_id="user",
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=errors,
+            description_placeholders=description_placeholders,
         )

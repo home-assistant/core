@@ -12,6 +12,7 @@ from homeassistant import config_entries
 from homeassistant.components.sofar.const import DEFAULT_NAME, DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.exceptions import HomeAssistantError
 
 from . import MOCK_MODEL, MOCK_SERIAL, MOCK_USER_INPUT, seed_pv_inverter
 
@@ -34,6 +35,20 @@ def _patch_temporary_unit(connection: MockModbusConnection) -> _patch:
         "homeassistant.components.sofar.config_flow.async_get_temporary_unit",
         side_effect=_get_temporary_unit,
     )
+
+
+class _RaisingTemporaryUnit:
+    """Stand in for a temporary-unit context whose __aenter__ raises."""
+
+    def __init__(self, error: Exception) -> None:
+        """Initialize with the error to raise on entry."""
+        self._error = error
+
+    async def __aenter__(self) -> None:
+        raise self._error
+
+    async def __aexit__(self, *args: object) -> None:
+        """No cleanup: entry never succeeded."""
 
 
 async def test_user_step_success(
@@ -86,11 +101,19 @@ def _seed_unrecognized(unit: MockModbusUnit) -> None:
 
 
 @pytest.mark.parametrize(
-    ("seed", "expected_error"),
+    ("seed", "expected_error", "expected_placeholders"),
     [
-        pytest.param(_seed_unreachable, "cannot_connect", id="cannot_connect"),
         pytest.param(
-            _seed_unrecognized, "unrecognized_inverter", id="unrecognized_inverter"
+            _seed_unreachable,
+            "cannot_connect",
+            {"error": "stuck"},
+            id="cannot_connect",
+        ),
+        pytest.param(
+            _seed_unrecognized,
+            "unrecognized_inverter",
+            {},
+            id="unrecognized_inverter",
         ),
     ],
 )
@@ -99,6 +122,7 @@ async def test_user_step_errors(
     mock_setup_entry: AsyncMock,
     seed: Callable[[MockModbusUnit], None],
     expected_error: str,
+    expected_placeholders: dict[str, str],
 ) -> None:
     """Test the user step reports the right error and recovers, per failure."""
     mock_conn = MockModbusConnection()
@@ -114,6 +138,7 @@ async def test_user_step_errors(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "user"
     assert result["errors"] == {"base": expected_error}
+    assert result["description_placeholders"] == expected_placeholders
 
     working_conn = MockModbusConnection()
     seed_pv_inverter(working_conn.for_unit(1))
@@ -124,6 +149,29 @@ async def test_user_step_errors(
         )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+async def test_user_step_link_settings_conflict(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """Test a shared-connection link-settings clash surfaces its own message."""
+    error = HomeAssistantError(
+        "Modbus device ('192.168.1.100', 502) is already in use with different "
+        "link settings"
+    )
+    with patch(
+        "homeassistant.components.sofar.config_flow.async_get_temporary_unit",
+        return_value=_RaisingTemporaryUnit(error),
+    ):
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_USER},
+            data=MOCK_USER_INPUT,
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert result["description_placeholders"] == {"error": str(error)}
 
 
 async def test_user_step_already_configured(hass: HomeAssistant) -> None:
