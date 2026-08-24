@@ -733,8 +733,9 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
     MideaSensorEntityDescription(
         key="soft_available",
         translation_key="softwater_available",
-        device_class=SensorDeviceClass.VOLUME,
+        device_class=SensorDeviceClass.VOLUME_STORAGE,
         native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
     MideaSensorEntityDescription(
         key="left_salt",
