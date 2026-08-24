@@ -93,17 +93,13 @@ async def test_remove_device(
     hass_client = await hass_ws_client(hass)
 
     # Do not allow to delete a connected device
-    response = await hass_client.remove_device(
-        device_entry.id, mock_config_entry.entry_id
-    )
+    response = await hass_client.remove_device(device_entry.id)
     assert not response["success"]
 
     eheimdigital_hub_mock.return_value.devices = {}
 
     # Allow to delete a not connected device
-    response = await hass_client.remove_device(
-        device_entry.id, mock_config_entry.entry_id
-    )
+    response = await hass_client.remove_device(device_entry.id)
     assert response["success"]
 
 

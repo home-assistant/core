@@ -32,6 +32,7 @@ def valid_config_entry() -> MockConfigEntry:
     """Return a valid egps config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
+        version=2,
         data=DEMO_CONFIG_DATA,
         unique_id=DEMO_CONFIG_DATA[CONF_DEVICE_API_ID],
     )

@@ -122,7 +122,9 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
     device_registry = dr.async_get(call.hass)
 
     if (
-        alarm_control_panel_device_entry := device_registry.async_get(device_id)
+        alarm_control_panel_device_entry := device_registry.async_get(
+            device_id, include_child_devices=False
+        )
     ) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
