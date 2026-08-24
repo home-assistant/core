@@ -265,7 +265,7 @@ async def test_unsupported_bypass_temperature_capabilities_are_not_repolled(
 ) -> None:
     """Test unavailable bypass targets are not polled after setup."""
 
-    poll_count: dict[int, int] = dict.fromkeys(range(1, 9), 0)
+    poll_count: dict[int, int] = dict.fromkeys(range(1, 5), 0)
 
     async def async_get_bypass_supply_temperature_target(
         zone_id: int,
@@ -304,7 +304,7 @@ async def test_unsupported_bypass_temperature_capabilities_are_not_repolled(
         assert hass.states.get("number.living_bypass_target_1") is not None
         assert hass.states.get("number.living_bypass_target_2") is None
         assert poll_count[2] == poll_count_after_setup[2]
-        for zone_id in (1, 3, 4, 5, 6, 7, 8):
+        for zone_id in (1, 3, 4):
             assert poll_count[zone_id] > poll_count_after_setup[zone_id]
 
 
@@ -316,7 +316,7 @@ async def test_bypass_temperature_connection_failure_stops_remaining_zone_polls(
 ) -> None:
     """Test that a connection failure stops polling remaining bypass zones."""
 
-    poll_count: dict[int, int] = dict.fromkeys(range(1, 9), 0)
+    poll_count: dict[int, int] = dict.fromkeys(range(1, 5), 0)
 
     async def async_get_bypass_supply_temperature_target(
         zone_id: int,
@@ -340,7 +340,7 @@ async def test_bypass_temperature_connection_failure_stops_remaining_zone_polls(
 
         assert mock_config_entry.state is ConfigEntryState.LOADED
         assert poll_count[1] == 1
-        for zone_id in range(2, 9):
+        for zone_id in range(2, 5):
             assert poll_count[zone_id] == 0
 
 

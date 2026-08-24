@@ -31,6 +31,14 @@ from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
 
+
+def _is_missing_bypass_supply_temperature_target_error(
+    zone_id: int, err: DucoError
+) -> bool:
+    """Return if a bypass target is absent from an otherwise successful response."""
+    return str(err) == f"Expected TempSupTgtZone{zone_id} in /config response"
+
+
 type DucoConfigEntry = ConfigEntry[DucoCoordinator]
 
 
@@ -231,6 +239,10 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                 )
                 break
             except DucoError as err:
+                if _is_missing_bypass_supply_temperature_target_error(zone_id, err):
+                    bypass_supply_temperature_targets.pop(zone_id, None)
+                    continue
+
                 _LOGGER.debug(
                     "Could not fetch Duco bypass supply target for zone %s",
                     zone_id,

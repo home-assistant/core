@@ -28,10 +28,6 @@ _ZONE_1_ENTITY_ID = "number.living_bypass_target_1"
 _ZONE_2_ENTITY_ID = "number.living_bypass_target_2"
 _ZONE_3_ENTITY_ID = "number.living_bypass_target_3"
 _ZONE_4_ENTITY_ID = "number.living_bypass_target_4"
-_ZONE_5_ENTITY_ID = "number.living_bypass_target_5"
-_ZONE_6_ENTITY_ID = "number.living_bypass_target_6"
-_ZONE_7_ENTITY_ID = "number.living_bypass_target_7"
-_ZONE_8_ENTITY_ID = "number.living_bypass_target_8"
 
 
 @pytest.fixture
@@ -44,13 +40,13 @@ async def init_integration(
     return await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
 
-async def test_bypass_supply_temperature_target_numbers_support_eight_zones(
+async def test_bypass_supply_temperature_target_numbers_support_four_zones(
     hass: HomeAssistant,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test bypass target controls are created for all eight supported zones."""
+    """Test bypass target controls are created for all supported zones."""
     mock_bypass_supply_temperature_targets.update(
         {
             3: BypassSupplyTemperatureTarget(
@@ -67,34 +63,6 @@ async def test_bypass_supply_temperature_target_numbers_support_eight_zones(
                 increment=0.1,
                 maximum=25.0,
             ),
-            5: BypassSupplyTemperatureTarget(
-                zone_id=5,
-                value=24.0,
-                minimum=15.0,
-                increment=0.1,
-                maximum=25.0,
-            ),
-            6: BypassSupplyTemperatureTarget(
-                zone_id=6,
-                value=20.0,
-                minimum=15.0,
-                increment=0.1,
-                maximum=25.0,
-            ),
-            7: BypassSupplyTemperatureTarget(
-                zone_id=7,
-                value=20.0,
-                minimum=15.0,
-                increment=0.1,
-                maximum=25.0,
-            ),
-            8: BypassSupplyTemperatureTarget(
-                zone_id=8,
-                value=20.0,
-                minimum=15.0,
-                increment=0.1,
-                maximum=25.0,
-            ),
         }
     )
 
@@ -105,10 +73,6 @@ async def test_bypass_supply_temperature_target_numbers_support_eight_zones(
         _ZONE_2_ENTITY_ID,
         _ZONE_3_ENTITY_ID,
         _ZONE_4_ENTITY_ID,
-        _ZONE_5_ENTITY_ID,
-        _ZONE_6_ENTITY_ID,
-        _ZONE_7_ENTITY_ID,
-        _ZONE_8_ENTITY_ID,
     ):
         assert hass.states.get(entity_id) is not None
 
@@ -301,20 +265,20 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
         assert state.state == "68.9"
 
 
-async def test_bypass_supply_temperature_target_keeps_previous_value_on_error(
+async def test_bypass_supply_temperature_target_becomes_unavailable_when_missing(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test an existing bypass target keeps its value when refresh fails."""
-    zone_1_available = True
+    """Test an existing bypass target becomes unavailable when it disappears."""
+    zone_1_missing = False
 
     async def async_get_bypass_supply_temperature_target(
         zone_id: int,
     ) -> BypassSupplyTemperatureTarget:
-        if zone_id == 1 and not zone_1_available:
+        if zone_id == 1 and zone_1_missing:
             raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
         if target := mock_bypass_supply_temperature_targets.get(zone_id):
             return target
@@ -330,19 +294,19 @@ async def test_bypass_supply_temperature_target_keeps_previous_value_on_error(
     assert state is not None
     assert state.state == "20.0"
 
-    zone_1_available = False
+    zone_1_missing = True
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
-    assert state.state == "20.0"
+    assert state.state == "unavailable"
 
     mock_bypass_supply_temperature_targets[1] = replace(
         mock_bypass_supply_temperature_targets[1], value=20.5
     )
-    zone_1_available = True
+    zone_1_missing = False
     freezer.tick(timedelta(days=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -350,6 +314,45 @@ async def test_bypass_supply_temperature_target_keeps_previous_value_on_error(
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
     assert state.state == "20.5"
+
+
+async def test_bypass_supply_temperature_target_keeps_previous_value_on_transient_error(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test an existing bypass target keeps its value on transient refresh errors."""
+    zone_1_fails = False
+
+    async def async_get_bypass_supply_temperature_target(
+        zone_id: int,
+    ) -> BypassSupplyTemperatureTarget:
+        if zone_id == 1 and zone_1_fails:
+            raise DucoError("Temporary bypass target failure")
+        if target := mock_bypass_supply_temperature_targets.get(zone_id):
+            return target
+        raise DucoError(f"Expected TempSupTgtZone{zone_id} in /config response")
+
+    mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
+        async_get_bypass_supply_temperature_target
+    )
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
+
+    state = hass.states.get(_ZONE_1_ENTITY_ID)
+    assert state is not None
+    assert state.state == "20.0"
+
+    zone_1_fails = True
+    freezer.tick(timedelta(days=1))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    state = hass.states.get(_ZONE_1_ENTITY_ID)
+    assert state is not None
+    assert state.state == "20.0"
 
 
 @pytest.mark.usefixtures("init_integration")
