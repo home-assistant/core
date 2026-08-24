@@ -450,6 +450,8 @@ async def test_loading_saving_data(
         device_class="user-class",
         name="User Name",
         icon="hass:user-icon",
+        range_icons={"0": "hass:range-low", "50": "hass:range-high"},
+        state_icons={"on": "hass:state-on"},
     )
     entity_registry.async_update_entity_options(
         orig_entry2.entity_id, "light", {"minimum_brightness": 20}
@@ -1416,6 +1418,8 @@ async def test_load_bad_data(
                     "original_name": None,
                     "platform": "super_platform",
                     "previous_unique_id": None,
+                    "range_icons": None,
+                    "state_icons": None,
                     "suggested_object_id": None,
                     "supported_features": 0,
                     "translation_key": None,
@@ -1450,6 +1454,8 @@ async def test_load_bad_data(
                     "original_name": None,
                     "platform": "super_platform",
                     "previous_unique_id": None,
+                    "range_icons": None,
+                    "state_icons": None,
                     "suggested_object_id": None,
                     "supported_features": 0,
                     "translation_key": None,
@@ -1481,6 +1487,8 @@ async def test_load_bad_data(
                     "options_undefined": False,
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
+                    "range_icons": None,
+                    "state_icons": None,
                     "unique_id": 234,  # Should not load
                 },
                 {
@@ -1506,6 +1514,8 @@ async def test_load_bad_data(
                     "options_undefined": False,
                     "orphaned_timestamp": None,
                     "platform": "super_platform",
+                    "range_icons": None,
+                    "state_icons": None,
                     "unique_id": ["also", "not", "valid"],  # Should not load
                 },
             ],
@@ -1928,6 +1938,8 @@ async def test_migration_1_1(hass: HomeAssistant, hass_storage: dict[str, Any]) 
                     "original_name": None,
                     "platform": "super_platform",
                     "previous_unique_id": None,
+                    "range_icons": None,
+                    "state_icons": None,
                     "suggested_object_id": None,
                     "supported_features": 0,
                     "translation_key": None,
@@ -2130,6 +2142,8 @@ async def test_migration_1_11(
                     "original_name": None,
                     "platform": "super_platform",
                     "previous_unique_id": None,
+                    "range_icons": None,
+                    "state_icons": None,
                     "suggested_object_id": None,
                     "supported_features": 0,
                     "translation_key": None,
@@ -2162,6 +2176,8 @@ async def test_migration_1_11(
                     "options_undefined": True,
                     "orphaned_timestamp": None,
                     "platform": "super_duper_platform",
+                    "range_icons": None,
+                    "state_icons": None,
                     "unique_id": "very_very_unique",
                 }
             ],
@@ -2301,6 +2317,8 @@ async def test_migration_1_18(
                     "original_name": "Test Entity",
                     "platform": "super_platform",
                     "previous_unique_id": None,
+                    "range_icons": None,
+                    "state_icons": None,
                     "suggested_object_id": None,
                     "supported_features": 0,
                     "translation_key": None,
@@ -2333,6 +2351,8 @@ async def test_migration_1_18(
                     "options_undefined": False,
                     "orphaned_timestamp": None,
                     "platform": "super_duper_platform",
+                    "range_icons": None,
+                    "state_icons": None,
                     "unique_id": "very_very_unique",
                 }
             ],
@@ -2505,6 +2525,8 @@ async def test_migration_1_21(
         "original_name": "Temperature",
         "platform": "super_platform",
         "previous_unique_id": None,
+        "range_icons": None,
+        "state_icons": None,
         "suggested_object_id": None,
         "supported_features": 0,
         "translation_key": None,
@@ -2540,6 +2562,121 @@ async def test_migration_1_21(
                 },
             ],
             "deleted_entities": [],
+            "settings": {"entity_id_parts": None},
+        },
+    }
+
+    # Serialize the migrated data again
+    registry.async_schedule_save()
+    await flush_store(registry._store)
+    assert hass_storage[er.STORAGE_KEY] == migrated_data
+
+
+@pytest.mark.parametrize("load_registries", [False])
+async def test_migration_1_23(
+    hass: HomeAssistant, hass_storage: dict[str, Any]
+) -> None:
+    """Test migration from version 1.23.
+
+    Version 1.24 adds state and range icons.
+    """
+    entity_dict = {
+        "aliases": [],
+        "aliases_v2": [None],
+        "area_id": None,
+        "capabilities": {},
+        "categories": {},
+        "config_entry_id": None,
+        "config_subentry_id": None,
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "device_class": None,
+        "device_id": None,
+        "disabled_by": None,
+        "entity_category": None,
+        "entity_id": "test.entity",
+        "has_entity_name": False,
+        "hidden_by": None,
+        "icon": None,
+        "id": "12345",
+        "labels": [],
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "name": None,
+        "object_id_base": None,
+        "options": {},
+        "original_device_class": None,
+        "original_icon": None,
+        "original_name": None,
+        "platform": "super_platform",
+        "previous_unique_id": None,
+        "suggested_object_id": None,
+        "supported_features": 0,
+        "translation_key": None,
+        "unique_id": "very_unique",
+        "unit_of_measurement": None,
+    }
+    deleted_entity_dict = {
+        "aliases": [],
+        "aliases_v2": [None],
+        "area_id": None,
+        "categories": {},
+        "config_entry_id": None,
+        "config_subentry_id": None,
+        "created_at": "1970-01-01T00:00:00+00:00",
+        "device_class": None,
+        "disabled_by": None,
+        "disabled_by_undefined": False,
+        "entity_id": "test.deleted_entity",
+        "hidden_by": None,
+        "hidden_by_undefined": False,
+        "icon": None,
+        "id": "23456",
+        "labels": [],
+        "modified_at": "1970-01-01T00:00:00+00:00",
+        "name": None,
+        "options": {},
+        "options_undefined": False,
+        "orphaned_timestamp": None,
+        "platform": "super_duper_platform",
+        "unique_id": "very_very_unique",
+    }
+    hass_storage[er.STORAGE_KEY] = {
+        "version": 1,
+        "minor_version": 23,
+        "data": {
+            "entities": [entity_dict],
+            "deleted_entities": [deleted_entity_dict],
+            "settings": {"entity_id_parts": None},
+        },
+    }
+
+    dr.async_setup(hass)
+    await dr.async_load(hass)
+
+    await er.async_load(hass)
+    registry = er.async_get(hass)
+
+    entry = registry.async_get_or_create("test", "super_platform", "very_unique")
+    assert entry.range_icons is None
+    assert entry.state_icons is None
+
+    deleted_entry = registry.deleted_entities[
+        ("test", "super_duper_platform", "very_very_unique")
+    ]
+    assert deleted_entry.range_icons is None
+    assert deleted_entry.state_icons is None
+
+    # Check migrated data
+    await flush_store(registry._store)
+    migrated_data = hass_storage[er.STORAGE_KEY]
+    assert migrated_data == {
+        "version": er.STORAGE_VERSION_MAJOR,
+        "minor_version": er.STORAGE_VERSION_MINOR,
+        "key": er.STORAGE_KEY,
+        "data": {
+            "entities": [{**entity_dict, "range_icons": None, "state_icons": None}],
+            "deleted_entities": [
+                {**deleted_entity_dict, "range_icons": None, "state_icons": None}
+            ],
             "settings": {"entity_id_parts": None},
         },
     }
@@ -2737,6 +2874,8 @@ async def test_update_entity(
         ("disabled_by", er.RegistryEntryDisabler.USER),
         ("icon", "new icon"),
         ("name", "new name"),
+        ("range_icons", {"0": "new range icon"}),
+        ("state_icons", {"on": "new state icon"}),
     ):
         changes = {attr_name: new_value}
         updated_entry = entity_registry.async_update_entity(entry.entity_id, **changes)
@@ -3201,6 +3340,17 @@ async def test_restore_states(
         original_name="Mock Original Name",
         original_icon="hass:original-icon",
     )
+    state_icons_entry = entity_registry.async_get_or_create(
+        "light",
+        "hue",
+        "3456",
+        suggested_object_id="state_icons_set",
+        original_icon="hass:original-icon",
+    )
+    entity_registry.async_update_entity(
+        state_icons_entry.entity_id,
+        state_icons={"unavailable": "hass:unavailable-icon"},
+    )
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_START, {})
     await hass.async_block_till_done()
@@ -3225,15 +3375,22 @@ async def test_restore_states(
         "icon": "hass:original-icon",
     }
 
+    state_icons_set = hass.states.get("light.state_icons_set")
+    assert state_icons_set is not None
+    assert state_icons_set.state == STATE_UNAVAILABLE
+    assert state_icons_set.attributes["icon"] == "hass:unavailable-icon"
+
     entity_registry.async_remove("light.disabled")
     entity_registry.async_remove("light.simple")
     entity_registry.async_remove("light.all_info_set")
+    entity_registry.async_remove("light.state_icons_set")
 
     await hass.async_block_till_done()
 
     assert hass.states.get("light.simple") is None
     assert hass.states.get("light.disabled") is None
     assert hass.states.get("light.all_info_set") is None
+    assert hass.states.get("light.state_icons_set") is None
 
 
 @pytest.mark.parametrize(
@@ -4665,6 +4822,8 @@ async def test_restore_entity(
         labels={"label1", "label2"},
         name="Test Friendly Name",
         new_entity_id="light.custom_1",
+        range_icons={"0": "range_icon_low", "50": "range_icon_high"},
+        state_icons={"on": "state_icon_on"},
     )
     entry1 = entity_registry.async_update_entity_options(
         entry1.entity_id, "options_domain", {"key": "value"}
@@ -4743,6 +4902,8 @@ async def test_restore_entity(
         original_device_class="device_class_2",
         original_icon="original_icon_2",
         original_name="original_name_2",
+        range_icons={"0": "range_icon_low", "50": "range_icon_high"},
+        state_icons={"on": "state_icon_on"},
         suggested_object_id="suggested_2",
         supported_features=2,
         translation_key="translation_key_2",

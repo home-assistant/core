@@ -213,6 +213,8 @@ async def test_list_entities_for_display(
                 icon="mdi:icon",
                 original_name="Hello World",
                 platform="test_platform",
+                range_icons={"0": "mdi:range-low"},
+                state_icons={"on": "mdi:state-on"},
                 translation_key="translations_galore",
                 unique_id="1234",
             ),
@@ -306,6 +308,8 @@ async def test_list_entities_for_display(
                 "ic": "mdi:icon",
                 "lb": [],
                 "pl": "test_platform",
+                "ri": {"0": "mdi:range-low"},
+                "si": {"on": "mdi:state-on"},
                 "tk": "translations_galore",
             },
             {
@@ -467,6 +471,8 @@ async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) ->
         "original_icon": None,
         "original_name": None,
         "platform": "test_platform",
+        "range_icons": None,
+        "state_icons": None,
         "translation_key": None,
         "unique_id": "1234",
     }
@@ -504,6 +510,8 @@ async def test_get_entity(hass: HomeAssistant, client: MockHAClientWebSocket) ->
         "original_icon": None,
         "original_name": None,
         "platform": "test_platform",
+        "range_icons": None,
+        "state_icons": None,
         "translation_key": None,
         "unique_id": "6789",
     }
@@ -572,6 +580,8 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         },
@@ -600,6 +610,8 @@ async def test_get_entities(hass: HomeAssistant, client: MockHAClientWebSocket) 
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "6789",
         },
@@ -682,6 +694,8 @@ async def test_update_entity(
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         }
@@ -689,6 +703,59 @@ async def test_update_entity(
 
     state = hass.states.get("test_domain.world")
     assert state.name == "after update"
+    assert state.attributes[ATTR_ICON] == "icon:after update"
+
+    # Update state_icons and range_icons, range_icons is stored sorted by threshold
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "range_icons": {"20": "icon:range-high", "10": "icon:range-low"},
+            "state_icons": {"unknown": "icon:state-unknown"},
+        }
+    )
+
+    msg = await client.receive_json()
+    entity_entry = msg["result"]["entity_entry"]
+    assert entity_entry["range_icons"] == {
+        "10": "icon:range-low",
+        "20": "icon:range-high",
+    }
+    assert list(entity_entry["range_icons"]) == ["10", "20"]
+    assert entity_entry["state_icons"] == {"unknown": "icon:state-unknown"}
+
+    # The icon for the current state wins over the flat icon override
+    state = hass.states.get("test_domain.world")
+    assert state.attributes[ATTR_ICON] == "icon:state-unknown"
+
+    # Non numeric range keys are rejected
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "range_icons": {"low": "icon:range-low"},
+        }
+    )
+
+    msg = await client.receive_json()
+    assert not msg["success"]
+
+    # An empty mapping removes the override
+    await client.send_json_auto_id(
+        {
+            "type": "config/entity_registry/update",
+            "entity_id": "test_domain.world",
+            "range_icons": {},
+            "state_icons": {},
+        }
+    )
+
+    msg = await client.receive_json()
+    entity_entry = msg["result"]["entity_entry"]
+    assert entity_entry["range_icons"] is None
+    assert entity_entry["state_icons"] is None
+
+    state = hass.states.get("test_domain.world")
     assert state.attributes[ATTR_ICON] == "icon:after update"
 
     modified = datetime.fromisoformat("2024-07-20T00:00:00.900075+00:00")
@@ -766,6 +833,8 @@ async def test_update_entity(
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         },
@@ -813,6 +882,8 @@ async def test_update_entity(
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         },
@@ -859,6 +930,8 @@ async def test_update_entity(
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         },
@@ -905,6 +978,8 @@ async def test_update_entity(
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         },
@@ -951,6 +1026,8 @@ async def test_update_entity(
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         },
@@ -994,6 +1071,8 @@ async def test_update_entity(
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         },
@@ -1057,6 +1136,8 @@ async def test_update_entity_require_restart(
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         },
@@ -1180,6 +1261,8 @@ async def test_update_entity_no_changes(
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         }
@@ -1278,6 +1361,8 @@ async def test_update_entity_id(
             "original_icon": None,
             "original_name": None,
             "platform": "test_platform",
+            "range_icons": None,
+            "state_icons": None,
             "translation_key": None,
             "unique_id": "1234",
         }

@@ -21,6 +21,7 @@ from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
+    ATTR_ICON,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
     EntityCategory,
@@ -1649,6 +1650,56 @@ async def test_friendly_name_updated(
 
     state = hass.states.async_all()[0]
     assert state.attributes.get(ATTR_FRIENDLY_NAME) == expected_friendly_name3
+
+
+async def test_registry_state_icons(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test per-state icon overrides from the entity registry."""
+    ent = MockEntity(unique_id="1234", icon="mdi:integration-icon")
+    await MockEntityPlatform(hass).async_add_entities([ent])
+    entity_id = ent.entity_id
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:integration-icon"
+
+    entity_registry.async_update_entity(
+        entity_id,
+        state_icons={"on": "mdi:state-on"},
+        range_icons={"10": "mdi:range-low", "20": "mdi:range-high"},
+    )
+    await hass.async_block_till_done()
+
+    # The unknown state matches neither map, the integration icon wins
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:integration-icon"
+
+    ent._attr_state = "on"
+    ent.async_write_ha_state()
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:state-on"
+
+    # Below the lowest range threshold there is no range match
+    ent._attr_state = "5"
+    ent.async_write_ha_state()
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:integration-icon"
+
+    ent._attr_state = "15"
+    ent.async_write_ha_state()
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:range-low"
+
+    ent._attr_state = "25.5"
+    ent.async_write_ha_state()
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:range-high"
+
+    # A state specific override wins over the flat icon override
+    entity_registry.async_update_entity(entity_id, icon="mdi:user-icon")
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:range-high"
+
+    ent._attr_state = "off"
+    ent.async_write_ha_state()
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:user-icon"
+
+    entity_registry.async_update_entity(entity_id, state_icons=None, range_icons=None)
+    await hass.async_block_till_done()
+    assert hass.states.get(entity_id).attributes[ATTR_ICON] == "mdi:user-icon"
 
 
 async def test_device_entry_cleared_when_detached_from_device(

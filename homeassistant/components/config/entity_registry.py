@@ -19,6 +19,14 @@ from homeassistant.helpers.json import json_dumps
 _LOGGER = logging.getLogger(__name__)
 
 
+def _validate_range_icons(value: dict[str, str]) -> dict[str, str]:
+    """Validate that range icon keys are numeric and sort them ascending."""
+    try:
+        return dict(sorted(value.items(), key=lambda item: float(item[0])))
+    except ValueError as err:
+        raise vol.Invalid("Range icon keys must be numeric") from err
+
+
 @callback
 def async_setup(hass: HomeAssistant) -> bool:
     """Enable the Entity Registry views."""
@@ -171,6 +179,10 @@ def websocket_get_entities(
         vol.Optional("labels"): [str],
         vol.Optional("name"): vol.Any(str, None),
         vol.Optional("new_entity_id"): str,
+        vol.Optional("range_icons"): vol.Any(
+            None, vol.All({str: str}, _validate_range_icons)
+        ),
+        vol.Optional("state_icons"): vol.Any(None, {str: str}),
         # We only allow setting disabled_by user via API.
         vol.Optional("disabled_by"): vol.Any(
             None,
@@ -238,6 +250,11 @@ def websocket_update_entity(
     if "labels" in msg:
         # Convert labels to a set
         changes["labels"] = set(msg["labels"])
+
+    for key in ("range_icons", "state_icons"):
+        if key in msg:
+            # Treat an empty mapping as removing the override
+            changes[key] = msg[key] or None
 
     if "disabled_by" in msg and msg["disabled_by"] is None:
         # Don't allow enabling an entity of a disabled device

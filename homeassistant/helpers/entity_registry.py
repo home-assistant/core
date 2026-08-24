@@ -74,7 +74,7 @@ EVENT_ENTITY_REGISTRY_UPDATED: EventType[EventEntityRegistryUpdatedData] = Event
 _LOGGER = logging.getLogger(__name__)
 
 STORAGE_VERSION_MAJOR = 1
-STORAGE_VERSION_MINOR = 23
+STORAGE_VERSION_MINOR = 24
 STORAGE_KEY = "core.entity_registry"
 
 CLEANUP_INTERVAL = 3600 * 24
@@ -184,6 +184,8 @@ DISPLAY_DICT_OPTIONAL = (
     ("lb", "labels", True),
     ("di", "device_id", False),
     ("ic", "icon", False),
+    ("ri", "range_icons", False),
+    ("si", "state_icons", False),
     ("tk", "translation_key", False),
 )
 
@@ -239,6 +241,8 @@ class RegistryEntry:
     name: str | None = attr.ib(default=None)
     object_id_base: str | None = attr.ib()
     options: ReadOnlyEntityOptionsType = attr.ib(converter=_protect_entity_options)
+    range_icons: Mapping[str, str] | None = attr.ib(default=None)
+    state_icons: Mapping[str, str] | None = attr.ib(default=None)
     # As set by integration
     original_device_class: str | None = attr.ib()
     original_icon: str | None = attr.ib()
@@ -272,6 +276,34 @@ class RegistryEntry:
     def hidden(self) -> bool:
         """Return if entry is hidden."""
         return self.hidden_by is not None
+
+    @under_cached_property
+    def _range_icons_sorted(self) -> tuple[tuple[float, str], ...]:
+        """Return range icons as (threshold, icon) tuples sorted ascending."""
+        if self.range_icons is None:
+            return ()
+        return tuple(
+            sorted((float(key), icon) for key, icon in self.range_icons.items())
+        )
+
+    def get_state_icon(self, state: str) -> str | None:
+        """Return the state specific icon override for a state, if any."""
+        if (state_icons := self.state_icons) is not None and (
+            icon := state_icons.get(state)
+        ) is not None:
+            return icon
+        if self.range_icons is None:
+            return None
+        try:
+            value = float(state)
+        except ValueError:
+            return None
+        icon = None
+        for threshold, threshold_icon in self._range_icons_sorted:
+            if value < threshold:
+                break
+            icon = threshold_icon
+        return icon
 
     @property
     def _as_display_dict(self) -> dict[str, Any] | None:
@@ -379,6 +411,8 @@ class RegistryEntry:
             "device_class": self.device_class,
             "original_device_class": self.original_device_class,
             "original_icon": self.original_icon,
+            "range_icons": self.range_icons,
+            "state_icons": self.state_icons,
         }
 
     @under_cached_property
@@ -429,6 +463,8 @@ class RegistryEntry:
                     "original_icon": self.original_icon,
                     "original_name": self.original_name,
                     "platform": self.platform,
+                    "range_icons": self.range_icons,
+                    "state_icons": self.state_icons,
                     "suggested_object_id": self.suggested_object_id,
                     "supported_features": self.supported_features,
                     "translation_key": self.translation_key,
@@ -451,7 +487,7 @@ class RegistryEntry:
         if device_class is not None:
             attrs[EntityStateAttribute.DEVICE_CLASS] = device_class
 
-        icon = self.icon or self.original_icon
+        icon = self.get_state_icon(STATE_UNAVAILABLE) or self.icon or self.original_icon
         if icon is not None:
             attrs[EntityStateAttribute.ICON] = icon
 
@@ -724,6 +760,8 @@ class DeletedRegistryEntry:
         converter=_protect_optional_entity_options
     )
     orphaned_timestamp: float | None = attr.ib()
+    range_icons: Mapping[str, str] | None = attr.ib()
+    state_icons: Mapping[str, str] | None = attr.ib()
 
     # For backwards compatibility, should be removed in the future
     compat_aliases: list[str] = attr.ib(factory=list, eq=False)
@@ -767,6 +805,8 @@ class DeletedRegistryEntry:
                     "options_undefined": self.options is UNDEFINED,
                     "orphaned_timestamp": self.orphaned_timestamp,
                     "platform": self.platform,
+                    "range_icons": self.range_icons,
+                    "state_icons": self.state_icons,
                     "unique_id": self.unique_id,
                 }
             )
@@ -952,6 +992,16 @@ class EntityRegistryStore(storage.Store[dict[str, Any]]):
             if old_minor_version < 23:
                 # Version 1.23 adds settings
                 data["settings"] = {"entity_id_parts": None}
+
+            if old_minor_version < 24:
+                # Version 1.24 adds state and range icons
+                for entity in data["entities"]:
+                    entity["range_icons"] = None
+                    entity["state_icons"] = None
+
+                for entity in data["deleted_entities"]:
+                    entity["range_icons"] = None
+                    entity["state_icons"] = None
 
         if old_major_version > 1:
             raise NotImplementedError
@@ -1524,6 +1574,8 @@ class EntityRegistry(BaseRegistry):
             icon = deleted_entity.icon
             labels = deleted_entity.labels
             name = deleted_entity.name
+            range_icons = deleted_entity.range_icons
+            state_icons = deleted_entity.state_icons
             if deleted_entity.options is not UNDEFINED:
                 options = deleted_entity.options
             else:
@@ -1538,6 +1590,8 @@ class EntityRegistry(BaseRegistry):
             labels = set()
             name = None
             options = get_initial_options() if get_initial_options else None
+            range_icons = None
+            state_icons = None
 
         def none_if_undefined[_T](value: _T | UndefinedType) -> _T | None:
             """Return None if value is UNDEFINED, otherwise return value."""
@@ -1602,6 +1656,8 @@ class EntityRegistry(BaseRegistry):
             original_name=original_name,
             original_name_unprefixed=original_name_unprefixed,
             platform=platform,
+            range_icons=range_icons,
+            state_icons=state_icons,
             suggested_object_id=suggested_object_id,
             supported_features=none_if_undefined(supported_features) or 0,
             translation_key=none_if_undefined(translation_key),
@@ -1658,6 +1714,8 @@ class EntityRegistry(BaseRegistry):
             options=entity.options,
             orphaned_timestamp=orphaned_timestamp,
             platform=entity.platform,
+            range_icons=entity.range_icons,
+            state_icons=entity.state_icons,
             unique_id=entity.unique_id,
         )
         self.hass.bus.async_fire_internal(
@@ -1867,6 +1925,8 @@ class EntityRegistry(BaseRegistry):
         original_name: str | UndefinedType | None = UNDEFINED,
         original_name_unprefixed: str | UndefinedType | None = UNDEFINED,
         platform: str | UndefinedType | None = UNDEFINED,
+        range_icons: Mapping[str, str] | UndefinedType | None = UNDEFINED,
+        state_icons: Mapping[str, str] | UndefinedType | None = UNDEFINED,
         suggested_object_id: str | UndefinedType | None = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
         translation_key: str | UndefinedType | None = UNDEFINED,
@@ -1903,6 +1963,8 @@ class EntityRegistry(BaseRegistry):
             ("original_name", original_name),
             ("original_name_unprefixed", original_name_unprefixed),
             ("platform", platform),
+            ("range_icons", range_icons),
+            ("state_icons", state_icons),
             ("suggested_object_id", suggested_object_id),
             ("supported_features", supported_features),
             ("translation_key", translation_key),
@@ -2040,6 +2102,8 @@ class EntityRegistry(BaseRegistry):
         original_device_class: str | UndefinedType | None = UNDEFINED,
         original_icon: str | UndefinedType | None = UNDEFINED,
         original_name: str | UndefinedType | None = UNDEFINED,
+        range_icons: Mapping[str, str] | UndefinedType | None = UNDEFINED,
+        state_icons: Mapping[str, str] | UndefinedType | None = UNDEFINED,
         supported_features: int | UndefinedType = UNDEFINED,
         translation_key: str | UndefinedType | None = UNDEFINED,
         unit_of_measurement: str | UndefinedType | None = UNDEFINED,
@@ -2067,6 +2131,8 @@ class EntityRegistry(BaseRegistry):
             original_device_class=original_device_class,
             original_icon=original_icon,
             original_name=original_name,
+            range_icons=range_icons,
+            state_icons=state_icons,
             supported_features=supported_features,
             translation_key=translation_key,
             unit_of_measurement=unit_of_measurement,
@@ -2284,6 +2350,8 @@ class EntityRegistry(BaseRegistry):
                     original_name=entity["original_name"],
                     original_name_unprefixed=original_name_unprefixed,
                     platform=entity["platform"],
+                    range_icons=entity["range_icons"],
+                    state_icons=entity["state_icons"],
                     suggested_object_id=entity["suggested_object_id"],
                     supported_features=entity["supported_features"],
                     translation_key=entity["translation_key"],
@@ -2352,6 +2420,8 @@ class EntityRegistry(BaseRegistry):
                     else UNDEFINED,
                     orphaned_timestamp=entity["orphaned_timestamp"],
                     platform=entity["platform"],
+                    range_icons=entity["range_icons"],
+                    state_icons=entity["state_icons"],
                     unique_id=entity["unique_id"],
                 )
 

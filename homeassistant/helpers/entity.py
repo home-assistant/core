@@ -1141,7 +1141,14 @@ class Entity(
         if (entity_picture := self.entity_picture) is not None:
             attr[EntityStateAttribute.ENTITY_PICTURE] = entity_picture
 
-        if (icon := (entry and entry.icon) or self.icon) is not None:
+        icon: str | None = None
+        if entry is not None and (
+            entry.state_icons is not None or entry.range_icons is not None
+        ):
+            icon = entry.get_state_icon(state)
+        if icon is None:
+            icon = (entry and entry.icon) or self.icon
+        if icon is not None:
             attr[EntityStateAttribute.ICON] = icon
 
         original_name = self.name
