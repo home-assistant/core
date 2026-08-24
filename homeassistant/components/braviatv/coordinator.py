@@ -180,7 +180,9 @@ class BraviaTVCoordinator(DataUpdateCoordinator[None]):
             # "title" is kept untouched so that select_source keeps working with
             # the generic name for anyone already using it.
             self.source_map[uri] = {**item, "name": name, "type": source_type}
-            if add_to_list and name not in self.source_list:
+            if add_to_list:
+                # `taken` starts from source_list, so the loop above already
+                # guarantees the name is not in it.
                 self.source_list.append(name)
 
     @override
