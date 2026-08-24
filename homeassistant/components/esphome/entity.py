@@ -1,7 +1,6 @@
 """Support for esphome entities."""
 
 from collections.abc import Awaitable, Callable, Coroutine
-from dataclasses import replace
 import functools
 import logging
 import math
@@ -76,7 +75,7 @@ def _build_identity_indexes(
     return old_info_by_unique_id, movable_by_name
 
 
-def _carry_mover_states(
+def _move_cached_states(
     states: dict[DeviceEntityKey, EntityState],
     moves: list[tuple[DeviceEntityKey, DeviceEntityKey]],
 ) -> None:
@@ -95,7 +94,7 @@ def _carry_mover_states(
     for _, new_slot in moves:
         states.pop(new_slot, None)
     for new_slot, own_state in carried.items():
-        states[new_slot] = replace(own_state, device_id=new_slot[0])  # type: ignore[type-var]
+        states[new_slot] = own_state.with_device_id(new_slot[0])
 
 
 @callback
@@ -256,7 +255,7 @@ def async_static_info_updated(
         add_entities.append(entity_type(entry_data, info, state_type))
 
     if moves:
-        _carry_mover_states(states, moves)
+        _move_cached_states(states, moves)
 
     # Second pass: anything left at an incoming (device_id, key) slot
     # is a rename with a stable key; the registry entry follows the
