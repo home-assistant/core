@@ -1,4 +1,4 @@
-"""Constants, distinct from sofar_modbus's own const (register tables)."""
+"""Constants for the Sofar integration."""
 
 DOMAIN = "sofar"
 ATTR_MANUFACTURER = "Sofar Solar"

@@ -78,22 +78,20 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
     @override
     async def async_added_to_hass(self) -> None:
         await super().async_added_to_hass()
-        if (last_data := await self.async_get_last_sensor_data()) is not None:
-            if last_data.native_value is not None:
-                try:
-                    val = float(str(last_data.native_value))
-                except ValueError, TypeError:
-                    pass
-                else:
-                    self._attr_native_value = val
-                    if (
-                        self.entity_description.state_class
-                        is SensorStateClass.TOTAL_INCREASING
-                    ):
-                        component = getattr(
-                            self.coordinator.device, self.entity_description.component
-                        )
-                        component.seed_high_water(self.entity_description.key, val)
+        if (last_data := await self.async_get_last_sensor_data()) is None:
+            return
+        if last_data.native_value is None:
+            return
+        try:
+            val = float(str(last_data.native_value))
+        except ValueError, TypeError:
+            return
+        self._attr_native_value = val
+        if self.entity_description.state_class is SensorStateClass.TOTAL_INCREASING:
+            component = getattr(
+                self.coordinator.device, self.entity_description.component
+            )
+            component.seed_high_water(self.entity_description.key, val)
 
     @property
     @override
@@ -105,9 +103,7 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
             value = getattr(component, self.entity_description.key)
         if isinstance(value, (int, float)):
             self._attr_native_value = value
-        if isinstance(self._attr_native_value, (int, float)):
-            return self._attr_native_value
-        return None
+        return cast(int | float | None, self._attr_native_value)
 
 
 @dataclass(frozen=True, kw_only=True)

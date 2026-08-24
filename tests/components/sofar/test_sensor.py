@@ -111,6 +111,14 @@ async def test_total_sensor_restore_data_parsing(
     await invalid_sensor.async_added_to_hass()
     assert invalid_sensor.native_value is None
 
+    blank_sensor = SofarTotalSensor(runtime_data, description)
+    blank_sensor.hass = hass
+    blank_sensor.async_get_last_sensor_data = AsyncMock(
+        return_value=SimpleNamespace(native_value=None)
+    )
+    await blank_sensor.async_added_to_hass()
+    assert blank_sensor.native_value is None
+
     device.energy.load_consumption_total = 120.0
     total_sensor = SofarTotalSensor(runtime_data, description)
     assert total_sensor.native_value == 120.0
