@@ -1,26 +1,32 @@
 """Test the Ouman EH-800 setup."""
 
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from ouman_eh_800_api import (
     OumanClientAuthenticationError,
     OumanClientCommunicationError,
 )
 import pytest
 
-from homeassistant.components.ouman_eh_800.const import DOMAIN, OumanDevice
+from homeassistant.components.ouman_eh_800.const import (
+    DEFAULT_SCAN_INTERVAL_SECONDS,
+    DOMAIN,
+    OumanDevice,
+)
 from homeassistant.components.select import (
     ATTR_OPTION,
     DOMAIN as SELECT_DOMAIN,
     SERVICE_SELECT_OPTION,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 @pytest.mark.usefixtures("mock_ouman_client")
@@ -102,6 +108,26 @@ async def test_setup_error(
         DOMAIN, match_context={"source": SOURCE_REAUTH}
     )
     assert len(reauth_flows) == expected_reauth_flows
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_update_failed(
+    hass: HomeAssistant,
+    mock_ouman_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that entities become unavailable when a data update fails."""
+    entity_id = "sensor.ouman_eh_800_outside_temperature"
+    assert hass.states.get(entity_id).state == "0.4"
+
+    mock_ouman_client.get_values.side_effect = OumanClientCommunicationError(
+        "Timeout connecting to device"
+    )
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL_SECONDS))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
 
 
 @pytest.mark.parametrize("init_integration", [Platform.SELECT], indirect=True)
