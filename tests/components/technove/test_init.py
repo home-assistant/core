@@ -2,7 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from technove import TechnoVEConnectionError
+import pytest
+from technove import TechnoVEConnectionError, TechnoVEError
 
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
@@ -23,13 +24,21 @@ async def test_async_setup_entry(
     assert init_integration.state is ConfigEntryState.NOT_LOADED
 
 
-async def test_async_setup_connection_error(
+@pytest.mark.parametrize(
+    "exception",
+    [
+        TechnoVEConnectionError,
+        TechnoVEError,
+    ],
+)
+async def test_async_setup_error(
     hass: HomeAssistant,
     mock_technove: MagicMock,
     mock_config_entry: MockConfigEntry,
+    exception: type[Exception],
 ) -> None:
-    """Test a connection error after setup."""
-    mock_technove.update.side_effect = TechnoVEConnectionError
+    """Test a connection or update error during setup."""
+    mock_technove.update.side_effect = exception
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
