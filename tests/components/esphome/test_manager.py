@@ -43,6 +43,7 @@ from aioesphomeapi import (
     build_device_unique_id,
 )
 import aiohttp
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 import voluptuous as vol
 
@@ -61,6 +62,7 @@ from homeassistant.components.esphome.const import (
 from homeassistant.components.esphome.encryption_key_storage import (
     ENCRYPTION_KEY_STORAGE_KEY,
 )
+from homeassistant.components.esphome.entry_data import SAVE_DELAY
 from homeassistant.components.esphome.manager import DEVICE_CONFLICT_ISSUE_FORMAT
 from homeassistant.components.tag import DOMAIN as TAG_DOMAIN
 from homeassistant.const import (
@@ -91,6 +93,7 @@ from tests.common import (
     MockConfigEntry,
     async_call_logger_set_level,
     async_capture_events,
+    async_fire_time_changed,
     async_mock_service,
 )
 
@@ -575,6 +578,7 @@ async def test_deep_sleep_states_flushed_on_unload_while_connected(
     mock_client: APIClient,
     hass_storage: dict[str, Any],
     mock_esphome_device: MockESPHomeDeviceType,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Unloading a connected deep-sleep device persists the states it received."""
     device = await mock_esphome_device(
@@ -587,16 +591,22 @@ async def test_deep_sleep_states_flushed_on_unload_while_connected(
     device.set_state(SensorState(key=1, state=50))
     await hass.async_block_till_done()
 
-    async def _disconnect() -> None:
-        await device.mock_disconnect(expected_disconnect=True)
-
-    # A real client disconnect runs the on_disconnect callback
-    mock_client.disconnect = AsyncMock(side_effect=_disconnect)
+    # The mock client never runs on_disconnect, like a real disconnect whose
+    # callback is still waiting on the reconnect lock
     await hass.config_entries.async_unload(entry.entry_id)
     await hass.async_block_till_done()
 
     data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
+    assert data["expected_disconnect"] is True
     assert data["states"] == {"sensor": [SensorState(key=1, state=50).to_dict()]}
+
+    # A late on_disconnect from the old instance must not overwrite the store
+    await device.mock_disconnect(expected_disconnect=False)
+    freezer.tick(SAVE_DELAY + 1)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
+    assert data["expected_disconnect"] is True
 
 
 async def test_non_deep_sleep_device_does_not_persist_states(

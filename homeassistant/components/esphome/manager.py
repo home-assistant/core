@@ -1571,11 +1571,16 @@ def _setup_services(
 async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
     """Cleanup the esphome client if it exists."""
     data = entry.runtime_data
+    was_connected = data.available
     data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
-    # Disconnect first so the disconnect-time save is flushed below
     await data.client.disconnect()
+    if was_connected and data.device_info and data.device_info.has_deep_sleep:
+        # on_disconnect runs in a background task that may not have
+        # persisted yet; the connection was closed by us, so it is expected
+        data.expected_disconnect = True
+        data.async_save_to_store()
     await data.async_cleanup()
     return data
 

@@ -192,6 +192,7 @@ class RuntimeEntryData:
     first_connect_done: asyncio.Event = field(default_factory=asyncio.Event)
     _storage_contents: StoreData | None = None
     _pending_storage: Callable[[], StoreData] | None = None
+    _cleaned_up: bool = False
     assist_pipeline_update_callbacks: list[CALLBACK_TYPE] = field(default_factory=list)
     assist_pipeline_state: bool = False
     entity_info_callbacks: dict[
@@ -534,6 +535,9 @@ class RuntimeEntryData:
 
     def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""
+        if self._cleaned_up:
+            # A late on_disconnect must not overwrite a reloaded entry's store
+            return
         if TYPE_CHECKING:
             assert self.device_info is not None
         store_data: StoreData = {
@@ -570,6 +574,7 @@ class RuntimeEntryData:
 
     async def async_cleanup(self) -> None:
         """Cleanup the entry data when disconnected or unloading."""
+        self._cleaned_up = True
         if self._pending_storage:
             # Ensure we save the data if we are unloading before the
             # save delay has passed.
