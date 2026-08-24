@@ -2,7 +2,7 @@
 
 from typing import Any, NotRequired, TypedDict
 
-import voluptuous as vol
+import probatio as prb
 from xknx import XKNX
 from xknx.dpt import DPTBase
 from xknx.telegram.address import parse_device_group_address
@@ -52,7 +52,7 @@ def validate_expose_template_no_coerce(value: str) -> str:
     """Validate an expose template without coercing to Template."""
     temp = cv.template(value)  # validate template
     if temp.is_static:
-        raise vol.Invalid(
+        raise prb.Invalid(
             "Static templates are not supported."
             " Template should start with '{{'"
             " and end with '}}'"
@@ -60,34 +60,34 @@ def validate_expose_template_no_coerce(value: str) -> str:
     return value  # return original string for storage and later template creation
 
 
-EXPOSE_OPTION_SCHEMA = vol.Schema(
+EXPOSE_OPTION_SCHEMA = prb.Schema(
     {
-        vol.Required("ga"): GASelector(
+        prb.Required("ga"): GASelector(
             state=False,
             passive=False,
             write_required=True,
             dpt=["numeric", "enum", "complex", "string"],
         ),
-        vol.Optional("attribute"): str,
-        vol.Optional("default"): object,
-        vol.Optional("cooldown"): cv.positive_float,  # frontend renders to duration
-        vol.Optional("periodic_send"): cv.positive_float,
-        vol.Optional("respond_to_read"): bool,
-        vol.Optional("value_template"): validate_expose_template_no_coerce,
+        prb.Optional("attribute"): str,
+        prb.Optional("default"): object,
+        prb.Optional("cooldown"): cv.positive_float,  # frontend renders to duration
+        prb.Optional("periodic_send"): cv.positive_float,
+        prb.Optional("respond_to_read"): bool,
+        prb.Optional("value_template"): validate_expose_template_no_coerce,
     }
 )
 
-EXPOSE_CONFIG_SCHEMA = vol.Schema(
+EXPOSE_CONFIG_SCHEMA = prb.Schema(
     {
-        vol.Required("entity_id"): selector.EntitySelector(),
-        vol.Required("data"): vol.Schema(
+        prb.Required("entity_id"): selector.EntitySelector(),
+        prb.Required("data"): prb.Schema(
             {
-                vol.Required("options"): [EXPOSE_OPTION_SCHEMA],
-                vol.Optional("notes"): str,
+                prb.Required("options"): [EXPOSE_OPTION_SCHEMA],
+                prb.Optional("notes"): str,
             }
         ),
     },
-    extra=vol.REMOVE_EXTRA,
+    extra=prb.REMOVE_EXTRA,
 )
 
 

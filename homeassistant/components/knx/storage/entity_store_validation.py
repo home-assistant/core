@@ -1,10 +1,9 @@
 """KNX entity store validation."""
 
+from collections.abc import Callable
 from typing import Any, Literal, TypedDict
 
-import voluptuous as vol
-
-from homeassistant.helpers.typing import VolSchemaType
+import probatio as prb
 
 from .entity_store_schema import ENTITY_STORE_DATA_SCHEMA
 
@@ -34,24 +33,26 @@ class EntityStoreValidationSuccess(TypedDict):
     entity_id: str | None
 
 
-def parse_invalid(exc: vol.Invalid) -> _ErrorDescription:
-    """Parse a vol.Invalid exception."""
+def parse_invalid(exc: prb.Invalid) -> _ErrorDescription:
+    """Parse a probatio.Invalid exception."""
     description = exc.as_dict()
-    # path items are str or vol.Marker; the frontend matches them against config keys
+    # path items are str or probatio.Marker; the frontend matches them against config keys
     description["path"] = [str(path) for path in description["path"]]
     return description  # type: ignore[return-value]
 
 
-def validate_config_store_data(schema: VolSchemaType, entity_data: dict) -> dict:
+def validate_config_store_data(
+    schema: Callable[[dict], dict], entity_data: dict
+) -> dict:
     """Validate data for config store.
 
     Return validated data or raise EntityStoreValidationException.
     """
     try:
         # return so defaults are applied
-        return schema(entity_data)  # type: ignore[no-any-return]
-    except vol.Invalid as exc:
-        errors = exc.errors if isinstance(exc, vol.MultipleInvalid) else [exc]
+        return schema(entity_data)
+    except prb.Invalid as exc:
+        errors = exc.errors if isinstance(exc, prb.MultipleInvalid) else [exc]
         raise EntityStoreValidationException(
             validation_error={
                 "success": False,
