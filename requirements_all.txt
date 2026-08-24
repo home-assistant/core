@@ -2242,11 +2242,11 @@ pygeosphere-warnings==0.1.1
 # homeassistant.components.gtfs
 pygtfs==0.1.11
 
-# homeassistant.components.hausbus
-pyhausbus==1.0.61
-
 # homeassistant.components.hvv_departures
 pygti==1.1.1
+
+# homeassistant.components.hausbus
+pyhausbus==1.0.61
 
 # homeassistant.components.version
 pyhaversion==22.8.0
