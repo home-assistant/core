@@ -1882,6 +1882,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/tolo/ @MatthiasLohr
 /homeassistant/components/tomorrowio/ @raman325 @lymanepp
 /tests/components/tomorrowio/ @raman325 @lymanepp
+/homeassistant/components/tonewinner/ @emma-sg
+/tests/components/tonewinner/ @emma-sg
 /homeassistant/components/totalconnect/ @austinmroczek
 /tests/components/totalconnect/ @austinmroczek
 /homeassistant/components/touchline/ @mnordseth

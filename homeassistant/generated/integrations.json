@@ -7390,6 +7390,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "tonewinner": {
+      "name": "Tonewinner",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "toon": {
       "name": "Toon",
       "integration_type": "device",
