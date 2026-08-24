@@ -76,7 +76,12 @@ from .const import (
     IntentSource,
 )
 from .entity import ConversationEntity
-from .gazetteer import GazetteerFallback, GazetteerResponses, async_refusal
+from .gazetteer import (
+    GazetteerFallback,
+    GazetteerResponses,
+    async_refusal,
+    async_targets_from_intent,
+)
 from .models import ConversationInput, ConversationResult
 from .trace import ConversationTraceEventType, async_conversation_trace_append
 
@@ -477,6 +482,10 @@ class DefaultAgent(ConversationEntity):
             )
             response.async_set_speech(response_text)
 
+            # An automation ran, and nothing in it is a target. Saying "turn it off"
+            # after that should find nothing rather than the turn before it.
+            self._gazetteer.async_remember(chat_log.conversation_id)
+
         if response is None:
             # Match intents
             intent_result = await self.async_recognize_intent(user_input)
@@ -565,7 +574,7 @@ class DefaultAgent(ConversationEntity):
             user_input.satellite_id, user_input.device_id
         )
 
-        return await self._async_execute_intent(
+        intent_response = await self._async_execute_intent(
             result.intent.name,
             slots,
             {
@@ -580,6 +589,16 @@ class DefaultAgent(ConversationEntity):
             satellite_area,
             device_id,
         )
+
+        if intent_response.response_type is not intent.IntentResponseType.ERROR:
+            # hassil answers most sentences, so this is where a later "open it" gets
+            # something to refer to.
+            self._gazetteer.async_remember(
+                chat_log.conversation_id,
+                async_targets_from_intent(slots, intent_response),
+            )
+
+        return intent_response
 
     async def _async_execute_intent(
         self,
@@ -761,9 +780,16 @@ class DefaultAgent(ConversationEntity):
                 return None
             keyed.append((frame, key))
 
-        return await self._async_process_frames(
+        intent_response = await self._async_process_frames(
             keyed, user_input, chat_log, lang_intents, language
         )
+
+        if intent_response.response_type is not intent.IntentResponseType.ERROR:
+            self._gazetteer.async_remember(
+                chat_log.conversation_id, interpretation.targets
+            )
+
+        return intent_response
 
     async def _async_process_frames(
         self,
