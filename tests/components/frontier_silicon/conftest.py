@@ -20,7 +20,7 @@ class FakeAFSAPIDevice:
     afsapi_device_map = {}
 
     def __new__(cls, webfsapi_endpoint: str, pin: str | int, timeout: int = 2):
-        """Create...."""
+        """Create or reuse a fake device for the endpoint."""
 
         if webfsapi_endpoint not in cls.afsapi_device_map:
             cls.afsapi_device_map[webfsapi_endpoint] = super().__new__(cls)
