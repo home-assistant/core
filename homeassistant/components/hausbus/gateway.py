@@ -57,7 +57,7 @@ class HausbusGateway(IBusDataListener):
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: "HausbusConfigEntry",
+        config_entry: HausbusConfigEntry,
         home_server: HomeServer,
     ) -> None:
         """Initialize the system."""
@@ -72,8 +72,8 @@ class HausbusGateway(IBusDataListener):
 
     @classmethod
     async def async_create(
-        cls, hass: HomeAssistant, config_entry: "HausbusConfigEntry"
-    ) -> "HausbusGateway":
+        cls, hass: HomeAssistant, config_entry: HausbusConfigEntry
+    ) -> HausbusGateway:
         """Create the gateway, opening the Haus-Bus network connection."""
         home_server = await async_get_home_server(hass)
         return cls(hass, config_entry, home_server)
