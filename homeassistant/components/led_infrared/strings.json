@@ -38,14 +38,62 @@
   },
   "entity": {
     "button": {
+      "blue_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::blue_down%]"
+      },
+      "blue_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::blue_up%]"
+      },
       "brightness_down": {
-        "name": "Brightness down"
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::brightness_down%]"
       },
       "brightness_up": {
-        "name": "Brightness up"
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::brightness_up%]"
+      },
+      "green_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::green_down%]"
+      },
+      "green_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::green_up%]"
+      },
+      "quick": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::quick%]"
+      },
+      "red_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::red_down%]"
+      },
+      "red_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::red_up%]"
+      },
+      "slow": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::slow%]"
       },
       "timer": {
-        "name": "Timer"
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::timer%]"
+      },
+      "white_brightness_100": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_100%]"
+      },
+      "white_brightness_25": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_25%]"
+      },
+      "white_brightness_50": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_50%]"
+      },
+      "white_brightness_75": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_75%]"
+      },
+      "white_brightness_down": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_down%]"
+      },
+      "white_brightness_up": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_brightness_up%]"
+      },
+      "white_off": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_off%]"
+      },
+      "white_on": {
+        "name": "[%key:component::led_infrared::entity::event::received_command::state_attributes::event_type::state::white_on%]"
       }
     },
     "event": {

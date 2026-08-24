@@ -13,7 +13,9 @@ from homeassistant.components.fan import (
     DOMAIN as FAN_DOMAIN,
     ENTITY_ID_FORMAT,
     FanEntity,
+    FanEntityCapabilityAttribute,
     FanEntityFeature,
+    FanEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, CONF_STATE
@@ -38,7 +40,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -91,7 +93,11 @@ FAN_COMMON_SCHEMA = vol.Schema(
 )
 
 FAN_YAML_SCHEMA = FAN_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
-    make_template_entity_common_modern_schema(FAN_DOMAIN, DEFAULT_NAME).schema
+    make_template_entity_common_schema(
+        FAN_DOMAIN,
+        DEFAULT_NAME,
+        (FanEntityStateAttribute, FanEntityCapabilityAttribute),
+    ).schema
 )
 
 FAN_CONFIG_ENTRY_SCHEMA = FAN_COMMON_SCHEMA.extend(
@@ -175,28 +181,16 @@ class FanExtraStoredData(ExtraStoredData):
     @classmethod
     def from_dict(cls, restored: dict[str, Any]) -> Self | None:
         """Initialize a stored fan data from a dict."""
-        is_on = restored.get("is_on")
-        percentage = restored.get("percentage")
-        preset_mode = restored.get("preset_mode")
-        oscillating = restored.get("oscillating")
-        direction = restored.get("direction")
-        if is_on is not None and not isinstance(is_on, bool):
+        try:
+            return cls(
+                is_on=restored["is_on"],
+                percentage=restored["percentage"],
+                preset_mode=restored["preset_mode"],
+                oscillating=restored["oscillating"],
+                direction=restored["direction"],
+            )
+        except KeyError:
             return None
-        if percentage is not None and not isinstance(percentage, int):
-            return None
-        if preset_mode is not None and not isinstance(preset_mode, str):
-            return None
-        if oscillating is not None and not isinstance(oscillating, bool):
-            return None
-        if direction is not None and not isinstance(direction, str):
-            return None
-        return cls(
-            is_on=is_on,
-            percentage=percentage,
-            preset_mode=preset_mode,
-            oscillating=oscillating,
-            direction=direction,
-        )
 
 
 class AbstractTemplateFan(AbstractTemplateEntity, FanEntity, RestoreEntity):

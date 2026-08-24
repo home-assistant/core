@@ -9,7 +9,6 @@ from zwave_js_server.event import Event
 from zwave_js_server.model.node import Node, NodeDataType
 
 from homeassistant.components.zwave_js import DOMAIN
-from homeassistant.components.zwave_js.const import CONF_KEEP_OLD_DEVICES
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -64,8 +63,8 @@ async def test_device_config_file_changed_confirm_step(
 
     client.async_send_command_no_wait.reset_mock()
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, node)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
     )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
@@ -126,8 +125,8 @@ async def test_device_config_file_changed_cleared(
     """Test the device_config_file_changed issue is cleared when no longer true."""
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, node)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
     )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
@@ -168,8 +167,8 @@ async def test_device_config_file_changed_ignore_step(
 
     client.async_send_command_no_wait.reset_mock()
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, node)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
     )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
@@ -280,8 +279,8 @@ async def test_abort_confirm(
     """Test aborting device_config_file_changed issue in confirm step."""
     node = await _trigger_repair_issue(hass, client, multisensor_6_state)
 
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, node)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
     )
     assert device
     issue_id = f"device_config_file_changed.{device.id}"
@@ -342,8 +341,6 @@ async def test_migrate_unique_id(
 
     await hass.config_entries.async_setup(config_entry.entry_id)
 
-    assert CONF_KEEP_OLD_DEVICES in config_entry.data
-    assert config_entry.data[CONF_KEEP_OLD_DEVICES] is True
     stored_devices = dr.async_entries_for_config_entry(
         device_registry, config_entry.entry_id
     )
