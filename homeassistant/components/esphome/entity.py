@@ -89,9 +89,7 @@ def async_static_info_updated(
 ) -> None:
     """Update entities of this platform when entities are listed."""
     current_infos = entry_data.info[info_type]
-    # On the first callback for this type there is nothing to compare
-    # against; any cached state was restored from the store together
-    # with these same infos and must survive.
+    # First listing: cached states were restored with these infos and must survive
     first_infos = not current_infos
     device_info = entry_data.device_info
     if TYPE_CHECKING:

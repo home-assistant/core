@@ -71,9 +71,7 @@ type DeviceEntityKey = tuple[int, int]  # (device_id, key)
 
 INFO_TO_COMPONENT_TYPE: Final = {v: k for k, v in COMPONENT_TYPE_TO_INFO.items()}
 
-# CameraState holds raw image bytes (not JSON-serializable, too large to store)
-# and Event is momentary (restoring one would replay a stale event), so both
-# are excluded from what gets persisted for deep-sleep state restore.
+# CameraState (raw image bytes) and Event (momentary) are never persisted.
 STATE_TYPE_TO_COMPONENT_TYPE: Final[dict[type[EntityState], str]] = {
     state_type: component_type
     for state_type, info_type in STATE_TYPE_TO_INFO_TYPE.items()
@@ -438,6 +436,15 @@ class RuntimeEntryData:
         return _unsubscribe
 
     @callback
+    def async_mark_states_stale(self) -> None:
+        """Mark all cached states stale so the next update is always dispatched."""
+        self.stale_state = {
+            (state_type, device_id, key)
+            for state_type, states in self.state.items()
+            for device_id, key in states
+        }
+
+    @callback
     def async_update_state(self, state: EntityState) -> None:
         """Distribute an update of state information to the target."""
         key = state.key
@@ -485,28 +492,8 @@ class RuntimeEntryData:
 
         self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
         self.api_version = APIVersion.from_dict(restored.pop("api_version", {}))
-        # Pop unconditionally so these never leak into the entity-info loop below.
-        restored_states = restored.pop("states", None)
+        restored_states = restored.pop("states", {})
         expected_disconnect = restored.pop("expected_disconnect", False)
-        if self.device_info.has_deep_sleep:
-            self.expected_disconnect = expected_disconnect
-            for comp_type, states in (restored_states or {}).items():
-                if (state_cls := COMPONENT_TYPE_TO_STATE_TYPE.get(comp_type)) is None:
-                    _LOGGER.debug("Skipping unknown stored state type %s", comp_type)
-                    continue
-                for state in states:
-                    # Restored state is only a cache, so a corrupt entry must
-                    # not fail entry setup.
-                    try:
-                        obj = state_cls.from_dict(state)
-                    except ValueError, TypeError, KeyError:
-                        _LOGGER.debug("Skipping corrupt stored %s state", comp_type)
-                        continue
-                    self.state[state_cls][(obj.device_id, obj.key)] = obj
-                    # Seed stale_state so the first real update after the
-                    # device wakes is always dispatched, even if the value
-                    # is identical to the restored one.
-                    self.stale_state.add((state_cls, obj.device_id, obj.key))
         infos: list[EntityInfo] = []
         for comp_type, restored_infos in restored.items():
             if TYPE_CHECKING:
@@ -519,6 +506,21 @@ class RuntimeEntryData:
         services = [
             UserService.from_dict(service) for service in restored.pop("services", [])
         ]
+        if self.device_info.has_deep_sleep:
+            self.expected_disconnect = expected_disconnect
+            # Only states owned by a restored entity are hydrated
+            slots = {(type(info), info.device_id, info.key) for info in infos}
+            for comp_type, states in restored_states.items():
+                if (state_cls := COMPONENT_TYPE_TO_STATE_TYPE.get(comp_type)) is None:
+                    _LOGGER.debug("Skipping unknown stored state type %s", comp_type)
+                    continue
+                info_type = STATE_TYPE_TO_INFO_TYPE[state_cls]
+                for state in states:
+                    obj = state_cls.from_dict(state)
+                    if (info_type, obj.device_id, obj.key) in slots:
+                        self.state[state_cls][(obj.device_id, obj.key)] = obj
+            # The device is disconnected until it wakes, same as after a disconnect
+            self.async_mark_states_stale()
         return infos, services
 
     def async_save_to_store(self) -> None:

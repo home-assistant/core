@@ -773,17 +773,9 @@ class ESPHomeManager:
         )
         entry_data.async_on_disconnect()
         entry_data.expected_disconnect = expected_disconnect
-        # Mark state as stale so that we will always dispatch
-        # the next state update of that type when the device reconnects
-        entry_data.stale_state = {
-            (type(entity_state), entity_state.device_id, entity_state.key)
-            for state_dict in entry_data.state.values()
-            for entity_state in state_dict.values()
-        }
+        entry_data.async_mark_states_stale()
         if entry_data.device_info and entry_data.device_info.has_deep_sleep:
-            # States are only known once the device has connected and sent
-            # updates, so this disconnect-time save is what actually
-            # captures them (the _on_connect save happens too early).
+            # States arrive after the _on_connect save, so persist them here
             entry_data.async_save_to_store()
         if not hass.is_stopping:
             # Avoid marking every esphome entity as unavailable on shutdown
