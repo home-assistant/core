@@ -10,7 +10,7 @@ from modbus_connection import (
 )
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
-from homeassistant.components.flexit import create_modbus_connection
+from homeassistant.components.flexit import create_modbus_params
 from homeassistant.components.flexit.const import CONF_UNIT, DOMAIN, TYPE_TCP
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
@@ -19,38 +19,28 @@ from homeassistant.core import HomeAssistant
 from tests.common import MockConfigEntry
 
 
-def test_create_tcp_connection() -> None:
-    """Test creating an unopened TCP connection."""
-    params = ModbusTcpParams(host="192.168.1.100", port=5020)
-
-    with patch("homeassistant.components.flexit.ModbusConnection") as connection:
-        create_modbus_connection(
-            {CONF_TYPE: TYPE_TCP, CONF_HOST: "192.168.1.100", CONF_PORT: 5020}
-        )
-
-    connection.assert_called_once_with(params)
+def test_create_tcp_params() -> None:
+    """Test creating TCP connection parameters."""
+    assert create_modbus_params(
+        {CONF_TYPE: TYPE_TCP, CONF_HOST: "192.168.1.100", CONF_PORT: 5020}
+    ) == ModbusTcpParams(host="192.168.1.100", port=5020)
 
 
-def test_create_serial_connection() -> None:
-    """Test creating an unopened serial connection."""
-    params = ModbusSerialParams(
+def test_create_serial_params() -> None:
+    """Test creating serial connection parameters."""
+    assert create_modbus_params(
+        {
+            CONF_TYPE: "serial",
+            CONF_DEVICE: "/dev/ttyUSB0",
+            "baudrate": 57600,
+        }
+    ) == ModbusSerialParams(
         device="/dev/ttyUSB0",
         baudrate=57600,
         bytesize=8,
         parity="E",
         stopbits=1,
     )
-
-    with patch("homeassistant.components.flexit.ModbusConnection") as connection:
-        create_modbus_connection(
-            {
-                CONF_TYPE: "serial",
-                CONF_DEVICE: "/dev/ttyUSB0",
-                "baudrate": 57600,
-            }
-        )
-
-    connection.assert_called_once_with(params)
 
 
 async def test_async_setup_entry_success(
@@ -67,7 +57,7 @@ async def test_async_setup_entry_success(
 
 async def test_async_setup_entry_with_custom_port(
     hass: HomeAssistant,
-    mock_create_modbus_connection: MagicMock,
+    mock_get_modbus_unit: MagicMock,
 ) -> None:
     """Test setup with custom port."""
     config_entry = MockConfigEntry(
@@ -85,12 +75,17 @@ async def test_async_setup_entry_with_custom_port(
     result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is True
-    mock_create_modbus_connection.assert_called_once_with(config_entry.data)
+    mock_get_modbus_unit.assert_called_once_with(
+        hass,
+        config_entry,
+        ModbusTcpParams(host="192.168.1.100", port=5020),
+        1,
+    )
 
 
 async def test_async_setup_entry_without_port(
     hass: HomeAssistant,
-    mock_create_modbus_connection: MagicMock,
+    mock_get_modbus_unit: MagicMock,
 ) -> None:
     """Test setup without port (should use default)."""
     config_entry = MockConfigEntry(
@@ -103,13 +98,18 @@ async def test_async_setup_entry_without_port(
     result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is True
-    mock_create_modbus_connection.assert_called_once_with(config_entry.data)
+    mock_get_modbus_unit.assert_called_once_with(
+        hass,
+        config_entry,
+        ModbusTcpParams(host="192.168.1.100", port=502),
+        1,
+    )
 
 
 async def test_async_setup_entry_serial(
     hass: HomeAssistant,
     mock_serial_config_entry: MockConfigEntry,
-    mock_create_modbus_connection: MagicMock,
+    mock_get_modbus_unit: MagicMock,
 ) -> None:
     """Test setup of a serial (RTU) config entry."""
     mock_serial_config_entry.add_to_hass(hass)
@@ -118,7 +118,18 @@ async def test_async_setup_entry_serial(
 
     assert result is True
     assert mock_serial_config_entry.state is ConfigEntryState.LOADED
-    mock_create_modbus_connection.assert_called_once_with(mock_serial_config_entry.data)
+    mock_get_modbus_unit.assert_called_once_with(
+        hass,
+        mock_serial_config_entry,
+        ModbusSerialParams(
+            device="/dev/ttyUSB0",
+            baudrate=57600,
+            bytesize=8,
+            parity="E",
+            stopbits=1,
+        ),
+        1,
+    )
 
 
 async def test_async_setup_entry_cannot_connect(
@@ -141,9 +152,8 @@ async def test_async_setup_entry_coordinator_update_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_modbus_unit: MockModbusUnit,
-    mock_modbus_connection: MockModbusConnection,
 ) -> None:
-    """Test setup retries and closes the connection when the first update fails."""
+    """Test setup retries when the first update fails."""
     mock_modbus_unit.fail_requests(ModbusError("update failed"))
     mock_config_entry.add_to_hass(hass)
 
@@ -151,7 +161,6 @@ async def test_async_setup_entry_coordinator_update_fails(
 
     assert result is False
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_modbus_connection.connected is False
 
 
 async def test_connection_lost_recovers_on_next_update(
@@ -174,40 +183,30 @@ async def test_connection_lost_recovers_on_next_update(
     mock_schedule_reload.assert_not_called()
 
 
-async def test_unload_entry_closes_connection(
+async def test_unload_entry(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_modbus_connection: MockModbusConnection,
 ) -> None:
-    """Test unloading the config entry closes the Modbus connection."""
+    """Test unloading the config entry."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
-    result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert result is True
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-    assert mock_modbus_connection.connected is False
 
 
-async def test_unload_entry_does_not_close_connection_if_platform_unload_fails(
+async def test_unload_entry_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_modbus_connection: MockModbusConnection,
 ) -> None:
-    """Test the connection is not closed if platform unload fails."""
+    """Test a platform unload failure marks the config entry accordingly."""
     mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
 
     with patch(
         "homeassistant.config_entries.ConfigEntries.async_unload_platforms",
         return_value=False,
     ):
-        result = await hass.config_entries.async_unload(mock_config_entry.entry_id)
-        await hass.async_block_till_done()
+        assert not await hass.config_entries.async_unload(mock_config_entry.entry_id)
 
-    assert result is False
-    assert mock_modbus_connection.connected is True
+    assert mock_config_entry.state is ConfigEntryState.FAILED_UNLOAD

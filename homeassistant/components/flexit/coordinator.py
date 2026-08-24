@@ -5,7 +5,7 @@ import logging
 from typing import override
 
 from flexit_modbus import Flexit
-from modbus_connection import ModbusConnection, ModbusError
+from modbus_connection import ModbusError, ModbusUnit
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -26,8 +26,7 @@ class FlexitDataCoordinator(DataUpdateCoordinator[None]):
         self,
         hass: HomeAssistant,
         entry: FlexitConfigEntry,
-        connection: ModbusConnection,
-        unit: int,
+        unit: ModbusUnit,
     ) -> None:
         """Initialize the FlexitDataCoordinator."""
         super().__init__(
@@ -40,7 +39,7 @@ class FlexitDataCoordinator(DataUpdateCoordinator[None]):
             # the register values), so there is nothing to diff against.
             always_update=True,
         )
-        self.device = Flexit(connection.for_unit(unit))
+        self.device = Flexit(unit)
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             configuration_url=None,

@@ -7,8 +7,10 @@ from flexit_modbus import Flexit
 from modbus_connection import ModbusError
 import voluptuous as vol
 
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
+from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -17,7 +19,7 @@ from homeassistant.helpers.selector import (
     TextSelector,
 )
 
-from . import create_modbus_connection
+from . import create_modbus_params
 from .const import (
     CONF_BAUDRATE,
     CONF_UNIT,
@@ -60,14 +62,13 @@ STEP_SERIAL_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def check_connection(data: dict[str, Any]) -> str | None:
+async def check_connection(hass: HomeAssistant, data: dict[str, Any]) -> str | None:
     """Check we can open a connection and read from the Flexit unit."""
     try:
-        connection = create_modbus_connection(data)
-        try:
-            await Flexit(connection.for_unit(data[CONF_UNIT])).async_update()
-        finally:
-            await connection.close()
+        async with async_get_temporary_unit(
+            hass, create_modbus_params(data), data[CONF_UNIT]
+        ) as unit:
+            await Flexit(unit).async_update()
     except ModbusError:
         _LOGGER.debug("Cannot connect to Flexit device", exc_info=True)
         return "cannot_connect"
@@ -116,7 +117,7 @@ class FlexitConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data = {CONF_TYPE: connection_type, **user_input}
             self._async_abort_entries_match(data)
-            error = await check_connection(data)
+            error = await check_connection(self.hass, data)
             if error is not None:
                 errors["base"] = error
             else:
@@ -142,7 +143,7 @@ class FlexitConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             data = {CONF_TYPE: connection_type, **user_input}
             self._async_abort_entries_match(data)
-            error = await check_connection(data)
+            error = await check_connection(self.hass, data)
             if error is not None:
                 errors["base"] = error
             else:

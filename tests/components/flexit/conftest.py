@@ -1,9 +1,10 @@
 """Common fixtures for the Flexit tests."""
 
-from collections.abc import Generator
+from collections.abc import AsyncIterator, Generator
+from contextlib import asynccontextmanager
 from unittest.mock import MagicMock, patch
 
-from modbus_connection.mock import MockModbusConnection
+from modbus_connection.mock import MockModbusUnit
 import pytest
 
 from homeassistant.components.flexit.const import CONF_UNIT, DOMAIN, TYPE_TCP
@@ -13,22 +14,31 @@ from tests.common import MockConfigEntry
 
 
 @pytest.fixture(autouse=True)
-def mock_create_modbus_connection(
-    mock_modbus_connection: MockModbusConnection,
+def mock_get_modbus_unit(
+    mock_modbus_unit: MockModbusUnit,
 ) -> Generator[MagicMock]:
-    """Patch the connection factory to return the in-memory mock connection."""
-    create_connection = MagicMock(return_value=mock_modbus_connection)
-    with (
-        patch(
-            "homeassistant.components.flexit.create_modbus_connection",
-            new=create_connection,
-        ),
-        patch(
-            "homeassistant.components.flexit.config_flow.create_modbus_connection",
-            new=create_connection,
-        ),
+    """Patch the shared unit helper to return the in-memory mock unit."""
+    get_unit = MagicMock(return_value=mock_modbus_unit)
+    with patch("homeassistant.components.flexit.async_get_unit", new=get_unit):
+        yield get_unit
+
+
+@pytest.fixture(autouse=True)
+def mock_get_temporary_modbus_unit(
+    mock_modbus_unit: MockModbusUnit,
+) -> Generator[MagicMock]:
+    """Patch the temporary unit helper to return the in-memory mock unit."""
+
+    @asynccontextmanager
+    async def temporary_unit(*_: object) -> AsyncIterator[MockModbusUnit]:
+        yield mock_modbus_unit
+
+    get_temporary_unit = MagicMock(side_effect=temporary_unit)
+    with patch(
+        "homeassistant.components.flexit.config_flow.async_get_temporary_unit",
+        new=get_temporary_unit,
     ):
-        yield create_connection
+        yield get_temporary_unit
 
 
 @pytest.fixture

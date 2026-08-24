@@ -2,8 +2,8 @@
 
 from unittest.mock import MagicMock
 
-from modbus_connection import ModbusError
-from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+from modbus_connection import ModbusError, ModbusTcpParams
+from modbus_connection.mock import MockModbusUnit
 import pytest
 
 from homeassistant.components.flexit.const import CONF_UNIT, DOMAIN, TYPE_TCP
@@ -26,7 +26,9 @@ SERIAL_USER_INPUT = {
 SERIAL_ENTRY_DATA = {CONF_TYPE: "serial", **SERIAL_USER_INPUT}
 
 
-async def test_full_flow(hass: HomeAssistant) -> None:
+async def test_full_flow(
+    hass: HomeAssistant, mock_get_temporary_modbus_unit: MagicMock
+) -> None:
     """Test the full TCP flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -49,6 +51,9 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flexit"
     assert result["data"] == TCP_ENTRY_DATA
+    mock_get_temporary_modbus_unit.assert_called_once_with(
+        hass, ModbusTcpParams(host="1.1.1.1", port=502), 1
+    )
 
 
 async def test_maximum_unit(hass: HomeAssistant) -> None:
@@ -112,7 +117,6 @@ async def test_full_flow_serial(
 
 async def test_form_cannot_connect_and_retry(
     hass: HomeAssistant,
-    mock_create_modbus_connection: MagicMock,
     mock_modbus_unit: MockModbusUnit,
 ) -> None:
     """Test we handle a connect error, then allow retrying successfully."""
@@ -134,7 +138,6 @@ async def test_form_cannot_connect_and_retry(
     assert result["errors"] == {"base": "cannot_connect"}
 
     mock_modbus_unit.fail_requests(None)
-    mock_create_modbus_connection.return_value = MockModbusConnection()
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -168,7 +171,7 @@ async def test_form_cannot_read_device(
 
 async def test_form_unknown_exception(
     hass: HomeAssistant,
-    mock_create_modbus_connection: MagicMock,
+    mock_get_temporary_modbus_unit: MagicMock,
 ) -> None:
     """Test we handle unknown exception."""
     result = await hass.config_entries.flow.async_init(
@@ -178,7 +181,8 @@ async def test_form_unknown_exception(
         result["flow_id"], {"next_step_id": "tcp"}
     )
 
-    mock_create_modbus_connection.side_effect = Exception
+    temporary_unit = mock_get_temporary_modbus_unit.side_effect
+    mock_get_temporary_modbus_unit.side_effect = Exception
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -188,7 +192,7 @@ async def test_form_unknown_exception(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "unknown"}
 
-    mock_create_modbus_connection.side_effect = None
+    mock_get_temporary_modbus_unit.side_effect = temporary_unit
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -249,7 +253,6 @@ async def test_reconfigure_flow_serial(
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_create_modbus_connection: MagicMock,
     mock_modbus_unit: MockModbusUnit,
 ) -> None:
     """Test error handling in reconfiguration flow."""
@@ -269,7 +272,6 @@ async def test_reconfigure_flow_errors(
     assert result["errors"] == {"base": "cannot_connect"}
 
     mock_modbus_unit.fail_requests(None)
-    mock_create_modbus_connection.return_value = MockModbusConnection()
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TCP_RECONFIGURE_INPUT,

@@ -4,8 +4,8 @@ from collections.abc import Mapping
 from typing import Any
 
 from modbus_connection import ModbusSerialParams, ModbusTcpParams
-from modbus_connection.pymodbus import ModbusConnection
 
+from homeassistant.components.modbus import async_get_unit
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 
@@ -15,30 +15,27 @@ from .coordinator import FlexitConfigEntry, FlexitDataCoordinator
 _PLATFORMS: list[Platform] = [Platform.CLIMATE]
 
 
-def create_modbus_connection(data: Mapping[str, Any]) -> ModbusConnection:
-    """Create an unopened Modbus connection from config entry data."""
-    params: ModbusSerialParams | ModbusTcpParams
+def create_modbus_params(
+    data: Mapping[str, Any],
+) -> ModbusSerialParams | ModbusTcpParams:
+    """Create Modbus connection parameters from config entry data."""
     if data[CONF_TYPE] == TYPE_SERIAL:
-        params = ModbusSerialParams(
+        return ModbusSerialParams(
             device=data[CONF_DEVICE],
             baudrate=data[CONF_BAUDRATE],
             bytesize=8,
             parity="E",
             stopbits=1,
         )
-    else:
-        params = ModbusTcpParams(
-            host=data[CONF_HOST], port=data.get(CONF_PORT, DEFAULT_PORT)
-        )
-    return ModbusConnection(params)
+    return ModbusTcpParams(host=data[CONF_HOST], port=data.get(CONF_PORT, DEFAULT_PORT))
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> bool:
     """Set up Flexit from a config entry."""
-    connection = create_modbus_connection(entry.data)
-    entry.async_on_unload(connection.close)
-
-    coordinator = FlexitDataCoordinator(hass, entry, connection, entry.data[CONF_UNIT])
+    unit = async_get_unit(
+        hass, entry, create_modbus_params(entry.data), entry.data[CONF_UNIT]
+    )
+    coordinator = FlexitDataCoordinator(hass, entry, unit)
 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

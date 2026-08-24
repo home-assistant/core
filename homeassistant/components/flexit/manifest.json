@@ -3,7 +3,7 @@
   "name": "Flexit",
   "codeowners": ["@troelde"],
   "config_flow": true,
-  "dependencies": ["usb"],
+  "dependencies": ["modbus", "usb"],
   "documentation": "https://www.home-assistant.io/integrations/flexit",
   "integration_type": "device",
   "iot_class": "local_polling",
