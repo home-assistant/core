@@ -119,7 +119,8 @@ class FlexitClimate(FlexitEntity, ClimateEntity):
     def __init__(self, coordinator: FlexitDataCoordinator) -> None:
         """Initialize the unit."""
         assert coordinator.config_entry is not None
-        super().__init__(coordinator, coordinator.config_entry.entry_id)
+        super().__init__(coordinator)
+        self._attr_unique_id = coordinator.config_entry.entry_id
         self._set_attr()
 
     @override
