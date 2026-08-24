@@ -79,6 +79,14 @@ CONFIG_SCHEMA = vol.Schema(
 )
 
 
+def _validated_credentials(username: str, password: str) -> tuple[str, str]:
+    """Return credentials for the handler to encode when the command runs."""
+    # encode_basic_auth runs per call, so it would only reject this much later
+    if ":" in username:
+        raise ValueError('A ":" is not allowed in login (RFC 7617#section-2)')
+    return (username, password)
+
+
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
 
@@ -125,7 +133,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
                 digest_auth = (username, password)
             else:
-                basic_auth = (username, password)
+                basic_auth = _validated_credentials(username, password)
 
         template_payload = None
         if CONF_PAYLOAD in command_config:

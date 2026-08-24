@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.setup import async_setup_component
 
 from .conftest import TEST_URL, ComponentSetup
 
@@ -127,6 +128,22 @@ async def test_rest_command_auth(
     _method, _url, _data, headers = aioclient_mock.mock_calls[0]
     encoded = base64.b64encode("tøst:123456".encode("latin-1")).decode()
     assert CIMultiDict(headers).getall("Authorization") == [f"Basic {encoded}"]
+
+
+async def test_rest_command_auth_username_with_colon(hass: HomeAssistant) -> None:
+    """Call a rest command configured with a colon in the username."""
+    config = {
+        "auth_test": {
+            "url": TEST_URL,
+            "method": "get",
+            "username": "user:name",
+            "password": "123456",
+        }
+    }
+    # RFC 7617 forbids the colon, and it must be rejected while setting up
+    assert not await async_setup_component(hass, DOMAIN, {DOMAIN: config})
+
+    assert not hass.services.has_service(DOMAIN, "auth_test")
 
 
 async def test_rest_command_auth_outside_latin_1(
