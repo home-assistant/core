@@ -8,7 +8,10 @@ from uiprotect.data import DeviceState, Light, Permission, WSAction
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.light import ATTR_BRIGHTNESS
-from homeassistant.components.unifiprotect.const import DEFAULT_ATTRIBUTION
+from homeassistant.components.unifiprotect.const import (
+    DEFAULT_ATTRIBUTION,
+    DEFAULT_BRAND,
+)
 from homeassistant.const import (
     ATTR_ATTRIBUTION,
     ATTR_ENTITY_ID,
@@ -18,7 +21,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from .utils import (
     MockUFPFixture,
@@ -212,6 +215,7 @@ async def test_light_turn_off(
 
 async def test_light_setup_public_only(
     hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
     ufp: MockUFPFixture,
     light: Light,
@@ -232,6 +236,13 @@ async def test_light_setup_public_only(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == STATE_OFF
+
+    # Device identity comes from the public object alone.
+    device = device_registry.async_get(entity.device_id)
+    assert device
+    assert device.model == public.type
+    assert device.model_id == public.type
+    assert device.manufacturer == DEFAULT_BRAND
 
 
 async def test_light_added_after_setup_public_only(
