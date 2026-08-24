@@ -123,6 +123,7 @@ class ProtectLight(ProtectDeviceEntity, LightEntity):
         self._attr_device_info = DeviceInfo(
             name=public.display_name,
             model=public.type,
+            model_id=public.type,
             manufacturer=DEFAULT_BRAND,
             connections={(dr.CONNECTION_NETWORK_MAC, public.mac)},
         )
