@@ -20,18 +20,10 @@ TCP_RECONFIGURE_INPUT = {CONF_HOST: "2.2.2.2", CONF_PORT: 502, CONF_UNIT: 1}
 
 SERIAL_USER_INPUT = {
     CONF_DEVICE: "/dev/ttyUSB0",
-    "baudrate": 9600,
-    "bytesize": "8",
-    "parity": "N",
-    "stopbits": "1",
+    "baudrate": 57600,
     CONF_UNIT: 1,
 }
-SERIAL_ENTRY_DATA = {
-    CONF_TYPE: "serial",
-    **SERIAL_USER_INPUT,
-    "bytesize": 8,
-    "stopbits": 1,
-}
+SERIAL_ENTRY_DATA = {CONF_TYPE: "serial", **SERIAL_USER_INPUT}
 
 
 async def test_full_flow(hass: HomeAssistant) -> None:

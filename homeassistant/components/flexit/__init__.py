@@ -1,7 +1,7 @@
 """The Flexit component, for AC units with a CI66 Modbus adapter."""
 
 from collections.abc import Mapping
-from typing import Any, Literal, cast
+from typing import Any
 
 from modbus_connection import ModbusSerialParams, ModbusTcpParams
 from modbus_connection.pymodbus import ModbusConnection
@@ -9,15 +9,7 @@ from modbus_connection.pymodbus import ModbusConnection
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 
-from .const import (
-    CONF_BAUDRATE,
-    CONF_BYTESIZE,
-    CONF_PARITY,
-    CONF_STOPBITS,
-    CONF_UNIT,
-    DEFAULT_PORT,
-    TYPE_SERIAL,
-)
+from .const import CONF_BAUDRATE, CONF_UNIT, DEFAULT_PORT, TYPE_SERIAL
 from .coordinator import FlexitConfigEntry, FlexitDataCoordinator
 
 _PLATFORMS: list[Platform] = [Platform.CLIMATE]
@@ -30,9 +22,9 @@ def create_modbus_connection(data: Mapping[str, Any]) -> ModbusConnection:
         params = ModbusSerialParams(
             device=data[CONF_DEVICE],
             baudrate=data[CONF_BAUDRATE],
-            bytesize=cast(Literal[7, 8], data[CONF_BYTESIZE]),
-            parity=cast(Literal["N", "E", "O"], data[CONF_PARITY]),
-            stopbits=cast(Literal[1, 2], data[CONF_STOPBITS]),
+            bytesize=8,
+            parity="E",
+            stopbits=1,
         )
     else:
         params = ModbusTcpParams(

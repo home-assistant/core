@@ -35,9 +35,9 @@ def test_create_serial_connection() -> None:
     """Test creating an unopened serial connection."""
     params = ModbusSerialParams(
         device="/dev/ttyUSB0",
-        baudrate=9600,
+        baudrate=57600,
         bytesize=8,
-        parity="N",
+        parity="E",
         stopbits=1,
     )
 
@@ -46,10 +46,7 @@ def test_create_serial_connection() -> None:
             {
                 CONF_TYPE: "serial",
                 CONF_DEVICE: "/dev/ttyUSB0",
-                "baudrate": 9600,
-                "bytesize": 8,
-                "parity": "N",
-                "stopbits": 1,
+                "baudrate": 57600,
             }
         )
 

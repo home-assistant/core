@@ -12,40 +12,28 @@
       "reconfigure": {
         "data": {
           "baudrate": "[%key:component::flexit::config::step::serial::data::baudrate%]",
-          "bytesize": "[%key:component::flexit::config::step::serial::data::bytesize%]",
           "device": "[%key:component::flexit::config::step::serial::data::device%]",
           "host": "[%key:common::config_flow::data::host%]",
-          "parity": "[%key:component::flexit::config::step::serial::data::parity%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "stopbits": "[%key:component::flexit::config::step::serial::data::stopbits%]",
           "unit": "Unit ID"
         },
         "data_description": {
           "baudrate": "[%key:component::flexit::config::step::serial::data_description::baudrate%]",
-          "bytesize": "[%key:component::flexit::config::step::serial::data_description::bytesize%]",
           "device": "[%key:component::flexit::config::step::serial::data_description::device%]",
           "host": "[%key:component::flexit::config::step::tcp::data_description::host%]",
-          "parity": "[%key:component::flexit::config::step::serial::data_description::parity%]",
           "port": "[%key:component::flexit::config::step::tcp::data_description::port%]",
-          "stopbits": "[%key:component::flexit::config::step::serial::data_description::stopbits%]",
           "unit": "[%key:component::flexit::config::step::tcp::data_description::unit%]"
         }
       },
       "serial": {
         "data": {
           "baudrate": "Baud rate",
-          "bytesize": "Data bits",
           "device": "Serial device",
-          "parity": "Parity",
-          "stopbits": "Stop bits",
           "unit": "Unit ID"
         },
         "data_description": {
           "baudrate": "The baud rate of the serial connection.",
-          "bytesize": "The number of data bits of the serial connection.",
           "device": "The serial device your Flexit CI66 Modbus adapter is connected to.",
-          "parity": "The parity of the serial connection.",
-          "stopbits": "The number of stop bits of the serial connection.",
           "unit": "The Modbus unit ID of your Flexit AC unit."
         }
       },

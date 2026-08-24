@@ -13,8 +13,6 @@ from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
     NumberSelectorMode,
-    SelectSelector,
-    SelectSelectorConfig,
     SerialPortSelector,
     TextSelector,
 )
@@ -22,15 +20,9 @@ from homeassistant.helpers.selector import (
 from . import create_modbus_connection
 from .const import (
     CONF_BAUDRATE,
-    CONF_BYTESIZE,
-    CONF_PARITY,
-    CONF_STOPBITS,
     CONF_UNIT,
     DEFAULT_BAUDRATE,
-    DEFAULT_BYTESIZE,
-    DEFAULT_PARITY,
     DEFAULT_PORT,
-    DEFAULT_STOPBITS,
     DOMAIN,
     TYPE_SERIAL,
     TYPE_TCP,
@@ -61,17 +53,6 @@ STEP_SERIAL_DATA_SCHEMA = vol.Schema(
         vol.Required(CONF_DEVICE): SerialPortSelector(),
         vol.Required(CONF_BAUDRATE, default=DEFAULT_BAUDRATE): vol.All(
             NumberSelector(NumberSelectorConfig(min=1, mode=NumberSelectorMode.BOX)),
-            vol.Coerce(int),
-        ),
-        vol.Required(CONF_BYTESIZE, default=DEFAULT_BYTESIZE): vol.All(
-            SelectSelector(SelectSelectorConfig(options=["7", "8"])),
-            vol.Coerce(int),
-        ),
-        vol.Required(CONF_PARITY, default=DEFAULT_PARITY): SelectSelector(
-            SelectSelectorConfig(options=["N", "E", "O"])
-        ),
-        vol.Required(CONF_STOPBITS, default=DEFAULT_STOPBITS): vol.All(
-            SelectSelector(SelectSelectorConfig(options=["1", "2"])),
             vol.Coerce(int),
         ),
         vol.Required(CONF_UNIT): UNIT_SELECTOR,
