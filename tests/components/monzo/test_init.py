@@ -45,8 +45,10 @@ async def test_config_entry_title_uses_authenticated_owner(
         },
         TEST_ACCOUNTS[1],
     ]
+    polling_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(polling_config_entry, title=DOMAIN)
 
-    await setup_integration(hass, polling_config_entry)
+    assert await hass.config_entries.async_setup(polling_config_entry.entry_id)
 
     assert polling_config_entry.title == "Jake Martin"
 
@@ -61,9 +63,12 @@ async def test_config_entry_title_falls_back_without_owner(
         {key: value for key, value in account.items() if key != "owners"}
         for account in TEST_ACCOUNTS
     ]
-    await setup_integration(hass, polling_config_entry)
+    polling_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(polling_config_entry, title=DOMAIN)
 
-    assert polling_config_entry.title == TITLE
+    assert await hass.config_entries.async_setup(polling_config_entry.entry_id)
+
+    assert polling_config_entry.title == DOMAIN
 
 
 async def test_config_entry_title_preserves_custom_name(
@@ -72,14 +77,9 @@ async def test_config_entry_title_preserves_custom_name(
     monzo: AsyncMock,
 ) -> None:
     """Test a user-defined config entry title is retained."""
-    polling_config_entry.add_to_hass(hass)
-    hass.config_entries.async_update_entry(
-        polling_config_entry, title="Household finances"
-    )
+    await setup_integration(hass, polling_config_entry)
 
-    assert await hass.config_entries.async_setup(polling_config_entry.entry_id)
-
-    assert polling_config_entry.title == "Household finances"
+    assert polling_config_entry.title == TITLE
 
 
 async def test_device_names(
