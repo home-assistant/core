@@ -1,9 +1,10 @@
 """Test the Sofar Inverter Modbus config flow."""
 
-from collections.abc import Callable
-from unittest.mock import AsyncMock, patch
+from collections.abc import AsyncIterator, Callable
+from contextlib import asynccontextmanager
+from unittest.mock import AsyncMock, _patch, patch
 
-from modbus_connection import ModbusTimeoutError
+from modbus_connection import ModbusTcpParams, ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 
@@ -20,6 +21,21 @@ from tests.common import MockConfigEntry
 _UNMODELED_SERIAL = "SA1XXES100XX"
 
 
+def _patch_temporary_unit(connection: MockModbusConnection) -> _patch:
+    """Stand in for async_get_temporary_unit, handing out a unit on connection."""
+
+    @asynccontextmanager
+    async def _get_temporary_unit(
+        hass: HomeAssistant, params: ModbusTcpParams, unit_id: int
+    ) -> AsyncIterator[MockModbusUnit]:
+        yield connection.for_unit(unit_id)
+
+    return patch(
+        "homeassistant.components.sofar.config_flow.async_get_temporary_unit",
+        side_effect=_get_temporary_unit,
+    )
+
+
 async def test_user_step_success(
     hass: HomeAssistant, mock_setup_entry: AsyncMock
 ) -> None:
@@ -27,10 +43,7 @@ async def test_user_step_success(
     mock_conn = MockModbusConnection()
     seed_pv_inverter(mock_conn.for_unit(1))
 
-    with patch(
-        "homeassistant.components.sofar.config_flow.ModbusConnection",
-        return_value=mock_conn,
-    ):
+    with _patch_temporary_unit(mock_conn):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -51,10 +64,7 @@ async def test_user_step_success_without_model(
     mock_conn = MockModbusConnection()
     seed_pv_inverter(mock_conn.for_unit(1), serial=_UNMODELED_SERIAL)
 
-    with patch(
-        "homeassistant.components.sofar.config_flow.ModbusConnection",
-        return_value=mock_conn,
-    ):
+    with _patch_temporary_unit(mock_conn):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -94,10 +104,7 @@ async def test_user_step_errors(
     mock_conn = MockModbusConnection()
     seed(mock_conn.for_unit(1))
 
-    with patch(
-        "homeassistant.components.sofar.config_flow.ModbusConnection",
-        return_value=mock_conn,
-    ):
+    with _patch_temporary_unit(mock_conn):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},
@@ -111,10 +118,7 @@ async def test_user_step_errors(
     working_conn = MockModbusConnection()
     seed_pv_inverter(working_conn.for_unit(1))
 
-    with patch(
-        "homeassistant.components.sofar.config_flow.ModbusConnection",
-        return_value=working_conn,
-    ):
+    with _patch_temporary_unit(working_conn):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], MOCK_USER_INPUT
         )
@@ -130,10 +134,7 @@ async def test_user_step_already_configured(hass: HomeAssistant) -> None:
     mock_conn = MockModbusConnection()
     seed_pv_inverter(mock_conn.for_unit(1))
 
-    with patch(
-        "homeassistant.components.sofar.config_flow.ModbusConnection",
-        return_value=mock_conn,
-    ):
+    with _patch_temporary_unit(mock_conn):
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
             context={"source": config_entries.SOURCE_USER},

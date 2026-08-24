@@ -4,10 +4,10 @@ import logging
 from typing import Any, override
 
 from modbus_connection import ModbusError, ModbusTcpParams
-from modbus_connection.tmodbus import ModbusConnection
 from sofar_modbus.modern.device import SofarInverter
 import voluptuous as vol
 
+from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.helpers.selector import (
@@ -52,15 +52,15 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial connection step."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            connection = ModbusConnection(
-                ModbusTcpParams(
-                    host=user_input[CONF_HOST],
-                    port=user_input[CONF_PORT],
-                )
+            params = ModbusTcpParams(
+                host=user_input[CONF_HOST], port=user_input[CONF_PORT]
             )
             try:
-                device = SofarInverter(connection.for_unit(user_input[CONF_UNIT_ID]))
-                await device.async_update()
+                async with async_get_temporary_unit(
+                    self.hass, params, user_input[CONF_UNIT_ID]
+                ) as unit:
+                    device = SofarInverter(unit)
+                    await device.async_update()
             except ModbusError:
                 errors["base"] = "cannot_connect"
             else:
@@ -74,8 +74,6 @@ class SofarConfigFlow(ConfigFlow, domain=DOMAIN):
                         title=device.model or DEFAULT_NAME,
                         data=user_input,
                     )
-            finally:
-                await connection.close()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
