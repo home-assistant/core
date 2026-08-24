@@ -5,6 +5,13 @@ from collections.abc import Mapping, Sequence
 from datetime import timedelta
 from typing import TYPE_CHECKING, Any, override
 
+from fronius_modbus import (
+    FroniusModbusInverter,
+    Mppt,
+    SunSpecError,
+    SunSpecMapShiftError,
+)
+from modbus_connection import ModbusError
 from pyfronius import BadStatusError, FroniusError
 
 from homeassistant.const import Platform
@@ -25,6 +32,7 @@ from .sensor import (
     INVERTER_ENTITY_DESCRIPTIONS,
     LOGGER_ENTITY_DESCRIPTIONS,
     METER_ENTITY_DESCRIPTIONS,
+    MODBUS_INVERTER_ENTITY_DESCRIPTIONS,
     OHMPILOT_ENTITY_DESCRIPTIONS,
     POWER_FLOW_ENTITY_DESCRIPTIONS,
     STORAGE_ENTITY_DESCRIPTIONS,
@@ -43,6 +51,7 @@ class FroniusCoordinatorBase(
     default_interval: timedelta
     error_interval: timedelta
     valid_descriptions: Mapping[Platform, Sequence[FroniusEntityDescription]]
+    update_exceptions: tuple[type[Exception], ...] = (FroniusError,)
 
     MAX_FAILED_UPDATES = 3
 
@@ -64,30 +73,34 @@ class FroniusCoordinatorBase(
     async def _async_update_data(self) -> dict[SolarNetId, Any]:
         """Fetch the latest data from the source."""
         async with self.solar_net.coordinator_lock:
-            try:
-                data = await self._update_method()
-            except FroniusError as err:
-                self._failed_update_count += 1
-                if self._failed_update_count == self.MAX_FAILED_UPDATES:
-                    self.update_interval = self.error_interval
-                raise UpdateFailed(
-                    translation_domain=DOMAIN,
-                    translation_key="update_failed",
-                    translation_placeholders={"fronius_error": str(err)},
-                ) from err
+            return await self._do_update()
 
-            if self._failed_update_count != 0:
-                self._failed_update_count = 0
-                self.update_interval = self.default_interval
+    async def _do_update(self) -> dict[SolarNetId, Any]:
+        """Fetch the latest data and keep track of seen conditions."""
+        try:
+            data = await self._update_method()
+        except self.update_exceptions as err:
+            self._failed_update_count += 1
+            if self._failed_update_count == self.MAX_FAILED_UPDATES:
+                self.update_interval = self.error_interval
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed",
+                translation_placeholders={"fronius_error": str(err)},
+            ) from err
 
-            for solar_net_id in data:
-                if solar_net_id not in self.unregistered_descriptors:
-                    # id seen for the first time
-                    self.unregistered_descriptors[solar_net_id] = {
-                        platform: list(descriptions)
-                        for platform, descriptions in self.valid_descriptions.items()
-                    }
-            return data
+        if self._failed_update_count != 0:
+            self._failed_update_count = 0
+            self.update_interval = self.default_interval
+
+        for solar_net_id in data:
+            if solar_net_id not in self.unregistered_descriptors:
+                # id seen for the first time
+                self.unregistered_descriptors[solar_net_id] = {
+                    platform: list(descriptions)
+                    for platform, descriptions in self.valid_descriptions.items()
+                }
+        return data
 
     @callback
     def add_entities_for_seen_keys[_FroniusEntityT: FroniusEntity](
@@ -170,6 +183,71 @@ class FroniusInverterUpdateCoordinator(FroniusCoordinatorBase):
         # wrap a single devices data in a dict with solar_net_id key for
         # FroniusCoordinatorBase _async_update_data and add_entities_for_seen_keys
         return {self.inverter_info.solar_net_id: data}
+
+
+class FroniusModbusInverterUpdateCoordinator(FroniusCoordinatorBase):
+    """Query SunSpec data from an inverters Modbus interface."""
+
+    default_interval = timedelta(minutes=1)
+    error_interval = timedelta(minutes=10)
+    valid_descriptions = {Platform.SENSOR: MODBUS_INVERTER_ENTITY_DESCRIPTIONS}
+    update_exceptions = (ModbusError, SunSpecError)
+
+    def __init__(
+        self,
+        *args: Any,
+        inverter_info: FroniusDeviceInfo,
+        modbus_inverter: FroniusModbusInverter,
+        **kwargs: Any,
+    ) -> None:
+        """Set up a Fronius Modbus inverter device scope coordinator."""
+        super().__init__(*args, **kwargs)
+        self.inverter_info = inverter_info
+        self.modbus_inverter = modbus_inverter
+
+    @override
+    async def _async_update_data(self) -> dict[SolarNetId, Any]:
+        """Fetch the latest data from the source.
+
+        The coordinator_lock rate-limits requests to the SolarAPI HTTP endpoint.
+        Modbus requests use a separate transport which serializes its requests
+        internally, so the lock is not needed here.
+        """
+        return await self._do_update()
+
+    @override
+    async def _update_method(self) -> dict[SolarNetId, Any]:
+        """Return data per solar net id from the Modbus interface."""
+        mppt = await self._update_mppt()
+        data: dict[str, Any] = {}
+        for index, module in enumerate(mppt.modules, start=1):
+            data[f"mppt_{index}_current_dc"] = {"value": module.current}
+            data[f"mppt_{index}_voltage_dc"] = {"value": module.voltage}
+            data[f"mppt_{index}_power_dc"] = {"value": module.power}
+            data[f"mppt_{index}_energy_dc"] = {"value": module.energy}
+        data["energy_total_pv"] = {"value": mppt.pv_energy_total}
+        data["storage_energy_charged_total"] = {
+            "value": mppt.storage_charge_energy_total
+        }
+        data["storage_energy_discharged_total"] = {
+            "value": mppt.storage_discharge_energy_total
+        }
+        return {self.inverter_info.solar_net_id: data}
+
+    async def _update_mppt(self) -> Mppt:
+        """Refresh the MPPT model, re-discovering once on a register map shift."""
+        if (mppt := self.modbus_inverter.mppt) is None:
+            raise SunSpecError("Multiple MPPT model not available")
+        try:
+            await mppt.async_update()
+        except SunSpecMapShiftError:
+            # The register map shifts when the data type setting is changed on
+            # the device. Re-discover once at the new addresses and retry.
+            await self.modbus_inverter.discover()
+            if (mppt := self.modbus_inverter.mppt) is None:
+                raise
+            await mppt.async_update()
+        return mppt
 
 
 class FroniusLoggerUpdateCoordinator(FroniusCoordinatorBase):
