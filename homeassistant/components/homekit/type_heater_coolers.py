@@ -29,7 +29,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES
+from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
 from homeassistant.core import State, callback
 from homeassistant.util.enum import try_parse_enum
 
@@ -138,7 +138,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         state = self.hass.states.get(self.entity_id)
         assert state
         attributes = state.attributes
-        features = attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         # The thresholds double as the setpoints, so only expose them when the
         # entity accepts a target temperature; a fan/dry-only entity otherwise
