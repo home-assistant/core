@@ -8,7 +8,14 @@ ATTR_CURRENT_POSITION = "current_position"
 ATTR_CURRENT_TILT_POSITION = "current_tilt_position"
 ATTR_IS_CLOSED = "is_closed"
 ATTR_POSITION = "position"
+ATTR_SPEED = "speed"
 ATTR_TILT_POSITION = "tilt_position"
+
+
+class CoverEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for cover entities."""
+
+    SUPPORTED_SPEEDS = "supported_speeds"
 
 
 class CoverEntityStateAttribute(StrEnum):
@@ -34,6 +41,7 @@ class CoverEntityFeature(IntFlag):
     CLOSE_TILT = 32
     STOP_TILT = 64
     SET_TILT_POSITION = 128
+    SPEED = 256
 
 
 class CoverState(StrEnum):

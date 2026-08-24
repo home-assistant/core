@@ -206,7 +206,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> b
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: LookinConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: LookinConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove lookin config entry from a device."""
     data = entry.runtime_data

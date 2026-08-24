@@ -247,12 +247,14 @@ def test_entities_areas_area_inherited_from_parent(hass: HomeAssistant) -> None:
                 area_id="mock-area-id",
             )
         },
-    )
-    # The child has no area of its own and inherits the parent's area.
-    device_registry.child_devices["mock-child-id"] = ChildDeviceEntry(
-        config_entry_id="mock-config-entry",
-        id="mock-child-id",
-        parent_device_id="mock-parent-id",
+        # The child has no area of its own and inherits the parent's area.
+        {
+            "mock-child-id": ChildDeviceEntry(
+                config_entry_id="mock-config-entry",
+                id="mock-child-id",
+                parent_device_id="mock-parent-id",
+            )
+        },
     )
 
     policy = {"area_ids": {"mock-area-id": {"read": True, "control": True}}}
