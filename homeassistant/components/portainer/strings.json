@@ -25,11 +25,13 @@
       "reconfigure": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]",
+          "github_token": "[%key:component::portainer::config::step::user::data::github_token%]",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "api_token": "[%key:component::portainer::config::step::user::data_description::api_token%]",
+          "github_token": "[%key:component::portainer::config::step::user::data_description::github_token%]",
           "url": "[%key:component::portainer::config::step::user::data_description::url%]",
           "verify_ssl": "[%key:component::portainer::config::step::user::data_description::verify_ssl%]"
         },
@@ -39,11 +41,13 @@
       "user": {
         "data": {
           "api_token": "[%key:common::config_flow::data::api_token%]",
+          "github_token": "GitHub access token (optional)",
           "url": "[%key:common::config_flow::data::url%]",
           "verify_ssl": "[%key:common::config_flow::data::verify_ssl%]"
         },
         "data_description": {
           "api_token": "The API access token for authenticating with Portainer",
+          "github_token": "Used only to fetch release notes for container update entities from GitHub. Without it, release notes still work but are limited to 60 requests per hour; with a token, the limit is 5000 per hour. Leave blank to skip",
           "url": "The URL, including the port, of your Portainer instance",
           "verify_ssl": "Whether to verify SSL certificates. Disable only if you have a self-signed certificate"
         },
@@ -210,7 +214,15 @@
     },
     "update": {
       "container_image_update": {
-        "name": "Image update available"
+        "name": "Image update available",
+        "state_attributes": {
+          "image_created": {
+            "name": "Image created"
+          },
+          "image_size": {
+            "name": "Image size"
+          }
+        }
       }
     }
   },

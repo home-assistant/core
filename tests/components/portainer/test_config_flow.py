@@ -10,7 +10,7 @@ from pyportainer.exceptions import (
 from pyportainer.models.portainer import PortainerSystemStatus
 import pytest
 
-from homeassistant.components.portainer.const import DOMAIN
+from homeassistant.components.portainer.const import CONF_GITHUB_TOKEN, DOMAIN
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.const import CONF_API_TOKEN, CONF_URL, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -52,6 +52,26 @@ async def test_form(
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "https://127.0.0.1:9000/"
     assert result["data"] == MOCK_TEST_CONFIG
+
+
+async def test_form_with_github_token(
+    hass: HomeAssistant,
+    mock_portainer_client: MagicMock,
+) -> None:
+    """Test we can set up with an optional GitHub token."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**MOCK_USER_SETUP, CONF_GITHUB_TOKEN: "ghp_secret"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {**MOCK_TEST_CONFIG, CONF_GITHUB_TOKEN: "ghp_secret"}
 
 
 @pytest.mark.parametrize(
@@ -253,6 +273,29 @@ async def test_full_flow_reconfigure(
     assert mock_config_entry.data[CONF_API_TOKEN] == "new_api_key"
     assert mock_config_entry.data[CONF_URL] == "https://new_domain:9000/"
     assert mock_config_entry.data[CONF_VERIFY_SSL] is True
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_full_flow_reconfigure_with_github_token(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_setup_entry: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfigure can add an optional GitHub token."""
+    mock_config_entry.add_to_hass(hass)
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={**USER_INPUT_RECONFIGURE, CONF_GITHUB_TOKEN: "ghp_secret"},
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_config_entry.data[CONF_GITHUB_TOKEN] == "ghp_secret"
     assert len(mock_setup_entry.mock_calls) == 1
 
 
