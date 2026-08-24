@@ -45,7 +45,7 @@ The following platforms have extra guidelines:
 ## Errors
 
 - During setup, raise `ConfigEntryNotReady` for transient failures (offline device, timeout) and `ConfigEntryError` for other non-retryable ones. (Bronze: `test-before-setup`)
-- Raise `ConfigEntryAuthFailed` — during setup, a coordinator update, or an action — whenever reauthenticating would actually restore access (invalid credentials, a revoked or insufficient scope); it starts a reauthentication flow. An account limitation reauth can't fix (an expired subscription, quota exceeded) is a repair issue instead, not this — see `homeassistant/components/onedrive/coordinator.py`.
+- During setup or a coordinator update, raise `ConfigEntryAuthFailed` whenever reauthenticating would actually restore access (invalid credentials, a revoked or insufficient scope); it starts a reauthentication flow. An account limitation reauth can't fix (an expired subscription, quota exceeded) is a repair issue instead, not this — see `homeassistant/components/onedrive/coordinator.py`. In an action, `ConfigEntryAuthFailed` reaching the service-call dispatcher does not start reauth on its own — call `entry.async_start_reauth_if_available(hass)` (or `async_start_reauth()`) explicitly, then raise a translated `HomeAssistantError` — see `homeassistant/components/blink/switch.py`.
 - In actions, raise `ServiceValidationError` for user errors and `HomeAssistantError` for device errors. (Silver: `action-exceptions`)
 - Don't put raw or stringified library exceptions into user-facing translated messages; use exception translation keys and chain the original exception (`raise ... from err`) instead of logging it separately. (Gold: `exception-translations`)
 
