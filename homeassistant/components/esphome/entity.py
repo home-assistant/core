@@ -89,12 +89,12 @@ def _move_cached_states(
     carried: dict[DeviceEntityKey, EntityState] = {}
     for old_slot, new_slot in moves:
         own_state = states.pop(old_slot, None)
-        if own_state is not None and old_slot[1] == new_slot[1]:
-            carried[new_slot] = own_state
+        (_, old_key), (new_device_id, new_key) = old_slot, new_slot
+        if own_state is not None and old_key == new_key:
+            carried[new_slot] = own_state.with_device_id(new_device_id)
     for _, new_slot in moves:
         states.pop(new_slot, None)
-    for new_slot, own_state in carried.items():
-        states[new_slot] = own_state.with_device_id(new_slot[0])
+    states.update(carried)
 
 
 @callback
