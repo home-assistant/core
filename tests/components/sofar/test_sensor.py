@@ -13,13 +13,14 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorStateClass
 from homeassistant.components.sofar.const import DEFAULT_SCAN_INTERVAL
 from homeassistant.components.sofar.sensor import (
-    SofarCommunicationHealthLastErrorSensor,
-    SofarCommunicationHealthLastErrorTimeSensor,
-    SofarCommunicationHealthSensor,
-    SofarCommunicationHealthSuccessRateSensor,
+    _HEALTH_DESCRIPTION,
+    _LAST_ERROR_DESCRIPTION,
+    _LAST_ERROR_TIME_DESCRIPTION,
+    _SUCCESS_RATE_DESCRIPTION,
     SofarSensor,
     SofarSensorDescription,
     SofarTotalSensor,
+    _SofarCommunicationHealthEntity,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -77,8 +78,12 @@ async def test_communication_health_sensor(
 
     # Disabled by default: not in hass.states, so instantiate directly.
     readings = init_integration.runtime_data.readings
-    last_error_sensor = SofarCommunicationHealthLastErrorSensor(readings)
-    last_error_time_sensor = SofarCommunicationHealthLastErrorTimeSensor(readings)
+    last_error_sensor = _SofarCommunicationHealthEntity(
+        readings, _LAST_ERROR_DESCRIPTION
+    )
+    last_error_time_sensor = _SofarCommunicationHealthEntity(
+        readings, _LAST_ERROR_TIME_DESCRIPTION
+    )
 
     assert (state := hass.states.get(health_id)) is not None
     assert state.state == "good"
@@ -112,7 +117,7 @@ async def test_communication_health_sensor_degraded_bucket(
     readings._poll_outcomes.clear()
     readings._poll_outcomes.extend([True] * 9 + [False])
 
-    health_sensor = SofarCommunicationHealthSensor(readings)
+    health_sensor = _SofarCommunicationHealthEntity(readings, _HEALTH_DESCRIPTION)
     assert readings.success_rate == 90.0
     assert health_sensor.native_value == "degraded"
 
@@ -126,10 +131,16 @@ async def test_communication_health_entities_stay_available_on_dead_link(
 ) -> None:
     """Test communication_health stays available when the link is down."""
     readings = init_integration.runtime_data.readings
-    health_sensor = SofarCommunicationHealthSensor(readings)
-    success_rate_sensor = SofarCommunicationHealthSuccessRateSensor(readings)
-    last_error_sensor = SofarCommunicationHealthLastErrorSensor(readings)
-    last_error_time_sensor = SofarCommunicationHealthLastErrorTimeSensor(readings)
+    health_sensor = _SofarCommunicationHealthEntity(readings, _HEALTH_DESCRIPTION)
+    success_rate_sensor = _SofarCommunicationHealthEntity(
+        readings, _SUCCESS_RATE_DESCRIPTION
+    )
+    last_error_sensor = _SofarCommunicationHealthEntity(
+        readings, _LAST_ERROR_DESCRIPTION
+    )
+    last_error_time_sensor = _SofarCommunicationHealthEntity(
+        readings, _LAST_ERROR_TIME_DESCRIPTION
+    )
 
     readings.last_update_success = False
     assert health_sensor.available

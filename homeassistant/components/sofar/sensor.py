@@ -1,5 +1,6 @@
 """One entity per served row; each is available independently."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime
 from enum import IntEnum
@@ -18,7 +19,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-from .entity import SofarEntity, build_device_info
+from .entity import SofarEntity, SofarEntityDescription
 
 
 def _enum_label(member_name: str) -> str:
@@ -51,123 +52,104 @@ async def async_setup_entry(
         if description.component in served
     ]
     readings = runtime_data.readings
-    entities.append(SofarCommunicationHealthSensor(readings))
-    entities.append(SofarCommunicationHealthSuccessRateSensor(readings))
-    entities.append(SofarCommunicationHealthLastErrorSensor(readings))
-    entities.append(SofarCommunicationHealthLastErrorTimeSensor(readings))
+    entities.extend(
+        _SofarCommunicationHealthEntity(readings, description)
+        for description in _COMMUNICATION_HEALTH_DESCRIPTIONS
+    )
     async_add_entities(entities)
+
+
+def _health_bucket(coordinator: SofarDataUpdateCoordinator) -> str:
+    """Bucket success_rate into the communication_health ENUM options."""
+    rate = coordinator.success_rate
+    if rate is None:
+        return "unknown"
+    if rate == 100:
+        return "good"
+    if rate >= 80:
+        return "degraded"
+    return "poor"
+
+
+@dataclass(frozen=True, kw_only=True)
+class _CommunicationHealthDescription(SensorEntityDescription):
+    """Computed from the coordinator, not tied to a device component."""
+
+    entity_category: EntityCategory | None = EntityCategory.DIAGNOSTIC
+    value_fn: Callable[[SofarDataUpdateCoordinator], str | float | datetime | None]
+
+
+_HEALTH_DESCRIPTION = _CommunicationHealthDescription(
+    key="communication_health",
+    translation_key="communication_health",
+    device_class=SensorDeviceClass.ENUM,
+    options=["good", "degraded", "poor", "unknown"],
+    value_fn=_health_bucket,
+)
+_SUCCESS_RATE_DESCRIPTION = _CommunicationHealthDescription(
+    key="communication_health_success_rate",
+    translation_key="communication_health_success_rate",
+    native_unit_of_measurement=PERCENTAGE,
+    state_class=SensorStateClass.MEASUREMENT,
+    value_fn=lambda coordinator: coordinator.success_rate,
+)
+_LAST_ERROR_DESCRIPTION = _CommunicationHealthDescription(
+    key="communication_health_last_error",
+    translation_key="communication_health_last_error",
+    entity_registry_enabled_default=False,
+    value_fn=lambda coordinator: coordinator.last_error,
+)
+_LAST_ERROR_TIME_DESCRIPTION = _CommunicationHealthDescription(
+    key="communication_health_last_error_time",
+    translation_key="communication_health_last_error_time",
+    device_class=SensorDeviceClass.TIMESTAMP,
+    entity_registry_enabled_default=False,
+    value_fn=lambda coordinator: coordinator.last_error_time,
+)
+
+_COMMUNICATION_HEALTH_DESCRIPTIONS: tuple[_CommunicationHealthDescription, ...] = (
+    _HEALTH_DESCRIPTION,
+    _SUCCESS_RATE_DESCRIPTION,
+    _LAST_ERROR_DESCRIPTION,
+    _LAST_ERROR_TIME_DESCRIPTION,
+)
 
 
 class _SofarCommunicationHealthEntity(
     CoordinatorEntity[SofarDataUpdateCoordinator], SensorEntity
 ):
-    """Base for communication_health entities; available even on a dead link."""
+    """Sensor computed from the coordinator; available even on a dead link."""
 
     _attr_has_entity_name = True
-    _attr_entity_category = EntityCategory.DIAGNOSTIC
+    entity_description: _CommunicationHealthDescription
 
     def __init__(
-        self, coordinator: SofarDataUpdateCoordinator, unique_id_suffix: str
+        self,
+        coordinator: SofarDataUpdateCoordinator,
+        description: _CommunicationHealthDescription,
     ) -> None:
-        """Initialize the entity."""
+        """Initialize the sensor."""
         super().__init__(coordinator)
+        self.entity_description = description
         serial = coordinator.device.serial_number
-        self._attr_unique_id = f"{serial}_{unique_id_suffix}"
-        self._attr_device_info = build_device_info(coordinator.device)
+        self._attr_unique_id = f"{serial}_{description.key}"
+        self._attr_device_info = coordinator.device_info
 
     @property
     @override
     def available(self) -> bool:
         return True
 
-
-class SofarCommunicationHealthSensor(_SofarCommunicationHealthEntity):
-    """Link-quality summary; one bad cycle in 20 dents this, not any entity."""
-
-    _attr_translation_key = "communication_health"
-    _attr_device_class = SensorDeviceClass.ENUM
-    _attr_options = ["good", "degraded", "poor", "unknown"]
-
-    def __init__(self, coordinator: SofarDataUpdateCoordinator) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, "communication_health")
-
     @property
     @override
-    def native_value(self) -> str:
-        rate = self.coordinator.success_rate
-        if rate is None:
-            return "unknown"
-        if rate == 100:
-            return "good"
-        if rate >= 80:
-            return "degraded"
-        return "poor"
-
-
-class SofarCommunicationHealthSuccessRateSensor(_SofarCommunicationHealthEntity):
-    """Same rolling window as the health sensor, as a number not a bucket."""
-
-    _attr_translation_key = "communication_health_success_rate"
-    _attr_native_unit_of_measurement = PERCENTAGE
-    _attr_state_class = SensorStateClass.MEASUREMENT
-
-    def __init__(self, coordinator: SofarDataUpdateCoordinator) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, "communication_health_success_rate")
-
-    @property
-    @override
-    def native_value(self) -> float | None:
-        return self.coordinator.success_rate
-
-
-class SofarCommunicationHealthLastErrorSensor(_SofarCommunicationHealthEntity):
-    """Type + message of the last poll error; not cleared by a later success."""
-
-    _attr_translation_key = "communication_health_last_error"
-    _attr_entity_registry_enabled_default = False
-
-    def __init__(self, coordinator: SofarDataUpdateCoordinator) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, "communication_health_last_error")
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        return self.coordinator.last_error
-
-
-class SofarCommunicationHealthLastErrorTimeSensor(_SofarCommunicationHealthEntity):
-    """When the last poll error (see the sibling sensor) happened."""
-
-    _attr_translation_key = "communication_health_last_error_time"
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
-    _attr_entity_registry_enabled_default = False
-
-    def __init__(self, coordinator: SofarDataUpdateCoordinator) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator, "communication_health_last_error_time")
-
-    @property
-    @override
-    def native_value(self) -> datetime | None:
-        return self.coordinator.last_error_time
+    def native_value(self) -> str | float | datetime | None:
+        return self.entity_description.value_fn(self.coordinator)
 
 
 class SofarSensor(SofarEntity, SensorEntity):
     """A read-only value off one of the device's components."""
 
     entity_description: SofarSensorDescription
-
-    def __init__(
-        self,
-        runtime_data: SofarRuntimeData,
-        description: SofarSensorDescription,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(runtime_data, description.key, description.component)
-        self.entity_description = description
 
     @property
     @override
@@ -192,8 +174,7 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
         description: SofarSensorDescription,
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(runtime_data, description.key, description.component)
-        self.entity_description = description
+        super().__init__(runtime_data, description)
         self._total_increasing_high_water: float | None = None
 
     @property
@@ -245,12 +226,8 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
 
 
 @dataclass(frozen=True, kw_only=True)
-class SofarSensorDescription(SensorEntityDescription):
-    """A SensorEntityDescription plus which Component the value comes from."""
-
-    # Must subclass (not duck-type): SensorEntity reads fields like
-    # suggested_unit_of_measurement straight off entity_description.
-    component: str  # attribute name on SofarInverter, e.g. 'grid', 'pv_1_2'
+class SofarSensorDescription(SensorEntityDescription, SofarEntityDescription):
+    """A SensorEntityDescription bound to which Component the value comes from."""
 
 
 SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = ()

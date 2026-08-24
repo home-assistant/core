@@ -1,46 +1,39 @@
 """Shared entity base — device_info and the coordinator plumbing."""
 
+from dataclasses import dataclass
 from typing import override
 
-from sofar_modbus.modern.device import SofarInverter
-
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.entity import EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import ATTR_MANUFACTURER, DOMAIN
 from .coordinator import SofarDataUpdateCoordinator, SofarRuntimeData
 
 
-def build_device_info(device: SofarInverter) -> DeviceInfo:
-    """The one physical inverter every entity on this config entry belongs to."""
-    serial = device.serial_number
-    assert serial is not None
-    return DeviceInfo(
-        identifiers={(DOMAIN, serial)},
-        manufacturer=ATTR_MANUFACTURER,
-        model=device.model or None,
-        serial_number=serial,
-    )
+@dataclass(frozen=True, kw_only=True)
+class SofarEntityDescription(EntityDescription):
+    """Which Component on the device an entity reads or acts through."""
+
+    component: str  # attribute name on SofarInverter, e.g. 'grid', 'pv_1_2'
 
 
 class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
     """Base for every Sofar entity — one physical inverter per config entry."""
 
     _attr_has_entity_name = True
+    entity_description: SofarEntityDescription
 
     def __init__(
         self,
         runtime_data: SofarRuntimeData,
-        unique_id_suffix: str,
-        component: str,
+        entity_description: SofarEntityDescription,
     ) -> None:
         """Initialize the entity, bound to whichever coordinator serves it."""
-        super().__init__(runtime_data.coordinator_for(component))
+        super().__init__(runtime_data.coordinator_for(entity_description.component))
+        self.entity_description = entity_description
         serial = self.coordinator.device.serial_number
         assert serial is not None
-        self._component = component
-        self._attr_unique_id = f"{serial}_{unique_id_suffix}"
-        self._attr_device_info = build_device_info(self.coordinator.device)
+        self._attr_unique_id = f"{serial}_{entity_description.key}"
+        self._attr_device_info = self.coordinator.device_info
 
     @property
     @override
@@ -49,4 +42,4 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
         if not super().available:
             return False
         report = self.coordinator.data
-        return report is None or self._component not in report.failed
+        return report is None or self.entity_description.component not in report.failed

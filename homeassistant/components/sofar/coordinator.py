@@ -8,13 +8,17 @@ import logging
 from typing import override
 
 from modbus_connection import ModbusConnectionError, ModbusError
+from propcache.api import cached_property
 from sofar_modbus.model import UpdateReport
 from sofar_modbus.modern.device import SofarInverter
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
+
+from .const import ATTR_MANUFACTURER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -49,6 +53,18 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         self._poll_outcomes: deque[bool] = deque(maxlen=_HEALTH_WINDOW)
         self.last_error: str | None = None
         self.last_error_time: datetime | None = None
+
+    @cached_property
+    def device_info(self) -> DeviceInfo:
+        """The one physical inverter every entity on this config entry belongs to."""
+        serial = self.device.serial_number
+        assert serial is not None
+        return DeviceInfo(
+            identifiers={(DOMAIN, serial)},
+            manufacturer=ATTR_MANUFACTURER,
+            model=self.device.model or None,
+            serial_number=serial,
+        )
 
     @property
     def success_rate(self) -> float | None:
