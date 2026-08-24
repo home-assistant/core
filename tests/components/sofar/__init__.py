@@ -1,7 +1,5 @@
 """Tests for the Sofar Inverter Modbus integration."""
 
-from __future__ import annotations
-
 from modbus_connection.mock import MockModbusUnit
 
 from homeassistant.components.sofar.const import CONF_UNIT_ID
