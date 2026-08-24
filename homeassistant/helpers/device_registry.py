@@ -3689,6 +3689,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
                 "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
                 "device"
             )
+        if device_id not in self._devices and device_id in self._child_devices:
+            raise HomeAssistantError(
+                f"Device {device_id} is a child device; use async_update_child_device"
+            )
         if (
             underlying_ids := self._async_device_ids_for_composite_device_id(device_id)
         ) is not None:
@@ -3811,6 +3815,10 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             inconsistent disabled_by is deprecated and ignored; this will raise in HA
             Core 2027.8.
         """
+        if device_id not in self._child_devices and device_id in self._devices:
+            raise HomeAssistantError(
+                f"Device {device_id} is a main device; use async_update_device"
+            )
         updated = self._async_update_child_device(
             device_id,
             area_id=area_id,
