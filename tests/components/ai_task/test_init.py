@@ -15,7 +15,7 @@ from homeassistant.components.ai_task.const import (
     DATA_PREFERENCES,
     DOMAIN,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Context, HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import selector
 
@@ -87,6 +87,7 @@ async def test_generate_data_service(
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
     """Test the generate data service."""
+    context = Context()
     preferences = hass.data[DATA_PREFERENCES]
     preferences.async_set_preferences(**set_preferences)
 
@@ -108,9 +109,11 @@ async def test_generate_data_service(
             | msg_extra,
             blocking=True,
             return_response=True,
+            context=context,
         )
 
     assert result["data"] == "Mock result"
+    assert hass.states.get(TEST_ENTITY_ID).context is context
 
     assert len(mock_ai_task_entity.mock_generate_data_tasks) == 1
     task = mock_ai_task_entity.mock_generate_data_tasks[0]
@@ -317,6 +320,7 @@ async def test_generate_image_service(
     mock_ai_task_entity: MockAITaskEntity,
 ) -> None:
     """Test the generate image service."""
+    context = Context()
     preferences = hass.data[DATA_PREFERENCES]
     preferences.async_set_preferences(**set_preferences)
 
@@ -335,9 +339,11 @@ async def test_generate_image_service(
             | msg_extra,
             blocking=True,
             return_response=True,
+            context=context,
         )
 
     mock_upload_media.assert_called_once()
+    assert hass.states.get(TEST_ENTITY_ID).context is context
     assert "image_data" not in result
     assert (
         result["media_source_id"]

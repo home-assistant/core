@@ -456,11 +456,6 @@ filterwarnings = [
   # Modify app state for testing
   "ignore:Changing state of started or joined application is deprecated:DeprecationWarning:tests.components.http.test_ban",
 
-  # -- Tests
-  # Ignore custom pytest marks
-  "ignore:Unknown pytest.mark.disable_autouse_fixture:pytest.PytestUnknownMarkWarning:tests.components.met",
-  "ignore:Unknown pytest.mark.dataset:pytest.PytestUnknownMarkWarning:tests.components.screenlogic",
-
   # -- DeprecationWarning already fixed in our codebase
   # https://github.com/kurtmckee/feedparser/ - 6.0.12
   "ignore:.*a temporary mapping .* from `updated_parsed` to `published_parsed` if `updated_parsed` doesn't exist:DeprecationWarning:feedparser.util",
