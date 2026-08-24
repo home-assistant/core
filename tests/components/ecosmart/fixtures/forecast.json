@@ -1,0 +1,625 @@
+{
+  "poc": "BOB1101",
+  "horizonHours": 48,
+  "coveredHours": 34.0,
+  "from": "2026-08-24T12:00:00Z",
+  "to": "2026-08-26T12:00:00Z",
+  "publishedAt": "2026-08-24T12:03:00Z",
+  "unavailableReason": null,
+  "count": 68,
+  "gstRatePercent": 15.0,
+  "points": [
+    {
+      "startsAt": "2026-08-24T12:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 1,
+      "schedule": "S",
+      "priceDollarsPerMwh": 66.4,
+      "priceCentsPerKwh": 6.64,
+      "priceCentsPerKwhInclGst": 7.636
+    },
+    {
+      "startsAt": "2026-08-24T12:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 2,
+      "schedule": "S",
+      "priceDollarsPerMwh": 34.3,
+      "priceCentsPerKwh": 3.43,
+      "priceCentsPerKwhInclGst": 3.9445
+    },
+    {
+      "startsAt": "2026-08-24T13:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 3,
+      "schedule": "S",
+      "priceDollarsPerMwh": 33.34,
+      "priceCentsPerKwh": 3.334,
+      "priceCentsPerKwhInclGst": 3.8341
+    },
+    {
+      "startsAt": "2026-08-24T13:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 4,
+      "schedule": "S",
+      "priceDollarsPerMwh": 37.38,
+      "priceCentsPerKwh": 3.738,
+      "priceCentsPerKwhInclGst": 4.2987
+    },
+    {
+      "startsAt": "2026-08-24T14:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 5,
+      "schedule": "S",
+      "priceDollarsPerMwh": 33.38,
+      "priceCentsPerKwh": 3.338,
+      "priceCentsPerKwhInclGst": 3.8387
+    },
+    {
+      "startsAt": "2026-08-24T14:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 6,
+      "schedule": "S",
+      "priceDollarsPerMwh": 33.88,
+      "priceCentsPerKwh": 3.388,
+      "priceCentsPerKwhInclGst": 3.8962
+    },
+    {
+      "startsAt": "2026-08-24T15:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 7,
+      "schedule": "S",
+      "priceDollarsPerMwh": 33.25,
+      "priceCentsPerKwh": 3.325,
+      "priceCentsPerKwhInclGst": 3.8238
+    },
+    {
+      "startsAt": "2026-08-24T15:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 8,
+      "schedule": "S",
+      "priceDollarsPerMwh": 10.96,
+      "priceCentsPerKwh": 1.096,
+      "priceCentsPerKwhInclGst": 1.2604
+    },
+    {
+      "startsAt": "2026-08-24T16:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 9,
+      "schedule": "L",
+      "priceDollarsPerMwh": 1.99,
+      "priceCentsPerKwh": 0.199,
+      "priceCentsPerKwhInclGst": 0.2289
+    },
+    {
+      "startsAt": "2026-08-24T16:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 10,
+      "schedule": "L",
+      "priceDollarsPerMwh": 35.36,
+      "priceCentsPerKwh": 3.536,
+      "priceCentsPerKwhInclGst": 4.0664
+    },
+    {
+      "startsAt": "2026-08-24T17:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 11,
+      "schedule": "L",
+      "priceDollarsPerMwh": 37.92,
+      "priceCentsPerKwh": 3.792,
+      "priceCentsPerKwhInclGst": 4.3608
+    },
+    {
+      "startsAt": "2026-08-24T17:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 12,
+      "schedule": "L",
+      "priceDollarsPerMwh": 37.37,
+      "priceCentsPerKwh": 3.737,
+      "priceCentsPerKwhInclGst": 4.2976
+    },
+    {
+      "startsAt": "2026-08-24T18:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 13,
+      "schedule": "L",
+      "priceDollarsPerMwh": 60.78,
+      "priceCentsPerKwh": 6.078,
+      "priceCentsPerKwhInclGst": 6.9897
+    },
+    {
+      "startsAt": "2026-08-24T18:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 14,
+      "schedule": "L",
+      "priceDollarsPerMwh": 68.21,
+      "priceCentsPerKwh": 6.821,
+      "priceCentsPerKwhInclGst": 7.8442
+    },
+    {
+      "startsAt": "2026-08-24T19:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 15,
+      "schedule": "L",
+      "priceDollarsPerMwh": 74.98,
+      "priceCentsPerKwh": 7.498,
+      "priceCentsPerKwhInclGst": 8.6227
+    },
+    {
+      "startsAt": "2026-08-24T19:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 16,
+      "schedule": "L",
+      "priceDollarsPerMwh": 86.87,
+      "priceCentsPerKwh": 8.687,
+      "priceCentsPerKwhInclGst": 9.9901
+    },
+    {
+      "startsAt": "2026-08-24T20:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 17,
+      "schedule": "L",
+      "priceDollarsPerMwh": 74.93,
+      "priceCentsPerKwh": 7.493,
+      "priceCentsPerKwhInclGst": 8.617
+    },
+    {
+      "startsAt": "2026-08-24T20:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 18,
+      "schedule": "L",
+      "priceDollarsPerMwh": 20.09,
+      "priceCentsPerKwh": 2.009,
+      "priceCentsPerKwhInclGst": 2.3104
+    },
+    {
+      "startsAt": "2026-08-24T21:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 19,
+      "schedule": "L",
+      "priceDollarsPerMwh": 17.57,
+      "priceCentsPerKwh": 1.757,
+      "priceCentsPerKwhInclGst": 2.0206
+    },
+    {
+      "startsAt": "2026-08-24T21:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 20,
+      "schedule": "L",
+      "priceDollarsPerMwh": 11.3,
+      "priceCentsPerKwh": 1.13,
+      "priceCentsPerKwhInclGst": 1.2995
+    },
+    {
+      "startsAt": "2026-08-24T22:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 21,
+      "schedule": "L",
+      "priceDollarsPerMwh": 12.46,
+      "priceCentsPerKwh": 1.246,
+      "priceCentsPerKwhInclGst": 1.4329
+    },
+    {
+      "startsAt": "2026-08-24T22:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 22,
+      "schedule": "L",
+      "priceDollarsPerMwh": 12.8,
+      "priceCentsPerKwh": 1.28,
+      "priceCentsPerKwhInclGst": 1.472
+    },
+    {
+      "startsAt": "2026-08-24T23:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 23,
+      "schedule": "L",
+      "priceDollarsPerMwh": 6.39,
+      "priceCentsPerKwh": 0.639,
+      "priceCentsPerKwhInclGst": 0.7349
+    },
+    {
+      "startsAt": "2026-08-24T23:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 24,
+      "schedule": "L",
+      "priceDollarsPerMwh": 11.19,
+      "priceCentsPerKwh": 1.119,
+      "priceCentsPerKwhInclGst": 1.2869
+    },
+    {
+      "startsAt": "2026-08-25T00:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 25,
+      "schedule": "L",
+      "priceDollarsPerMwh": 6.38,
+      "priceCentsPerKwh": 0.638,
+      "priceCentsPerKwhInclGst": 0.7337
+    },
+    {
+      "startsAt": "2026-08-25T00:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 26,
+      "schedule": "L",
+      "priceDollarsPerMwh": 6.28,
+      "priceCentsPerKwh": 0.628,
+      "priceCentsPerKwhInclGst": 0.7222
+    },
+    {
+      "startsAt": "2026-08-25T01:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 27,
+      "schedule": "L",
+      "priceDollarsPerMwh": 6.25,
+      "priceCentsPerKwh": 0.625,
+      "priceCentsPerKwhInclGst": 0.7188
+    },
+    {
+      "startsAt": "2026-08-25T01:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 28,
+      "schedule": "L",
+      "priceDollarsPerMwh": 6.24,
+      "priceCentsPerKwh": 0.624,
+      "priceCentsPerKwhInclGst": 0.7176
+    },
+    {
+      "startsAt": "2026-08-25T02:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 29,
+      "schedule": "L",
+      "priceDollarsPerMwh": 6.32,
+      "priceCentsPerKwh": 0.632,
+      "priceCentsPerKwhInclGst": 0.7268
+    },
+    {
+      "startsAt": "2026-08-25T02:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 30,
+      "schedule": "L",
+      "priceDollarsPerMwh": 6.27,
+      "priceCentsPerKwh": 0.627,
+      "priceCentsPerKwhInclGst": 0.7211
+    },
+    {
+      "startsAt": "2026-08-25T03:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 31,
+      "schedule": "L",
+      "priceDollarsPerMwh": 6.36,
+      "priceCentsPerKwh": 0.636,
+      "priceCentsPerKwhInclGst": 0.7314
+    },
+    {
+      "startsAt": "2026-08-25T03:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 32,
+      "schedule": "L",
+      "priceDollarsPerMwh": 19.74,
+      "priceCentsPerKwh": 1.974,
+      "priceCentsPerKwhInclGst": 2.2701
+    },
+    {
+      "startsAt": "2026-08-25T04:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 33,
+      "schedule": "L",
+      "priceDollarsPerMwh": 53.85,
+      "priceCentsPerKwh": 5.385,
+      "priceCentsPerKwhInclGst": 6.1928
+    },
+    {
+      "startsAt": "2026-08-25T04:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 34,
+      "schedule": "L",
+      "priceDollarsPerMwh": 54.75,
+      "priceCentsPerKwh": 5.475,
+      "priceCentsPerKwhInclGst": 6.2963
+    },
+    {
+      "startsAt": "2026-08-25T05:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 35,
+      "schedule": "L",
+      "priceDollarsPerMwh": 54.76,
+      "priceCentsPerKwh": 5.476,
+      "priceCentsPerKwhInclGst": 6.2974
+    },
+    {
+      "startsAt": "2026-08-25T05:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 36,
+      "schedule": "L",
+      "priceDollarsPerMwh": 94.19,
+      "priceCentsPerKwh": 9.419,
+      "priceCentsPerKwhInclGst": 10.8319
+    },
+    {
+      "startsAt": "2026-08-25T06:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 37,
+      "schedule": "L",
+      "priceDollarsPerMwh": 101.66,
+      "priceCentsPerKwh": 10.166,
+      "priceCentsPerKwhInclGst": 11.6909
+    },
+    {
+      "startsAt": "2026-08-25T06:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 38,
+      "schedule": "L",
+      "priceDollarsPerMwh": 110.16,
+      "priceCentsPerKwh": 11.016,
+      "priceCentsPerKwhInclGst": 12.6684
+    },
+    {
+      "startsAt": "2026-08-25T07:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 39,
+      "schedule": "L",
+      "priceDollarsPerMwh": 93.18,
+      "priceCentsPerKwh": 9.318,
+      "priceCentsPerKwhInclGst": 10.7157
+    },
+    {
+      "startsAt": "2026-08-25T07:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 40,
+      "schedule": "L",
+      "priceDollarsPerMwh": 90.93,
+      "priceCentsPerKwh": 9.093,
+      "priceCentsPerKwhInclGst": 10.457
+    },
+    {
+      "startsAt": "2026-08-25T08:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 41,
+      "schedule": "L",
+      "priceDollarsPerMwh": 94.46,
+      "priceCentsPerKwh": 9.446,
+      "priceCentsPerKwhInclGst": 10.8629
+    },
+    {
+      "startsAt": "2026-08-25T08:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 42,
+      "schedule": "L",
+      "priceDollarsPerMwh": 62.96,
+      "priceCentsPerKwh": 6.296,
+      "priceCentsPerKwhInclGst": 7.2404
+    },
+    {
+      "startsAt": "2026-08-25T09:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 43,
+      "schedule": "L",
+      "priceDollarsPerMwh": 99.84,
+      "priceCentsPerKwh": 9.984,
+      "priceCentsPerKwhInclGst": 11.4816
+    },
+    {
+      "startsAt": "2026-08-25T09:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 44,
+      "schedule": "L",
+      "priceDollarsPerMwh": 58.34,
+      "priceCentsPerKwh": 5.834,
+      "priceCentsPerKwhInclGst": 6.7091
+    },
+    {
+      "startsAt": "2026-08-25T10:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 45,
+      "schedule": "L",
+      "priceDollarsPerMwh": 55.01,
+      "priceCentsPerKwh": 5.501,
+      "priceCentsPerKwhInclGst": 6.3262
+    },
+    {
+      "startsAt": "2026-08-25T10:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 46,
+      "schedule": "L",
+      "priceDollarsPerMwh": 54.17,
+      "priceCentsPerKwh": 5.417,
+      "priceCentsPerKwhInclGst": 6.2296
+    },
+    {
+      "startsAt": "2026-08-25T11:00:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 47,
+      "schedule": "L",
+      "priceDollarsPerMwh": 54.39,
+      "priceCentsPerKwh": 5.439,
+      "priceCentsPerKwhInclGst": 6.2549
+    },
+    {
+      "startsAt": "2026-08-25T11:30:00Z",
+      "tradingDate": "2026-08-25",
+      "tradingPeriod": 48,
+      "schedule": "L",
+      "priceDollarsPerMwh": 54.61,
+      "priceCentsPerKwh": 5.461,
+      "priceCentsPerKwhInclGst": 6.2802
+    },
+    {
+      "startsAt": "2026-08-25T12:00:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 1,
+      "schedule": "L",
+      "priceDollarsPerMwh": 55.75,
+      "priceCentsPerKwh": 5.575,
+      "priceCentsPerKwhInclGst": 6.4113
+    },
+    {
+      "startsAt": "2026-08-25T12:30:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 2,
+      "schedule": "L",
+      "priceDollarsPerMwh": 52.62,
+      "priceCentsPerKwh": 5.262,
+      "priceCentsPerKwhInclGst": 6.0513
+    },
+    {
+      "startsAt": "2026-08-25T13:00:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 3,
+      "schedule": "L",
+      "priceDollarsPerMwh": 54.74,
+      "priceCentsPerKwh": 5.474,
+      "priceCentsPerKwhInclGst": 6.2951
+    },
+    {
+      "startsAt": "2026-08-25T13:30:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 4,
+      "schedule": "L",
+      "priceDollarsPerMwh": 56.91,
+      "priceCentsPerKwh": 5.691,
+      "priceCentsPerKwhInclGst": 6.5447
+    },
+    {
+      "startsAt": "2026-08-25T14:00:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 5,
+      "schedule": "L",
+      "priceDollarsPerMwh": 54.57,
+      "priceCentsPerKwh": 5.457,
+      "priceCentsPerKwhInclGst": 6.2756
+    },
+    {
+      "startsAt": "2026-08-25T14:30:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 6,
+      "schedule": "L",
+      "priceDollarsPerMwh": 54.78,
+      "priceCentsPerKwh": 5.478,
+      "priceCentsPerKwhInclGst": 6.2997
+    },
+    {
+      "startsAt": "2026-08-25T15:00:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 7,
+      "schedule": "L",
+      "priceDollarsPerMwh": 54.98,
+      "priceCentsPerKwh": 5.498,
+      "priceCentsPerKwhInclGst": 6.3227
+    },
+    {
+      "startsAt": "2026-08-25T15:30:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 8,
+      "schedule": "L",
+      "priceDollarsPerMwh": 32.96,
+      "priceCentsPerKwh": 3.296,
+      "priceCentsPerKwhInclGst": 3.7904
+    },
+    {
+      "startsAt": "2026-08-25T16:00:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 9,
+      "schedule": "L",
+      "priceDollarsPerMwh": 45.5,
+      "priceCentsPerKwh": 4.55,
+      "priceCentsPerKwhInclGst": 5.2325
+    },
+    {
+      "startsAt": "2026-08-25T16:30:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 10,
+      "schedule": "L",
+      "priceDollarsPerMwh": 55.81,
+      "priceCentsPerKwh": 5.581,
+      "priceCentsPerKwhInclGst": 6.4182
+    },
+    {
+      "startsAt": "2026-08-25T17:00:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 11,
+      "schedule": "L",
+      "priceDollarsPerMwh": 55.67,
+      "priceCentsPerKwh": 5.567,
+      "priceCentsPerKwhInclGst": 6.4021
+    },
+    {
+      "startsAt": "2026-08-25T17:30:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 12,
+      "schedule": "L",
+      "priceDollarsPerMwh": 56.15,
+      "priceCentsPerKwh": 5.615,
+      "priceCentsPerKwhInclGst": 6.4573
+    },
+    {
+      "startsAt": "2026-08-25T18:00:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 13,
+      "schedule": "L",
+      "priceDollarsPerMwh": 99.01,
+      "priceCentsPerKwh": 9.901,
+      "priceCentsPerKwhInclGst": 11.3862
+    },
+    {
+      "startsAt": "2026-08-25T18:30:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 14,
+      "schedule": "L",
+      "priceDollarsPerMwh": 109.8,
+      "priceCentsPerKwh": 10.98,
+      "priceCentsPerKwhInclGst": 12.627
+    },
+    {
+      "startsAt": "2026-08-25T19:00:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 15,
+      "schedule": "L",
+      "priceDollarsPerMwh": 92.74,
+      "priceCentsPerKwh": 9.274,
+      "priceCentsPerKwhInclGst": 10.6651
+    },
+    {
+      "startsAt": "2026-08-25T19:30:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 16,
+      "schedule": "L",
+      "priceDollarsPerMwh": 100.28,
+      "priceCentsPerKwh": 10.028,
+      "priceCentsPerKwhInclGst": 11.5322
+    },
+    {
+      "startsAt": "2026-08-25T20:00:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 17,
+      "schedule": "L",
+      "priceDollarsPerMwh": 75.85,
+      "priceCentsPerKwh": 7.585,
+      "priceCentsPerKwhInclGst": 8.7228
+    },
+    {
+      "startsAt": "2026-08-25T20:30:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 18,
+      "schedule": "L",
+      "priceDollarsPerMwh": 10.16,
+      "priceCentsPerKwh": 1.016,
+      "priceCentsPerKwhInclGst": 1.1684
+    },
+    {
+      "startsAt": "2026-08-25T21:00:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 19,
+      "schedule": "L",
+      "priceDollarsPerMwh": 2.43,
+      "priceCentsPerKwh": 0.243,
+      "priceCentsPerKwhInclGst": 0.2795
+    },
+    {
+      "startsAt": "2026-08-25T21:30:00Z",
+      "tradingDate": "2026-08-26",
+      "tradingPeriod": 20,
+      "schedule": "L",
+      "priceDollarsPerMwh": 1.06,
+      "priceCentsPerKwh": 0.106,
+      "priceCentsPerKwhInclGst": 0.1219
+    }
+  ]
+}

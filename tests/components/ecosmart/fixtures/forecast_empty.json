@@ -1,0 +1,12 @@
+{
+  "poc": "BOB1101",
+  "horizonHours": 48,
+  "coveredHours": 0.0,
+  "from": null,
+  "to": null,
+  "publishedAt": null,
+  "unavailableReason": "No WITS forecast is published for this grid exit point yet.",
+  "count": 0,
+  "gstRatePercent": 15.0,
+  "points": []
+}
