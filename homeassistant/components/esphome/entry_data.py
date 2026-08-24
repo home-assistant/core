@@ -542,7 +542,7 @@ class RuntimeEntryData:
                     state.to_dict() for state in states.values()
                 ]
                 for state_type, states in self.state.items()
-                if state_type in STATE_TYPE_TO_COMPONENT_TYPE
+                if states and state_type in STATE_TYPE_TO_COMPONENT_TYPE
             }
         if store_data == self._storage_contents:
             return

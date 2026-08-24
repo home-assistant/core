@@ -88,6 +88,10 @@ def async_static_info_updated(
 ) -> None:
     """Update entities of this platform when entities are listed."""
     current_infos = entry_data.info[info_type]
+    # On the first callback for this type there is nothing to compare
+    # against; any cached state was restored from the store together
+    # with these same infos and must survive.
+    first_infos = not current_infos
     device_info = entry_data.device_info
     if TYPE_CHECKING:
         assert device_info is not None
@@ -261,7 +265,7 @@ def async_static_info_updated(
     # A cached state is only valid while its (device_id, key) slot is
     # occupied by the same entity; anything else is stale and must not
     # be adopted by another entity through a reused key
-    if rekeys or current_infos or new_entity_slots:
+    if not first_infos and (rekeys or current_infos or new_entity_slots):
         for cached_key, cached_state in list(states.items()):
             slot = (cached_state.device_id, cached_key)
             if slot not in new_infos or slot in new_entity_slots:

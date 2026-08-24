@@ -234,6 +234,7 @@ def _seed_deep_sleep_storage(
         domain=DOMAIN,
         unique_id="11:22:33:44:55:aa",
         data={CONF_HOST: "test.local", CONF_PORT: 6053, CONF_PASSWORD: ""},
+        title="test",
     )
     entry.add_to_hass(hass)
     device_info = DeviceInfo(
@@ -332,7 +333,7 @@ async def test_cold_start_offline_restores_deep_sleep_entities(
 
     await _async_setup_without_connecting(hass, mock_client, entry)
 
-    state = hass.states.get("sensor.my_sensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == expected_state
 
@@ -349,7 +350,7 @@ async def test_unknown_component_type_in_states_skipped(
 
     await _async_setup_without_connecting(hass, mock_client, entry)
 
-    state = hass.states.get("sensor.my_sensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == "42"
 
@@ -367,7 +368,7 @@ async def test_corrupt_stored_state_skipped(
     await _async_setup_without_connecting(hass, mock_client, entry)
 
     assert entry.state is ConfigEntryState.LOADED
-    state = hass.states.get("sensor.my_sensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
@@ -475,7 +476,7 @@ async def test_cold_start_restores_non_finite_sensor_state(
 
     await _async_setup_without_connecting(hass, mock_client, entry)
 
-    state = hass.states.get("sensor.my_sensor")
+    state = hass.states.get("sensor.test_my_sensor")
     assert state is not None
     assert state.state == STATE_UNKNOWN
 
