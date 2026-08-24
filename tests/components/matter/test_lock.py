@@ -586,6 +586,12 @@ async def test_get_lock_info_service(
         "max_pin_length": 8,
         "min_rfid_length": 10,
         "max_rfid_length": 20,
+        "supports_week_day_schedules": False,
+        "max_week_day_schedules_per_user": None,
+        "supports_year_day_schedules": False,
+        "max_year_day_schedules_per_user": None,
+        "supports_holiday_schedules": False,
+        "max_holiday_schedules": None,
     }
 
 
@@ -2537,6 +2543,12 @@ async def test_get_lock_info_without_usr_feature(
         "max_pin_length": None,
         "min_rfid_length": None,
         "max_rfid_length": None,
+        "supports_week_day_schedules": False,
+        "max_week_day_schedules_per_user": None,
+        "supports_year_day_schedules": False,
+        "max_year_day_schedules_per_user": None,
+        "supports_holiday_schedules": False,
+        "max_holiday_schedules": None,
     }
 
 
@@ -2560,6 +2572,34 @@ async def test_get_lock_info_with_multiple_credential_types(
     assert info["supports_user_management"] is True
     assert "pin" in info["supported_credential_types"]
     assert "rfid" in info["supported_credential_types"]
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize(
+    "attributes",
+    [{"1/257/65532": _FEATURE_USR | _FEATURE_WDSCH | _FEATURE_YDSCH | _FEATURE_HDSCH}],
+)
+async def test_get_lock_info_with_schedule_capacities(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_lock_info reports schedule support and capacities."""
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_lock_info",
+        {ATTR_ENTITY_ID: "lock.mock_door_lock"},
+        blocking=True,
+        return_response=True,
+    )
+
+    info = result["lock.mock_door_lock"]
+    assert info["supports_week_day_schedules"] is True
+    assert info["max_week_day_schedules_per_user"] == 10
+    assert info["supports_year_day_schedules"] is True
+    assert info["max_year_day_schedules_per_user"] == 10
+    assert info["supports_holiday_schedules"] is True
+    assert info["max_holiday_schedules"] == 10
 
 
 # --- PIN boundary validation tests ---

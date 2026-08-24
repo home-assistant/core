@@ -117,6 +117,12 @@ class GetLockInfoResult(TypedDict):
     max_pin_length: int | None
     min_rfid_length: int | None
     max_rfid_length: int | None
+    supports_week_day_schedules: bool
+    max_week_day_schedules_per_user: int | None
+    supports_year_day_schedules: bool
+    max_year_day_schedules_per_user: int | None
+    supports_holiday_schedules: bool
+    max_holiday_schedules: int | None
 
 
 class SetLockCredentialResult(TypedDict):
@@ -400,6 +406,9 @@ async def get_lock_info(
     """
     lock_endpoint = _get_lock_endpoint_or_raise(node)
     supports_usr = _lock_supports_usr_feature(lock_endpoint)
+    supports_wdsch = _lock_supports_wdsch_feature(lock_endpoint)
+    supports_ydsch = _lock_supports_ydsch_feature(lock_endpoint)
+    supports_hdsch = _lock_supports_hdsch_feature(lock_endpoint)
 
     # Get feature map for credential type detection
     feature_map = (
@@ -418,6 +427,12 @@ async def get_lock_info(
         max_pin_length=None,
         min_rfid_length=None,
         max_rfid_length=None,
+        supports_week_day_schedules=supports_wdsch,
+        max_week_day_schedules_per_user=None,
+        supports_year_day_schedules=supports_ydsch,
+        max_year_day_schedules_per_user=None,
+        supports_holiday_schedules=supports_hdsch,
+        max_holiday_schedules=None,
     )
 
     # Populate capacity info if USR feature is supported
@@ -445,6 +460,19 @@ async def get_lock_info(
         )
         result["max_rfid_length"] = lock_endpoint.get_attribute_value(
             None, clusters.DoorLock.Attributes.MaxRFIDCodeLength
+        )
+
+    if supports_wdsch:
+        result["max_week_day_schedules_per_user"] = lock_endpoint.get_attribute_value(
+            None, clusters.DoorLock.Attributes.NumberOfWeekDaySchedulesSupportedPerUser
+        )
+    if supports_ydsch:
+        result["max_year_day_schedules_per_user"] = lock_endpoint.get_attribute_value(
+            None, clusters.DoorLock.Attributes.NumberOfYearDaySchedulesSupportedPerUser
+        )
+    if supports_hdsch:
+        result["max_holiday_schedules"] = lock_endpoint.get_attribute_value(
+            None, clusters.DoorLock.Attributes.NumberOfHolidaySchedulesSupported
         )
 
     return result
