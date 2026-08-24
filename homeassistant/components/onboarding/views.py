@@ -130,6 +130,11 @@ class InstallationTypeOnboardingView(NoAuthBaseOnboardingView):
         # installation type is not misdetected while still starting up. When
         # hassio is not pending setup this returns immediately.
         await async_wait_component(hass, "hassio")
+
+        # Onboarding may have completed while waiting
+        if self._data["done"]:
+            raise HTTPUnauthorized
+
         info = await async_get_system_info(hass)
         return self.json({"installation_type": info["installation_type"]})
 
