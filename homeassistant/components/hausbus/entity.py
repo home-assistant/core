@@ -23,14 +23,12 @@ class HausbusEntity(Entity):
     def __init__(
         self,
         channel: ABusFeature,
-        domain: str,
         device_info: DeviceInfo,
     ) -> None:
         """Set up channel."""
         super().__init__()
 
         self._channel = channel
-        self._domain = domain
         self._configuration: Any = None
 
         self._object_id = ObjectId(channel.getObjectId())
@@ -45,10 +43,6 @@ class HausbusEntity(Entity):
             f"{self._device_id}-{self._type}-{self._object_id.getInstanceId()}"
         )
         self._debug_identifier = f"{self._device_id} {self._attr_name}"
-
-    def get_domain(self) -> str:
-        """Return the domain of this entity."""
-        return self._domain
 
     def get_hardware_status(self) -> None:
         """Request status and configuration of this channel from hardware."""

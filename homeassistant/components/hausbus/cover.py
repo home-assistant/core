@@ -17,7 +17,6 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
-    DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -64,7 +63,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
     def __init__(self, channel: Rollladen, device_info: DeviceInfo) -> None:
         """Set up cover."""
-        super().__init__(channel, COVER_DOMAIN, device_info)
+        super().__init__(channel, device_info)
 
         self._attr_device_class = CoverDeviceClass.SHUTTER
         self._attr_supported_features = (
@@ -73,7 +72,6 @@ class HausbusCover(HausbusEntity, CoverEntity):
             | CoverEntityFeature.STOP
             | CoverEntityFeature.SET_POSITION
         )
-        self._attr_reports_position = True  # Position is reported
         self._position: int | None = None
 
     @property
@@ -105,16 +103,10 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move cover to the given position."""
-        position = kwargs.get(ATTR_POSITION)
+        position = kwargs[ATTR_POSITION]
         _LOGGER.debug(
             "set cover position to %s for %s", position, self._debug_identifier
         )
-
-        if position is None:
-            return
-
-        position = min(position, 100)
-        position = max(position, 0)
         await self.hass.async_add_executor_job(
             self._channel.moveToPosition, 100 - position
         )
