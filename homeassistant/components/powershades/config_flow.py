@@ -12,6 +12,8 @@ from pyowershades import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_HOST
+from homeassistant.helpers import selector
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
@@ -71,15 +73,26 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
             if result is not None:
                 return result
 
-        choices = {
-            ip: f"{ip} (Serial: {device['serial']})"
+        options = [
+            selector.SelectOptionDict(
+                value=ip, label=f"{ip} (Serial: {device['serial']})"
+            )
             for ip, device in self._discovered.items()
-        }
-        choices[MANUAL_ENTRY] = "Enter IP address manually"
+        ]
+        options.append(selector.SelectOptionDict(value=MANUAL_ENTRY, label="manual"))
 
         return self.async_show_form(
             step_id="pick_device",
-            data_schema=vol.Schema({vol.Required("device"): vol.In(choices)}),
+            data_schema=vol.Schema(
+                {
+                    vol.Required("device"): selector.SelectSelector(
+                        selector.SelectSelectorConfig(
+                            options=options,
+                            translation_key="device",
+                        )
+                    )
+                }
+            ),
             errors=errors,
         )
 
@@ -90,11 +103,11 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            ip = user_input["ip"].strip()
+            ip = user_input[CONF_HOST].strip()
             try:
                 ipaddress.IPv4Address(ip)
             except ValueError:
-                errors["ip"] = "invalid_ip"
+                errors[CONF_HOST] = "invalid_ip"
             else:
                 result = await self._async_validate_and_create(ip, errors)
                 if result is not None:
@@ -102,7 +115,7 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="manual",
-            data_schema=vol.Schema({vol.Required("ip"): str}),
+            data_schema=vol.Schema({vol.Required(CONF_HOST): str}),
             errors=errors,
         )
 
@@ -136,7 +149,7 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_handle_discovery(self, ip: str, serial: int) -> ConfigFlowResult:
         """Common handling for discovered devices."""
         await self.async_set_unique_id(str(serial))
-        updates = {"ip": ip}
+        updates = {CONF_HOST: ip}
         if self._discovered_mac:
             updates["mac"] = self._discovered_mac
         self._abort_if_unique_id_configured(updates=updates)
@@ -146,11 +159,12 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
         if self._discovered_name is None:
             try:
                 info = await async_get_device_info(ip)
+            except PowerShadesTimeoutError:
+                self._discovered_name = None
+            else:
                 self._discovered_name = info["name"]
                 if self._discovered_model is None:
                     self._discovered_model = info["model"]
-            except PowerShadesTimeoutError:
-                self._discovered_name = None
 
         self.context["title_placeholders"] = {
             "name": self._discovered_name or ip,
@@ -168,7 +182,7 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=title,
                 data={
-                    "ip": ip,
+                    CONF_HOST: ip,
                     "serial": self._discovered_serial,
                     "name": name,
                     "mac": self._discovered_mac,
@@ -197,14 +211,14 @@ class PowerShadesConfigFlow(ConfigFlow, domain=DOMAIN):
             return None
 
         await self.async_set_unique_id(str(info["serial"]))
-        self._abort_if_unique_id_configured(updates={"ip": ip})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: ip})
 
         name = info["name"]
         title = f"PowerShade {name}" if name else f"PowerShade {ip}"
         return self.async_create_entry(
             title=title,
             data={
-                "ip": ip,
+                CONF_HOST: ip,
                 "serial": info["serial"],
                 "name": name,
                 "model": info["model"],

@@ -16,6 +16,7 @@ import pytest
 from homeassistant.components.powershades import coordinator as coordinator_module
 from homeassistant.components.powershades.const import DOMAIN
 from homeassistant.components.powershades.coordinator import PowerShadesCoordinator
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.update_coordinator import UpdateFailed
@@ -30,7 +31,7 @@ def coordinator(hass: HomeAssistant, mock_connection):
     """A coordinator with a mocked connection, not yet started."""
     entry = MockConfigEntry(
         domain=DOMAIN,
-        data={"ip": TEST_IP, "serial": TEST_SERIAL, "name": TEST_NAME, "model": 1},
+        data={CONF_HOST: TEST_IP, "serial": TEST_SERIAL, "name": TEST_NAME, "model": 1},
         unique_id=str(TEST_SERIAL),
     )
     entry.add_to_hass(hass)
@@ -223,7 +224,7 @@ async def test_async_update_data_raises_on_malformed_reply(coordinator) -> None:
 def test_device_info_without_name_uses_ip(coordinator) -> None:
     """With no known shade name, the device name falls back to the IP address."""
     coordinator.device_name = None
-    assert coordinator.device_info["name"] == f"PowerShade {coordinator.ip_address}"
+    assert coordinator.device_info["name"] == f"PowerShade {coordinator.host}"
 
 
 def test_handle_status_push_updates_data(coordinator) -> None:

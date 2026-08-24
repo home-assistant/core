@@ -20,6 +20,7 @@ from pyowershades import (
 )
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
@@ -35,7 +36,7 @@ POSITION_TOLERANCE = 2
 # seconds before an unmoving target is changed from moving to still
 STUCK_TIMEOUT = 15
 
-PowerShadesConfigEntry = ConfigEntry["PowerShadesCoordinator"]
+type PowerShadesConfigEntry = ConfigEntry[PowerShadesCoordinator]
 
 
 @dataclass(frozen=True)
@@ -61,9 +62,9 @@ class PowerShadesCoordinator(DataUpdateCoordinator[PowerShadesData]):
     ) -> None:
         """Initialize the coordinator."""
         self.connection = connection
-        self.ip_address: str = entry.data["ip"]
+        self.host: str = entry.data[CONF_HOST]
         self.entry_id = entry.entry_id
-        self.serial_number = entry.data.get("serial")
+        self.serial_number: str = str(entry.data["serial"])
         self.device_name = entry.data.get("name")
         self.mac_address: str | None = entry.data.get("mac")
         self.model: int | None = entry.data.get("model")
@@ -74,7 +75,7 @@ class PowerShadesCoordinator(DataUpdateCoordinator[PowerShadesData]):
             hass,
             _LOGGER,
             config_entry=entry,
-            name=f"PowerShades {self.ip_address}",
+            name=f"PowerShades {self.host}",
             update_interval=timedelta(seconds=10),
         )
         connection.set_status_callback(self._handle_status_push)
@@ -85,11 +86,9 @@ class PowerShadesCoordinator(DataUpdateCoordinator[PowerShadesData]):
         name = (
             f"PowerShade {self.device_name}"
             if self.device_name
-            else f"PowerShade {self.ip_address}"
+            else f"PowerShade {self.host}"
         )
-        identifiers = {(DOMAIN, self.entry_id)}
-        if self.serial_number:
-            identifiers.add((DOMAIN, str(self.serial_number)))
+        identifiers = {(DOMAIN, self.entry_id), (DOMAIN, self.serial_number)}
         model_name = (
             MODEL_NAMES.get(self.model, "Motorized Window Cover")
             if self.model is not None
@@ -105,7 +104,7 @@ class PowerShadesCoordinator(DataUpdateCoordinator[PowerShadesData]):
             name=name,
             manufacturer="PowerShades",
             model=model_name,
-            serial_number=str(self.serial_number) if self.serial_number else None,
+            serial_number=self.serial_number,
         )
 
     def _data_from_status(self, status: StatusReply) -> PowerShadesData:
@@ -155,7 +154,7 @@ class PowerShadesCoordinator(DataUpdateCoordinator[PowerShadesData]):
                 translation_domain=DOMAIN,
                 translation_key="update_timeout",
                 translation_placeholders={
-                    "ip_address": self.ip_address,
+                    "ip_address": self.host,
                     "error": str(err),
                 },
             ) from err
@@ -164,7 +163,7 @@ class PowerShadesCoordinator(DataUpdateCoordinator[PowerShadesData]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="update_malformed_reply",
-                translation_placeholders={"ip_address": self.ip_address},
+                translation_placeholders={"ip_address": self.host},
             )
         data = self._data_from_status(status)
         self.update_interval = timedelta(seconds=5 if data.position is None else 10)
@@ -183,7 +182,7 @@ class PowerShadesCoordinator(DataUpdateCoordinator[PowerShadesData]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="command_not_acknowledged",
-                translation_placeholders={"ip_address": self.ip_address},
+                translation_placeholders={"ip_address": self.host},
             ) from err
 
     async def async_set_position(self, position: int) -> None:
