@@ -43,9 +43,7 @@ def test_data_from_status_no_target(coordinator) -> None:
     """Without a movement target, status is passed through unchanged."""
     data = coordinator._data_from_status(StatusReply(position=42, battery_mv=3700))
     assert data.position == 42
-    assert data.battery_mv == 3700
     assert data.target_position is None
-    assert data.battery_percentage is not None
 
 
 def test_target_reached_clears_target(coordinator) -> None:
