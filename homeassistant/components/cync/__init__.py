@@ -102,6 +102,7 @@ def _migrate_unique_ids(
 
     light_entity_entries = get_light_entity_entries()
     final_ids_by_device: dict[str, set[str]] = {}
+    source_ids_by_device: dict[str, set[str]] = {}
     for entity_entry in light_entity_entries:
         if (
             entity_entry.device_id is not None
@@ -110,6 +111,27 @@ def _migrate_unique_ids(
             final_ids_by_device.setdefault(entity_entry.device_id, set()).add(
                 entity_entry.unique_id
             )
+            previous_unique_id = entity_entry.previous_unique_id
+            if (
+                previous_unique_id is not None
+                and id_map.get(previous_unique_id) == entity_entry.unique_id
+            ):
+                source_ids_by_device.setdefault(entity_entry.device_id, set()).add(
+                    previous_unique_id
+                )
+            elif (
+                previous_unique_id is not None
+                and temporary_id_map.get(previous_unique_id) == entity_entry.unique_id
+            ):
+                source_ids_by_device.setdefault(entity_entry.device_id, set()).add(
+                    previous_unique_id.removeprefix(_MESH_UNIQUE_ID_MIGRATION_PREFIX)
+                )
+            else:
+                source_ids_by_device.setdefault(entity_entry.device_id, set()).update(
+                    old_unique_id
+                    for old_unique_id, new_unique_id in id_map.items()
+                    if new_unique_id == entity_entry.unique_id
+                )
 
     migrated_device_ids = {
         entity_entry.device_id
@@ -123,14 +145,12 @@ def _migrate_unique_ids(
         device_entry = device_registry.async_get(device_id)
         if device_entry is None:
             continue
-        final_ids = final_ids_by_device.get(device_id, set())
+        source_ids = source_ids_by_device.get(device_id, set())
         temporary_identifiers = {
             (
                 domain,
                 f"{_MESH_UNIQUE_ID_MIGRATION_PREFIX}{identifier}"
-                if domain == DOMAIN
-                and identifier in id_map
-                and identifier not in final_ids
+                if domain == DOMAIN and identifier in source_ids
                 else identifier,
             )
             for domain, identifier in device_entry.identifiers
@@ -145,6 +165,7 @@ def _migrate_unique_ids(
         device_entry = device_registry.async_get(device_id)
         if device_entry is None:
             continue
+        final_ids = final_ids_by_device.get(device_id, set())
         final_identifiers = {
             (
                 domain,
@@ -153,7 +174,7 @@ def _migrate_unique_ids(
                 else identifier,
             )
             for domain, identifier in device_entry.identifiers
-        }
+        } | {(DOMAIN, identifier) for identifier in final_ids}
         if final_identifiers != device_entry.identifiers:
             device_registry.async_update_device(
                 device_id,
