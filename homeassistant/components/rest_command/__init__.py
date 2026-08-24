@@ -1,16 +1,12 @@
-"""Support for exposing regular REST commands as services."""
+"""Support for exposing regular REST commands as actions."""
 
-from http import HTTPStatus
-from json.decoder import JSONDecodeError
-import logging
 from typing import Any
 
-import aiohttp
-from aiohttp import hdrs
 import voluptuous as vol
-from yarl import URL
 
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    ATTR_CONFIG_ENTRY_ID,
     CONF_AUTHENTICATION,
     CONF_HEADERS,
     CONF_METHOD,
@@ -31,32 +27,31 @@ from homeassistant.core import (
     SupportsResponse,
     callback,
 )
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import config_validation as cv
-from homeassistant.helpers.aiohttp_client import async_get_clientsession
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.reload import async_integration_yaml_config
+from homeassistant.helpers.selector import ConfigEntrySelector
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util.ssl import SSLCipherList
 
-DOMAIN = "rest_command"
+from .const import (
+    CONF_CONTENT_TYPE,
+    CONF_INSECURE_CIPHER,
+    CONF_SKIP_URL_ENCODING,
+    DEFAULT_METHOD,
+    DEFAULT_TIMEOUT,
+    DEFAULT_VERIFY_SSL,
+    DOMAIN,
+    SERVICE_CALL_ENDPOINT,
+    SUPPORTED_REST_METHODS,
+)
+from .http import RestCommandRequest
 
-_LOGGER = logging.getLogger(__name__)
-
-DEFAULT_TIMEOUT = 10
-DEFAULT_METHOD = "get"
-DEFAULT_VERIFY_SSL = True
-
-SUPPORT_REST_METHODS = ["get", "patch", "post", "put", "delete"]
-
-CONF_CONTENT_TYPE = "content_type"
-CONF_INSECURE_CIPHER = "insecure_cipher"
-CONF_SKIP_URL_ENCODING = "skip_url_encoding"
+type RestCommandConfigEntry = ConfigEntry[RestCommandRequest]
 
 COMMAND_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): cv.template,
         vol.Optional(CONF_METHOD, default=DEFAULT_METHOD): vol.All(
-            vol.Lower, vol.In(SUPPORT_REST_METHODS)
+            vol.Lower, vol.In(SUPPORTED_REST_METHODS)
         ),
         vol.Optional(CONF_HEADERS): vol.Schema({cv.string: cv.template}),
         vol.Optional(CONF_AUTHENTICATION): vol.In(
@@ -73,15 +68,85 @@ COMMAND_SCHEMA = vol.Schema(
     }
 )
 
-CONFIG_SCHEMA = vol.Schema(
-    {DOMAIN: cv.schema_with_slug_keys(COMMAND_SCHEMA)}, extra=vol.ALLOW_EXTRA
+RESERVED_ACTIONS = {SERVICE_RELOAD}
+
+
+def _validate_yaml_action_names(
+    commands: dict[str, dict[str, Any]],
+) -> dict[str, dict[str, Any]]:
+    """Reject YAML names owned by integration actions."""
+    if reserved_names := RESERVED_ACTIONS.intersection(commands):
+        reserved_name = min(reserved_names)
+        raise vol.Invalid(
+            f'The RESTful Command action name "{reserved_name}" is reserved'
+        )
+    return commands
+
+
+YAML_COMMANDS_SCHEMA = vol.All(
+    _validate_yaml_action_names, cv.schema_with_slug_keys(COMMAND_SCHEMA)
 )
+
+CONFIG_SCHEMA = vol.Schema(
+    {vol.Optional(DOMAIN, default={}): YAML_COMMANDS_SCHEMA}, extra=vol.ALLOW_EXTRA
+)
+
+CALL_ENDPOINT_SCHEMA = vol.Schema(
+    {
+        vol.Required(ATTR_CONFIG_ENTRY_ID): ConfigEntrySelector(
+            {"integration": DOMAIN}
+        ),
+        vol.Optional(CONF_PAYLOAD): cv.string,
+    }
+)
+
+CALL_ENDPOINT_SERVICE_DESCRIPTION = {
+    "fields": {
+        ATTR_CONFIG_ENTRY_ID: {
+            "required": True,
+            "selector": {"config_entry": {"integration": DOMAIN}},
+        },
+        CONF_PAYLOAD: {
+            "example": '{"message": "The event occurred"}',
+            "selector": {"text": {"multiline": True}},
+        },
+    }
+}
 
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the REST command component."""
 
-    async def reload_service_handler(service: ServiceCall) -> None:
+    async def async_call_endpoint_handler(call: ServiceCall) -> ServiceResponse:
+        """Send a request using a UI-managed endpoint."""
+        entry: RestCommandConfigEntry = service.async_get_config_entry(
+            hass, DOMAIN, call.data[ATTR_CONFIG_ENTRY_ID]
+        )
+        return await entry.runtime_data.async_call(
+            entry.data[CONF_URL],
+            call.data.get(CONF_PAYLOAD, entry.data.get(CONF_PAYLOAD)),
+            {},
+            call.return_response,
+        )
+
+    @callback
+    def async_register_call_endpoint() -> None:
+        """Register the action for UI-managed endpoints."""
+        hass.services.async_register(
+            DOMAIN,
+            SERVICE_CALL_ENDPOINT,
+            async_call_endpoint_handler,
+            schema=CALL_ENDPOINT_SCHEMA,
+            supports_response=SupportsResponse.OPTIONAL,
+        )
+        service.async_set_service_schema(
+            hass,
+            DOMAIN,
+            SERVICE_CALL_ENDPOINT,
+            CALL_ENDPOINT_SERVICE_DESCRIPTION,
+        )
+
+    async def reload_service_handler(call: ServiceCall) -> None:
         """Remove all rest_commands and load new ones from config."""
         conf = await async_integration_yaml_config(hass, DOMAIN)
 
@@ -89,177 +154,46 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if conf is None:
             return
 
+        commands = _validate_yaml_action_names(conf[DOMAIN])
         existing = hass.services.async_services_for_domain(DOMAIN)
         for existing_service in existing:
-            if existing_service == SERVICE_RELOAD:
+            if existing_service in RESERVED_ACTIONS:
                 continue
             hass.services.async_remove(DOMAIN, existing_service)
 
-        for name, command_config in conf[DOMAIN].items():
+        async_register_call_endpoint()
+        for name, command_config in commands.items():
             async_register_rest_command(name, command_config)
 
     @callback
     def async_register_rest_command(name: str, command_config: dict[str, Any]) -> None:
         """Create service for rest command."""
-        websession = async_get_clientsession(
-            hass,
-            command_config[CONF_VERIFY_SSL],
-            ssl_cipher=(
-                SSLCipherList.INSECURE
-                if command_config[CONF_INSECURE_CIPHER]
-                else SSLCipherList.PYTHON_DEFAULT
-            ),
-        )
-        timeout = command_config[CONF_TIMEOUT]
-        method = command_config[CONF_METHOD]
-
+        request = RestCommandRequest(hass, command_config)
         template_url = command_config[CONF_URL]
-        skip_url_encoding = command_config[CONF_SKIP_URL_ENCODING]
-
-        auth = None
-        digest_auth: tuple[str, str] | None = None
-        if CONF_USERNAME in command_config:
-            username = command_config[CONF_USERNAME]
-            password = command_config.get(CONF_PASSWORD, "")
-            if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
-                digest_auth = (username, password)
-            else:
-                auth = aiohttp.BasicAuth(username, password=password)
-
-        template_payload = None
-        if CONF_PAYLOAD in command_config:
-            template_payload = command_config[CONF_PAYLOAD]
-
+        template_payload = command_config.get(CONF_PAYLOAD)
         template_headers = command_config.get(CONF_HEADERS, {})
 
-        content_type = command_config.get(CONF_CONTENT_TYPE)
-
-        async def async_service_handler(service: ServiceCall) -> ServiceResponse:
-            """Execute a shell command service."""
+        async def async_service_handler(call: ServiceCall) -> ServiceResponse:
+            """Execute a RESTful Command action."""
             payload = None
             if template_payload:
-                payload = bytes(
-                    template_payload.async_render(
-                        variables=service.data, parse_result=False
-                    ),
-                    "utf-8",
+                payload = template_payload.async_render(
+                    variables=call.data, parse_result=False
                 )
 
             request_url = template_url.async_render(
-                variables=service.data, parse_result=False
+                variables=call.data, parse_result=False
             )
 
             headers = {}
             for header_name, template_header in template_headers.items():
                 headers[header_name] = template_header.async_render(
-                    variables=service.data, parse_result=False
+                    variables=call.data, parse_result=False
                 )
 
-            if content_type:
-                headers[hdrs.CONTENT_TYPE] = content_type
-
-            _LOGGER.debug(
-                "Calling %s %s with headers: %s and payload: %s",
-                method,
-                request_url,
-                headers,
-                payload,
+            return await request.async_call(
+                request_url, payload, headers, call.return_response
             )
-
-            try:
-                # Prepare request kwargs
-                request_kwargs = {
-                    "data": payload,
-                    "headers": headers or None,
-                    "timeout": timeout,
-                }
-
-                # Add authentication
-                if auth is not None:
-                    request_kwargs["auth"] = auth
-                elif digest_auth is not None:
-                    request_kwargs["middlewares"] = (
-                        aiohttp.DigestAuthMiddleware(*digest_auth),
-                    )
-
-                async with getattr(websession, method)(
-                    URL(request_url, encoded=skip_url_encoding),
-                    **request_kwargs,
-                ) as response:
-                    if response.status < HTTPStatus.BAD_REQUEST:
-                        _LOGGER.debug(
-                            "Success. Url: %s. Status code: %d. Payload: %s",
-                            response.url,
-                            response.status,
-                            payload,
-                        )
-                    else:
-                        _LOGGER.warning(
-                            "Error. Url: %s. Status code %d. Payload: %s",
-                            response.url,
-                            response.status,
-                            payload,
-                        )
-
-                    if not service.return_response:
-                        # always read the response to avoid closing
-                        # the connection before the server has
-                        # finished sending it, while avoiding
-                        # excessive memory usage
-                        async for _ in response.content.iter_chunked(1024):
-                            pass
-
-                        return None
-
-                    _content = None
-                    try:
-                        if response.content_type == "application/json":
-                            _content = await response.json()
-                        else:
-                            _content = await response.text()
-                    except (JSONDecodeError, AttributeError) as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="decoding_error",
-                            translation_placeholders={
-                                "request_url": request_url,
-                                "decoding_type": "JSON",
-                            },
-                        ) from err
-
-                    except UnicodeDecodeError as err:
-                        raise HomeAssistantError(
-                            translation_domain=DOMAIN,
-                            translation_key="decoding_error",
-                            translation_placeholders={
-                                "request_url": request_url,
-                                "decoding_type": "text",
-                            },
-                        ) from err
-                    return {
-                        "content": _content,
-                        "status": response.status,
-                        "headers": {
-                            key: values[0] if len(values) == 1 else values
-                            for key in response.headers
-                            if (values := response.headers.getall(key))
-                        },
-                    }
-
-            except TimeoutError as err:
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="timeout",
-                    translation_placeholders={"request_url": request_url},
-                ) from err
-
-            except aiohttp.ClientError as err:
-                _LOGGER.error("Error fetching data: %s", err)
-                raise HomeAssistantError(
-                    translation_domain=DOMAIN,
-                    translation_key="client_error",
-                    translation_placeholders={"request_url": request_url},
-                ) from err
 
         # register services
         hass.services.async_register(
@@ -268,12 +202,36 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             async_service_handler,
             supports_response=SupportsResponse.OPTIONAL,
         )
+        if name == SERVICE_CALL_ENDPOINT:
+            service.async_set_service_schema(hass, DOMAIN, name, {})
 
-    for name, command_config in config[DOMAIN].items():
+    async_register_call_endpoint()
+    for name, command_config in config.get(DOMAIN, {}).items():
         async_register_rest_command(name, command_config)
 
     hass.services.async_register(
         DOMAIN, SERVICE_RELOAD, reload_service_handler, schema=vol.Schema({})
     )
 
+    return True
+
+
+async def async_setup_entry(hass: HomeAssistant, entry: RestCommandConfigEntry) -> bool:
+    """Set up a UI-managed RESTful Command endpoint."""
+    entry.runtime_data = RestCommandRequest(hass, dict(entry.data))
+    entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    return True
+
+
+async def _async_update_listener(
+    hass: HomeAssistant, entry: RestCommandConfigEntry
+) -> None:
+    """Reload an updated endpoint."""
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
+async def async_unload_entry(
+    hass: HomeAssistant, entry: RestCommandConfigEntry
+) -> bool:
+    """Unload a UI-managed RESTful Command endpoint."""
     return True

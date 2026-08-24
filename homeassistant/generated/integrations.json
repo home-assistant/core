@@ -6018,8 +6018,8 @@
     },
     "rest_command": {
       "name": "RESTful Command",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "service",
+      "config_flow": true,
       "iot_class": "local_push"
     },
     "rexel": {

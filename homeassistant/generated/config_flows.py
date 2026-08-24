@@ -655,6 +655,7 @@ FLOWS = {
         "renault",
         "renson",
         "reolink",
+        "rest_command",
         "rfxtrx",
         "rhasspy",
         "ridwell",

@@ -1,5 +1,8 @@
 {
   "services": {
+    "call_endpoint": {
+      "service": "mdi:webhook"
+    },
     "reload": {
       "service": "mdi:reload"
     }

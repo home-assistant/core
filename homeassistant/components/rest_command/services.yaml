@@ -1,1 +1,14 @@
+call_endpoint:
+  fields:
+    config_entry_id:
+      required: true
+      selector:
+        config_entry:
+          integration: rest_command
+    payload:
+      example: '{"message": "The event occurred"}'
+      selector:
+        text:
+          multiline: true
+
 reload:
