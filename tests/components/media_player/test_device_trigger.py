@@ -265,8 +265,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 2
     assert {service_calls[0].data["some"], service_calls[1].data["some"]} == {
-        "turned_on - device - media_player.test_5678 - off - on - None",
-        "changed_states - device - media_player.test_5678 - off - on - None",
+        f"turned_on - device - {entry.entity_id} - off - on - None",
+        f"changed_states - device - {entry.entity_id} - off - on - None",
     }
 
     # Fake that the entity is turning off.
@@ -274,8 +274,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 4
     assert {service_calls[2].data["some"], service_calls[3].data["some"]} == {
-        "turned_off - device - media_player.test_5678 - on - off - None",
-        "changed_states - device - media_player.test_5678 - on - off - None",
+        f"turned_off - device - {entry.entity_id} - on - off - None",
+        f"changed_states - device - {entry.entity_id} - on - off - None",
     }
 
     # Fake that the entity becomes idle.
@@ -283,8 +283,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 6
     assert {service_calls[4].data["some"], service_calls[5].data["some"]} == {
-        "idle - device - media_player.test_5678 - off - idle - None",
-        "changed_states - device - media_player.test_5678 - off - idle - None",
+        f"idle - device - {entry.entity_id} - off - idle - None",
+        f"changed_states - device - {entry.entity_id} - off - idle - None",
     }
 
     # Fake that the entity starts playing.
@@ -292,8 +292,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 8
     assert {service_calls[6].data["some"], service_calls[7].data["some"]} == {
-        "playing - device - media_player.test_5678 - idle - playing - None",
-        "changed_states - device - media_player.test_5678 - idle - playing - None",
+        f"playing - device - {entry.entity_id} - idle - playing - None",
+        f"changed_states - device - {entry.entity_id} - idle - playing - None",
     }
 
     # Fake that the entity is paused.
@@ -301,8 +301,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 10
     assert {service_calls[8].data["some"], service_calls[9].data["some"]} == {
-        "paused - device - media_player.test_5678 - playing - paused - None",
-        "changed_states - device - media_player.test_5678 - playing - paused - None",
+        f"paused - device - {entry.entity_id} - playing - paused - None",
+        f"changed_states - device - {entry.entity_id} - playing - paused - None",
     }
 
     # Fake that the entity is buffering.
@@ -310,8 +310,8 @@ async def test_if_fires_on_state_change(
     await hass.async_block_till_done()
     assert len(service_calls) == 12
     assert {service_calls[10].data["some"], service_calls[11].data["some"]} == {
-        "buffering - device - media_player.test_5678 - paused - buffering - None",
-        "changed_states - device - media_player.test_5678 - paused - buffering - None",
+        f"buffering - device - {entry.entity_id} - paused - buffering - None",
+        f"changed_states - device - {entry.entity_id} - paused - buffering - None",
     }
 
 
@@ -370,7 +370,7 @@ async def test_if_fires_on_state_change_legacy(
     assert len(service_calls) == 1
     assert (
         service_calls[0].data["some"]
-        == "turned_on - device - media_player.test_5678 - off - on - None"
+        == f"turned_on - device - {entry.entity_id} - off - on - None"
     )
 
 

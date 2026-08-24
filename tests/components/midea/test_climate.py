@@ -6,7 +6,7 @@ from unittest.mock import patch
 
 from midealocal.const import DeviceType
 from midealocal.devices.ac import DeviceAttributes as ACAttributes
-from midealocal.devices.c3.const import DeviceAttributes as C3Attributes
+from midealocal.devices.c3 import DeviceAttributes as C3Attributes
 from midealocal.devices.cc import DeviceAttributes as CCAttributes
 from midealocal.devices.cf import DeviceAttributes as CFAttributes
 from midealocal.devices.fb import DeviceAttributes as FBAttributes

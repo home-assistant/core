@@ -333,10 +333,7 @@ async def test_missing_config_entry(
     other_entry = MockConfigEntry(domain="other_domain", data={})
     other_entry.add_to_hass(hass)
     device_registry.async_update_device(
-        device_entry.id, add_config_entry_id=other_entry.entry_id
-    )
-    device_registry.async_update_device(
-        device_entry.id, remove_config_entry_id=mock_config_entry.entry_id
+        device_entry.id, new_config_entry_id=other_entry.entry_id
     )
 
     # Call Service

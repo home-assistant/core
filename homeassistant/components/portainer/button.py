@@ -6,7 +6,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from typing import Any, override
 
-from pyportainer import Portainer
+from pyportainer import DockerContainerState, Portainer
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
@@ -54,6 +54,7 @@ class PortainerContainerButtonDescription(ButtonEntityDescription):
         [Portainer, int, str],
         Coroutine[Any, Any, DockerContainer | None],
     ]
+    available_fn: Callable[[PortainerContainerData], bool]
 
 
 ENDPOINT_BUTTONS: tuple[PortainerEndpointButtonDescription, ...] = (
@@ -89,6 +90,9 @@ CONTAINER_BUTTONS: tuple[PortainerContainerButtonDescription, ...] = (
                 endpoint_id, container_id
             )
         ),
+        available_fn=lambda container: (
+            container.container.state != DockerContainerState.PAUSED
+        ),
     ),
     PortainerContainerButtonDescription(
         key="pause",
@@ -99,6 +103,9 @@ CONTAINER_BUTTONS: tuple[PortainerContainerButtonDescription, ...] = (
                 endpoint_id, container_id
             )
         ),
+        available_fn=lambda container: (
+            container.container.state == DockerContainerState.RUNNING
+        ),
     ),
     PortainerContainerButtonDescription(
         key="resume",
@@ -108,6 +115,9 @@ CONTAINER_BUTTONS: tuple[PortainerContainerButtonDescription, ...] = (
             lambda portainer, endpoint_id, container_id: portainer.unpause_container(
                 endpoint_id, container_id
             )
+        ),
+        available_fn=lambda container: (
+            container.container.state == DockerContainerState.PAUSED
         ),
     ),
     PortainerContainerButtonDescription(
@@ -122,6 +132,10 @@ CONTAINER_BUTTONS: tuple[PortainerContainerButtonDescription, ...] = (
                 pull_image=True,
             )
         ),
+        available_fn=lambda container: (
+            container.container.state
+            not in (DockerContainerState.REMOVING, DockerContainerState.DEAD)
+        ),
     ),
     PortainerContainerButtonDescription(
         key="kill",
@@ -131,6 +145,10 @@ CONTAINER_BUTTONS: tuple[PortainerContainerButtonDescription, ...] = (
             lambda portainer, endpoint_id, container_id: portainer.kill_container(
                 endpoint_id, container_id
             )
+        ),
+        available_fn=lambda container: (
+            container.container.state
+            in (DockerContainerState.RUNNING, DockerContainerState.PAUSED)
         ),
     ),
 )
@@ -243,6 +261,14 @@ class PortainerContainerButton(PortainerContainerEntity, PortainerBaseButton):
     """Defines a Portainer button."""
 
     entity_description: PortainerContainerButtonDescription
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return if the button is available."""
+        return super().available and self.entity_description.available_fn(
+            self.container_data
+        )
 
     @override
     async def _async_press_call(self) -> None:
