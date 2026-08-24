@@ -59,6 +59,12 @@
       "buffer_load": {
         "name": "Buffer load"
       },
+      "buffer_stage_bottom_temperature": {
+        "name": "Buffer stage {tank} bottom temperature"
+      },
+      "buffer_stage_top_temperature": {
+        "name": "Buffer stage {tank} top temperature"
+      },
       "buffer_top_0_temperature": {
         "name": "Buffer 0 top temperature"
       },
@@ -71,20 +77,17 @@
       "buffer_top_temperature": {
         "name": "Buffer top temperature"
       },
+      "burner_output": {
+        "name": "Burner output"
+      },
       "circuit_temperature": {
         "name": "Flow temperature"
       },
       "co2_content": {
         "name": "Flue CO2 content"
       },
-      "dhw_pump_0": {
-        "name": "DHW pump 0"
-      },
-      "dhw_pump_1": {
-        "name": "DHW pump 1"
-      },
-      "dhw_pump_2": {
-        "name": "DHW pump 2"
+      "dhw_pump": {
+        "name": "DHW pump {circuit}"
       },
       "domestic_hot_water_0_temperature": {
         "name": "Domestic hot water circuit 0 temperature"
@@ -94,6 +97,9 @@
       },
       "domestic_hot_water_2_temperature": {
         "name": "Domestic hot water circuit 2 temperature"
+      },
+      "domestic_hot_water_temperature": {
+        "name": "Domestic hot water circuit {circuit} temperature"
       },
       "extra_dhw_1_temperature": {
         "name": "Extra DHW 1 temperature"
@@ -108,6 +114,12 @@
           "nonstop": "Non-stop",
           "off": "Off"
         }
+      },
+      "extra_dhw_temperature": {
+        "name": "Extra DHW circuit {circuit} temperature"
+      },
+      "flue_gas_actuator_target": {
+        "name": "Flue gas actuator target"
       },
       "heating_circulation_program": {
         "name": "Program",
@@ -127,11 +139,8 @@
           "off": "Off"
         }
       },
-      "interruption_1": {
-        "name": "Malfunction 1"
-      },
-      "interruption_2": {
-        "name": "Malfunction 2"
+      "interruption": {
+        "name": "Interruption {number}"
       },
       "operating_time": {
         "name": "Operating time"

@@ -1,5 +1,6 @@
 """Support for Guntamatic sensors in Home Assistant."""
 
+from datetime import timedelta
 import re
 from typing import override
 
@@ -21,6 +22,7 @@ from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import ChildDeviceInfo, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN
 from .coordinator import GuntamaticConfigEntry, GuntamaticCoordinator
@@ -75,7 +77,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="buffer_top_0_temperature",
-        translation_key="buffer_top_0_temperature",
+        translation_key="buffer_stage_top_temperature",
+        translation_placeholders={"tank": "1"},
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -83,7 +86,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="buffer_top_1_temperature",
-        translation_key="buffer_top_1_temperature",
+        translation_key="buffer_stage_top_temperature",
+        translation_placeholders={"tank": "2"},
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -91,7 +95,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="buffer_top_2_temperature",
-        translation_key="buffer_top_2_temperature",
+        translation_key="buffer_stage_top_temperature",
+        translation_placeholders={"tank": "3"},
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -113,7 +118,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="buffer_bottom_0_temperature",
-        translation_key="buffer_bottom_0_temperature",
+        translation_key="buffer_stage_bottom_temperature",
+        translation_placeholders={"tank": "1"},
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -121,7 +127,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="buffer_bottom_1_temperature",
-        translation_key="buffer_bottom_1_temperature",
+        translation_key="buffer_stage_bottom_temperature",
+        translation_placeholders={"tank": "2"},
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -129,7 +136,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="buffer_bottom_2_temperature",
-        translation_key="buffer_bottom_2_temperature",
+        translation_key="buffer_stage_bottom_temperature",
+        translation_placeholders={"tank": "3"},
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -137,21 +145,24 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="domestic_hot_water_0_temperature",
-        translation_key="domestic_hot_water_0_temperature",
+        translation_key="domestic_hot_water_temperature",
+        translation_placeholders={"circuit": "1"},
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="domestic_hot_water_1_temperature",
-        translation_key="domestic_hot_water_1_temperature",
+        translation_key="domestic_hot_water_temperature",
+        translation_placeholders={"circuit": "2"},
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
     ),
     SensorEntityDescription(
         key="domestic_hot_water_2_temperature",
-        translation_key="domestic_hot_water_2_temperature",
+        translation_key="domestic_hot_water_temperature",
+        translation_placeholders={"circuit": "3"},
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -304,7 +315,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="dhw_pump_0",
-        translation_key="dhw_pump_0",
+        translation_key="dhw_pump",
+        translation_placeholders={"circuit": "1"},
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
@@ -312,7 +324,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="dhw_pump_1",
-        translation_key="dhw_pump_1",
+        translation_key="dhw_pump",
+        translation_placeholders={"circuit": "2"},
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
@@ -320,7 +333,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="dhw_pump_2",
-        translation_key="dhw_pump_2",
+        translation_key="dhw_pump",
+        translation_placeholders={"circuit": "3"},
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
@@ -329,7 +343,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     *[
         SensorEntityDescription(
             key=f"extra_dhw_{nr}_temperature",
-            translation_key=f"extra_dhw_{nr}_temperature",
+            translation_key="extra_dhw_temperature",
+            translation_placeholders={"circuit": str(nr + 1)},
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
@@ -642,13 +657,15 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="interruption_1",
-        translation_key="interruption_1",
+        translation_key="interruption",
+        translation_placeholders={"number": "1"},
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
     SensorEntityDescription(
         key="interruption_2",
-        translation_key="interruption_2",
+        translation_key="interruption",
+        translation_placeholders={"number": "2"},
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -663,9 +680,8 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     ),
     SensorEntityDescription(
         key="service_days",
-        translation_key="service_days",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.DAYS,
+        translation_key="service_date",
+        device_class=SensorDeviceClass.DATE,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),
@@ -750,6 +766,8 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
     def native_value(self) -> StateType:
         """Return the current value of the sensor."""
         value = self.coordinator.data[self.entity_description.key][0]
+        if self.entity_description.device_class is SensorDeviceClass.DATE:
+            return dt_util.now().date() + timedelta(days=int(value))
         if (
             self.entity_description.device_class is SensorDeviceClass.ENUM
             and value not in (self.entity_description.options or [])
