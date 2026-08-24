@@ -1,0 +1,45 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
+      "no_icps": "This key has no connection points yet. Keys can be created before a switch to Ecosmart completes; try again once your property is connected.",
+      "unknown": "[%key:common::config_flow::error::unknown%]"
+    },
+    "step": {
+      "user": {
+        "data": {
+          "api_key": "[%key:common::config_flow::data::api_key%]"
+        },
+        "data_description": {
+          "api_key": "Create a key in the Ecosmart app under More > Settings > Advanced > API keys. Creating a new key disables the previous one, so if you use your key somewhere else already, that other tool will stop working."
+        },
+        "description": "Enter the API key for your Ecosmart account."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "forecast_price": {
+        "name": "Forecast price"
+      },
+      "spot_price": {
+        "name": "Spot price"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not reach the Ecosmart API"
+    },
+    "invalid_auth": {
+      "message": "The Ecosmart API key was rejected. Creating a new key in the Ecosmart app disables the previous one."
+    },
+    "rate_limited": {
+      "message": "The Ecosmart API key is out of requests; the next attempt is in {retry_after} seconds"
+    }
+  }
+}
