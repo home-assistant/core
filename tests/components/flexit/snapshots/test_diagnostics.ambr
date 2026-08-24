@@ -18,8 +18,8 @@
     'entry_data': dict({
       'host': '**REDACTED**',
       'port': 502,
-      'slave': 1,
       'type': 'tcp',
+      'unit': 1,
     }),
   })
 # ---

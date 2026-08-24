@@ -8,7 +8,7 @@ from modbus_connection import ModbusError
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_SLAVE, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -25,6 +25,7 @@ from .const import (
     CONF_BYTESIZE,
     CONF_PARITY,
     CONF_STOPBITS,
+    CONF_UNIT,
     DEFAULT_BAUDRATE,
     DEFAULT_BYTESIZE,
     DEFAULT_PARITY,
@@ -37,8 +38,8 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
-SLAVE_SELECTOR = vol.All(
-    NumberSelector(NumberSelectorConfig(min=0, max=32, mode=NumberSelectorMode.BOX)),
+UNIT_SELECTOR = vol.All(
+    NumberSelector(NumberSelectorConfig(min=1, max=247, mode=NumberSelectorMode.BOX)),
     vol.Coerce(int),
 )
 
@@ -51,7 +52,7 @@ STEP_TCP_DATA_SCHEMA = vol.Schema(
             ),
             vol.Coerce(int),
         ),
-        vol.Required(CONF_SLAVE): SLAVE_SELECTOR,
+        vol.Required(CONF_UNIT): UNIT_SELECTOR,
     }
 )
 
@@ -73,7 +74,7 @@ STEP_SERIAL_DATA_SCHEMA = vol.Schema(
             SelectSelector(SelectSelectorConfig(options=["1", "2"])),
             vol.Coerce(int),
         ),
-        vol.Required(CONF_SLAVE): SLAVE_SELECTOR,
+        vol.Required(CONF_UNIT): UNIT_SELECTOR,
     }
 )
 
@@ -83,7 +84,7 @@ async def check_connection(data: dict[str, Any]) -> str | None:
     try:
         connection = create_modbus_connection(data)
         try:
-            await Flexit(connection.for_unit(data[CONF_SLAVE])).async_update()
+            await Flexit(connection.for_unit(data[CONF_UNIT])).async_update()
         finally:
             await connection.close()
     except ModbusError:

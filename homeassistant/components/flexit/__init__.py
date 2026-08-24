@@ -6,14 +6,7 @@ from typing import Any, Literal, cast
 from modbus_connection import ModbusSerialParams, ModbusTcpParams
 from modbus_connection.pymodbus import ModbusConnection
 
-from homeassistant.const import (
-    CONF_DEVICE,
-    CONF_HOST,
-    CONF_PORT,
-    CONF_SLAVE,
-    CONF_TYPE,
-    Platform,
-)
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import (
@@ -21,6 +14,7 @@ from .const import (
     CONF_BYTESIZE,
     CONF_PARITY,
     CONF_STOPBITS,
+    CONF_UNIT,
     DEFAULT_PORT,
     TYPE_SERIAL,
 )
@@ -52,7 +46,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: FlexitConfigEntry) -> bo
     connection = create_modbus_connection(entry.data)
     entry.async_on_unload(connection.close)
 
-    coordinator = FlexitDataCoordinator(hass, entry, connection, entry.data[CONF_SLAVE])
+    coordinator = FlexitDataCoordinator(hass, entry, connection, entry.data[CONF_UNIT])
 
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data = coordinator

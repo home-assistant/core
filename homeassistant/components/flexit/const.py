@@ -9,6 +9,7 @@ CONF_BAUDRATE = "baudrate"
 CONF_BYTESIZE = "bytesize"
 CONF_PARITY = "parity"
 CONF_STOPBITS = "stopbits"
+CONF_UNIT = "unit"
 
 TYPE_TCP = "tcp"
 TYPE_SERIAL = "serial"

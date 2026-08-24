@@ -27,7 +27,7 @@ class FlexitDataCoordinator(DataUpdateCoordinator[None]):
         hass: HomeAssistant,
         entry: FlexitConfigEntry,
         connection: ModbusConnection,
-        slave: int,
+        unit: int,
     ) -> None:
         """Initialize the FlexitDataCoordinator."""
         super().__init__(
@@ -40,7 +40,7 @@ class FlexitDataCoordinator(DataUpdateCoordinator[None]):
             # the register values), so there is nothing to diff against.
             always_update=True,
         )
-        self.device = Flexit(connection.for_unit(slave))
+        self.device = Flexit(connection.for_unit(unit))
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
             configuration_url=None,

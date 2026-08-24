@@ -17,8 +17,8 @@
           "host": "[%key:common::config_flow::data::host%]",
           "parity": "[%key:component::flexit::config::step::serial::data::parity%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "slave": "Slave ID",
-          "stopbits": "[%key:component::flexit::config::step::serial::data::stopbits%]"
+          "stopbits": "[%key:component::flexit::config::step::serial::data::stopbits%]",
+          "unit": "Unit ID"
         },
         "data_description": {
           "baudrate": "[%key:component::flexit::config::step::serial::data_description::baudrate%]",
@@ -27,8 +27,8 @@
           "host": "[%key:component::flexit::config::step::tcp::data_description::host%]",
           "parity": "[%key:component::flexit::config::step::serial::data_description::parity%]",
           "port": "[%key:component::flexit::config::step::tcp::data_description::port%]",
-          "slave": "[%key:component::flexit::config::step::tcp::data_description::slave%]",
-          "stopbits": "[%key:component::flexit::config::step::serial::data_description::stopbits%]"
+          "stopbits": "[%key:component::flexit::config::step::serial::data_description::stopbits%]",
+          "unit": "[%key:component::flexit::config::step::tcp::data_description::unit%]"
         }
       },
       "serial": {
@@ -37,28 +37,28 @@
           "bytesize": "Data bits",
           "device": "Serial device",
           "parity": "Parity",
-          "slave": "Slave ID",
-          "stopbits": "Stop bits"
+          "stopbits": "Stop bits",
+          "unit": "Unit ID"
         },
         "data_description": {
           "baudrate": "The baud rate of the serial connection.",
           "bytesize": "The number of data bits of the serial connection.",
           "device": "The serial device your Flexit CI66 Modbus adapter is connected to.",
           "parity": "The parity of the serial connection.",
-          "slave": "The Modbus slave ID of your Flexit AC unit.",
-          "stopbits": "The number of stop bits of the serial connection."
+          "stopbits": "The number of stop bits of the serial connection.",
+          "unit": "The Modbus unit ID of your Flexit AC unit."
         }
       },
       "tcp": {
         "data": {
           "host": "[%key:common::config_flow::data::host%]",
           "port": "[%key:common::config_flow::data::port%]",
-          "slave": "Slave ID"
+          "unit": "Unit ID"
         },
         "data_description": {
           "host": "The hostname or IP address of your Flexit CI66 Modbus adapter.",
           "port": "The port of your Flexit CI66 Modbus adapter.",
-          "slave": "The Modbus slave ID of your Flexit AC unit."
+          "unit": "The Modbus unit ID of your Flexit AC unit."
         }
       },
       "user": {
@@ -71,7 +71,7 @@
   },
   "issues": {
     "deprecated_yaml_no_import": {
-      "description": "Configuring Flexit using YAML is being removed.\n\nYour existing YAML configuration could not be automatically imported because the Modbus connection details are configured separately, in a `modbus:` hub, which is not accessible from the `climate` platform configuration.\n\nRemove the `flexit` configuration from your configuration.yaml file, then add the integration again from the Home Assistant UI, providing the host, port, and slave ID of your Flexit unit.",
+      "description": "Configuring Flexit using YAML is being removed.\n\nYour existing YAML configuration could not be automatically imported because the Modbus connection details are configured separately, in a `modbus:` hub, which is not accessible from the `climate` platform configuration.\n\nRemove the `flexit` configuration from your configuration.yaml file, then add the integration again from the Home Assistant UI, providing the host, port, and unit ID of your Flexit unit.",
       "title": "The Flexit YAML configuration is being removed"
     }
   }

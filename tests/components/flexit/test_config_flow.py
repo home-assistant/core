@@ -4,18 +4,19 @@ from unittest.mock import MagicMock
 
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+import pytest
 
-from homeassistant.components.flexit.const import DOMAIN, TYPE_TCP
+from homeassistant.components.flexit.const import CONF_UNIT, DOMAIN, TYPE_TCP
 from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_SLAVE, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 
 from tests.common import MockConfigEntry
 
-TCP_USER_INPUT = {CONF_HOST: "1.1.1.1", CONF_PORT: 502, CONF_SLAVE: 1}
+TCP_USER_INPUT = {CONF_HOST: "1.1.1.1", CONF_PORT: 502, CONF_UNIT: 1}
 TCP_ENTRY_DATA = {CONF_TYPE: TYPE_TCP, **TCP_USER_INPUT}
-TCP_RECONFIGURE_INPUT = {CONF_HOST: "2.2.2.2", CONF_PORT: 502, CONF_SLAVE: 1}
+TCP_RECONFIGURE_INPUT = {CONF_HOST: "2.2.2.2", CONF_PORT: 502, CONF_UNIT: 1}
 
 SERIAL_USER_INPUT = {
     CONF_DEVICE: "/dev/ttyUSB0",
@@ -23,7 +24,7 @@ SERIAL_USER_INPUT = {
     "bytesize": "8",
     "parity": "N",
     "stopbits": "1",
-    CONF_SLAVE: 1,
+    CONF_UNIT: 1,
 }
 SERIAL_ENTRY_DATA = {
     CONF_TYPE: "serial",
@@ -56,6 +57,39 @@ async def test_full_flow(hass: HomeAssistant) -> None:
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Flexit"
     assert result["data"] == TCP_ENTRY_DATA
+
+
+async def test_maximum_unit(hass: HomeAssistant) -> None:
+    """Test the maximum Modbus unit ID is accepted."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "tcp"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**TCP_USER_INPUT, CONF_UNIT: 247}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_UNIT] == 247
+
+
+@pytest.mark.parametrize("unit", [0, 248])
+async def test_unit_out_of_range(hass: HomeAssistant, unit: int) -> None:
+    """Test unit IDs outside the Modbus address range are rejected."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "tcp"}
+    )
+
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**TCP_USER_INPUT, CONF_UNIT: unit}
+        )
 
 
 async def test_full_flow_serial(

@@ -6,8 +6,8 @@ from unittest.mock import MagicMock, patch
 from modbus_connection.mock import MockModbusConnection
 import pytest
 
-from homeassistant.components.flexit.const import DOMAIN, TYPE_TCP
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_SLAVE, CONF_TYPE
+from homeassistant.components.flexit.const import CONF_UNIT, DOMAIN, TYPE_TCP
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 
 from tests.common import MockConfigEntry
 
@@ -41,7 +41,7 @@ def mock_config_entry() -> MockConfigEntry:
             CONF_TYPE: TYPE_TCP,
             CONF_HOST: "1.1.1.1",
             CONF_PORT: 502,
-            CONF_SLAVE: 1,
+            CONF_UNIT: 1,
         },
         entry_id="flexit_001",
     )
@@ -60,7 +60,7 @@ def mock_serial_config_entry() -> MockConfigEntry:
             "bytesize": 8,
             "parity": "N",
             "stopbits": 1,
-            CONF_SLAVE: 1,
+            CONF_UNIT: 1,
         },
         entry_id="flexit_002",
     )

@@ -11,9 +11,9 @@ from modbus_connection import (
 from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 
 from homeassistant.components.flexit import create_modbus_connection
-from homeassistant.components.flexit.const import DOMAIN, TYPE_TCP
+from homeassistant.components.flexit.const import CONF_UNIT, DOMAIN, TYPE_TCP
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_SLAVE, CONF_TYPE
+from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry
@@ -80,7 +80,7 @@ async def test_async_setup_entry_with_custom_port(
             CONF_TYPE: TYPE_TCP,
             CONF_HOST: "192.168.1.100",
             CONF_PORT: 5020,
-            CONF_SLAVE: 1,
+            CONF_UNIT: 1,
         },
     )
     config_entry.add_to_hass(hass)
@@ -99,7 +99,7 @@ async def test_async_setup_entry_without_port(
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Flexit",
-        data={CONF_TYPE: TYPE_TCP, CONF_HOST: "192.168.1.100", CONF_SLAVE: 1},
+        data={CONF_TYPE: TYPE_TCP, CONF_HOST: "192.168.1.100", CONF_UNIT: 1},
     )
     config_entry.add_to_hass(hass)
 
