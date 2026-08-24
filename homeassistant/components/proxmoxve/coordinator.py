@@ -353,6 +353,8 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
             for nodes_callback in self.new_nodes_callbacks:
                 nodes_callback(new_node_data)
 
+        self._async_update_resource_device_parents(data)
+
         # Track VMs by VMID only (not by node), since VMIDs are globally
         # unique in a Proxmox cluster and VMs can migrate between nodes.
         current_vms = {vmid for node_data in data.values() for vmid in node_data.vms}
@@ -404,6 +406,40 @@ class ProxmoxCoordinator(DataUpdateCoordinator[dict[str, ProxmoxNodeData]]):
                 storages_callback(new_storage_data)
 
         self._async_remove_stale_devices(data)
+
+    @callback
+    def _async_update_resource_device_parents(
+        self, data: dict[str, ProxmoxNodeData]
+    ) -> None:
+        """Update VM/container device parents after a migration."""
+        registry = dr.async_get(self.hass)
+        entry_id = self.config_entry.entry_id
+
+        for resource_kind, node_map in (
+            ("vm", self.vmid_node_map),
+            ("container", self.ctid_node_map),
+        ):
+            for resource_id, node_name in node_map.items():
+                resource_device = registry.async_get_device_by_identifier(
+                    (DOMAIN, f"{entry_id}_{resource_kind}_{resource_id}"), entry_id
+                )
+                if resource_device is None:
+                    continue
+
+                node_device = registry.async_get_device_by_identifier(
+                    (
+                        DOMAIN,
+                        f"{entry_id}_node_{data[node_name].node['id']}",
+                    ),
+                    entry_id,
+                )
+                if (
+                    node_device is not None
+                    and resource_device.via_device_id != node_device.id
+                ):
+                    registry.async_update_device(
+                        resource_device.id, via_device_id=node_device.id
+                    )
 
     @callback
     def _async_remove_stale_devices(self, data: dict[str, ProxmoxNodeData]) -> None:

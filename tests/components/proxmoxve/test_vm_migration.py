@@ -237,6 +237,10 @@ async def test_migration_source_dual_target(
     await coordinator.async_refresh()
     await hass.async_block_till_done()
 
+    target_node_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{entry_id}_node_node/pve2"), entry_id
+    )
+    assert target_node_device is not None
     assert _state_value(hass, status_entity_id) == STATE_ON
     assert (
         _resource_entity_identity(entity_registry, entry_id, resource_id)
@@ -245,6 +249,12 @@ async def test_migration_source_dual_target(
     assert (
         _get_child_device(device_registry, entry_id, resource_kind, resource_id).id
         == child_device_id
+    )
+    assert (
+        _get_child_device(
+            device_registry, entry_id, resource_kind, resource_id
+        ).via_device_id
+        == source_node_device.id
     )
 
     source_vms = [_VM_101] if resource_kind == "vm" else initial_vms
@@ -269,6 +279,12 @@ async def test_migration_source_dual_target(
     assert (
         _get_child_device(device_registry, entry_id, resource_kind, resource_id).id
         == child_device_id
+    )
+    assert (
+        _get_child_device(
+            device_registry, entry_id, resource_kind, resource_id
+        ).via_device_id
+        == target_node_device.id
     )
     assert (
         _matching_device_count(device_registry, entry_id, resource_kind, resource_id)
