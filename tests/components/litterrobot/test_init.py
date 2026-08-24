@@ -1,6 +1,7 @@
 """Test Litter-Robot setup process."""
 
 from datetime import timedelta
+from typing import Any
 from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
@@ -57,6 +58,22 @@ async def test_shutdown_disconnects_account(
     await setup_integration(hass, mock_account, VACUUM_DOMAIN)
 
     hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_account.disconnect.assert_awaited_once()
+
+
+async def test_shutdown_during_first_refresh_disconnects_account(
+    hass: HomeAssistant, mock_account: MagicMock
+) -> None:
+    """Test a stop during the first refresh still disconnects the account."""
+
+    async def _stop_during_refresh(**kwargs: Any) -> None:
+        hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+
+    mock_account.load_robots.side_effect = _stop_during_refresh
+
+    await setup_integration(hass, mock_account, VACUUM_DOMAIN)
     await hass.async_block_till_done()
 
     mock_account.disconnect.assert_awaited_once()
