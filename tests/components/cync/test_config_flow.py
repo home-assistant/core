@@ -110,7 +110,7 @@ async def test_form_reauth_success(
         mock_config_entry,
         data={
             **mock_config_entry.data,
-            "mesh_unique_ids_migration_pending": "entities_to_temporary",
+            "mesh_unique_ids_migration_pending": True,
         },
     )
     result = await mock_config_entry.start_reauth_flow(hass)
@@ -146,7 +146,7 @@ async def test_form_reauth_success(
         CONF_EXPIRES_AT: ANY,
         CONF_ACCESS_TOKEN: "test_token",
         CONF_REFRESH_TOKEN: "test_refresh_token",
-        "mesh_unique_ids_migration_pending": "entities_to_temporary",
+        "mesh_unique_ids_migration_pending": True,
     }
     assert len(mock_setup_entry.mock_calls) == 1
 
