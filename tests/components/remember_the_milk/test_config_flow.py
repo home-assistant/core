@@ -288,6 +288,120 @@ async def test_reauth_change_credentials(
     assert mock_entry.unique_id == TOKEN_RESPONSE["user"]["id"]
 
 
+@pytest.mark.parametrize(
+    ("exception", "error"),
+    [
+        (AuthError, "invalid_auth"),
+        (AioRTMError, "cannot_connect"),
+        (Exception, "unknown"),
+    ],
+)
+async def test_reauth_form_errors(
+    hass: HomeAssistant,
+    client: AsyncMock,
+    mock_setup_entry: AsyncMock,
+    exception: type[Exception],
+    error: str,
+) -> None:
+    """Test reauth form errors when getting the authentication URL."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=TOKEN_RESPONSE["user"]["id"], data=CREATE_ENTRY_DATA
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "user"
+
+    with patch(
+        "homeassistant.components.remember_the_milk.config_flow.Auth.authenticate_desktop",
+        side_effect=exception,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {
+                "api_key": "new-api-key",
+                "shared_secret": "new-secret",
+            },
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": error}
+    # Edited credentials are preserved on the retry form, not discarded.
+    data_schema = result["data_schema"]
+    assert data_schema is not None
+    assert get_suggested_value(data_schema, "api_key") == "new-api-key"
+    assert get_suggested_value(data_schema, "shared_secret") == "new-secret"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "api_key": "new-api-key",
+            "shared_secret": "new-secret",
+        },
+    )
+    reauth_data = deepcopy(TOKEN_RESPONSE) | {"token": "new-test-token"}
+    with patch(
+        "homeassistant.components.remember_the_milk.config_flow.Auth.get_token",
+        return_value=reauth_data,
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "reason", "timeout"),
+    [
+        (AuthError, "invalid_auth", TOKEN_TIMEOUT_SEC),
+        (AioRTMError, "cannot_connect", TOKEN_TIMEOUT_SEC),
+        (Exception, "unknown", TOKEN_TIMEOUT_SEC),
+        (mock_get_token, "timeout_token", 0),
+    ],
+)
+async def test_reauth_token_abort(
+    hass: HomeAssistant,
+    client: AsyncMock,
+    side_effect: type[Exception | Awaitable[None]],
+    reason: str,
+    timeout: int,
+) -> None:
+    """Test abort result when getting token during reauth."""
+    mock_entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=TOKEN_RESPONSE["user"]["id"], data=CREATE_ENTRY_DATA
+    )
+    mock_entry.add_to_hass(hass)
+
+    result = await mock_entry.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "api_key": "test-api-key",
+            "shared_secret": "test-secret",
+        },
+    )
+
+    with (
+        patch(
+            "homeassistant.components.remember_the_milk.config_flow.Auth.get_token",
+            side_effect=side_effect,
+        ),
+        patch(
+            "homeassistant.components.remember_the_milk.config_flow.TOKEN_TIMEOUT_SEC",
+            timeout,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
 async def test_import_flow(
     hass: HomeAssistant, client: AsyncMock, mock_setup_entry: AsyncMock
 ) -> None:

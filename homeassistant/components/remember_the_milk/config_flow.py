@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Mapping
 from typing import Any, override
 
-from aiortm import AioRTMError, Auth, AuthError, ResponseError
+from aiortm import AioRTMError, Auth, AuthError
 import voluptuous as vol
 
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
@@ -79,13 +79,13 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_step_auth()
 
+        suggested_values: Mapping[str, Any] | None = user_input
+        if suggested_values is None and self.source == SOURCE_REAUTH:
+            suggested_values = self._get_reauth_entry().data
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA,
-                self._get_reauth_entry().data
-                if self.source == SOURCE_REAUTH
-                else user_input,
+                STEP_USER_DATA_SCHEMA, suggested_values
             ),
             errors=errors,
         )
@@ -135,8 +135,7 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
         """Create or update the config entry from token data.
 
         The token data has the same structure whether it comes from get_token
-        or check_token. The username defaults to the Remember The Milk account
-        username but can be overridden, e.g. to keep the YAML account name.
+        or check_token.
         """
         await self.async_set_unique_id(token_data["user"]["id"])
         data = {
