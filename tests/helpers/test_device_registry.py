@@ -4529,9 +4529,11 @@ async def test_async_get_device_deprecated(
 @pytest.mark.parametrize(
     ("parameter", "value", "replacement"),
     [
+        ("created_at", "2024-01-01T00:00:00+00:00", None),
         ("default_manufacturer", "manufacturer", "manufacturer"),
         ("default_model", "model", "model"),
         ("default_name", "name", "name"),
+        ("modified_at", "2024-01-01T00:00:00+00:00", None),
         ("via_device", ("some_domain", "via_id"), "via_device_id"),
     ],
 )
@@ -4562,7 +4564,7 @@ async def test_async_get_or_create_deprecated_parameters(
     caplog: pytest.LogCaptureFixture,
     parameter: str,
     value: Any,
-    replacement: str,
+    replacement: str | None,
     expectation: AbstractContextManager,
     expected_log: int,
 ) -> None:
@@ -4576,9 +4578,13 @@ async def test_async_get_or_create_deprecated_parameters(
         config_entry_id=config_entry.entry_id, identifiers={("some_domain", "via_id")}
     )
 
+    if replacement is None:
+        advice = ", which is ignored"
+    else:
+        advice = f"; use `{replacement}` instead"
     what = (
         "calls `device_registry.async_get_or_create` with a deprecated "
-        f"`{parameter}` parameter; use `{replacement}` instead"
+        f"`{parameter}` parameter{advice}"
     )
     with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
         device_registry.async_get_or_create(
@@ -4593,9 +4599,11 @@ async def test_async_get_or_create_deprecated_parameters(
 @pytest.mark.parametrize(
     ("parameter", "value"),
     [
+        ("created_at", "2024-01-01T00:00:00+00:00"),
         ("default_manufacturer", "manufacturer"),
         ("default_model", "model"),
         ("default_name", "name"),
+        ("modified_at", "2024-01-01T00:00:00+00:00"),
         ("via_device", ("some_domain", "via_id")),
     ],
 )
@@ -10477,6 +10485,33 @@ async def test_child_device_parent_in_other_config_entry(
     # Validation precedes mutation, so no child device is created
     assert not device_registry.child_devices
     assert len(device_registry.devices) == 1
+
+
+@pytest.mark.parametrize("parameter", ["created_at", "modified_at"])
+@pytest.mark.usefixtures("hass")
+async def test_async_get_or_create_child_rejects_removed_parameters(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+    parameter: str,
+) -> None:
+    """Test async_get_or_create_child no longer accepts created_at / modified_at."""
+    parent = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+
+    with pytest.raises(
+        TypeError,
+        match=f"unexpected keyword argument '{parameter}'",
+    ):
+        device_registry.async_get_or_create_child(
+            config_entry_id=mock_config_entry.entry_id,
+            identifiers={("test", "strip_outlet_1")},
+            parent_device_id=parent.id,
+            name="Outlet 1",
+            **{parameter: "2024-01-01T00:00:00+00:00"},
+        )
 
 
 @pytest.mark.usefixtures("hass")
