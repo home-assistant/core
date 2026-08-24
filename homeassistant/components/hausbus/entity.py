@@ -23,12 +23,14 @@ class HausbusEntity(Entity):
     def __init__(
         self,
         channel: ABusFeature,
+        domain: str,
         device_info: DeviceInfo,
     ) -> None:
         """Set up channel."""
         super().__init__()
 
         self._channel = channel
+        self._domain = domain
         self._configuration: Any = None
 
         self._object_id = ObjectId(channel.getObjectId())
@@ -44,6 +46,10 @@ class HausbusEntity(Entity):
         )
         self._debug_identifier = f"{self._device_id} {self._attr_name}"
 
+    def get_domain(self) -> str:
+        """Return the domain of this entity."""
+        return self._domain
+
     def get_hardware_status(self) -> None:
         """Request status and configuration of this channel from hardware."""
         self._channel.getStatus()
@@ -53,10 +59,8 @@ class HausbusEntity(Entity):
     def handle_event(self, data: Any) -> None:
         """Handle haus-bus events.
 
-        Must stay marked @callback: it is registered as a dispatcher target
-        and, unmarked, the dispatcher would run it (and any subclass
-        override, e.g. HausbusCover.handle_event, which calls
-        async_write_ha_state) in the executor instead of the event loop.
+        Must stay marked @callback: unmarked, the dispatcher would run this
+        (and subclass overrides) in the executor instead of the event loop.
         """
         LOGGER.debug("handle_event %s for %s", data, self._debug_identifier)
 
