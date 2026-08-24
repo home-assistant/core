@@ -13,7 +13,7 @@ async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) 
 
     await setup_integration(hass, patch_nexia_home)
 
-    state = hass.states.get("sensor.nick_office_temperature")
+    state = hass.states.get("sensor.nick_office_nick_office_temperature")
     assert state is not None
     assert round(float(state.state)) == 23
 
@@ -29,7 +29,7 @@ async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) 
         state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
-    state = hass.states.get("sensor.nick_office_zone_setpoint_status")
+    state = hass.states.get("sensor.nick_office_nick_office_zone_setpoint_status")
     assert state is not None
     assert state.state == "Permanent Hold"
     expected_attributes = {
@@ -42,7 +42,7 @@ async def test_create_sensors(hass: HomeAssistant, patch_nexia_home: NexiaHome) 
         state.attributes[key] == value for key, value in expected_attributes.items()
     )
 
-    state = hass.states.get("sensor.nick_office_zone_status")
+    state = hass.states.get("sensor.nick_office_nick_office_zone_status")
     assert state is not None
     assert state.state == "Relieving Air"
 

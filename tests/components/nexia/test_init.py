@@ -40,7 +40,7 @@ async def test_device_remove_devices(
     await async_setup_component(hass, "config", {})
     config_entry = await setup_integration(hass, patch_nexia_home)
 
-    entity = entity_registry.entities["sensor.nick_office_temperature"]
+    entity = entity_registry.entities["sensor.nick_office_nick_office_temperature"]
 
     live_zone_device_entry = device_registry.async_get(entity.device_id)
     client = await hass_ws_client(hass)
@@ -86,14 +86,15 @@ async def test_device_via_device_links(
     config_entry = await setup_integration(hass, patch_nexia_home)
 
     thermostat_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, 2000000),  # type: ignore[arg-type] # until fix issue #139773
+        (DOMAIN, 2000004),  # type: ignore[arg-type] # until fix issue #139773
         config_entry.entry_id,
     )
     assert thermostat_device is not None
 
     zone_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, 100),  # type: ignore[arg-type] # until fix issue #139773
+        (DOMAIN, 500),  # type: ignore[arg-type] # until fix issue #139773
         config_entry.entry_id,
     )
     assert zone_device is not None
     assert zone_device.via_device_id == thermostat_device.id
+    assert zone_device.area_id == "center_nativezone"
