@@ -33,8 +33,12 @@ async def test_all_entities(
     snapshot: SnapshotAssertion,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test all entities."""
+    # The service date sensor computes now() + a day count; freeze the clock
+    # so the snapshot does not depend on the day the tests run on.
+    freezer.move_to("2030-01-01 12:00:00+00:00")
     with patch(
         "homeassistant.components.guntamatic._PLATFORMS",
         [Platform.SENSOR],

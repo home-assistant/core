@@ -28,7 +28,7 @@
   "entity": {
     "sensor": {
       "auxiliary_pump": {
-        "name": "Auxiliary pump",
+        "name": "Auxiliary pump {pump}",
         "state": {
           "auto": "Auto",
           "nonstop": "Non-stop",
@@ -108,7 +108,7 @@
         "name": "Extra DHW 2 temperature"
       },
       "extra_dhw_boost": {
-        "name": "Extra DHW pump",
+        "name": "Extra DHW pump {pump}",
         "state": {
           "auto": "Auto",
           "nonstop": "Non-stop",
@@ -169,8 +169,8 @@
       "secondary_air": {
         "name": "Secondary air"
       },
-      "service_days": {
-        "name": "Service days"
+      "service_date": {
+        "name": "Service date"
       },
       "status": {
         "name": "Status"

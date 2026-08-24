@@ -243,7 +243,7 @@
     'state': '21.50',
   })
 # ---
-# name: test_all_entities[sensor.mock_title_auxiliary_pump-entry]
+# name: test_all_entities[sensor.mock_title_auxiliary_pump_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -263,7 +263,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_auxiliary_pump',
+    'entity_id': 'sensor.mock_title_auxiliary_pump_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -271,12 +271,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Auxiliary pump',
+    'object_id_base': 'Auxiliary pump 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Auxiliary pump',
+    'original_name': 'Auxiliary pump 1',
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -286,11 +286,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.mock_title_auxiliary_pump-state]
+# name: test_all_entities[sensor.mock_title_auxiliary_pump_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Auxiliary pump',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Auxiliary pump 1',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'off',
@@ -298,7 +298,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_auxiliary_pump',
+    'entity_id': 'sensor.mock_title_auxiliary_pump_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -417,57 +417,6 @@
     'state': '22',
   })
 # ---
-# name: test_all_entities[sensor.mock_title_date-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': None,
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_date',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Date',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
-    'original_icon': None,
-    'original_name': 'Date',
-    'platform': 'guntamatic',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'service_date',
-    'unique_id': '959103_service_days',
-    'unit_of_measurement': None,
-  })
-# ---
-# name: test_all_entities[sensor.mock_title_date-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Date',
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.mock_title_date',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '2032-02-26',
-  })
-# ---
 # name: test_all_entities[sensor.mock_title_extra_dhw_circuit_2_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -526,7 +475,7 @@
     'state': '52.10',
   })
 # ---
-# name: test_all_entities[sensor.mock_title_extra_dhw_pump-entry]
+# name: test_all_entities[sensor.mock_title_extra_dhw_pump_1-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -546,7 +495,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'sensor.mock_title_extra_dhw_pump',
+    'entity_id': 'sensor.mock_title_extra_dhw_pump_1',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -554,12 +503,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Extra DHW pump',
+    'object_id_base': 'Extra DHW pump 1',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
-    'original_name': 'Extra DHW pump',
+    'original_name': 'Extra DHW pump 1',
     'platform': 'guntamatic',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -569,11 +518,11 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[sensor.mock_title_extra_dhw_pump-state]
+# name: test_all_entities[sensor.mock_title_extra_dhw_pump_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Extra DHW pump',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Extra DHW pump 1',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'auto',
         'off',
@@ -581,7 +530,7 @@
       ]),
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.mock_title_extra_dhw_pump',
+    'entity_id': 'sensor.mock_title_extra_dhw_pump_1',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -822,6 +771,57 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'heat',
+  })
+# ---
+# name: test_all_entities[sensor.mock_title_service_date-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
+    'entity_id': 'sensor.mock_title_service_date',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Service date',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_icon': None,
+    'original_name': 'Service date',
+    'platform': 'guntamatic',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'service_date',
+    'unique_id': '959103_service_days',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_all_entities[sensor.mock_title_service_date-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Service date',
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.mock_title_service_date',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '2035-07-06',
   })
 # ---
 # name: test_all_entities[sensor.mock_title_status-entry]

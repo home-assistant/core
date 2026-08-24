@@ -246,6 +246,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="auxiliary_pump_0",
         translation_key="auxiliary_pump",
+        translation_placeholders={"pump": "1"},
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -258,6 +259,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="auxiliary_pump_1",
         translation_key="auxiliary_pump",
+        translation_placeholders={"pump": "2"},
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -270,6 +272,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
     SensorEntityDescription(
         key="auxiliary_pump_2",
         translation_key="auxiliary_pump",
+        translation_placeholders={"pump": "3"},
         device_class=SensorDeviceClass.ENUM,
         options=[
             "auto",
@@ -356,6 +359,7 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         SensorEntityDescription(
             key=f"extra_dhw_boost_{nr}",
             translation_key="extra_dhw_boost",
+            translation_placeholders={"pump": str(nr + 1)},
             device_class=SensorDeviceClass.ENUM,
             options=[
                 "auto",
@@ -767,7 +771,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
         """Return the current value of the sensor."""
         value = self.coordinator.data[self.entity_description.key][0]
         if self.entity_description.device_class is SensorDeviceClass.DATE:
-            return dt_util.now().date() + timedelta(days=int(value))
+            return dt_util.now().date() + timedelta(days=float(value))
         if (
             self.entity_description.device_class is SensorDeviceClass.ENUM
             and value not in (self.entity_description.options or [])
