@@ -680,7 +680,7 @@ class WaterHeater(HomeAccessory):
         """Update water_heater state after state change."""
         # Update current and target temperature
         target_temperature = temperature_attribute_to_homekit(
-            new_state, WaterHeaterStateAttribute.TEMPERATURE, self._unit
+            new_state, WaterHeaterStateAttribute.TARGET_TEMPERATURE, self._unit
         )
         if target_temperature is not None:
             self.char_target_temp.set_value(target_temperature)

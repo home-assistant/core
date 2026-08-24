@@ -260,7 +260,7 @@ aioelectricitymaps==1.1.1
 aioemonitor==1.0.5
 
 # homeassistant.components.esphome
-aioesphomeapi==45.12.0
+aioesphomeapi==46.1.0
 
 # homeassistant.components.matrix
 # homeassistant.components.slack
@@ -1198,7 +1198,7 @@ greenplanet-energy-api==0.1.10
 gridnet==5.0.1
 
 # homeassistant.components.growatt_server
-growattServer==2.1.0
+growattServer==2.2.0
 
 # homeassistant.components.google_sheets
 gspread==5.5.0
@@ -1610,7 +1610,7 @@ mitsubishi-comfort==0.5.2
 moat-ble==0.1.1
 
 # homeassistant.components.modbus
-modbus-connection[tmodbus]==4.8.1
+modbus-connection[tmodbus]==4.9.0
 
 # homeassistant.components.moehlenhoff_alpha2
 moehlenhoff-alpha2==1.4.0
@@ -2044,7 +2044,7 @@ pyairobotrest==0.4.0
 pyairvisual==2023.08.1
 
 # homeassistant.components.anglian_water
-pyanglianwater==3.2.4
+pyanglianwater==3.3.0
 
 # homeassistant.components.aprilaire
 pyaprilaire==0.9.1
@@ -2931,7 +2931,7 @@ renault-api==0.5.12
 renson-endura-delta==1.7.2
 
 # homeassistant.components.reolink
-reolink-aio==0.21.10
+reolink-aio==0.21.11
 
 # homeassistant.components.radio_frequency
 rf-protocols==4.3.0
@@ -3219,6 +3219,9 @@ tilt-pi==0.2.1
 # homeassistant.components.tmb
 tmb==0.0.4
 
+# homeassistant.components.modbus
+tmodbus==0.5.2
+
 # homeassistant.components.todoist
 todoist-api-python==3.1.0
 
@@ -3277,7 +3280,7 @@ uasiren==0.0.1
 uhooapi==1.2.8
 
 # homeassistant.components.unifiprotect
-uiprotect==15.14.2
+uiprotect==16.1.0
 
 # homeassistant.components.landisgyr_heat_meter
 ultraheat-api==0.6.1

@@ -1,0 +1,112 @@
+# serializer version: 1
+# name: test_diagnostics
+  dict({
+    'data': dict({
+      'audio_settings': dict({
+        'eq': dict({
+          'center': None,
+          'hashval': 0,
+          'max': None,
+          'min': None,
+          'name': 'eq',
+          'options': list([
+          ]),
+          'setting_type': 'audio',
+          'type': 'T_LIST_V1',
+          'value': 'Music',
+        }),
+        'mute': dict({
+          'center': None,
+          'hashval': 0,
+          'max': None,
+          'min': None,
+          'name': 'mute',
+          'options': list([
+          ]),
+          'setting_type': 'audio',
+          'type': 'T_LIST_V1',
+          'value': 'Off',
+        }),
+        'volume': dict({
+          'center': None,
+          'hashval': 0,
+          'max': None,
+          'min': None,
+          'name': 'volume',
+          'options': list([
+          ]),
+          'setting_type': 'audio',
+          'type': 'T_VALUE_ABS_V1',
+          'value': 15,
+        }),
+      }),
+      'current_app_config': None,
+      'current_input': 'HDMI',
+      'input_list': list([
+        dict({
+          'cname': '',
+          'is_current': False,
+          'meta_name': 'HDMI',
+          'name': 'HDMI',
+        }),
+        dict({
+          'cname': '',
+          'is_current': False,
+          'meta_name': 'USB',
+          'name': 'USB',
+        }),
+        dict({
+          'cname': '',
+          'is_current': False,
+          'meta_name': 'Bluetooth',
+          'name': 'Bluetooth',
+        }),
+        dict({
+          'cname': '',
+          'is_current': False,
+          'meta_name': 'AUX',
+          'name': 'AUX',
+        }),
+      ]),
+      'is_on': True,
+      'sound_mode_list': list([
+        'Music',
+        'Movie',
+      ]),
+    }),
+    'device_profile': dict({
+      'has_apps': True,
+      'has_battery': False,
+      'has_inputs': True,
+      'max_volume': 100,
+      'name': 'Vizio SmartCast TV',
+      'requires_auth': True,
+    }),
+    'entry': dict({
+      'data': dict({
+        'access_token': '**REDACTED**',
+        'device_class': 'tv',
+        'host': '**REDACTED**',
+        'name': 'Vizio',
+        'volume_step': 1,
+      }),
+      'options': dict({
+        'volume_step': 1,
+      }),
+      'unique_id': '**REDACTED**',
+    }),
+    'versions': dict({
+      'esn': '**REDACTED**',
+      'firmware': '3.720.9.1-1',
+      'raw': dict({
+        'ESN': '**REDACTED**',
+        'FIRMWARE': '3.720.9.1-1',
+        'SCPL': '3.4.3-2614.0002',
+        'SERIAL NUMBER': '**REDACTED**',
+        'acr': '1.2.3',
+      }),
+      'scpl': '3.4.3-2614.0002',
+      'serial_number': '**REDACTED**',
+    }),
+  })
+# ---

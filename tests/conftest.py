@@ -220,6 +220,10 @@ def pytest_runtest_setup() -> None:
 
     - Modified to not force lazily imported module attributes to be resolved
       when scanning the loaded modules for time related objects.
+
+    - Modified to tolerate a thread reading the time while another thread
+      stops freeze_time, which otherwise raises IndexError, see
+      https://github.com/spulec/freezegun/issues/345.
     """
     pytest_socket.socket_allow_hosts(["127.0.0.1"])
     pytest_socket.disable_socket(allow_unix_socket=True)
@@ -258,6 +262,8 @@ def pytest_runtest_setup() -> None:
     freezegun.api._get_module_attributes_hash = (  # type: ignore[attr-defined]
         patch_time.ha_get_module_attributes_hash
     )
+    freezegun.api._should_use_real_time = patch_time.ha_should_use_real_time  # type: ignore[attr-defined]
+    freezegun.api.get_current_time = patch_time.ha_get_current_time
 
     def adapt_datetime(val):
         return val.isoformat(" ")
