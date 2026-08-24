@@ -413,6 +413,8 @@ async def test_reauth_flow(
 ) -> None:
     """Test the reauth flow."""
     mock_config_entry.add_to_hass(hass)
+    mock_anglian_water_authenticator.refresh_token = "new_access_token"
+    original_data = dict(mock_config_entry.data)
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
@@ -436,6 +438,10 @@ async def test_reauth_flow(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+    assert mock_config_entry.data == {
+        **original_data,
+        CONF_ACCESS_TOKEN: "new_access_token",
+    }
 
 
 async def test_reauth_flow_invalid_credentials(
