@@ -8,10 +8,9 @@ from pyhap.const import CATEGORY_TELEVISION
 
 from homeassistant.components.remote import (
     ATTR_ACTIVITY,
-    ATTR_ACTIVITY_LIST,
-    ATTR_CURRENT_ACTIVITY,
     DOMAIN as REMOTE_DOMAIN,
     RemoteEntityFeature,
+    RemoteEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -224,8 +223,8 @@ class ActivityRemote(RemoteInputSelectAccessory):
         """Initialize a Activity Remote accessory object."""
         super().__init__(
             RemoteEntityFeature.ACTIVITY,
-            ATTR_CURRENT_ACTIVITY,
-            ATTR_ACTIVITY_LIST,
+            RemoteEntityStateAttribute.CURRENT_ACTIVITY,
+            RemoteEntityStateAttribute.ACTIVITY_LIST,
             *args,
         )
         state = self.hass.states.get(self.entity_id)

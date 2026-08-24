@@ -8,12 +8,13 @@ from pyhap.const import CATEGORY_SWITCH
 
 from homeassistant.components.media_player import (
     ATTR_INPUT_SOURCE,
-    ATTR_INPUT_SOURCE_LIST,
     ATTR_MEDIA_VOLUME_LEVEL,
     ATTR_MEDIA_VOLUME_MUTED,
     DOMAIN as MEDIA_PLAYER_DOMAIN,
     SERVICE_SELECT_SOURCE,
+    MediaPlayerEntityCapabilityAttribute,
     MediaPlayerEntityFeature,
+    MediaPlayerEntityStateAttribute,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -242,7 +243,11 @@ class MediaPlayer(HomeAccessory):
             play_stop_char.set_value(hk_state)
 
         if toggle_mute_char := self.chars[FEATURE_TOGGLE_MUTE]:
-            mute_state = bool(new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED))
+            mute_state = bool(
+                new_state.attributes.get(
+                    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED
+                )
+            )
             _LOGGER.debug(
                 '%s: Set current state for "toggle_mute" to %s',
                 self.entity_id,
@@ -259,8 +264,8 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
         """Initialize a Television Media Player accessory object."""
         super().__init__(
             MediaPlayerEntityFeature.SELECT_SOURCE,
-            ATTR_INPUT_SOURCE,
-            ATTR_INPUT_SOURCE_LIST,
+            MediaPlayerEntityStateAttribute.INPUT_SOURCE,
+            MediaPlayerEntityCapabilityAttribute.INPUT_SOURCE_LIST,
             *args,
             **kwargs,
         )
@@ -394,7 +399,11 @@ class TelevisionMediaPlayer(RemoteInputSelectAccessory):
 
         # Set mute state
         if CHAR_VOLUME_SELECTOR in self.chars_speaker:
-            current_mute_state = bool(new_state.attributes.get(ATTR_MEDIA_VOLUME_MUTED))
+            current_mute_state = bool(
+                new_state.attributes.get(
+                    MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED
+                )
+            )
             _LOGGER.debug(
                 "%s: Set current mute state to %s",
                 self.entity_id,
