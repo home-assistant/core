@@ -17,6 +17,7 @@ from homeassistant.helpers import entity_registry as er
 
 from .common import (
     set_node_attribute,
+    set_node_attribute_and_notify,
     snapshot_matter_entities,
     trigger_subscription_callback,
 )
@@ -321,6 +322,13 @@ async def test_cover_stale_moving_operational_status(
 
 
 @pytest.mark.parametrize(
+    ("target_position", "current_position"),
+    [
+        pytest.param(None, 10000, id="unknown_target"),
+        pytest.param(None, None, id="unknown_target_and_position"),
+    ],
+)
+@pytest.mark.parametrize(
     ("node_fixture", "entity_id"),
     [
         ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
@@ -332,17 +340,108 @@ async def test_cover_moving_status_with_unknown_target(
     matter_node: MatterNode,
     entity_id: str,
     freezer: FrozenDateTimeFactory,
+    target_position: int | None,
+    current_position: int | None,
 ) -> None:
-    """Test operational status is trusted when the target position is unknown."""
+    """Test operational status is trusted when the positions cannot be compared."""
 
-    set_node_attribute(matter_node, 1, 258, 11, None)
-    set_node_attribute(matter_node, 1, 258, 14, 10000)
+    set_node_attribute(matter_node, 1, 258, 11, target_position)
+    set_node_attribute(matter_node, 1, 258, 14, current_position)
     set_node_attribute(matter_node, 1, 258, 10, 0b001010)
     await trigger_subscription_callback_debounced(hass, freezer, matter_client)
 
     state = hass.states.get(entity_id)
     assert state
     assert state.state == CoverState.CLOSING
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+    ],
+)
+async def test_cover_target_position_subscription(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a target position only report reaches the entity."""
+
+    set_node_attribute(matter_node, 1, 258, 14, 4900)
+    set_node_attribute(matter_node, 1, 258, 11, 0)
+    set_node_attribute(matter_node, 1, 258, 10, 0b001010)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
+    # StopMotion sets the target to the current position, so a target only
+    # report is enough to clear a stale moving operational status
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=258,
+        attribute_id=11,
+        value=4900,
+    )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPEN
+
+
+@pytest.mark.parametrize(
+    ("node_fixture", "entity_id"),
+    [
+        ("mock_window_covering_pa_lift", "cover.longan_link_wncv_da01"),
+    ],
+)
+async def test_cover_moving_status_masked_until_target_updates(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    entity_id: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a moving operational status is ignored while the target is stale."""
+
+    # the cover rests at its target and starts moving, but the report carries
+    # only the operational status, so the stale target masks the movement
+    set_node_attribute(matter_node, 1, 258, 11, 10000)
+    set_node_attribute(matter_node, 1, 258, 14, 10000)
+    set_node_attribute(matter_node, 1, 258, 10, 0b000101)
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSED
+
+    # the movement is reported again once the target catches up
+    await set_node_attribute_and_notify(
+        hass,
+        matter_client,
+        matter_node,
+        endpoint=1,
+        cluster_id=258,
+        attribute_id=11,
+        value=0,
+    )
+    freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPENING
 
 
 @pytest.mark.parametrize(
