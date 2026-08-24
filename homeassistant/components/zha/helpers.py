@@ -444,7 +444,9 @@ class ZHADeviceProxy(EventBase):
         if reg_device is not None:
             device_info[USER_GIVEN_NAME] = reg_device.name_by_user
             device_info[DEVICE_REG_ID] = reg_device.id
-            device_info[ATTR_AREA_ID] = reg_device.area_id
+            device_info[ATTR_AREA_ID] = dr.async_get_effective_area_id(
+                self.gateway_proxy.hass, reg_device
+            )
         return device_info
 
     @callback
@@ -642,7 +644,7 @@ class ZHAGatewayProxy(EventBase):
             or entity_entry.device_id is None
         ):
             return
-        device_entry: dr.DeviceEntry | None = dr.async_get(self.hass).async_get(
+        device_entry: dr.AnyDeviceEntry | None = dr.async_get(self.hass).async_get(
             entity_entry.device_id
         )
         assert device_entry

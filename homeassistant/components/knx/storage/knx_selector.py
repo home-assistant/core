@@ -1,6 +1,6 @@
 """Selectors for KNX."""
 
-from collections.abc import Hashable, Iterable
+from collections.abc import Iterable
 from enum import Enum
 from typing import Any, override
 
@@ -8,7 +8,7 @@ import voluptuous as vol
 
 from homeassistant.const import CONF_PAYLOAD
 
-from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE
+from ..const import CONF_PAYLOAD_LENGTH, CONF_VALUE, SelectConf
 from ..dpt import HaDptClass, get_supported_dpts
 from ..validation import ga_validator, maybe_ga_validator, sync_state_validator
 from .const import CONF_DPT, CONF_GA_PASSIVE, CONF_GA_STATE, CONF_GA_WRITE
@@ -26,7 +26,7 @@ class AllSerializeFirst(vol.All):
 class KNXSelectorBase:
     """Base class for KNX selectors supporting optional nested schemas."""
 
-    schema: vol.Schema | vol.Any | vol.All
+    schema: vol.Schema | vol.Any | vol.All | GroupSelectSchema
     selector_type: str
     # mark if self.schema should be serialized to `schema` key
     serialize_subschema: bool = False
@@ -111,30 +111,35 @@ class GroupSelectOption(KNXSelectorBase):
         }
 
 
-class GroupSelectSchema(vol.Any):
-    """Use the first validated value.
+class GroupSelectSchema:
+    """Use the first validated value, like ``vol.Any``.
 
-    This is a version of vol.Any with custom error handling to
-    show proper invalid markers for sub-schema items in the UI.
+    A standalone validator rather than a ``vol.Any`` subclass, so it does not
+    reach into validation-engine internals. On total failure it raises the most
+    useful branch error (the first that is not an unknown-key error, else the
+    first) so the UI marks a real problem instead of an extra key.
     """
 
-    @override
-    def _exec(self, funcs: Iterable, v: Any, path: list[Hashable] | None = None) -> Any:
-        """Execute the validation functions."""
+    def __init__(self, *options: vol.Schemable, msg: str | None = None) -> None:
+        """Store the options to try in order."""
+        self.validators = options
+        self.msg = msg
+        self._compiled = [vol.Schema(option) for option in options]
+
+    def __call__(self, data: Any) -> Any:
+        """Return the first option that validates, else raise the best error."""
         errors: list[vol.Invalid] = []
-        for func in funcs:
+        for option in self._compiled:
             try:
-                if path is None:
-                    return func(v)
-                return func(path, v)
-            except vol.Invalid as e:
-                errors.append(e)
+                return option(data)
+            except vol.Invalid as err:
+                errors.append(err)
         if errors:
             raise next(
-                (err for err in errors if "extra keys not allowed" not in err.msg),
+                (err for err in errors if err.code != "extra_keys_not_allowed"),
                 errors[0],
             )
-        raise vol.AnyInvalid(self.msg or "no valid value found", path=path)
+        raise vol.AnyInvalid(self.msg or "no valid value found")
 
 
 class GroupSelect(KNXSelectorBase):
@@ -371,3 +376,45 @@ class KnxPayloadSelector(KNXSelectorBase):
                     )
         # CONF_VALUE branch needs subvalidator as we don't have the DPT available here
         return validated
+
+
+class KnxSelectOptionsSelector(KNXSelectorBase):
+    """Selector for a list of select options mapping names to payloads.
+
+    Each option pairs a name with a payload following the `KnxPayloadSelector`
+    contract (a typed `value` or a raw `payload` + `payload_length`), resolved
+    against the linked group address's DPT via `ga_path`.
+    """
+
+    selector_type = "knx_select_options"
+
+    def __init__(self, ga_path: str) -> None:
+        """Initialize the options selector."""
+        self.ga_path = ga_path
+        self._payload_selector = KnxPayloadSelector(ga_path=ga_path)
+        self.schema = vol.Schema([self._validate_option])
+
+    @override
+    def serialize(self) -> dict[str, Any]:
+        """Serialize the selector to a dictionary."""
+        return {
+            "type": self.selector_type,
+            "ga_path": self.ga_path,
+        }
+
+    def _validate_option(self, data: Any) -> dict[str, Any]:
+        """Validate a single option entry.
+
+        The typed `value` branch needs the DPT and is validated by the platform
+        sub-validator.
+        """
+        if not isinstance(data, dict):
+            raise vol.Invalid("Each option must be a dictionary")
+        option = data.get(SelectConf.OPTION)
+        if not isinstance(option, str) or not option:
+            raise vol.Invalid("Option name is required", path=[SelectConf.OPTION])
+        payload = {
+            key: value for key, value in data.items() if key != SelectConf.OPTION
+        }
+        validated = self._payload_selector(payload)
+        return {SelectConf.OPTION: option, **validated}

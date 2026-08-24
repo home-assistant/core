@@ -233,7 +233,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         # are treated as one device.
         if (
             parent is not None
-            and parent != registry_device
+            and parent.device_id != registry_device.device_id
             and parent.device_type is not Device.Type.WallSwitch
         ):
             self._attr_device_info["via_device_id"] = (
@@ -279,7 +279,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             if self._attr_available:
                 _LOGGER.warning(
                     "Unable to read data for %s %s: %s",
-                    self._device,
+                    self._device.host,
                     self.entity_id,
                     ex,
                 )

@@ -20,7 +20,14 @@ from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
 from .const import CONF_KEY, CONF_SUBTYPE
 from .entity import MideaConfigEntry
 
-_PLATFORMS: list[Platform] = [Platform.CLIMATE]
+_PLATFORMS: list[Platform] = [
+    Platform.CLIMATE,
+    Platform.FAN,
+    Platform.HUMIDIFIER,
+    Platform.NUMBER,
+    Platform.SELECT,
+    Platform.SWITCH,
+]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: MideaConfigEntry) -> bool:
