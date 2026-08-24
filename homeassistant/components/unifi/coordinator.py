@@ -17,7 +17,7 @@ POLL_INTERVAL = timedelta(seconds=10)
 
 
 class UnifiDataUpdateCoordinator[HandlerT: APIHandler](DataUpdateCoordinator[None]):
-    """Coordinator managing polling for a single UniFi API data source."""
+    """Coordinator managing websocket or polling updates for a UniFi API handler."""
 
     def __init__(
         self,
