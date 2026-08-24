@@ -1,6 +1,7 @@
 """Support for covers which integrate with other components."""
 
-from typing import TYPE_CHECKING, Any, override
+from dataclasses import asdict, dataclass
+from typing import TYPE_CHECKING, Any, Self, override
 
 import voluptuous as vol
 
@@ -12,6 +13,7 @@ from homeassistant.components.cover import (
     ENTITY_ID_FORMAT,
     CoverEntity,
     CoverEntityFeature,
+    CoverEntityStateAttribute,
     CoverState,
 )
 from homeassistant.config_entries import ConfigEntry
@@ -22,6 +24,7 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
 from . import TriggerUpdateCoordinator, validators as template_validators
@@ -35,7 +38,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -96,7 +99,12 @@ COVER_YAML_SCHEMA = vol.All(
     .extend(COVER_COMMON_SCHEMA.schema)
     .extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA)
     .extend(
-        make_template_entity_common_modern_schema(COVER_DOMAIN, DEFAULT_NAME).schema
+        make_template_entity_common_schema(
+            COVER_DOMAIN,
+            DEFAULT_NAME,
+            CoverEntityStateAttribute,
+            block_device_class=True,
+        ).schema
     ),
     cv.has_at_least_one_key(OPEN_ACTION, POSITION_ACTION),
 )
@@ -158,13 +166,43 @@ def async_create_preview_cover(
     )
 
 
-class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
+@dataclass(kw_only=True)
+class CoverExtraStoredData(ExtraStoredData):
+    """Holds extra stored data for template cover entities."""
+
+    current_cover_position: int | None
+    current_cover_tilt_position: int | None
+    is_opening: bool | None
+    is_closing: bool | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the cover data."""
+        return asdict(self)
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored cover state from a dict."""
+        try:
+            return cls(
+                current_cover_position=restored["current_cover_position"],
+                current_cover_tilt_position=restored["current_cover_tilt_position"],
+                is_opening=restored["is_opening"],
+                is_closing=restored["is_closing"],
+            )
+        except KeyError:
+            return None
+
+
+class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity, RestoreEntity):
     """Representation of a template cover features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _extra_optimistic_options = (CONF_POSITION,)
     _state_option = CONF_STATE
+    _restore_state_extra_data = CoverExtraStoredData
+    _restore_state_properties = ("_attr_current_cover_position",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -323,6 +361,25 @@ class AbstractTemplateCover(AbstractTemplateEntity, CoverEntity):
         )
         if self._tilt_optimistic:
             self.async_write_ha_state()
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> CoverExtraStoredData:
+        """Return cover specific state data to be restored."""
+        return CoverExtraStoredData(
+            current_cover_position=self._attr_current_cover_position,
+            current_cover_tilt_position=self._attr_current_cover_tilt_position,
+            is_opening=self._attr_is_opening,
+            is_closing=self._attr_is_closing,
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: CoverExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_current_cover_position = extra_data.current_cover_position
+        self._attr_current_cover_tilt_position = extra_data.current_cover_tilt_position
+        self._attr_is_opening = extra_data.is_opening
+        self._attr_is_closing = extra_data.is_closing
 
 
 class StateCoverEntity(TemplateEntity, AbstractTemplateCover):

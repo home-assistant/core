@@ -14,6 +14,8 @@ from .const import CONF_DEVICE_API_ID, DOMAIN, LOGGER
 class EGPSConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle the config flow for EGPS devices."""
 
+    VERSION = 2
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None

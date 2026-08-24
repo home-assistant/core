@@ -23,7 +23,6 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_NAME,
     CONF_ID,
-    EVENT_HOMEASSISTANT_STARTED,
     SERVICE_RELOAD,
     SERVICE_TOGGLE,
     SERVICE_TURN_OFF,
@@ -1683,7 +1682,9 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
     await hass.async_block_till_done()
     assert len(calls) == 0
 
-    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    # Triggers are armed by a startup job which runs during async_start, before
+    # EVENT_HOMEASSISTANT_STARTED is fired.
+    await hass.async_start()
     await hass.async_block_till_done()
     assert automation.is_on(hass, "automation.hello")
 
@@ -1700,7 +1701,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
         (
             {},
             "could not be validated",
-            "required key not provided @ data['actions']",
+            "required key not provided at 'actions'",
             "validation_failed_schema",
         ),
         (
@@ -1710,8 +1711,7 @@ async def test_automation_not_trigger_on_bootstrap(hass: HomeAssistant) -> None:
             },
             "failed to setup triggers",
             "Integration 'automation' does not provide trigger support"
-            ". Got {'alias': 'bad_automation', "
-            "'triggers': [{'platform': 'automation'}], 'actions': []",
+            ". Got {'alias': 'bad_automation',",
             "validation_failed_triggers",
         ),
         (
@@ -2480,6 +2480,7 @@ async def test_extraction_functions(
         "sensor.trigger_state",
         "sensor.trigger_numeric_state",
         "sensor.trigger_event",
+        "light.bla",
         "light.condition_state",
         "light.in_both",
         "light.in_first",
@@ -3301,10 +3302,7 @@ async def test_blueprint_automation_override(
                 "a_number": 5,
             },
             "Blueprint 'Call service based on event' generated invalid automation",
-            (
-                "value should be a string for dictionary value @"
-                " data['actions'][0]['action']"
-            ),
+            "value should be a string at 'actions[0].action'",
         ),
     ],
 )

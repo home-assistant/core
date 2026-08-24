@@ -4,7 +4,6 @@ from pathlib import Path
 
 import astroid
 from pylint.testutils import MessageTest, UnittestLinter
-from pylint.utils.ast_walker import ASTWalker
 from pylint_home_assistant.checkers.quality_scale.parallel_updates import (
     ParallelUpdatesChecker,
 )
@@ -12,7 +11,7 @@ from pylint_home_assistant.helpers.quality_scale import clear_quality_scale_cach
 import pytest
 import yaml
 
-from tests.pylint import assert_adds_messages, assert_no_messages
+from tests.pylint import assert_adds_messages, assert_no_messages, walk_checker
 
 
 @pytest.fixture(name="parallel_updates_checker")
@@ -61,11 +60,8 @@ def test_parallel_updates_present(
     root_node = astroid.parse("PARALLEL_UPDATES = 1\n", module_name)
     root_node.file = str(integration_dir / "sensor.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(parallel_updates_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, parallel_updates_checker, root_node)
 
 
 def test_parallel_updates_zero(
@@ -82,11 +78,8 @@ def test_parallel_updates_zero(
     )
     root_node.file = str(integration_dir / "sensor.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(parallel_updates_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, parallel_updates_checker, root_node)
 
 
 def test_parallel_updates_annotated_assignment(
@@ -104,11 +97,8 @@ def test_parallel_updates_annotated_assignment(
     )
     root_node.file = str(integration_dir / "sensor.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(parallel_updates_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, parallel_updates_checker, root_node)
 
 
 def test_parallel_updates_missing_fires(
@@ -126,9 +116,6 @@ def test_parallel_updates_missing_fires(
     )
     root_node.file = str(integration_dir / "sensor.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(parallel_updates_checker)
-
     with assert_adds_messages(
         linter,
         MessageTest(
@@ -138,7 +125,7 @@ def test_parallel_updates_missing_fires(
             col_offset=0,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, parallel_updates_checker, root_node)
 
 
 def test_parallel_updates_missing_status_done_dict(
@@ -159,9 +146,6 @@ def test_parallel_updates_missing_status_done_dict(
     )
     root_node.file = str(integration_dir / "sensor.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(parallel_updates_checker)
-
     with assert_adds_messages(
         linter,
         MessageTest(
@@ -171,7 +155,7 @@ def test_parallel_updates_missing_status_done_dict(
             col_offset=0,
         ),
     ):
-        walker.walk(root_node)
+        walk_checker(linter, parallel_updates_checker, root_node)
 
 
 @pytest.mark.parametrize(
@@ -231,8 +215,5 @@ def test_parallel_updates_not_fired(
     )
     root_node.file = str(integration_dir / "sensor.py")
 
-    walker = ASTWalker(linter)
-    walker.add_checker(parallel_updates_checker)
-
     with assert_no_messages(linter):
-        walker.walk(root_node)
+        walk_checker(linter, parallel_updates_checker, root_node)

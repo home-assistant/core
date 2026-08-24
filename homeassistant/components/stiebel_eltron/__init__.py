@@ -2,14 +2,15 @@
 
 import logging
 
-from pymodbus.exceptions import ModbusException
+from modbus_connection import ModbusError
+from modbus_connection.pymodbus import connect_tcp
 from pystiebeleltron import StiebelEltronModbusError, get_controller_model
 
 from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryError, ConfigEntryNotReady
+from homeassistant.exceptions import ConfigEntryNotReady
 
-from .const import DEFAULT_PORT
+from .const import DEFAULT_PORT, UNIT_ID
 from .coordinator import StiebelEltronConfigEntry, StiebelEltronDataCoordinator
 
 _LOGGER = logging.getLogger(__name__)
@@ -25,16 +26,26 @@ async def async_setup_entry(
     port = entry.data.get(CONF_PORT, DEFAULT_PORT)
 
     try:
-        model = await get_controller_model(host, port)
-    except ModbusException as exception:
+        connection = await connect_tcp(host, port=port)
+    except ModbusError as exception:
         raise ConfigEntryNotReady("Could not connect to device") from exception
-    except StiebelEltronModbusError as exception:
-        raise ConfigEntryError(exception) from exception
+    entry.async_on_unload(connection.close)
 
-    coordinator = StiebelEltronDataCoordinator(hass, entry, model, host, port)
+    try:
+        model = await get_controller_model(connection.for_unit(UNIT_ID))
+    except StiebelEltronModbusError as exception:
+        raise ConfigEntryNotReady("Could not read controller model") from exception
+
+    coordinator = StiebelEltronDataCoordinator(hass, entry, model, connection, host)
 
     entry.runtime_data = coordinator
     await coordinator.async_config_entry_first_refresh()
+
+    entry.async_on_unload(
+        connection.on_connection_lost(
+            lambda: hass.config_entries.async_schedule_reload(entry.entry_id)
+        )
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
     return True
@@ -45,6 +56,4 @@ async def async_unload_entry(
     entry: StiebelEltronConfigEntry,
 ) -> bool:
     """Unload a config entry."""
-    coordinator = entry.runtime_data
-    await coordinator.close()
     return await hass.config_entries.async_unload_platforms(entry, _PLATFORMS)

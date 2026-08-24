@@ -34,8 +34,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
     UnitOfVolumeFlowRate,
@@ -78,7 +77,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=True,
         state_class=SensorStateClass.MEASUREMENT,
         device_class=SensorDeviceClass.CO2,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     RensonSensorEntityDescription(
         key="AIR_FIELD",
@@ -86,7 +85,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         field=AIR_QUALITY_FIELD,
         state_class=SensorStateClass.MEASUREMENT,
         raw_format=True,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
     ),
     RensonSensorEntityDescription(
         key="CURRENT_LEVEL_FIELD",
@@ -145,7 +144,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     RensonSensorEntityDescription(
         key="MANUAL_LEVEL_FIELD",
@@ -194,7 +193,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         translation_key="co2_threshold",
         field=CO2_THRESHOLD_FIELD,
         raw_format=False,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
@@ -202,7 +201,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         translation_key="co2_hysteresis",
         field=CO2_HYSTERESIS_FIELD,
         raw_format=False,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
     ),
     RensonSensorEntityDescription(
@@ -221,7 +220,7 @@ SENSORS: tuple[RensonSensorEntityDescription, ...] = (
         raw_format=False,
         device_class=SensorDeviceClass.POWER_FACTOR,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
 )
 

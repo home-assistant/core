@@ -29,6 +29,7 @@ from homeassistant.components.light import (
     ColorMode,
     LightEntity,
     LightEntityFeature,
+    LightEntityStateAttribute,
 )
 from homeassistant.const import CONF_HOST, CONF_NAME, CONF_PORT, CONF_TYPE, STATE_ON
 from homeassistant.core import HomeAssistant
@@ -259,11 +260,15 @@ class LimitlessLEDGroup(LightEntity, RestoreEntity):
         await super().async_added_to_hass()
         if last_state := await self.async_get_last_state():
             self._attr_is_on = last_state.state == STATE_ON
-            self._attr_brightness = last_state.attributes.get("brightness")
-            self._attr_color_temp_kelvin = last_state.attributes.get(
-                "color_temp_kelvin"
+            self._attr_brightness = last_state.attributes.get(
+                LightEntityStateAttribute.BRIGHTNESS
             )
-            self._attr_hs_color = last_state.attributes.get("hs_color")
+            self._attr_color_temp_kelvin = last_state.attributes.get(
+                LightEntityStateAttribute.COLOR_TEMP_KELVIN
+            )
+            self._attr_hs_color = last_state.attributes.get(
+                LightEntityStateAttribute.HS_COLOR
+            )
 
     @property
     @override

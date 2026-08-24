@@ -11,11 +11,10 @@ from homeassistant.components.sensor import (
     SensorStateClass,
 )
 from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
     CONF_NAME,
-    PERCENTAGE,
     REVOLUTIONS_PER_MINUTE,
     EntityCategory,
+    UnitOfRatio,
     UnitOfTemperature,
     UnitOfTime,
 )
@@ -167,7 +166,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         translation_key="fan_speed",
         metric_key="A_CYC_FAN_SPEED",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_type=ValloxFanSpeedSensor,
     ),
     ValloxSensorEntityDescription(
@@ -254,14 +253,14 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_RH_VALUE",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
     ),
     ValloxSensorEntityDescription(
         key="efficiency",
         translation_key="efficiency",
         metric_key="A_CYC_EXTRACT_EFFICIENCY",
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_registry_enabled_default=False,
         round_ndigits=0,
     ),
@@ -270,7 +269,7 @@ SENSOR_ENTITIES: tuple[ValloxSensorEntityDescription, ...] = (
         metric_key="A_CYC_CO2_VALUE",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=CONCENTRATION_PARTS_PER_MILLION,
+        native_unit_of_measurement=UnitOfRatio.PARTS_PER_MILLION,
         entity_registry_enabled_default=False,
     ),
     ValloxSensorEntityDescription(

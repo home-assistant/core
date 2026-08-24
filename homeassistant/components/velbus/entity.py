@@ -2,12 +2,13 @@
 
 from collections.abc import Awaitable, Callable, Coroutine
 from functools import wraps
-from typing import Any, Concatenate, override
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from velbusaio.channels import Channel as VelbusChannel
 from velbusaio.properties import Property as VelbusProperty
 
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -31,22 +32,6 @@ class VelbusEntity(Entity):
         self._channel = channel
         self._module_address = str(channel.get_module_address())
         self._attr_name = channel.get_name()
-        self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, self._get_identifier()),
-            },
-            manufacturer="Velleman",
-            model=channel.get_module_type_name(),
-            model_id=str(channel.get_module_type()),
-            name=channel.get_full_name(),
-            sw_version=channel.get_module_sw_version(),
-            serial_number=channel.get_module_serial(),
-        )
-        if self._channel.is_sub_device():
-            self._attr_device_info["via_device"] = (
-                DOMAIN,
-                self._module_address,
-            )
         serial = channel.get_module_serial() or self._module_address
         self._attr_unique_id = f"{serial}-{channel.get_channel_number()}"
 
@@ -55,6 +40,31 @@ class VelbusEntity(Entity):
         if not self._channel.is_sub_device():
             return self._module_address
         return f"{self._module_address}-{self._channel.get_channel_number()}"
+
+    @property
+    @override
+    def device_info(self) -> DeviceInfo:
+        """Return device info, linking a sub-device to its module device."""
+        channel = self._channel
+        device_info = DeviceInfo(
+            identifiers={(DOMAIN, self._get_identifier())},
+            manufacturer="Velleman",
+            model=channel.get_module_type_name(),
+            model_id=str(channel.get_module_type()),
+            name=channel.get_full_name(),
+            sw_version=channel.get_module_sw_version(),
+            serial_number=channel.get_module_serial(),
+        )
+        if channel.is_sub_device():
+            config_entry = self.platform.config_entry
+            if TYPE_CHECKING:
+                assert config_entry
+            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+                self.hass,
+                (DOMAIN, self._module_address),
+                config_entry_id=config_entry.entry_id,
+            )
+        return device_info
 
     @override
     async def async_added_to_hass(self) -> None:
