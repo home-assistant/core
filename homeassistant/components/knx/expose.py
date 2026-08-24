@@ -216,7 +216,7 @@ class KnxExposeEntity:
                         xknx_expose,
                         expose_value,
                     )
-                return
+                continue
             try:
                 xknx_expose.initialize_value(expose_value)
             except ConversionError:
