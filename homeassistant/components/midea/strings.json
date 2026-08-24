@@ -129,6 +129,21 @@
         }
       }
     },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "cinema": "Cinema",
+              "living": "Living",
+              "mildly": "Mildly",
+              "night": "Night",
+              "reading": "Reading"
+            }
+          }
+        }
+      }
+    },
     "number": {
       "dry_level": {
         "name": "Dry level"

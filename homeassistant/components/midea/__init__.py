@@ -29,6 +29,7 @@ _PLATFORMS: list[Platform] = [
     Platform.CLIMATE,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SWITCH,
