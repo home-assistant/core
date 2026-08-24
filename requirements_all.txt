@@ -3219,6 +3219,9 @@ tilt-pi==0.2.1
 # homeassistant.components.tmb
 tmb==0.0.4
 
+# homeassistant.components.modbus
+tmodbus==0.5.2
+
 # homeassistant.components.todoist
 todoist-api-python==3.1.0
 
