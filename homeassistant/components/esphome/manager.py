@@ -1571,12 +1571,14 @@ async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
     data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
-    await data.client.disconnect()
-    if was_connected:
-        # on_disconnect runs in a background task that may not have
-        # persisted yet; the connection was closed by us, so it is expected
-        data.async_record_disconnect(expected_disconnect=True)
-    await data.async_cleanup()
+    try:
+        await data.client.disconnect()
+    finally:
+        if was_connected:
+            # on_disconnect runs in a background task that may not have
+            # persisted yet; the connection was closed by us, so it is expected
+            data.async_record_disconnect(expected_disconnect=True)
+        await data.async_cleanup()
     return data
 
 

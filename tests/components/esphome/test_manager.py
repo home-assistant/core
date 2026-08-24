@@ -603,6 +603,30 @@ async def test_deep_sleep_states_flushed_on_unload_while_connected(
     assert data["expected_disconnect"] is True
 
 
+async def test_deep_sleep_states_persisted_on_shutdown_while_connected(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Restarting Home Assistant while the device is awake persists its states."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=_DEEP_SLEEP_SENSOR_INFOS,
+        device_info={"has_deep_sleep": True},
+    )
+    entry = device.entry
+    device.set_state(SensorState(key=1, state=50))
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_CLOSE)
+    await hass.async_block_till_done()
+
+    data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
+    assert data["expected_disconnect"] is True
+    assert data["states"] == {"sensor": [SensorState(key=1, state=50).to_dict()]}
+
+
 async def test_non_deep_sleep_device_does_not_persist_states(
     hass: HomeAssistant,
     mock_client: APIClient,
