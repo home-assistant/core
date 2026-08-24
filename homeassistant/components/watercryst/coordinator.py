@@ -128,5 +128,5 @@ class WatercrystMeasurementsUpdateCoordinator(
     @override
     async def _async_fetch_data(self) -> MeasurementResponse:
         if self._state.data is None or not self._state.data.online:
-            return self.data
+            return None
         return await self._client.get_measurements()

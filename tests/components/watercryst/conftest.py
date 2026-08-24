@@ -18,11 +18,7 @@ import pytest
 from homeassistant.components.watercryst import RuntimeData
 from homeassistant.components.watercryst.const import DOMAIN
 from homeassistant.const import CONF_API_KEY
-from homeassistant.helpers.device_registry import (
-    CONNECTION_BLUETOOTH,
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 
 from tests.common import MockConfigEntry
 
@@ -34,7 +30,6 @@ DEVICE_TYPE_SERIES = "KLS 3000-C"
 FW_VERSION = "V01.05.07"
 HW_VERSION = "2"
 SYSTEM_MAC = "00:A2:AA:BB:CC:DD"
-BLE_MAC = "CC:F9:AA:BB:CC:DD"
 
 
 DEFAULT_INFO_RESPONSE = DeviceResponse(
@@ -54,7 +49,6 @@ DEFAULT_INFO_RESPONSE = DeviceResponse(
     current_hardware_version=HW_VERSION,
     latest_firmware_version="V01.08.05",
     system_mac_address=SYSTEM_MAC,
-    ble_mac_address=BLE_MAC,
 )
 
 DEFAULT_MEASUREMENT_RESPONSE = MeasurementResponse(
@@ -117,7 +111,6 @@ def mock_config_entry() -> MockConfigEntry:
             identifiers={(DOMAIN, BIOCAT_SERIAL)},
             connections={
                 (CONNECTION_NETWORK_MAC, SYSTEM_MAC),
-                (CONNECTION_BLUETOOTH, BLE_MAC),
             },
             manufacturer="WATERCryst",
             model=f"{DEVICE_TYPE_LINE} {DEVICE_TYPE_SERIES}",

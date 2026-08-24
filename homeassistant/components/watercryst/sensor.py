@@ -248,6 +248,7 @@ class WatercrystSensor[DataT, CoordinatorT: WatercrystDataUpdateCoordinator[Any]
         state = self.runtime_data.state
         return (
             super().available
+            and self.coordinator.data is not None
             and state.last_update_success
             and state.data is not None
             and state.data.online
