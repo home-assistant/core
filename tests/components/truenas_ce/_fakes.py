@@ -87,6 +87,5 @@ def make_coordinator(
         async_request_refresh=AsyncMock(),
         async_run_task=AsyncMock(),
         set_optimistic_running=MagicMock(),
-        raise_migration_rollback_issue=MagicMock(),
         supports_update_run=MagicMock(return_value=True),
     )

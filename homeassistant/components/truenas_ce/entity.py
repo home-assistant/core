@@ -59,7 +59,6 @@ def format_unique_id(identity: str, key: str, reference: object = None) -> str:
 
     ``identity`` must be a stable per-entry identity (see
     ``resolve_entry_identity``), not the user-editable display name.
-    Shared with __init__.py's migration, which relies on this exact format.
     """
     base = f"{identity.lower()}-{key}"
     if reference is None:

@@ -19,12 +19,6 @@ from .const import (
 from .coordinator import TrueNASConfigEntry, TrueNASCoordinator, get_truenas_coordinator
 from .entity import format_unique_id, register_system_device, resolve_entry_identity
 from .helper import scaled_data_unit
-from .migration import (
-    async_adopt_legacy_entities,
-    async_notify_migration_result,
-    finalize_legacy_adoption,
-    pending_legacy_records,
-)
 from .sensor_types import SENSOR_TYPES, TrueNASSensorEntityDescription
 
 _LOGGER = getLogger(__name__)
@@ -115,23 +109,9 @@ async def async_setup_entry(
         hass, config_entry, coordinator
     )
 
-    # Frees legacy "truenas" entity_ids before the new platforms claim them.
-    adopted = await async_adopt_legacy_entities(hass, config_entry)
-
     _migrate_data_size_units(hass, config_entry, coordinator)
 
     await hass.config_entries.async_forward_entry_setups(config_entry, PLATFORMS)
-
-    # pending_legacy_records() re-derives from all persisted records each setup,
-    # so entities that didn't exist yet (disabled/group off) still reclaim their id later.
-    finalize_legacy_adoption(
-        hass, config_entry, pending_legacy_records(hass, config_entry)
-    )
-    async_notify_migration_result(hass, config_entry, adopted)
-    # The notification above tells the user a Repairs entry lets them roll
-    # back; make sure that entry actually exists (a no-op once already
-    # raised, and it self-clears once rollback is no longer possible).
-    coordinator.raise_migration_rollback_issue()
 
     # Re-discover entities on every refresh (new interface/pool/dataset) without a reload.
     @callback

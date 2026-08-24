@@ -10,7 +10,6 @@ import voluptuous as vol
 
 from homeassistant.config_entries import (
     CONN_CLASS_LOCAL_POLL,
-    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
 )
@@ -23,7 +22,6 @@ from .const import (
     ALLOWED_DATA_UNITS,
     CONF_CRONJOB_SKIP_DISABLED,
     CONF_DATA_UNIT,
-    CONF_POLL_INTERVAL,
     CONF_SYSTEM_ID,
     DEFAULT_CRONJOB_SKIP_DISABLED,
     DEFAULT_DATA_UNIT,
@@ -44,8 +42,6 @@ from .const import (
     ERR_UNKNOWN_HOSTNAME,
     ERR_WS_NOT_SUPPORTED,
     KNOWN_DOMAINS,
-    LEGACY_DOMAIN,
-    MIGRATION_DONE,
 )
 from .helper import sanitize_host
 
@@ -223,8 +219,6 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
     def __init__(self) -> None:
         """Initialize the config flow."""
         self.truenas_config: dict[str, Any] = {}
-        self._legacy_options: dict[str, Any] = {}
-        self._migration_checked = False
 
     async def _validate_connection(
         self, config: dict[str, Any], errors: dict[str, str]
@@ -250,8 +244,6 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
             system_id = await _async_get_system_id(api, config.get(CONF_HOST, ""))
             if system_id:
                 config[CONF_SYSTEM_ID] = system_id
-            # Only auto-derive on a new entry; migration/reauth pre-seed the
-            # name and must keep it exactly (unique_ids depend on it).
             if not config.get(CONF_NAME):
                 config[CONF_NAME] = await _async_get_hostname(
                     api, config.get(CONF_HOST, "")
@@ -272,12 +264,6 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle a flow initialized by the user."""
-        # Offer a legacy-config takeover once, before the form is shown.
-        if user_input is None and not self._migration_checked:
-            self._migration_checked = True
-            if self._find_legacy_config() is not None:
-                return await self.async_step_migrate()
-
         truenas_config = self.truenas_config
         errors: dict[str, str] = {}
 
@@ -336,7 +322,6 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
             return self.async_create_entry(
                 title=truenas_config[CONF_NAME],
                 data=truenas_config,
-                options=self._legacy_options or None,
             )
         return None
 
@@ -391,71 +376,3 @@ class TrueNASConfigFlow(ConfigFlow, domain=DOMAIN):
             step_id="zeroconf_confirm",
             description_placeholders={CONF_HOST: self.truenas_config[CONF_HOST]},
         )
-
-    def _find_legacy_config(self) -> ConfigEntry | None:
-        """Return a legacy ``truenas`` entry to optionally take over, if any.
-
-        With multiple legacy entries and no host known yet, none is offered
-        (ambiguous -- the user can still migrate manually).
-        """
-        if DOMAIN == LEGACY_DOMAIN:
-            return None
-        legacy_entries = self.hass.config_entries.async_entries(LEGACY_DOMAIN)
-        if not legacy_entries:
-            return None
-        if host := self.truenas_config.get(CONF_HOST):
-            sanitized_host = sanitize_host(host)
-            for entry in legacy_entries:
-                entry_host = entry.data.get(CONF_HOST)
-                if entry_host and sanitize_host(entry_host) == sanitized_host:
-                    return entry
-        return legacy_entries[0] if len(legacy_entries) == 1 else None
-
-    async def async_step_migrate(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Offer to import an existing TrueNAS configuration or start fresh."""
-        return self.async_show_menu(
-            step_id="migrate",
-            menu_options=["migrate_import", "migrate_manual"],
-        )
-
-    async def async_step_migrate_import(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Prefill the form from the detected legacy entry, then show it.
-
-        The name must carry over unchanged: entity unique_ids derive from it.
-        """
-        legacy = self._find_legacy_config()
-        if legacy is not None:
-            self.truenas_config.update(
-                {
-                    CONF_NAME: legacy.data.get(CONF_NAME, DEFAULT_DEVICE_NAME),
-                    CONF_HOST: legacy.data.get(CONF_HOST, DEFAULT_HOST),
-                    CONF_API_KEY: legacy.data.get(CONF_API_KEY, ""),
-                    CONF_VERIFY_SSL: legacy.data.get(
-                        CONF_VERIFY_SSL, DEFAULT_SSL_VERIFY
-                    ),
-                    CONF_CRONJOB_SKIP_DISABLED: legacy.data.get(
-                        CONF_CRONJOB_SKIP_DISABLED, DEFAULT_CRONJOB_SKIP_DISABLED
-                    ),
-                    CONF_DATA_UNIT: legacy.data.get(CONF_DATA_UNIT, DEFAULT_DATA_UNIT),
-                }
-            )
-            self._legacy_options = {
-                key: value
-                for key, value in legacy.options.items()
-                if key != CONF_POLL_INTERVAL
-            }
-        return await self.async_step_user()
-
-    async def async_step_migrate_manual(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Skip the takeover and configure TrueNAS CE from scratch.
-
-        Marks the entry as migrated so it's never auto-adopted later.
-        """
-        self.truenas_config[MIGRATION_DONE] = True
-        return await self.async_step_user()

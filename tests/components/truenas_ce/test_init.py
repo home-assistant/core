@@ -1,7 +1,7 @@
 """Unit tests for __init__.py (setup/unload, entity cleanup, service handlers).
 
 Most helpers here are pure functions tested with bare mocks/``SimpleNamespace``,
-like test_coordinator.py and test_migration.py. ``async_setup_entry``/
+like test_coordinator.py. ``async_setup_entry``/
 ``async_unload_entry`` go through the real ``hass`` fixture and
 ``MockConfigEntry`` instead, since they are HA's own config-entry lifecycle
 entrypoints.
@@ -175,7 +175,7 @@ def test_migrate_description_with_reference_skips_non_dict_vals() -> None:
 async def test_async_setup_entry_wires_coordinator_and_platforms(
     hass: HomeAssistant,
 ) -> None:
-    """Entry setup creates the coordinator, forwards platforms, and runs migration/adoption steps."""
+    """Entry setup creates the coordinator, forwards platforms, and runs unit migration."""
     entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"}, entry_id="e1")
     entry.add_to_hass(hass)
     hass.config_entries.async_forward_entry_setups = AsyncMock()
@@ -186,12 +186,7 @@ async def test_async_setup_entry_wires_coordinator_and_platforms(
 
     with (
         patch.object(init_module, "TrueNASCoordinator", return_value=coordinator),
-        patch.object(
-            init_module, "async_adopt_legacy_entities", new=AsyncMock(return_value=[])
-        ),
         patch.object(init_module, "_migrate_data_size_units") as migrate_mock,
-        patch.object(init_module, "finalize_legacy_adoption") as finalize_mock,
-        patch.object(init_module, "async_notify_migration_result") as notify_mock,
         patch.object(init_module, "register_system_device") as register_device_mock,
     ):
         result = await hass.config_entries.async_setup(entry.entry_id)
@@ -201,45 +196,8 @@ async def test_async_setup_entry_wires_coordinator_and_platforms(
     coordinator.async_config_entry_first_refresh.assert_awaited_once()
     hass.config_entries.async_forward_entry_setups.assert_awaited_once()
     migrate_mock.assert_called_once()
-    finalize_mock.assert_called_once()
-    notify_mock.assert_called_once()
     register_device_mock.assert_called_once_with(hass, entry, coordinator)
     assert coordinator.system_device_id is register_device_mock.return_value
-
-
-async def test_async_setup_entry_raises_migration_rollback_issue(
-    hass: HomeAssistant,
-) -> None:
-    """Setup asks the coordinator to (re)raise the migration-rollback Repairs issue.
-
-    The post-migration success notification tells the user this issue exists
-    (Settings -> Repairs); nothing else creates it, so setup must ask the
-    coordinator to do so or the notification's promise is false. Coverage for
-    when the issue is actually created/omitted lives in
-    test_coordinator.py's ``raise_migration_rollback_issue`` tests.
-    """
-    entry = MockConfigEntry(domain=DOMAIN, data={CONF_NAME: "TrueNAS"}, entry_id="e1")
-    entry.add_to_hass(hass)
-    hass.config_entries.async_forward_entry_setups = AsyncMock()
-
-    coordinator = MagicMock()
-    coordinator.async_config_entry_first_refresh = AsyncMock()
-    coordinator.async_add_listener = MagicMock(return_value=MagicMock())
-
-    with (
-        patch.object(init_module, "TrueNASCoordinator", return_value=coordinator),
-        patch.object(
-            init_module, "async_adopt_legacy_entities", new=AsyncMock(return_value=[])
-        ),
-        patch.object(init_module, "_migrate_data_size_units"),
-        patch.object(init_module, "finalize_legacy_adoption"),
-        patch.object(init_module, "async_notify_migration_result"),
-        patch.object(init_module, "register_system_device"),
-    ):
-        result = await hass.config_entries.async_setup(entry.entry_id)
-
-    assert result is True
-    coordinator.raise_migration_rollback_issue.assert_called_once_with()
 
 
 async def test_async_setup_entry_refresh_listener_dispatches_update_signal(
@@ -256,12 +214,7 @@ async def test_async_setup_entry_refresh_listener_dispatches_update_signal(
 
     with (
         patch.object(init_module, "TrueNASCoordinator", return_value=coordinator),
-        patch.object(
-            init_module, "async_adopt_legacy_entities", new=AsyncMock(return_value=[])
-        ),
         patch.object(init_module, "_migrate_data_size_units"),
-        patch.object(init_module, "finalize_legacy_adoption"),
-        patch.object(init_module, "async_notify_migration_result"),
         patch.object(init_module, "register_system_device"),
         patch.object(init_module, "async_dispatcher_send") as dispatch_mock,
     ):

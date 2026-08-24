@@ -1,7 +1,7 @@
 """Full config-flow coverage via a real HomeAssistant instance.
 
 Drives ``TrueNASConfigFlow`` through ``hass.config_entries.flow`` to cover the
-user/migrate/zeroconf steps end to end.
+user/zeroconf steps end to end.
 """
 
 from __future__ import annotations
@@ -18,7 +18,6 @@ from homeassistant.components.truenas_ce import config_flow
 from homeassistant.components.truenas_ce.const import (
     CONF_CRONJOB_SKIP_DISABLED,
     CONF_DATA_UNIT,
-    CONF_POLL_INTERVAL,
     CONF_SYSTEM_ID,
     DEFAULT_CRONJOB_SKIP_DISABLED,
     DEFAULT_DATA_UNIT,
@@ -26,8 +25,6 @@ from homeassistant.components.truenas_ce.const import (
     DOMAIN,
     ERR_CONNECTION_REFUSED,
     ERR_INVALID_KEY,
-    LEGACY_DOMAIN,
-    MIGRATION_DONE,
 )
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
@@ -557,146 +554,3 @@ async def test_zeroconf_flow_creates_new_entry_when_system_id_does_not_match(
     assert new_entry is not None
     assert new_entry.unique_id == "different-id"
     assert new_entry.unique_id != entry.unique_id
-
-
-# ---------------------------
-#   migrate step
-# ---------------------------
-def _legacy_entry() -> MockConfigEntry:
-    return MockConfigEntry(
-        domain=LEGACY_DOMAIN,
-        data={
-            CONF_NAME: "TrueNAS",
-            CONF_HOST: "legacy.example.com",
-            CONF_API_KEY: "old-key",
-            CONF_VERIFY_SSL: True,
-            CONF_CRONJOB_SKIP_DISABLED: False,
-            CONF_DATA_UNIT: "GB",
-        },
-        options={CONF_POLL_INTERVAL: "30"},
-    )
-
-
-async def test_user_flow_offers_migration_when_legacy_exists(
-    hass: HomeAssistant,
-) -> None:
-    """A legacy entry present at setup offers a migrate menu with both options."""
-    _legacy_entry().add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    assert result["type"] is FlowResultType.MENU
-    assert result["step_id"] == "migrate"
-    assert result["menu_options"] == ["migrate_import", "migrate_manual"]
-
-
-@pytest.mark.usefixtures("_mock_connection_ok")
-async def test_migrate_import_prefills_and_creates_entry(hass: HomeAssistant) -> None:
-    """Migrate-import prefills the form from the legacy entry and creates a new entry."""
-    _legacy_entry().add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "migrate_import"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-    # Non-secret fields are prefilled; the API key is deliberately left blank
-    # (never pre-filled into the form -- see _base_schema) even though the
-    # legacy entry's key is known internally.
-    defaults = result["data_schema"]({})
-    assert defaults[CONF_HOST] == "legacy.example.com"
-    assert defaults[CONF_API_KEY] == ""
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "legacy.example.com",
-            CONF_API_KEY: "old-key",
-            CONF_VERIFY_SSL: True,
-            CONF_CRONJOB_SKIP_DISABLED: False,
-            CONF_DATA_UNIT: "GB",
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_HOST] == "legacy.example.com"
-    assert result["data"][CONF_NAME] == "TrueNAS"
-    assert result["options"] == {CONF_POLL_INTERVAL: "30"}
-
-
-@pytest.mark.usefixtures("_mock_connection_ok")
-async def test_migrate_import_blank_api_key_keeps_legacy_key(
-    hass: HomeAssistant,
-) -> None:
-    """Resubmitting the (blank) API key field keeps the taken-over legacy key."""
-    _legacy_entry().add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "migrate_import"}
-    )
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "legacy.example.com",
-            CONF_API_KEY: "",
-            CONF_VERIFY_SSL: True,
-            CONF_CRONJOB_SKIP_DISABLED: False,
-            CONF_DATA_UNIT: "GB",
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][CONF_API_KEY] == "old-key"
-
-
-async def test_migrate_manual_skips_takeover(hass: HomeAssistant) -> None:
-    """Migrate-manual leaves the legacy entry untouched and shows a blank user form."""
-    _legacy_entry().add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "migrate_manual"}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "user"
-
-
-@pytest.mark.usefixtures("_mock_connection_ok")
-async def test_migrate_manual_marks_migration_done(hass: HomeAssistant) -> None:
-    """Migrate-manual's entry must never be auto-adopted by the legacy entry later.
-
-    Regression test: entering the *same* host the legacy entry uses (the
-    normal case, since it's the same physical box) used to let
-    ``async_adopt_legacy_entities`` silently override the user's explicit
-    "from scratch" choice on the first coordinator setup, because nothing
-    recorded that this entry had already gone through the migration decision.
-    """
-    _legacy_entry().add_to_hass(hass)
-
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": config_entries.SOURCE_USER}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {"next_step_id": "migrate_manual"}
-    )
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"],
-        {
-            CONF_HOST: "legacy.example.com",
-            CONF_API_KEY: "new-key",
-            CONF_VERIFY_SSL: True,
-            CONF_CRONJOB_SKIP_DISABLED: False,
-            CONF_DATA_UNIT: "GB",
-        },
-    )
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["data"][MIGRATION_DONE] is True

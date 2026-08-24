@@ -72,8 +72,8 @@ rules:
     status: todo
     comment: Planned as a follow-up PR after the initial bronze PR merges.
   repair-issues:
-    status: done
-    comment: Orphaned-statistics cleanup repair planned as a follow-up PR alongside stale-devices.
+    status: todo
+    comment: Orphaned-statistics cleanup repair planned as a follow-up PR alongside stale-devices; the previous legacy-migration rollback repair was removed (Core integrations don't migrate from custom integrations).
   stale-devices:
     status: todo
     comment: Planned as a follow-up PR after the initial bronze PR merges, alongside dynamic-devices and the orphaned-statistics cleanup repair.

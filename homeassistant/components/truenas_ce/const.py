@@ -7,8 +7,6 @@ PLATFORMS = [
 ]
 
 DOMAIN = "truenas_ce"
-# Pre-rename domain; migration stays inert until DOMAIN differs from this. See migration.py.
-LEGACY_DOMAIN = "truenas"
 DEFAULT_NAME = "root"
 ATTRIBUTION = "Data provided by TrueNAS CE integration"
 
@@ -87,22 +85,6 @@ CONF_DATA_UNIT = "data_unit"
 
 # system.global.id UUID; lets zeroconf rediscovery under a new IP match this device without a pre-auth probe.
 CONF_SYSTEM_ID = "system_id"
-
-# Migration-rollback Repairs issues: available (shown on demand only) and failed (rollback task errored). See repairs.py.
-ISSUE_MIGRATION_ROLLBACK = "migration_rollback_available"
-ISSUE_MIGRATION_ROLLBACK_FAILED = "migration_rollback_failed"
-
-# Migration state persisted on the config entry; supports full rollback. See migration.py.
-MIGRATION_DONE = "ce_migration_done"
-MIGRATION_RECORDS = "ce_migration_records"
-MIGRATION_RESOLVED_UNIQUE_IDS = "ce_migration_resolved_unique_ids"
-MIGRATION_LEGACY_ENTRY_ID = "ce_migration_legacy_entry_id"
-MIGRATION_LEGACY_CONFIG = "ce_migration_legacy_config"
-MIGRATION_BACKUP_KEY = "ce_migration_backup_key"
-# Domains present on the legacy entry that this build doesn't adopt yet (e.g.
-# binary_sensor/switch on a sensor-only build); left registered but inactive
-# on the disabled legacy entry until a later release adds that platform.
-MIGRATION_LEFT_BEHIND_DOMAINS = "ce_migration_left_behind_domains"
 
 CONF_POLL_INTERVAL = "poll_interval"
 DEFAULT_POLL_INTERVAL = 60

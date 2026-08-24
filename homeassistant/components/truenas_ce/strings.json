@@ -21,14 +21,6 @@
       "websocket_not_supported": "WebSocket not supported. Reverse proxy?"
     },
     "step": {
-      "migrate": {
-        "description": "A previous TrueNAS integration was detected. You can take over its settings (host, API key and options) so you don't have to enter them again — your existing entities and their history are preserved. Or set up TrueNAS CE from scratch.",
-        "menu_options": {
-          "migrate_import": "Take over existing configuration",
-          "migrate_manual": "Set up from scratch"
-        },
-        "title": "Existing TrueNAS configuration found"
-      },
       "user": {
         "data": {
           "api_key": "API key",
@@ -38,7 +30,7 @@
           "verify_ssl": "Verify SSL certificate"
         },
         "data_description": {
-          "api_key": "An API key generated in TrueNAS under Credentials > API Keys. Leave blank to keep a previously configured key when taking over an existing configuration.",
+          "api_key": "An API key generated in TrueNAS under Credentials > API Keys.",
           "cronjob_skip_disabled": "Skip cron jobs that are disabled in TrueNAS.",
           "data_unit": "Choose whether data sizes are displayed using decimal (GB) or binary (GiB) units.",
           "host": "The hostname or IP address of your TrueNAS instance, without \"https://\", path or trailing slash.",
@@ -220,27 +212,6 @@
     },
     "unsupported_action": {
       "message": "The {action} action is not supported by this TrueNAS entity ({entity_id})"
-    }
-  },
-  "issues": {
-    "migration_rollback_available": {
-      "fix_flow": {
-        "step": {
-          "init": {
-            "description": "TrueNAS Community Edition adopted {count} entity(ies) and their history from your previous TrueNAS integration, which is now disabled (not deleted). Keep TrueNAS CE, or roll back to hand the entities and history back to the old integration. Rolling back removes the TrueNAS CE integration. This is only possible while the old integration still exists.",
-            "menu_options": {
-              "ignore": "Keep TrueNAS CE (dismiss)",
-              "rollback": "Roll back to the previous integration"
-            },
-            "title": "Roll back the TrueNAS CE migration?"
-          }
-        }
-      },
-      "title": "TrueNAS CE migration — rollback available"
-    },
-    "migration_rollback_failed": {
-      "description": "Rolling back the TrueNAS CE migration for {name} failed partway through. The integration may be left in an inconsistent state — check the Home Assistant logs for details, then try pressing the rollback button again or reinstalling the integration.",
-      "title": "TrueNAS CE migration rollback failed"
     }
   }
 }

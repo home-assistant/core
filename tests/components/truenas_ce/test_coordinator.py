@@ -26,9 +26,6 @@ from homeassistant.components.truenas_ce.const import (
     CONF_POLL_INTERVAL,
     DEFAULT_POLL_INTERVAL,
     DOMAIN,
-    LEGACY_DOMAIN,
-    MIGRATION_LEGACY_ENTRY_ID,
-    MIGRATION_RECORDS,
     MONITOR_GROUP_CLOUDSYNC,
     MONITOR_GROUP_CONTAINERS,
     MONITOR_GROUP_CRONJOBS,
@@ -568,47 +565,6 @@ def test_store_stat_value_unknown_type_stores_raw_key() -> None:
     coord.ds = {"system_info": {}}
     coord._store_stat_value("diskstats", "reads", 12.345)
     assert coord.ds["system_info"]["reads"] == pytest.approx(12.35)
-
-
-# ---------------------------
-#   _rollback_possible / issue-id builders
-# ---------------------------
-def test_rollback_possible_false_when_domain_is_legacy(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Rollback is impossible once the integration is already running as legacy."""
-    coord = _bare_coordinator()
-    monkeypatch.setattr(coordinator_module, "DOMAIN", LEGACY_DOMAIN)
-    assert coord._rollback_possible() is False
-
-
-def test_rollback_possible_true_when_legacy_entry_exists() -> None:
-    """Rollback is possible when a recorded legacy entry id still resolves."""
-    coord = _bare_coordinator()
-    coord.config_entry = MagicMock()
-    coord.config_entry.data = {MIGRATION_LEGACY_ENTRY_ID: "legacy-id-1"}
-    coord.hass = MagicMock()
-    coord.hass.config_entries.async_get_entry.return_value = MagicMock()
-    assert coord._rollback_possible() is True
-
-
-def test_rollback_possible_false_when_no_legacy_id_recorded() -> None:
-    """Rollback is impossible when no legacy entry id was ever recorded."""
-    coord = _bare_coordinator()
-    coord.config_entry = MagicMock()
-    coord.config_entry.data = {}
-    coord.hass = MagicMock()
-    assert coord._rollback_possible() is False
-
-
-def test_migration_rollback_issue_id_includes_entry_id() -> None:
-    """The migration-rollback issue id is scoped by config entry id."""
-    coord = _bare_coordinator()
-    coord.config_entry = MagicMock()
-    coord.config_entry.entry_id = "entry123"
-    assert (
-        coord._migration_rollback_issue_id() == "migration_rollback_available_entry123"
-    )
 
 
 # ---------------------------
@@ -1610,7 +1566,6 @@ async def test_async_update_data_runs_jobs_when_connected() -> None:
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord._async_ensure_connected = AsyncMock()
-    coord._clear_stale_migration_rollback_issue = MagicMock()
     coord.last_updatecheck_update = datetime(1970, 1, 1, tzinfo=UTC)
     _stub_all_jobs(coord)
     coord.ds = {"foo": "bar", "system_info": {"hostname": "truenas"}}
@@ -1630,7 +1585,6 @@ async def test_async_update_data_skips_jobs_when_disconnected() -> None:
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=False)
     coord._async_ensure_connected = AsyncMock()
-    coord._clear_stale_migration_rollback_issue = MagicMock()
     _stub_all_jobs(coord)
 
     with pytest.raises(coordinator_module.UpdateFailed):
@@ -1645,7 +1599,6 @@ async def test_async_update_data_swallows_job_exceptions() -> None:
     coord.api = MagicMock()
     coord.api.connected = MagicMock(return_value=True)
     coord._async_ensure_connected = AsyncMock()
-    coord._clear_stale_migration_rollback_issue = MagicMock()
     coord.last_updatecheck_update = dt_util.utcnow()
     _stub_all_jobs(coord)
     coord.get_service = AsyncMock(side_effect=Exception("boom"))
@@ -1671,61 +1624,6 @@ async def test_async_update_data_raises_when_system_info_missing() -> None:
 
     coord.get_systeminfo.assert_awaited_once()
     coord.get_pool.assert_not_awaited()
-
-
-# ---------------------------
-#   Community-Edition migration rollback lifecycle
-# ---------------------------
-def test_raise_migration_rollback_issue_noop_when_not_possible() -> None:
-    """No rollback-eligible legacy entry means no issue is created."""
-    coord = _bare_coordinator()
-    coord.config_entry = MagicMock()
-    coord.config_entry.data = {}
-    coord.hass = MagicMock()
-    with patch.object(coordinator_module.ir, "async_create_issue") as create_mock:
-        coord.raise_migration_rollback_issue()
-    create_mock.assert_not_called()
-
-
-def test_raise_migration_rollback_issue_creates_when_possible() -> None:
-    """A rollback-eligible legacy entry causes the Repairs issue to be created."""
-    coord = _bare_coordinator()
-    coord.config_entry = MagicMock()
-    coord.config_entry.entry_id = "entry1"
-    coord.config_entry.data = {
-        MIGRATION_LEGACY_ENTRY_ID: "legacy-1",
-        MIGRATION_RECORDS: [1, 2],
-    }
-    coord.hass = MagicMock()
-    coord.hass.config_entries.async_get_entry.return_value = MagicMock()
-    with patch.object(coordinator_module.ir, "async_create_issue") as create_mock:
-        coord.raise_migration_rollback_issue()
-    create_mock.assert_called_once()
-
-
-def test_clear_stale_migration_rollback_issue_inert_for_legacy_domain(
-    monkeypatch: pytest.MonkeyPatch,
-) -> None:
-    """Running as the legacy domain never deletes the migration-rollback issue."""
-    monkeypatch.setattr(coordinator_module, "DOMAIN", LEGACY_DOMAIN)
-    coord = _bare_coordinator()
-    with patch.object(coordinator_module.ir, "async_delete_issue") as delete_mock:
-        coord._clear_stale_migration_rollback_issue()
-    delete_mock.assert_not_called()
-
-
-def test_clear_stale_migration_rollback_issue_deletes_when_rollback_impossible() -> (
-    None
-):
-    """Once rollback is no longer possible, any stale issue is deleted."""
-    coord = _bare_coordinator()
-    coord.config_entry = MagicMock()
-    coord.config_entry.entry_id = "entry1"
-    coord.config_entry.data = {}
-    coord.hass = MagicMock()
-    with patch.object(coordinator_module.ir, "async_delete_issue") as delete_mock:
-        coord._clear_stale_migration_rollback_issue()
-    delete_mock.assert_called_once()
 
 
 # ---------------------------

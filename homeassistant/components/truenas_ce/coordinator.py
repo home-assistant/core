@@ -11,7 +11,6 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_API_KEY, CONF_HOST, CONF_NAME, CONF_VERIFY_SSL
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
@@ -26,12 +25,8 @@ from .const import (
     DEFAULT_POLL_INTERVAL,
     DOMAIN,
     ERR_INVALID_KEY,
-    ISSUE_MIGRATION_ROLLBACK,
     KILOBITS_TO_KIBIBYTES_FACTOR,
-    LEGACY_DOMAIN,
     LINK_STATE_UP,
-    MIGRATION_LEGACY_ENTRY_ID,
-    MIGRATION_RECORDS,
     MONITOR_GROUP_CLOUDSYNC,
     MONITOR_GROUP_CONTAINERS,
     MONITOR_GROUP_CRONJOBS,
@@ -524,51 +519,7 @@ class TrueNASCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"host": self.host},
             )
 
-        self._clear_stale_migration_rollback_issue()
-
         return self.ds
-
-    def _migration_rollback_issue_id(self) -> str:
-        """Return the per-entry Repairs issue id for the migration rollback."""
-        return f"{ISSUE_MIGRATION_ROLLBACK}_{self.config_entry.entry_id}"
-
-    def _rollback_possible(self) -> bool:
-        """Whether a rollback to the disabled legacy entry is still possible."""
-        if DOMAIN == LEGACY_DOMAIN:
-            return False
-        legacy_id = self.config_entry.data.get(MIGRATION_LEGACY_ENTRY_ID)
-        return bool(legacy_id and self.hass.config_entries.async_get_entry(legacy_id))
-
-    def raise_migration_rollback_issue(self) -> None:
-        """Raise the rollback confirm issue if a rollback is currently possible.
-
-        Called after a successful migration so the success notification's
-        promise of a Repairs entry is fulfilled; safe to call repeatedly
-        (e.g. on every setup) since it's a no-op once the issue already
-        exists and the fix flow / :meth:`_clear_stale_migration_rollback_issue`
-        take care of removing it again.
-        """
-        if not self._rollback_possible():
-            return
-        count = len(self.config_entry.data.get(MIGRATION_RECORDS, []))
-        ir.async_create_issue(
-            self.hass,
-            DOMAIN,
-            self._migration_rollback_issue_id(),
-            is_fixable=True,
-            severity=ir.IssueSeverity.WARNING,
-            translation_key=ISSUE_MIGRATION_ROLLBACK,
-            translation_placeholders={"count": str(count)},
-        )
-
-    def _clear_stale_migration_rollback_issue(self) -> None:
-        """Withdraw a lingering rollback issue once a rollback is no longer possible."""
-        if DOMAIN == LEGACY_DOMAIN:
-            return
-        if not self._rollback_possible():
-            ir.async_delete_issue(
-                self.hass, DOMAIN, self._migration_rollback_issue_id()
-            )
 
     async def get_systeminfo(self) -> None:
         """Get system info from TrueNAS."""
