@@ -8,6 +8,12 @@ import urllib.parse
 
 import pytest
 
+from homeassistant.components.daikin.const import DOMAIN, KEY_MAC
+from homeassistant.const import CONF_HOST
+from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
+
 type ZoneDefinition = list[str | int]
 type ZoneDevice = MagicMock
 
@@ -45,6 +51,23 @@ def configure_zone_device(
             encoded_zone_temperatures if cooling_values is None else cooling_values
         ),
     }
+
+
+async def async_setup_daikin(
+    hass: HomeAssistant, zone_device: ZoneDevice
+) -> MockConfigEntry:
+    """Set up a Daikin config entry with a mocked library device."""
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=zone_device.mac,
+        data={CONF_HOST: "127.0.0.1", KEY_MAC: zone_device.mac},
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    return config_entry
 
 
 @pytest.fixture
