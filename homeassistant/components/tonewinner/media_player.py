@@ -46,6 +46,7 @@ class TonewinnerMediaPlayer(MediaPlayerEntity):
     """Tonewinner media player."""
 
     _attr_device_class = MediaPlayerDeviceClass.RECEIVER
+    _attr_should_poll = False
     _attr_supported_features = (
         MediaPlayerEntityFeature.VOLUME_MUTE
         | MediaPlayerEntityFeature.VOLUME_SET
