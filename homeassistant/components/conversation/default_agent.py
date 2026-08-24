@@ -741,18 +741,16 @@ class DefaultAgent(ConversationEntity):
 
         responses = self._gazetteer_responses.get(language)
         if responses is None:
-            responses = GazetteerResponses(lang_intents.intents_dict)
+            responses = GazetteerResponses(
+                lang_intents.intents_dict, lang_intents.intent_responses
+            )
             self._gazetteer_responses[language] = responses
 
-        # Only take over a sentence we can also answer. A shape the corpus phrases more
-        # than one way is one the frame cannot choose between -- "are any lights on" and
-        # "how many lights are on" are the same frame -- and acting on it mutely is
-        # worse than leaving the sentence to hassil's own error.
+        # Only take over a sentence we can also answer. Acting on one mutely is worse
+        # than leaving it to hassil's own error.
         keyed: list[tuple[FrameCandidate, str]] = []
         for frame in interpretation.frames:
-            key = responses.key_for(
-                frame.intent, frame.combination, self._gazetteer.async_domain(frame)
-            )
+            key = responses.key_for(frame, self._gazetteer.async_domain(frame))
             if key is None:
                 _LOGGER.debug(
                     "Gazetteer matched '%s' as %s/%s, which has no single response",
