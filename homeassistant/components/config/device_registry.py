@@ -1,5 +1,6 @@
 """HTTP views to interact with the device registry."""
 
+from itertools import chain
 import logging
 from typing import Any
 
@@ -92,7 +93,7 @@ def websocket_list_devices(
     inner = b",".join(
         [
             entry.json_repr
-            for entry in (*registry.devices, *registry.child_devices)
+            for entry in chain(registry.devices, registry.child_devices)
             if entry.json_repr is not None
         ]
     )
