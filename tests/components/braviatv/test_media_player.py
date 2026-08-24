@@ -73,6 +73,13 @@ INPUTS = [
         "icon": "meta:hdmi",
     },
     {
+        # Some models leave the key out entirely rather than sending it empty.
+        "uri": "extInput:hdmi?port=6",
+        "title": "HDMI 6",
+        "connection": True,
+        "icon": "meta:hdmi",
+    },
+    {
         "uri": "extInput:cec?type=player&port=1",
         "connection": True,
         "label": "Streaming box",
@@ -144,15 +151,16 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
     state = hass.states.get(ENTITY_ID)
 
     assert state is not None
-    # "HDMI 1" has no label and keeps the generic name, "HDMI 2" was renamed and
-    # "HDMI 3" repeats the same label, so it falls back to the generic name to
-    # stay reachable.
+    # "HDMI 1" has an empty label and "HDMI 6" no label key at all, so both keep
+    # the generic name. "HDMI 2" was renamed, and "HDMI 3" repeats the same
+    # label, so it falls back to the generic name to stay reachable.
     assert state.attributes[ATTR_INPUT_SOURCE_LIST] == [
         "HDMI 1",
         "Game console",
         "HDMI 3",
         "HDMI 4",
         "HDMI 5",
+        "HDMI 6",
         "Streaming box",
         "Streaming box (3)",
         "Streaming box (2)",
@@ -171,6 +179,7 @@ async def test_source_list_prefers_label(hass: HomeAssistant) -> None:
         pytest.param("HDMI 1", "extInput:hdmi?port=1", id="generic_name_not_stolen"),
         pytest.param("HDMI 4", "extInput:hdmi?port=4", id="label_of_another_input"),
         pytest.param("HDMI 5", "extInput:hdmi?port=5", id="label_differing_in_case"),
+        pytest.param("HDMI 6", "extInput:hdmi?port=6", id="no_label_key"),
         pytest.param(
             "Streaming box", "extInput:cec?type=player&port=1", id="label_without_title"
         ),
