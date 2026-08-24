@@ -23,14 +23,13 @@ from homeassistant.components.input_number import (
     DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
-from homeassistant.components.input_select import SERVICE_SELECT_OPTION
+from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     SERVICE_DOCK,
     SERVICE_START_MOWING,
     LawnMowerActivity,
 )
-from homeassistant.components.select import SelectEntityCapabilityAttribute
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -528,7 +527,7 @@ class SelectSwitch(HomeAccessory):
         assert state
 
         self.select_chars: dict[str, Characteristic] = {}
-        options = state.attributes[SelectEntityCapabilityAttribute.OPTIONS]
+        options = state.attributes[ATTR_OPTIONS]
         for option in options:
             serv_option = self.add_preload_service(
                 SERV_OUTLET,

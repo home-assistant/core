@@ -25,15 +25,12 @@ from homeassistant.components.switch import SwitchDeviceClass
 from homeassistant.const import (
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
-    ATTR_DEVICE_CLASS,
     ATTR_ENTITY_ID,
     ATTR_HW_VERSION,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SERVICE,
-    ATTR_SUPPORTED_FEATURES,
     ATTR_SW_VERSION,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_TYPE,
     LIGHT_LUX,
@@ -137,9 +134,9 @@ CLIMATE_TYPES = {
 TYPES: Registry[str, type[HomeAccessory]] = Registry()
 
 RELOAD_ON_CHANGE_ATTRS = (
-    ATTR_SUPPORTED_FEATURES,
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
+    EntityStateAttribute.SUPPORTED_FEATURES,
+    EntityStateAttribute.DEVICE_CLASS,
+    EntityStateAttribute.UNIT_OF_MEASUREMENT,
 )
 
 
@@ -452,7 +449,7 @@ class HomeAccessory(Accessory):  # type: ignore[misc]
             *args,  # noqa: B026
             **kwargs,
         )
-        self._reload_on_change_attrs = list(RELOAD_ON_CHANGE_ATTRS)
+        self._reload_on_change_attrs: list[str] = list(RELOAD_ON_CHANGE_ATTRS)
         self.config = config or {}
         if device_id:
             self.device_id: str | None = device_id

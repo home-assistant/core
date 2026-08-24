@@ -8,7 +8,6 @@ from pyhap.const import CATEGORY_AIR_PURIFIER
 from pyhap.service import Service
 from pyhap.util import callback as pyhap_callback
 
-from homeassistant.components.fan import FanEntityStateAttribute
 from homeassistant.const import (
     STATE_ON,
     STATE_UNAVAILABLE,
@@ -49,7 +48,7 @@ from .const import (
     SERV_TEMPERATURE_SENSOR,
     THRESHOLD_FILTER_CHANGE_NEEDED,
 )
-from .type_fans import CHAR_ROTATION_SPEED, Fan
+from .type_fans import ATTR_PRESET_MODE, CHAR_ROTATION_SPEED, Fan
 from .util import (
     cleanup_name_for_homekit,
     convert_to_float,
@@ -469,8 +468,8 @@ class AirPurifier(Fan):
 
         # Automatic mode is represented in HASS by a preset called Auto or auto
         attributes = new_state.attributes
-        if FanEntityStateAttribute.PRESET_MODE in attributes:
-            current_preset_mode = attributes.get(FanEntityStateAttribute.PRESET_MODE)
+        if ATTR_PRESET_MODE in attributes:
+            current_preset_mode = attributes.get(ATTR_PRESET_MODE)
             self.char_target_air_purifier_state.set_value(
                 TARGET_STATE_AUTO
                 if current_preset_mode and current_preset_mode.lower() == "auto"

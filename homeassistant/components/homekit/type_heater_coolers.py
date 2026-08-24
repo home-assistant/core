@@ -10,7 +10,11 @@ from pyhap.characteristic import Characteristic
 from pyhap.const import CATEGORY_AIR_CONDITIONER, CATEGORY_HEATER
 
 from homeassistant.components.climate import (
+    ATTR_CURRENT_HUMIDITY,
+    ATTR_CURRENT_TEMPERATURE,
+    ATTR_HVAC_ACTION,
     ATTR_HVAC_MODE,
+    ATTR_HVAC_MODES,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     ATTR_TEMPERATURE,
@@ -21,9 +25,7 @@ from homeassistant.components.climate import (
     SERVICE_SET_HVAC_MODE,
     SERVICE_SET_SWING_MODE,
     SERVICE_SET_TEMPERATURE,
-    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
-    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
@@ -149,7 +151,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             )
         )
 
-        hvac_modes = attributes.get(ClimateEntityCapabilityAttribute.HVAC_MODES, [])
+        hvac_modes = attributes.get(ATTR_HVAC_MODES, [])
         current_mode = try_parse_enum(HVACMode, state.state)
 
         self._supports_off = HVACMode.OFF in hvac_modes
@@ -227,7 +229,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             self.fan_chars.append(CHAR_TARGET_FAN_STATE)
             if self.ordered_fan_speeds:
                 self.fan_chars.append(CHAR_ROTATION_SPEED)
-            if attributes.get(ClimateEntityStateAttribute.HVAC_ACTION) is not None:
+            if attributes.get(ATTR_HVAC_ACTION) is not None:
                 self.fan_chars.append(CHAR_CURRENT_FAN_STATE)
 
         # Fan/swing modes are detected in the base class; only advertise the
@@ -302,7 +304,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         # Thermostat, this is decided once at setup and not a reload attribute:
         # current humidity changes on every update, so reloading on it would
         # thrash the accessory.
-        self._has_humidity = ClimateEntityStateAttribute.CURRENT_HUMIDITY in attributes
+        self._has_humidity = ATTR_CURRENT_HUMIDITY in attributes
         if self._has_humidity:
             humidity_serv = self.add_preload_service(SERV_HUMIDITY_SENSOR, CHAR_NAME)
             serv.add_linked_service(humidity_serv)
@@ -532,13 +534,10 @@ class HeaterCooler(HomeKitClimateAccessory):
             self._has_cool_threshold
             and self._has_heat_threshold
             and (
-                ClimateEntityStateAttribute.TARGET_TEMP_HIGH in attributes
-                or ClimateEntityStateAttribute.TARGET_TEMP_LOW in attributes
+                ATTR_TARGET_TEMP_HIGH in attributes
+                or ATTR_TARGET_TEMP_LOW in attributes
             )
-            and (
-                effective_mode in RANGE_MODES
-                or ClimateEntityStateAttribute.TARGET_TEMPERATURE not in attributes
-            )
+            and (effective_mode in RANGE_MODES or ATTR_TEMPERATURE not in attributes)
         )
 
         if use_range:
@@ -585,9 +584,7 @@ class HeaterCooler(HomeKitClimateAccessory):
             # Pick whichever threshold moved further from the entity's existing
             # target setpoint. The thresholds are in HomeKit units, so convert
             # the target setpoint before comparing.
-            target_temp = current_state.attributes.get(
-                ClimateEntityStateAttribute.TARGET_TEMPERATURE
-            )
+            target_temp = current_state.attributes.get(ATTR_TEMPERATURE)
             if target_temp is None:
                 selected_temp = heating_temp
             else:
@@ -646,9 +643,9 @@ class HeaterCooler(HomeKitClimateAccessory):
             self.char_current_state.set_value(HC_INACTIVE)
         else:
             self.char_active.set_value(1)
-            action = attributes.get(
-                ClimateEntityStateAttribute.HVAC_ACTION
-            ) or self._derive_action(new_state, current_mode)
+            action = attributes.get(ATTR_HVAC_ACTION) or self._derive_action(
+                new_state, current_mode
+            )
             self.char_current_state.set_value(
                 HC_HASS_TO_HOMEKIT_ACTION.get(action, HC_INACTIVE)
             )
@@ -656,8 +653,7 @@ class HeaterCooler(HomeKitClimateAccessory):
         self._update_current_temperature_char(new_state)
         self._update_temperature_thresholds(new_state)
         if self._has_humidity and isinstance(
-            (humidity := attributes.get(ClimateEntityStateAttribute.CURRENT_HUMIDITY)),
-            (int, float),
+            (humidity := attributes.get(ATTR_CURRENT_HUMIDITY)), (int, float)
         ):
             self.char_current_humidity.set_value(humidity)
         if self.fan_chars:
@@ -675,8 +671,8 @@ class HeaterCooler(HomeKitClimateAccessory):
         # Dual capable entities publish the range keys even in single
         # setpoint modes, so only values decide what is displayed.
         supports_dual_temp = (
-            attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_HIGH) is not None
-            or attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_LOW) is not None
+            attributes.get(ATTR_TARGET_TEMP_HIGH) is not None
+            or attributes.get(ATTR_TARGET_TEMP_LOW) is not None
         )
 
         if supports_dual_temp:
@@ -701,7 +697,7 @@ class HeaterCooler(HomeKitClimateAccessory):
     def _derive_action(self, state: State, mode: HVACMode | None) -> HVACAction:
         """Infer heating / cooling when integration omits hvac_action."""
         attributes = state.attributes
-        cur = attributes.get(ClimateEntityStateAttribute.CURRENT_TEMPERATURE)
+        cur = attributes.get(ATTR_CURRENT_TEMPERATURE)
         if cur is None or mode is None:
             return HVACAction.IDLE
 
@@ -709,19 +705,17 @@ class HeaterCooler(HomeKitClimateAccessory):
         # Range modes have independent thresholds; single-target modes only
         # drive one side. Any other mode (e.g. dry, fan_only) stays idle.
         if mode in RANGE_MODES:
-            cool_above = attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_HIGH)
-            heat_below = attributes.get(ClimateEntityStateAttribute.TARGET_TEMP_LOW)
+            cool_above = attributes.get(ATTR_TARGET_TEMP_HIGH)
+            heat_below = attributes.get(ATTR_TARGET_TEMP_LOW)
             if cool_above is None and heat_below is None:
                 # Some integrations run auto from a single setpoint.
-                cool_above = heat_below = attributes.get(
-                    ClimateEntityStateAttribute.TARGET_TEMPERATURE
-                )
+                cool_above = heat_below = attributes.get(ATTR_TEMPERATURE)
         elif mode == HVACMode.COOL:
-            cool_above = attributes.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE)
+            cool_above = attributes.get(ATTR_TEMPERATURE)
             heat_below = None
         elif mode == HVACMode.HEAT:
             cool_above = None
-            heat_below = attributes.get(ClimateEntityStateAttribute.TARGET_TEMPERATURE)
+            heat_below = attributes.get(ATTR_TEMPERATURE)
         else:
             return HVACAction.IDLE
 
