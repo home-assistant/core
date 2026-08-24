@@ -607,12 +607,9 @@ async def test_onboarding_installation_type_waits_for_hassio(
 
     async_set_domains_to_be_loaded(hass, {"hassio"})
 
-    with (
-        patch.dict(os.environ, {"SUPERVISOR": "127.0.0.1"}),
-        patch(
-            "homeassistant.components.onboarding.views.async_get_system_info",
-            return_value={"installation_type": "Home Assistant OS"},
-        ),
+    with patch(
+        "homeassistant.components.onboarding.views.async_get_system_info",
+        return_value={"installation_type": "Home Assistant OS"},
     ):
         req_task = asyncio.create_task(client.get("/api/onboarding/installation_type"))
         await asyncio.sleep(0.01)
@@ -629,12 +626,12 @@ async def test_onboarding_installation_type_waits_for_hassio(
     assert resp_content["installation_type"] == "Home Assistant OS"
 
 
-async def test_onboarding_installation_type_no_wait_without_supervisor(
+async def test_onboarding_installation_type_no_hassio(
     hass: HomeAssistant,
     hass_storage: dict[str, Any],
     hass_client: ClientSessionGenerator,
 ) -> None:
-    """Test installation type does not wait for hassio without Supervisor."""
+    """Test installation type does not wait when hassio is not pending setup."""
     mock_storage(hass_storage, {"done": []})
 
     assert await async_setup_component(hass, DOMAIN, {})
@@ -642,16 +639,10 @@ async def test_onboarding_installation_type_no_wait_without_supervisor(
 
     client = await hass_client()
 
-    async_set_domains_to_be_loaded(hass, {"hassio"})
-
-    with (
-        patch.dict(os.environ),
-        patch(
-            "homeassistant.components.onboarding.views.async_get_system_info",
-            return_value={"installation_type": "Home Assistant Container"},
-        ),
+    with patch(
+        "homeassistant.components.onboarding.views.async_get_system_info",
+        return_value={"installation_type": "Home Assistant Container"},
     ):
-        os.environ.pop("SUPERVISOR", None)
         resp = await client.get("/api/onboarding/installation_type")
 
     assert resp.status == 200
