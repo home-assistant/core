@@ -53,6 +53,29 @@
         "name": "Main zone"
       }
     },
+    "number": {
+      "lipsync": {
+        "name": "Lip sync"
+      },
+      "trim_bass": {
+        "name": "Trim bass"
+      },
+      "trim_centre": {
+        "name": "Trim centre"
+      },
+      "trim_height": {
+        "name": "Trim height"
+      },
+      "trim_lfe": {
+        "name": "Trim LFE"
+      },
+      "trim_surround": {
+        "name": "Trim surround"
+      },
+      "trim_treble": {
+        "name": "Trim treble"
+      }
+    },
     "sensor": {
       "audio_information": {
         "name": "Audio information"
