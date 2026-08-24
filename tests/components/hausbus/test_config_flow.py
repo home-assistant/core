@@ -68,12 +68,24 @@ async def test_user_flow_search_timeout_then_retry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "search_timeout"
 
-    # Retrying starts a new search.
-    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] in (
-        FlowResultType.SHOW_PROGRESS,
-        FlowResultType.FORM,
+    # Retrying starts a new search and lands back on the timeout form.
+    result = await _resolve_progress(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "search_timeout"
+
+
+async def test_user_flow_network_error_shows_retry(
+    hass: HomeAssistant, mock_home_server: MagicMock
+) -> None:
+    """Test the user flow shows a retry form when a network error occurs."""
+    mock_home_server.searchDevices.side_effect = OSError("network unreachable")
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    result = await _resolve_progress(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "search_timeout"
 
 
 async def test_single_instance_allowed(

@@ -45,6 +45,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
 async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> bool:
     """Unload a config entry."""
     gateway = entry.runtime_data
-    gateway.home_server.removeBusEventListener(gateway)
-    gateway.home_server.removeBusDeviceListener(gateway)
-    return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    unload_ok = await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
+    if unload_ok:
+        gateway.home_server.removeBusEventListener(gateway)
+        gateway.home_server.removeBusDeviceListener(gateway)
+    return unload_ok
