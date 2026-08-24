@@ -44,15 +44,15 @@
           "unit": "Unit ID"
         },
         "data_description": {
-          "host": "The hostname or IP address of your Flexit CI66 Modbus adapter.",
-          "port": "The port of your Flexit CI66 Modbus adapter.",
+          "host": "The hostname or IP address of your Flexit CI66 Modbus bridge.",
+          "port": "The port of your Flexit CI66 Modbus bridge.",
           "unit": "The Modbus unit ID of your Flexit AC unit."
         }
       },
       "user": {
         "menu_options": {
           "serial": "Serial (Modbus RTU)",
-          "tcp": "Network (Modbus TCP)"
+          "tcp": "Network (Modbus TCP) via Bridge"
         }
       }
     }
