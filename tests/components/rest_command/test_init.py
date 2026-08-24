@@ -129,6 +129,29 @@ async def test_rest_command_auth(
     assert CIMultiDict(headers).getall("Authorization") == [f"Basic {encoded}"]
 
 
+async def test_rest_command_auth_outside_latin_1(
+    hass: HomeAssistant,
+    setup_component: ComponentSetup,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Call a rest command with a credential latin-1 cannot encode."""
+    config = {
+        "auth_test": {
+            "url": TEST_URL,
+            "method": "get",
+            "username": "用户",
+            "password": "123456",
+        }
+    }
+    # Setting up must not fail, only the call that needs the credential
+    await setup_component(config)
+
+    aioclient_mock.get(TEST_URL, content=b"success")
+
+    with pytest.raises(UnicodeEncodeError):
+        await hass.services.async_call(DOMAIN, "auth_test", {}, blocking=True)
+
+
 @pytest.mark.parametrize(
     "header_name",
     [

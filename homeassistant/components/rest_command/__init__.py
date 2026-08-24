@@ -117,7 +117,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         template_url = command_config[CONF_URL]
         skip_url_encoding = command_config[CONF_SKIP_URL_ENCODING]
 
-        basic_auth: str | None = None
+        basic_auth: tuple[str, str] | None = None
         digest_auth: tuple[str, str] | None = None
         if CONF_USERNAME in command_config:
             username = command_config[CONF_USERNAME]
@@ -125,9 +125,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             if command_config.get(CONF_AUTHENTICATION) == HTTP_DIGEST_AUTHENTICATION:
                 digest_auth = (username, password)
             else:
-                basic_auth = aiohttp.encode_basic_auth(
-                    username, password, encoding="latin1"
-                )
+                basic_auth = (username, password)
 
         template_payload = None
         if CONF_PAYLOAD in command_config:
@@ -170,9 +168,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
 
             # Kept out of the debug log above so the credentials are not logged.
+            # Encoding here rather than at registration keeps a credential
+            # outside latin-1 a failure of this call, not of the whole setup.
             request_headers = CIMultiDict(headers)
-            if basic_auth is not None:
-                request_headers.setdefault(hdrs.AUTHORIZATION, basic_auth)
+            if basic_auth is not None and hdrs.AUTHORIZATION not in request_headers:
+                request_headers[hdrs.AUTHORIZATION] = aiohttp.encode_basic_auth(
+                    *basic_auth, encoding="latin1"
+                )
 
             try:
                 # Prepare request kwargs
