@@ -3,7 +3,7 @@
 from abc import abstractmethod
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import TYPE_CHECKING, cast, override
+from typing import TYPE_CHECKING, override
 
 import aiounifi
 from aiounifi.interfaces.api_handlers import (
@@ -26,7 +26,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity import Entity, EntityDescription
 
 from .const import ATTR_MANUFACTURER, DOMAIN
-from .coordinator import UnifiDataUpdateCoordinator
 
 if TYPE_CHECKING:
     from .hub import UnifiHub
@@ -150,11 +149,8 @@ class UnifiEntity[HandlerT: APIHandler, ItemT: ApiItem](Entity):
         self.hub = hub
         self.api = hub.api
         self.entity_description = description
-        self.coordinator = cast(
-            UnifiDataUpdateCoordinator[HandlerT] | None,
-            hub.entity_loader.get_data_update_coordinator(
-                description.api_handler_fn(self.api)
-            ),
+        self.coordinator = hub.entity_loader.get_data_update_coordinator(
+            description.api_handler_fn(self.api)
         )
         assert self.coordinator is not None
 

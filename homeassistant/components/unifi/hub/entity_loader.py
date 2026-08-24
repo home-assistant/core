@@ -43,7 +43,7 @@ class UnifiEntityLoader:
         )
         self.wireless_clients = hub.hass.data[UNIFI_WIRELESS_CLIENTS]
 
-        self._data_coordinators: dict[int, UnifiDataUpdateCoordinator] = {
+        self._data_coordinators: dict[int, UnifiDataUpdateCoordinator[Any]] = {
             id(hub.api.clients): UnifiDataUpdateCoordinator(hub, hub.api.clients),
             id(hub.api.devices): UnifiDataUpdateCoordinator(hub, hub.api.devices),
             id(hub.api.dpi_apps): UnifiDataUpdateCoordinator(hub, hub.api.dpi_apps),
@@ -218,9 +218,9 @@ class UnifiEntityLoader:
         )
 
     @callback
-    def get_data_update_coordinator(
-        self, handler: APIHandler
-    ) -> UnifiDataUpdateCoordinator | None:
+    def get_data_update_coordinator[HandlerT: APIHandler](
+        self, handler: HandlerT
+    ) -> UnifiDataUpdateCoordinator[HandlerT] | None:
         """Return the data coordinator for a handler, if available."""
         handler_id = id(handler)
         resolved_handler_id = self._data_coordinator_aliases.get(handler_id, handler_id)
