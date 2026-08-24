@@ -11,17 +11,20 @@ from homeassistant.components.webhook import async_generate_id
 from homeassistant.const import CONF_ACCESS_TOKEN, CONF_WEBHOOK_ID, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady, OAuth2TokenRequestError
+from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
+from homeassistant.helpers.typing import ConfigType
 
 from .api import AuthenticatedMonzoAPI, MonzoAPI
 from .const import CONF_CLOUDHOOK_URL, CONF_WEBHOOK_URL, DOMAIN
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoRuntimeData
 from .helpers import get_authenticated_owner_name
+from .services import async_setup_services
 from .webhook import MonzoWebhookManager, async_delete_remote_webhooks
 
 _LOGGER = logging.getLogger(__name__)
@@ -48,6 +51,15 @@ async def _async_create_removal_api(
     if not session.valid_token:
         token = await implementation.async_refresh_token(token)
     return MonzoAPI(async_get_clientsession(hass), token[CONF_ACCESS_TOKEN])
+
+
+CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
+
+
+async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
+    """Set up the Monzo integration."""
+    async_setup_services(hass)
+    return True
 
 
 async def async_migrate_entry(hass: HomeAssistant, entry: MonzoConfigEntry) -> bool:

@@ -35,14 +35,24 @@ TEST_ACCOUNTS = [
         "name": "Current Account",
         "type": "uk_retail",
         "owners": [OWNER],
-        "balance": {"balance": 123, "total_balance": 321, "currency": "GBP"},
+        "balance": {
+            "balance": 123,
+            "total_balance": 321,
+            "spend_today": -45,
+            "currency": "GBP",
+        },
     },
     {
         "id": "acc_flex",
         "name": "Flex",
         "type": "uk_monzo_flex",
         "owners": [OWNER],
-        "balance": {"balance": 123, "total_balance": 321, "currency": "EUR"},
+        "balance": {
+            "balance": 123,
+            "total_balance": 321,
+            "spend_today": -67,
+            "currency": "EUR",
+        },
     },
 ]
 TEST_POTS = [
@@ -53,6 +63,7 @@ TEST_POTS = [
         "balance": 134578,
         "currency": "USD",
         "type": "instant_access",
+        "current_account_id": "acc_curr",
     }
 ]
 WEBHOOK_ID = "test-webhook-id"

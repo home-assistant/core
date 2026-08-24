@@ -1626,7 +1626,7 @@ async def test_reconfigure_outdated_version(
 
     # Set up NVR with outdated version
     old_nvr = nvr.model_copy()
-    old_nvr.version = Version("5.0.0")  # Below MIN_REQUIRED_PROTECT_V (7.1.0)
+    old_nvr.version = Version("5.0.0")  # Below MIN_REQUIRED_PROTECT_V (7.2.105)
     bootstrap.nvr = old_nvr
 
     result = await hass.config_entries.flow.async_configure(
