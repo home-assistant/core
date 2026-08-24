@@ -1,6 +1,6 @@
 """KNX entity store validation."""
 
-from typing import Literal, TypedDict
+from typing import Any, Literal, TypedDict
 
 import voluptuous as vol
 
@@ -10,9 +10,13 @@ from .entity_store_schema import ENTITY_STORE_DATA_SCHEMA
 
 
 class _ErrorDescription(TypedDict):
-    path: list[str] | None
+    path: list[str]
     message: str
     code: str | None
+    translation_key: str | None
+    placeholders: dict[str, Any]
+    context: dict[str, Any]
+    secret: bool
 
 
 class EntityStoreValidationError(TypedDict):
@@ -32,11 +36,10 @@ class EntityStoreValidationSuccess(TypedDict):
 
 def parse_invalid(exc: vol.Invalid) -> _ErrorDescription:
     """Parse a vol.Invalid exception."""
-    return _ErrorDescription(
-        path=[str(path) for path in exc.path],  # exc.path: str | vol.Required
-        message=exc.msg,
-        code=type(exc).__name__,
-    )
+    description = exc.as_dict()
+    # path items are str or vol.Marker; the frontend matches them against config keys
+    description["path"] = [str(path) for path in description["path"]]
+    return description  # type: ignore[return-value]
 
 
 def validate_config_store_data(schema: VolSchemaType, entity_data: dict) -> dict:
@@ -47,20 +50,13 @@ def validate_config_store_data(schema: VolSchemaType, entity_data: dict) -> dict
     try:
         # return so defaults are applied
         return schema(entity_data)  # type: ignore[no-any-return]
-    except vol.MultipleInvalid as exc:
-        raise EntityStoreValidationException(
-            validation_error={
-                "success": False,
-                "error_base": str(exc),
-                "errors": [parse_invalid(invalid) for invalid in exc.errors],
-            }
-        ) from exc
     except vol.Invalid as exc:
+        errors = exc.errors if isinstance(exc, vol.MultipleInvalid) else [exc]
         raise EntityStoreValidationException(
             validation_error={
                 "success": False,
                 "error_base": str(exc),
-                "errors": [parse_invalid(exc)],
+                "errors": [parse_invalid(invalid) for invalid in errors],
             }
         ) from exc
 
