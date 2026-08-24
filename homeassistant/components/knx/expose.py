@@ -229,7 +229,7 @@ class KnxExposeEntity:
     @callback
     def _initialize_expose_value(
         self, xknx_expose: ExposeSensor, expose_value: StateType
-    ) -> bool:
+    ) -> None:
         """Initialize an expose value without sending to KNX."""
         try:
             xknx_expose.initialize_value(expose_value)
@@ -239,8 +239,6 @@ class KnxExposeEntity:
                 expose_value,
                 xknx_expose.name,
             )
-            return False
-        return True
 
     @callback
     def async_remove(self) -> None:
@@ -316,31 +314,19 @@ class KnxExposeEntity:
                     continue
 
                 if xknx_expose.sensor_value.value is None and not option.send_on_init:
-                    if not self._initialize_expose_value(xknx_expose, expose_value):
-                        continue
-
-                    if option.send_on_init:
-                        tg.create_task(
-                            self._async_set_knx_value(
-                                xknx_expose,
-                                expose_value,
-                                skip_unchanged=False,
-                            )
-                        )
+                    self._initialize_expose_value(xknx_expose, expose_value)
                     continue
-
+                
                 tg.create_task(self._async_set_knx_value(xknx_expose, expose_value))
 
     async def _async_set_knx_value(
         self,
         xknx_expose: ExposeSensor,
         value: StateType,
-        *,
-        skip_unchanged: bool = True,
     ) -> None:
         """Set new value on xknx ExposeSensor."""
         try:
-            await xknx_expose.set(value, skip_unchanged=skip_unchanged)
+            await xknx_expose.set(value, skip_unchanged=True)            
         except ConversionError as err:
             _LOGGER.warning(
                 'Could not expose %s value "%s" to KNX: %s',
