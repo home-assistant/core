@@ -402,6 +402,11 @@ RPC_SENSORS: Final = {
         sub_key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
+    "motion": RpcBinarySensorDescription(
+        key="motion",
+        sub_key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
 }
 
 

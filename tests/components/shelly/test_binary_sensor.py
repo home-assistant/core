@@ -10,6 +10,7 @@ from aioshelly.const import (
     MODEL_MOTION,
     MODEL_PLUS_SMOKE,
     MODEL_WALL_DISPLAY,
+    MODEL_WALL_DISPLAY_XL,
 )
 from aioshelly.exceptions import DeviceConnectionError
 from freezegun.api import FrozenDateTimeFactory
@@ -947,6 +948,34 @@ async def test_rpc_camera_motion(
     assert state.state == STATE_OFF
 
     status["camera:0"]["motion"] = True
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    mock_rpc_device.mock_update()
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_ON
+
+
+async def test_rpc_wall_display_xl_motion(
+    hass: HomeAssistant,
+    mock_rpc_device: Mock,
+    monkeypatch: pytest.MonkeyPatch,
+) -> None:
+    """Test RPC motion binary sensor for Shelly Wall Display XL."""
+    status: dict[str, dict[str, int]] = {
+        "motion:0": {
+            "id": 0,
+            "motion": False,
+        }
+    }
+    monkeypatch.setattr(mock_rpc_device, "status", status)
+    await init_integration(hass, 2, model=MODEL_WALL_DISPLAY_XL)
+
+    entity_id = f"{BINARY_SENSOR_DOMAIN}.test_name_motion"
+
+    assert (state := hass.states.get(entity_id))
+    assert state.state == STATE_OFF
+
+    status["motion:0"]["motion"] = True
     monkeypatch.setattr(mock_rpc_device, "status", status)
     mock_rpc_device.mock_update()
 
