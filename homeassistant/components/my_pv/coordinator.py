@@ -19,6 +19,8 @@ from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+UPDATE_INTERVAL = timedelta(seconds=5)
+
 
 def _my_pv_connection[T](
     func: Callable[..., Coroutine[Any, Any, T]],
@@ -69,7 +71,7 @@ class MyPVCoordinator(DataUpdateCoordinator[None]):
             _LOGGER,
             name=DOMAIN,
             config_entry=config_entry,
-            update_interval=timedelta(seconds=5),
+            update_interval=UPDATE_INTERVAL,
             always_update=True,
         )
 
