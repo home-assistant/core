@@ -9,11 +9,26 @@ from homeassistant.components.template.config import (
     async_validate_config_section,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.helpers.discovery import Platform
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    assert_action,
+    async_trigger,
+    make_mock_device_actions,
+    setup_entity,
+    setup_mock_devices,
+)
 
 from tests.common import assert_platform_setup_creates_issue, assert_setup_component
 
@@ -441,6 +456,338 @@ async def test_setup_component_bad_config_logs_error(
     """Test setting up template with a bad config logs a useful error message."""
     await async_setup_component(hass, "template", {"template": [config]})
     assert expected_error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("platform", "config"),
+    [
+        (
+            Platform.ALARM_CONTROL_PANEL,
+            {
+                "state": "{{ 'disarmed' }}",
+            },
+        ),
+        (
+            Platform.BINARY_SENSOR,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
+        (
+            Platform.COVER,
+            {
+                "state": "{{ 'open' }}",
+                "open_cover": [],
+                "close_cover": [],
+            },
+        ),
+        (
+            Platform.DEVICE_TRACKER,
+            {
+                "in_zones": "{{ ['zone.home'] }}",
+            },
+        ),
+        (
+            Platform.EVENT,
+            {
+                "event_type": "{{ 'single' }}",
+                "event_types": "{{ ['single'] }}",
+            },
+        ),
+        (
+            Platform.FAN,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.IMAGE,
+            {
+                "url": "{{ 'http://www.test.com' }}",
+            },
+        ),
+        (
+            Platform.LIGHT,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.LOCK,
+            {
+                "state": "{{ 'on' }}",
+                "lock": [],
+                "unlock": [],
+            },
+        ),
+        (
+            Platform.NUMBER,
+            {
+                "state": "{{ 4 }}",
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
+                "set_value": [],
+            },
+        ),
+        (
+            Platform.SELECT,
+            {
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+                "select_option": [],
+            },
+        ),
+        (
+            Platform.SENSOR,
+            {
+                "state": "{{ 'yes' }}",
+            },
+        ),
+        (
+            Platform.SWITCH,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.UPDATE,
+            {
+                "installed_version": "{{ '1.0' }}",
+                "latest_version": "{{ '2.0' }}",
+            },
+        ),
+        (
+            Platform.VACUUM,
+            {
+                "state": "{{ 'docked' }}",
+                "start": [],
+            },
+        ),
+        (
+            Platform.WEATHER,
+            {
+                "condition": "{{ 'cloudy' }}",
+                "temperature": "{{ 20 }}",
+                "humidity": "{{ 50 }}",
+            },
+        ),
+    ],
+)
+@pytest.mark.parametrize(
+    ("extra_section_config", "breadcrumb"),
+    [
+        ({}, "template section"),
+        ({"unique_id": "foo"}, "template section with unique_id: foo"),
+    ],
+)
+async def test_trigger_schema_with_invalid_actions(
+    hass: HomeAssistant,
+    platform: Platform,
+    config: ConfigType,
+    extra_section_config: ConfigType,
+    breadcrumb: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger schema with valid actions configurations."""
+
+    await setup_entity(
+        hass,
+        TemplatePlatformSetup(
+            platform,
+            "test_entity",
+            {
+                **extra_section_config,
+                "trigger": [
+                    {"trigger": "state", "entity_id": ["sensor.test_state"]},
+                ],
+                "action": [
+                    {
+                        "type": "turn_off",
+                        "device_id": "70c5f67ec2f82f9ba128fe6e99eb7dfa",
+                        "entity_id": "c7e6f3753cb18937f2147bbbdccdd949",
+                        "domain": "light",
+                    },
+                ],
+            },
+        ),
+        ConfigurationStyle.TRIGGER,
+        1,
+        config,
+    )
+
+    assert len(hass.states.async_entity_ids(platform)) == 0
+    assert (
+        f"The 'actions' for {breadcrumb} failed to setup: Unknown device '70c5f67ec2f82f9ba128fe6e99eb7dfa'"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    ("platform", "config"),
+    [
+        (
+            Platform.ALARM_CONTROL_PANEL,
+            {
+                "state": "{{ 'disarmed' }}",
+            },
+        ),
+        (
+            Platform.BINARY_SENSOR,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
+        (
+            Platform.COVER,
+            {
+                "state": "{{ 'open' }}",
+                "open_cover": [],
+                "close_cover": [],
+            },
+        ),
+        (
+            Platform.DEVICE_TRACKER,
+            {
+                "in_zones": "{{ ['zone.home'] }}",
+            },
+        ),
+        (
+            Platform.EVENT,
+            {
+                "event_type": "{{ 'single' }}",
+                "event_types": "{{ ['single'] }}",
+            },
+        ),
+        (
+            Platform.FAN,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.IMAGE,
+            {
+                "url": "{{ 'http://www.test.com' }}",
+            },
+        ),
+        (
+            Platform.LIGHT,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.LOCK,
+            {
+                "state": "{{ 'on' }}",
+                "lock": [],
+                "unlock": [],
+            },
+        ),
+        (
+            Platform.NUMBER,
+            {
+                "state": "{{ 4 }}",
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
+                "set_value": [],
+            },
+        ),
+        (
+            Platform.SELECT,
+            {
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+                "select_option": [],
+            },
+        ),
+        (
+            Platform.SENSOR,
+            {
+                "state": "{{ 'yes' }}",
+            },
+        ),
+        (
+            Platform.SWITCH,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.UPDATE,
+            {
+                "installed_version": "{{ '1.0' }}",
+                "latest_version": "{{ '2.0' }}",
+            },
+        ),
+        (
+            Platform.VACUUM,
+            {
+                "state": "{{ 'docked' }}",
+                "start": [],
+            },
+        ),
+        (
+            Platform.WEATHER,
+            {
+                "condition": "{{ 'cloudy' }}",
+                "temperature": "{{ 20 }}",
+                "humidity": "{{ 50 }}",
+            },
+        ),
+    ],
+)
+async def test_trigger_schema_with_valid_actions(
+    hass: HomeAssistant,
+    platform: Platform,
+    config: ConfigType,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls: list,
+) -> None:
+    """Test trigger schema with valid actions configurations."""
+
+    platform_setup, device_entry, entity_entry = await setup_mock_devices(
+        hass, platform, device_registry, entity_registry
+    )
+
+    await setup_entity(
+        hass,
+        TemplatePlatformSetup(
+            platform,
+            "test_entity",
+            {
+                "trigger": [
+                    {"trigger": "state", "entity_id": ["sensor.test_state"]},
+                ],
+                **make_mock_device_actions(
+                    ["actions"], platform_setup, device_entry, entity_entry
+                ),
+            },
+        ),
+        ConfigurationStyle.TRIGGER,
+        1,
+        config,
+    )
+
+    await async_trigger(hass, "sensor.test_state", "anything")
+    assert_action(platform_setup, calls, 1, "fake_action")
 
 
 @pytest.mark.parametrize(
