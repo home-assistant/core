@@ -3,6 +3,7 @@
 from collections.abc import Hashable
 from enum import StrEnum, unique
 
+from probatio import TaggedUnion
 import voluptuous as vol
 from xknx.dpt import DPTBase, DPTBinary, DPTNumeric
 from xknx.exceptions import ConversionError
@@ -31,7 +32,7 @@ from homeassistant.const import (
     CONF_UNIT_OF_MEASUREMENT,
     Platform,
 )
-from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers import selector
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
 from homeassistant.helpers.typing import VolDictType, VolSchemaType
 
@@ -1005,7 +1006,7 @@ ENTITY_STORE_DATA_SCHEMA: VolSchemaType = vol.All(
         },
         extra=vol.ALLOW_EXTRA,
     ),
-    cv.key_value_schemas(
+    TaggedUnion(
         CONF_PLATFORM,
         {
             platform: vol.Schema(
