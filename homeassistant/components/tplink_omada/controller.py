@@ -1,7 +1,6 @@
 """Controller for sharing Omada API coordinators between platforms."""
 
 from collections.abc import Awaitable, Callable
-import logging
 from typing import TYPE_CHECKING
 
 from tplink_omada_client import OmadaSiteClient
@@ -19,8 +18,6 @@ from .coordinator import (
     OmadaGatewayCoordinator,
     OmadaSwitchPortCoordinator,
 )
-
-_LOGGER = logging.getLogger(__name__)
 
 
 class OmadaSiteController:
@@ -91,15 +88,12 @@ class OmadaSiteController:
                 return
 
             for device in devices_to_process:
+                processed_devices.add(device.mac)
                 try:
                     await entity_callback(device)
                 except UpdateFailed:
                     # Device not yet queryable; retried on the next devices update
-                    pass
-                except Exception:
-                    _LOGGER.exception("Failed to register entities for %s", device.name)
-                else:
-                    processed_devices.add(device.mac)
+                    processed_devices.discard(device.mac)
 
         @callback
         def _handle_devices_update() -> None:
