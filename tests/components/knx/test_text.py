@@ -3,6 +3,7 @@
 from homeassistant.components.knx.const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
+    CONF_SYNC_STATE,
     KNX_ADDRESS,
 )
 from homeassistant.components.knx.schema import TextSchema
@@ -120,6 +121,7 @@ async def test_text_state_restore(hass: HomeAssistant, knx: KNXTestKit) -> None:
                 CONF_NAME: "test",
                 KNX_ADDRESS: test_address,
                 CONF_STATE_ADDRESS: test_state_address,
+                CONF_SYNC_STATE: "init",
             }
         }
     )
