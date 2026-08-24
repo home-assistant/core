@@ -24,11 +24,11 @@ from homeassistant.components.fan import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     SERVICE_TURN_OFF,
     SERVICE_TURN_ON,
     STATE_OFF,
     STATE_ON,
+    EntityStateAttribute,
 )
 from homeassistant.core import State, callback
 
@@ -71,7 +71,7 @@ class Fan(HomeAccessory):
             )
         )
 
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
         percentage_step = state.attributes.get(ATTR_PERCENTAGE_STEP, 1)
         self.preset_modes: list[str] | None = state.attributes.get(ATTR_PRESET_MODES)
 
