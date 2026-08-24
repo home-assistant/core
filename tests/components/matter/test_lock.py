@@ -17,6 +17,8 @@ from homeassistant.components.matter.const import (
     ATTR_DAYS,
     ATTR_END_DATE_TIME,
     ATTR_END_TIME,
+    ATTR_HOLIDAY_INDEX,
+    ATTR_OPERATING_MODE,
     ATTR_START_DATE_TIME,
     ATTR_START_TIME,
     ATTR_WEEK_DAY_INDEX,
@@ -47,6 +49,7 @@ _FEATURE_RFID = 2  # kRfidCredential (bit 1)
 _FEATURE_FINGER = 4  # kFingerCredentials (bit 2)
 _FEATURE_WDSCH = 16  # kWeekDayAccessSchedules (bit 4)
 _FEATURE_YDSCH = 1024  # kYearDayAccessSchedules (bit 10)
+_FEATURE_HDSCH = 2048  # kHolidaySchedules (bit 11)
 _FEATURE_USR = 256  # kUser (bit 8)
 _FEATURE_USR_PIN = _FEATURE_USR | _FEATURE_PIN  # 257
 _FEATURE_USR_RFID = _FEATURE_USR | _FEATURE_RFID  # 258
@@ -3356,6 +3359,261 @@ async def test_clear_year_day_schedule_all_indices(
         command=clusters.DoorLock.Commands.ClearYearDaySchedule(
             yearDayIndex=254,
             userIndex=CLEAR_ALL_INDEX,
+        ),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_set_holiday_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_holiday_schedule entity service."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "set_holiday_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_HOLIDAY_INDEX: 1,
+            ATTR_START_DATE_TIME: "2024-01-01 08:00:00",
+            ATTR_END_DATE_TIME: "2024-06-01 18:00:00",
+            ATTR_OPERATING_MODE: "vacation",
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_count == 1
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.SetHolidaySchedule(
+            holidayIndex=1,
+            localStartTime=757411200,
+            localEndTime=770580000,
+            operatingMode=clusters.DoorLock.Enums.OperatingModeEnum.kVacation,
+        ),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_set_holiday_schedule_invalid_time(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test set_holiday_schedule raises when end time is not after start time."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    with pytest.raises(ServiceValidationError, match="end time must be after"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_holiday_schedule",
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_HOLIDAY_INDEX: 1,
+                ATTR_START_DATE_TIME: "2024-06-01 18:00:00",
+                ATTR_END_DATE_TIME: "2024-01-01 08:00:00",
+                ATTR_OPERATING_MODE: "vacation",
+            },
+            blocking=True,
+        )
+
+    matter_client.send_device_command.assert_not_called()
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": 0}])
+async def test_holiday_schedule_services_on_lock_without_hdsch_feature(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test holiday schedule entity services on lock without HDSCH feature."""
+    with pytest.raises(ServiceValidationError, match="does not support"):
+        await hass.services.async_call(
+            DOMAIN,
+            "set_holiday_schedule",
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_HOLIDAY_INDEX: 1,
+                ATTR_START_DATE_TIME: "2024-01-01 08:00:00",
+                ATTR_END_DATE_TIME: "2024-06-01 18:00:00",
+                ATTR_OPERATING_MODE: "vacation",
+            },
+            blocking=True,
+        )
+
+    with pytest.raises(ServiceValidationError, match="does not support"):
+        await hass.services.async_call(
+            DOMAIN,
+            "clear_holiday_schedule",
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_HOLIDAY_INDEX: 1,
+            },
+            blocking=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_get_holiday_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_holiday_schedule entity service returns an existing schedule."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={
+            "holidayIndex": 1,
+            "status": 0,  # kSuccess
+            "localStartTime": 757411200,
+            "localEndTime": 770580000,
+            "operatingMode": 1,  # kVacation
+        }
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_holiday_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_HOLIDAY_INDEX: 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {
+        "lock.mock_door_lock": {
+            "exists": True,
+            "start_date_time": "2024-01-01T08:00:00",
+            "end_date_time": "2024-06-01T18:00:00",
+            "operating_mode": "vacation",
+        }
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_get_holiday_schedule_not_found(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_holiday_schedule returns exists=False for an empty slot."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={"holidayIndex": 1, "status": 139}  # kNotFound
+    )
+
+    result = await hass.services.async_call(
+        DOMAIN,
+        "get_holiday_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_HOLIDAY_INDEX: 1,
+        },
+        blocking=True,
+        return_response=True,
+    )
+
+    assert result == {
+        "lock.mock_door_lock": {
+            "exists": False,
+            "start_date_time": None,
+            "end_date_time": None,
+            "operating_mode": None,
+        }
+    }
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_get_holiday_schedule_status_failure(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test get_holiday_schedule raises on a non-success, non-not-found status."""
+    matter_client.send_device_command = AsyncMock(
+        return_value={"holidayIndex": 1, "status": 133}  # kInvalidField
+    )
+
+    with pytest.raises(HomeAssistantError, match="unknown"):
+        await hass.services.async_call(
+            DOMAIN,
+            "get_holiday_schedule",
+            {
+                ATTR_ENTITY_ID: "lock.mock_door_lock",
+                ATTR_HOLIDAY_INDEX: 1,
+            },
+            blocking=True,
+            return_response=True,
+        )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_clear_holiday_schedule_service(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clear_holiday_schedule entity service."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_holiday_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_HOLIDAY_INDEX: 1,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearHolidaySchedule(
+            holidayIndex=1,
+        ),
+        timed_request_timeout_ms=10000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_door_lock"])
+@pytest.mark.parametrize("attributes", [{"1/257/65532": _FEATURE_HDSCH}])
+async def test_clear_holiday_schedule_all_indices(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """Test clear_holiday_schedule with the clear-all sentinel index."""
+    matter_client.send_device_command = AsyncMock(return_value=None)
+
+    await hass.services.async_call(
+        DOMAIN,
+        "clear_holiday_schedule",
+        {
+            ATTR_ENTITY_ID: "lock.mock_door_lock",
+            ATTR_HOLIDAY_INDEX: 254,
+        },
+        blocking=True,
+    )
+
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.DoorLock.Commands.ClearHolidaySchedule(
+            holidayIndex=254,
         ),
         timed_request_timeout_ms=10000,
     )

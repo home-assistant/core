@@ -1,3 +1,18 @@
+clear_holiday_schedule:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    holiday_index:
+      selector:
+        number:
+          min: 1
+          max: 254
+          step: 1
+          mode: box
+      required: true
+
 clear_lock_credential:
   target:
     entity:
@@ -80,6 +95,21 @@ clear_year_day_schedule:
         number:
           min: 1
           max: 65534
+          step: 1
+          mode: box
+      required: true
+
+get_holiday_schedule:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    holiday_index:
+      selector:
+        number:
+          min: 1
+          max: 253
           step: 1
           mode: box
       required: true
@@ -169,6 +199,39 @@ get_year_day_schedule:
           max: 254
           step: 1
           mode: box
+      required: true
+
+set_holiday_schedule:
+  target:
+    entity:
+      domain: lock
+      integration: matter
+  fields:
+    holiday_index:
+      selector:
+        number:
+          min: 1
+          max: 253
+          step: 1
+          mode: box
+      required: true
+    start_date_time:
+      selector:
+        datetime:
+      required: true
+    end_date_time:
+      selector:
+        datetime:
+      required: true
+    operating_mode:
+      selector:
+        select:
+          options:
+            - normal
+            - vacation
+            - privacy
+            - no_remote_lock_unlock
+            - passage
       required: true
 
 set_lock_credential:

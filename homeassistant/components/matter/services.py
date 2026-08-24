@@ -11,6 +11,8 @@ from .const import (
     ATTR_DAYS,
     ATTR_END_DATE_TIME,
     ATTR_END_TIME,
+    ATTR_HOLIDAY_INDEX,
+    ATTR_OPERATING_MODE,
     ATTR_START_DATE_TIME,
     ATTR_START_TIME,
     ATTR_WEEK_DAY_INDEX,
@@ -19,6 +21,7 @@ from .const import (
     CREDENTIAL_RULE_REVERSE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
     DOMAIN,
+    OPERATING_MODE_REVERSE_MAP,
     SCHEDULE_CLEAR_ALL_INDEX,
     SERVICE_CREDENTIAL_TYPES,
     USER_TYPE_REVERSE_MAP,
@@ -274,4 +277,50 @@ def async_setup_services(hass: HomeAssistant) -> None:
             ),
         },
         func="async_clear_year_day_schedule",
+    )
+
+    # Lock services - Holiday schedule management (lock-wide, no user_index)
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "set_holiday_schedule",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(ATTR_HOLIDAY_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=253)
+            ),
+            vol.Required(ATTR_START_DATE_TIME): cv.datetime,
+            vol.Required(ATTR_END_DATE_TIME): cv.datetime,
+            vol.Required(ATTR_OPERATING_MODE): vol.In(
+                OPERATING_MODE_REVERSE_MAP.keys()
+            ),
+        },
+        func="async_set_holiday_schedule",
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "get_holiday_schedule",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(ATTR_HOLIDAY_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=253)
+            ),
+        },
+        func="async_get_holiday_schedule",
+        supports_response=SupportsResponse.ONLY,
+    )
+
+    service.async_register_platform_entity_service(
+        hass,
+        DOMAIN,
+        "clear_holiday_schedule",
+        entity_domain=LOCK_DOMAIN,
+        schema={
+            vol.Required(ATTR_HOLIDAY_INDEX): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=SCHEDULE_CLEAR_ALL_INDEX)
+            ),
+        },
+        func="async_clear_holiday_schedule",
     )

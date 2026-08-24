@@ -23,6 +23,8 @@ from .const import (
     CREDENTIAL_TYPE_MAP,
     CREDENTIAL_TYPE_REVERSE_MAP,
     LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    OPERATING_MODE_MAP,
+    OPERATING_MODE_REVERSE_MAP,
     USER_STATUS_MAP,
     USER_STATUS_REVERSE_MAP,
     USER_TYPE_MAP,
@@ -152,6 +154,15 @@ class YearDayScheduleData(TypedDict):
     end_date_time: str | None
 
 
+class HolidayScheduleData(TypedDict):
+    """Result of get_holiday_schedule service action."""
+
+    exists: bool
+    start_date_time: str | None
+    end_date_time: str | None
+    operating_mode: str | None
+
+
 def _get_lock_endpoint_from_node(node: MatterNode) -> MatterEndpoint | None:
     """Get the DoorLock endpoint from a node.
 
@@ -197,6 +208,14 @@ def _lock_supports_ydsch_feature(endpoint: MatterEndpoint) -> bool:
     if feature_map is None:
         return False
     return bool(feature_map & DoorLockFeature.kYearDayAccessSchedules)
+
+
+def _lock_supports_hdsch_feature(endpoint: MatterEndpoint) -> bool:
+    """Check if lock endpoint supports HDSCH (Holiday Schedule) feature."""
+    feature_map = _get_feature_map(endpoint)
+    if feature_map is None:
+        return False
+    return bool(feature_map & DoorLockFeature.kHolidaySchedules)
 
 
 # --- Pure utility functions ---
@@ -309,6 +328,10 @@ class YdschFeatureNotSupportedError(ServiceValidationError):
     """Lock does not support YDSCH (year day schedule) feature."""
 
 
+class HdschFeatureNotSupportedError(ServiceValidationError):
+    """Lock does not support HDSCH (holiday schedule) feature."""
+
+
 class ScheduleTimeInvalidError(ServiceValidationError):
     """Schedule end time is not after start time."""
 
@@ -352,6 +375,15 @@ def _ensure_ydsch_support(lock_endpoint: MatterEndpoint) -> None:
     """
     if not _lock_supports_ydsch_feature(lock_endpoint):
         raise YdschFeatureNotSupportedError("Lock does not support year day schedules")
+
+
+def _ensure_hdsch_support(lock_endpoint: MatterEndpoint) -> None:
+    """Ensure the lock endpoint supports HDSCH (holiday schedule) feature.
+
+    Raises HdschFeatureNotSupportedError if the lock doesn't support it.
+    """
+    if not _lock_supports_hdsch_feature(lock_endpoint):
+        raise HdschFeatureNotSupportedError("Lock does not support holiday schedules")
 
 
 # --- High-level business logic functions ---
@@ -1213,6 +1245,116 @@ async def clear_year_day_schedule(
         command=clusters.DoorLock.Commands.ClearYearDaySchedule(
             yearDayIndex=year_day_index,
             userIndex=user_index,
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+# --- Schedule (HDSCH) business logic functions ---
+
+
+async def set_holiday_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    holiday_index: int,
+    start_date_time: datetime,
+    end_date_time: datetime,
+    operating_mode: str,
+) -> None:
+    """Add or replace a lock-wide holiday schedule.
+
+    start_date_time and end_date_time are interpreted as local wall-clock
+    time, matching the Matter spec's Local{Start,End}Time semantics.
+    Raises ServiceValidationError for validation failures.
+    Raises HomeAssistantError for device communication failures.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_hdsch_support(lock_endpoint)
+    _validate_schedule_datetimes(start_date_time, end_date_time)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.SetHolidaySchedule(
+            holidayIndex=holiday_index,
+            localStartTime=_local_datetime_to_epoch_s(start_date_time),
+            localEndTime=_local_datetime_to_epoch_s(end_date_time),
+            operatingMode=OPERATING_MODE_REVERSE_MAP[operating_mode],
+        ),
+        timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
+    )
+
+
+async def get_holiday_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    holiday_index: int,
+) -> HolidayScheduleData:
+    """Get a lock-wide holiday schedule.
+
+    Returns a typed dict with exists=False if the schedule slot is empty.
+    Raises HomeAssistantError on device communication or status failures.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_hdsch_support(lock_endpoint)
+
+    response = await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.GetHolidaySchedule(
+            holidayIndex=holiday_index,
+        ),
+    )
+
+    status_code = _get_attr(response, "status")
+    status_str = GET_SCHEDULE_STATUS_MAP.get(status_code)
+    if status_str == "not_found":
+        return HolidayScheduleData(
+            exists=False,
+            start_date_time=None,
+            end_date_time=None,
+            operating_mode=None,
+        )
+    if status_str != "success":
+        raise GetScheduleFailedError(
+            translation_domain="matter",
+            translation_key="get_schedule_failed",
+            translation_placeholders={"status": f"unknown({status_code})"},
+        )
+
+    local_start_time = _get_attr(response, "localStartTime") or 0
+    local_end_time = _get_attr(response, "localEndTime") or 0
+    operating_mode = _get_attr(response, "operatingMode")
+
+    return HolidayScheduleData(
+        exists=True,
+        start_date_time=_epoch_s_to_local_datetime(local_start_time).isoformat(),
+        end_date_time=_epoch_s_to_local_datetime(local_end_time).isoformat(),
+        operating_mode=OPERATING_MODE_MAP.get(operating_mode, "unknown"),
+    )
+
+
+async def clear_holiday_schedule(
+    matter_client: MatterClient,
+    node: MatterNode,
+    *,
+    holiday_index: int,
+) -> None:
+    """Clear a lock-wide holiday schedule.
+
+    Use holiday_index 0xFE to clear all holiday schedules on the lock.
+    Raises HomeAssistantError on failure.
+    """
+    lock_endpoint = _get_lock_endpoint_or_raise(node)
+    _ensure_hdsch_support(lock_endpoint)
+
+    await matter_client.send_device_command(
+        node_id=node.node_id,
+        endpoint_id=lock_endpoint.endpoint_id,
+        command=clusters.DoorLock.Commands.ClearHolidaySchedule(
+            holidayIndex=holiday_index,
         ),
         timed_request_timeout_ms=LOCK_TIMED_REQUEST_TIMEOUT_MS,
     )

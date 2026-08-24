@@ -854,6 +854,16 @@
     }
   },
   "services": {
+    "clear_holiday_schedule": {
+      "description": "Deletes a holiday schedule from a lock. Use holiday index 254 to clear all holiday schedules on the lock.",
+      "fields": {
+        "holiday_index": {
+          "description": "The holiday schedule slot index (1-based), or 254 to clear all holiday schedules.",
+          "name": "Holiday index"
+        }
+      },
+      "name": "Clear holiday schedule"
+    },
     "clear_lock_credential": {
       "description": "Removes a credential from a lock.",
       "fields": {
@@ -905,6 +915,16 @@
         }
       },
       "name": "Clear year day schedule"
+    },
+    "get_holiday_schedule": {
+      "description": "Returns a holiday schedule from a lock.",
+      "fields": {
+        "holiday_index": {
+          "description": "The holiday schedule slot index (1-based) to query.",
+          "name": "Holiday index"
+        }
+      },
+      "name": "Get holiday schedule"
     },
     "get_lock_credential_status": {
       "description": "Returns the status of a credential slot on a lock.",
@@ -965,6 +985,28 @@
         }
       },
       "name": "Open commissioning window"
+    },
+    "set_holiday_schedule": {
+      "description": "Adds or replaces a lock-wide holiday schedule.",
+      "fields": {
+        "end_date_time": {
+          "description": "The date and time the holiday schedule ends.",
+          "name": "End date/time"
+        },
+        "holiday_index": {
+          "description": "The holiday schedule slot index (1-based).",
+          "name": "Holiday index"
+        },
+        "operating_mode": {
+          "description": "The lock's operating mode while the schedule is active.",
+          "name": "Operating mode"
+        },
+        "start_date_time": {
+          "description": "The date and time the holiday schedule starts.",
+          "name": "Start date/time"
+        }
+      },
+      "name": "Set holiday schedule"
     },
     "set_lock_credential": {
       "description": "Adds or updates a credential on a lock.",

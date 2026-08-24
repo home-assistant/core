@@ -206,6 +206,9 @@
     }
   },
   "services": {
+    "clear_holiday_schedule": {
+      "service": "mdi:calendar-remove"
+    },
     "clear_lock_credential": {
       "service": "mdi:key-remove"
     },
@@ -217,6 +220,9 @@
     },
     "clear_year_day_schedule": {
       "service": "mdi:calendar-remove"
+    },
+    "get_holiday_schedule": {
+      "service": "mdi:calendar-search"
     },
     "get_lock_credential_status": {
       "service": "mdi:key-chain"
@@ -232,6 +238,9 @@
     },
     "get_year_day_schedule": {
       "service": "mdi:calendar-search"
+    },
+    "set_holiday_schedule": {
+      "service": "mdi:calendar-clock"
     },
     "set_lock_credential": {
       "service": "mdi:key-plus"
