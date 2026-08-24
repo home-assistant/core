@@ -484,10 +484,12 @@ class RuntimeEntryData:
         for callback_ in self.device_update_subscriptions.copy():
             callback_()
 
-    async def async_load_from_store(self) -> tuple[list[EntityInfo], list[UserService]]:
+    async def async_load_from_store(
+        self,
+    ) -> tuple[list[EntityInfo], list[UserService], list[EntityState]]:
         """Load the retained data from store and return de-serialized data."""
         if (restored := await self.store.async_load()) is None:
-            return [], []
+            return [], [], []
         self._storage_contents = restored.copy()
 
         self.device_info = DeviceInfo.from_dict(restored.pop("device_info"))
@@ -506,22 +508,29 @@ class RuntimeEntryData:
         services = [
             UserService.from_dict(service) for service in restored.pop("services", [])
         ]
+        states: list[EntityState] = []
         if self.device_info.has_deep_sleep:
             self.expected_disconnect = expected_disconnect
-            # Only states owned by a restored entity are hydrated
+            # Only states owned by a restored entity are returned
             slots = {(type(info), info.device_id, info.key) for info in infos}
-            for comp_type, states in restored_states.items():
+            for comp_type, comp_states in restored_states.items():
                 if (state_cls := COMPONENT_TYPE_TO_STATE_TYPE.get(comp_type)) is None:
                     _LOGGER.debug("Skipping unknown stored state type %s", comp_type)
                     continue
                 info_type = STATE_TYPE_TO_INFO_TYPE[state_cls]
-                for state in states:
+                for state in comp_states:
                     obj = state_cls.from_dict(state)
                     if (info_type, obj.device_id, obj.key) in slots:
-                        self.state[state_cls][(obj.device_id, obj.key)] = obj
-            # The device is disconnected until it wakes, same as after a disconnect
-            self.async_mark_states_stale()
-        return infos, services
+                        states.append(obj)
+        return infos, services, states
+
+    @callback
+    def async_restore_states(self, states: Iterable[EntityState]) -> None:
+        """Seed the state cache from the store before the entities are built."""
+        for state in states:
+            self.state[type(state)][(state.device_id, state.key)] = state
+        # The device is disconnected until it wakes, same as after a disconnect
+        self.async_mark_states_stale()
 
     def async_save_to_store(self) -> None:
         """Generate dynamic data to store and save it to the filesystem."""

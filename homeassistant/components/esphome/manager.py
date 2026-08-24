@@ -1144,8 +1144,10 @@ class ESPHomeManager:
         )
         entry_data.cleanup_callbacks.extend(cleanups)
 
-        infos, services = await entry_data.async_load_from_store()
+        infos, services, states = await entry_data.async_load_from_store()
         if entry.unique_id:
+            # Restored states are only valid alongside the restored infos
+            entry_data.async_restore_states(states)
             await entry_data.async_update_static_infos(
                 hass, entry, infos, entry.unique_id.upper()
             )
@@ -1572,8 +1574,9 @@ async def cleanup_instance(entry: ESPHomeConfigEntry) -> RuntimeEntryData:
     data.async_on_disconnect()
     for cleanup_callback in data.cleanup_callbacks:
         cleanup_callback()
-    await data.async_cleanup()
+    # Disconnect first so the disconnect-time save is flushed below
     await data.client.disconnect()
+    await data.async_cleanup()
     return data
 
 

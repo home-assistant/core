@@ -76,6 +76,28 @@ def _build_identity_indexes(
     return old_info_by_unique_id, movable_by_name
 
 
+def _carry_mover_states(
+    states: dict[DeviceEntityKey, EntityState],
+    moves: list[tuple[DeviceEntityKey, DeviceEntityKey]],
+) -> None:
+    """Move each mover's cached state to its new slot.
+
+    Sources are taken before any destination is written so movers that
+    swap slots do not read each other's state; a mover whose key also
+    changed drops its state, and anything left at a destination is
+    foreign and must not be adopted on re-add.
+    """
+    carried: dict[DeviceEntityKey, EntityState] = {}
+    for old_slot, new_slot in moves:
+        own_state = states.pop(old_slot, None)
+        if own_state is not None and old_slot[1] == new_slot[1]:
+            carried[new_slot] = own_state
+    for _, new_slot in moves:
+        states.pop(new_slot, None)
+    for new_slot, own_state in carried.items():
+        states[new_slot] = replace(own_state, device_id=new_slot[0])  # type: ignore[type-var]
+
+
 @callback
 def async_static_info_updated(
     hass: HomeAssistant,
@@ -233,20 +255,8 @@ def async_static_info_updated(
         # Create new entity with the new device_id
         add_entities.append(entity_type(entry_data, info, state_type))
 
-    # Carry each mover's own cached state to its new slot. Sources are
-    # taken before any destination is written so movers that swap slots
-    # do not read each other's state; anything left at a destination is
-    # foreign and must not be adopted on re-add.
     if moves:
-        carried = {
-            new_slot: states.pop(old_slot)
-            for old_slot, new_slot in moves
-            if old_slot[1] == new_slot[1] and old_slot in states
-        }
-        for _, new_slot in moves:
-            states.pop(new_slot, None)
-        for new_slot, own_state in carried.items():
-            states[new_slot] = replace(own_state, device_id=new_slot[0])  # type: ignore[type-var]
+        _carry_mover_states(states, moves)
 
     # Second pass: anything left at an incoming (device_id, key) slot
     # is a rename with a stable key; the registry entry follows the

@@ -519,6 +519,86 @@ async def test_cold_start_restores_same_key_on_sub_devices(
         assert state.state == expected
 
 
+async def test_restored_state_of_removed_entity_dropped_on_wake(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """The stale-state sweep still runs when the device wakes with new entities."""
+    entry = _seed_deep_sleep_storage(hass, hass_storage)
+    new_info = SensorInfo(object_id="other", key=2, name="other")
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        entity_info=[new_info],
+        device_info={"has_deep_sleep": True},
+    )
+
+    assert hass.states.get("sensor.test_my_sensor") is None
+    state = hass.states.get("sensor.test_other")
+    assert state is not None
+    assert state.state == STATE_UNKNOWN
+
+    await device.mock_disconnect(expected_disconnect=True)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
+    assert data["sensor"] == [new_info.to_dict()]
+    assert data["states"] == {}
+
+
+async def test_wake_with_unchanged_state_after_restore_is_dispatched(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """A wake-up state identical to the restored one still reaches the entity."""
+    entry = _seed_deep_sleep_storage(hass, hass_storage, expected_disconnect=False)
+    await mock_esphome_device(
+        mock_client=mock_client,
+        entry=entry,
+        entity_info=_DEEP_SLEEP_SENSOR_INFOS,
+        states=[SensorState(key=1, state=42)],
+        device_info={"has_deep_sleep": True},
+    )
+
+    state = hass.states.get("sensor.test_my_sensor")
+    assert state is not None
+    assert state.state == "42"
+
+
+async def test_deep_sleep_states_flushed_on_unload_while_connected(
+    hass: HomeAssistant,
+    mock_client: APIClient,
+    hass_storage: dict[str, Any],
+    mock_esphome_device: MockESPHomeDeviceType,
+) -> None:
+    """Unloading a connected deep-sleep device persists the states it received."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        entity_info=_DEEP_SLEEP_SENSOR_INFOS,
+        device_info={"has_deep_sleep": True},
+    )
+    entry = device.entry
+    # Real devices send states after the connect-time save has been scheduled
+    device.set_state(SensorState(key=1, state=50))
+    await hass.async_block_till_done()
+
+    async def _disconnect() -> None:
+        await device.mock_disconnect(expected_disconnect=True)
+
+    # A real client disconnect runs the on_disconnect callback
+    mock_client.disconnect = AsyncMock(side_effect=_disconnect)
+    await hass.config_entries.async_unload(entry.entry_id)
+    await hass.async_block_till_done()
+
+    data = hass_storage[f"{DOMAIN}.{entry.entry_id}"]["data"]
+    assert data["states"] == {"sensor": [SensorState(key=1, state=50).to_dict()]}
+
+
 async def test_non_deep_sleep_device_does_not_persist_states(
     hass: HomeAssistant,
     mock_client: APIClient,

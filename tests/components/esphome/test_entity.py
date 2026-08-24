@@ -1758,16 +1758,8 @@ async def test_entity_move_between_devices_carries_cached_state(
         assert entity_id is not None
         assert hass.states.get(entity_id).state == expected
 
-    # The fixture replays its states on connect, which would mask the carry
-    device.states = []
-    device_info = mock_client.device_info.return_value
-    mock_client.list_entities_services = AsyncMock(return_value=(new_infos, []))
-    mock_client.device_info_and_list_entities = AsyncMock(
-        return_value=(device_info, new_infos, [])
-    )
-    await device.mock_disconnect(expected_disconnect=False)
-    await device.mock_connect()
-    await hass.async_block_till_done()
+    # No states are replayed on connect so only the carried state is observable
+    await reconnect_with_updated_entity_info(hass, device, new_infos, states=[])
 
     for info, expected in zip(new_infos, expected_states, strict=True):
         entity_id = entity_registry.async_get_entity_id(
