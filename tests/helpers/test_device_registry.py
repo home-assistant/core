@@ -4365,6 +4365,34 @@ async def test_devices_collection_operations(
     assert entry in device_registry.devices
 
 
+async def test_child_devices_collection_operations(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the supported `Collection[ChildDeviceEntry]` surface of `child_devices`.
+
+    Iteration yields the entries (not the ids), `len()` returns the count, and
+    `ChildDeviceEntry` membership works. Unlike `DeviceRegistry.devices`, the child
+    collection is a plain read-only view, so mapping-style access, `.values()`, and
+    mutation are unavailable.
+    """
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    assert list(device_registry.child_devices) == [child_device]
+    assert [device.id for device in device_registry.child_devices] == [child_device.id]
+    assert len(device_registry.child_devices) == 1
+    assert child_device in device_registry.child_devices
+
+    with pytest.raises(TypeError):
+        _ = device_registry.child_devices[child_device.id]  # type: ignore[index]
+    with pytest.raises(AttributeError):
+        device_registry.child_devices.values()  # type: ignore[attr-defined]
+    with pytest.raises(TypeError):
+        device_registry.child_devices[child_device.id] = child_device  # type: ignore[index]
+
+
 @pytest.mark.parametrize(
     ("integration_frame_path", "expectation", "expected_log"),
     [
@@ -11127,7 +11155,10 @@ async def test_link_device_info_matching_child_raises(
     # The child device is left untouched: not converted, no new device created
     assert len(device_registry.devices) == 1
     assert len(device_registry.child_devices) == 1
-    assert device_registry._child_devices[child_device.id] == child_device
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        == child_device
+    )
     assert child_device.identifiers == {("test", "strip_outlet_1")}
 
 
