@@ -1,10 +1,13 @@
 """Test the gazetteer fallback in the default agent."""
 
+from gazetteer_matcher import FrameCandidate, Span
+from home_assistant_intents import get_intents
 import pytest
 
 from homeassistant.components import conversation
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.chat_log import async_get_chat_log
+from homeassistant.components.conversation.gazetteer import GazetteerResponses
 from homeassistant.components.conversation.models import ConversationInput
 from homeassistant.const import ATTR_FRIENDLY_NAME, STATE_OFF, STATE_ON
 from homeassistant.core import Context, HomeAssistant
@@ -263,13 +266,78 @@ async def test_unexposed_entities_are_not_targets(
 
 @pytest.mark.usefixtures("init_components", "home")
 async def test_declines_shapes_it_cannot_answer(hass: HomeAssistant) -> None:
-    """Test a question the corpus phrases two ways is left to hassil.
+    """Test a question whose wording does not say which answer it wants.
 
-    "are any lights on" and "how many lights are on" are the same frame, so answering
-    it would mean guessing which was asked. hassil's error stands instead.
+    Nothing in "are the kitchen lights on" separates it from "how many kitchen lights
+    are on", and the slots are identical, so the frame names no response key and the
+    corpus writes several. hassil's error stands rather than a guess.
     """
     result = await conversation.async_converse(
         hass, "are the kichen lights on", None, Context(), None
     )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
+
+
+@pytest.mark.usefixtures("init_components", "home")
+@pytest.mark.parametrize(
+    ("text", "speech"),
+    [
+        ("how many kichen lights are on", "0"),
+        ("which kichen lights are on", "Not any"),
+        ("are any kichen lights on", "No"),
+    ],
+    ids=["how_many", "which", "any"],
+)
+async def test_wording_picks_between_identical_frames(
+    hass: HomeAssistant, text: str, speech: str
+) -> None:
+    """Test the frame's own response key answers questions the slots cannot tell apart.
+
+    All three are HassGetState with the same slots. Only the words said separate them,
+    which is what the matcher records on the frame.
+    """
+    result = await conversation.async_converse(hass, text, None, Context(), None)
+
+    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
+    assert result.response.speech["plain"]["speech"] == speech
+
+
+def _frame(combination: str, response_key: str | None) -> FrameCandidate:
+    """Build a HassGetState frame carrying `response_key`."""
+    return FrameCandidate(
+        intent="HassGetState",
+        combination=combination,
+        action="get_state",
+        slots={},
+        slot_options={},
+        action_span=Span(start=0, end=1, tag="action", value="get_state", text="are"),
+        segment=(0, 1),
+        response_key=response_key,
+    )
+
+
+@pytest.mark.parametrize(
+    ("combination", "response_key", "expected"),
+    [
+        ("domain_state", "how_many", "how_many"),
+        ("name_only", "unreleased_key", "one"),
+        ("domain_state", "unreleased_key", None),
+    ],
+    ids=["frame_wins", "unknown_falls_back", "unknown_with_no_fallback"],
+)
+def test_response_key_must_name_a_template(
+    combination: str, response_key: str, expected: str | None
+) -> None:
+    """Test a frame's key is preferred, but only when the corpus still writes it.
+
+    The matcher ships its own vocabulary of key names and is versioned separately from
+    home-assistant-intents, so a name that has moved on has to fall through to the
+    shape lookup rather than render nothing.
+    """
+    lang_intents = get_intents("en")
+    responses = GazetteerResponses(
+        lang_intents, (lang_intents.get("responses") or {}).get("intents") or {}
+    )
+
+    assert responses.key_for(_frame(combination, response_key), "light") == expected

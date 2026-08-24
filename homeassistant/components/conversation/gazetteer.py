@@ -172,14 +172,22 @@ class GazetteerResponses:
 
     The matcher writes wording for refusals only, so a successful command is answered
     from the same intents data hassil was loaded from: each sentence block declares a
-    response key alongside the slot combination the matcher validated against. The key
-    is therefore a lookup on (intent, combination), narrowed by the target's domain
+    response key alongside the slot combination the matcher validated against. That
+    makes a key a lookup on (intent, combination), narrowed by the target's domain
     where a combination spells several -- `HassTurnOn/domain_only` answers "Turned on
     the lights" for `light` and "Turned on the fans" for `fan`.
+
+    A frame may name its own key, and that one wins. It is drawn from the words that
+    were actually said, so it separates questions the slots cannot: "how many lights
+    are on" and "are any lights on" are both `HassGetState/domain_state`, and the
+    shape lookup can only decline between them.
     """
 
-    def __init__(self, intents_dict: dict[str, Any]) -> None:
+    def __init__(
+        self, intents_dict: dict[str, Any], intent_responses: dict[str, Any]
+    ) -> None:
         """Index the response key of every sentence block by the shape it answers."""
+        self._templates = intent_responses
         keys: dict[tuple[str, str], list[_ResponseKey]] = {}
         for intent_name, intent_data in (intents_dict.get("intents") or {}).items():
             for block in (intent_data or {}).get("data") or []:
@@ -199,16 +207,30 @@ class GazetteerResponses:
             shape: tuple(dict.fromkeys(found)) for shape, found in keys.items()
         }
 
-    def key_for(
+    def key_for(self, frame: FrameCandidate, domain: str | None) -> str | None:
+        """Return the response key to speak for a frame, or None to say nothing.
+
+        Each candidate has to name a template that exists. The matcher carries its own
+        vocabulary of key names, and it is versioned separately from this corpus, so a
+        name that has moved on must fall through rather than answer mutely.
+        """
+        for key in (
+            frame.response_key,
+            self._shape_key(frame.intent, frame.combination, domain),
+        ):
+            if key and key in self._templates.get(frame.intent, {}):
+                return key
+        return None
+
+    def _shape_key(
         self, intent_name: str, combination: str, domain: str | None
     ) -> str | None:
-        """Return the response key for a frame, or None to say nothing.
+        """Return the one key the corpus writes for this shape, if it writes one.
 
         A key written for a domain beats a generic one, and what is left has to be
-        unanimous. The frame is everything the matcher knows about the sentence, so a
-        shape the corpus answers two ways is one it cannot choose between: "are any
-        lights on" and "how many lights are on" are both `HassGetState/domain_state`,
-        and answering the second one "Yes" is worse than answering it silently.
+        unanimous: a shape the corpus answers two ways is one the slots cannot choose
+        between, and answering "how many lights are on" with "Yes" is worse than
+        saying nothing.
         """
         candidates = self._keys.get((intent_name, combination), ())
         fitting = [key for key in candidates if key.fits(domain)]
