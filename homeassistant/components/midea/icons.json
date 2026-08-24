@@ -3,6 +3,8 @@
     "binary_sensor": {
       "header_exist": {
         "default": "mdi:air-filter"
+      }
+    },
     "fan": {
       "fan": {
         "state_attributes": {
