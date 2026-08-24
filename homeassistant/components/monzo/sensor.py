@@ -13,12 +13,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
-from .const import (
-    DEVICE_MODEL_ID_ACCOUNT,
-    DEVICE_MODEL_ID_NON_TRANSFER_ACCOUNT,
-    DEVICE_MODEL_ID_POT,
-    NON_TRANSFER_ACCOUNT_TYPES,
-)
+from .const import DEVICE_MODEL_ACCOUNT, DEVICE_MODEL_POT, NON_TRANSFER_ACCOUNT_TYPES
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoData
 from .entity import MonzoBaseEntity
 
@@ -57,8 +52,6 @@ POT_SENSORS = (
     ),
 )
 
-MODEL_POT = "Pot"
-
 
 async def async_setup_entry(
     hass: HomeAssistant,
@@ -73,11 +66,10 @@ async def async_setup_entry(
             coordinator,
             entity_description,
             account_id,
-            account["name"],
             (
-                DEVICE_MODEL_ID_NON_TRANSFER_ACCOUNT
+                account["name"]
                 if account["type"] in NON_TRANSFER_ACCOUNT_TYPES
-                else DEVICE_MODEL_ID_ACCOUNT
+                else DEVICE_MODEL_ACCOUNT
             ),
             account["balance"]["currency"],
             lambda x: x.accounts,
@@ -91,8 +83,7 @@ async def async_setup_entry(
             coordinator,
             entity_description,
             pot_id,
-            MODEL_POT,
-            DEVICE_MODEL_ID_POT,
+            DEVICE_MODEL_POT,
             pot["currency"],
             lambda x: x.pots,
         )
@@ -114,14 +105,11 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         entity_description: MonzoSensorEntityDescription,
         resource_id: str,
         device_model: str,
-        device_model_id: str,
         currency: str,
         data_accessor: Callable[[MonzoData], dict[str, dict[str, Any]]],
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(
-            coordinator, resource_id, device_model, device_model_id, data_accessor
-        )
+        super().__init__(coordinator, resource_id, device_model, data_accessor)
         self.entity_description = entity_description
         self._attr_native_unit_of_measurement = currency
         self._attr_unique_id = f"{resource_id}_{entity_description.key}"

@@ -5,14 +5,14 @@
       device:
         filter:
           integration: monzo
-          model_id: account
+          model: Account
   pot:
     required: true
     selector:
       device:
         filter:
           integration: monzo
-          model_id: pot
+          model: Pot
   amount:
     required: true
     selector:

@@ -17,8 +17,8 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import device_registry as dr, selector, service
 
 from .const import (
-    DEVICE_MODEL_ID_ACCOUNT,
-    DEVICE_MODEL_ID_POT,
+    DEVICE_MODEL_ACCOUNT,
+    DEVICE_MODEL_POT,
     DOMAIN,
     NON_TRANSFER_ACCOUNT_TYPES,
 )
@@ -70,7 +70,7 @@ TRANSFER_SCHEMA = vol.Schema(
             {
                 "filter": {
                     "integration": DOMAIN,
-                    "model_id": DEVICE_MODEL_ID_ACCOUNT,
+                    "model": DEVICE_MODEL_ACCOUNT,
                 }
             }
         ),
@@ -78,7 +78,7 @@ TRANSFER_SCHEMA = vol.Schema(
             {
                 "filter": {
                     "integration": DOMAIN,
-                    "model_id": DEVICE_MODEL_ID_POT,
+                    "model": DEVICE_MODEL_POT,
                 }
             }
         ),

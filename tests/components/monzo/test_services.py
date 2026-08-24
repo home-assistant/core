@@ -12,9 +12,8 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components.monzo.const import (
-    DEVICE_MODEL_ID_ACCOUNT,
-    DEVICE_MODEL_ID_NON_TRANSFER_ACCOUNT,
-    DEVICE_MODEL_ID_POT,
+    DEVICE_MODEL_ACCOUNT,
+    DEVICE_MODEL_POT,
     DOMAIN,
 )
 from homeassistant.components.monzo.services import (
@@ -90,7 +89,7 @@ async def _async_call_transfer(
     )
 
 
-async def test_device_model_ids_support_selector_filtering(
+async def test_device_models_support_selector_filtering(
     device_registry: dr.DeviceRegistry,
     transfer_devices: TransferDevices,
 ) -> None:
@@ -99,8 +98,8 @@ async def test_device_model_ids_support_selector_filtering(
     pot_device = device_registry.async_get(transfer_devices.pot_device_id)
     assert account_device is not None
     assert pot_device is not None
-    assert account_device.model_id == DEVICE_MODEL_ID_ACCOUNT
-    assert pot_device.model_id == DEVICE_MODEL_ID_POT
+    assert account_device.model == DEVICE_MODEL_ACCOUNT
+    assert pot_device.model == DEVICE_MODEL_POT
 
 
 async def test_non_transfer_account_is_rejected(
@@ -114,7 +113,7 @@ async def test_non_transfer_account_is_rejected(
         (DOMAIN, cast(str, TEST_ACCOUNTS[1]["id"])), polling_config_entry.entry_id
     )
     assert flex_device is not None
-    assert flex_device.model_id == DEVICE_MODEL_ID_NON_TRANSFER_ACCOUNT
+    assert flex_device.model == "Flex"
 
     with pytest.raises(ServiceValidationError) as error:
         await hass.services.async_call(

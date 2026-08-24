@@ -4,9 +4,8 @@ from typing import Final
 
 DOMAIN = "monzo"
 
-DEVICE_MODEL_ID_ACCOUNT = "account"
-DEVICE_MODEL_ID_NON_TRANSFER_ACCOUNT = "non_transfer_account"
-DEVICE_MODEL_ID_POT = "pot"
+DEVICE_MODEL_ACCOUNT = "Account"
+DEVICE_MODEL_POT = "Pot"
 
 NON_TRANSFER_ACCOUNT_TYPES = frozenset({"uk_loan", "uk_monzo_flex", "uk_rewards"})
 ATTR_DATA: Final = "data"
