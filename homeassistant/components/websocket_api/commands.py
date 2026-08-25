@@ -1051,6 +1051,7 @@ async def handle_subscribe_trigger(
         vol.Optional("variables"): dict,
     }
 )
+@decorators.require_admin
 @decorators.async_response
 async def handle_test_condition(
     hass: HomeAssistant, connection: ActiveConnection, msg: dict[str, Any]

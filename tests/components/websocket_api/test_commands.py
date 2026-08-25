@@ -2945,12 +2945,12 @@ async def test_test_condition(
     assert msg["result"]["result"] is False
 
 
-async def test_test_condition_non_admin(
+async def test_test_condition_requires_admin(
     hass: HomeAssistant,
     websocket_client: MockHAClientWebSocket,
     hass_admin_user: MockUser,
 ) -> None:
-    """Test testing a condition does not require admin."""
+    """Test testing a condition requires admin."""
     hass_admin_user.groups = []
     hass.states.async_set("hello.world", "paulus")
 
@@ -2967,8 +2967,8 @@ async def test_test_condition_non_admin(
 
     msg = await websocket_client.receive_json()
     assert msg["type"] == const.TYPE_RESULT
-    assert msg["success"]
-    assert msg["result"]["result"] is True
+    assert not msg["success"]
+    assert msg["error"]["code"] == const.ERR_UNAUTHORIZED
 
 
 @pytest.mark.parametrize(
