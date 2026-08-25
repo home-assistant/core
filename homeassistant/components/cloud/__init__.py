@@ -13,7 +13,6 @@ from hass_nabucasa import (
     CloudEvent,
     CloudEventType,
     LoginFailedEvent,
-    LoginFailedReason,
     NabuCasaBaseError,
     RemoteNotConnected,
 )
@@ -53,6 +52,7 @@ from . import (
     backup,  # noqa: F401
     http_api,
 )
+from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     CONF_ACCOUNT_LINK_SERVER,
@@ -79,6 +79,7 @@ from .const import (
     MODE_PROD,
 )
 from .helpers import FixedSizeQueueLogHandler
+from .models import auto_login_failure
 from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
@@ -108,14 +109,6 @@ _SIGNAL_CLOUDHOOKS_UPDATED: SignalType[dict[str, Any]] = SignalType(
 )
 
 STARTUP_REPAIR_DELAY = 1  # 1 hour
-
-# Spelled out rather than derived from the reason, so the keys stay greppable and
-# a reason hass_nabucasa adds later does not silently point at a missing string.
-AUTO_LOGIN_FAILED_TRANSLATION_KEYS = {
-    LoginFailedReason.CLOUD_ERROR: "auto_login_failed_cloud_error",
-    LoginFailedReason.TIMEOUT: "auto_login_failed_timeout",
-    LoginFailedReason.UNEXPECTED_ERROR: "auto_login_failed_unexpected_error",
-}
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
@@ -346,9 +339,11 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     loaded = False
     stt_platform_loaded = asyncio.Event()
     tts_platform_loaded = asyncio.Event()
+    stt_tts_entities_added = asyncio.Event()
     hass.data[DATA_PLATFORMS_SETUP] = {
         Platform.STT: stt_platform_loaded,
         Platform.TTS: tts_platform_loaded,
+        "stt_tts_entities_added": stt_tts_entities_added,
     }
 
     async def _on_start() -> None:
@@ -387,6 +382,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         # Never cancel the controller here, hass_nabucasa cancels the retry loop
         # itself and this may be running inside that very loop.
         hass.data[DATA_PENDING_AUTO_LOGIN] = None
+        if "assist_pipeline" in hass.config.components:
+            await async_create_cloud_pipeline(hass)
         async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
 
     async def _on_cloud_login_failed(event: CloudEvent) -> None:
@@ -395,19 +392,21 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         if not isinstance(event, LoginFailedEvent) or not event.auto:
             return
 
-        hass.data[DATA_PENDING_AUTO_LOGIN] = None
+        # Keep the registration around, so a client that was not connected when
+        # this fired can still find out why it stopped.
+        if pending := hass.data[DATA_PENDING_AUTO_LOGIN]:
+            pending.mark_failed(event.reason)
+
         async_dispatcher_send(
             hass,
             EVENT_CLOUD_EVENT,
-            {
-                "type": "auto_login_failed",
-                "reason": event.reason,
-                "translation_key": AUTO_LOGIN_FAILED_TRANSLATION_KEYS.get(event.reason),
-            },
+            {"type": "auto_login_failed"} | auto_login_failure(event.reason),
         )
 
     async def _on_cloud_logout(event: CloudEvent) -> None:
         """Forget a pending auto-login, hass_nabucasa cancels it on logout."""
+        # No frontend event here, hass_nabucasa publishes LOGOUT before it clears
+        # the tokens, so a client re-reading the status would still see a session.
         hass.data[DATA_PENDING_AUTO_LOGIN] = None
 
     cloud.register_on_start(_on_start)
@@ -490,6 +489,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
     entry.runtime_data = {"platforms": platforms}
+    stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
+    stt_tts_entities_added.set()
 
     return True
 

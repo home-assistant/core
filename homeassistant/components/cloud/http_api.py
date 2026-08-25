@@ -15,7 +15,7 @@ from typing import Any, Concatenate, cast
 import aiohttp
 from aiohttp import web
 import attr
-from hass_nabucasa import AlreadyConnectedError, Cloud, auth
+from hass_nabucasa import AlreadyConnectedError, AutoLoginController, Cloud, auth
 from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice_data import TTS_VOICES
 import voluptuous as vol
@@ -116,7 +116,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_webrtc_ice_servers)
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_postpone)
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_complete)
-    websocket_api.async_register_command(hass, websocket_subscribe_events)
+    websocket_api.async_register_command(hass, websocket_subscribe_cloud_events)
     websocket_api.async_register_command(hass, websocket_attempt_auto_login_now)
     websocket_api.async_register_command(hass, websocket_resend_auto_login_confirm)
     websocket_api.async_register_command(hass, websocket_cancel_auto_login)
@@ -153,6 +153,7 @@ def async_setup(hass: HomeAssistant) -> None:
                 HTTPStatus.BAD_REQUEST,
                 "An account with the given email already exists.",
             ),
+            auth.AlreadyLoggedIn: (HTTPStatus.BAD_REQUEST, "Already logged in."),
             auth.Unauthenticated: (HTTPStatus.UNAUTHORIZED, "Authentication failed."),
             auth.PasswordChangeRequired: (
                 HTTPStatus.BAD_REQUEST,
@@ -424,6 +425,9 @@ class CloudRegisterAutoLoginView(HomeAssistantView):
         hass = request.app[KEY_HASS]
         cloud = hass.data[DATA_CLOUD]
 
+        if cloud.is_logged_in:
+            raise auth.AlreadyLoggedIn("Cannot register if already logged in.")
+
         client_metadata = await _async_location_client_metadata(hass)
 
         async with asyncio.timeout(REQUEST_TIMEOUT):
@@ -434,7 +438,8 @@ class CloudRegisterAutoLoginView(HomeAssistantView):
             )
 
         hass.data[DATA_PENDING_AUTO_LOGIN] = PendingAutoLogin(
-            email=data["email"],
+            # hass_nabucasa registers and logs in with the lowercased address.
+            email=data["email"].lower(),
             controller=controller,
         )
         return self.json_message("ok")
@@ -720,6 +725,25 @@ class DownloadSupportPackageView(HomeAssistantView):
         )
 
 
+@callback
+def _async_auto_login_controller(hass: HomeAssistant) -> AutoLoginController | None:
+    """Return the controls of a retry loop that is still running."""
+    pending = hass.data[DATA_PENDING_AUTO_LOGIN]
+    return pending.controller if pending is not None else None
+
+
+@callback
+def _async_clear_pending_auto_login(hass: HomeAssistant) -> None:
+    """Cancel and forget a pending auto-login, telling subscribers it is gone."""
+    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
+        return
+
+    hass.data[DATA_PENDING_AUTO_LOGIN] = None
+    if pending.controller is not None:
+        pending.controller.cancel()
+    async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "auto_login_cancelled"})
+
+
 @websocket_api.require_admin
 @websocket_api.websocket_command({vol.Required("type"): "cloud/remove_data"})
 @websocket_api.async_response
@@ -741,11 +765,11 @@ async def websocket_cloud_remove_data(
         )
         return
 
+    # Cancel first, so an auto-login cannot land while the data is being wiped.
+    _async_clear_pending_auto_login(hass)
+
     await cloud.remove_data()
     await cloud.client.prefs.async_erase_config()
-    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is not None:
-        hass.data[DATA_PENDING_AUTO_LOGIN] = None
-        pending.controller.cancel()
 
     connection.send_message(websocket_api.result_message(msg["id"]))
 
@@ -764,19 +788,21 @@ async def websocket_cloud_status(
     cloud = hass.data[DATA_CLOUD]
     data = await _account_data(hass, cloud)
 
-    if not cloud.is_logged_in:
-        # The pending registration email is only for the admin who registered.
-        data["auto_login"] = None
-        if connection.user.is_admin and (pending := hass.data[DATA_PENDING_AUTO_LOGIN]):
-            data["auto_login"] = {"email": pending.email}
+    # The pending registration is only for the admin who registered.
+    if (
+        not cloud.is_logged_in
+        and connection.user.is_admin
+        and (pending := hass.data[DATA_PENDING_AUTO_LOGIN])
+    ):
+        data["auto_login"] = pending.as_status()
 
     connection.send_message(websocket_api.result_message(msg["id"], data))
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "cloud/events"})
+@websocket_api.websocket_command({vol.Required("type"): "cloud/subscribe_events"})
 @callback
-def websocket_subscribe_events(
+def websocket_subscribe_cloud_events(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
@@ -802,7 +828,7 @@ def websocket_attempt_auto_login_now(
     msg: dict[str, Any],
 ) -> None:
     """Attempt a pending auto-login now instead of waiting for the backoff."""
-    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
+    if (controller := _async_auto_login_controller(hass)) is None:
         connection.send_error(
             msg["id"],
             ERR_NOT_FOUND,
@@ -812,7 +838,7 @@ def websocket_attempt_auto_login_now(
         )
         return
 
-    pending.controller.attempt_now()
+    controller.attempt_now()
     connection.send_result(msg["id"])
 
 
@@ -828,7 +854,7 @@ async def websocket_resend_auto_login_confirm(
     msg: dict[str, Any],
 ) -> None:
     """Resend the confirmation email for a pending auto-login."""
-    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
+    if (controller := _async_auto_login_controller(hass)) is None:
         connection.send_error(
             msg["id"],
             ERR_NOT_FOUND,
@@ -839,7 +865,7 @@ async def websocket_resend_auto_login_confirm(
         return
 
     async with asyncio.timeout(REQUEST_TIMEOUT):
-        await pending.controller.resend()
+        await controller.resend()
 
     connection.send_result(msg["id"])
 
@@ -853,7 +879,7 @@ def websocket_cancel_auto_login(
     msg: dict[str, Any],
 ) -> None:
     """Cancel a pending auto-login after registration."""
-    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
+    if hass.data[DATA_PENDING_AUTO_LOGIN] is None:
         connection.send_error(
             msg["id"],
             ERR_NOT_FOUND,
@@ -863,8 +889,7 @@ def websocket_cancel_auto_login(
         )
         return
 
-    hass.data[DATA_PENDING_AUTO_LOGIN] = None
-    pending.controller.cancel()
+    _async_clear_pending_auto_login(hass)
     connection.send_result(msg["id"])
 
 
@@ -1094,6 +1119,7 @@ async def _account_data(
     assert hass.config.api
     if not cloud.is_logged_in:
         return {
+            "auto_login": None,
             "logged_in": False,
             "cloud": STATE_DISCONNECTED,
             "http_use_ssl": hass.config.api.use_ssl,
@@ -1122,6 +1148,7 @@ async def _account_data(
     return {
         "alexa_entities": client.alexa_user_config["filter"].config,
         "alexa_registered": alexa_config.authorized,
+        "auto_login": None,
         "cloud": cloud.iot.state,
         "cloud_last_disconnect_reason": cloud_last_disconnect_reason,
         "email": claims["email"],

@@ -3,7 +3,6 @@
 import asyncio
 from typing import TYPE_CHECKING, Any
 
-from homeassistant.const import Platform
 from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.signal_type import SignalType
 
@@ -16,7 +15,7 @@ if TYPE_CHECKING:
 
 DOMAIN = "cloud"
 DATA_CLOUD: HassKey[Cloud[CloudClient]] = HassKey(DOMAIN)
-DATA_PLATFORMS_SETUP: HassKey[dict[Platform, asyncio.Event]] = HassKey(
+DATA_PLATFORMS_SETUP: HassKey[dict[str, asyncio.Event]] = HassKey(
     "cloud_platforms_setup"
 )
 DATA_CLOUD_LOG_HANDLER: HassKey[FixedSizeQueueLogHandler] = HassKey("cloud_log_handler")

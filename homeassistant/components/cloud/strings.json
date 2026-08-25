@@ -11,7 +11,7 @@
       "message": "Could not reach Home Assistant Cloud to finish signing you in. Please try signing in again."
     },
     "auto_login_failed_timeout": {
-      "message": "Your email was not confirmed in time, so we stopped waiting. Please try registering again."
+      "message": "Your email was not confirmed in time, so we stopped waiting. Your account was created, so please confirm your email and sign in."
     },
     "auto_login_failed_unexpected_error": {
       "message": "An unexpected error stopped us from signing you in. Please try signing in again."
