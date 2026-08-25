@@ -48,6 +48,9 @@
       "fx_on": {
         "name": "FX on"
       },
+      "line": {
+        "name": "Line"
+      },
       "line_1": {
         "name": "Line 1"
       },

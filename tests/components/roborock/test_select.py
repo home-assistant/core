@@ -2,7 +2,7 @@
 
 import copy
 from typing import Any
-from unittest.mock import AsyncMock, Mock, call
+from unittest.mock import AsyncMock, Mock, call, patch
 
 import pytest
 from roborock import CleanTypeMapping, RoborockCommand
@@ -87,6 +87,7 @@ async def test_update_success(
         ("select.roborock_s7_maxv_selected_map", "Downstairs"),
     ],
 )
+@patch("homeassistant.components.roborock.select.MAP_SLEEP", 0)
 async def test_update_success_selected_map(
     hass: HomeAssistant,
     setup_entry: MockConfigEntry,
@@ -168,6 +169,63 @@ async def test_selected_map_without_name(
     select_entity = hass.states.get("select.roborock_s7_maxv_selected_map")
     assert select_entity
     assert select_entity.state == "Map 0"
+
+
+async def test_cleaning_mode_select_current_option(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test the V1 cleaning mode select entity current option."""
+    entity_id = "select.roborock_s7_maxv_cleaning_mode"
+    state = hass.states.get(entity_id)
+    assert state is not None
+    assert state.state == "vac_and_mop"
+    options = state.attributes.get("options")
+    assert options is not None
+    assert set(options) == {"vacuum", "vac_and_mop", "mop", "custom", "smart_mode"}
+
+
+async def test_cleaning_mode_select_update_success(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test setting the V1 cleaning mode select option."""
+    entity_id = "select.roborock_s7_maxv_cleaning_mode"
+    assert hass.states.get(entity_id) is not None
+
+    await hass.services.async_call(
+        "select",
+        SERVICE_SELECT_OPTION,
+        service_data={"option": "vacuum"},
+        blocking=True,
+        target={"entity_id": entity_id},
+    )
+
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.status.set_cleaning_mode.assert_called_once_with("vacuum")
+
+
+async def test_cleaning_mode_select_update_failure(
+    hass: HomeAssistant,
+    setup_entry: MockConfigEntry,
+    fake_vacuum: FakeDevice,
+) -> None:
+    """Test failure when setting the V1 cleaning mode."""
+    assert fake_vacuum.v1_properties
+    fake_vacuum.v1_properties.status.set_cleaning_mode.side_effect = RoborockException
+    entity_id = "select.roborock_s7_maxv_cleaning_mode"
+    assert hass.states.get(entity_id) is not None
+
+    with pytest.raises(HomeAssistantError, match="cleaning_mode"):
+        await hass.services.async_call(
+            "select",
+            SERVICE_SELECT_OPTION,
+            service_data={"option": "vacuum"},
+            blocking=True,
+            target={"entity_id": entity_id},
+        )
 
 
 @pytest.mark.parametrize(

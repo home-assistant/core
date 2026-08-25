@@ -127,6 +127,7 @@ def mock_radios(mock_countries, mock_stations):
     """Provide a radios mock object."""
     radios = MagicMock()
     radios.countries = AsyncMock(return_value=mock_countries)
+    radios.search = AsyncMock(return_value=mock_stations)
     radios.stations = AsyncMock(return_value=mock_stations)
     return radios
 

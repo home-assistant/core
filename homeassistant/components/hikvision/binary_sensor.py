@@ -267,6 +267,7 @@ async def async_setup_entry(
             seen_channels.add(channel)
             entities.append(
                 HikvisionBinarySensor(
+                    hass=hass,
                     entry=entry,
                     description=BINARY_SENSOR_DESCRIPTIONS[sensor_type],
                     sensor_type=sensor_type,
@@ -284,13 +285,14 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: HikvisionConfigEntry,
         description: BinarySensorEntityDescription,
         sensor_type: str,
         channel: int,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(entry, channel)
+        super().__init__(hass, entry, channel)
         self.entity_description = description
         self._sensor_type = sensor_type
 

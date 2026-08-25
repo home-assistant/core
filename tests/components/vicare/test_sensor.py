@@ -35,8 +35,12 @@ async def test_all_entities(
         Fixture({"type:climateSensor"}, "vicare/RoomSensor2.json"),
         Fixture({"type:radiator"}, "vicare/ZigbeeTRV.json"),
         Fixture({"type:repeater"}, "vicare/ZigbeeRepeater.json"),
-        Fixture({"type:fhtMain"}, "vicare/FHTMain.json"),
-        Fixture({"type:fhtChannel"}, "vicare/FHTChannel.json"),
+        # FHT main and channel are the same physical zigbee node, so they share
+        # a gateway; this lets the channel link to the main via via_device.
+        Fixture({"type:fhtMain"}, "vicare/FHTMain.json", gateway_id="fht_gateway"),
+        Fixture(
+            {"type:fhtChannel"}, "vicare/FHTChannel.json", gateway_id="fht_gateway"
+        ),
     ]
     with (
         patch(

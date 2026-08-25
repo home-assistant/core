@@ -134,7 +134,6 @@ def ws_start_preview(
         )
 
     preview_entity = ThresholdSensor(
-        hass,
         entity_id=entity_id,
         name=name,
         lower=msg["user_input"].get(CONF_LOWER),

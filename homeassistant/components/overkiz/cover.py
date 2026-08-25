@@ -523,6 +523,9 @@ COVER_DESCRIPTIONS: list[OverkizCoverDescription] = [
 SUPPORTED_DEVICES = {description.key: description for description in COVER_DESCRIPTIONS}
 
 
+PARALLEL_UPDATES = 0
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: OverkizDataConfigEntry,
