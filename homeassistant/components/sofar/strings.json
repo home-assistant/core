@@ -1,0 +1,53 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]"
+    },
+    "error": {
+      "cannot_connect": "Failed to connect: {error}",
+      "unrecognized_inverter": "The device answered, but its serial number doesn't match a known Sofar model."
+    },
+    "step": {
+      "user": {
+        "data": {
+          "host": "[%key:common::config_flow::data::host%]",
+          "port": "[%key:common::config_flow::data::port%]",
+          "unit_id": "Modbus unit ID"
+        },
+        "data_description": {
+          "host": "The hostname or IP address of the inverter, or of the Modbus TCP bridge it's connected through.",
+          "port": "The Modbus TCP port to connect on.",
+          "unit_id": "The inverter's Modbus unit/slave ID."
+        },
+        "description": "Connect over Modbus TCP. The inverter model and register map are detected automatically from its serial number."
+      }
+    }
+  },
+  "entity": {
+    "sensor": {
+      "pv_power_1": {
+        "name": "PV power 1"
+      },
+      "pv_power_2": {
+        "name": "PV power 2"
+      },
+      "pv_power_total": {
+        "name": "PV power total"
+      },
+      "solar_generation_total": {
+        "name": "Solar generation total"
+      }
+    }
+  },
+  "exceptions": {
+    "modbus_error": {
+      "message": "{error}"
+    },
+    "no_component_answered": {
+      "message": "{name}: no component answered."
+    },
+    "unrecognized_inverter_model": {
+      "message": "Unrecognized Sofar inverter model for {title}."
+    }
+  }
+}
