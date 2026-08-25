@@ -25,7 +25,7 @@ from homeassistant.helpers.config_entry_oauth2_flow import (
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
@@ -163,9 +163,14 @@ async def async_remove_config_entry_device(
             if identifier[0] == DOMAIN
         ):
             return False
+        parent_id = (
+            device.parent_device_id
+            if isinstance(device, dr.ChildDeviceEntry)
+            else device.via_device_id
+        )
         device = (
-            device_registry.async_get(device.via_device_id, include_child_devices=False)
-            if isinstance(device, DeviceEntry) and device.via_device_id
+            device_registry.async_get(parent_id, include_child_devices=False)
+            if parent_id
             else None
         )
 
