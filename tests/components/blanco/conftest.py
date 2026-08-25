@@ -3,6 +3,7 @@
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from blanco_smart_home_api_client import BlancoDeviceType
 import pytest
 
 from homeassistant.components.blanco.const import (
@@ -14,7 +15,6 @@ from homeassistant.components.blanco.const import (
     CONF_TOKEN_TYPE,
 )
 from homeassistant.components.blanco.coordinator import BlancoDataUpdateCoordinator
-from homeassistant.components.blanco.definitions import BlancoDeviceType
 from homeassistant.const import CONF_TOKEN
 from homeassistant.core import HomeAssistant
 

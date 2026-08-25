@@ -1,10 +1,9 @@
 """Test the blanco config flow."""
 
-import hashlib
 from unittest.mock import AsyncMock, MagicMock, patch
 
 import aiohttp
-from blanco_smart_home_api_client import ApiErrorCode
+from blanco_smart_home_api_client import ApiErrorCode, BlancoApiClient
 
 from homeassistant import config_entries
 from homeassistant.components.blanco.const import (
@@ -29,8 +28,8 @@ TEST_TOKEN = "test-bearer-token"
 TEST_APP_ID = "test-app-id"
 TEST_DEV_TYPE = 1
 
-# Expected SHA-256 dev_id derived from serial + service code
-TEST_DEV_ID = hashlib.sha256((TEST_SERIAL + TEST_SERVICE_CODE).encode()).hexdigest()
+# Expected dev_id derived from serial + service code
+TEST_DEV_ID = BlancoApiClient.compute_dev_id(TEST_SERIAL, TEST_SERVICE_CODE)
 
 # ── Mock response templates ────────────────────────────────────────────────────
 

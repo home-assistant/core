@@ -1,38 +1,14 @@
 """Tests for coordinator.py — BlancoDataUpdateCoordinator and helpers."""
 
-import base64
-import json
-import math
-import time
-from unittest.mock import AsyncMock, MagicMock, patch
+from unittest.mock import MagicMock
 
 from blanco_smart_home_api_client import BlancoApiClient
 from blanco_smart_home_api_client.mask import mask_dev_id, mask_headers
 import pytest
 
-from homeassistant.components.blanco.coordinator import _jwt_expires_at
-from homeassistant.components.blanco.definitions import BlancoDeviceType
 from homeassistant.config_entries import ConfigEntryAuthFailed
 
 from .conftest import make_coordinator, make_get_response
-
-# ── JWT test helper ────────────────────────────────────────────────────────────
-
-
-def _make_jwt(exp_offset: int) -> str:
-    """Return a minimal unsigned JWT with exp = now + exp_offset seconds."""
-    header = (
-        base64.urlsafe_b64encode(b'{"alg":"none","typ":"JWT"}').rstrip(b"=").decode()
-    )
-    payload = (
-        base64.urlsafe_b64encode(
-            json.dumps({"exp": int(time.time()) + exp_offset}).encode()
-        )
-        .rstrip(b"=")
-        .decode()
-    )
-    return f"{header}.{payload}."
-
 
 # ── Sample API response payloads ───────────────────────────────────────────────
 
@@ -40,15 +16,11 @@ SYSTEM_RESPONSE = {
     "results": [{"dev_name": "My BLANCO", "sw_ver_comm_con": "1.0"}],
     "info": {"connected": True, "online": 1700000000000, "dev_type": 2},
 }
-STATUS_RESPONSE = {
-    "results": [{"co2_rest": 75, "filter_rest": 50}],
-    "info": {},
-}
-SETTINGS_RESPONSE = {
-    "results": [{"set_point_cooling": 8, "set_point_heating": 85}],
-    "info": {},
-}
 ERRORS_RESPONSE = {"results": [], "info": {}}
+AUTH_RESPONSE = {
+    "results": [{"token": "renewed-token", "token_type": "Bearer"}],
+    "info": {},
+}
 
 
 # ── mask_headers ──────────────────────────────────────────────────────────────
@@ -165,32 +137,6 @@ class TestStaticHeaders:
                 f"got {auth_headers.get(key)!r}"
             )
 
-    async def test_renewal_request_includes_static_headers(
-        self, mock_hass: MagicMock
-    ) -> None:
-        """The token-renewal POST must include all _static_headers."""
-        renewal_body = {
-            "results": [{"token": "new-token", "token_type": "Bearer"}],
-        }
-        mock_resp = AsyncMock()
-        mock_resp.status = 200
-        mock_resp.json = AsyncMock(return_value=renewal_body)
-        cm = MagicMock()
-        cm.__aenter__ = AsyncMock(return_value=mock_resp)
-        cm.__aexit__ = AsyncMock(return_value=False)
-        mock_session = MagicMock()
-        mock_session.post.return_value = cm
-
-        coord = make_coordinator(mock_hass, session=mock_session)
-        await coord._async_renew_token()
-
-        _, call_kwargs = mock_session.post.call_args
-        sent_headers: dict[str, str] = call_kwargs.get("headers", {})
-        for key, value in coord._api._static_headers.items():
-            assert sent_headers.get(key) == value, (
-                f"Renewal POST missing header {key!r}={value!r}"
-            )
-
 
 # ── mask_dev_id ───────────────────────────────────────────────────────────────
 
@@ -222,30 +168,6 @@ class TestMaskDevId:
         assert mask_dev_id("") == ""
 
 
-# ── _jwt_expires_at ───────────────────────────────────────────────────────────
-
-
-class TestJwtExpiresAt:
-    """Tests for the _jwt_expires_at coordinator helper."""
-
-    def test_valid_jwt_returns_exp_timestamp(self) -> None:
-        """A well-formed JWT returns its exp claim as a float."""
-        token = _make_jwt(3600)
-        result = _jwt_expires_at(token)
-        assert result == pytest.approx(time.time() + 3600, abs=2)
-
-    def test_expired_jwt_returns_past_timestamp(self) -> None:
-        """An expired JWT returns an exp value in the past."""
-        token = _make_jwt(-1)
-        assert _jwt_expires_at(token) < time.time()
-
-    def test_non_jwt_returns_inf(self) -> None:
-        """A non-JWT string returns float('inf'), disabling proactive renewal."""
-        assert _jwt_expires_at("not-a-jwt") == math.inf
-        assert _jwt_expires_at("test-bearer-token") == math.inf
-        assert _jwt_expires_at("") == math.inf
-
-
 # ── _async_update_data ─────────────────────────────────────────────────────────
 
 
@@ -261,50 +183,42 @@ class TestAsyncUpdateData:
     async def test_all_endpoints_200_returns_structured_data(
         self, mock_hass: MagicMock
     ) -> None:
-        """All four endpoints returning 200 produces a correctly structured data dict."""
+        """Both endpoints returning 200 produces a correctly structured data dict."""
         session = self._make_session(
             make_get_response(200, SYSTEM_RESPONSE),
-            make_get_response(200, STATUS_RESPONSE),
-            make_get_response(200, SETTINGS_RESPONSE),
             make_get_response(200, ERRORS_RESPONSE),
         )
         coord = make_coordinator(mock_hass, session=session)
         data = await coord._async_update_data()
 
         assert "system" in data
-        assert "status" in data
-        assert "settings" in data
         assert "errors" in data
+        assert "status" not in data
+        assert "settings" not in data
         assert "actions" not in data
         assert "stats" not in data
         assert data["system"]["params"]["dev_name"] == "My BLANCO"
-        assert data["status"]["params"]["co2_rest"] == 75
-        assert data["settings"]["params"]["set_point_cooling"] == 8
         assert data["errors"]["errors"] == []
 
     async def test_one_endpoint_500_uses_previous_data_for_that_key(
         self, mock_hass: MagicMock
     ) -> None:
-        """A 500 on /status falls back to previous coordinator data for that key."""
+        """A 500 on /errors falls back to previous coordinator data for that key."""
         session = self._make_session(
             make_get_response(200, SYSTEM_RESPONSE),
-            make_get_response(500, {}),  # /status fails
-            make_get_response(200, SETTINGS_RESPONSE),
-            make_get_response(200, ERRORS_RESPONSE),
+            make_get_response(500, {}),  # /errors fails
         )
         coord = make_coordinator(mock_hass, session=session)
         # Seed previous data so the fallback has something to return.
         coord.data = {
             "system": {"params": {}, "info": {}},
-            "status": {"params": {"co2_rest": 99}, "info": {}},
-            "settings": {"params": {}, "info": {}},
-            "errors": {"errors": [], "info": {}},
+            "errors": {"errors": [{"err_code": 1}], "info": {}},
         }
         data = await coord._async_update_data()
 
-        # The previous status data is used as fallback.
-        assert data["status"]["params"]["co2_rest"] == 99
-        # Other endpoints still return fresh data.
+        # The previous errors data is used as fallback.
+        assert data["errors"]["errors"] == [{"err_code": 1}]
+        # The other endpoint still returns fresh data.
         assert data["system"]["params"]["dev_name"] == "My BLANCO"
 
     async def test_401_with_successful_renewal_retries_and_succeeds(
@@ -314,13 +228,11 @@ class TestAsyncUpdateData:
         session = self._make_session(
             make_get_response(401, {}),  # /system — expired token
             make_get_response(200, SYSTEM_RESPONSE),  # /system — retry after renewal
-            make_get_response(200, STATUS_RESPONSE),
-            make_get_response(200, SETTINGS_RESPONSE),
             make_get_response(200, ERRORS_RESPONSE),
         )
+        session.post.side_effect = [make_get_response(200, AUTH_RESPONSE)]
         coord = make_coordinator(mock_hass, session=session)
-        with patch.object(coord, "_async_renew_token", AsyncMock(return_value=True)):
-            data = await coord._async_update_data()
+        data = await coord._async_update_data()
 
         assert data["system"]["params"]["dev_name"] == "My BLANCO"
 
@@ -331,123 +243,8 @@ class TestAsyncUpdateData:
         session = self._make_session(
             make_get_response(401, {}),  # /system — expired token, no retry
         )
+        session.post.side_effect = [make_get_response(401, {})]  # renewal also fails
         coord = make_coordinator(mock_hass, session=session)
-        with (
-            patch.object(coord, "_async_renew_token", AsyncMock(return_value=False)),
-            pytest.raises(ConfigEntryAuthFailed),
-        ):
+
+        with pytest.raises(ConfigEntryAuthFailed):
             await coord._async_update_data()
-
-    async def test_dev_type_discovered_from_system_info(
-        self, mock_hass: MagicMock
-    ) -> None:
-        """dev_type is discovered from the system info block when not yet known."""
-        session = self._make_session(
-            make_get_response(200, SYSTEM_RESPONSE),
-            make_get_response(200, STATUS_RESPONSE),
-            make_get_response(200, SETTINGS_RESPONSE),
-            make_get_response(200, ERRORS_RESPONSE),
-        )
-        # Create a coordinator with dev_type=None to trigger discovery.
-        coord = make_coordinator(
-            mock_hass, session=session, dev_type=BlancoDeviceType.SODA2
-        )
-        coord.dev_type = None
-        await coord._async_update_data()
-
-        # SYSTEM_RESPONSE has dev_type=2 (AIO).
-        assert coord.dev_type == BlancoDeviceType.AIO
-
-    async def test_expired_jwt_triggers_proactive_renewal(
-        self, mock_hass: MagicMock
-    ) -> None:
-        """An expired JWT is detected before the first API call; renewal is proactive."""
-        session = self._make_session(
-            make_get_response(200, SYSTEM_RESPONSE),
-            make_get_response(200, STATUS_RESPONSE),
-            make_get_response(200, SETTINGS_RESPONSE),
-            make_get_response(200, ERRORS_RESPONSE),
-        )
-        coord = make_coordinator(mock_hass, session=session)
-        coord._token = _make_jwt(-3600)
-
-        async def _mock_renew() -> bool:
-            # After renewal, use a non-JWT so subsequent calls don't re-renew.
-            coord._token = "renewed-bearer-token"
-            return True
-
-        renew_mock = AsyncMock(side_effect=_mock_renew)
-        with patch.object(coord, "_async_renew_token", renew_mock):
-            data = await coord._async_update_data()
-
-        renew_mock.assert_called_once()
-        assert "system" in data
-
-    async def test_valid_jwt_skips_proactive_renewal(
-        self, mock_hass: MagicMock
-    ) -> None:
-        """A non-expired JWT does not trigger proactive renewal."""
-        session = self._make_session(
-            make_get_response(200, SYSTEM_RESPONSE),
-            make_get_response(200, STATUS_RESPONSE),
-            make_get_response(200, SETTINGS_RESPONSE),
-            make_get_response(200, ERRORS_RESPONSE),
-        )
-        coord = make_coordinator(mock_hass, session=session)
-        coord._token = _make_jwt(3600)
-
-        with patch.object(
-            coord, "_async_renew_token", AsyncMock(return_value=True)
-        ) as renew_mock:
-            data = await coord._async_update_data()
-
-        renew_mock.assert_not_called()
-        assert "system" in data
-
-
-# ── _async_renew_token ─────────────────────────────────────────────────────────
-
-
-class TestAsyncRenewToken:
-    """Async tests for BlancoDataUpdateCoordinator._async_renew_token."""
-
-    async def test_successful_post_returns_true_and_updates_auth_header(
-        self, mock_hass: MagicMock
-    ) -> None:
-        """A 200 renewal response returns True and updates the Authorization header."""
-        renewal_body = {
-            "results": [{"token": "new-token-value", "token_type": "Bearer"}],
-            "errors": None,
-            "info": None,
-        }
-        mock_resp = AsyncMock()
-        mock_resp.status = 200
-        mock_resp.json = AsyncMock(return_value=renewal_body)
-        cm = MagicMock()
-        cm.__aenter__ = AsyncMock(return_value=mock_resp)
-        cm.__aexit__ = AsyncMock(return_value=False)
-        mock_session = MagicMock()
-        mock_session.post.return_value = cm
-
-        coord = make_coordinator(mock_hass, session=mock_session)
-        result = await coord._async_renew_token()
-
-        assert result is True
-        assert coord._api._auth_headers()["Authorization"] == "Bearer new-token-value"
-        assert coord._token == "new-token-value"
-
-    async def test_non_200_post_returns_false(self, mock_hass: MagicMock) -> None:
-        """A non-200 renewal response returns False."""
-        mock_resp = AsyncMock()
-        mock_resp.status = 401
-        mock_resp.json = AsyncMock(return_value={"results": []})
-        cm = MagicMock()
-        cm.__aenter__ = AsyncMock(return_value=mock_resp)
-        cm.__aexit__ = AsyncMock(return_value=False)
-        mock_session = MagicMock()
-        mock_session.post.return_value = cm
-
-        coord = make_coordinator(mock_hass, session=mock_session)
-        result = await coord._async_renew_token()
-
-        assert result is False

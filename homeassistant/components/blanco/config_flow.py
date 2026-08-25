@@ -1,6 +1,5 @@
 """Config flow for the blanco integration."""
 
-import hashlib
 import logging
 from typing import Any, override
 
@@ -48,9 +47,7 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
 
     reg = await client.register_app(locale)
 
-    dev_id: str = hashlib.sha256(
-        (data[CONF_SERIAL] + data[CONF_SERVICE_CODE]).encode()
-    ).hexdigest()
+    dev_id = BlancoApiClient.compute_dev_id(data[CONF_SERIAL], data[CONF_SERVICE_CODE])
 
     auth = await client.authenticate(dev_id)
 
