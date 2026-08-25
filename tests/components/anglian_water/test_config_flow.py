@@ -449,6 +449,7 @@ async def test_reauth_flow(
     [
         (SelfAssertedError, "invalid_auth"),
         (ConsentRequiredError, "consent_required"),
+        (ValueError, "unknown"),
     ],
 )
 async def test_reauth_flow_auth_exception(
