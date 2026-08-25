@@ -525,6 +525,11 @@ ZEROCONF = {
             "domain": "energieleser",
         },
     ],
+    "_gaspulse._tcp.local.": [
+        {
+            "domain": "energieleser",
+        },
+    ],
     "_googlecast._tcp.local.": [
         {
             "domain": "cast",
