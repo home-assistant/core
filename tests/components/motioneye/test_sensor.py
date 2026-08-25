@@ -96,7 +96,9 @@ async def test_sensor_device_info(
         config_entry.entry_id, TEST_CAMERA_ID
     )
 
-    device = device_registry.async_get_device(identifiers={device_identifer})
+    device = device_registry.async_get_device_by_identifier(
+        device_identifer, config_entry.entry_id
+    )
     assert device
 
     entities_from_device = [

@@ -43,6 +43,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.FAN,
+    Platform.IMAGE,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
@@ -93,9 +94,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HomeConnectConfigEntry) 
 
     for device in device_entries:
         if not device.identifiers.intersection(appliances_identifiers):
-            device_registry.async_update_device(
-                device.id, remove_config_entry_id=entry.entry_id
-            )
+            device_registry.async_remove_device(device.id)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

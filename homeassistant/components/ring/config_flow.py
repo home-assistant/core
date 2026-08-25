@@ -90,7 +90,7 @@ class RingConfigFlow(ConfigFlow, domain=DOMAIN):
         self._abort_if_unique_id_configured()
         if self.hass.config_entries.async_has_entries(DOMAIN):
             device_registry = dr.async_get(self.hass)
-            if device_registry.async_get_device(
+            if device_registry.async_get_devices(
                 identifiers={(DOMAIN, discovery_info.macaddress)}
             ):
                 return self.async_abort(reason="already_configured")

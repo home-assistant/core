@@ -40,6 +40,7 @@ from homeassistant.util import color as color_util
 from . import YEELIGHT_FLOW_TRANSITION_SCHEMA, YeelightConfigEntry
 from .const import (
     ACTION_RECOVER,
+    ACTIVE_COLOR_FLOWING,
     ATTR_ACTION,
     ATTR_COUNT,
     ATTR_MODE_MUSIC,
@@ -51,6 +52,7 @@ from .const import (
     CONF_TRANSITION,
     DATA_CUSTOM_EFFECTS_KEY,
     DATA_UPDATED,
+    DOMAIN,
     MODELS_WITH_DELAYED_ON_TRANSITION,
     POWER_STATE_CHANGE_TIME,
 )
@@ -548,7 +550,12 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
     @override
     def effect(self) -> str | None:
         """Return the current effect."""
-        return self._effect if self.device.is_color_flow_enabled else None
+        return self._effect if self._is_color_flow_enabled else None
+
+    @property
+    def _is_color_flow_enabled(self) -> bool:
+        color_flow = self._get_property("flowing")
+        return bool(color_flow) and int(color_flow) == ACTIVE_COLOR_FLOWING
 
     @property
     def _bulb(self) -> AsyncBulb:
@@ -582,7 +589,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device specific state attributes."""
         attributes = {
-            "flowing": self.device.is_color_flow_enabled,
+            "flowing": self._is_color_flow_enabled,
             "music_mode": self._bulb.music_mode,
         }
 
@@ -605,9 +612,15 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         """Set the music mode on or off."""
         try:
             await self._async_set_music_mode(music_mode)
-        # pylint: disable-next=home-assistant-action-swallowed-exception
         except AssertionError as ex:
-            _LOGGER.error("Unable to turn on music mode, consider disabling it: %s", ex)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="set_music_mode_failed",
+                translation_placeholders={
+                    "name": self.device.name,
+                    "error": str(ex) or type(ex).__name__,
+                },
+            ) from ex
 
     @_async_cmd
     async def _async_set_music_mode(self, music_mode) -> None:
@@ -648,7 +661,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         ):
             return
         if (
-            not self.device.is_color_flow_enabled
+            not self._is_color_flow_enabled
             and self.color_mode == ColorMode.HS
             and self.hs_color == hs_color
         ):
@@ -673,7 +686,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
         ):
             return
         if (
-            not self.device.is_color_flow_enabled
+            not self._is_color_flow_enabled
             and self.color_mode == ColorMode.RGB
             and self.rgb_color == rgb
         ):
@@ -699,7 +712,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
             return
 
         if (
-            not self.device.is_color_flow_enabled
+            not self._is_color_flow_enabled
             and self.color_mode == ColorMode.COLOR_TEMP
             and self.color_temp_kelvin == temp_in_k
         ):
@@ -757,6 +770,8 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
 
         if effect == EFFECT_STOP:
             await self._bulb.async_stop_flow(light_type=self.light_type)
+            self._effect = None
+            await self.device.async_update(True)
             return
 
         if effect in self.custom_effects_names:
@@ -776,6 +791,7 @@ class YeelightBaseLight(YeelightEntity, LightEntity):
 
         await self._bulb.async_start_flow(flow, light_type=self.light_type)
         self._effect = effect
+        await self.device.async_update(True)
 
     @_async_cmd
     async def _async_turn_on(self, duration) -> None:

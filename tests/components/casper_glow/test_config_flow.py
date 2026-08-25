@@ -14,7 +14,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.device_registry import format_mac
 
-from . import CASPER_GLOW_DISCOVERY_INFO, NOT_CASPER_GLOW_DISCOVERY_INFO
+from . import (
+    CASPER_GLOW_DISCOVERY_INFO,
+    NOT_CASPER_GLOW_DISCOVERY_INFO,
+    SAMSUNG_EARBUDS_DISCOVERY_INFO,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.bluetooth import (
@@ -78,6 +82,21 @@ async def test_bluetooth_confirm_error(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == reason
+
+
+async def test_bluetooth_step_ignores_unrecognized_device(
+    hass: HomeAssistant, mock_casper_glow: MagicMock
+) -> None:
+    """Test bluetooth discovery aborts before handshaking with unsupported devices."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_BLUETOOTH},
+        data=SAMSUNG_EARBUDS_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "not_supported"
+    mock_casper_glow.handshake.assert_not_called()
 
 
 async def test_user_step_success(

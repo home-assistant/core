@@ -1,37 +1,28 @@
 """Tests for the AquaLogic sensor platform."""
 
-from collections.abc import Callable
 from unittest.mock import MagicMock
 
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.aqualogic import DOMAIN, AquaLogicProcessor
+from homeassistant.const import STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.setup import async_setup_component
 
 
 @pytest.fixture
-async def init_sensors(
-    hass: HomeAssistant, init_integration: AquaLogicProcessor
-) -> None:
-    """Set up the AquaLogic sensor platform."""
-    assert await async_setup_component(
-        hass,
-        "sensor",
-        {"sensor": {"platform": DOMAIN}},
-    )
-    await hass.async_block_till_done()
+def platforms() -> list[Platform]:
+    """Fixture to specify platforms to test."""
+    return [Platform.SENSOR]
 
 
-@pytest.mark.usefixtures("init_sensors")
+@pytest.mark.usefixtures("init_integration")
 async def test_sensors(
     hass: HomeAssistant,
+    mock_processor: MagicMock,
     snapshot: SnapshotAssertion,
-    update_callback: Callable[[], None],
 ) -> None:
-    """Test all sensor entities are created and report correct state."""
-    update_callback()
+    """Test sensor entities are created and report correct state."""
+    mock_processor.data_changed(mock_processor.panel)
     await hass.async_block_till_done()
 
     states = {
@@ -41,16 +32,33 @@ async def test_sensors(
     assert states == snapshot
 
 
-@pytest.mark.usefixtures("init_sensors")
+@pytest.mark.usefixtures("init_integration")
 async def test_sensors_imperial_units(
     hass: HomeAssistant,
-    update_callback: Callable[[], None],
-    mock_panel: MagicMock,
+    mock_processor: MagicMock,
 ) -> None:
     """Test sensors report imperial units when the panel is not metric."""
-    mock_panel.is_metric = False
-    update_callback()
+    mock_processor.panel.is_metric = False
+    mock_processor.data_changed(mock_processor.panel)
     await hass.async_block_till_done()
 
+    # Use salt_level (g/L → PPM) to verify imperial branch without HA unit conversion
     state = hass.states.get("sensor.aqualogic_salt_level")
     assert state.attributes["unit_of_measurement"] == "PPM"
+
+
+@pytest.mark.usefixtures("init_integration")
+async def test_sensors_no_panel(
+    hass: HomeAssistant,
+    mock_processor: MagicMock,
+) -> None:
+    """Test sensors revert to unknown when the panel becomes unavailable."""
+    mock_processor.data_changed(mock_processor.panel)
+    await hass.async_block_till_done()
+    assert hass.states.get("sensor.aqualogic_air_temperature").state == "25.5"
+
+    mock_processor.panel = None
+    mock_processor.data_changed(None)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.aqualogic_air_temperature").state == STATE_UNKNOWN

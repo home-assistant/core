@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, override
 import voluptuous as vol
 
 from homeassistant.components import camera
-from homeassistant.components.camera import Camera
+from homeassistant.components.camera import Camera, CameraEntityStateAttribute
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant, callback
@@ -33,10 +33,10 @@ DEFAULT_NAME = "MQTT Camera"
 
 MQTT_CAMERA_ATTRIBUTES_BLOCKED = frozenset(
     {
-        "access_token",
-        "brand",
-        "model_name",
-        "motion_detection",
+        CameraEntityStateAttribute.ACCESS_TOKEN,
+        CameraEntityStateAttribute.BRAND,
+        CameraEntityStateAttribute.MODEL_NAME,
+        CameraEntityStateAttribute.MOTION_DETECTION,
     }
 )
 

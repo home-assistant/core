@@ -78,6 +78,39 @@ class WiimConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle user initiated reconfiguration."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            try:
+                device_info = await _async_probe_wiim_host(
+                    self.hass, user_input[CONF_HOST]
+                )
+            except CannotConnect:
+                errors["base"] = "cannot_connect"
+            else:
+                await self.async_set_unique_id(device_info.udn)
+                self._abort_if_unique_id_mismatch()
+                return self.async_update_reload_and_abort(
+                    self._get_reconfigure_entry(),
+                    data_updates={CONF_HOST: device_info.host},
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                user_input
+                or {
+                    CONF_HOST: self._get_reconfigure_entry().data[CONF_HOST],
+                },
+            ),
+            errors=errors,
+        )
+
     @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo

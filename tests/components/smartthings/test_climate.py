@@ -22,6 +22,9 @@ from homeassistant.components.climate import (
     ATTR_SWING_MODE,
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
+    ATTR_TARGET_TEMP_STEP,
+    DEFAULT_MAX_TEMP,
+    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     PRESET_BOOST,
     PRESET_NONE,
@@ -36,7 +39,7 @@ from homeassistant.components.climate import (
     HVACAction,
     HVACMode,
 )
-from homeassistant.components.smartthings.const import MAIN
+from homeassistant.components.smartthings.const import DOMAIN, MAIN
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_TEMPERATURE,
@@ -47,7 +50,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import (
     set_attribute_value,
@@ -201,6 +204,201 @@ async def test_ac_set_hvac_mode_turns_on(
             argument="auto",
         ),
     ]
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_set_hvac_mode_auto_uses_aicomfort(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting AC HVAC mode auto uses aIComfort when auto is not supported."""
+    set_attribute_value(
+        devices,
+        Capability.AIR_CONDITIONER_MODE,
+        Attribute.SUPPORTED_AC_MODES,
+        ["aIComfort", "cool", "dry", "heat", "fanOnly"],
+    )
+    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
+            ATTR_HVAC_MODE: HVACMode.AUTO,
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.AIR_CONDITIONER_MODE,
+        Command.SET_AIR_CONDITIONER_MODE,
+        MAIN,
+        argument="aIComfort",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_set_hvac_mode_auto_prefers_auto_when_aicomfort_supported(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting AC HVAC mode auto uses auto when both auto and aIComfort are supported."""
+    set_attribute_value(
+        devices,
+        Capability.AIR_CONDITIONER_MODE,
+        Attribute.SUPPORTED_AC_MODES,
+        ["aIComfort", "auto", "cool", "dry", "heat", "fanOnly"],
+    )
+    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
+            ATTR_HVAC_MODE: HVACMode.AUTO,
+        },
+        blocking=True,
+    )
+    devices.execute_device_command.assert_called_once_with(
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.AIR_CONDITIONER_MODE,
+        Command.SET_AIR_CONDITIONER_MODE,
+        MAIN,
+        argument="auto",
+    )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_set_hvac_mode_auto_turns_on_uses_aicomfort(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting AC HVAC mode auto turns on and uses aIComfort when auto is not supported."""
+    set_attribute_value(
+        devices,
+        Capability.AIR_CONDITIONER_MODE,
+        Attribute.SUPPORTED_AC_MODES,
+        ["aIComfort", "cool", "dry", "heat", "fanOnly"],
+    )
+
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_HVAC_MODE,
+        {
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
+            ATTR_HVAC_MODE: HVACMode.AUTO,
+        },
+        blocking=True,
+    )
+    assert devices.execute_device_command.mock_calls == [
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d",
+            Capability.SWITCH,
+            Command.ON,
+            MAIN,
+        ),
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d",
+            Capability.AIR_CONDITIONER_MODE,
+            Command.SET_AIR_CONDITIONER_MODE,
+            MAIN,
+            argument="aIComfort",
+        ),
+    ]
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_set_temperature_and_hvac_mode_auto_uses_aicomfort(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test setting AC temperature and HVAC mode auto uses aIComfort when auto is not supported."""
+    set_attribute_value(
+        devices,
+        Capability.AIR_CONDITIONER_MODE,
+        Attribute.SUPPORTED_AC_MODES,
+        ["aIComfort", "cool", "dry", "heat", "fanOnly"],
+    )
+    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
+    await setup_integration(hass, mock_config_entry)
+
+    await hass.services.async_call(
+        CLIMATE_DOMAIN,
+        SERVICE_SET_TEMPERATURE,
+        {
+            ATTR_ENTITY_ID: "climate.theater_ac_office_granit",
+            ATTR_TEMPERATURE: 23,
+            ATTR_HVAC_MODE: HVACMode.AUTO,
+        },
+        blocking=True,
+    )
+    assert devices.execute_device_command.mock_calls == [
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d",
+            Capability.THERMOSTAT_COOLING_SETPOINT,
+            Command.SET_COOLING_SETPOINT,
+            MAIN,
+            argument=23.0,
+        ),
+        call(
+            "96a5ef74-5832-a84b-f1f7-ca799957065d",
+            Capability.AIR_CONDITIONER_MODE,
+            Command.SET_AIR_CONDITIONER_MODE,
+            MAIN,
+            argument="aIComfort",
+        ),
+    ]
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_aicomfort_mode_state(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test aIComfort AC mode is reported as auto."""
+    set_attribute_value(devices, Capability.SWITCH, Attribute.SWITCH, "on")
+    set_attribute_value(
+        devices,
+        Capability.AIR_CONDITIONER_MODE,
+        Attribute.AIR_CONDITIONER_MODE,
+        "aIComfort",
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    assert hass.states.get("climate.theater_ac_office_granit").state == HVACMode.AUTO
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_hvac_modes_includes_auto_for_aicomfort(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test hvac_modes includes auto when only aIComfort is supported."""
+    set_attribute_value(
+        devices,
+        Capability.AIR_CONDITIONER_MODE,
+        Attribute.SUPPORTED_AC_MODES,
+        ["aIComfort", "cool", "heat"],
+    )
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.theater_ac_office_granit")
+    assert state
+    assert HVACMode.AUTO in state.attributes[ATTR_HVAC_MODES]
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
@@ -614,6 +812,35 @@ async def test_ac_state_attributes_update(
         hass.states.get("climate.theater_ac_office_granit").attributes[state_attribute]
         == expected_value
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])
+async def test_ac_setpoint_range_update(
+    hass: HomeAssistant,
+    devices: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the setpoint range is used when the device reports one."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("climate.theater_ac_office_granit")
+    assert state.attributes[ATTR_MIN_TEMP] == DEFAULT_MIN_TEMP
+    assert state.attributes[ATTR_MAX_TEMP] == DEFAULT_MAX_TEMP
+    assert ATTR_TARGET_TEMP_STEP not in state.attributes
+
+    await trigger_update(
+        hass,
+        devices,
+        "96a5ef74-5832-a84b-f1f7-ca799957065d",
+        Capability.THERMOSTAT_COOLING_SETPOINT,
+        Attribute.COOLING_SETPOINT_RANGE,
+        {"minimum": 16, "maximum": 30, "step": 1},
+    )
+
+    state = hass.states.get("climate.theater_ac_office_granit")
+    assert state.attributes[ATTR_MIN_TEMP] == 16
+    assert state.attributes[ATTR_MAX_TEMP] == 30
+    assert state.attributes[ATTR_TARGET_TEMP_STEP] == 1
 
 
 @pytest.mark.parametrize("device_fixture", ["virtual_thermostat"])
@@ -1157,6 +1384,30 @@ async def test_heat_pump_state_attributes_update(
         hass.states.get("climate.eco_heating_system_indoor").attributes[state_attribute]
         == expected_value
     )
+
+
+@pytest.mark.parametrize("device_fixture", ["da_sac_ehs_000002_sub"])
+@pytest.mark.usefixtures("devices")
+async def test_heat_pump_zone_via_device_id(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test heat pump zone devices are linked to their parent device."""
+    await setup_integration(hass, mock_config_entry)
+
+    parent_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "3810e5ad-5351-d9f9-12ff-000001200000"), mock_config_entry.entry_id
+    )
+    assert parent_device is not None
+
+    for component in ("INDOOR1", "INDOOR2"):
+        zone_device = device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"3810e5ad-5351-d9f9-12ff-000001200000_{component}"),
+            mock_config_entry.entry_id,
+        )
+        assert zone_device is not None
+        assert zone_device.via_device_id == parent_device.id
 
 
 @pytest.mark.parametrize("device_fixture", ["da_ac_rac_000001"])

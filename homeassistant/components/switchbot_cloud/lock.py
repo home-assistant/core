@@ -44,8 +44,14 @@ class SwitchBotCloudLock(SwitchBotCloudEntity, LockEntity):
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if coord_data := self.coordinator.data:
-            self._attr_is_locked = coord_data["lockState"] == "locked"
-        if self.__model != "Smart Lock Lite":
+            self._attr_is_locked = coord_data["lockState"].lower() == "locked"
+        if self.__model not in [
+            "Smart Lock Lite",
+            "Smart Lock Vision",
+            "Smart Lock Vision Pro",
+            "Lock Vision",
+            "Lock Vision Pro",
+        ]:
             self._attr_supported_features = LockEntityFeature.OPEN
 
     @override

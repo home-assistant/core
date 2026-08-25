@@ -77,6 +77,7 @@ INITIAL_FETCH_CLIENT_METHODS = [
     "get_all_programs",
     "get_available_commands",
     "get_available_program",
+    "get_images",
 ]
 
 
@@ -531,8 +532,12 @@ async def test_devices_updated_on_refresh(
     assert config_entry.state is ConfigEntryState.LOADED
 
     for appliance in appliances[:2]:
-        assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
-    assert not device_registry.async_get_device({(DOMAIN, appliances[2].ha_id)})
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, appliance.ha_id), config_entry.entry_id
+        )
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliances[2].ha_id), config_entry.entry_id
+    )
 
     client.get_home_appliances = AsyncMock(
         return_value=ArrayOfHomeAppliances(appliances[1:3]),
@@ -547,9 +552,13 @@ async def test_devices_updated_on_refresh(
         await client.add_events([HomeConnectApiError("error.key", "error description")])
         await hass.async_block_till_done()
 
-    assert not device_registry.async_get_device({(DOMAIN, appliances[0].ha_id)})
+    assert not device_registry.async_get_device_by_identifier(
+        (DOMAIN, appliances[0].ha_id), config_entry.entry_id
+    )
     for appliance in appliances[2:3]:
-        assert device_registry.async_get_device({(DOMAIN, appliance.ha_id)})
+        assert device_registry.async_get_device_by_identifier(
+            (DOMAIN, appliance.ha_id), config_entry.entry_id
+        )
 
 
 @pytest.mark.parametrize("appliance", ["Washer"], indirect=True)
@@ -1091,3 +1100,27 @@ async def test_option_values_kept_after_changing_program(
     await hass.async_block_till_done()
 
     assert hass.states.is_state(entity_id, "on")
+
+
+async def test_images_not_fetched_if_no_images_scope(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry_no_images_scope: MockConfigEntry,
+    platforms: list[str],
+) -> None:
+    """Test that images are not fetched if the images scope is not granted."""
+    config_entry_no_images_scope.add_to_hass(hass)
+    assert config_entry_no_images_scope.state is ConfigEntryState.NOT_LOADED
+    with (
+        patch("homeassistant.components.home_connect.PLATFORMS", platforms),
+        patch("homeassistant.components.home_connect.HomeConnectClient") as client_mock,
+    ):
+        client_mock.return_value = client
+        assert await hass.config_entries.async_setup(
+            config_entry_no_images_scope.entry_id
+        )
+        await hass.async_block_till_done()
+
+    assert config_entry_no_images_scope.state is ConfigEntryState.LOADED
+
+    client.get_images.assert_not_awaited()
