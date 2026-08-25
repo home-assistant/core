@@ -64,12 +64,15 @@ def _migrate_data_api_registry_entries(
     for device in coordinator.data.values():
         device_id_by_identifier[device.id] = device.id
         if device.external_id:
-            device_id_by_identifier.setdefault(device.external_id, device.id)
+            device_id_by_identifier[device.external_id] = device.id
         for sensor in device.sensors:
             new_unique_id = f"{device.id}_{sensor.id}"
             migration = (new_unique_id, device.id)
-            migrations.setdefault(f"{device.external_id}_{sensor.id}", migration)
-            migrations.setdefault(new_unique_id, migration)
+            migrations[new_unique_id] = migration
+            if device.external_id:
+                migrations[f"{device.external_id}_{sensor.id}"] = migration
+            else:
+                migrations.setdefault(f"_{sensor.id}", migration)
 
     device_migrations: dict[str, str] = {}
     for entity_entry in entity_entries:
@@ -77,6 +80,7 @@ def _migrate_data_api_registry_entries(
             continue
         new_unique_id, device_id = registry_migration
         if entity_entry.device_id:
+            # Empty external IDs may have grouped multiple Tibber devices.
             device_migrations.setdefault(entity_entry.device_id, device_id)
         if entity_entry.unique_id != new_unique_id:
             entity_registry.async_update_entity(

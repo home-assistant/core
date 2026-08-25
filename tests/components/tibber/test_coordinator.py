@@ -59,7 +59,7 @@ async def _async_setup_data_api_sensor(
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, "external-id_storage.stateOfCharge"
+        "sensor", DOMAIN, "device-id_storage.stateOfCharge"
     )
     assert entity_id is not None
     assert hass.states.get(entity_id) is not None
