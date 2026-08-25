@@ -85,6 +85,11 @@
       "wifi_up_since": {
         "name": "Wi-Fi up since"
       }
+    },
+    "switch": {
+      "auto_shut_off": {
+        "name": "Auto shut-off"
+      }
     }
   }
 }
