@@ -14,7 +14,10 @@ from uiprotect.exceptions import BadRequest, ClientError, NotAuthorized
 from uiprotect.websocket import WebsocketState
 
 from homeassistant.components.alarm_control_panel import AlarmControlPanelState
-from homeassistant.components.unifiprotect import async_remove_config_entry_device
+from homeassistant.components.unifiprotect import (
+    SCAN_INTERVAL,
+    async_remove_config_entry_device,
+)
 from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
@@ -23,17 +26,18 @@ from homeassistant.components.unifiprotect.const import (
     PUBLIC_ONLY_PLATFORMS,
 )
 from homeassistant.components.unifiprotect.data import (
+    ProtectData,
     async_ufp_instance_for_config_entry_ids,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE
+from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
 
 from . import _patch_discovery
 from .conftest import PUBLIC_ONLY_ALARM_ENTITY_ID, UNIFI_MAC
-from .utils import MockUFPFixture, init_entry, time_changed
+from .utils import MockUFPFixture, init_entry, make_public_light, time_changed
 
 from tests.common import MockConfigEntry
 from tests.typing import WebSocketGenerator
@@ -765,6 +769,7 @@ async def test_public_only_setup(
 async def test_public_only_forwards_only_public_platforms(
     hass: HomeAssistant,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Only ``PUBLIC_ONLY_PLATFORMS`` are forwarded in public-only mode.
 
@@ -776,6 +781,9 @@ async def test_public_only_forwards_only_public_platforms(
     private_platforms = [p for p in PLATFORMS if p not in PUBLIC_ONLY_PLATFORMS]
     for platform in private_platforms:
         assert not hass.states.async_entity_ids(platform.value)
+    # entity_platform turns a failing platform into a log line, so a forwarded
+    # platform can break without failing any assertion above.
+    assert "Error while setting up" not in caplog.text
 
 
 async def test_public_only_auth_failed_triggers_reauth(
@@ -971,3 +979,38 @@ async def test_public_only_manual_refresh_revoked_key_triggers_reauth(
     await hass.async_block_till_done()
 
     assert _reauth_flow_started(hass)
+
+
+async def test_public_only_setup_retakes_add_baseline(
+    hass: HomeAssistant,
+    light: Light,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """A ProtectData kept from an earlier attempt retakes the add baseline.
+
+    HA only drops ``runtime_data`` after a successful unload, so an entry that
+    never loaded keeps its ProtectData across a mode switch. Its baseline was
+    taken in full-access mode, where the mac set stays empty on purpose, and
+    reusing it would re-offer every enumerated device on the first reconnect.
+    """
+    api = ufp_public_only.api
+    api.public_bootstrap.lights = {light.id: make_public_light(light)}
+
+    # The object a full-access attempt leaves behind: baseline taken, no macs.
+    stale = ProtectData(hass, api, SCAN_INTERVAL, ufp_public_only.entry)
+    api.is_public_only = False
+    await stale.async_update_public()
+    api.is_public_only = True
+    ufp_public_only.entry.runtime_data = stale
+
+    await setup_public_only()
+    assert len(hass.states.async_entity_ids(Platform.LIGHT.value)) == 1
+
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_entity_ids(Platform.LIGHT.value)) == 1
+    assert "already exists" not in caplog.text

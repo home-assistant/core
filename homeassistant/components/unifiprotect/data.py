@@ -316,6 +316,17 @@ class ProtectData:
         )
 
     @callback
+    def async_reset_public_add_baseline(self) -> None:
+        """Drop the add-dedup baseline so the next refresh retakes it.
+
+        The baseline belongs to one setup generation, but this object outlives
+        a setup that never loaded (HA only drops ``runtime_data`` after a
+        successful unload), including one whose mode changed in between.
+        """
+        self._public_baseline_taken = False
+        self._known_public_macs.clear()
+
+    @callback
     def _async_dispatch_new_public_device(self, device: PublicDeviceModel) -> None:
         """Offer a public device to the platforms, once per mac.
 

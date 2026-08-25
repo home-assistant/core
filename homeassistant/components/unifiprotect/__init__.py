@@ -81,6 +81,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: UFPConfigEntry) -> bool:
     if hasattr(entry, "runtime_data"):
         data_service = entry.runtime_data
         data_service.api = protect
+        # The retained object may carry the previous attempt's add-dedup
+        # baseline, taken against another snapshot or another mode.
+        data_service.async_reset_public_add_baseline()
     else:
         data_service = ProtectData(hass, protect, SCAN_INTERVAL, entry)
         entry.runtime_data = data_service
