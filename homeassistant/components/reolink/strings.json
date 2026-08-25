@@ -743,16 +743,14 @@
       "work_mode_battery": {
         "name": "Work mode battery",
         "state": {
-          "aidelaymodev2": "AI extended recording",
-          "aovdiymodev2": "Always on custom",
-          "balancedmoniteringmodev2": "[%key:component::reolink::entity::select::work_mode_battery::state::powersaving%]",
+          "always_on_custom": "Always on custom",
+          "continuous_recording": "Always on continuous recording",
           "custom": "Custom",
-          "diymodev2": "[%key:component::reolink::entity::select::work_mode_battery::state::custom%]",
-          "lowfpsrecordmodev2": "Always on continuous recording",
-          "optimalsurveillance": "Optimal surveillance",
-          "optimizedmoniteringmodev2": "Detection priority",
-          "powersaving": "Power saving",
-          "prerecordmodev2": "Always on pre-recording",
+          "detection_priority": "Detection priority",
+          "extended_recording": "AI extended recording",
+          "optimal_surveillance": "Optimal surveillance",
+          "power_saving": "Power saving",
+          "pre_recording": "Always on pre-recording",
           "smart": "Smart power"
         }
       },
