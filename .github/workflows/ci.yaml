@@ -474,6 +474,32 @@ jobs:
         run: |
           uv run --no-project python -m script.gen_copilot_instructions validate
 
+  gen-recorder-db-versions:
+    name: Check recorder database versions
+    runs-on: ubuntu-24.04
+    permissions:
+      contents: read
+    needs:
+      - info
+    # Only run on push to the dev branch; this job reaches out to endoflife.date, and
+    # we do not want a new MariaDB/MySQL release to fail CI on PR runs or the rc/master
+    # branches.
+    if: github.event_name == 'push' && github.ref == 'refs/heads/dev'
+    steps:
+      - name: Check out code from GitHub
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+        with:
+          persist-credentials: false
+      - name: Set up Python
+        id: python
+        uses: ./.github/actions/setup-uv-python
+        with:
+          uv-version: ${{ needs.info.outputs.uv_version }}
+          python-version: ${{ needs.info.outputs.default_python }}
+      - name: Check MariaDB and MySQL versions are up to date
+        run: |
+          uv run --no-project python -m script.gen_recorder_db_versions validate
+
   dependency-review:
     name: Dependency review
     runs-on: ubuntu-24.04
@@ -835,9 +861,6 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Download pytest_buckets
         uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8.0.1
         with:
@@ -869,7 +892,8 @@ jobs:
           python3 -b -X dev -m pytest \
             -qq \
             --timeout=9 \
-            --durations=10 \
+            --durations=0 \
+            --durations-min=1 \
             --numprocesses auto \
             --snapshot-details \
             --dist=loadfile \
@@ -971,9 +995,6 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate
@@ -1012,7 +1033,8 @@ jobs:
             --snapshot-details \
             ${cov_params[@]} \
             -o console_output_style=count \
-            --durations=10 \
+            --durations=0 \
+            --durations-min=10 \
             -p no:sugar \
             --exclude-warning-annotations \
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
@@ -1124,9 +1146,6 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Register pytest slow test problem matcher
-        run: |
-          echo "::add-matcher::.github/workflows/matchers/pytest-slow.json"
       - name: Install SQL Python libraries
         run: |
           . venv/bin/activate

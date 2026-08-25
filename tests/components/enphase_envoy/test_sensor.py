@@ -6,13 +6,14 @@ from typing import Any
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
+from pyenphase import EnvoyData
 from pyenphase.const import PHASENAMES, PhaseNames
 from pyenphase.models.acb import ACBChargeStatus, EnvoyACB
 from pyenphase.models.meters import CtType
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.enphase_envoy.const import Platform
+from homeassistant.components.enphase_envoy.const import DOMAIN, Platform
 from homeassistant.components.enphase_envoy.coordinator import SCAN_INTERVAL
 from homeassistant.components.enphase_envoy.sensor import aggregate_acb_sleep_state
 from homeassistant.components.sensor import SensorStateClass
@@ -23,8 +24,14 @@ from homeassistant.util import dt as dt_util
 from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import setup_integration
+from .conftest import _load_json_2_meter_data, _load_json_2_production_data
 
-from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    async_fire_time_changed,
+    load_json_object_fixture,
+    snapshot_platform,
+)
 
 
 @pytest.mark.parametrize(
@@ -1408,6 +1415,264 @@ async def test_sensor_missing_data(
         "metering_status_production_ct_l1",
         "metering_status_storage_ct",
         "metering_status_storage_ct_l1",
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
+        assert entity_state.state == STATE_UNKNOWN
+
+
+def reference_fixture(fixture: str) -> EnvoyData:
+    """Load reference fixture in envoy data model."""
+    reference_data = EnvoyData()
+    json_fixture: dict[str, Any] = load_json_object_fixture(f"{fixture}.json", DOMAIN)
+    _load_json_2_production_data(reference_data, json_fixture)
+    _load_json_2_meter_data(reference_data, json_fixture)
+    return reference_data
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy", "ref_fixture"),
+    [
+        (
+            "envoy_metered_batt_relay_none",
+            "envoy_metered_batt_relay",
+        )
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_load_none_data(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    ref_fixture: str,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test enphase_envoy sensor platform load None data handling."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    ENTITY_BASE = f"{Platform.SENSOR}.envoy_{mock_envoy.serial_number}"
+
+    # these have None data and should show up as unknown
+    for entity in (
+        "lifetime_energy_production",
+        "lifetime_energy_consumption",
+        "current_battery_discharge",
+        "backfeed_ct_energy_delivered",
+        "lifetime_energy_production_l1",
+        "lifetime_energy_consumption_l1",
+        "backfeed_ct_energy_delivered_l1",
+        "current_battery_discharge_l1",
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
+        assert entity_state.state == STATE_UNKNOWN
+
+    # restore None data to operational state
+
+    reference_data = reference_fixture(ref_fixture)
+    mock_envoy.data.system_production = reference_data.system_production
+    mock_envoy.data.system_consumption = reference_data.system_consumption
+    mock_envoy.data.ctmeters[CtType.BACKFEED] = reference_data.ctmeters[CtType.BACKFEED]
+    mock_envoy.data.ctmeters[CtType.STORAGE] = reference_data.ctmeters[CtType.STORAGE]
+
+    mock_envoy.data.system_production_phases = reference_data.system_production_phases
+    mock_envoy.data.system_consumption_phases = reference_data.system_consumption_phases
+    mock_envoy.data.ctmeters_phases[CtType.BACKFEED] = reference_data.ctmeters_phases[
+        CtType.BACKFEED
+    ]
+    mock_envoy.data.ctmeters_phases[CtType.STORAGE][PhaseNames.PHASE_1] = (
+        reference_data.ctmeters_phases[CtType.STORAGE][PhaseNames.PHASE_1]
+    )
+
+    # force HA to detect changed data by changing raw
+    mock_envoy.data.raw = {"I": "am changed"}
+
+    # Move time to next update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # all these should now no longer be in unknown state
+    for entity in (
+        "lifetime_energy_production",
+        "lifetime_energy_consumption",
+        "current_battery_discharge",
+        "backfeed_ct_energy_delivered",
+        "lifetime_energy_production_l1",
+        "lifetime_energy_consumption_l1",
+        "backfeed_ct_energy_delivered_l1",
+        "current_battery_discharge_l1",
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
+        assert entity_state.state != STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_none_data(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test enphase_envoy sensor platform None data handling."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    ENTITY_BASE = f"{Platform.SENSOR}.envoy_{mock_envoy.serial_number}"
+
+    for entity in (
+        "lifetime_energy_production",
+        "lifetime_energy_consumption",
+        "lifetime_balanced_net_energy_consumption",
+        "backfeed_ct_energy_delivered",
+        "lifetime_energy_production_l1",
+        "lifetime_energy_consumption_l1",
+        "lifetime_balanced_net_energy_consumption_l1",
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
+
+    # force None data to test 'if == none' code sections
+    mock_envoy.data.system_production = None
+    mock_envoy.data.system_consumption = None
+    mock_envoy.data.system_net_consumption = None
+    mock_envoy.data.ctmeters[CtType.BACKFEED] = None
+
+    mock_envoy.data.system_production_phases = None
+    mock_envoy.data.system_consumption_phases = None
+    mock_envoy.data.system_net_consumption_phases = None
+
+    # force HA to detect changed data by changing raw
+    mock_envoy.data.raw = {"I": "am changed"}
+
+    # Move time to next update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # all these should now be in unknown state
+    for entity in (
+        "lifetime_energy_production",
+        "lifetime_energy_consumption",
+        "lifetime_balanced_net_energy_consumption",
+        "backfeed_ct_energy_delivered",
+        "lifetime_energy_production_l1",
+        "lifetime_energy_consumption_l1",
+        "lifetime_balanced_net_energy_consumption_l1",
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
+        assert entity_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_phase_values_none_data(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test enphase_envoy sensor platform phase None data handling."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    ENTITY_BASE = f"{Platform.SENSOR}.envoy_{mock_envoy.serial_number}"
+
+    for entity in (
+        "lifetime_energy_production_l1",
+        "lifetime_energy_consumption_l1",
+        "lifetime_balanced_net_energy_consumption_l1",
+        "backfeed_ct_energy_delivered_l1",
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
+
+    # force None data to test 'if == none' code sections
+    mock_envoy.data.system_production_phases[PhaseNames.PHASE_1] = None
+    mock_envoy.data.system_consumption_phases[PhaseNames.PHASE_1] = None
+    mock_envoy.data.system_net_consumption_phases[PhaseNames.PHASE_1] = None
+    mock_envoy.data.ctmeters_phases[CtType.BACKFEED][PhaseNames.PHASE_1] = None
+
+    # force HA to detect changed data by changing raw
+    mock_envoy.data.raw = {"I": "am changed"}
+
+    # Move time to next update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # all these should now be in unknown state
+    for entity in (
+        "lifetime_energy_production_l1",
+        "lifetime_energy_consumption_l1",
+        "lifetime_balanced_net_energy_consumption_l1",
+        "backfeed_ct_energy_delivered_l1",
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
+        assert entity_state.state == STATE_UNKNOWN
+
+
+@pytest.mark.parametrize(
+    ("mock_envoy"),
+    [
+        "envoy_metered_batt_relay",
+    ],
+    indirect=["mock_envoy"],
+)
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_sensor_phase_values_missing_data(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_envoy: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test enphase_envoy sensor platform missing phase data handling."""
+    with patch("homeassistant.components.enphase_envoy.PLATFORMS", [Platform.SENSOR]):
+        await setup_integration(hass, config_entry)
+
+    ENTITY_BASE = f"{Platform.SENSOR}.envoy_{mock_envoy.serial_number}"
+
+    for entity in (
+        "lifetime_energy_production_l1",
+        "lifetime_energy_consumption_l1",
+        "lifetime_balanced_net_energy_consumption_l1",
+        "backfeed_ct_energy_delivered_l1",
+    ):
+        assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
+
+    # test handling of missing phase data
+    del mock_envoy.data.system_production_phases[PhaseNames.PHASE_1]
+    del mock_envoy.data.system_consumption_phases[PhaseNames.PHASE_1]
+    del mock_envoy.data.system_net_consumption_phases[PhaseNames.PHASE_1]
+    del mock_envoy.data.ctmeters_phases[CtType.BACKFEED][PhaseNames.PHASE_1]
+
+    # force HA to detect changed data by changing raw
+    mock_envoy.data.raw = {"I": "am changed"}
+
+    # Move time to next update
+    freezer.tick(SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    # all these should now be in unknown state
+    for entity in (
+        "lifetime_energy_production_l1",
+        "lifetime_energy_consumption_l1",
+        "lifetime_balanced_net_energy_consumption_l1",
+        "backfeed_ct_energy_delivered_l1",
     ):
         assert (entity_state := hass.states.get(f"{ENTITY_BASE}_{entity}"))
         assert entity_state.state == STATE_UNKNOWN
