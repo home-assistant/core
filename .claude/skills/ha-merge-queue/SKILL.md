@@ -29,6 +29,11 @@ verify every finalist with the per-PR checks below.
 
 Check all five. A PR fails the shortlist if any one fails.
 
+Paginate every list response before deciding. Check runs, reviews and review threads are all
+paged, typically 30 per page, and a full-suite Home Assistant PR runs to 40-odd check runs —
+so page one shows a green subset while a failure or a standing review sits on page two.
+Compare the returned count against the reported total and keep fetching until they match.
+
 1. **Merge-gate statuses** — fetch the combined commit status. This is the cheapest and
    most informative call, and it is what actually blocks the merge button. Five contexts
    matter: `code-owner-approval` (required for Platinum integrations),
@@ -48,13 +53,21 @@ Check all five. A PR fails the shortlist if any one fails.
    the request after that can still return `unknown`. Poll with bounded retries — a few
    attempts, pausing between them — and treat an `unknown` that never resolves as not
    ready, rather than assuming it is fine.
-   - `clean` — approved and mergeable; merge now
-   - `blocked` — mergeable, no conflict, waiting on an approving review (the normal state)
+   - `clean` — every merge requirement met; merge now
+   - `blocked` — some branch-protection requirement is unmet. It does not specifically mean
+     "waiting on an approval", so do not report it that way by default: use the other four
+     checks to establish which requirement is missing, and only call it awaiting review once
+     they all come back clean.
+   - `behind` — the base branch has moved on. Actionable and often a one-click update, so
+     surface it rather than dropping the PR.
+   - `unstable` — a non-required check is failing. Find out which one before shortlisting.
    - `dirty` — merge conflict. The author needs to merge `dev` into the branch. Do not tell
      them to rebase: `AGENTS.md` forbids rewriting history on a PR branch once the PR is
      open, because reviewers need to see what changed since their last review.
      `homeassistant/generated/integrations.json` conflicts constantly, so PRs adding
      integrations go stale fast.
+   - anything else (`draft`, `has_hooks`, a value not listed here) — do not guess at what it
+     means. Treat the PR as not ready and report the value you got.
 
 4. **Review submissions** — fetch the reviews, not just the threads. A `CHANGES_REQUESTED`
    review is returned here and nowhere else, and a reviewer can request changes with only a
@@ -80,8 +93,10 @@ Check all five. A PR fails the shortlist if any one fails.
 ## Report
 
 Rank by how little work each PR needs: `clean` first, then `blocked` with everything else
-green. For each PR give the number as a full markdown link, the integration, one line on
-what it does, and its blocking state.
+green. For each PR give the number as a full markdown link, the integration or core area,
+one line on what it does, and its blocking state. Plenty of `home-assistant/core` PRs touch
+helpers, the framework, the recorder or repo tooling and have no integration at all — name
+what they touch instead, rather than dropping them or inventing one.
 
 Then list the near-misses separately, each with the one action that unblocks it. The
 recurring ones:
