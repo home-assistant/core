@@ -122,6 +122,8 @@ async def test_device_configuration_url(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_DEVICE_ID)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_DEVICE_ID), mock_config_entry.entry_id
+    )
     assert device is not None
     assert device.configuration_url == expected_url
