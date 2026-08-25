@@ -11,6 +11,7 @@ from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.device_registry import format_mac
 from homeassistant.helpers.selector import (
     NumberSelector,
@@ -46,7 +47,9 @@ async def check_controller_model(
             hass, ModbusTcpParams(host=host, port=port), UNIT_ID
         ) as unit:
             await get_controller_model(unit)
-    except StiebelEltronModbusError:
+    # HomeAssistantError: another integration already holds this host and port
+    # with link settings that cannot be honoured on one connection.
+    except StiebelEltronModbusError, HomeAssistantError:
         _LOGGER.debug("Cannot connect to Stiebel Eltron device", exc_info=True)
         return "cannot_connect"
     except Exception:
