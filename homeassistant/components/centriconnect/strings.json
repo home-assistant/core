@@ -12,6 +12,17 @@
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
+      "reauth_confirm": {
+        "data": {
+          "password": "Device Authentication Code",
+          "username": "User ID"
+        },
+        "data_description": {
+          "password": "Your CentriConnect/MyPropane device authentication code",
+          "username": "Your CentriConnect/MyPropane user ID"
+        },
+        "description": "Enter your CentriConnect/MyPropane device credentials."
+      },
       "reconfigure": {
         "data": {
           "password": "Device Authentication Code",
