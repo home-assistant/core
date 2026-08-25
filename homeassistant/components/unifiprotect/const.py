@@ -55,7 +55,7 @@ DEVICES_FOR_SUBSCRIBE = DEVICES_WITH_ENTITIES | {ModelType.EVENT}
 # the public API devices WebSocket.
 DEVICES_WS_SUBSCRIBED_MODELS: set[ModelType] = set()
 
-MIN_REQUIRED_PROTECT_V = Version("7.1.0")
+MIN_REQUIRED_PROTECT_V = Version("7.2.105")
 OUTDATED_LOG_MESSAGE = (
     "You are running v%s of UniFi Protect. Minimum required version is v%s. Please"
     " upgrade UniFi Protect and then retry"
@@ -82,6 +82,7 @@ PLATFORMS = [
 DISPATCH_ADD = "add_device"
 DISPATCH_ADOPT = "adopt_device"
 DISPATCH_CHANNELS = "new_camera_channels"
+DISPATCH_PUBLIC_ADD = "public_add_device"
 
 EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "identified"
 EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "not_identified"
