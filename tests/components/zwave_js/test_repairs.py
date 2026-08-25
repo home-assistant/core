@@ -11,7 +11,11 @@ from zwave_js_server.model.node import Node, NodeDataType
 from homeassistant.components.zwave_js import DOMAIN
 from homeassistant.components.zwave_js.helpers import get_device_id
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, issue_registry as ir
+from homeassistant.helpers import (
+    area_registry as ar,
+    device_registry as dr,
+    issue_registry as ir,
+)
 
 from tests.common import MockConfigEntry
 from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
@@ -112,6 +116,42 @@ async def test_device_config_file_changed_confirm_step(
     msg = await ws_client.receive_json()
     assert msg["success"]
     assert len(msg["result"]["issues"]) == 0
+
+
+async def test_device_config_file_changed_area_in_placeholders(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    area_registry: ar.AreaRegistry,
+    device_registry: dr.DeviceRegistry,
+    client: Client,
+    multisensor_6_state: NodeDataType,
+    integration: MockConfigEntry,
+) -> None:
+    """Test the device area is included in the device_config_file_changed issue."""
+    node = await _trigger_repair_issue(
+        hass, client, multisensor_6_state, device_config_changed=False
+    )
+
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, node), integration.entry_id
+    )
+    assert device
+    area = area_registry.async_get_or_create("Living room")
+    device_registry.async_update_device(device.id, area_id=area.id)
+
+    await _trigger_repair_issue(hass, client, multisensor_6_state)
+
+    ws_client = await hass_ws_client(hass)
+
+    await ws_client.send_json({"id": 1, "type": "repairs/list_issues"})
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    assert len(msg["result"]["issues"]) == 1
+    issue = msg["result"]["issues"][0]
+    assert issue["issue_id"] == f"device_config_file_changed.{device.id}"
+    assert issue["translation_placeholders"] == {
+        "device_name": f"{device.name} (Living room)"
+    }
 
 
 async def test_device_config_file_changed_cleared(

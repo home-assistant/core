@@ -774,7 +774,7 @@ async def _async_snapshot_payload(hass: HomeAssistant) -> dict:  # noqa: C901
     removed_devices: set[str] = set()
 
     # Get device list
-    for device_entry in (*dev_reg.devices.values(), *dev_reg.child_devices.values()):
+    for device_entry in (*dev_reg.devices, *dev_reg.child_devices):
         config_entry = hass.config_entries.async_get_entry(device_entry.config_entry_id)
 
         if config_entry is None:

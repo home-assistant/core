@@ -148,7 +148,10 @@ class _TurnOnTargetTracker(TargetEntityChangeTracker):
         # Used as-is: resolving via entities would drop hidden-entity devices.
         device_ids: set[str] = set()
         for device_id in self._selection.device_ids:
-            if device_id in dev_reg.devices:
+            if (
+                dev_reg.async_get(device_id, include_composite_devices=False)
+                is not None
+            ):
                 device_ids.add(device_id)
             # A composite id isn't a device; it resolves to its splits.
             elif splits := dev_reg.async_get_devices_for_composite_device_id(device_id):

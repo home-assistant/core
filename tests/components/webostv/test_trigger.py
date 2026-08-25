@@ -190,7 +190,7 @@ async def test_legacy_trigger_rejects_target(
         },
     )
 
-    assert "extra keys not allowed @ data['target']" in caplog.text
+    assert "not a valid option at 'target'" in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -273,7 +273,7 @@ async def test_webostv_turn_on_trigger_composite_device_id(
         (DOMAIN, FAKE_UUID), entry.entry_id
     )
     composite_device_id = "composite00000000000000000000ab"
-    device_registry.devices[device.id] = attr.evolve(
+    device_registry._devices[device.id] = attr.evolve(
         device, composite_device_id=composite_device_id
     )
     # Hide entities so the composite id resolves only via device registry

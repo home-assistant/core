@@ -71,24 +71,24 @@ def config_entry_data(
 @pytest.mark.parametrize(
     ("config_entry_data", "service_data", "error", "error_message"),
     [
-        ({}, {}, vol.er.Error, "required key not provided .+"),
+        ({}, {}, vol.error.Error, "required key not provided .+"),
         (
             {"config_entry": True},
             {},
-            vol.er.Error,
+            vol.error.Error,
             "required key not provided .+",
         ),
         (
             {},
             {"incl_vat": True},
-            vol.er.Error,
+            vol.error.Error,
             "required key not provided .+",
         ),
         (
             {"config_entry": True},
             {"incl_vat": "incorrect vat"},
-            vol.er.Error,
-            "expected bool for dictionary value .+",
+            vol.error.Error,
+            "expected bool at .+",
         ),
         (
             {"config_entry": "incorrect entry"},
