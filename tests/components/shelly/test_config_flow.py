@@ -6081,6 +6081,7 @@ async def test_name_conflict_migrate_recovered_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["other_domain"])
 async def test_name_conflict_migrate_deletes_old_issues(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
