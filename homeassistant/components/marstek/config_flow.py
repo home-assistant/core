@@ -1,166 +1,137 @@
 """Config flow for Marstek integration."""
 
-import asyncio
 import logging
-from typing import Any, override
+from typing import override
 
 from aiomarstek import MarstekUDPClient
 import voluptuous as vol
 
 from homeassistant import config_entries
 from homeassistant.config_entries import ConfigFlowResult
-from homeassistant.const import CONF_HOST, CONF_MAC
+from homeassistant.const import CONF_DEVICE, CONF_HOST
 from homeassistant.helpers.selector import (
     SelectOptionDict,
     SelectSelector,
     SelectSelectorConfig,
-    SelectSelectorMode,
+    TextSelector,
 )
 
-from .client import async_create_udp_client
+from . import async_create_udp_client
 from .const import DOMAIN
+from .models import MarstekDeviceInfo
 
 _LOGGER = logging.getLogger(__name__)
 
-STEP_MANUAL_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): str})
-
-
-def _device_from_discovery_result(
-    device_info: dict[str, Any], host: str | None = None
-) -> dict[str, Any]:
-    """Return config flow device data from a discovery response result."""
-    device_type = device_info.get("device", "Unknown")
-    version = device_info.get("ver", 0)
-    ip_address = device_info.get("ip") or host or ""
-    wifi_mac = device_info.get("wifi_mac", "")
-    ble_mac = device_info.get("ble_mac", "")
-
-    return {
-        "id": device_info.get("id", 0),
-        "device_type": device_type,
-        "version": version,
-        "wifi_name": device_info.get("wifi_name", ""),
-        "ip": ip_address,
-        "wifi_mac": wifi_mac,
-        "ble_mac": ble_mac,
-        "mac": wifi_mac or ble_mac,
-    }
-
-
-def _device_display_name(device: dict[str, Any]) -> str:
-    """Return a stable display name for a discovered Marstek device."""
-    device_type = device.get("device_type") or "Marstek"
-    version = device.get("version") or "Unknown"
-    host = device.get("ip") or "Unknown IP"
-    wifi_name = device.get("wifi_name") or "No WiFi"
-
-    return f"{device_type} v{version} ({wifi_name}) - {host}"
+STEP_MANUAL_DATA_SCHEMA = vol.Schema({vol.Required(CONF_HOST): TextSelector()})
+ABORT_MISSING_UNIQUE_ID = "missing_unique_id"
+MARSTEK_CONNECTION_ERRORS = (TimeoutError, OSError)
+MARSTEK_DISCOVERY_ERRORS = (TimeoutError, OSError, TypeError)
+MARSTEK_DEVICE_INFO_ERRORS = (TypeError,)
 
 
 class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Marstek."""
 
-    VERSION = 1
-    domain = DOMAIN
-    discovered_devices: list[dict[str, Any]]
-    discovered_device_options: dict[str, int]
+    discovered_device_options: dict[str, MarstekDeviceInfo]
 
     @override
     async def async_step_user(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, object] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
         return self.async_show_menu(
             step_id="user",
-            menu_options={
-                "discover": "Search for devices on the local network",
-                "manual": "Enter device IP address",
-            },
+            menu_options=["discover", "manual"],
         )
 
     async def async_step_discover(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, object] | None = None
     ) -> ConfigFlowResult:
         """Handle broadcast device discovery."""
-        if user_input is not None:
-            # User has selected a device from the discovered list
-            selected_device = user_input["device"]
-            device_index = self.discovered_device_options[selected_device]
-            device = self.discovered_devices[device_index]
-
-            return await self._async_create_entry_from_device(device)
-
-        # Start broadcast device discovery
-        udp_client = await async_create_udp_client(self.hass)
-        try:
-            _LOGGER.info("Starting device discovery")
-
-            # Execute broadcast discovery with retry mechanism
-            devices = await self._discover_devices_with_retry(udp_client)
-
-            if not devices:
+        if user_input and CONF_DEVICE in user_input:
+            host = self.discovered_device_options[str(user_input[CONF_DEVICE])].ip
+            try:
+                device = await self._async_get_device_from_host(host)
+            except MARSTEK_CONNECTION_ERRORS:
                 return self.async_show_form(
                     step_id="discover",
                     data_schema=vol.Schema({}),
-                    errors={"base": "no_devices_found"},
+                    errors={"base": "cannot_connect"},
                 )
-
-            # Store discovered devices for selection
-            self.discovered_devices = devices
-            _LOGGER.info("Discovered %d devices", len(devices))
-
-            # Show device selection form with detailed device information
-            device_options: list[SelectOptionDict] = []
-            self.discovered_device_options = {}
-            for i, device in enumerate(devices):
-                device_name = _device_display_name(device)
-                if device_name in self.discovered_device_options:
-                    device_name = f"{device_name} #{i + 1}"
-                self.discovered_device_options[device_name] = i
-                device_options.append(
-                    SelectOptionDict(value=device_name, label=device_name)
+            except MARSTEK_DEVICE_INFO_ERRORS:
+                return self.async_show_form(
+                    step_id="discover",
+                    data_schema=vol.Schema({}),
+                    errors={"base": "device_not_found"},
                 )
+            return await self._async_create_entry_from_device(device)
 
-            return self.async_show_form(
-                step_id="discover",
-                data_schema=vol.Schema(
-                    {
-                        vol.Required("device"): SelectSelector(
-                            SelectSelectorConfig(
-                                options=device_options,
-                                mode=SelectSelectorMode.DROPDOWN,
-                            )
-                        )
-                    }
-                ),
-            )
-
-        except (OSError, TimeoutError, ValueError) as err:
-            _LOGGER.error("Device discovery failed: %s", err)
+        _LOGGER.debug("Starting device discovery")
+        try:
+            udp_client: MarstekUDPClient | None = None
+            try:
+                udp_client = await async_create_udp_client(self.hass)
+                discovered_devices = await udp_client.discover_devices()
+            finally:
+                if udp_client is not None:
+                    await udp_client.async_cleanup()
+        except MARSTEK_DISCOVERY_ERRORS:
             return self.async_show_form(
                 step_id="discover",
                 data_schema=vol.Schema({}),
                 errors={"base": "discovery_failed"},
             )
-        finally:
-            await udp_client.async_cleanup()
+
+        if not discovered_devices:
+            return self.async_show_form(
+                step_id="discover",
+                data_schema=vol.Schema({}),
+                errors={"base": "no_devices_found"},
+            )
+
+        normalized_devices = [
+            MarstekDeviceInfo.from_response(device) for device in discovered_devices
+        ]
+        _LOGGER.debug("Discovered %d devices", len(normalized_devices))
+        self.discovered_device_options = {}
+
+        device_options: list[SelectOptionDict] = []
+        for index, device in enumerate(normalized_devices):
+            device_label = device.display_name
+            if any(option["label"] == device_label for option in device_options):
+                device_label = f"{device_label} #{index + 1}"
+            device_key = str(index)
+            self.discovered_device_options[device_key] = device
+            device_options.append(
+                SelectOptionDict(value=device_key, label=device_label)
+            )
+
+        return self.async_show_form(
+            step_id="discover",
+            data_schema=vol.Schema(
+                {
+                    vol.Required(CONF_DEVICE): SelectSelector(
+                        SelectSelectorConfig(options=device_options)
+                    )
+                }
+            ),
+        )
 
     async def async_step_manual(
-        self, user_input: dict[str, Any] | None = None
+        self, user_input: dict[str, object] | None = None
     ) -> ConfigFlowResult:
         """Handle manual device setup."""
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            host = user_input[CONF_HOST]
+            host = str(user_input[CONF_HOST])
             self._async_abort_entries_match({CONF_HOST: host})
 
             try:
                 device = await self._async_get_device_from_host(host)
-            except TimeoutError:
+            except MARSTEK_CONNECTION_ERRORS:
                 errors["base"] = "cannot_connect"
-            except (OSError, TypeError, ValueError) as err:
-                _LOGGER.debug("Manual Marstek setup failed for %s: %s", host, err)
+            except MARSTEK_DEVICE_INFO_ERRORS:
                 errors["base"] = "device_not_found"
             else:
                 return await self._async_create_entry_from_device(device)
@@ -171,89 +142,37 @@ class MarstekConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _async_get_device_from_host(self, host: str) -> dict[str, Any]:
+    async def _async_get_device_from_host(self, host: str) -> MarstekDeviceInfo:
         """Fetch device information from a specific host."""
-        udp_client = await async_create_udp_client(self.hass)
+        udp_client: MarstekUDPClient | None = None
         try:
+            udp_client = await async_create_udp_client(self.hass)
             device_info = await udp_client.get_device_info(host)
             if not isinstance(device_info, dict):
                 raise TypeError("No device information returned")
-            return _device_from_discovery_result(device_info, host)
+            return MarstekDeviceInfo.from_response(device_info, host)
         finally:
-            await udp_client.async_cleanup()
+            if udp_client is not None:
+                await udp_client.async_cleanup()
 
     async def _async_create_entry_from_device(
-        self, device: dict[str, Any]
+        self, device: MarstekDeviceInfo
     ) -> ConfigFlowResult:
         """Create a config entry from normalized Marstek device data."""
-        unique_id = (
-            device["mac"]
-            or device["wifi_mac"]
-            or device["ble_mac"]
-            or str(device["id"])
-        )
-        _LOGGER.info(
+        unique_id = device.stable_id
+        if not unique_id:
+            return self.async_abort(reason=ABORT_MISSING_UNIQUE_ID)
+
+        _LOGGER.debug(
             "Check device uniqueness: IP=%s, MAC=%s, unique_id=%s",
-            device["ip"],
-            device["mac"],
+            device.ip,
+            device.mac,
             unique_id,
         )
         await self.async_set_unique_id(unique_id)
-        self._abort_if_unique_id_configured(updates={CONF_HOST: device["ip"]})
+        self._abort_if_unique_id_configured(updates={CONF_HOST: device.ip})
 
-        title = f"Marstek {device['device_type']} v{device['version']} ({device['ip']})"
         return self.async_create_entry(
-            title=title,
-            data={
-                CONF_HOST: device["ip"],
-                CONF_MAC: device["mac"],
-                "device_type": device["device_type"],
-                "version": device["version"],
-                "wifi_name": device["wifi_name"],
-                "wifi_mac": device["wifi_mac"],
-                "ble_mac": device["ble_mac"],
-            },
+            title=device.title,
+            data=device.as_config_entry_data(),
         )
-
-    async def _discover_devices_with_retry(
-        self,
-        udp_client: MarstekUDPClient,
-        max_retries: int = 2,
-        retry_delay: int = 3000,
-    ) -> list[dict[str, Any]]:
-        """Device discovery retry mechanism."""
-        for attempt in range(1, max_retries + 1):
-            try:
-                if attempt > 1:
-                    _LOGGER.info("Device discovery, attempt %d", attempt)
-                    await asyncio.sleep(retry_delay / 1000)  # Convert to seconds
-                    # Clear cache, force re-discovery
-                    udp_client.clear_discovery_cache()
-
-                # First attempt uses cache, retries force refresh
-                use_cache = attempt == 1
-                devices = await udp_client.discover_devices(use_cache=use_cache)
-
-                if devices:
-                    if attempt > 1:
-                        _LOGGER.info("Device discovery retry successful")
-                    return devices
-                _LOGGER.warning("Attempt %d found no devices", attempt)
-
-            except (OSError, TimeoutError, ValueError) as error:
-                _LOGGER.error("Device discovery failed, attempt %d: %s", attempt, error)
-
-                if attempt == max_retries:
-                    _LOGGER.error(
-                        "Device discovery failed after %d retries: %s",
-                        max_retries,
-                        error,
-                    )
-                    # Try using cached data as fallback
-                    cached_devices = udp_client.get_discovery_cache()
-                    if cached_devices:
-                        _LOGGER.info("Using cached device data as fallback")
-                        return cached_devices
-                    raise
-
-        return []

@@ -1,16 +1,16 @@
 """Sensor platform for Marstek devices."""
 
+from collections.abc import Callable
+from dataclasses import dataclass
 import logging
-from typing import Any, override
-
-from aiomarstek import MarstekUDPClient
+from typing import cast, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
+    SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     PERCENTAGE,
     UnitOfElectricCurrent,
@@ -20,244 +20,156 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
-from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .const import DOMAIN
-from .coordinator import MarstekDataUpdateCoordinator
+from .coordinator import MarstekConfigEntry, MarstekDataUpdateCoordinator
+from .entity import MarstekEntity
 
 _LOGGER = logging.getLogger(__name__)
 
 
-class MarstekSensor(CoordinatorEntity, SensorEntity):
-    """Representation of a Marstek sensor."""
+@dataclass(frozen=True, kw_only=True)
+class MarstekSensorEntityDescription(SensorEntityDescription):
+    """Describe a Marstek sensor entity."""
 
-    _attr_has_entity_name = True
-
-    def __init__(
-        self,
-        coordinator: MarstekDataUpdateCoordinator,
-        device_info: dict[str, Any],
-        sensor_type: str,
-    ) -> None:
-        """Initialize the sensor."""
-        super().__init__(coordinator)
-        self._device_info = device_info
-        self._sensor_type = sensor_type
-        self._device_id = device_info.get("mac") or device_info.get("ip", "Unknown")
-        self._attr_translation_key = sensor_type
-        self._attr_device_info = {
-            "identifiers": {(DOMAIN, self._device_id)},
-            "name": f"Marstek {device_info['device_type']} v{device_info['version']}",
-            "manufacturer": "Marstek",
-            "model": device_info["device_type"],
-            "sw_version": str(device_info["version"]),
-        }
-
-    @property
-    @override
-    def unique_id(self) -> str:
-        """Return a unique ID."""
-        device_id = self._device_info.get("mac") or self._device_info.get(
-            "ip", "unknown"
-        )
-        unique_id = f"{device_id}_{self._sensor_type}"
-        _LOGGER.debug(
-            "Generate sensor unique_id: %s (ip=%s, mac=%s, type=%s)",
-            unique_id,
-            self._device_info.get("ip"),
-            self._device_info.get("mac"),
-            self._sensor_type,
-        )
-        return unique_id
-
-    @property
-    @override
-    def native_value(self) -> StateType:
-        """Return the state of the sensor."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.get(self._sensor_type)
+    value_fn: Callable[[object], StateType | None] | None = None
+    exists_fn: Callable[[dict[str, object]], bool] = lambda data: True
 
 
-class MarstekBatterySensor(MarstekSensor):
-    """Representation of a Marstek battery sensor."""
-
-    def __init__(
-        self,
-        coordinator: MarstekDataUpdateCoordinator,
-        device_info: dict[str, Any],
-    ) -> None:
-        """Initialize the battery sensor."""
-        super().__init__(coordinator, device_info, "battery_soc")
-        self._attr_device_class = SensorDeviceClass.BATTERY
-        self._attr_native_unit_of_measurement = PERCENTAGE
-        self._attr_state_class = SensorStateClass.MEASUREMENT
-
-    @property
-    @override
-    def native_value(self) -> int | None:
-        """Return the battery level."""
-        if not self.coordinator.data:
-            return None
-        return int(self.coordinator.data.get("battery_soc", 0))
+def _int_value(value: object) -> int | None:
+    """Return an integer value or None."""
+    if isinstance(value, int | float | str):
+        return int(value)
+    return None
 
 
-class MarstekPowerSensor(MarstekSensor):
-    """Representation of a Marstek power sensor."""
+def _exists_for_key(key: str) -> Callable[[dict[str, object]], bool]:
+    """Return a predicate checking whether a sensor key is present."""
 
-    def __init__(
-        self,
-        coordinator: MarstekDataUpdateCoordinator,
-        device_info: dict[str, Any],
-    ) -> None:
-        """Initialize the power sensor."""
-        super().__init__(coordinator, device_info, "battery_power")
-        self._attr_device_class = SensorDeviceClass.POWER
-        self._attr_native_unit_of_measurement = UnitOfPower.WATT
-        self._attr_state_class = SensorStateClass.MEASUREMENT
+    def exists(data: dict[str, object]) -> bool:
+        return key in data
 
-    @property
-    @override
-    def native_value(self) -> int | None:
-        """Return the battery power."""
-        if not self.coordinator.data:
-            return None
-        return int(self.coordinator.data.get("battery_power", 0))
+    return exists
 
 
-class MarstekDeviceModeSensor(MarstekSensor):
-    """Representation of a Marstek device mode sensor."""
+def _pv_sensor_descriptions() -> tuple[MarstekSensorEntityDescription, ...]:
+    """Build PV sensor descriptions for all supported channels."""
+    descriptions: list[MarstekSensorEntityDescription] = []
+    for pv_channel in range(1, 5):
+        for metric, device_class, unit, icon in (
+            (
+                "power",
+                SensorDeviceClass.POWER,
+                UnitOfPower.WATT,
+                "mdi:solar-power",
+            ),
+            (
+                "voltage",
+                SensorDeviceClass.VOLTAGE,
+                UnitOfElectricPotential.VOLT,
+                "mdi:flash",
+            ),
+            (
+                "current",
+                SensorDeviceClass.CURRENT,
+                UnitOfElectricCurrent.AMPERE,
+                "mdi:current-ac",
+            ),
+            ("state", None, None, "mdi:state-machine"),
+        ):
+            key = f"pv{pv_channel}_{metric}"
+            descriptions.append(
+                MarstekSensorEntityDescription(
+                    key=key,
+                    translation_key=key,
+                    device_class=device_class,
+                    native_unit_of_measurement=unit,
+                    icon=icon,
+                    state_class=(
+                        SensorStateClass.MEASUREMENT if metric != "state" else None
+                    ),
+                    value_fn=_int_value if metric != "state" else None,
+                    exists_fn=_exists_for_key(key),
+                )
+            )
+    return tuple(descriptions)
 
-    def __init__(
-        self,
-        coordinator: MarstekDataUpdateCoordinator,
-        device_info: dict[str, Any],
-    ) -> None:
-        """Initialize the device mode sensor."""
-        super().__init__(coordinator, device_info, "device_mode")
-        self._attr_icon = "mdi:cog"
 
-    @property
-    @override
-    def native_value(self) -> str | None:
-        """Return the device mode."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.get("device_mode", "Unknown")
-
-
-class MarstekBatteryStatusSensor(MarstekSensor):
-    """Representation of a Marstek battery status sensor."""
-
-    def __init__(
-        self,
-        coordinator: MarstekDataUpdateCoordinator,
-        device_info: dict[str, Any],
-    ) -> None:
-        """Initialize the battery status sensor."""
-        super().__init__(coordinator, device_info, "battery_status")
-        self._attr_icon = "mdi:battery"
-
-    @property
-    @override
-    def native_value(self) -> str | None:
-        """Return the battery status."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.get("battery_status", "Unknown")
-
-
-class MarstekPVSensor(MarstekSensor):
-    """Representation of a Marstek PV sensor."""
-
-    def __init__(
-        self,
-        coordinator: MarstekDataUpdateCoordinator,
-        device_info: dict[str, Any],
-        pv_channel: int,
-        metric_type: str,
-    ) -> None:
-        """Initialize the PV sensor."""
-        sensor_key = f"pv{pv_channel}_{metric_type}"
-        super().__init__(coordinator, device_info, sensor_key)
-        self._pv_channel = pv_channel
-        self._metric_type = metric_type
-
-        # Set unit and device class based on metric type
-        if metric_type == "power":
-            self._attr_device_class = SensorDeviceClass.POWER
-            self._attr_native_unit_of_measurement = UnitOfPower.WATT
-            self._attr_icon = "mdi:solar-power"
-        elif metric_type == "voltage":
-            self._attr_device_class = SensorDeviceClass.VOLTAGE
-            self._attr_native_unit_of_measurement = UnitOfElectricPotential.VOLT
-            self._attr_icon = "mdi:flash"
-        elif metric_type == "current":
-            self._attr_device_class = SensorDeviceClass.CURRENT
-            self._attr_native_unit_of_measurement = UnitOfElectricCurrent.AMPERE
-            self._attr_icon = "mdi:current-ac"
-        elif metric_type == "state":
-            self._attr_icon = "mdi:state-machine"
-        else:
-            self._attr_icon = "mdi:solar-panel"
-
-        if metric_type != "state":
-            self._attr_state_class = SensorStateClass.MEASUREMENT
-
-    @property
-    @override
-    def native_value(self) -> int | float | None:
-        """Return the PV metric value."""
-        if not self.coordinator.data:
-            return None
-        return self.coordinator.data.get(self._sensor_type, 0)
+SENSOR_DESCRIPTIONS: tuple[MarstekSensorEntityDescription, ...] = (
+    MarstekSensorEntityDescription(
+        key="battery_soc",
+        translation_key="battery_soc",
+        device_class=SensorDeviceClass.BATTERY,
+        native_unit_of_measurement=PERCENTAGE,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_int_value,
+    ),
+    MarstekSensorEntityDescription(
+        key="battery_power",
+        translation_key="battery_power",
+        device_class=SensorDeviceClass.POWER,
+        native_unit_of_measurement=UnitOfPower.WATT,
+        state_class=SensorStateClass.MEASUREMENT,
+        value_fn=_int_value,
+    ),
+    MarstekSensorEntityDescription(
+        key="device_mode",
+        translation_key="device_mode",
+        icon="mdi:cog",
+    ),
+    MarstekSensorEntityDescription(
+        key="battery_status",
+        translation_key="battery_status",
+        icon="mdi:battery",
+    ),
+    *_pv_sensor_descriptions(),
+)
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: MarstekConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Marstek sensors based on a config entry."""
-    device_ip = config_entry.data["host"]
-    _LOGGER.info("Setting up Marstek sensors: %s", device_ip)
+    coordinator = config_entry.runtime_data
+    device_ip = coordinator.device_ip
+    _LOGGER.debug("Setting up Marstek sensors: %s", device_ip)
 
-    udp_client: MarstekUDPClient = config_entry.runtime_data
+    sensors = [
+        MarstekSensor(coordinator, description)
+        for description in SENSOR_DESCRIPTIONS
+        if description.exists_fn(coordinator.data)
+    ]
 
-    # Build device info from config entry
-    device_info = {
-        "ip": config_entry.data["host"],
-        "mac": config_entry.data["mac"],
-        "device_type": config_entry.data.get("device_type", "Unknown"),
-        "version": config_entry.data.get("version", 0),
-        "wifi_name": config_entry.data.get("wifi_name", ""),
-        "wifi_mac": config_entry.data.get("wifi_mac", ""),
-        "ble_mac": config_entry.data.get("ble_mac", ""),
-    }
-
-    # Create coordinator for this device
-    coordinator = MarstekDataUpdateCoordinator(
-        hass,
-        config_entry,
-        udp_client,
-        device_info["ip"],
-    )
-
-    # Create sensor entities - battery SoC, grid power, device mode, battery status
-    sensors: tuple[MarstekSensor, ...] = (
-        MarstekBatterySensor(coordinator, device_info),
-        MarstekPowerSensor(coordinator, device_info),
-        MarstekDeviceModeSensor(coordinator, device_info),
-        MarstekBatteryStatusSensor(coordinator, device_info),
-    )
-
-    # Add PV sensors for all 4 PV channels
-    pv_sensors: tuple[MarstekSensor, ...] = tuple(
-        MarstekPVSensor(coordinator, device_info, pv_channel, metric_type)
-        for pv_channel in range(1, 5)
-        for metric_type in ("power", "voltage", "current", "state")
-    )
-    sensors = (*sensors, *pv_sensors)
-
-    _LOGGER.info("Device %s sensors set up, total %d", device_ip, len(sensors))
+    _LOGGER.debug("Device %s sensors set up, total %d", device_ip, len(sensors))
     async_add_entities(sensors)
+
+
+class MarstekSensor(MarstekEntity, SensorEntity):
+    """Representation of a Marstek sensor."""
+
+    entity_description: MarstekSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: MarstekDataUpdateCoordinator,
+        entity_description: MarstekSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator, entity_description)
+
+    @property
+    @override
+    def native_value(self) -> StateType | None:
+        """Return the state of the sensor."""
+        data = self.coordinator.data
+        if not data:
+            return None
+
+        value = data.get(self.entity_description.key)
+        if value is None:
+            return None
+
+        if self.entity_description.value_fn is not None:
+            return self.entity_description.value_fn(value)
+        return cast(StateType, value)

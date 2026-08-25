@@ -53,7 +53,7 @@ rules:
   reauthentication-flow:
     status: exempt
     comment: This integration requires no authentication.
-  test-coverage: done
+  test-coverage: todo
 
   # Gold
   devices: done

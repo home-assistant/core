@@ -3,17 +3,21 @@
 from datetime import timedelta
 from unittest.mock import MagicMock
 
+from syrupy.assertion import SnapshotAssertion
+
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 from homeassistant.util import dt as dt_util
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-async def test_sensor_setup(
+async def test_sensor_setup_snapshot(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
+    snapshot: SnapshotAssertion,
 ) -> None:
     """Test sensor platform setup."""
     mock_config_entry.add_to_hass(hass)
@@ -21,45 +25,12 @@ async def test_sensor_setup(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Battery SoC sensor
-    battery_sensor = entity_registry.async_get("sensor.marstek_es5_v1_battery_level")
-    assert battery_sensor
-    assert battery_sensor.unique_id == "AA:BB:CC:DD:EE:FF_battery_soc"
-
-    # Grid power sensor
-    power_sensor = entity_registry.async_get("sensor.marstek_es5_v1_grid_power")
-    assert power_sensor
-    assert power_sensor.unique_id == "AA:BB:CC:DD:EE:FF_battery_power"
-
-    # Device mode sensor
-    mode_sensor = entity_registry.async_get("sensor.marstek_es5_v1_device_mode")
-    assert mode_sensor
-    assert mode_sensor.unique_id == "AA:BB:CC:DD:EE:FF_device_mode"
-
-    # Battery status sensor
-    status_sensor = entity_registry.async_get("sensor.marstek_es5_v1_battery_status")
-    assert status_sensor
-    assert status_sensor.unique_id == "AA:BB:CC:DD:EE:FF_battery_status"
-
-
-async def test_coordinator_creates_sensors(
-    hass: HomeAssistant,
-    entity_registry: er.EntityRegistry,
-    mock_config_entry: MockConfigEntry,
-) -> None:
-    """Test that coordinator is created and sensors are set up."""
-    mock_config_entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
-    # Check that sensor platform was set up
-    entities = er.async_entries_for_config_entry(
-        entity_registry, mock_config_entry.entry_id
+    await snapshot_platform(
+        hass,
+        entity_registry,
+        snapshot,
+        mock_config_entry.entry_id,
     )
-
-    # Should have created multiple sensors (battery, power, mode, status, PV sensors, etc.)
-    assert len(entities) > 0
 
 
 async def test_polling_paused(
@@ -69,16 +40,78 @@ async def test_polling_paused(
 ) -> None:
     """Test coordinator respects polling pause."""
     mock_config_entry.add_to_hass(hass)
-
-    # Setup mock to return paused status
     mock_udp_client.is_polling_paused.return_value = True
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Trigger update
     async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
     await hass.async_block_till_done()
 
-    # Polling is paused, so no device status request should be made
     mock_udp_client.get_device_status.assert_not_awaited()
+
+
+async def test_polling_failure_recovers(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_client: MagicMock,
+) -> None:
+    """Test polling failures make the sensor unavailable and then recover."""
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    mock_udp_client.get_device_status.side_effect = [
+        OSError("network down"),
+        {
+            "battery_soc": 85,
+            "battery_power": 1300,
+            "device_mode": "Manual",
+            "battery_status": "Charging",
+            "device_ip": "192.168.1.100",
+            "pv1_power": 500,
+            "pv1_voltage": 48,
+            "pv1_current": 10,
+            "pv1_state": 1,
+        },
+    ]
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.marstek_es5_v1_battery_level").state
+        == STATE_UNAVAILABLE
+    )
+
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=22))
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.marstek_es5_v1_battery_level").state == "85"
+
+
+async def test_missing_sensor_fields_do_not_fallback(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_client: MagicMock,
+) -> None:
+    """Test missing device status fields are not reported as fallback values."""
+    mock_config_entry.add_to_hass(hass)
+    mock_udp_client.get_device_status.side_effect = None
+    mock_udp_client.get_device_status.return_value = {
+        "battery_power": 1300,
+        "pv1_power": 500,
+    }
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.marstek_es5_v1_battery_level").state == STATE_UNKNOWN
+    assert hass.states.get("sensor.marstek_es5_v1_device_mode").state == STATE_UNKNOWN
+    assert (
+        hass.states.get("sensor.marstek_es5_v1_battery_status").state == STATE_UNKNOWN
+    )
+    assert hass.states.get("sensor.marstek_es5_v1_pv1_power").state == "500"
+    assert hass.states.get("sensor.marstek_es5_v1_pv1_voltage") is None
+    assert hass.states.get("sensor.marstek_es5_v1_pv2_power") is None

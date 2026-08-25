@@ -3,3 +3,9 @@
 from typing import Final
 
 DOMAIN: Final = "marstek"
+
+CONF_BLE_MAC: Final = "ble_mac"
+CONF_DEVICE_TYPE: Final = "device_type"
+CONF_VERSION: Final = "version"
+CONF_WIFI_MAC: Final = "wifi_mac"
+CONF_WIFI_NAME: Final = "wifi_name"
