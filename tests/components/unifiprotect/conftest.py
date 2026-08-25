@@ -7,7 +7,7 @@ from ipaddress import IPv4Address
 from pathlib import Path
 from tempfile import gettempdir
 from typing import Any
-from unittest.mock import AsyncMock, Mock, patch
+from unittest.mock import AsyncMock, Mock, PropertyMock, patch
 
 import pytest
 from uiprotect import ProtectApiClient
@@ -612,24 +612,17 @@ def mock_ufp_public_only_entry():
     )
 
 
-class _PublicOnlyClientMock(Mock):
-    """Mock client mirroring the real public-only contract.
-
-    Reading ``bootstrap`` on an API-key-only client raises ``BadRequest`` in
-    the library; mirroring that here makes every accidental private-bootstrap
-    read in a public-only code path fail loudly in tests.
-    """
-
-    @property
-    def bootstrap(self) -> None:
-        raise BadRequest("Client not initialized, run `update` first")
-
-
 @pytest.fixture(name="ufp_public_only_client")
 def mock_ufp_public_only_client() -> Mock:
     """Mock an API-key-only ProtectApiClient for setup."""
-    client = _PublicOnlyClientMock()
-    # pylint: disable=attribute-defined-outside-init
+    client = Mock()
+    # Reading ``bootstrap`` on an API-key-only client raises in the library;
+    # mirroring that makes every accidental private-bootstrap read in a
+    # public-only code path fail loudly. A property needs the instance type,
+    # which mock gives each Mock of its own.
+    type(client).bootstrap = PropertyMock(
+        side_effect=BadRequest("Client not initialized, run `update` first")
+    )
     client.is_public_only = True
     client.has_public_bootstrap = True
 
