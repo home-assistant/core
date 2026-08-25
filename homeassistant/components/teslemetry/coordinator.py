@@ -1,11 +1,12 @@
 """Teslemetry Data Coordinator."""
 
-from datetime import datetime, timedelta
+from datetime import timedelta
 from typing import TYPE_CHECKING, Any, override
 
 from tesla_fleet_api.const import TeslaEnergyPeriod, VehicleDataEndpoint
 from tesla_fleet_api.exceptions import (
     GatewayTimeout,
+    InsufficientCredits,
     InvalidResponse,
     InvalidToken,
     LoginRequired,
@@ -24,7 +25,7 @@ if TYPE_CHECKING:
     from . import TeslemetryConfigEntry
 
 from .const import DOMAIN, ENERGY_HISTORY_FIELDS, LOGGER
-from .helpers import flatten
+from .helpers import async_update_device_sw_version, flatten
 
 RETRY_EXCEPTIONS = (
     InvalidResponse,
@@ -48,6 +49,10 @@ ENERGY_LIVE_INTERVAL = timedelta(seconds=30)
 ENERGY_INFO_INTERVAL = timedelta(seconds=30)
 ENERGY_HISTORY_INTERVAL = timedelta(seconds=60)
 METADATA_INTERVAL = timedelta(hours=1)
+
+# Insufficient credits will not resolve themselves quickly, so back off polling
+# instead of hammering the API at the coordinator's normal interval.
+INSUFFICIENT_CREDITS_RETRY_AFTER = timedelta(hours=1).total_seconds()
 
 ENDPOINTS = [
     VehicleDataEndpoint.CHARGE_STATE,
@@ -108,7 +113,7 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching data from the Teslemetry API."""
 
     config_entry: TeslemetryConfigEntry
-    last_active: datetime
+    vin: str
 
     def __init__(
         self,
@@ -129,8 +134,8 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self.update_interval = VEHICLE_INTERVAL
 
         self.api = api
+        self.vin = product["vin"]
         self.data = flatten(product)
-        self.last_active = datetime.now()  # pylint: disable=home-assistant-enforce-naive-now
 
     @override
     async def _async_update_data(self) -> dict[str, Any]:
@@ -139,6 +144,12 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             data = (await self.api.vehicle_data(endpoints=ENDPOINTS))["response"]
         except (InvalidToken, SubscriptionRequired, LoginRequired) as e:
             raise ConfigEntryAuthFailed from e
+        except InsufficientCredits as e:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_failed_insufficient_credits",
+                retry_after=INSUFFICIENT_CREDITS_RETRY_AFTER,
+            ) from e
         except RETRY_EXCEPTIONS as e:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
@@ -153,7 +164,15 @@ class TeslemetryVehicleDataCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_placeholders={"message": e.message},
             ) from e
 
-        return flatten(data)
+        data = flatten(data)
+        if version := data.get("vehicle_state_car_version"):
+            # Consume firmware opportunistically rather than through a listener
+            # that would keep this coordinator polling after every entity is
+            # disabled. Drop the build suffix (e.g. "2024.44.25 x" -> "2024.44.25").
+            async_update_device_sw_version(
+                self.hass, self.vin, self.config_entry.entry_id, version.split(" ")[0]
+            )
+        return data
 
 
 class TeslemetryEnergySiteLiveCoordinator(DataUpdateCoordinator[dict[str, Any]]):

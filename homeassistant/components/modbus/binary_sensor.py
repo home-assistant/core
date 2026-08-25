@@ -21,11 +21,11 @@ from homeassistant.helpers.update_coordinator import (
 
 from . import get_hub
 from .const import (
-    _LOGGER,
     CALL_TYPE_COIL,
     CALL_TYPE_DISCRETE,
     CONF_SLAVE_COUNT,
     CONF_VIRTUAL_COUNT,
+    LOGGER,
 )
 from .entity import ModbusBaseEntity
 from .modbus import ModbusHub
@@ -84,7 +84,7 @@ class ModbusBinarySensor(ModbusBaseEntity, RestoreEntity, BinarySensorEntity):
         name = self._attr_name or "modbus_sensor"
         self._coordinator = DataUpdateCoordinator(
             hass,
-            _LOGGER,
+            LOGGER,
             config_entry=None,
             name=name,
         )

@@ -160,7 +160,9 @@ class DnsIPConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user",
-            data_schema=DATA_SCHEMA,
+            data_schema=self.add_suggested_values_to_schema(
+                DATA_SCHEMA, user_input or {}
+            ),
             errors=errors,
         )
 

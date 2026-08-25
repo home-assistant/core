@@ -39,7 +39,7 @@ async def test_sensors(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-    entity_registry = er.async_get(hass)
+    entity_registry = er.async_get(hass)  # pylint: disable=home-assistant-tests-registry-fixtures
 
     # Check electric sensors
     entry = entity_registry.async_get(

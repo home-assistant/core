@@ -9,15 +9,16 @@ from homeassistant.helpers.trigger import (
     EntityNumericalStateCrossedThresholdTriggerBase,
     EntityNumericalStateTriggerBase,
     EntityTriggerBase,
+    NotTriggeredReasonReporter,
     Trigger,
     make_entity_transition_trigger,
 )
 
-from . import ATTR_MEDIA_VOLUME_LEVEL, ATTR_MEDIA_VOLUME_MUTED, MediaPlayerState
-from .const import DOMAIN
+from . import MediaPlayerState
+from .const import DOMAIN, MediaPlayerEntityStateAttribute
 
 VOLUME_DOMAIN_SPECS: dict[str, DomainSpec] = {
-    DOMAIN: DomainSpec(value_source=ATTR_MEDIA_VOLUME_LEVEL),
+    DOMAIN: DomainSpec(value_source=MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL),
 }
 
 
@@ -30,8 +31,10 @@ class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
     def _has_volume_attributes(self, state: State) -> bool:
         """Check if the state has volume muted or volume level attributes."""
         return (
-            state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is not None
-            or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
+            state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED)
+            is not None
+            or state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL)
+            is not None
         )
 
     @override
@@ -47,8 +50,10 @@ class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
     def is_muted(self, state: State) -> bool:
         """Check if the media player is muted."""
         return (
-            state.attributes.get(ATTR_MEDIA_VOLUME_MUTED) is True
-            or state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) == 0
+            state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_MUTED)
+            is True
+            or state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL)
+            == 0
         )
 
     @override
@@ -60,7 +65,11 @@ class _MediaPlayerMutedStateTriggerBase(EntityTriggerBase):
         return self.is_muted(from_state) != self.is_muted(to_state)
 
     @override
-    def is_valid_state(self, state: State) -> bool:
+    def is_valid_state(
+        self,
+        state: State,
+        report_not_triggered: NotTriggeredReasonReporter,
+    ) -> bool:
         """Check if the new state matches the expected state."""
         if not self._has_volume_attributes(state):
             return False
@@ -104,7 +113,8 @@ class VolumeTriggerMixin(EntityNumericalStateTriggerBase):
         """
         return (
             super()._should_include(state)
-            and state.attributes.get(ATTR_MEDIA_VOLUME_LEVEL) is not None
+            and state.attributes.get(MediaPlayerEntityStateAttribute.MEDIA_VOLUME_LEVEL)
+            is not None
         )
 
 

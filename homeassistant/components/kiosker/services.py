@@ -106,19 +106,15 @@ async def _get_coordinator(
     call: ServiceCall,
 ) -> KioskerDataUpdateCoordinator:
     """Get the coordinator for the targeted device."""
-    registry = dr.async_get(call.hass)
     device_id: str = call.data[ATTR_DEVICE_ID]
-    device = registry.async_get(device_id)
-
-    if device:
-        for entry_id in device.config_entries:
-            entry = call.hass.config_entries.async_get_entry(entry_id)
-            if entry and entry.domain == DOMAIN:
-                if entry.state != ConfigEntryState.LOADED:
-                    raise HomeAssistantError(f"{entry.title} is not loaded")
-                return entry.runtime_data
-
-    raise ServiceValidationError(f"No {DOMAIN} devices found in targeted selection")
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        call.hass, device_id, domain=DOMAIN
+    )
+    if config_entry is None:
+        raise ServiceValidationError(f"No {DOMAIN} devices found in targeted selection")
+    if config_entry.state is not ConfigEntryState.LOADED:
+        raise HomeAssistantError(f"{config_entry.title} is not loaded")
+    return config_entry.runtime_data
 
 
 def _rgb_to_hex(rgb: list[int]) -> str:

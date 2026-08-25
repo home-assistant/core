@@ -103,7 +103,7 @@ class AdGuardHomeSwitch(AdGuardHomeEntity, SwitchEntity):
         """Initialize AdGuard Home switch."""
         super().__init__(data, entry)
         self.entity_description = description
-        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain
+        self._attr_unique_id = "_".join(  # pylint: disable=home-assistant-entity-unique-id-redundant-domain,home-assistant-entity-unique-id-redundant-platform
             [
                 DOMAIN,
                 self.adguard.host,

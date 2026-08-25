@@ -14,11 +14,7 @@ from propcache.api import cached_property
 import voluptuous as vol
 
 from homeassistant.components.homeassistant.exposed_entities import async_should_expose
-from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
-)
+from homeassistant.const import ATTR_ENTITY_ID, EntityStateAttribute
 from homeassistant.core import Context, HomeAssistant, State, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.util.hass_dict import HassKey
@@ -374,7 +370,7 @@ class MatchTargetsCandidate:
     is_exposed: bool
     entity: er.RegistryEntry | None = None
     area: ar.AreaEntry | None = None
-    device: dr.DeviceEntry | None = None
+    device: dr.AnyDeviceEntry | None = None
     matched_name: str | None = None
 
 
@@ -455,7 +451,9 @@ def _filter_by_features(
             yield candidate
             continue
 
-        supported_features = candidate.state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        supported_features = candidate.state.attributes.get(
+            EntityStateAttribute.SUPPORTED_FEATURES, 0
+        )
         if (supported_features & features) == features:
             yield candidate
 
@@ -474,7 +472,7 @@ def _filter_by_device_classes(
             yield candidate
             continue
 
-        device_class = candidate.state.attributes.get(ATTR_DEVICE_CLASS)
+        device_class = candidate.state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
         if device_class and (device_class in device_classes):
             yield candidate
 
@@ -496,9 +494,13 @@ def _add_areas(
             # Use entity area first
             candidate.area = areas.async_get_area(candidate.entity.area_id)
             assert candidate.area is not None
-        elif (candidate.device is not None) and candidate.device.area_id:
+        elif candidate.device is not None and (
+            device_area_id := dr.async_get_effective_area_id(
+                devices.hass, candidate.device
+            )
+        ):
             # Fall back to device area
-            candidate.area = areas.async_get_area(candidate.device.area_id)
+            candidate.area = areas.async_get_area(device_area_id)
 
 
 def _default_area_candidate_filter(
@@ -811,7 +813,7 @@ def async_match_states(
 @callback
 def async_test_feature(state: State, feature: int, feature_name: str) -> None:
     """Test if state supports a feature."""
-    if state.attributes.get(ATTR_SUPPORTED_FEATURES, 0) & feature == 0:
+    if state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0) & feature == 0:
         raise IntentHandleError(f"Entity {state.name} does not support {feature_name}")
 
 
