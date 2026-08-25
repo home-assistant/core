@@ -226,8 +226,8 @@ async def test_cleanup_button(
     assert entry.state is ConfigEntryState.LOADED
 
     # check if tracked device is registered properly
-    device = device_registry.async_get_device(
-        connections={("mac", "aa:bb:cc:00:11:22")}
+    device = device_registry.async_get_device_by_connection(
+        ("mac", "aa:bb:cc:00:11:22"), entry.entry_id
     )
     assert device
 
@@ -254,8 +254,8 @@ async def test_cleanup_button(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     # check if orphan tracked device is removed
-    device = device_registry.async_get_device(
-        connections={("mac", "aa:bb:cc:00:11:22")}
+    device = device_registry.async_get_device_by_connection(
+        ("mac", "aa:bb:cc:00:11:22"), entry.entry_id
     )
     assert not device
 

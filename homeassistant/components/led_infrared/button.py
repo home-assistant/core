@@ -16,6 +16,32 @@ PARALLEL_UPDATES = 1
 SUPPORTED_BUTTONS = {
     LEDIrDeviceType.GENERIC_24_KEY: ["brightness_up", "brightness_down"],
     LEDIrDeviceType.GENERIC_13_KEY: ["brightness_up", "brightness_down", "timer"],
+    LEDIrDeviceType.GENERIC_40_KEY: [
+        "brightness_up",
+        "brightness_down",
+        "white_brightness_up",
+        "white_brightness_down",
+        "white_on",
+        "white_off",
+        "white_brightness_25",
+        "white_brightness_50",
+        "white_brightness_75",
+        "white_brightness_100",
+        "quick",
+        "slow",
+    ],
+    LEDIrDeviceType.GENERIC_44_KEY: [
+        "brightness_up",
+        "brightness_down",
+        "red_up",
+        "green_up",
+        "blue_up",
+        "red_down",
+        "green_down",
+        "blue_down",
+        "quick",
+        "slow",
+    ],
 }
 
 

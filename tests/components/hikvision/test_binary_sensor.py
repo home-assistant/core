@@ -91,8 +91,8 @@ async def test_binary_sensor_device_info(
     """Test binary sensors are linked to device."""
     await setup_integration(hass, mock_config_entry)
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, TEST_DEVICE_ID)}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_ID), mock_config_entry.entry_id
     )
     assert device_entry is not None
     assert device_entry.name == TEST_DEVICE_NAME
@@ -147,18 +147,23 @@ async def test_binary_sensor_nvr_device(
 
     await setup_integration(hass, mock_config_entry)
 
-    # Verify NVR channel devices are created with via_device linking
-    channel_1_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_1")}
+    # Verify NVR channel devices are linked to the NVR device via via_device_id
+    nvr_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_ID), mock_config_entry.entry_id
+    )
+    assert nvr_device is not None
+
+    channel_1_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_ID}_1"), mock_config_entry.entry_id
     )
     assert channel_1_device is not None
-    assert channel_1_device.via_device_id is not None
+    assert channel_1_device.via_device_id == nvr_device.id
 
-    channel_2_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{TEST_DEVICE_ID}_2")}
+    channel_2_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{TEST_DEVICE_ID}_2"), mock_config_entry.entry_id
     )
     assert channel_2_device is not None
-    assert channel_2_device.via_device_id is not None
+    assert channel_2_device.via_device_id == nvr_device.id
 
     # Verify sensors are created (entity IDs depend on translation loading)
     states = hass.states.async_entity_ids("binary_sensor")

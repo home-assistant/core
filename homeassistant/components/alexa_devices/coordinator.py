@@ -3,6 +3,7 @@
 from collections.abc import AsyncGenerator
 from contextlib import asynccontextmanager
 from datetime import timedelta
+from pathlib import Path
 from typing import override
 
 from aioamazondevices.api import AmazonEchoApi
@@ -10,6 +11,7 @@ from aioamazondevices.exceptions import (
     CannotAuthenticate,
     CannotConnect,
     CannotRetrieveData,
+    NoOnlineDevicesError,
 )
 from aioamazondevices.structures import (
     AmazonDevice,
@@ -17,6 +19,7 @@ from aioamazondevices.structures import (
     AmazonListEventType,
     AmazonListItem,
     AmazonMediaState,
+    AmazonSaveDataConfig,
     AmazonVocalRecord,
     AmazonVolumeState,
 )
@@ -90,7 +93,13 @@ async def alexa_config_entry_errors() -> AsyncGenerator[None]:
             translation_key="cannot_connect_with_error",
             translation_placeholders={"error": repr(err)},
         ) from err
-    except (CannotRetrieveData, ValueError, KeyError, StopIteration) as err:
+    except (
+        CannotRetrieveData,
+        NoOnlineDevicesError,
+        ValueError,
+        KeyError,
+        StopIteration,
+    ) as err:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_retrieve_data_with_error",
@@ -127,13 +136,16 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
             session,
             entry.data[CONF_USERNAME],
             entry.data[CONF_PASSWORD],
-            entry.data[CONF_LOGIN_DATA],
+            login_data=entry.data[CONF_LOGIN_DATA],
+            save_data=AmazonSaveDataConfig(
+                path=Path(hass.config.path(DOMAIN)),
+            ),
         )
         device_registry = dr.async_get(hass)
         self.previous_devices: set[str] = {
             identifier
-            for device in device_registry.devices.get_devices_for_config_entry_id(
-                entry.entry_id
+            for device in dr.async_entries_for_config_entry(
+                device_registry, entry.entry_id
             )
             if device.entry_type != dr.DeviceEntryType.SERVICE
             for identifier_domain, identifier in device.identifiers
@@ -182,7 +194,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 translation_key="cannot_connect_with_error",
                 translation_placeholders={"error": repr(err)},
             ) from err
-        except CannotRetrieveData as err:
+        except (CannotRetrieveData, NoOnlineDevicesError) as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="cannot_retrieve_data_with_error",
@@ -240,10 +252,7 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
                 (DOMAIN, serial_num), self.config_entry.entry_id
             )
             if device:
-                device_registry.async_update_device(
-                    device_id=device.id,
-                    remove_config_entry_id=self.config_entry.entry_id,
-                )
+                device_registry.async_remove_device(device.id)
 
     async def _async_remove_routine_stale(
         self,
@@ -302,7 +311,9 @@ class AmazonDevicesCoordinator(DataUpdateCoordinator[dict[str, AmazonDevice]]):
     async def todo_event_handler(self, list_event: AmazonListEvent) -> None:
         """Handle changes on To-Do lists."""
         if list_event.type == AmazonListEventType.DELETED:
-            self._todo_list_items[list_event.list_id].pop(list_event.item_id, None)
+            self._todo_list_items.get(list_event.list_id, {}).pop(
+                list_event.item_id, None
+            )
         elif (
             list_event.type
             in (AmazonListEventType.UPDATED, AmazonListEventType.CREATED)

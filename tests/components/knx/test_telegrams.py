@@ -21,6 +21,8 @@ from homeassistant.components.knx.const import (
     REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR,
 )
 from homeassistant.components.knx.telegrams import (
+    FLUSH_INTERVAL_SECONDS_POSTGRES,
+    FLUSH_INTERVAL_SECONDS_SQLITE,
     STORE_INIT_RETRY_BACKOFF,
     TelegramDict,
 )
@@ -684,3 +686,43 @@ async def test_postgres_backend_init_error(
         issue_registry.async_get_issue(DOMAIN, REPAIR_ISSUE_TELEGRAM_BACKEND_ERROR)
         is not None
     )
+
+
+async def test_postgres_backend_flushes_more_often_than_sqlite(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Postgres flushes every second; sqlite keeps the original 10 minute interval.
+
+    Sqlite's long interval is safe because the websocket history API already
+    flushes on demand. Postgres consumers that only learn about a telegram
+    once it is written (e.g. a LISTEN/NOTIFY-driven live view) have no such
+    fallback, so they need a much shorter interval.
+    """
+    assert FLUSH_INTERVAL_SECONDS_POSTGRES < FLUSH_INTERVAL_SECONDS_SQLITE
+
+    dsn = "postgresql://user:secret@db.local:5432/knx"
+    knx.mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        knx.mock_config_entry,
+        options=knx.mock_config_entry.options
+        | {
+            CONF_KNX_TELEGRAM_DB_BACKEND: KNX_TELEGRAM_BACKEND_POSTGRES,
+            CONF_KNX_TELEGRAM_DB_POSTGRES_DSN: dsn,
+        },
+    )
+    await knx.setup_integration(add_entry_to_hass=False)
+
+    store = hass.data[KNX_MODULE_KEY].telegrams.store
+    assert store.flush_interval == FLUSH_INTERVAL_SECONDS_POSTGRES
+
+
+async def test_sqlite_backend_keeps_long_flush_interval(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Sqlite's flush interval is unaffected by the Postgres-specific tuning."""
+    await knx.setup_integration()
+
+    store = hass.data[KNX_MODULE_KEY].telegrams.store
+    assert store.flush_interval == FLUSH_INTERVAL_SECONDS_SQLITE

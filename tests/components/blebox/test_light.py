@@ -53,6 +53,7 @@ def dimmer_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My dimmer")
     type(product).model = PropertyMock(return_value="dimmerBox")
+    type(product).product = PropertyMock(return_value="dimmerBox")
     return (feature, "light.my_dimmer")
 
 
@@ -175,6 +176,7 @@ def wlightboxs_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBoxS")
     type(product).model = PropertyMock(return_value="wLightBoxS")
+    type(product).product = PropertyMock(return_value="wLightBoxS")
     return (feature, "light.my_wlightboxs")
 
 
@@ -260,6 +262,7 @@ def wlightbox_fixture():
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
+    type(product).product = PropertyMock(return_value="wLightBox")
     return (feature, "light.my_wlightbox")
 
 
@@ -286,6 +289,7 @@ def wlightbox_ct_fixture() -> tuple[MagicMock, str]:
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
+    type(product).product = PropertyMock(return_value="wLightBox")
     return feature, "light.my_wlightbox"
 
 
@@ -571,6 +575,7 @@ async def test_multichannel_light_name(
     product = feature.product
     type(product).name = PropertyMock(return_value="My wLightBox")
     type(product).model = PropertyMock(return_value="wLightBox")
+    type(product).product = PropertyMock(return_value="wLightBox")
 
     await async_setup_entity(hass, entity_id)
     state = hass.states.get(entity_id)
