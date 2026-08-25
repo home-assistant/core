@@ -48,5 +48,17 @@
       "description": "The YAML configuration for OpenWrt (luci) at `{host}` could not be imported because the credentials are invalid.\n\nPlease update your `configuration.yaml` with valid credentials and restart Home Assistant.",
       "title": "YAML configuration import failed: invalid authentication"
     }
+  },
+  "options": {
+    "step": {
+      "init": {
+        "data": {
+          "consider_home": "Seconds to consider a device at 'home'"
+        },
+        "data_description": {
+          "consider_home": "Time a device stays at home after the router stops reporting it. Raise this if devices that sleep, such as phones, flap between home and away. Default is 180 seconds."
+        }
+      }
+    }
   }
 }
