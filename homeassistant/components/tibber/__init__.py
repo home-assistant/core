@@ -65,11 +65,18 @@ def _migrate_data_api_registry_entries(
     legacy_device_name = legacy_device.name if legacy_device else None
 
     migrations: dict[str, tuple[str, str]] = {}
+    device_migrations: dict[str, str] = {}
     device_id_by_identifier = {home_id: home_id for home_id in home_ids}
     for device in sorted(
         coordinator.data.values(),
         key=lambda device: (device.name != legacy_device_name, device.id),
     ):
+        if (
+            legacy_device
+            and not device.external_id
+            and device.name == legacy_device_name
+        ):
+            device_migrations.setdefault(legacy_device.id, device.id)
         device_id_by_identifier[device.id] = device.id
         if device.external_id:
             device_id_by_identifier[device.external_id] = device.id
@@ -83,7 +90,6 @@ def _migrate_data_api_registry_entries(
                 # An empty external ID produced a legacy leading-underscore unique ID.
                 migrations.setdefault(f"_{sensor.id}", migration)
 
-    device_migrations: dict[str, str] = {}
     for entity_entry in entity_entries:
         if not (registry_migration := migrations.get(entity_entry.unique_id)):
             continue
