@@ -1146,7 +1146,7 @@
           "title": "Additional settings"
         },
         "send_on_init": {
-          "description": "Send the first valid value to the KNX bus when the expose is initialized.",
+          "description": "Send the value to the KNX bus when the expose is initialized. When disabled, a state change will trigger the first telegram.",
           "label": "Send on initialization"
         },
         "show_raw_values": "Show raw values",
