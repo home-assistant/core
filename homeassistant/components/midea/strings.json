@@ -97,7 +97,7 @@
       }
     }
   },
-  "entity": {       
+  "entity": {
     "binary_sensor": {
       "arofene_link": {
         "name": "Methanal"
