@@ -117,7 +117,6 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_validate_mfa(self, code: str) -> str | None:
         """Validate the provided MFA code."""
         if TYPE_CHECKING:
-            # This can never not be None at this point.
             assert self.authenticator
         try:
             await self.authenticator.send_mfa_request(code)
