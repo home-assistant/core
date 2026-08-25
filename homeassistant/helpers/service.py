@@ -1422,13 +1422,33 @@ def async_get_device_and_config_entry(
 ) -> tuple[device_registry.DeviceEntry, ConfigEntry]:
     """Get and validate the device and the loaded config entry of the domain owning it.
 
-    Raises ServiceValidationError if the device is unknown, is not owned by a
-    config entry of the domain, or if that config entry is not loaded.
+    Raises ServiceValidationError if the device is unknown, is a child device, is
+    not owned by a config entry of the domain, or if that config entry is not
+    loaded. Child devices are rejected because the returned DeviceEntry would not
+    carry the attributes callers read from it; target the main device instead.
     """
     device, config_entry = device_registry.async_get_device_and_config_entry_for_domain(
         hass, device_id, domain=domain
     )
     if device is None:
+        # A child device id resolves to no device above. Report that specifically,
+        # so the caller is not sent looking for a missing device.
+        if (
+            child_device := device_registry.async_get(hass).async_get(
+                device_id,
+                include_main_devices=False,
+                include_composite_devices=False,
+            )
+        ) is not None:
+            raise ServiceValidationError(
+                translation_domain=HOMEASSISTANT_DOMAIN,
+                translation_key="service_device_is_child_device",
+                translation_placeholders={
+                    "device_name": child_device.name_by_user
+                    or child_device.name
+                    or device_id,
+                },
+            )
         raise ServiceValidationError(
             translation_domain=HOMEASSISTANT_DOMAIN,
             translation_key="service_device_not_found",

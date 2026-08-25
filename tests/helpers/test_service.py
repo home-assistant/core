@@ -3460,3 +3460,35 @@ async def test_get_service_device_and_config_entry(
     with pytest.raises(exceptions.ServiceValidationError) as err:
         service.async_get_device_and_config_entry(hass, domain, device.id)
     assert err.value.translation_key == "service_config_entry_not_loaded"
+
+
+async def test_get_service_device_and_config_entry_child_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry
+) -> None:
+    """Test that a child device is reported as such, not as a missing device."""
+    domain = "mock_integration"
+    entry = MockConfigEntry(domain=domain)
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(domain, "parent")},
+        name="Parent device",
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=entry.entry_id,
+        parent_device_id=parent.id,
+        identifiers={(domain, "child")},
+        name="Child device",
+    )
+
+    with pytest.raises(exceptions.ServiceValidationError) as err:
+        service.async_get_device_and_config_entry(hass, domain, child.id)
+    assert err.value.translation_key == "service_device_is_child_device"
+    assert err.value.translation_placeholders == {"device_name": "Child device"}
+
+    # The parent device still resolves normally
+    assert service.async_get_device_and_config_entry(hass, domain, parent.id) == (
+        parent,
+        entry,
+    )

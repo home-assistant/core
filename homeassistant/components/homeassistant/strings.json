@@ -63,6 +63,9 @@
     "service_config_entry_wrong_domain": {
       "message": "Config entry {entry_title} does not belong to integration {domain}."
     },
+    "service_device_is_child_device": {
+      "message": "Device {device_name} is a sub-device and can't be targeted directly. Target its main device instead."
+    },
     "service_device_not_found": {
       "message": "Device with ID {device_id} was not found."
     },
