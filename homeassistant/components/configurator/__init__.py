@@ -6,8 +6,6 @@ A callback has to be provided to `request_config` which will be called when
 the user has submitted configuration information.
 """
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from contextlib import suppress
 from datetime import datetime
@@ -16,7 +14,7 @@ from typing import Any
 
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_PICTURE, ATTR_FRIENDLY_NAME
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import (
     HassJob,
     HomeAssistant,
@@ -183,8 +181,8 @@ class Configurator:
         data = {
             ATTR_CONFIGURE_ID: request_id,
             ATTR_FIELDS: fields,
-            ATTR_FRIENDLY_NAME: name,
-            ATTR_ENTITY_PICTURE: entity_picture,
+            EntityStateAttribute.FRIENDLY_NAME: name,
+            EntityStateAttribute.ENTITY_PICTURE: entity_picture,
         }
 
         data.update(

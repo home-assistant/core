@@ -1,10 +1,8 @@
 """Support for Elgato switches."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from elgato import Elgato
 
@@ -88,17 +86,20 @@ class ElgatoSwitchEntity(ElgatoEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return state of the switch."""
         return self.entity_description.is_on_fn(self.coordinator.data)
 
     @elgato_exception_handler
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         await self.entity_description.set_fn(self.coordinator.client, True)
         await self.coordinator.async_request_refresh()
 
     @elgato_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         await self.entity_description.set_fn(self.coordinator.client, False)

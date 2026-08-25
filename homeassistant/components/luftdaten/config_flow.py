@@ -1,8 +1,6 @@
 """Config flow to configure the Sensor.Community integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from luftdaten import Luftdaten
 from luftdaten.exceptions import LuftdatenConnectionError
@@ -35,6 +33,7 @@ class SensorCommunityFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors or {},
         )
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -362,3 +362,173 @@ async def test_migrate_battery_and_obsolete_access_point(
     assert entity_registry.async_get_entity_id(
         "binary_sensor", DOMAIN, "3014F711ABCD_0_battery"
     )
+
+
+@pytest.mark.parametrize(
+    ("platform", "old_unique_id_a", "old_unique_id_b", "new_unique_id"),
+    [
+        (
+            "light",
+            "HomematicipNotificationLight_Top_3014F711ABCD",
+            "HomematicipNotificationLightV2_Top_3014F711ABCD",
+            "3014F711ABCD_2_notification_light",
+        ),
+        (
+            "switch",
+            "HomematicipSwitch_3014F711ABCD",
+            "HomematicipSwitchMeasuring_3014F711ABCD",
+            "3014F711ABCD_1_switch",
+        ),
+    ],
+    ids=["notification_light_v1_v2", "switch_vs_measuring"],
+)
+async def test_migrate_unique_id_collision(
+    hass: HomeAssistant,
+    mock_config_entry_v1: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+    platform: str,
+    old_unique_id_a: str,
+    old_unique_id_b: str,
+    new_unique_id: str,
+) -> None:
+    """Test that legacy duplicates targeting the same new id are deduped."""
+    entity_a = entity_registry.async_get_or_create(
+        platform,
+        DOMAIN,
+        old_unique_id_a,
+        config_entry=mock_config_entry_v1,
+    )
+    entity_b = entity_registry.async_get_or_create(
+        platform,
+        DOMAIN,
+        old_unique_id_b,
+        config_entry=mock_config_entry_v1,
+    )
+
+    with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
+        instance = mock_hap.return_value
+        instance.async_setup = AsyncMock(return_value=True)
+        instance.home.id = "1"
+        instance.home.modelType = "mock-type"
+        instance.home.name = "mock-name"
+        instance.home.label = "mock-label"
+        instance.home.currentAPVersion = "mock-ap-version"
+        instance.async_reset = AsyncMock(return_value=True)
+
+        await hass.config_entries.async_setup(mock_config_entry_v1.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry_v1.version == 2
+    # The longer class-name match (entity_b: V2 / Measuring) wins the collision
+    surviving_id = entity_registry.async_get_entity_id(platform, DOMAIN, new_unique_id)
+    assert surviving_id == entity_b.entity_id
+    # The shorter-class entry was removed
+    assert entity_registry.async_get(entity_a.entity_id) is None
+    assert "Removing duplicate registry entry" in caplog.text
+
+
+async def test_migrate_unique_id_partial_prior_run(
+    hass: HomeAssistant,
+    mock_config_entry_v1: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test recovery from a previously-aborted migration.
+
+    async_migrate_entries commits each entry update individually with no
+    rollback. If a user already hit the original collision once, one legacy
+    entry was migrated to the stable format and the other remained. On the
+    next startup the migration must drop the leftover legacy entry instead
+    of crashing again on the same collision.
+    """
+    # Simulate previous-run state: one entry at the new (stable) target,
+    # plus the still-legacy duplicate that was never migrated.
+    stable_entry = entity_registry.async_get_or_create(
+        "light",
+        DOMAIN,
+        "3014F711ABCD_2_notification_light",
+        config_entry=mock_config_entry_v1,
+    )
+    stale_legacy = entity_registry.async_get_or_create(
+        "light",
+        DOMAIN,
+        "HomematicipNotificationLight_Top_3014F711ABCD",
+        config_entry=mock_config_entry_v1,
+    )
+
+    with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
+        instance = mock_hap.return_value
+        instance.async_setup = AsyncMock(return_value=True)
+        instance.home.id = "1"
+        instance.home.modelType = "mock-type"
+        instance.home.name = "mock-name"
+        instance.home.label = "mock-label"
+        instance.home.currentAPVersion = "mock-ap-version"
+        instance.async_reset = AsyncMock(return_value=True)
+
+        await hass.config_entries.async_setup(mock_config_entry_v1.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry_v1.version == 2
+    # The stable entry from the previous run keeps its place.
+    surviving_id = entity_registry.async_get_entity_id(
+        "light", DOMAIN, "3014F711ABCD_2_notification_light"
+    )
+    assert surviving_id == stable_entry.entity_id
+    # The leftover legacy entry was removed, not migrated.
+    assert entity_registry.async_get(stale_legacy.entity_id) is None
+    assert "already in use by a stable entry" in caplog.text
+
+
+async def test_migrate_unique_id_three_way_collision(
+    hass: HomeAssistant,
+    mock_config_entry_v1: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test that more than two legacy entries can share a target safely.
+
+    The pre-pass groups by computed new id, so any number of legacy
+    entries pointing at the same target should collapse to one survivor.
+    """
+    short = entity_registry.async_get_or_create(
+        "switch",
+        DOMAIN,
+        "HomematicipSwitch_3014F711ABCD",
+        config_entry=mock_config_entry_v1,
+    )
+    multi_channel = entity_registry.async_get_or_create(
+        "switch",
+        DOMAIN,
+        "HomematicipMultiSwitch_Channel1_3014F711ABCD",
+        config_entry=mock_config_entry_v1,
+    )
+    longest = entity_registry.async_get_or_create(
+        "switch",
+        DOMAIN,
+        "HomematicipSwitchMeasuring_3014F711ABCD",
+        config_entry=mock_config_entry_v1,
+    )
+
+    with patch("homeassistant.components.homematicip_cloud.HomematicipHAP") as mock_hap:
+        instance = mock_hap.return_value
+        instance.async_setup = AsyncMock(return_value=True)
+        instance.home.id = "1"
+        instance.home.modelType = "mock-type"
+        instance.home.name = "mock-name"
+        instance.home.label = "mock-label"
+        instance.home.currentAPVersion = "mock-ap-version"
+        instance.async_reset = AsyncMock(return_value=True)
+
+        await hass.config_entries.async_setup(mock_config_entry_v1.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry_v1.version == 2
+    # The longest legacy class name wins.
+    surviving_id = entity_registry.async_get_entity_id(
+        "switch", DOMAIN, "3014F711ABCD_1_switch"
+    )
+    assert surviving_id == longest.entity_id
+    # The shorter and multi-channel legacy entries were removed.
+    assert entity_registry.async_get(short.entity_id) is None
+    assert entity_registry.async_get(multi_channel.entity_id) is None

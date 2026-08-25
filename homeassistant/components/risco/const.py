@@ -24,6 +24,7 @@ CONF_RISCO_STATES_TO_HA = "risco_states_to_ha"
 CONF_HA_STATES_TO_RISCO = "ha_states_to_risco"
 CONF_COMMUNICATION_DELAY = "communication_delay"
 CONF_CONCURRENCY = "concurrency"
+CONF_MORE_OPTIONS = "more_options"
 
 RISCO_GROUPS = ["A", "B", "C", "D"]
 RISCO_ARM = "arm"

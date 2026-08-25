@@ -2,10 +2,11 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute, HomeeNode
+from pyHomee.model_homeegram import HomeeGram
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -14,9 +15,12 @@ from homeassistant.components.switch import (
 )
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
+from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import HomeeConfigEntry
+from . import DOMAIN, HomeeConfigEntry
 from .const import CLIMATE_PROFILES, LIGHT_PROFILES
 from .entity import HomeeEntity
 from .helpers import setup_homee_platform
@@ -67,13 +71,14 @@ SWITCH_DESCRIPTIONS: dict[AttributeType, HomeeSwitchEntityDescription] = {
 
 
 async def add_switch_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee switch entities."""
     async_add_entities(
-        HomeeSwitch(attribute, config_entry, SWITCH_DESCRIPTIONS[attribute.type])
+        HomeeSwitch(hass, attribute, config_entry, SWITCH_DESCRIPTIONS[attribute.type])
         for node in nodes
         for attribute in node.attributes
         if (attribute.type in SWITCH_DESCRIPTIONS and attribute.editable)
@@ -94,7 +99,13 @@ async def async_setup_entry(
 ) -> None:
     """Set up the switch platform for the Homee component."""
 
-    await setup_homee_platform(add_switch_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_switch_entities, async_add_entities, config_entry
+    )
+    async_add_entities(
+        HomeegramSwitch(hass, homeegram, config_entry)
+        for homeegram in config_entry.runtime_data.homeegrams
+    )
 
 
 class HomeeSwitch(HomeeEntity, SwitchEntity):
@@ -104,12 +115,13 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
         description: HomeeSwitchEntityDescription,
     ) -> None:
         """Initialize a Homee switch entity."""
-        super().__init__(attribute, entry)
+        super().__init__(hass, attribute, entry)
         self.entity_description = description
         if attribute.instance == 0:
             if attribute.type == AttributeType.ON_OFF:
@@ -121,19 +133,107 @@ class HomeeSwitch(HomeeEntity, SwitchEntity):
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         return bool(self._attribute.current_value)
 
     @property
+    @override
     def device_class(self) -> SwitchDeviceClass:
         """Return the device class of the switch."""
         return self.entity_description.device_class_fn(self._attribute, self._entry)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self.async_set_homee_value(1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self.async_set_homee_value(0)
+
+
+class HomeegramSwitch(SwitchEntity):
+    """Representation of a Homeegram as switch."""
+
+    _attr_has_entity_name = True
+    _attr_should_poll = False
+
+    def __init__(
+        self, hass: HomeAssistant, homeegram: HomeeGram, entry: HomeeConfigEntry
+    ) -> None:
+        """Initialize a homee Homeegram switch entity."""
+        self._homeegram = homeegram
+        self._entry = entry
+        self._attr_unique_id = f"{entry.unique_id}-hg-{homeegram.id}"
+        self._attr_translation_key = "homeegram"
+        self._host_connected = entry.runtime_data.connected
+        self._attr_name = homeegram.name
+
+        self._attr_entity_registry_enabled_default = self._is_enabled_by_default(
+            homeegram
+        )
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, f"{entry.unique_id}-homeegrams")},
+            name="Homeegrams",
+            model="Homeegram Switches",
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass,
+                (DOMAIN, entry.runtime_data.settings.uid),
+                config_entry_id=entry.entry_id,
+            ),
+        )
+
+    @override
+    async def async_added_to_hass(self) -> None:
+        """Add the Homeegram entity to home assistant."""
+        self.async_on_remove(
+            self._homeegram.add_on_changed_listener(self._on_homeegram_updated)
+        )
+        self.async_on_remove(
+            self._entry.runtime_data.add_connection_listener(
+                self._on_connection_changed
+            )
+        )
+
+    @property
+    @override
+    def is_on(self) -> bool:
+        """Return True if homeegram is executing."""
+        return bool(self._homeegram.play)
+
+    @property
+    @override
+    def available(self) -> bool:
+        """Return the availability of the homeegram based on host availability."""
+        return bool(self._homeegram.active) and self._host_connected
+
+    @override
+    async def async_turn_on(self, **kwargs: Any) -> None:
+        """Trigger Homeegram on switching on."""
+        await self._entry.runtime_data.play_homeegram(self._homeegram.id)
+
+    @override
+    async def async_turn_off(self, **kwargs: Any) -> None:
+        """Turning off homeegrams is not supported."""
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="homeegram_turn_off_not_supported",
+        )
+
+    def _on_homeegram_updated(self, homeegram: HomeeGram) -> None:
+        self.async_write_ha_state()
+
+    async def _on_connection_changed(self, connected: bool) -> None:
+        self._host_connected = connected
+        self.async_write_ha_state()
+
+    def _is_enabled_by_default(self, homeegram: HomeeGram) -> bool:
+        """Return if the homeegram should be enabled by default."""
+        # Only enable homeegram switches by default if there is more than 1 homeegram action.
+        return (
+            sum(len(action_list) for action_list in homeegram.actions.data.values()) > 1
+        )

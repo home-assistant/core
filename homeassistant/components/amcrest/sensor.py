@@ -1,10 +1,8 @@
 """Support for Amcrest IP camera sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from amcrest import AmcrestError
 
@@ -84,6 +82,7 @@ class AmcrestSensor(SensorEntity):
         self._attr_extra_state_attributes = {}
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return self._api.available
@@ -130,6 +129,7 @@ class AmcrestSensor(SensorEntity):
         except AmcrestError as error:
             log_update_error(_LOGGER, "update", self.name, "sensor", error)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to update signal."""
         self.async_on_remove(

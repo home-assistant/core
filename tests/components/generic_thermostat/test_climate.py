@@ -554,7 +554,7 @@ async def test_external_toggle_resets_min_cycle(
     # Set up thermostat with min cycle duration and cooldown
     await _setup_thermostat_with_min_cycle_duration(hass, False, HVACMode.HEAT)
 
-    fake_changed = datetime.datetime.now(dt_util.UTC)
+    fake_changed = dt_util.utcnow()
     # Perform initial actions at the same frozen time so the cycle timer is recent
     freezer.move_to(fake_changed)
     # Start with switch on and record service call registrations
@@ -819,6 +819,91 @@ async def test_no_state_change_when_operation_mode_off_2(hass: HomeAssistant) ->
     assert len(calls) == 0
 
 
+async def test_set_target_temp_with_hvac_mode_heat(hass: HomeAssistant) -> None:
+    """Test setting the target temperature and HVAC mode together."""
+    hass.config.units = METRIC_SYSTEM
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 2,
+                "hot_tolerance": 4,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "initial_hvac_mode": HVACMode.OFF,
+                "target_temp": 20,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+    await common.async_set_temperature(hass, temperature=30, hvac_mode=HVACMode.HEAT)
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 30.0
+    assert state.state == HVACMode.HEAT
+
+
+async def test_set_target_temp_with_hvac_mode_off(hass: HomeAssistant) -> None:
+    """Test setting a temperature while switching the climate mode to OFF."""
+    hass.config.units = METRIC_SYSTEM
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 2,
+                "hot_tolerance": 4,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "initial_hvac_mode": HVACMode.HEAT,
+                "target_temp": 20,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await common.async_set_temperature(hass, temperature=30, hvac_mode=HVACMode.OFF)
+
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 30.0
+    assert state.state == HVACMode.OFF
+
+
+async def test_set_target_temp_with_hvac_mode_cool_when_ac_mode_enabled(
+    hass: HomeAssistant,
+) -> None:
+    """Test that COOL is accepted from set_temperature when ac_mode is enabled."""
+    hass.config.units = METRIC_SYSTEM
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "cold_tolerance": 2,
+                "hot_tolerance": 4,
+                "heater": ENT_SWITCH,
+                "target_sensor": ENT_SENSOR,
+                "initial_hvac_mode": HVACMode.OFF,
+                "target_temp": 20,
+                "ac_mode": True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await common.async_set_temperature(hass, temperature=30, hvac_mode=HVACMode.COOL)
+
+    state = hass.states.get(ENTITY)
+    assert state.attributes.get(ATTR_TEMPERATURE) == 30.0
+    assert state.state == HVACMode.COOL
+
+
 async def _setup_thermostat_with_min_cycle_duration(
     hass: HomeAssistant, ac_mode: bool, initial_hvac_mode: HVACMode
 ):
@@ -946,7 +1031,7 @@ async def test_heating_cooling_switch_toggles_when_outside_min_cycle_duration(
         (False, HVACMode.HEAT, True, 30, 25, HVACMode.OFF, SERVICE_TURN_OFF),
     ],
 )
-async def test_hvac_mode_change_toggles_heating_cooling_switch_even_when_within_min_cycle_duration(
+async def test_hvac_mode_change_toggles_switch_within_min_cycle_duration(
     hass: HomeAssistant,
     ac_mode: bool,
     initial_hvac_mode: HVACMode,
@@ -1013,7 +1098,7 @@ async def test_temp_change_ac_trigger_on_long_enough_3(hass: HomeAssistant) -> N
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
-    test_time = datetime.datetime.now(dt_util.UTC)
+    test_time = dt_util.utcnow()
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -1037,7 +1122,7 @@ async def test_temp_change_ac_trigger_off_long_enough_3(hass: HomeAssistant) -> 
     _setup_sensor(hass, 20)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
-    test_time = datetime.datetime.now(dt_util.UTC)
+    test_time = dt_util.utcnow()
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -1088,7 +1173,7 @@ async def test_temp_change_heater_trigger_on_long_enough_2(hass: HomeAssistant) 
     _setup_sensor(hass, 20)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
-    test_time = datetime.datetime.now(dt_util.UTC)
+    test_time = dt_util.utcnow()
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -1114,7 +1199,7 @@ async def test_temp_change_heater_trigger_off_long_enough_2(
     _setup_sensor(hass, 30)
     await hass.async_block_till_done()
     await common.async_set_temperature(hass, 25)
-    test_time = datetime.datetime.now(dt_util.UTC)
+    test_time = dt_util.utcnow()
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     assert len(calls) == 0
@@ -1164,7 +1249,7 @@ async def test_max_cycle_duration_turns_off(hass: HomeAssistant) -> None:
     assert call.service == SERVICE_TURN_ON
 
     # Advance time to trigger max cycle shut-off
-    test_time = datetime.datetime.now(dt_util.UTC)
+    test_time = dt_util.utcnow()
     async_fire_time_changed(hass, test_time)
     await hass.async_block_till_done()
     async_fire_time_changed(hass, test_time + datetime.timedelta(minutes=10))
@@ -1207,7 +1292,7 @@ async def test_external_toggle_resets_max_cycle(
     assert len(calls) == 1
 
     # Simulate an external toggle event shortly after (resets internals)
-    test_time = datetime.datetime.now(dt_util.UTC)
+    test_time = dt_util.utcnow()
     async_fire_time_changed(hass, test_time)
     freezer.move_to(test_time + datetime.timedelta(minutes=1))
     hass.states.async_set(ENT_SWITCH, STATE_ON)
@@ -1274,7 +1359,7 @@ async def test_cycle_cooldown_schedules_restart_after_cooldown(
 ) -> None:
     """Test that cooldown blocks restart and schedules a restart check."""
     hass.config.temperature_unit = UnitOfTemperature.CELSIUS
-    now = datetime.datetime.now(dt_util.UTC)
+    now = dt_util.utcnow()
     freezer.move_to(now)
 
     assert await async_setup_component(
@@ -1763,14 +1848,14 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("switch.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     helper_config_entry = MockConfigEntry(
         data={},
         domain=DOMAIN,
         options={
             "name": "Test",
-            "heater": "switch.test_source",
+            "heater": source_entity.entity_id,
             "target_sensor": ENT_SENSOR,
             "ac_mode": False,
             "cold_tolerance": 0.3,
@@ -1783,9 +1868,53 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    helper_entity = entity_registry.async_get("climate.test")
+    helper_entity = entity_registry.async_get("climate.mock_title_test")
     assert helper_entity is not None
     assert helper_entity.device_id == source_entity.device_id
+
+
+async def test_device_id_yaml(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test no device is set for a YAML-configured thermostat."""
+    source_config_entry = MockConfigEntry()
+    source_config_entry.add_to_hass(hass)
+    source_device_entry = device_registry.async_get_or_create(
+        config_entry_id=source_config_entry.entry_id,
+        identifiers={("switch", "identifier_test")},
+        connections={("mac", "30:31:32:33:34:35")},
+    )
+    entity_registry.async_get_or_create(
+        "switch",
+        "test",
+        "source",
+        config_entry=source_config_entry,
+        device_id=source_device_entry.id,
+    )
+    await hass.async_block_till_done()
+
+    assert await async_setup_component(
+        hass,
+        CLIMATE_DOMAIN,
+        {
+            "climate": {
+                "platform": "generic_thermostat",
+                "name": "test",
+                "heater": "switch.test_source",
+                "target_sensor": ENT_SENSOR,
+                "unique_id": "generic_thermostat_yaml",
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    helper_entity = entity_registry.async_get("climate.test")
+    assert helper_entity is not None
+    assert helper_entity.device_id is None
+    assert "attempts to attach a device to an entity" not in caplog.text
 
 
 @pytest.mark.usefixtures("setup_comp_1")

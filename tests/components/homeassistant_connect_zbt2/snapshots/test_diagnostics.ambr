@@ -1,0 +1,32 @@
+# serializer version: 1
+# name: test_diagnostics_for_config_entry
+  dict({
+    'config_entry': dict({
+      'data': dict({
+        'device': '/dev/serial/by-id/usb-Nabu_Casa_ZBT-2_80B54EEFAE18-if01-port0',
+        'firmware': 'ezsp',
+        'firmware_version': '7.3.1.0 build 0',
+        'manufacturer': 'Nabu Casa',
+        'pid': '4001',
+        'product': 'ZBT-2',
+        'serial_number': '80B54EEFAE18',
+        'vid': '303A',
+      }),
+      'disabled_by': None,
+      'discovery_keys': dict({
+      }),
+      'domain': 'homeassistant_connect_zbt2',
+      'minor_version': 2,
+      'options': dict({
+      }),
+      'pref_disable_new_entities': False,
+      'pref_disable_polling': False,
+      'source': 'user',
+      'subentries': list([
+      ]),
+      'title': 'Mock Title',
+      'unique_id': '80B54EEFAE18',
+      'version': 1,
+    }),
+  })
+# ---

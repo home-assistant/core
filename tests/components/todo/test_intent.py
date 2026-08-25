@@ -59,7 +59,7 @@ async def test_add_item_intent(
         {ATTR_ITEM: {"value": " beer "}, "name": {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
     assert response.success_results[0].name == "list 1"
     assert response.success_results[0].type == intent.IntentResponseTargetType.ENTITY
     assert response.success_results[0].id == entity1.entity_id
@@ -78,7 +78,7 @@ async def test_add_item_intent(
         {ATTR_ITEM: {"value": "cheese"}, "name": {"value": "List 2"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
 
     assert len(entity1.items) == 0
     assert len(entity2.items) == 1
@@ -93,7 +93,7 @@ async def test_add_item_intent(
         {ATTR_ITEM: {"value": "wine"}, "name": {"value": "lIST 2"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
 
     assert len(entity1.items) == 0
     assert len(entity2.items) == 2
@@ -111,7 +111,7 @@ async def test_add_item_intent(
             {"item": {"value": "cookies"}, "name": {"value": "list 1"}},
             assistant=conversation.DOMAIN,
         )
-    assert err.value.result.no_match_reason == intent.MatchFailedReason.ASSISTANT
+    assert err.value.result.no_match_reason is intent.MatchFailedReason.ASSISTANT
 
     # Missing list
     with pytest.raises(intent.MatchFailedError):
@@ -210,7 +210,7 @@ async def test_complete_item_intent(
         {ATTR_ITEM: {"value": "beer"}, ATTR_NAME: {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
 
     assert len(entity1.items) == 2
     assert entity1.items[0].status == TodoItemStatus.COMPLETED
@@ -321,7 +321,7 @@ async def test_remove_item_intent(
         {ATTR_ITEM: {"value": "beer"}, ATTR_NAME: {"value": "list 1"}},
         assistant=conversation.DOMAIN,
     )
-    assert response.response_type == intent.IntentResponseType.ACTION_DONE
+    assert response.response_type is intent.IntentResponseType.ACTION_DONE
 
     # only the first matching item has been removed
     assert len(entity1.items) == 2

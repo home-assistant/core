@@ -1,7 +1,5 @@
 """The ntfy integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aiontfy import Ntfy
@@ -16,7 +14,7 @@ from aiontfy.update import UpdateChecker
 from homeassistant.const import CONF_TOKEN, CONF_URL, CONF_VERIFY_SSL, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util.hass_dict import HassKey
@@ -93,6 +91,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: NtfyConfigEntry) -> bool
     await version.async_config_entry_first_refresh()
 
     entry.runtime_data = NtfyRuntimeData(coordinator, version)
+
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id, **coordinator.device_info
+    )
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 

@@ -8,15 +8,14 @@ from homeassistant.helpers.condition import Condition, make_entity_state_conditi
 
 from .const import DOMAIN
 
-SWITCH_DOMAIN_SPECS = {DOMAIN: DomainSpec(), INPUT_BOOLEAN_DOMAIN: DomainSpec()}
+SWITCH_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    DOMAIN: DomainSpec(),
+    INPUT_BOOLEAN_DOMAIN: DomainSpec(),
+}
 
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_off": make_entity_state_condition(
-        SWITCH_DOMAIN_SPECS, STATE_OFF, support_duration=True
-    ),
-    "is_on": make_entity_state_condition(
-        SWITCH_DOMAIN_SPECS, STATE_ON, support_duration=True
-    ),
+    "is_off": make_entity_state_condition(SWITCH_DOMAIN_SPECS, STATE_OFF),
+    "is_on": make_entity_state_condition(SWITCH_DOMAIN_SPECS, STATE_ON),
 }
 
 

@@ -73,21 +73,6 @@
       }
     }
   },
-  "selector": {
-    "condition_behavior": {
-      "options": {
-        "all": "All",
-        "any": "Any"
-      }
-    },
-    "trigger_behavior": {
-      "options": {
-        "any": "Any",
-        "first": "First",
-        "last": "Last"
-      }
-    }
-  },
   "services": {
     "toggle": {
       "description": "Toggles a switch on/off.",
@@ -105,7 +90,7 @@
   "title": "Switch",
   "triggers": {
     "turned_off": {
-      "description": "Triggers after one or more switches turn off.",
+      "description": "Triggers when one or more switches turn off.",
       "fields": {
         "behavior": {
           "name": "[%key:component::switch::common::trigger_behavior_name%]"
@@ -117,7 +102,7 @@
       "name": "Switch turned off"
     },
     "turned_on": {
-      "description": "Triggers after one or more switches turn on.",
+      "description": "Triggers when one or more switches turn on.",
       "fields": {
         "behavior": {
           "name": "[%key:component::switch::common::trigger_behavior_name%]"

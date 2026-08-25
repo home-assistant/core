@@ -33,7 +33,7 @@ from tests.typing import ClientSessionGenerator
 
 @pytest.fixture(autouse=True)
 def required_platforms_only():
-    """Only set up the required platform and required base platforms to speed up tests."""
+    """Only set up required platform and base platforms."""
     with patch(
         "homeassistant.components.zha.PLATFORMS", (Platform.ALARM_CONTROL_PANEL,)
     ):
@@ -129,8 +129,8 @@ async def test_diagnostics_for_device(
         security.IasZone.AttributeDefs.current_zone_sensitivity_level
     )
 
-    device = device_registry.async_get_device(
-        identifiers={("zha", str(zha_device_proxy.device.ieee))}
+    device = device_registry.async_get_device_by_identifier(
+        ("zha", str(zha_device_proxy.device.ieee)), config_entry.entry_id
     )
     assert device
     diagnostics_data = await get_diagnostics_for_device(

@@ -1,11 +1,9 @@
 """Support for Hydrawise cloud switches."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine, Iterable
 from dataclasses import dataclass
 from datetime import timedelta
-from typing import Any
+from typing import Any, override
 
 from pydrawise import Controller, HydrawiseBase, Zone
 
@@ -91,18 +89,21 @@ class HydrawiseSwitch(HydrawiseEntity, SwitchEntity):
     entity_description: HydrawiseSwitchEntityDescription
     zone: Zone
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self.entity_description.turn_on_fn(self.coordinator.api, self.zone)
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self.entity_description.turn_off_fn(self.coordinator.api, self.zone)
         self._attr_is_on = False
         self.async_write_ha_state()
 
+    @override
     def _update_attrs(self) -> None:
         """Update state attributes."""
         self._attr_is_on = self.entity_description.value_fn(self.zone)

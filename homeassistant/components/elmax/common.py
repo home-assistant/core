@@ -1,7 +1,5 @@
 """Elmax integration common classes and utilities."""
 
-from __future__ import annotations
-
 import ssl
 
 from elmax_api.model.panel import PanelEntry

@@ -1,7 +1,5 @@
 """Home Assistant command line scripts."""
 
-from __future__ import annotations
-
 import argparse
 import asyncio
 from collections.abc import Sequence

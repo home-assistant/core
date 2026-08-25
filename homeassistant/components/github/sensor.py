@@ -1,10 +1,10 @@
 """Sensor platform for the GitHub integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
+
+from aiogithubapi import GitHubAuthenticatedUserModel
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -19,7 +19,11 @@ from homeassistant.helpers.typing import StateType
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
-from .coordinator import GithubConfigEntry, GitHubDataUpdateCoordinator
+from .coordinator import (
+    GithubConfigEntry,
+    GitHubDataUpdateCoordinator,
+    GitHubUserDataUpdateCoordinator,
+)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -143,14 +147,58 @@ SENSOR_DESCRIPTIONS: tuple[GitHubSensorEntityDescription, ...] = (
 )
 
 
+@dataclass(frozen=True, kw_only=True)
+class GitHubUserSensorEntityDescription(SensorEntityDescription):
+    """Describes GitHub user sensor entity."""
+
+    value_fn: Callable[[GitHubAuthenticatedUserModel], StateType]
+
+
+USER_SENSOR_DESCRIPTIONS: tuple[GitHubUserSensorEntityDescription, ...] = (
+    GitHubUserSensorEntityDescription(
+        key="followers",
+        translation_key="followers",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.followers,
+    ),
+    GitHubUserSensorEntityDescription(
+        key="following",
+        translation_key="following",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.following,
+    ),
+    GitHubUserSensorEntityDescription(
+        key="public_gists",
+        translation_key="public_gists",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.public_gists,
+    ),
+    GitHubUserSensorEntityDescription(
+        key="public_repos",
+        translation_key="public_repos",
+        state_class=SensorStateClass.MEASUREMENT,
+        entity_registry_enabled_default=False,
+        value_fn=lambda data: data.public_repos,
+    ),
+)
+
+
 async def async_setup_entry(
     hass: HomeAssistant,
     entry: GithubConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up GitHub sensor based on a config entry."""
-    repositories = entry.runtime_data
-    for subentry_id, coordinator in repositories.items():
+    user_coordinator = entry.runtime_data.user_coordinator
+    async_add_entities(
+        GitHubUserSensorEntity(user_coordinator, description)
+        for description in USER_SENSOR_DESCRIPTIONS
+    )
+
+    for subentry_id, coordinator in entry.runtime_data.repositories.items():
         async_add_entities(
             (
                 GitHubSensorEntity(coordinator, description)
@@ -188,6 +236,7 @@ class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorE
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         return (
@@ -197,11 +246,48 @@ class GitHubSensorEntity(CoordinatorEntity[GitHubDataUpdateCoordinator], SensorE
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)
 
     @property
+    @override
     def extra_state_attributes(self) -> Mapping[str, Any] | None:
         """Return the extra state attributes."""
         return self.entity_description.attr_fn(self.coordinator.data)
+
+
+class GitHubUserSensorEntity(
+    CoordinatorEntity[GitHubUserDataUpdateCoordinator], SensorEntity
+):
+    """Defines a GitHub user sensor entity."""
+
+    _attr_has_entity_name = True
+
+    entity_description: GitHubUserSensorEntityDescription
+
+    def __init__(
+        self,
+        coordinator: GitHubUserDataUpdateCoordinator,
+        entity_description: GitHubUserSensorEntityDescription,
+    ) -> None:
+        """Initialize the sensor."""
+        super().__init__(coordinator=coordinator)
+
+        self.entity_description = entity_description
+        self._attr_unique_id = f"{coordinator.data.id}_{entity_description.key}"
+
+        self._attr_device_info = DeviceInfo(
+            identifiers={(DOMAIN, str(coordinator.data.id))},
+            name=coordinator.data.login,
+            manufacturer="GitHub",
+            configuration_url=f"https://github.com/{coordinator.data.login}",
+            entry_type=DeviceEntryType.SERVICE,
+        )
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.coordinator.data)

@@ -1,22 +1,27 @@
 """Config flow for the Anglian Water integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from aiohttp import CookieJar
 from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
+    ConsentRequiredError,
     InvalidAccountIdError,
+    MFARequiredError,
     SelfAssertedError,
     SmartMeterUnavailableError,
 )
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
-from homeassistant.const import CONF_ACCESS_TOKEN, CONF_PASSWORD, CONF_USERNAME
+from homeassistant.const import (
+    CONF_ACCESS_TOKEN,
+    CONF_CODE,
+    CONF_PASSWORD,
+    CONF_USERNAME,
+)
 from homeassistant.helpers import selector
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 
@@ -33,11 +38,21 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
     }
 )
 
+STEP_MFA_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_CODE): selector.TextSelector(),
+    }
+)
+
 
 async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
     """Validate the provided credentials."""
     try:
         await auth.send_login_request()
+    except MFARequiredError:
+        return "mfa_required"
+    except ConsentRequiredError:
+        return "consent_required"
     except SelfAssertedError:
         return "invalid_auth"
     except Exception:
@@ -87,6 +102,7 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         self.accounts: list[selector.SelectOptionDict] = []
         self.user_input: dict[str, Any] | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -103,29 +119,53 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             validation_response = await validate_credentials(self.authenticator)
             if isinstance(validation_response, str):
+                if validation_response == "mfa_required":
+                    self.user_input = user_input
+                    return await self.async_step_mfa()
                 errors["base"] = validation_response
             else:
                 self.accounts = await get_accounts(self.authenticator)
-                if len(self.accounts) > 1:
-                    self.user_input = user_input
-                    return await self.async_step_select_account()
-                account_number = self.accounts[0]["value"]
                 self.user_input = user_input
-                return await self.async_step_complete(
-                    {
-                        CONF_ACCOUNT_NUMBER: account_number,
-                    }
-                )
+                return await self.async_step_select_account()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_mfa(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the MFA step."""
+        errors: dict[str, str] = {}
+        if user_input is not None:
+            if TYPE_CHECKING:
+                assert self.authenticator
+            try:
+                await self.authenticator.send_mfa_request(user_input[CONF_CODE])
+            except MFARequiredError:
+                errors["base"] = "invalid_code"
+            except Exception:
+                _LOGGER.exception("Unexpected exception")
+                errors["base"] = "unknown"
+            else:
+                self.accounts = await get_accounts(self.authenticator)
+                return await self.async_step_select_account()
+        return self.async_show_form(
+            step_id="mfa", data_schema=STEP_MFA_DATA_SCHEMA, errors=errors
         )
 
     async def async_step_select_account(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the account selection step."""
-        errors = {}
+        if len(self.accounts) == 1:
+            account_number = self.accounts[0]["value"]
+            return await self.async_step_complete(
+                {
+                    CONF_ACCOUNT_NUMBER: account_number,
+                }
+            )
+        errors: dict[str, str] = {}
         if user_input is not None:
             if TYPE_CHECKING:
                 assert self.authenticator

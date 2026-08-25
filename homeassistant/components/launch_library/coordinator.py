@@ -1,10 +1,8 @@
 """DataUpdateCoordinator for the launch_library integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import TypedDict
+from typing import TypedDict, override
 
 from pylaunches import PyLaunches, PyLaunchesError
 from pylaunches.types import Launch, StarshipResponse
@@ -50,6 +48,7 @@ class LaunchLibraryCoordinator(DataUpdateCoordinator[LaunchLibraryData]):
         session = async_get_clientsession(hass)
         self._launches = PyLaunches(session)
 
+    @override
     async def _async_update_data(self) -> LaunchLibraryData:
         """Fetch data from Launch Library."""
         try:

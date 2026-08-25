@@ -1,7 +1,8 @@
 {
   "config": {
     "abort": {
-      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]"
+      "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
+      "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
@@ -9,6 +10,7 @@
       "invalid_url": "Invalid URL",
       "invalid_url_schema_override_mqtt_url": "Invalid MQTT URL scheme.\nThe URL should start with `mqtt://` or `mqtts://`.",
       "invalid_url_schema_override_rest_url": "Invalid REST URL scheme.\nThe URL should start with `http://` or `https://`.",
+      "invalid_verification_code": "The verification code is invalid or has expired.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -25,6 +27,18 @@
           "override_mqtt_url": "Enter the MQTT URL of your self-hosted instance including the scheme (mqtt/mqtts).",
           "override_rest_url": "Enter the REST URL of your self-hosted instance including the scheme (http/https)."
         }
+      },
+      "device_verification": {
+        "data": {
+          "verification_code": "Verification code"
+        },
+        "description": "Enter the verification code Ecovacs sent to {username} to confirm Home Assistant as a trusted device."
+      },
+      "reauth_confirm": {
+        "data": {
+          "password": "[%key:common::config_flow::data::password%]"
+        },
+        "description": "Enter the Ecovacs password for {username} to reconnect the integration."
       },
       "user": {
         "data": {
@@ -55,6 +69,9 @@
       "reset_lifespan_brush": {
         "name": "Reset main brush lifespan"
       },
+      "reset_lifespan_cleaning_solution": {
+        "name": "Reset cleaning solution lifespan"
+      },
       "reset_lifespan_dust_bag": {
         "name": "Reset dust bag lifespan"
       },
@@ -70,17 +87,29 @@
       "reset_lifespan_round_mop": {
         "name": "Reset round mop lifespan"
       },
+      "reset_lifespan_sewage_box": {
+        "name": "Reset sewage box lifespan"
+      },
       "reset_lifespan_side_brush": {
         "name": "Reset side brush lifespan"
       },
       "reset_lifespan_station_filter": {
         "name": "Reset station filter lifespan"
       },
+      "reset_lifespan_trimmer_brush": {
+        "name": "Reset edge trimmer brush lifespan"
+      },
       "reset_lifespan_unit_care": {
         "name": "Reset unit care lifespan"
       },
       "reset_lifespan_uv_sanitizer": {
         "name": "Reset UV sanitizer lifespan"
+      },
+      "reset_lifespan_water_sink": {
+        "name": "Reset water sink lifespan"
+      },
+      "reset_lifespan_weed_rope": {
+        "name": "Reset edge trimmer line lifespan"
       },
       "station_action_clean_base": {
         "name": "Clean base"
@@ -176,6 +205,9 @@
       "lifespan_brush": {
         "name": "Main brush lifespan"
       },
+      "lifespan_cleaning_solution": {
+        "name": "Cleaning solution lifespan"
+      },
       "lifespan_dust_bag": {
         "name": "Dust bag lifespan"
       },
@@ -194,14 +226,26 @@
       "lifespan_round_mop": {
         "name": "Round mop lifespan"
       },
+      "lifespan_sewage_box": {
+        "name": "Sewage box lifespan"
+      },
       "lifespan_side_brush": {
         "name": "Side brush lifespan"
+      },
+      "lifespan_trimmer_brush": {
+        "name": "Edge trimmer brush lifespan"
       },
       "lifespan_unit_care": {
         "name": "Unit care lifespan"
       },
       "lifespan_uv_sanitizer": {
         "name": "UV sanitizer lifespan"
+      },
+      "lifespan_water_sink": {
+        "name": "Water sink lifespan"
+      },
+      "lifespan_weed_rope": {
+        "name": "Edge trimmer line lifespan"
       },
       "network_ip": {
         "name": "IP address"
@@ -224,17 +268,32 @@
       "stats_area": {
         "name": "Area cleaned"
       },
+      "stats_area_mower": {
+        "name": "Area mowed"
+      },
       "stats_time": {
         "name": "Cleaning duration"
+      },
+      "stats_time_mower": {
+        "name": "Mowing duration"
       },
       "total_stats_area": {
         "name": "Total area cleaned"
       },
+      "total_stats_area_mower": {
+        "name": "Total area mowed"
+      },
       "total_stats_cleanings": {
         "name": "Total cleanings"
       },
+      "total_stats_cleanings_mower": {
+        "name": "Total mowings"
+      },
       "total_stats_time": {
         "name": "Total cleaning duration"
+      },
+      "total_stats_time_mower": {
+        "name": "Total mowing duration"
       }
     },
     "switch": {
@@ -293,6 +352,9 @@
   "exceptions": {
     "vacuum_raw_get_positions_not_supported": {
       "message": "Retrieving the positions of the chargers and the device itself is not supported"
+    },
+    "vacuum_send_command_not_supported": {
+      "message": "The {command} command is not supported by {name}"
     },
     "vacuum_send_command_params_dict": {
       "message": "Params must be a dictionary and not a list"

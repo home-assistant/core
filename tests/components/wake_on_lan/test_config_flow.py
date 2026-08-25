@@ -1,11 +1,9 @@
 """Test the Scrape config flow."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from homeassistant import config_entries
-from homeassistant.components.wake_on_lan.const import DOMAIN
+from homeassistant.components.wake_on_lan.const import CONF_SECUREON_PASSWORD, DOMAIN
 from homeassistant.const import CONF_BROADCAST_ADDRESS, CONF_BROADCAST_PORT, CONF_MAC
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -28,6 +26,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
         result["flow_id"],
         {
             CONF_MAC: DEFAULT_MAC,
+            CONF_SECUREON_PASSWORD: "00:aa:22:bb:33:cc",
             CONF_BROADCAST_ADDRESS: "255.255.255.255",
             CONF_BROADCAST_PORT: 9,
         },
@@ -38,6 +37,7 @@ async def test_form(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
     assert result["version"] == 1
     assert result["options"] == {
         CONF_MAC: DEFAULT_MAC,
+        CONF_SECUREON_PASSWORD: "00:aa:22:bb:33:cc",
         CONF_BROADCAST_ADDRESS: "255.255.255.255",
         CONF_BROADCAST_PORT: 9,
     }
@@ -56,6 +56,7 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
+            CONF_SECUREON_PASSWORD: "ff:ee:dd:cc:bb:aa",
             CONF_BROADCAST_ADDRESS: "192.168.255.255",
             CONF_BROADCAST_PORT: 10,
         },
@@ -65,6 +66,7 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["data"] == {
         CONF_MAC: DEFAULT_MAC,
+        CONF_SECUREON_PASSWORD: "ff:ee:dd:cc:bb:aa",
         CONF_BROADCAST_ADDRESS: "192.168.255.255",
         CONF_BROADCAST_PORT: 10,
     }
@@ -73,6 +75,7 @@ async def test_options_flow(hass: HomeAssistant, loaded_entry: MockConfigEntry) 
 
     assert loaded_entry.options == {
         CONF_MAC: DEFAULT_MAC,
+        CONF_SECUREON_PASSWORD: "ff:ee:dd:cc:bb:aa",
         CONF_BROADCAST_ADDRESS: "192.168.255.255",
         CONF_BROADCAST_PORT: 10,
     }

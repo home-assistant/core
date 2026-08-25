@@ -1,7 +1,5 @@
 """Helpers for Fumis."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from typing import Any, Concatenate
 

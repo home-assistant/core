@@ -1,12 +1,13 @@
 """Base entity for zimi integrations."""
 
-from __future__ import annotations
-
 import logging
+from typing import override
 
 from zcc import ControlPoint
 from zcc.device import ControlPointDevice
 
+from homeassistant.core import HomeAssistant
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity import Entity
 
@@ -22,7 +23,12 @@ class ZimiEntity(Entity):
     _attr_has_entity_name = True
 
     def __init__(
-        self, device: ControlPointDevice, api: ControlPoint, use_device_name=True
+        self,
+        hass: HomeAssistant,
+        device: ControlPointDevice,
+        api: ControlPoint,
+        config_entry_id: str,
+        use_device_name: bool = True,
     ) -> None:
         """Initialize an HA Entity which is a ZimiDevice."""
 
@@ -36,22 +42,27 @@ class ZimiEntity(Entity):
             hw_version=device.manufacture_info.hwVersion,
             sw_version=device.manufacture_info.firmwareVersion,
             suggested_area=device.room,
-            via_device=(DOMAIN, api.mac),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                hass, (DOMAIN, api.mac), config_entry_id=config_entry_id
+            ),
         )
         if use_device_name:
             self._attr_name = device.name.strip()
         self._attr_suggested_area = device.room
 
     @property
+    @override
     def available(self) -> bool:
-        """Return True if Home Assistant is able to read the state and control the underlying device."""
+        """Return True if HA can read state and control the device."""
         return self._device.is_connected
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the events."""
         await super().async_added_to_hass()
         self._device.subscribe(self)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup ZimiLight with removal of notification prior to removal."""
         self._device.unsubscribe(self)

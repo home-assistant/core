@@ -1,9 +1,7 @@
 """Support for MQTT water heater devices."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -17,8 +15,10 @@ from homeassistant.components.water_heater import (
     STATE_HEAT_PUMP,
     STATE_HIGH_DEMAND,
     STATE_PERFORMANCE,
+    WaterHeaterCapabilityAttribute,
     WaterHeaterEntity,
     WaterHeaterEntityFeature,
+    WaterHeaterStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -78,12 +78,12 @@ DEFAULT_NAME = "MQTT Water Heater"
 
 MQTT_WATER_HEATER_ATTRIBUTES_BLOCKED = frozenset(
     {
-        water_heater.ATTR_CURRENT_TEMPERATURE,
-        water_heater.ATTR_MAX_TEMP,
-        water_heater.ATTR_MIN_TEMP,
-        water_heater.ATTR_TEMPERATURE,
-        water_heater.ATTR_OPERATION_LIST,
-        water_heater.ATTR_OPERATION_MODE,
+        WaterHeaterStateAttribute.CURRENT_TEMPERATURE,
+        WaterHeaterCapabilityAttribute.MAX_TEMP,
+        WaterHeaterCapabilityAttribute.MIN_TEMP,
+        WaterHeaterStateAttribute.TARGET_TEMPERATURE,
+        WaterHeaterCapabilityAttribute.OPERATION_LIST,
+        WaterHeaterStateAttribute.OPERATION_MODE,
     }
 )
 
@@ -191,10 +191,12 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
     _attr_target_temperature_high: float | None = None
 
     @staticmethod
+    @override
     def config_schema() -> VolSchemaType:
         """Return the config schema."""
         return DISCOVERY_SCHEMA
 
+    @override
     def _setup_from_config(self, config: ConfigType) -> None:
         """(Re)Setup the entity."""
         self._attr_operation_list = config[CONF_MODE_LIST]
@@ -285,6 +287,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             self._attr_current_operation = payload
 
     @callback
+    @override
     def _prepare_subscribe_topics(self) -> None:
         """(Re)Subscribe to topics."""
         # add subscriptions for WaterHeaterEntity
@@ -296,6 +299,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
         # add subscriptions for MqttTemperatureControlEntity
         self.prepare_subscribe_topics()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         operation_mode: str | None
@@ -303,6 +307,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             await self.async_set_operation_mode(operation_mode)
         await super().async_set_temperature(**kwargs)
 
+    @override
     async def async_set_operation_mode(self, operation_mode: str) -> None:
         """Set new operation mode."""
         payload = self._command_templates[CONF_MODE_COMMAND_TEMPLATE](operation_mode)
@@ -312,6 +317,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             self._attr_current_operation = operation_mode
             self.async_write_ha_state()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         if CONF_POWER_COMMAND_TOPIC in self._config:
@@ -320,6 +326,7 @@ class MqttWaterHeater(MqttTemperatureControlEntity, WaterHeaterEntity):
             )
             await self._publish(CONF_POWER_COMMAND_TOPIC, mqtt_payload)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if CONF_POWER_COMMAND_TOPIC in self._config:

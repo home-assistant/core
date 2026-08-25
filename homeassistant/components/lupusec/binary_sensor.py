@@ -1,10 +1,9 @@
 """Support for Lupusec Security System binary sensors."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 from functools import partial
 import logging
+from typing import override
 
 import lupupy.constants as CONST
 
@@ -38,7 +37,7 @@ async def async_setup_entry(
     devices = await hass.async_add_executor_job(partial_func)
 
     async_add_entities(
-        LupusecBinarySensor(device, config_entry.entry_id) for device in devices
+        LupusecBinarySensor(hass, device, config_entry.entry_id) for device in devices
     )
 
 
@@ -48,11 +47,13 @@ class LupusecBinarySensor(LupusecBaseSensor, BinarySensorEntity):
     _attr_name = None
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self._device.is_on
 
     @property
+    @override
     def device_class(self) -> BinarySensorDeviceClass | None:
         """Return the class of the binary sensor."""
         if self._device.generic_type not in (

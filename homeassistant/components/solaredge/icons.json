@@ -13,6 +13,9 @@
       "energy_today": {
         "default": "mdi:solar-power"
       },
+      "grid_flow_direction": {
+        "default": "mdi:transmission-tower"
+      },
       "grid_power": {
         "default": "mdi:power-plug"
       },
@@ -24,6 +27,9 @@
       },
       "solar_power": {
         "default": "mdi:solar-power"
+      },
+      "storage_flow_direction": {
+        "default": "mdi:battery-charging"
       },
       "storage_power": {
         "default": "mdi:car-battery"

@@ -1,7 +1,5 @@
 """Base entity for the LaMetric integration."""
 
-from __future__ import annotations
-
 from homeassistant.helpers.device_registry import (
     CONNECTION_BLUETOOTH,
     CONNECTION_NETWORK_MAC,
@@ -22,7 +20,7 @@ class LaMetricEntity(CoordinatorEntity[LaMetricDataUpdateCoordinator]):
     def __init__(self, coordinator: LaMetricDataUpdateCoordinator) -> None:
         """Initialize the LaMetric entity."""
         super().__init__(coordinator=coordinator)
-        connections = {(CONNECTION_NETWORK_MAC, format_mac(coordinator.data.wifi.mac))}
+        connections = {(CONNECTION_NETWORK_MAC, coordinator.data.wifi.mac)}
         if coordinator.data.bluetooth is not None:
             connections.add(
                 (CONNECTION_BLUETOOTH, format_mac(coordinator.data.bluetooth.address))

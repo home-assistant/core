@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from tiltpi import TiltHydrometerData
 
@@ -12,7 +12,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import UnitOfTemperature
+from homeassistant.const import ATTR_TEMPERATURE, UnitOfTemperature
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
@@ -23,7 +23,6 @@ from .entity import TiltEntity
 # Coordinator is used to centralize the data updates
 PARALLEL_UPDATES = 0
 
-ATTR_TEMPERATURE = "temperature"
 ATTR_GRAVITY = "gravity"
 
 
@@ -88,6 +87,7 @@ class TiltSensor(TiltEntity, SensorEntity):
         self._attr_unique_id = f"{hydrometer.mac_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the sensor value."""
         return self.entity_description.value_fn(self.current_hydrometer)

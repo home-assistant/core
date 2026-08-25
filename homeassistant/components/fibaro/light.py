@@ -1,9 +1,7 @@
 """Support for Fibaro lights."""
 
-from __future__ import annotations
-
 from contextlib import suppress
-from typing import Any
+from typing import Any, override
 
 from pyfibaro.fibaro_device import DeviceModel
 
@@ -102,6 +100,7 @@ class FibaroLight(FibaroEntity, LightEntity):
         super().__init__(fibaro_device)
         self.entity_id = ENTITY_ID_FORMAT.format(self.ha_id)
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         if ATTR_BRIGHTNESS in kwargs:
@@ -126,10 +125,12 @@ class FibaroLight(FibaroEntity, LightEntity):
         # The simplest case is left for last. No dimming, just switch on
         self.call_turn_on()
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         self.call_turn_off()
 
+    @override
     def update(self) -> None:
         """Update the state."""
         super().update()

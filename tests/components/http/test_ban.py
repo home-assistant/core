@@ -12,6 +12,7 @@ from aiohttp.web_middlewares import middleware
 import pytest
 
 from homeassistant.components import http
+from homeassistant.components.http import DOMAIN
 from homeassistant.components.http.ban import (
     IP_BANS_FILE,
     KEY_BAN_MANAGER,
@@ -82,18 +83,19 @@ async def test_access_from_banned_ip_with_partially_broken_yaml_file(
     aiohttp_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test accessing to server from banned IP. Both trusted and not.
-
-    We inject some garbage into the yaml file to make sure it can
-    still load the bans.
-    """
+    """Test loading IP bans from a partially broken YAML file."""
     app = web.Application()
     app[KEY_HASS] = hass
     setup_bans(hass, app, 5)
     set_real_ip = mock_real_ip(app)
 
-    data = {banned_ip: {"banned_at": "2016-11-16T19:20:03"} for banned_ip in BANNED_IPS}
-    data["5.3.3.3"] = {"banned_at": "garbage"}
+    data = {
+        BANNED_IPS[0]: {"banned_at": "2016-11-16T19:20:03"},
+        "5.3.3.3": {"banned_at": "garbage"},
+        "5.3.3.4": {},
+        "5.3.3.5": None,
+        BANNED_IPS[1]: {"banned_at": "2016-11-16T19:20:03"},
+    }
 
     with patch(
         "homeassistant.components.http.ban.load_yaml_config_file",
@@ -101,17 +103,18 @@ async def test_access_from_banned_ip_with_partially_broken_yaml_file(
     ):
         client = await aiohttp_client(app)
 
-    for remote_addr in BANNED_IPS:
+    for remote_addr in (*BANNED_IPS, "5.3.3.4"):
         set_real_ip(remote_addr)
         resp = await client.get("/")
         assert resp.status == HTTPStatus.FORBIDDEN
 
-    # Ensure garbage data is ignored
-    set_real_ip("5.3.3.3")
-    resp = await client.get("/")
-    assert resp.status == HTTPStatus.NOT_FOUND
+    # Ensure malformed data is ignored
+    for remote_addr in ("5.3.3.3", "5.3.3.5"):
+        set_real_ip(remote_addr)
+        resp = await client.get("/")
+        assert resp.status == HTTPStatus.NOT_FOUND
 
-    assert "Failed to load IP ban" in caplog.text
+    assert caplog.text.count("Failed to load IP ban") == 2
 
 
 async def test_access_from_banned_ip_with_invalid_ip_entry(
@@ -148,7 +151,8 @@ async def test_access_from_banned_ip_with_invalid_ip_entry(
     manager = app[KEY_BAN_MANAGER]
     assert len(manager.ip_bans_lookup) == len(BANNED_IPS)
 
-    # Valid banned IPs should still be blocked (even though they came after invalid ones)
+    # Valid banned IPs should still be blocked (even though they came after invalid
+    # ones)
     for remote_addr in BANNED_IPS:
         set_real_ip(remote_addr)
         resp = await client.get("/")
@@ -251,6 +255,14 @@ async def test_ip_ban_manager_never_started(
     "os_info",
     "store_info",
     "supervisor_info",
+    "supervisor_root_info",
+    "homeassistant_info",
+    "host_info",
+    "network_info",
+    "addons_list",
+    "addon_info",
+    "homeassistant_stats",
+    "supervisor_stats",
     "ingress_panels",
 )
 async def test_access_from_supervisor_ip(
@@ -301,9 +313,9 @@ async def test_access_from_supervisor_ip(
 
 async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_bans") as mock_setup:
+    with patch("homeassistant.components.http.server.setup_bans") as mock_setup:
         await async_setup_component(
-            hass, "http", {"http": {http.CONF_IP_BAN_ENABLED: False}}
+            hass, DOMAIN, {"http": {http.CONF_IP_BAN_ENABLED: False}}
         )
 
     assert len(mock_setup.mock_calls) == 0
@@ -311,8 +323,8 @@ async def test_ban_middleware_not_loaded_by_config(hass: HomeAssistant) -> None:
 
 async def test_ban_middleware_loaded_by_default(hass: HomeAssistant) -> None:
     """Test accessing to server from banned IP when feature is off."""
-    with patch("homeassistant.components.http.setup_bans") as mock_setup:
-        await async_setup_component(hass, "http", {"http": {}})
+    with patch("homeassistant.components.http.server.setup_bans") as mock_setup:
+        await async_setup_component(hass, DOMAIN, {"http": {}})
 
     assert len(mock_setup.mock_calls) == 1
 
@@ -366,12 +378,15 @@ async def test_ip_bans_file_creation(
         assert len(notifications) == 2
         assert (
             notifications["http-login"]["message"]
-            == "Login attempt or request with invalid authentication from example.com (200.201.202.204). See the log for details."
+            == "Login attempt or request with invalid authentication"
+            " from example.com (200.201.202.204)."
+            " See the log for details."
         )
 
         assert (
-            "Login attempt or request with invalid authentication from example.com (200.201.202.204). Requested URL: '/example'."
-            in caplog.text
+            "Login attempt or request with invalid authentication"
+            " from example.com (200.201.202.204)."
+            " Requested URL: '/example'." in caplog.text
         )
 
 

@@ -1,9 +1,9 @@
 """Config flow for Alexa Devices integration."""
 
-from __future__ import annotations
-
+import asyncio
 from collections.abc import Mapping
-from typing import Any
+from pathlib import Path
+from typing import Any, override
 
 from aioamazondevices.api import AmazonEchoApi
 from aioamazondevices.exceptions import (
@@ -11,6 +11,7 @@ from aioamazondevices.exceptions import (
     CannotConnect,
     CannotRetrieveData,
 )
+from aioamazondevices.structures import AmazonSaveDataConfig
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -21,6 +22,13 @@ import homeassistant.helpers.config_validation as cv
 
 from .const import CONF_LOGIN_DATA, DOMAIN
 
+STEP_USER_DATA_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_USERNAME): cv.string,
+        vol.Required(CONF_PASSWORD): cv.string,
+        vol.Required(CONF_CODE): cv.string,
+    }
+)
 STEP_REAUTH_DATA_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_PASSWORD): cv.string,
@@ -43,6 +51,9 @@ async def validate_input(hass: HomeAssistant, data: dict[str, Any]) -> dict[str,
         session,
         data[CONF_USERNAME],
         data[CONF_PASSWORD],
+        save_data=AmazonSaveDataConfig(
+            path=Path(hass.config.path(DOMAIN)),
+        ),
     )
 
     return await api.login.login_mode_interactive(data[CONF_CODE])
@@ -54,39 +65,71 @@ class AmazonDevicesConfigFlow(ConfigFlow, domain=DOMAIN):
     VERSION = 1
     MINOR_VERSION = 3
 
+    _login_data: dict[str, Any]
+
+    def __init__(self) -> None:
+        """Initialize a new AmazonDevicesConfigFlow."""
+        self._login_task: asyncio.Task[dict[str, Any]] | None = None
+        self._login_errors: dict[str, str] = {}
+        self._login_result: dict[str, Any] = {}
+
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Handle the initial step."""
-        errors = {}
-        if user_input:
-            try:
-                data = await validate_input(self.hass, user_input)
-            except CannotConnect:
-                errors["base"] = "cannot_connect"
-            except CannotAuthenticate:
-                errors["base"] = "invalid_auth"
-            except CannotRetrieveData:
-                errors["base"] = "cannot_retrieve_data"
-            else:
-                await self.async_set_unique_id(data["customer_info"]["user_id"])
-                self._abort_if_unique_id_configured()
-                user_input.pop(CONF_CODE)
-                return self.async_create_entry(
-                    title=user_input[CONF_USERNAME],
-                    data=user_input | {CONF_LOGIN_DATA: data},
-                )
+        if user_input is not None:
+            self._login_data = user_input
+            return await self.async_step_login()
 
         return self.async_show_form(
             step_id="user",
-            errors=errors,
-            data_schema=vol.Schema(
-                {
-                    vol.Required(CONF_USERNAME): cv.string,
-                    vol.Required(CONF_PASSWORD): cv.string,
-                    vol.Required(CONF_CODE): cv.string,
-                }
-            ),
+            data_schema=STEP_USER_DATA_SCHEMA,
+            errors=self._login_errors,
+        )
+
+    async def async_step_login(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Log in and scan for devices, showing progress to the user."""
+        if (login_task := self._login_task) and login_task.done():
+            self._login_errors = {}
+            try:
+                self._login_result = login_task.result()
+            except CannotConnect:
+                self._login_errors = {"base": "cannot_connect"}
+            except CannotAuthenticate:
+                self._login_errors = {"base": "invalid_auth"}
+            except CannotRetrieveData:
+                self._login_errors = {"base": "cannot_retrieve_data"}
+            finally:
+                self._login_task = None
+
+            return self.async_show_progress_done(
+                next_step_id="user" if self._login_errors else "login_done"
+            )
+
+        if self._login_task is None:
+            self._login_task = self.hass.async_create_task(
+                validate_input(self.hass, self._login_data)
+            )
+
+        return self.async_show_progress(
+            step_id="login",
+            progress_action="login",
+            progress_task=self._login_task,
+        )
+
+    async def async_step_login_done(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Create the config entry after a successful login."""
+        await self.async_set_unique_id(self._login_result["customer_info"]["user_id"])
+        self._abort_if_unique_id_configured()
+        self._login_data.pop(CONF_CODE)
+        return self.async_create_entry(
+            title=self._login_data[CONF_USERNAME],
+            data=self._login_data | {CONF_LOGIN_DATA: self._login_result},
         )
 
     async def async_step_reauth(

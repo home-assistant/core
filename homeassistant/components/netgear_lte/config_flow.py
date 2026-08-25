@@ -1,8 +1,6 @@
 """Config flow for Netgear LTE integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from aiohttp.cookiejar import CookieJar
 from eternalegypt import Error, Modem
@@ -20,6 +18,7 @@ from .const import DEFAULT_HOST, DOMAIN, MANUFACTURER
 class NetgearLTEFlowHandler(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Netgear LTE."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

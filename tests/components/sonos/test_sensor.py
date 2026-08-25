@@ -43,9 +43,9 @@ async def test_entity_registry_unsupported(
     await async_setup_sonos()
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    assert "media_player.zone_a" in entity_registry.entities
-    assert "sensor.zone_a_battery" not in entity_registry.entities
-    assert "binary_sensor.zone_a_charging" not in entity_registry.entities
+    assert "media_player.zone_a_zone_a" in entity_registry.entities
+    assert "sensor.zone_a_zone_a_battery" not in entity_registry.entities
+    assert "binary_sensor.zone_a_zone_a_charging" not in entity_registry.entities
 
 
 async def test_entity_registry_supported(
@@ -159,18 +159,18 @@ async def test_battery_on_s1(
     subscription = soco.deviceProperties.subscribe.return_value
     sub_callback = subscription.callback
 
-    assert "sensor.zone_a_battery" not in entity_registry.entities
-    assert "binary_sensor.zone_a_charging" not in entity_registry.entities
+    assert "sensor.zone_a_zone_a_battery" not in entity_registry.entities
+    assert "binary_sensor.zone_a_zone_a_charging" not in entity_registry.entities
 
     # Update the speaker with a callback event
     sub_callback(device_properties_event)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    battery = entity_registry.entities["sensor.zone_a_battery"]
+    battery = entity_registry.entities["sensor.zone_a_zone_a_battery"]
     battery_state = hass.states.get(battery.entity_id)
     assert battery_state.state == "100"
 
-    power = entity_registry.entities["binary_sensor.zone_a_charging"]
+    power = entity_registry.entities["binary_sensor.zone_a_zone_a_charging"]
     power_state = hass.states.get(power.entity_id)
     assert power_state.state == STATE_OFF
     assert power_state.attributes.get(ATTR_BATTERY_POWER_SOURCE) == "BATTERY"

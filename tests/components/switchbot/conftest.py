@@ -52,7 +52,7 @@ def mock_entry_factory():
 
 @pytest.fixture
 def mock_entry_encrypted_factory():
-    """Fixture to create a MockConfigEntry with an encryption key and a customizable sensor type."""
+    """Create a MockConfigEntry with encryption key and sensor type."""
 
     def _create_entry(sensor_type: str = "lock") -> MockConfigEntry:
         options: dict[str, int | bool] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}

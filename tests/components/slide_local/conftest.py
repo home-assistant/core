@@ -36,7 +36,7 @@ def mock_config_entry() -> MockConfigEntry:
 
 @pytest.fixture
 def mock_slide_api() -> Generator[AsyncMock]:
-    """Build a fixture for the SlideLocalApi that connects successfully and returns one device."""
+    """Build a fixture for the SlideLocalApi that connects successfully."""
 
     with (
         patch(

@@ -1,7 +1,5 @@
 """Support for August devices."""
 
-from __future__ import annotations
-
 from pathlib import Path
 from typing import cast
 
@@ -94,7 +92,9 @@ async def async_setup_august(
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: AugustConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant,
+    config_entry: AugustConfigEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove august config entry from a device if its no longer present."""
     return not any(

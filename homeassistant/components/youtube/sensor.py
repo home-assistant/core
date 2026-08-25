@@ -1,10 +1,8 @@
 """Support for YouTube Sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorEntity,
@@ -17,12 +15,15 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
 from .const import (
+    ATTR_LATEST_SHORT,
     ATTR_LATEST_VIDEO,
+    ATTR_LATEST_VIDEO_NON_SHORT,
     ATTR_PUBLISHED_AT,
     ATTR_SUBSCRIBER_COUNT,
     ATTR_THUMBNAIL,
     ATTR_TITLE,
     ATTR_TOTAL_VIEWS,
+    ATTR_VIDEO_COUNT,
     ATTR_VIDEO_ID,
 )
 from .coordinator import YouTubeConfigEntry
@@ -52,6 +53,30 @@ SENSOR_TYPES = [
         },
     ),
     YouTubeSensorEntityDescription(
+        key="latest_short",
+        translation_key="latest_short",
+        available_fn=lambda channel: channel[ATTR_LATEST_SHORT] is not None,
+        value_fn=lambda channel: channel[ATTR_LATEST_SHORT][ATTR_TITLE],
+        entity_picture_fn=lambda channel: channel[ATTR_LATEST_SHORT][ATTR_THUMBNAIL],
+        attributes_fn=lambda channel: {
+            ATTR_VIDEO_ID: channel[ATTR_LATEST_SHORT][ATTR_VIDEO_ID],
+            ATTR_PUBLISHED_AT: channel[ATTR_LATEST_SHORT][ATTR_PUBLISHED_AT],
+        },
+    ),
+    YouTubeSensorEntityDescription(
+        key="latest_video",
+        translation_key="latest_video",
+        available_fn=lambda channel: channel[ATTR_LATEST_VIDEO_NON_SHORT] is not None,
+        value_fn=lambda channel: channel[ATTR_LATEST_VIDEO_NON_SHORT][ATTR_TITLE],
+        entity_picture_fn=lambda channel: channel[ATTR_LATEST_VIDEO_NON_SHORT][
+            ATTR_THUMBNAIL
+        ],
+        attributes_fn=lambda channel: {
+            ATTR_VIDEO_ID: channel[ATTR_LATEST_VIDEO_NON_SHORT][ATTR_VIDEO_ID],
+            ATTR_PUBLISHED_AT: channel[ATTR_LATEST_VIDEO_NON_SHORT][ATTR_PUBLISHED_AT],
+        },
+    ),
+    YouTubeSensorEntityDescription(
         key="subscribers",
         translation_key="subscribers",
         native_unit_of_measurement="subscribers",
@@ -70,6 +95,17 @@ SENSOR_TYPES = [
         value_fn=lambda channel: channel[ATTR_TOTAL_VIEWS],
         entity_picture_fn=lambda channel: channel[ATTR_ICON],
         attributes_fn=None,
+    ),
+    YouTubeSensorEntityDescription(
+        key="videos",
+        translation_key="videos",
+        native_unit_of_measurement="videos",
+        state_class=SensorStateClass.TOTAL,
+        available_fn=lambda _: True,
+        value_fn=lambda channel: channel[ATTR_VIDEO_COUNT],
+        entity_picture_fn=lambda _: None,
+        attributes_fn=None,
+        icon="mdi:filmstrip-box-multiple",
     ),
 ]
 
@@ -94,6 +130,7 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
     entity_description: YouTubeSensorEntityDescription
 
     @property
+    @override
     def available(self) -> bool:
         """Return if the entity is available."""
         return super().available and self.entity_description.available_fn(
@@ -101,11 +138,13 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         return self.entity_description.value_fn(self.coordinator.data[self._channel_id])
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the value reported by the sensor."""
         if not self.available:
@@ -115,6 +154,7 @@ class YouTubeSensor(YouTubeChannelEntity, SensorEntity):
         )
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the extra state attributes."""
         if self.entity_description.attributes_fn:

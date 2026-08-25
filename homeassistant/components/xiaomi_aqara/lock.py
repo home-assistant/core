@@ -1,8 +1,6 @@
 """Support for Xiaomi Aqara locks."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from xiaomi_gateway import XiaomiGateway
 
@@ -55,6 +53,7 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
         super().__init__(device, name, xiaomi_hub, config_entry)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, int]:
         """Return the state attributes."""
         return {ATTR_VERIFIED_WRONG_TIMES: self._verified_wrong_times}
@@ -65,6 +64,7 @@ class XiaomiAqaraLock(LockEntity, XiaomiDevice):
         self._attr_is_locked = True
         self.async_write_ha_state()
 
+    @override
     def parse_data(self, data, raw_data):
         """Parse data sent by gateway."""
         if (value := data.get(VERIFIED_WRONG_KEY)) is not None:

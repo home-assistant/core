@@ -68,7 +68,7 @@ async def test_availability(
     freezer: FrozenDateTimeFactory,
     side_effect: Exception,
 ) -> None:
-    """Ensure that we mark the entities unavailable correctly when service is offline."""
+    """Ensure entities are marked unavailable when service is offline."""
     entity_id = "sensor.test_abc_type_total_power"
 
     state = hass.states.get(entity_id)

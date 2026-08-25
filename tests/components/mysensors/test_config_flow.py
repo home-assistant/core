@@ -1,7 +1,5 @@
 """Test the MySensors config flow."""
 
-from __future__ import annotations
-
 from typing import Any
 from unittest.mock import patch
 
@@ -76,6 +74,7 @@ async def test_config_mqtt(hass: HomeAssistant, mqtt: None) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "errors" in result:
         assert not result["errors"]
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -114,7 +113,9 @@ async def test_config_serial(hass: HomeAssistant) -> None:
     flow_id = step["flow_id"]
 
     with (
-        patch(  # mock is_serial_port because otherwise the test will be platform dependent (/dev/ttyACMx vs COMx)
+        patch(
+            # mock is_serial_port because otherwise the test will
+            # be platform dependent (/dev/ttyACMx vs COMx)
             "homeassistant.components.mysensors.config_flow.is_serial_port",
             return_value=True,
         ),
@@ -137,6 +138,7 @@ async def test_config_serial(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "errors" in result:
         assert not result["errors"]
     assert result["type"] is FlowResultType.CREATE_ENTRY
@@ -176,6 +178,7 @@ async def test_config_tcp(hass: HomeAssistant) -> None:
         )
         await hass.async_block_till_done()
 
+    # pylint: disable-next=home-assistant-test-non-deterministic
     if "errors" in result:
         assert not result["errors"]
     assert result["type"] is FlowResultType.CREATE_ENTRY

@@ -1,7 +1,5 @@
 """Base entity for OpenAI."""
 
-from __future__ import annotations
-
 import base64
 from collections.abc import AsyncGenerator, Callable, Iterable
 import json
@@ -43,7 +41,10 @@ from openai.types.responses import (
     ToolParam,
     WebSearchToolParam,
 )
-from openai.types.responses.response_create_params import ResponseCreateParamsStreaming
+from openai.types.responses.response_create_params import (
+    Reasoning,
+    ResponseCreateParamsStreaming,
+)
 from openai.types.responses.response_input_param import (
     FunctionCallOutput,
     ImageGenerationCall as ImageGenerationCallParam,
@@ -55,8 +56,8 @@ from openai.types.responses.tool_param import (
     ImageGeneration,
 )
 from openai.types.responses.web_search_tool_param import UserLocation
+from probatio import to_openapi
 import voluptuous as vol
-from voluptuous_openapi import convert
 
 from homeassistant.components import conversation
 from homeassistant.config_entries import ConfigSubentry
@@ -72,6 +73,7 @@ from .const import (
     CONF_CODE_INTERPRETER,
     CONF_IMAGE_MODEL,
     CONF_MAX_TOKENS,
+    CONF_PRO_MODE,
     CONF_REASONING_EFFORT,
     CONF_REASONING_SUMMARY,
     CONF_SERVICE_TIER,
@@ -92,6 +94,7 @@ from .const import (
     RECOMMENDED_CHAT_MODEL,
     RECOMMENDED_IMAGE_MODEL,
     RECOMMENDED_MAX_TOKENS,
+    RECOMMENDED_PRO_MODE,
     RECOMMENDED_REASONING_EFFORT,
     RECOMMENDED_REASONING_SUMMARY,
     RECOMMENDED_SERVICE_TIER,
@@ -142,7 +145,7 @@ def _format_structured_output(
     schema: vol.Schema, llm_api: llm.APIInstance | None
 ) -> dict[str, Any]:
     """Format the schema to be compatible with OpenAI API."""
-    result: dict[str, Any] = convert(
+    result: dict[str, Any] = to_openapi(
         schema,
         custom_serializer=(
             llm_api.custom_serializer if llm_api else llm.selector_serializer
@@ -159,7 +162,7 @@ def _format_tool(
 ) -> FunctionToolParam:
     """Format tool specification."""
     unsupported_keys = {"oneOf", "anyOf", "allOf", "enum", "not"}
-    schema = convert(tool.parameters, custom_serializer=custom_serializer)
+    schema = to_openapi(tool.parameters, custom_serializer=custom_serializer)
     if unsupported_keys.intersection(schema):
         schema = {k: v for k, v in schema.items() if k not in unsupported_keys}
 
@@ -496,7 +499,7 @@ class OpenAIBaseLLMEntity(Entity):
             entry_type=dr.DeviceEntryType.SERVICE,
         )
 
-    async def _async_handle_chat_log(
+    async def _async_handle_chat_log(  # noqa: C901
         self,
         chat_log: conversation.ChatLog,
         structure_name: str | None = None,
@@ -520,16 +523,24 @@ class OpenAIBaseLLMEntity(Entity):
         )
 
         if model_args["model"].startswith(("o", "gpt-5")):
-            model_args["reasoning"] = {
+            reasoning: Reasoning = {
                 "effort": options.get(
                     CONF_REASONING_EFFORT, RECOMMENDED_REASONING_EFFORT
                 )
                 if not model_args["model"].startswith("gpt-5-pro")
                 else "high",  # GPT-5 pro only supports reasoning.effort: high
-                "summary": options.get(
-                    CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
-                ),
             }
+
+            reasoning_summary = options.get(
+                CONF_REASONING_SUMMARY, RECOMMENDED_REASONING_SUMMARY
+            )
+            if reasoning_summary != "off":
+                reasoning["summary"] = reasoning_summary
+
+            if options.get(CONF_PRO_MODE, RECOMMENDED_PRO_MODE):
+                reasoning["mode"] = "pro"
+
+            model_args["reasoning"] = reasoning
             model_args["include"] = ["reasoning.encrypted_content"]
 
         if (
@@ -591,8 +602,8 @@ class OpenAIBaseLLMEntity(Entity):
                     )
                 )
 
-                if "reasoning" not in model_args:
-                    # Reasoning models handle this correctly with just a prompt
+                if not model_args["model"].startswith("o"):
+                    # o-series models handle this correctly with just a prompt
                     remove_citations = True
 
             tools.append(web_search)
@@ -661,15 +672,13 @@ class OpenAIBaseLLMEntity(Entity):
             try:
                 stream = await client.responses.create(**model_args)
 
+                content_stream = chat_log.async_add_delta_content_stream(
+                    self.entity_id,
+                    _transform_stream(chat_log, stream, remove_citations),
+                )
                 messages.extend(
                     _convert_content_to_param(
-                        [
-                            content
-                            async for content in chat_log.async_add_delta_content_stream(
-                                self.entity_id,
-                                _transform_stream(chat_log, stream, remove_citations),
-                            )
-                        ]
+                        [content async for content in content_stream]
                     )
                 )
             except openai.RateLimitError as err:
@@ -678,7 +687,8 @@ class OpenAIBaseLLMEntity(Entity):
                     and "resource unavailable" in (err.message or "").lower()
                 ):
                     LOGGER.info(
-                        "Flex tier is not available at the moment, continuing with default tier"
+                        "Flex tier is not available at the moment,"
+                        " continuing with default tier"
                     )
                     model_args["service_tier"] = "default"
                     continue

@@ -67,7 +67,7 @@ async def test_entry_startup_and_unload(
     verify_ssl: bool | None,
     enable_push: bool | None,
 ) -> None:
-    """Test imap entry startup and unload with push and polling coordinator and alternate ciphers."""
+    """Test imap entry startup/unload with push/polling and ciphers."""
     config = MOCK_CONFIG.copy()
     if cipher_list is not None:
         config["ssl_cipher_list"] = cipher_list

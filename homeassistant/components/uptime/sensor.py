@@ -1,7 +1,5 @@
 """Platform to retrieve uptime for Home Assistant."""
 
-from __future__ import annotations
-
 from homeassistant.components.sensor import SensorDeviceClass, SensorEntity
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
@@ -24,7 +22,7 @@ async def async_setup_entry(
 class UptimeSensor(SensorEntity):
     """Representation of an uptime sensor."""
 
-    _attr_device_class = SensorDeviceClass.TIMESTAMP
+    _attr_device_class = SensorDeviceClass.UPTIME
     _attr_has_entity_name = True
     _attr_name = None
     _attr_should_poll = False

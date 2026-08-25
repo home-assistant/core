@@ -1,6 +1,4 @@
-"""Constant for AWS component."""
-
-from __future__ import annotations
+"""Constant for AWS integration."""
 
 from typing import TYPE_CHECKING
 

@@ -2,7 +2,6 @@
 
 from unittest.mock import Mock
 
-import pytest
 from soco import SoCo
 
 from homeassistant.components.sonos.const import (
@@ -19,9 +18,6 @@ from .conftest import SonosMockEvent, SonosMockSubscribe
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 
-@pytest.mark.skip(
-    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
-)
 async def test_subscription_repair_issues(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
@@ -44,13 +40,12 @@ async def test_subscription_repair_issues(
 
     # Ensure the issue still exists after reload
     assert await hass.config_entries.async_reload(config_entry.entry_id)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert issue_registry.async_get_issue(DOMAIN, SUB_FAIL_ISSUE_ID)
 
     # Ensure the issue has been removed after a successful subscription callback
     variables = {"ZoneGroupState": zgs_discovery}
     event = SonosMockEvent(soco, soco.zoneGroupTopology, variables)
     sub_callback(event)
-    await hass.async_block_till_done()
-    assert not issue_registry.async_get_issue(DOMAIN, SUB_FAIL_ISSUE_ID)
     await hass.async_block_till_done(wait_background_tasks=True)
+    assert not issue_registry.async_get_issue(DOMAIN, SUB_FAIL_ISSUE_ID)

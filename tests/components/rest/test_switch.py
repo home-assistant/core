@@ -41,6 +41,7 @@ from homeassistant.const import (
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.setup import async_setup_component
@@ -308,18 +309,20 @@ async def test_turn_on_status_not_ok(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     route = respx.post(RESOURCE) % HTTPStatus.INTERNAL_SERVER_ERROR
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.foo"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.foo"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "turn_on_failed"
 
     last_call = route.calls[-1]
     last_request: httpx.Request = last_call.request
     assert last_request.content.decode() == "ON"
-    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
 
 @respx.mock
@@ -328,15 +331,16 @@ async def test_turn_on_timeout(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     respx.post(RESOURCE).mock(side_effect=httpx.TimeoutException(""))
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_ON,
-        {ATTR_ENTITY_ID: "switch.foo"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: "switch.foo"},
+            blocking=True,
+        )
 
-    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "error_communicating"
 
 
 @respx.mock
@@ -370,19 +374,20 @@ async def test_turn_off_status_not_ok(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     route = respx.post(RESOURCE) % HTTPStatus.INTERNAL_SERVER_ERROR
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.foo"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.foo"},
+            blocking=True,
+        )
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "turn_off_failed"
 
     last_call = route.calls[-1]
     last_request: httpx.Request = last_call.request
     assert last_request.content.decode() == "OFF"
-
-    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
 
 
 @respx.mock
@@ -391,15 +396,16 @@ async def test_turn_off_timeout(hass: HomeAssistant) -> None:
     await _async_setup_test_switch(hass)
 
     respx.post(RESOURCE).mock(side_effect=httpx.TimeoutException(""))
-    await hass.services.async_call(
-        SWITCH_DOMAIN,
-        SERVICE_TURN_OFF,
-        {ATTR_ENTITY_ID: "switch.foo"},
-        blocking=True,
-    )
-    await hass.async_block_till_done()
+    with pytest.raises(HomeAssistantError) as exc_info:
+        await hass.services.async_call(
+            SWITCH_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: "switch.foo"},
+            blocking=True,
+        )
 
-    assert hass.states.get("switch.foo").state == STATE_UNKNOWN
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "error_communicating"
 
 
 @respx.mock

@@ -1,9 +1,7 @@
 """Test the Dropbox config flow."""
 
-from __future__ import annotations
-
 from types import SimpleNamespace
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, MagicMock
 
 import pytest
 from yarl import URL
@@ -21,6 +19,7 @@ from homeassistant.helpers import config_entry_oauth2_flow
 
 from .conftest import ACCOUNT_EMAIL, ACCOUNT_ID, CLIENT_ID
 
+from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 from tests.typing import ClientSessionGenerator
 
@@ -132,6 +131,54 @@ async def test_already_configured(
 
 @pytest.mark.usefixtures("current_request_with_host")
 @pytest.mark.parametrize(
+    ("token", "expected_step"),
+    [
+        (
+            {
+                "access_token": "mock-access-token",
+                "expires_at": 9_999_999_999,
+                "scope": " ".join(OAUTH2_SCOPES),
+            },
+            "reauth_confirm",
+        ),
+        (
+            {
+                "access_token": "mock-access-token",
+                "refresh_token": "mock-refresh-token",
+                "expires_at": 9_999_999_999,
+                "scope": "account_info.read files.content.read files.content.write",
+            },
+            "reauth_permissions",
+        ),
+    ],
+    ids=["missing_refresh_token", "missing_scope"],
+)
+async def test_reauth_confirm_step(
+    hass: HomeAssistant,
+    mock_config_entry,
+    token: dict[str, object],
+    expected_step: str,
+) -> None:
+    """Test reauth shows the correct confirmation step for the broken token."""
+
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, "token": token}
+    )
+
+    result = await mock_config_entry.start_reauth_flow(hass)
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == expected_step
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "auth"
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
     (
         "new_account_info",
         "expected_reason",
@@ -177,6 +224,85 @@ async def test_reauth_flow(
     assert result["step_id"] == "reauth_confirm"
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    state = config_entry_oauth2_flow._encode_jwt(
+        hass,
+        {
+            "flow_id": result["flow_id"],
+            "redirect_uri": "https://example.com/auth/external/callback",
+        },
+    )
+
+    client = await hass_client_no_auth()
+    resp = await client.get(f"/auth/external/callback?code=abcd&state={state}")
+    assert resp.status == 200
+
+    aioclient_mock.post(
+        OAUTH2_TOKEN,
+        json={
+            "refresh_token": "mock-refresh-token",
+            "access_token": "updated-access-token",
+            "token_type": "Bearer",
+            "expires_in": 120,
+        },
+    )
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == expected_reason
+    assert mock_setup_entry.await_count == expected_setup_calls
+
+    assert mock_config_entry.data["token"]["access_token"] == expected_access_token
+
+
+@pytest.mark.usefixtures("current_request_with_host")
+@pytest.mark.parametrize(
+    (
+        "new_account_info",
+        "expected_reason",
+        "expected_setup_calls",
+        "expected_access_token",
+    ),
+    [
+        (
+            SimpleNamespace(account_id=ACCOUNT_ID, email=ACCOUNT_EMAIL),
+            "reconfigure_successful",
+            1,
+            "updated-access-token",
+        ),
+        (
+            SimpleNamespace(account_id="dbid:different", email="other@example.com"),
+            "wrong_account",
+            0,
+            "mock-access-token",
+        ),
+    ],
+    ids=["success", "wrong_account"],
+)
+async def test_reconfigure_flow(
+    hass: HomeAssistant,
+    hass_client_no_auth: ClientSessionGenerator,
+    aioclient_mock: AiohttpClientMocker,
+    mock_config_entry: MockConfigEntry,
+    mock_dropbox_client: MagicMock,
+    mock_setup_entry: AsyncMock,
+    new_account_info: SimpleNamespace,
+    expected_reason: str,
+    expected_setup_calls: int,
+    expected_access_token: str,
+) -> None:
+    """Test reconfiguration flow outcomes."""
+
+    mock_config_entry.add_to_hass(hass)
+
+    mock_dropbox_client.get_account_info.return_value = new_account_info
+
+    result = await mock_config_entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.EXTERNAL_STEP
+    assert result["step_id"] == "auth"
 
     state = config_entry_oauth2_flow._encode_jwt(
         hass,

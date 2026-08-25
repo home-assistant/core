@@ -236,8 +236,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
 
-        # Zone bypass switches are not currently created due to an issue with some panels.
-        # These switches will be re-added in the future after some further refactoring of the integration.
+        # Zone bypass switches are not currently created due
+        # to an issue with some panels. These switches will be
+        # re-added in the future after some further refactoring
+        # of the integration.
 
     hass.services.async_register(
         DOMAIN, SERVICE_CUSTOM_FUNCTION, handle_custom_function, schema=SERVICE_SCHEMA

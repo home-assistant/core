@@ -1,10 +1,10 @@
 """The Portainer integration."""
 
-from __future__ import annotations
-
+from datetime import timedelta
 import logging
+from typing import TYPE_CHECKING
 
-from pyportainer import Portainer
+from pyportainer import Portainer, PortainerImageWatcher
 from pyportainer.exceptions import PortainerError
 
 from homeassistant.config_entries import ConfigEntry
@@ -14,25 +14,29 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STOP,
     Platform,
 )
-from homeassistant.core import HomeAssistant
+from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.helpers.aiohttp_client import async_create_clientsession
 import homeassistant.helpers.config_validation as cv
 import homeassistant.helpers.device_registry as dr
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 import homeassistant.helpers.entity_registry as er
+from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from .const import API_MAX_RETRIES, DOMAIN
-from .coordinator import PortainerCoordinator
+from .coordinator import PortainerCoordinator, PortainerDockerDiskSpaceCoordinator
 from .services import async_setup_services
 
 _PLATFORMS: list[Platform] = [
     Platform.BINARY_SENSOR,
     Platform.BUTTON,
+    Platform.EVENT,
     Platform.SENSOR,
     Platform.SWITCH,
+    Platform.UPDATE,
 ]
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
@@ -45,21 +49,96 @@ _LOGGER = logging.getLogger(__name__)
 async def async_setup_entry(hass: HomeAssistant, entry: PortainerConfigEntry) -> bool:
     """Set up Portainer from a config entry."""
 
+    session = async_create_clientsession(
+        hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
+    )
+
     client = Portainer(
         api_url=entry.data[CONF_URL],
         api_key=entry.data[CONF_API_TOKEN],
-        session=async_create_clientsession(
-            hass=hass, verify_ssl=entry.data[CONF_VERIFY_SSL]
-        ),
-        request_timeout=30,
+        session=session,
+        request_timeout=10,
+        max_retries=API_MAX_RETRIES,
+    )
+    watcher = PortainerImageWatcher(client, interval=timedelta(hours=24))
+
+    coordinator = PortainerCoordinator(hass, entry, client)
+    coordinator.watcher = watcher
+    await coordinator.async_config_entry_first_refresh()
+
+    docker_system_df_client = Portainer(
+        api_url=entry.data[CONF_URL],
+        api_key=entry.data[CONF_API_TOKEN],
+        session=session,
+        request_timeout=120,
         max_retries=API_MAX_RETRIES,
     )
 
-    coordinator = PortainerCoordinator(hass, entry, client)
-    await coordinator.async_config_entry_first_refresh()
+    docker_disk_space_coordinator = PortainerDockerDiskSpaceCoordinator(
+        hass, entry, docker_system_df_client
+    )
+    coordinator.docker_disk_space = docker_disk_space_coordinator
+
+    async def _defer_docker_disk_space_refresh(_: HomeAssistant) -> None:
+        """Defer the first refresh until Home Assistant has started."""
+        hass.async_create_task(
+            docker_disk_space_coordinator.async_refresh(),
+            "portainer_docker_disk_space_initial_refresh",
+        )
+
+    # On lower-end hardware, the DF endpoint can take long
+    # Do not block the setup, but defer the first refresh until HA is fully started
+    entry.async_on_unload(async_at_started(hass, _defer_docker_disk_space_refresh))
 
     entry.runtime_data = coordinator
+
+    # Register the endpoint and stack devices up front so that container, stack and
+    # volume entities can deterministically resolve them as their via device when
+    # their platforms are set up below, regardless of platform/entity add order.
+    coordinator.async_register_endpoint_and_stack_devices(
+        coordinator.data,
+        set(coordinator.data),
+        {
+            (endpoint_id, stack_name, stack_data.stack.id)
+            for endpoint_id, endpoint_data in coordinator.data.items()
+            for stack_name, stack_data in endpoint_data.stacks.items()
+        },
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
+
+    @callback
+    def _start_watcher(_hass: HomeAssistant) -> None:
+        """Start the image watcher in the event loop."""
+        watcher.start()
+
+    @callback
+    def _stop_watcher(_event: Event) -> None:
+        """Stop the image watcher in the event loop."""
+        watcher.stop()
+
+    entry.async_on_unload(async_at_started(hass, _start_watcher))
+    entry.async_on_unload(watcher.stop)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_watcher)
+    )
+
+    @callback
+    def _start_event_listeners(_hass: HomeAssistant) -> None:
+        """Start the Docker event listeners in the event loop."""
+        coordinator.async_start_event_listeners()
+
+    @callback
+    def _stop_event_listeners(_event: Event) -> None:
+        """Stop the Docker event listeners in the event loop."""
+        coordinator.async_stop_event_listeners()
+
+    # Defer the event listener, to avoid a thunderherd of connections during startup
+    entry.async_on_unload(async_at_started(hass, _start_event_listeners))
+    entry.async_on_unload(coordinator.async_stop_event_listeners)
+    entry.async_on_unload(
+        hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _stop_event_listeners)
+    )
 
     return True
 
@@ -94,12 +173,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
         entity_registry = er.async_get(hass)
         devices = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
         for device in devices:
-            # This means it's an endpoint. This can be skipped, we're only interested in the containers
+            # This means it's an endpoint. This can be skipped,
+            # we're only interested in the containers
             if device.via_device_id is None:
                 continue
 
             parent_devices = device_registry.async_get(device.via_device_id)
-            assert parent_devices
+            if TYPE_CHECKING:
+                assert parent_devices is not None
             for parent_device in parent_devices.identifiers:
                 if parent_device[0] == DOMAIN:
                     parent_device_identifiers = parent_device
@@ -166,13 +247,14 @@ async def async_migrate_entry(hass: HomeAssistant, entry: PortainerConfigEntry) 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     entry: PortainerConfigEntry,
-    device: DeviceEntry,
+    device: AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     coordinator = entry.runtime_data
     valid_identifiers: set[tuple[str, str]] = set()
 
-    # The Portainer integration creates devices for both endpoints and containers. That's why we're doing it double
+    # The Portainer integration creates devices for both
+    # endpoints and containers. That's why we're doing it double
     valid_identifiers.update(
         (DOMAIN, f"{entry.entry_id}_{endpoint_id}") for endpoint_id in coordinator.data
     )

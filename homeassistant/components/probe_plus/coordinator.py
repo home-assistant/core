@@ -1,9 +1,8 @@
 """Coordinator for the probe_plus integration."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
+from typing import override
 
 from pyprobeplus import ProbePlusDevice
 from pyprobeplus.exceptions import ProbePlusDeviceNotFound, ProbePlusError
@@ -58,6 +57,7 @@ class ProbePlusDataUpdateCoordinator(DataUpdateCoordinator[None]):
             notify_callback=self.async_update_listeners,
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Connect to the Probe Plus device on a set interval.
 

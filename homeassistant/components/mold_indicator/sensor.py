@@ -1,11 +1,9 @@
 """Calculates mold growth indication from temperature and humidity."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Mapping
 import logging
 import math
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
@@ -18,12 +16,12 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_NAME,
     CONF_UNIQUE_ID,
     PERCENTAGE,
     STATE_UNAVAILABLE,
     STATE_UNKNOWN,
+    EntityStateAttribute,
     UnitOfTemperature,
 )
 from homeassistant.core import (
@@ -36,6 +34,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -91,7 +90,6 @@ async def async_setup_platform(
     async_add_entities(
         [
             MoldIndicator(
-                hass,
                 name,
                 hass.config.units is METRIC_SYSTEM,
                 indoor_temp_sensor,
@@ -120,7 +118,6 @@ async def async_setup_entry(
     async_add_entities(
         [
             MoldIndicator(
-                hass,
                 name,
                 hass.config.units is METRIC_SYSTEM,
                 indoor_temp_sensor,
@@ -128,6 +125,7 @@ async def async_setup_entry(
                 indoor_humidity_sensor,
                 calib_factor,
                 entry.entry_id,
+                device=async_entity_id_to_device(hass, indoor_humidity_sensor),
             )
         ],
         False,
@@ -144,7 +142,6 @@ class MoldIndicator(SensorEntity):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         name: str,
         is_metric: bool,
         indoor_temp_sensor: str,
@@ -152,6 +149,7 @@ class MoldIndicator(SensorEntity):
         indoor_humidity_sensor: str,
         calib_factor: float,
         unique_id: str | None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the sensor."""
         self._attr_name = name
@@ -170,11 +168,7 @@ class MoldIndicator(SensorEntity):
         self._outdoor_temp: float | None = None
         self._indoor_hum: float | None = None
         self._crit_temp: float | None = None
-        if indoor_humidity_sensor:
-            self.device_entry = async_entity_id_to_device(
-                hass,
-                indoor_humidity_sensor,
-            )
+        self.device_entry = device
         self._preview_callback: Callable[[str, Mapping[str, Any]], None] | None = None
 
     @callback
@@ -195,6 +189,7 @@ class MoldIndicator(SensorEntity):
         self._async_setup_sensor()
         return self._call_on_remove_callbacks
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Run when entity about to be added to hass."""
         self._async_setup_sensor()
@@ -299,7 +294,9 @@ class MoldIndicator(SensorEntity):
             )
             return None
 
-        return validator(value, state.attributes.get(ATTR_UNIT_OF_MEASUREMENT))
+        return validator(
+            value, state.attributes.get(EntityStateAttribute.UNIT_OF_MEASUREMENT)
+        )
 
     def _get_temperature_from_state(self, state: State | None) -> float | None:
         """Get temperature value in Celsius from state."""
@@ -415,6 +412,7 @@ class MoldIndicator(SensorEntity):
         _LOGGER.debug("Mold indicator humidity: %s", self.native_value)
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         if self._is_metric:

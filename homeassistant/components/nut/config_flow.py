@@ -1,10 +1,8 @@
 """Config flow for Network UPS Tools (NUT) integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aionut import NUTError, NUTLoginError
 import voluptuous as vol
@@ -119,6 +117,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         self.title: str | None = None
         self.reauth_entry: ConfigEntry | None = None
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -131,6 +130,7 @@ class NutConfigFlow(ConfigFlow, domain=DOMAIN):
         self.context["title_placeholders"] = self.nut_config.copy()
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

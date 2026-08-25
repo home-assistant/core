@@ -1,13 +1,11 @@
 """Support for restoring entity states on startup."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from datetime import datetime, timedelta
 import logging
-from typing import Any, Self, cast
+from typing import Any, Self, cast, override
 
-from homeassistant.const import ATTR_RESTORED, EVENT_HOMEASSISTANT_STOP
+from homeassistant.const import EVENT_HOMEASSISTANT_STOP, EntityStateAttribute
 from homeassistant.core import HomeAssistant, State, callback, valid_entity_id
 from homeassistant.exceptions import HomeAssistantError, UnsupportedStorageVersionError
 from homeassistant.util import dt as dt_util
@@ -53,6 +51,7 @@ class RestoredExtraData(ExtraStoredData):
         """Object to hold extra stored data."""
         self.json_dict = json_dict
 
+    @override
     def as_dict(self) -> dict[str, Any]:
         """Return a dict representation of the extra data."""
         return self.json_dict
@@ -177,7 +176,7 @@ class RestoreStateData:
         current_states_by_entity_id = {
             state.entity_id: state
             for state in all_states
-            if not state.attributes.get(ATTR_RESTORED)
+            if not state.attributes.get(EntityStateAttribute.RESTORED)
         }
 
         # Start with the currently registered states
@@ -293,11 +292,13 @@ class RestoreStateData:
 class RestoreEntity(Entity):
     """Mixin class for restoring previous entity state."""
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Register this entity as a restorable entity."""
         await super().async_internal_added_to_hass()
         async_get(self.hass).async_restore_entity_added(self)
 
+    @override
     async def async_internal_will_remove_from_hass(self) -> None:
         """Run when entity will be removed from hass."""
         try:

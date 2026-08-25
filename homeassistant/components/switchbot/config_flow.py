@@ -1,9 +1,7 @@
 """Config flow for Switchbot."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 from switchbot import (
     SwitchbotAccountConnectionError,
@@ -16,6 +14,7 @@ from switchbot import (
 )
 import voluptuous as vol
 
+from homeassistant.components import bluetooth
 from homeassistant.components.bluetooth import (
     BluetoothServiceInfoBleak,
     async_discovered_service_info,
@@ -86,6 +85,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> SwitchbotOptionsFlowHandler:
@@ -100,6 +100,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         self._cloud_password: str | None = None
         self._encryption_method_selected = False
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfoBleak
     ) -> ConfigFlowResult:
@@ -355,6 +356,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         self._abort_if_unique_id_configured()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -430,6 +432,7 @@ class SwitchbotConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_password()
             return await self._async_create_entry_from_discovery(user_input)
 
+        await bluetooth.async_request_active_scan(self.hass)
         self._async_discover_devices()
         if len(self._discovered_advs) == 1:
             # If there is only one device we can ask for a password
@@ -483,6 +486,9 @@ class SwitchbotOptionsFlowHandler(OptionsFlow):
             SupportedModels.LOCK,
             SupportedModels.LOCK_PRO,
             SupportedModels.LOCK_ULTRA,
+            SupportedModels.LOCK_PRO_WIFI,
+            SupportedModels.LOCK_VISION,
+            SupportedModels.LOCK_VISION_PRO,
         ):
             options.update(
                 {

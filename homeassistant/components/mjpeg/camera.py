@@ -1,10 +1,9 @@
 """Support for IP Cameras."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import AsyncIterator
 from contextlib import suppress
+from typing import override
 
 import aiohttp
 from aiohttp import web
@@ -108,13 +107,17 @@ class MjpegCamera(Camera):
         self._mjpeg_url = mjpeg_url
         self._still_image_url = still_image_url
 
-        self._auth = None
+        self._auth_headers: dict[str, str] | None = None
         if (
             self._username
             and self._password
             and self._authentication == HTTP_BASIC_AUTHENTICATION
         ):
-            self._auth = aiohttp.BasicAuth(self._username, password=self._password)
+            self._auth_headers = {
+                "Authorization": aiohttp.encode_basic_auth(
+                    self._username, self._password
+                )
+            }
         self._verify_ssl = verify_ssl
 
         if unique_id is not None:
@@ -122,6 +125,7 @@ class MjpegCamera(Camera):
         if device_info is not None:
             self._attr_device_info = device_info
 
+    @override
     async def stream_source(self) -> str:
         """Return the stream source."""
         url = URL(self._mjpeg_url)
@@ -131,6 +135,7 @@ class MjpegCamera(Camera):
             url = url.with_password(self._password)
         return str(url)
 
+    @override
     async def async_camera_image(
         self, width: int | None = None, height: int | None = None
     ) -> bytes | None:
@@ -144,10 +149,13 @@ class MjpegCamera(Camera):
         websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
         try:
             async with asyncio.timeout(TIMEOUT):
-                response = await websession.get(self._still_image_url, auth=self._auth)
+                response = await websession.get(
+                    self._still_image_url, headers=self._auth_headers
+                )
 
                 return await response.read()
 
+        # pylint: disable-next=home-assistant-action-swallowed-exception
         except TimeoutError:
             LOGGER.error("Timeout getting camera image from %s", self.name)
 
@@ -210,6 +218,7 @@ class MjpegCamera(Camera):
                         await response.write(chunk)
         return response
 
+    @override
     async def handle_async_mjpeg_stream(
         self, request: web.Request
     ) -> web.StreamResponse | None:
@@ -220,6 +229,6 @@ class MjpegCamera(Camera):
 
         # connect to stream
         websession = async_get_clientsession(self.hass, verify_ssl=self._verify_ssl)
-        stream_coro = websession.get(self._mjpeg_url, auth=self._auth)
+        stream_coro = websession.get(self._mjpeg_url, headers=self._auth_headers)
 
         return await async_aiohttp_proxy_web(self.hass, request, stream_coro)

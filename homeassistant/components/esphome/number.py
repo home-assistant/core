@@ -1,8 +1,7 @@
 """Support for esphome numbers."""
 
-from __future__ import annotations
-
 from functools import partial
+from typing import override
 
 from aioesphomeapi import (
     EntityInfo,
@@ -38,6 +37,7 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
     """A number implementation for esphome."""
 
     @callback
+    @override
     def _on_static_info_update(self, static_info: EntityInfo) -> None:
         """Set attrs from static info."""
         super()._on_static_info_update(static_info)
@@ -59,12 +59,14 @@ class EsphomeNumber(EsphomeEntity[NumberInfo, NumberState], NumberEntity):
 
     @property
     @esphome_float_state_property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the entity."""
         state = self._state
         return None if state.missing_state else state.state
 
     @convert_api_error_ha_error
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the current value."""
         self._client.number_command(

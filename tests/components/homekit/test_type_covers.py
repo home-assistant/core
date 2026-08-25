@@ -693,7 +693,7 @@ async def test_windowcovering_restore(
 async def test_garage_door_with_linked_obstruction_sensor(
     hass: HomeAssistant, hk_driver
 ) -> None:
-    """Test if accessory and HA are updated accordingly with a linked obstruction sensor."""
+    """Test accessory and HA update with linked obstruction sensor."""
     linked_obstruction_sensor_entity_id = "binary_sensor.obstruction"
     entity_id = "cover.garage_door"
 

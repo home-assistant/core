@@ -1,11 +1,8 @@
 """Represent the Netgear router and its devices."""
 
-from __future__ import annotations
-
 from abc import abstractmethod
-from typing import Any
+from typing import Any, override
 
-from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -37,10 +34,17 @@ class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
         self._attr_unique_id = self._mac
         self._attr_device_info = DeviceInfo(
             connections={(dr.CONNECTION_NETWORK_MAC, self._mac)},
-            default_name=self._device_name,
-            default_model=device["device_model"],
-            via_device=(DOMAIN, coordinator.router.unique_id),
+            name=self._device_name,
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.router.unique_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
+        # Offline devices restored at startup have no model yet; only set it when known
+        # so a previously stored model is not overwritten with None.
+        if (device_model := device["device_model"]) is not None:
+            self._attr_device_info["model"] = device_model
 
     def get_device_name(self):
         """Return the name of the given device or the MAC if we don't know."""
@@ -56,6 +60,7 @@ class NetgearDeviceEntity(CoordinatorEntity[NetgearTrackerCoordinator]):
         """Update the Netgear device."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_update_device()
@@ -70,21 +75,8 @@ class NetgearRouterEntity(Entity):
     def __init__(self, router: NetgearRouter) -> None:
         """Initialize a Netgear device."""
         self._router = router
-
-        configuration_url = None
-        if host := router.entry.data[CONF_HOST]:
-            configuration_url = f"http://{host}/"
-
         self._attr_unique_id = router.serial_number
-        self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, router.unique_id)},
-            manufacturer="Netgear",
-            name=router.device_name,
-            model=router.model,
-            sw_version=router.firmware_version,
-            hw_version=router.hardware_version,
-            configuration_url=configuration_url,
-        )
+        self._attr_device_info = router.device_info
 
 
 class NetgearRouterCoordinatorEntity[T: NetgearDataCoordinator[Any]](
@@ -103,6 +95,7 @@ class NetgearRouterCoordinatorEntity[T: NetgearDataCoordinator[Any]](
         """Update the Netgear device."""
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self.async_update_device()

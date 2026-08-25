@@ -1,7 +1,5 @@
 """Support for MQTT message handling."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.const import CONF_OPTIMISTIC, CONF_VALUE_TEMPLATE

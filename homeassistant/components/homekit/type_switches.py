@@ -1,9 +1,7 @@
 """Class to hold all switch accessories."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any, Final, NamedTuple
+from typing import Any, Final, NamedTuple, override
 
 from pyhap.characteristic import Characteristic
 from pyhap.const import (
@@ -15,6 +13,8 @@ from pyhap.const import (
 )
 
 from homeassistant.components import button, input_button
+from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
+from homeassistant.components.input_button import DOMAIN as INPUT_BUTTON_DOMAIN
 from homeassistant.components.input_number import (
     ATTR_VALUE as INPUT_NUMBER_ATTR_VALUE,
     CONF_MAX as INPUT_NUMBER_CONF_MAX,
@@ -23,13 +23,14 @@ from homeassistant.components.input_number import (
     DOMAIN as INPUT_NUMBER_DOMAIN,
     SERVICE_SET_VALUE as INPUT_NUMBER_SERVICE_SET_VALUE,
 )
-from homeassistant.components.input_select import ATTR_OPTIONS, SERVICE_SELECT_OPTION
+from homeassistant.components.input_select import SERVICE_SELECT_OPTION
 from homeassistant.components.lawn_mower import (
     DOMAIN as LAWN_MOWER_DOMAIN,
     SERVICE_DOCK,
     SERVICE_START_MOWING,
     LawnMowerActivity,
 )
+from homeassistant.components.select import SelectEntityCapabilityAttribute
 from homeassistant.components.switch import DOMAIN as SWITCH_DOMAIN
 from homeassistant.components.vacuum import (
     DOMAIN as VACUUM_DOMAIN,
@@ -40,7 +41,6 @@ from homeassistant.components.vacuum import (
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_TYPE,
     SERVICE_CLOSE_VALVE,
     SERVICE_OPEN_VALVE,
@@ -50,6 +50,7 @@ from homeassistant.const import (
     STATE_ON,
     STATE_OPEN,
     STATE_OPENING,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, State, callback, split_entity_id
 from homeassistant.helpers.event import async_call_later
@@ -146,6 +147,7 @@ class Outlet(HomeAccessory):
         self.async_call_service(SWITCH_DOMAIN, service, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_state = new_state.state == STATE_ON
@@ -194,9 +196,9 @@ class Switch(HomeAccessory):
         if self._domain == "script":
             service = self._object_id
             params = {}
-        elif self._domain == button.DOMAIN:
+        elif self._domain == BUTTON_DOMAIN:
             service = button.SERVICE_PRESS
-        elif self._domain == input_button.DOMAIN:
+        elif self._domain == INPUT_BUTTON_DOMAIN:
             service = input_button.SERVICE_PRESS
         else:
             service = SERVICE_TURN_ON if value else SERVICE_TURN_OFF
@@ -207,6 +209,7 @@ class Switch(HomeAccessory):
             async_call_later(self.hass, ACTIVATE_ONLY_RESET_SECONDS, self.reset_switch)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         self.activate_only = self.is_activate(new_state)
@@ -225,13 +228,14 @@ class Switch(HomeAccessory):
 class Vacuum(Switch):
     """Generate a Switch accessory."""
 
+    @override
     def set_state(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
         state = self.hass.states.get(self.entity_id)
         assert state
 
-        features = state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+        features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
         if value:
             sup_start = features & VacuumEntityFeature.START
@@ -245,6 +249,7 @@ class Vacuum(Switch):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_state = new_state.state in (VacuumActivity.CLEANING, STATE_ON)
@@ -256,6 +261,7 @@ class Vacuum(Switch):
 class LawnMower(Switch):
     """Generate a Switch accessory."""
 
+    @override
     def set_state(self, value: bool) -> None:
         """Move switch state to value if call came from HomeKit."""
         _LOGGER.debug("%s: Set switch state to %s", self.entity_id, value)
@@ -268,6 +274,7 @@ class LawnMower(Switch):
         )
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_state = new_state.state in (LawnMowerActivity.MOWING, STATE_ON)
@@ -351,9 +358,13 @@ class ValveBase(HomeAccessory):
                 CHAR_REMAINING_DURATION,
                 getter_callback=self.get_remaining_duration,
                 properties={
-                    # Default remaining time maxValue to 48 hours if not set via linked default duration.
-                    # pyhap truncates the remaining time to maxValue of the characteristic (pyhap default is 1 hour).
-                    # This can potentially show a remaining duration that is lower than the actual remaining duration.
+                    # Default remaining time maxValue to 48 hours
+                    # if not set via linked default duration.
+                    # pyhap truncates the remaining time to
+                    # maxValue of the characteristic (pyhap
+                    # default is 1 hour). This can potentially
+                    # show a remaining duration that is lower
+                    # than the actual remaining duration.
                     PROP_MAX_VALUE: self._get_linked_duration_property(
                         INPUT_NUMBER_CONF_MAX, VALVE_REMAINING_TIME_MAX_DEFAULT
                     ),
@@ -373,6 +384,7 @@ class ValveBase(HomeAccessory):
         self.async_call_service(self.domain, service, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
         current_state = 1 if new_state.state in self.open_states else 0
@@ -516,7 +528,7 @@ class SelectSwitch(HomeAccessory):
         assert state
 
         self.select_chars: dict[str, Characteristic] = {}
-        options = state.attributes[ATTR_OPTIONS]
+        options = state.attributes[SelectEntityCapabilityAttribute.OPTIONS]
         for option in options:
             serv_option = self.add_preload_service(
                 SERV_OUTLET,
@@ -544,8 +556,9 @@ class SelectSwitch(HomeAccessory):
         self.async_call_service(self.domain, SERVICE_SELECT_OPTION, params)
 
     @callback
+    @override
     def async_update_state(self, new_state: State) -> None:
         """Update switch state after state changed."""
-        current_option = cleanup_name_for_homekit(new_state.state)
+        current_option = new_state.state
         for option, char in self.select_chars.items():
             char.set_value(option == current_option)

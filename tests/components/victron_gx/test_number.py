@@ -1,7 +1,5 @@
 """Tests for Victron GX MQTT number entities."""
 
-from __future__ import annotations
-
 from victron_mqtt import Hub as VictronVenusHub
 from victron_mqtt.testing import finalize_injection, inject_message
 
@@ -55,8 +53,8 @@ async def test_victron_number_with_step(
     assert state.attributes["min"] == 0.0
     assert state.attributes["max"] == 100.0
 
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0")}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{MOCK_INSTALLATION_ID}_system_0"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.manufacturer == "Victron Energy"

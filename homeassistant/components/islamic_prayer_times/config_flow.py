@@ -1,8 +1,6 @@
 """Config flow for Islamic Prayer Times integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -12,14 +10,13 @@ from homeassistant.config_entries import (
     ConfigFlowResult,
     OptionsFlow,
 )
-from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE, CONF_NAME
+from homeassistant.const import CONF_LATITUDE, CONF_LOCATION, CONF_LONGITUDE
 from homeassistant.core import callback
 from homeassistant.helpers.selector import (
     LocationSelector,
     SelectSelector,
     SelectSelectorConfig,
     SelectSelectorMode,
-    TextSelector,
 )
 
 from .const import (
@@ -48,12 +45,14 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> IslamicPrayerOptionsFlowHandler:
         """Get the options flow for this handler."""
         return IslamicPrayerOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -66,7 +65,7 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
             return self.async_create_entry(
-                title=user_input[CONF_NAME],
+                title=NAME,
                 data={
                     CONF_LATITUDE: lat,
                     CONF_LONGITUDE: lon,
@@ -81,7 +80,6 @@ class IslamicPrayerFlowHandler(ConfigFlow, domain=DOMAIN):
             step_id="user",
             data_schema=vol.Schema(
                 {
-                    vol.Optional(CONF_NAME, default=NAME): TextSelector(),
                     vol.Required(
                         CONF_LOCATION, default=home_location
                     ): LocationSelector(),

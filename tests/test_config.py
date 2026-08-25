@@ -392,7 +392,7 @@ async def test_ensure_config_exists_uses_existing_config(hass: HomeAssistant) ->
 
 
 async def test_ensure_existing_files_is_not_overwritten(hass: HomeAssistant) -> None:
-    """Test that calling async_create_default_config does not overwrite existing files."""
+    """Test async_create_default_config does not overwrite files."""
     await hass.async_add_executor_job(create_file, SECRET_PATH)
 
     await config_util.async_create_default_config(hass)
@@ -1226,7 +1226,7 @@ async def test_component_config_exceptions(
                     "https://example.com",
                 )
             ],
-            "bla @ data['path']",
+            "bla at 'path'",
             [
                 "Invalid config for 'test_domain' at "
                 "../../configuration.yaml, line 140: bla 'path', "
@@ -1246,7 +1246,7 @@ async def test_component_config_exceptions(
                     "https://alt.example.com",
                 )
             ],
-            "bla @ data['path']",
+            "bla at 'path'",
             [
                 "Invalid config for 'test_domain' at "
                 "../../configuration.yaml, line 140: bla 'path', "

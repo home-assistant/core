@@ -1,11 +1,9 @@
 """Support for monitoring pyLoad."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from enum import StrEnum
-from typing import Any
+from typing import Any, override
 
 from pyloadapi import CannotConnect, InvalidAuth, PyLoadAPI
 
@@ -85,12 +83,14 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
     entity_description: PyLoadSwitchEntityDescription
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return the state of the device."""
         return self.entity_description.value_fn(
             self.coordinator.data,
         )
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         try:
@@ -108,6 +108,7 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity on."""
         try:
@@ -125,6 +126,7 @@ class PyLoadSwitchEntity(BasePyLoadEntity, SwitchEntity):
 
         await self.coordinator.async_refresh()
 
+    @override
     async def async_toggle(self, **kwargs: Any) -> None:
         """Toggle the entity."""
         try:

@@ -1,9 +1,8 @@
 """Support for Rituals Perfume Genie numbers."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from pyrituals import Diffuser
 
@@ -73,10 +72,12 @@ class RitualsSelectEntity(DiffuserEntity, SelectEntity):
         )
 
     @property
+    @override
     def current_option(self) -> str:
         """Return the selected entity option to represent the entity state."""
         return self.entity_description.current_fn(self.coordinator.diffuser)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.select_fn(self.coordinator.diffuser, option)

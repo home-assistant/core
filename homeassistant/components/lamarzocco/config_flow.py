@@ -1,14 +1,13 @@
 """Config flow for La Marzocco integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 import uuid
 
 from aiohttp import ClientSession
 from pylamarzocco import LaMarzoccoCloudClient
+from pylamarzocco.const import DeviceType
 from pylamarzocco.exceptions import AuthFail, RequestNotSuccessful
 from pylamarzocco.models import Thing
 from pylamarzocco.util import InstallationKey, generate_installation_key
@@ -70,6 +69,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
         self._things: dict[str, Thing] = {}
         self._discovered: dict[str, str] = {}
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -106,7 +106,11 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
                 _LOGGER.error("Error connecting to server: %s", exc)
                 errors["base"] = "cannot_connect"
             else:
-                self._things = {thing.serial_number: thing for thing in things}
+                self._things = {
+                    thing.serial_number: thing
+                    for thing in things
+                    if thing.type is DeviceType.MACHINE
+                }
                 if not self._things:
                     errors["base"] = "no_machines"
 
@@ -259,6 +263,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
+    @override
     async def async_step_bluetooth(
         self, discovery_info: BluetoothServiceInfo
     ) -> ConfigFlowResult:
@@ -283,6 +288,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -365,6 +371,7 @@ class LmConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: LaMarzoccoConfigEntry,
     ) -> LmOptionsFlowHandler:

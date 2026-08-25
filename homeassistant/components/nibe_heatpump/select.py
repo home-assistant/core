@@ -1,6 +1,6 @@
 """The Nibe Heat Pump select."""
 
-from __future__ import annotations
+from typing import override
 
 from nibe.coil import Coil, CoilData
 
@@ -41,6 +41,7 @@ class Select(CoilEntity, SelectEntity):
         self._attr_options = list(coil.mappings.values())
         self._attr_current_option = None
 
+    @override
     def _async_read_coil(self, data: CoilData) -> None:
         if not isinstance(data.value, str):
             self._attr_current_option = None
@@ -48,6 +49,7 @@ class Select(CoilEntity, SelectEntity):
 
         self._attr_current_option = data.value
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Support writing value."""
         await self._async_write_coil(option)

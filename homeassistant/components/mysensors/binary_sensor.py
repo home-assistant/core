@@ -1,10 +1,8 @@
 """Support for MySensors binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -106,6 +104,7 @@ class MySensorsBinarySensor(MySensorsChildEntity, BinarySensorEntity):
         self.entity_description = SENSORS[presentation(self.child_type).name]
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if the binary sensor is on."""
         return self.entity_description.is_on(self.value_type, self._child.values)

@@ -1,7 +1,5 @@
 """Helper classes for Google Assistant integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from asyncio import gather
 from collections.abc import Callable, Collection, Mapping
@@ -10,7 +8,7 @@ from functools import lru_cache
 from http import HTTPStatus
 import logging
 import pprint
-from typing import Any
+from typing import Any, override
 
 from aiohttp.web import json_response
 from awesomeversion import AwesomeVersion
@@ -20,7 +18,6 @@ from homeassistant.components import webhook
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_SUPPORTED_FEATURES,
-    CLOUD_NEVER_EXPOSED_ENTITIES,
     CONF_NAME,
     STATE_UNAVAILABLE,
 )
@@ -62,7 +59,7 @@ def _get_registry_entries(
     hass: HomeAssistant, entity_id: str
 ) -> tuple[
     er.RegistryEntry | None,
-    dr.DeviceEntry | None,
+    dr.AnyDeviceEntry | None,
     ar.AreaEntry | None,
 ]:
     """Get registry entries."""
@@ -71,16 +68,13 @@ def _get_registry_entries(
     area_reg = ar.async_get(hass)
 
     if (entity_entry := ent_reg.async_get(entity_id)) and entity_entry.device_id:
-        device_entry = dev_reg.devices.get(entity_entry.device_id)
+        device_entry = dev_reg.async_get(entity_entry.device_id)
     else:
         device_entry = None
 
-    if entity_entry and entity_entry.area_id:
-        area_id = entity_entry.area_id
-    elif device_entry and device_entry.area_id:
-        area_id = device_entry.area_id
-    else:
-        area_id = None
+    area_id = (
+        er.async_get_effective_area_id(hass, entity_entry) if entity_entry else None
+    )
 
     if area_id is not None:
         area_entry = area_reg.async_get_area(area_id)
@@ -114,7 +108,7 @@ class AbstractConfig(ABC):
             """Sync entities to Google."""
             await self.async_sync_entities_all()
 
-        self._on_deinitialize.append(start.async_at_start(self.hass, sync_google))
+        self._on_deinitialize.append(start.async_at_started(self.hass, sync_google))
 
     @callback
     def async_deinitialize(self) -> None:
@@ -174,7 +168,7 @@ class AbstractConfig(ABC):
 
     @abstractmethod
     def get_local_webhook_id(self, agent_user_id):
-        """Return the webhook ID to be used for actions for a given agent user id via the local SDK."""
+        """Return the webhook ID for a given agent user id via the local SDK."""
 
     @abstractmethod
     def get_agent_user_id_from_context(self, context):
@@ -188,7 +182,7 @@ class AbstractConfig(ABC):
         """
 
     @abstractmethod
-    def should_expose(self, state) -> bool:
+    def should_expose(self, entity_id: str) -> bool:
         """Return if entity should be exposed."""
 
     @abstractmethod
@@ -427,7 +421,8 @@ class AbstractConfig(ABC):
             )
 
         if (agent_user_id := self.get_agent_user_id_from_webhook(webhook_id)) is None:
-            # No agent user linked to this webhook, means that the user has somehow unregistered
+            # No agent user linked to this webhook, means that
+            # the user has somehow unregistered
             # removing webhook and stopping processing of this request.
             _LOGGER.error(
                 (
@@ -532,9 +527,10 @@ class GoogleEntity:
         self.entity_id = state.entity_id
         self._traits: list[trait._Trait] | None = None
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
-        return f"<GoogleEntity {self.state.entity_id}: {self.state.name}>"
+        return f"<GoogleEntity {self.entity_id}: {self.state.name}>"
 
     @callback
     def traits(self) -> list[trait._Trait]:
@@ -551,7 +547,7 @@ class GoogleEntity:
     @callback
     def should_expose(self):
         """If entity should be exposed."""
-        return self.config.should_expose(self.state)
+        return self.config.should_expose(self.entity_id)
 
     @callback
     def should_expose_local(self) -> bool:
@@ -669,18 +665,19 @@ class GoogleEntity:
                 device["matterOriginalVendorId"] = matter_info["vendor_id"]
                 device["matterOriginalProductId"] = matter_info["product_id"]
 
-        # Add deviceInfo
-        device_info = {}
+        # Add deviceInfo (child devices carry no hardware/firmware fields)
+        if isinstance(device_entry, dr.DeviceEntry):
+            device_info = {}
 
-        if device_entry.manufacturer:
-            device_info["manufacturer"] = device_entry.manufacturer
-        if device_entry.model:
-            device_info["model"] = device_entry.model
-        if device_entry.sw_version:
-            device_info["swVersion"] = device_entry.sw_version
+            if device_entry.manufacturer:
+                device_info["manufacturer"] = device_entry.manufacturer
+            if device_entry.model:
+                device_info["model"] = device_entry.model
+            if device_entry.sw_version:
+                device_info["swVersion"] = device_entry.sw_version
 
-        if device_info:
-            device["deviceInfo"] = device_info
+            if device_info:
+                device["deviceInfo"] = device_info
 
         return device
 
@@ -735,7 +732,7 @@ class GoogleEntity:
         if not executed:
             raise SmartHomeError(
                 ERR_FUNCTION_NOT_SUPPORTED,
-                f"Unable to execute {command} for {self.state.entity_id}",
+                f"Unable to execute {command} for {self.entity_id}",
             )
 
     @callback
@@ -804,8 +801,6 @@ def async_get_entities(
     is_supported_cache = config.is_supported_cache
     for state in hass.states.async_all():
         entity_id = state.entity_id
-        if entity_id in CLOUD_NEVER_EXPOSED_ENTITIES:
-            continue
         # Check check inlined for performance to avoid
         # function calls for every entity since we enumerate
         # the entire state machine here

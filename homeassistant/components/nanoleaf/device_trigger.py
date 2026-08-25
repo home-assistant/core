@@ -1,7 +1,5 @@
 """Provides device triggers for Nanoleaf."""
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.components.device_automation import (
@@ -40,7 +38,7 @@ async def async_get_triggers(
 ) -> list[dict[str, str]]:
     """List device triggers for Nanoleaf devices."""
     device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_id)
+    device_entry = device_registry.async_get(device_id, include_child_devices=False)
     if device_entry is None:
         raise DeviceNotFound(f"Device ID {device_id} is not valid")
     if device_entry.model not in TOUCH_MODELS:

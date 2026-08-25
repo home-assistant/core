@@ -1,8 +1,6 @@
 """Support for control of ElkM1 tasks ("macros")."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from elkm1_lib.tasks import Task
 
@@ -32,6 +30,7 @@ class ElkTask(ElkAttachedEntity, Scene):
 
     _element: Task
 
+    @override
     async def async_activate(self, **kwargs: Any) -> None:
         """Activate the task."""
         self._element.activate()

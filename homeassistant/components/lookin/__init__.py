@@ -1,6 +1,5 @@
 """The lookin integration."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Callable, Coroutine
@@ -33,6 +32,7 @@ from .const import (
     TYPE_TO_PLATFORM,
 )
 from .coordinator import LookinDataUpdateCoordinator, LookinPushCoordinator
+from .entity import _lookin_device_to_device_info
 from .models import LookinConfigEntry, LookinData
 
 LOGGER = logging.getLogger(__name__)
@@ -125,7 +125,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bo
             push_coordinator,
             name=entry.title,
             update_method=lookin_protocol.get_meteo_sensor,
-            update_interval=METEO_UPDATE_INTERVAL,  # Updates are pushed (fallback is polling)
+            # Updates are pushed (fallback is polling)
+            update_interval=METEO_UPDATE_INTERVAL,
         )
         await meteo_coordinator.async_config_entry_first_refresh()
 
@@ -144,7 +145,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bo
             push_coordinator,
             name=f"{entry.title} {uuid}",
             update_method=updater,
-            update_interval=REMOTE_UPDATE_INTERVAL,  # Updates are pushed (fallback is polling)
+            # Updates are pushed (fallback is polling)
+            update_interval=REMOTE_UPDATE_INTERVAL,
         )
         await coordinator.async_config_entry_first_refresh()
         device_coordinators[uuid] = coordinator
@@ -181,6 +183,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> bo
         device_coordinators=device_coordinators,
     )
 
+    # Register the lookin device so entities on the controlled devices can link
+    # to it via via_device_id, regardless of which platform is set up first.
+    dr.async_get(hass).async_get_or_create(
+        config_entry_id=entry.entry_id,
+        **_lookin_device_to_device_info(lookin_device, host),
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
@@ -197,7 +206,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: LookinConfigEntry) -> b
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, entry: LookinConfigEntry, device_entry: dr.DeviceEntry
+    hass: HomeAssistant, entry: LookinConfigEntry, device_entry: dr.AnyDeviceEntry
 ) -> bool:
     """Remove lookin config entry from a device."""
     data = entry.runtime_data

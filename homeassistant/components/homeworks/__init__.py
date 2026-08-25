@@ -1,7 +1,5 @@
 """Support for Lutron Homeworks Series 4 and 8 systems."""
 
-from __future__ import annotations
-
 import asyncio
 from dataclasses import dataclass
 import logging
@@ -18,6 +16,7 @@ import voluptuous as vol
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_COMMAND,
     CONF_HOST,
     CONF_ID,
     CONF_NAME,
@@ -40,8 +39,6 @@ from .const import CONF_ADDR, CONF_CONTROLLER_ID, CONF_KEYPADS, DOMAIN
 _LOGGER = logging.getLogger(__name__)
 
 PLATFORMS: list[Platform] = [Platform.BINARY_SENSOR, Platform.BUTTON, Platform.LIGHT]
-
-CONF_COMMAND = "command"
 
 EVENT_BUTTON_PRESS = "homeworks_button_press"
 EVENT_BUTTON_RELEASE = "homeworks_button_release"

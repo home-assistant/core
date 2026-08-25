@@ -1,8 +1,6 @@
 """Config flow for Homeassistant Analytics integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from python_homeassistant_analytics import (
     HomeassistantAnalyticsClient,
@@ -47,12 +45,14 @@ class HomeassistantAnalyticsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: AnalyticsInsightsConfigEntry,
     ) -> HomeassistantAnalyticsOptionsFlowHandler:
         """Get the options flow for this handler."""
         return HomeassistantAnalyticsOptionsFlowHandler()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

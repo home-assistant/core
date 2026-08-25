@@ -76,7 +76,7 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                 vol.Optional("pipeline"): str,
                 vol.Optional("conversation_id"): vol.Any(str, None),
                 vol.Optional("device_id"): vol.Any(str, None),
-                vol.Optional("timeout"): vol.Any(float, int),
+                vol.Optional("timeout"): vol.Any(int, float),
             },
         ),
         cv.key_value_schemas(
@@ -86,9 +86,9 @@ def async_register_websocket_api(hass: HomeAssistant) -> None:
                     {
                         vol.Required("input"): {
                             vol.Required("sample_rate"): int,
-                            vol.Optional("timeout"): vol.Any(float, int),
+                            vol.Optional("timeout"): vol.Any(int, float),
                             vol.Optional("audio_seconds_to_buffer"): vol.Any(
-                                float, int
+                                int, float
                             ),
                             # Audio enhancement
                             vol.Optional("noise_suppression_level"): int,
@@ -470,7 +470,7 @@ async def websocket_device_capture(
     # single sample (16 bits) per queue item.
     max_queue_items = (
         # +1 for None to signal end
-        int(math.ceil(timeout_seconds * CAPTURE_RATE)) + 1
+        math.ceil(timeout_seconds * CAPTURE_RATE) + 1
     )
 
     audio_queue = DeviceAudioQueue(queue=asyncio.Queue(maxsize=max_queue_items))

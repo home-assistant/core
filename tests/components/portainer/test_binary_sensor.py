@@ -61,7 +61,7 @@ async def test_refresh_endpoints_exceptions(
     exception: Exception,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test entities go unavailable after coordinator refresh failures, for the endpoint fetch."""
+    """Test entities go unavailable after endpoint refresh failures."""
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -71,7 +71,7 @@ async def test_refresh_endpoints_exceptions(
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("binary_sensor.practical_morse_status")
+    assert (state := hass.states.get("binary_sensor.practical_morse_status"))
     assert state.state == STATE_UNAVAILABLE
 
 
@@ -90,7 +90,7 @@ async def test_refresh_containers_exceptions(
     exception: Exception,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test entities go unavailable after coordinator refresh failures, for the container fetch."""
+    """Test entities go unavailable after container refresh failures."""
     await setup_integration(hass, mock_config_entry)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
@@ -100,5 +100,5 @@ async def test_refresh_containers_exceptions(
     async_fire_time_changed(hass, dt_util.utcnow())
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("binary_sensor.practical_morse_status")
+    assert (state := hass.states.get("binary_sensor.practical_morse_status"))
     assert state.state == STATE_UNAVAILABLE

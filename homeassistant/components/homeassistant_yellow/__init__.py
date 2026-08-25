@@ -1,16 +1,19 @@
 """The Home Assistant Yellow integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 import logging
 
-from homeassistant.components.hassio import get_os_info
+from homeassistant.components.hassio import HassioNotReadyError, get_os_info
 from homeassistant.components.homeassistant_hardware.coordinator import (
     FirmwareUpdateCoordinator,
 )
+from homeassistant.components.homeassistant_hardware.repair_helpers import (
+    async_create_multi_pan_migration_issue,
+    async_delete_multi_pan_migration_issue,
+)
 from homeassistant.components.homeassistant_hardware.silabs_multiprotocol_addon import (
     check_multi_pan_addon,
+    multi_pan_addon_using_device,
 )
 from homeassistant.components.homeassistant_hardware.util import (
     ApplicationType,
@@ -29,6 +32,7 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.hassio import is_hassio
 
 from .const import (
+    DOMAIN,
     FIRMWARE,
     FIRMWARE_VERSION,
     MANUFACTURER,
@@ -60,9 +64,10 @@ async def async_setup_entry(
         hass.async_create_task(hass.config_entries.async_remove(entry.entry_id))
         return False
 
-    if (os_info := get_os_info(hass)) is None:
-        # The hassio integration has not yet fetched data from the supervisor
-        raise ConfigEntryNotReady
+    try:
+        os_info = get_os_info(hass)
+    except HassioNotReadyError as err:
+        raise ConfigEntryNotReady from err
 
     if os_info.get("board") != "yellow":
         # Not running on a Home Assistant Yellow, Home Assistant may have been migrated
@@ -77,6 +82,16 @@ async def async_setup_entry(
             await check_multi_pan_addon(hass)
         except HomeAssistantError as err:
             raise ConfigEntryNotReady from err
+
+    try:
+        multipan_using_device = await multi_pan_addon_using_device(hass, RADIO_DEVICE)
+    except HomeAssistantError as err:
+        raise ConfigEntryNotReady from err
+
+    if multipan_using_device:
+        async_create_multi_pan_migration_issue(hass, DOMAIN, entry)
+    else:
+        async_delete_multi_pan_migration_issue(hass, DOMAIN, entry)
 
     if firmware is ApplicationType.EZSP:
         discovery_flow.async_create_flow(
@@ -133,9 +148,11 @@ async def async_migrate_entry(
 
     if config_entry.version == 1:
         if config_entry.minor_version == 1:
-            # Add-on startup with type service get started before Core, always (e.g. the
-            # Multi-Protocol add-on). Probing the firmware would interfere with the add-on,
-            # so we can't safely probe here. Instead, we must make an educated guess!
+            # Add-on startup with type service get started before
+            # Core, always (e.g. the Multi-Protocol add-on).
+            # Probing the firmware would interfere with the
+            # add-on, so we can't safely probe here. Instead,
+            # we must make an educated guess!
             firmware_guess = await guess_firmware_info(hass, RADIO_DEVICE)
 
             new_data = {**config_entry.data}

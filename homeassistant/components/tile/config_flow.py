@@ -1,9 +1,7 @@
 """Config flow to configure the Tile integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pytile import async_login
 from pytile.errors import InvalidAuthError, TileError
@@ -91,6 +89,7 @@ class TileFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self._async_verify("reauth_confirm", STEP_REAUTH_SCHEMA)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -1,9 +1,8 @@
 """Data update coordinator for eGauge energy monitors."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from egauge_async.exceptions import (
     EgaugeAuthenticationError,
@@ -44,6 +43,7 @@ class EgaugeData:
 class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
     """Class to manage fetching eGauge data."""
 
+    config_entry: EgaugeConfigEntry
     serial_number: str
     hostname: str
 
@@ -68,6 +68,7 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
         # Populated in _async_setup
         self._register_info: dict[str, RegisterInfo] = {}
 
+    @override
     async def _async_setup(self) -> None:
         try:
             self.serial_number = await self.client.get_device_serial_number()
@@ -78,11 +79,14 @@ class EgaugeDataCoordinator(DataUpdateCoordinator[EgaugeData]):
             EgaugePermissionError,
             EgaugeException,
         ) as err:
-            # EgaugeAuthenticationError and EgaugePermissionError will raise ConfigEntryAuthFailed once reauth is implemented
+            # EgaugeAuthenticationError and
+            # EgaugePermissionError will raise
+            # ConfigEntryAuthFailed once reauth is implemented
             raise ConfigEntryError from err
         except ConnectError as err:
             raise UpdateFailed(f"Error fetching device info: {err}") from err
 
+    @override
     async def _async_update_data(self) -> EgaugeData:
         """Fetch data from eGauge device."""
         try:

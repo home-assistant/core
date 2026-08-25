@@ -1,7 +1,5 @@
 """Const for conversation integration."""
 
-from __future__ import annotations
-
 from enum import IntFlag, StrEnum
 from typing import TYPE_CHECKING
 
@@ -21,7 +19,6 @@ ATTR_AGENT_ID = "agent_id"
 ATTR_CONVERSATION_ID = "conversation_id"
 
 SERVICE_PROCESS = "process"
-SERVICE_RELOAD = "reload"
 
 DATA_COMPONENT: HassKey[EntityComponent[ConversationEntity]] = HassKey(DOMAIN)
 

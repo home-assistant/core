@@ -1,6 +1,6 @@
 """Data update coordinator for RDW."""
 
-from __future__ import annotations
+from typing import override
 
 from vehicle import RDW, RDWConnectionError, RDWError, Vehicle
 
@@ -33,6 +33,7 @@ class RDWDataUpdateCoordinator(DataUpdateCoordinator[Vehicle]):
             license_plate=config_entry.data[CONF_LICENSE_PLATE],
         )
 
+    @override
     async def _async_update_data(self) -> Vehicle:
         """Fetch data from RDW."""
         try:

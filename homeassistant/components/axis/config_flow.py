@@ -1,16 +1,13 @@
 """Config flow to configure Axis devices."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 from ipaddress import ip_address
-from typing import Any
+from typing import TYPE_CHECKING, Any, override
 from urllib.parse import urlsplit
 
 import voluptuous as vol
 
 from homeassistant.config_entries import (
-    SOURCE_IGNORE,
     SOURCE_REAUTH,
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -30,6 +27,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import callback
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.helpers.selector import TextSelector, TextSelectorConfig
 from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 from homeassistant.helpers.service_info.ssdp import (
     ATTR_UPNP_FRIENDLY_NAME,
@@ -52,6 +50,9 @@ from .const import (
 from .errors import AuthenticationRequired, CannotConnect
 from .hub import AxisHub, get_axis_api
 
+if TYPE_CHECKING:
+    import axis
+
 AXIS_OUI = {"00:40:8c", "ac:cc:8e", "b8:a4:4f", "e8:27:25"}
 DEFAULT_PORT = 443
 DEFAULT_PROTOCOL = "https"
@@ -65,6 +66,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
     @staticmethod
     @callback
+    @override
     def async_get_options_flow(
         config_entry: ConfigEntry,
     ) -> AxisOptionsFlowHandler:
@@ -76,6 +78,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         self.config: dict[str, Any] = {}
         self.discovery_schema: VolDictType | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -96,7 +99,11 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "cannot_connect"
 
             else:
-                serial = api.vapix.serial_number
+                if not self.unique_id:
+                    if (serial := self._get_formatted_serial(api)) is None:
+                        return self.async_abort(reason="no_serial_number")
+                    await self.async_set_unique_id(serial)
+
                 config = {
                     CONF_PROTOCOL: user_input[CONF_PROTOCOL],
                     CONF_HOST: user_input[CONF_HOST],
@@ -104,8 +111,6 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_USERNAME: user_input[CONF_USERNAME],
                     CONF_PASSWORD: user_input[CONF_PASSWORD],
                 }
-
-                await self.async_set_unique_id(format_mac(serial))
 
                 if self.source == SOURCE_REAUTH:
                     self._abort_if_unique_id_mismatch()
@@ -121,7 +126,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
                 self.config = config | {CONF_MODEL: api.vapix.product_number}
 
-                return await self._create_entry(serial)
+                return await self._create_entry()
 
         data = self.discovery_schema or {
             vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
@@ -138,28 +143,18 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
-    async def _create_entry(self, serial: str) -> ConfigFlowResult:
+    async def _create_entry(self) -> ConfigFlowResult:
         """Create entry for device.
 
-        Generate a name to be used as a prefix for device entities.
+        Use the discovered device name when available.
         """
-        model = self.config[CONF_MODEL]
-        same_model = [
-            entry.data[CONF_NAME]
-            for entry in self.hass.config_entries.async_entries(DOMAIN)
-            if entry.source != SOURCE_IGNORE and entry.data[CONF_MODEL] == model
-        ]
-
-        name = model
-        for idx in range(len(same_model) + 1):
-            name = f"{model} {idx}"
-            if name not in same_model:
-                break
-
+        if (title_placeholders := self.context.get("title_placeholders")) is not None:
+            name = title_placeholders[CONF_NAME]
+        else:
+            name = f"{self.config[CONF_MODEL]} - {self.unique_id}"
         self.config[CONF_NAME] = name
 
-        title = f"{model} - {serial}"
-        return self.async_create_entry(title=title, data=self.config)
+        return self.async_create_entry(title=name, data=self.config)
 
     async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
@@ -195,6 +190,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         return await self.async_step_user()
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
@@ -202,12 +198,13 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._process_discovered_device(
             {
                 CONF_HOST: discovery_info.ip,
-                CONF_MAC: format_mac(discovery_info.macaddress),
+                CONF_MAC: discovery_info.macaddress,
                 CONF_NAME: discovery_info.hostname,
                 CONF_PORT: 80,
             }
         )
 
+    @override
     async def async_step_ssdp(
         self, discovery_info: SsdpServiceInfo
     ) -> ConfigFlowResult:
@@ -216,12 +213,13 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._process_discovered_device(
             {
                 CONF_HOST: url.hostname,
-                CONF_MAC: format_mac(discovery_info.upnp[ATTR_UPNP_SERIAL]),
+                CONF_MAC: discovery_info.upnp[ATTR_UPNP_SERIAL],
                 CONF_NAME: f"{discovery_info.upnp[ATTR_UPNP_FRIENDLY_NAME]}",
                 CONF_PORT: url.port,
             }
         )
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: ZeroconfServiceInfo
     ) -> ConfigFlowResult:
@@ -229,7 +227,7 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         return await self._process_discovered_device(
             {
                 CONF_HOST: discovery_info.host,
-                CONF_MAC: format_mac(discovery_info.properties["macaddress"]),
+                CONF_MAC: discovery_info.properties["macaddress"],
                 CONF_NAME: discovery_info.name.split(".", 1)[0],
                 CONF_PORT: discovery_info.port,
             }
@@ -239,17 +237,17 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
         self, discovery_info: dict[str, Any]
     ) -> ConfigFlowResult:
         """Prepare configuration for a discovered Axis device."""
-        if discovery_info[CONF_MAC][:8] not in AXIS_OUI:
+        serial = format_mac(discovery_info[CONF_MAC])
+        if serial[:8] not in AXIS_OUI:
             return self.async_abort(reason="not_axis_device")
 
         if is_link_local(ip_address(discovery_info[CONF_HOST])):
             return self.async_abort(reason="link_local_address")
 
-        await self.async_set_unique_id(discovery_info[CONF_MAC])
-
-        self._abort_if_unique_id_configured(
-            updates={CONF_HOST: discovery_info[CONF_HOST]}, reload_on_update=False
-        )
+        if await self.async_set_unique_id(serial):
+            self._abort_if_unique_id_configured(
+                updates={CONF_HOST: discovery_info[CONF_HOST]}, reload_on_update=False
+            )
 
         self.context.update(
             {
@@ -263,13 +261,28 @@ class AxisFlowHandler(ConfigFlow, domain=DOMAIN):
 
         self.discovery_schema = {
             vol.Required(CONF_PROTOCOL): vol.In(PROTOCOL_CHOICES),
-            vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): str,
+            vol.Required(CONF_HOST, default=discovery_info[CONF_HOST]): TextSelector(
+                TextSelectorConfig(read_only=True)
+            ),
             vol.Required(CONF_USERNAME): str,
             vol.Required(CONF_PASSWORD): str,
             vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
         }
 
         return await self.async_step_user()
+
+    @staticmethod
+    def _get_formatted_serial(api: axis.AxisDevice) -> str | None:
+        """Retrieve the device serial number from the Axis API.
+
+        Tries basic_device_info first, then property_handler. Returns None if not found.
+        """
+        vapix = api.vapix
+        if vapix.basic_device_info.initialized:
+            return format_mac(vapix.basic_device_info["0"].serial_number)
+        if vapix.params.property_handler.initialized:
+            return format_mac(vapix.params.property_handler["0"].system_serial_number)
+        return None
 
 
 class AxisOptionsFlowHandler(OptionsFlow):

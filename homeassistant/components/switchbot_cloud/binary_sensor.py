@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from switchbot_api import Device, SwitchBotAPI
 
@@ -114,6 +114,7 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Curtain": (CALIBRATION_DESCRIPTION,),
     "Curtain3": (CALIBRATION_DESCRIPTION,),
+    "Curtain4": (CALIBRATION_DESCRIPTION,),
     "Roller Shade": (CALIBRATION_DESCRIPTION,),
     "Blind Tilt": (CALIBRATION_DESCRIPTION,),
     "Garage Door Opener": (DOOR_OPEN_DESCRIPTION,),
@@ -125,7 +126,7 @@ BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES = {
     ),
     "Hub 3": (MOVE_DETECTED_DESCRIPTION,),
     "Water Detector": (LEAK_DESCRIPTION,),
-    "Climate Panel": (
+    "Home Climate Panel": (
         IS_LIGHT_DESCRIPTION,
         MOVE_DETECTED_DESCRIPTION,
     ),
@@ -141,13 +142,19 @@ async def async_setup_entry(
     """Set up SwitchBot Cloud entry."""
     data = config.runtime_data
 
-    async_add_entities(
-        SwitchBotCloudBinarySensor(data.api, device, coordinator, description)
-        for device, coordinator in data.devices.binary_sensors
+    entities: list[SwitchBotCloudBinarySensor] = []
+
+    for device, coordinator in data.devices.binary_sensors:
+        if not BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES.get(device.device_type):
+            continue
         for description in BINARY_SENSOR_DESCRIPTIONS_BY_DEVICE_TYPES[
             device.device_type
-        ]
-    )
+        ]:
+            entities.extend(
+                [SwitchBotCloudBinarySensor(data.api, device, coordinator, description)]
+            )
+
+    async_add_entities(entities)
 
 
 class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
@@ -167,6 +174,7 @@ class SwitchBotCloudBinarySensor(SwitchBotCloudEntity, BinarySensorEntity):
         self.entity_description = description
         self._attr_unique_id = f"{device.device_id}_{description.key}"
 
+    @override
     def _set_attributes(self) -> None:
         """Set attributes from coordinator data."""
         if not self.coordinator.data:

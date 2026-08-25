@@ -1,12 +1,10 @@
 """AWS platform for notify component."""
 
-from __future__ import annotations
-
 import asyncio
 import base64
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiobotocore.session import AioSession
 
@@ -143,6 +141,7 @@ class AWSLambda(AWSNotify):
         super().__init__(session, aws_config)
         self.context = context
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send notification to specified LAMBDA ARN."""
         if not kwargs.get(ATTR_TARGET):
@@ -175,6 +174,7 @@ class AWSSNS(AWSNotify):
 
     service = "sns"
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send notification to specified SNS ARN."""
         if not kwargs.get(ATTR_TARGET):
@@ -212,6 +212,7 @@ class AWSSQS(AWSNotify):
 
     service = "sqs"
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send notification to specified SQS ARN."""
         if not kwargs.get(ATTR_TARGET):
@@ -250,6 +251,7 @@ class AWSEventBridge(AWSNotify):
 
     service = "events"
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send notification to specified EventBus."""
 

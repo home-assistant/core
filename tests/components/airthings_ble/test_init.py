@@ -1,6 +1,7 @@
 """Test the Airthings BLE integration init."""
 
 from copy import deepcopy
+from unittest.mock import patch
 
 from airthings_ble import AirthingsDeviceType
 from freezegun.api import FrozenDateTimeFactory
@@ -12,6 +13,7 @@ from homeassistant.components.airthings_ble.const import (
     DEVICE_SPECIFIC_SCAN_INTERVAL,
     DOMAIN,
 )
+from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import (
@@ -64,6 +66,36 @@ async def test_migration_existing_entries(
     # Migration should have added device_model to entry data
     assert DEVICE_MODEL in entry.data
     assert entry.data[DEVICE_MODEL] == device_info.model.value
+
+
+async def test_setup_retries_when_device_not_found(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test setup is retried with a diagnostic reason when the device is missing."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=WAVE_SERVICE_INFO.address,
+        data={DEVICE_MODEL: WAVE_DEVICE_INFO.model.value},
+    )
+    entry.add_to_hass(hass)
+
+    with (
+        patch_async_ble_device_from_address(None),
+        patch(
+            "homeassistant.components.airthings_ble.coordinator.bluetooth."
+            "async_address_reachability_diagnostics",
+            return_value="mock reachability reason",
+        ),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY
+    assert (
+        "Could not find Airthings device with address "
+        f"{WAVE_SERVICE_INFO.address}: mock reachability reason" in caplog.text
+    )
 
 
 async def test_no_migration_when_device_model_exists(

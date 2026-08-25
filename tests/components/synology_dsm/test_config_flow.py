@@ -40,7 +40,7 @@ from homeassistant.helpers.service_info.ssdp import (
 )
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
 
-from .common import mock_dsm_information
+from .common import mock_dsm_hardware, mock_dsm_information
 from .consts import (
     DEVICE_TOKEN,
     HOST,
@@ -67,7 +67,10 @@ def mock_controller_service():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -90,7 +93,10 @@ def mock_controller_service_2sa():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -111,7 +117,10 @@ def mock_controller_service_vdsm():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=[],
             volumes_ids=["volume_1"],
@@ -132,7 +141,10 @@ def mock_controller_service_with_filestation():
         dsm.surveillance_station.update = AsyncMock(return_value=True)
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=1, update=AsyncMock(return_value=True))
-        dsm.network = Mock(update=AsyncMock(return_value=True), macs=MACS)
+        dsm.network = Mock(
+            update=AsyncMock(return_value=True), macs=MACS, hostname=HOST
+        )
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=["sda", "sdb", "sdc"],
             volumes_ids=["volume_1"],
@@ -166,6 +178,7 @@ def mock_controller_service_failed():
         dsm.upgrade.update = AsyncMock(return_value=True)
         dsm.utilisation = Mock(cpu_user_load=None, update=AsyncMock(return_value=True))
         dsm.network = Mock(update=AsyncMock(return_value=True), macs=[])
+        dsm.hardware = mock_dsm_hardware()
         dsm.storage = Mock(
             disks_ids=[],
             volumes_ids=[],
@@ -511,7 +524,8 @@ async def test_form_ssdp(
             ssdp_location="http://192.168.1.5:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX99",  # MAC address, but SSDP does not have `-`
+                # MAC address, but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX99",
             },
         ),
     )
@@ -558,7 +572,8 @@ async def test_reconfig_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
             ssdp_location="http://192.168.1.5:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX59",
             },
         ),
     )
@@ -601,7 +616,8 @@ async def test_skip_reconfig_ssdp(
             ssdp_location=f"http://{new_host}:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX59",
             },
         ),
     )
@@ -634,7 +650,8 @@ async def test_existing_ssdp(hass: HomeAssistant, service: MagicMock) -> None:
             ssdp_location="http://192.168.1.5:5000",
             upnp={
                 ATTR_UPNP_FRIENDLY_NAME: "mydsm",
-                ATTR_UPNP_SERIAL: "001132XXXX59",  # Existing in MACS[0], but SSDP does not have `-`
+                # Existing in MACS[0], but SSDP does not have `-`
+                ATTR_UPNP_SERIAL: "001132XXXX59",
             },
         ),
     )
@@ -707,7 +724,8 @@ async def test_discovered_via_zeroconf(
             type="_http._tcp.local.",
             name="mydsm._http._tcp.local.",
             properties={
-                "mac_address": "00:11:32:XX:XX:99|00:11:22:33:44:55",  # MAC address, but SSDP does not have `-`
+                # MAC address, but SSDP does not have `-`
+                "mac_address": "00:11:32:XX:XX:99|00:11:22:33:44:55",
             },
         ),
     )

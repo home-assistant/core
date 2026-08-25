@@ -45,7 +45,8 @@ async def test_fallback_to_polling(
 
     caplog.clear()
 
-    # Ensure subscriptions are cancelled and polling methods are called when subscriptions time out
+    # Ensure subscriptions are cancelled and polling methods are
+    # called when subscriptions time out
     with (
         patch("homeassistant.components.sonos.media.SonosMedia.poll_media"),
         patch(
@@ -101,15 +102,13 @@ async def _media_play(hass: HomeAssistant, entity: str) -> None:
     )
 
 
-@pytest.mark.skip(
-    reason="Flaky due to Python 3.14.3 asyncio changes - see home-assistant/core#162263"
-)
 async def test_zgs_event_group_speakers(
     hass: HomeAssistant, sonos_setup_two_speakers: list[MockSoCo]
 ) -> None:
     """Tests grouping and ungrouping two speakers."""
-    # When Sonos speakers are grouped; one of the speakers is the coordinator and is in charge
-    # of playback across both speakers. Hence, service calls to play or pause on media_players
+    # When Sonos speakers are grouped; one of the speakers is the coordinator
+    # and is in charge of playback across both speakers. Hence, service calls
+    # to play or pause on media_players
     # that are part of the group are routed to the coordinator.
     soco_lr = sonos_setup_two_speakers[0]
     soco_br = sonos_setup_two_speakers[1]

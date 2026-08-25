@@ -7,8 +7,7 @@ import contextlib
 from dataclasses import dataclass, field
 from enum import StrEnum
 import logging
-import time
-from typing import Any, Literal, final
+from typing import Any, Literal, final, override
 
 from hassil import Intents, recognize
 from hassil.expression import Expression, Group, ListReference
@@ -146,6 +145,7 @@ class AssistSatelliteEntity(entity.Entity):
 
     @final
     @property
+    @override
     def state(self) -> str | None:
         """Return state of the entity."""
         return self.__assist_satellite_state
@@ -291,7 +291,8 @@ class AssistSatelliteEntity(entity.Entity):
         self._is_announcing = True
         self._set_state(AssistSatelliteState.RESPONDING)
 
-        # Provide our start info to the LLM so it understands context of incoming message
+        # Provide our start info to the LLM so it understands
+        # context of incoming message
         if extra_system_prompt is not None:
             self._extra_system_prompt = extra_system_prompt
         else:
@@ -440,6 +441,8 @@ class AssistSatelliteEntity(entity.Entity):
         start_stage: PipelineStage = PipelineStage.STT,
         end_stage: PipelineStage = PipelineStage.TTS,
         wake_word_phrase: str | None = None,
+        *,
+        context: Context | None = None,
     ) -> None:
         """Triggers an Assist pipeline in Home Assistant from a satellite."""
         await self._cancel_running_pipeline()
@@ -483,15 +486,8 @@ class AssistSatelliteEntity(entity.Entity):
 
         device_id = self.registry_entry.device_id if self.registry_entry else None
 
-        # Refresh context if necessary
-        if (
-            (self._context is None)
-            or (self._context_set is None)
-            or ((time.time() - self._context_set) > entity.CONTEXT_RECENT_TIME_SECONDS)
-        ):
-            self.async_set_context(Context())
-
-        assert self._context is not None
+        context = context or Context()
+        self.async_set_context(context)
 
         # Set entity state based on pipeline events
         self._run_has_tts = False
@@ -501,14 +497,15 @@ class AssistSatelliteEntity(entity.Entity):
         with chat_session.async_get_chat_session(
             self.hass, self._conversation_id
         ) as session:
-            # Store the conversation ID. If it is no longer valid, get_chat_session will reset it
+            # Store the conversation ID. If it is no longer valid,
+            # get_chat_session will reset it
             self._conversation_id = session.conversation_id
             self._pipeline_task = (
                 self.platform.config_entry.async_create_background_task(
                     self.hass,
                     async_pipeline_from_audio_stream(
                         self.hass,
-                        context=self._context,
+                        context=context,
                         event_callback=self._internal_on_pipeline_event,
                         stt_metadata=stt.SpeechMetadata(
                             language="",  # set in async_pipeline_from_audio_stream

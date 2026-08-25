@@ -74,7 +74,8 @@ async def test_button_press_exc(hass: HomeAssistant, exc: Exception) -> None:
         ),
         pytest.raises(
             HomeAssistantError,
-            match="An error occurred while calling action for button.nettigo_air_monitor_restart",
+            match="An error occurred while calling action for"
+            " button.nettigo_air_monitor_restart",
         ),
     ):
         await hass.services.async_call(

@@ -101,5 +101,5 @@ class SmartTubExternalSensorBase(SmartTubEntity):
 
     @property
     def sensor(self) -> SpaSensor:
-        """Convenience property to access the smarttub.SpaSensor instance for this sensor."""
+        """Access the smarttub.SpaSensor instance for this sensor."""
         return self.coordinator.data[self.spa.id][ATTR_SENSORS][self.sensor_address]

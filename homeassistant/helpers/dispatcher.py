@@ -1,7 +1,5 @@
 """Helpers for Home Assistant dispatcher & internal component/platform."""
 
-from __future__ import annotations
-
 from collections import defaultdict
 from collections.abc import Callable, Coroutine
 from functools import partial
@@ -29,7 +27,7 @@ type _DispatcherDataType[*_Ts] = dict[
     SignalType[*_Ts] | str,
     dict[
         Callable[[*_Ts], Any] | Callable[..., Any],
-        HassJob[..., None | Coroutine[Any, Any, None]] | None,
+        HassJob[..., Coroutine[Any, Any, None] | None] | None,
     ],
 ]
 

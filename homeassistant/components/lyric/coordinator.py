@@ -1,11 +1,10 @@
 """The Honeywell Lyric integration."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import timedelta
 from http import HTTPStatus
 import logging
+from typing import override
 
 from aiohttp.client_exceptions import ClientResponseError
 from aiolyric import Lyric
@@ -46,6 +45,7 @@ class LyricDataUpdateCoordinator(DataUpdateCoordinator[Lyric]):
         self.oauth_session = oauth_session
         self.lyric = lyric
 
+    @override
     async def _async_update_data(self) -> Lyric:
         """Fetch data from Lyric."""
         return await self._run_update(False)

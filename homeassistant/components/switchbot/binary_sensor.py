@@ -1,11 +1,11 @@
 """Support for SwitchBot binary sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
-from switchbot import SwitchbotModel
+import switchbot
+from switchbot import LockStatus, SwitchbotModel
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -21,12 +21,17 @@ from .entity import SwitchbotEntity
 
 PARALLEL_UPDATES = 0
 
+LOCK_ULTRA_BINARY_SENSORS = {"half_lock_calibration", "half_locked"}
+
 
 @dataclass(frozen=True, kw_only=True)
 class SwitchbotBinarySensorEntityDescription(BinarySensorEntityDescription):
     """Describes Switchbot binary sensor entity."""
 
     device_class_fn: Callable[[SwitchbotModel], BinarySensorDeviceClass] | None = None
+    value_fn: Callable[[switchbot.SwitchbotDevice, str], bool | None] = (
+        lambda device, key: device.parsed_data.get(key)
+    )
 
 
 BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
@@ -34,6 +39,20 @@ BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
         key="calibration",
         translation_key="calibration",
         entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "half_lock_calibration": SwitchbotBinarySensorEntityDescription(
+        key="half_lock_calibration",
+        translation_key="half_lock_calibration",
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "half_locked": SwitchbotBinarySensorEntityDescription(
+        key="half_locked",
+        translation_key="half_locked",
+        value_fn=lambda device, _: (
+            None
+            if (status := device.get_lock_status()) is None
+            else status is LockStatus.HALF_LOCKED
+        ),
     ),
     "motion_detected": SwitchbotBinarySensorEntityDescription(
         key="pir_state",
@@ -88,6 +107,28 @@ BINARY_SENSOR_TYPES: dict[str, SwitchbotBinarySensorEntityDescription] = {
         entity_category=EntityCategory.DIAGNOSTIC,
         device_class=BinarySensorDeviceClass.BATTERY_CHARGING,
     ),
+    "duress_alarm": SwitchbotBinarySensorEntityDescription(
+        key="duress_alarm",
+        translation_key="duress_alarm",
+        device_class=BinarySensorDeviceClass.SAFETY,
+    ),
+    "high_temperature": SwitchbotBinarySensorEntityDescription(
+        key="high_temperature",
+        translation_key="high_temperature",
+        device_class=BinarySensorDeviceClass.HEAT,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    "lockout_alarm": SwitchbotBinarySensorEntityDescription(
+        key="lockout_alarm",
+        translation_key="lockout_alarm",
+        device_class=BinarySensorDeviceClass.PROBLEM,
+    ),
+    "low_temperature": SwitchbotBinarySensorEntityDescription(
+        key="low_temperature",
+        translation_key="low_temperature",
+        device_class=BinarySensorDeviceClass.COLD,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
     "tamper_alarm": SwitchbotBinarySensorEntityDescription(
         key="tamper_alarm",
         device_class=BinarySensorDeviceClass.TAMPER,
@@ -102,10 +143,14 @@ async def async_setup_entry(
 ) -> None:
     """Set up Switchbot curtain based on a config entry."""
     coordinator = entry.runtime_data
+    binary_sensors: set[str] = {
+        bs for bs in coordinator.device.parsed_data if bs in BINARY_SENSOR_TYPES
+    }
+    if coordinator.model is SwitchbotModel.LOCK_ULTRA:
+        binary_sensors.update(LOCK_ULTRA_BINARY_SENSORS)
     async_add_entities(
         SwitchBotBinarySensor(coordinator, binary_sensor)
-        for binary_sensor in coordinator.device.parsed_data
-        if binary_sensor in BINARY_SENSOR_TYPES
+        for binary_sensor in binary_sensors
     )
 
 
@@ -130,6 +175,7 @@ class SwitchBotBinarySensor(SwitchbotEntity, BinarySensorEntity):
             )
 
     @property
-    def is_on(self) -> bool:
+    @override
+    def is_on(self) -> bool | None:
         """Return the state of the sensor."""
-        return self.parsed_data[self._sensor]
+        return self.entity_description.value_fn(self._device, self._sensor)

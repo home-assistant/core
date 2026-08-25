@@ -1,10 +1,9 @@
 """Sensor platform of the Pterodactyl integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -180,6 +179,7 @@ class PterodactylSensorEntity(PterodactylEntity, SensorEntity):
         self._attr_unique_id = f"{self.game_server_data.uuid}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> StateType | datetime:
         """Return native value of sensor."""
         return self.entity_description.value_fn(self.game_server_data)

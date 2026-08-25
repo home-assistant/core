@@ -3,8 +3,11 @@
 from dataclasses import asdict
 import logging
 from pathlib import Path
+import re
 from typing import Any
 
+from hassil.parse_expression import parse_sentence
+from hassil.parser import ParseError
 from hassil.util import (
     PUNCTUATION_END,
     PUNCTUATION_END_WORD,
@@ -128,6 +131,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 f"Invalid Assist satellite entity id: {satellite_entity_id}"
             )
 
+        satellite_entity.async_set_context(call.context)
+
         ask_question_args = {
             "question": call.data.get("question"),
             "question_media_id": call.data.get("question_media_id"),
@@ -164,6 +169,7 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                             [cv.string],
                             has_one_non_empty_item,
                             has_no_punctuation,
+                            is_valid_sentence,
                         ),
                     }
                 ],
@@ -201,6 +207,8 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 def has_no_punctuation(value: list[str]) -> list[str]:
     """Validate result does not contain punctuation."""
     for sentence in value:
+        # Exclude {list_references} which may contain punctuation characters.
+        sentence = _remove_list_references(sentence)
         if (
             PUNCTUATION_START.search(sentence)
             or PUNCTUATION_END.search(sentence)
@@ -209,6 +217,21 @@ def has_no_punctuation(value: list[str]) -> list[str]:
         ):
             raise vol.Invalid("sentence should not contain punctuation")
 
+    return value
+
+
+def _remove_list_references(sentence: str) -> str:
+    """Remove {list_references} from a sentence for linting."""
+    return re.sub(r"(?<!\\)\{[^{}]*\}", "", sentence)
+
+
+def is_valid_sentence(value: list[str]) -> list[str]:
+    """Validate result can be parsed by hassil."""
+    for sentence in value:
+        try:
+            parse_sentence(sentence)
+        except ParseError as err:
+            raise vol.Invalid(f"invalid sentence: {err}") from err
     return value
 
 
