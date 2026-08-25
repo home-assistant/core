@@ -31,7 +31,6 @@ class HausbusEntity(Entity):
 
         self._channel = channel
         self._domain = domain
-        self._configuration: Any = None
 
         self._object_id = ObjectId(channel.getObjectId())
         self._device_id = self._object_id.getDeviceId()
@@ -51,9 +50,8 @@ class HausbusEntity(Entity):
         return self._domain
 
     def get_hardware_status(self) -> None:
-        """Request status and configuration of this channel from hardware."""
+        """Request status from hardware."""
         self._channel.getStatus()
-        self._channel.getConfiguration()
 
     @callback
     def handle_event(self, data: Any) -> None:
@@ -75,9 +73,8 @@ class HausbusEntity(Entity):
             )
         )
 
-        # Request the current status/configuration only once this entity is
-        # listening for the response, and off the event loop since it sends
-        # blocking UDP traffic.
+        # Request the current status only once this entity is listening for
+        # the response, and off the event loop since it sends blocking UDP traffic.
         await self.hass.async_add_executor_job(self.get_hardware_status)
 
         LOGGER.debug(

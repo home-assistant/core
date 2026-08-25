@@ -4,9 +4,6 @@ import logging
 from typing import TYPE_CHECKING, Any, override
 
 from pyhausbus.de.hausbus.homeassistant.proxy.Rollladen import Rollladen
-from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Configuration import (
-    Configuration,
-)
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.EvClosed import EvClosed
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.EvOpen import EvOpen
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.EvStart import EvStart
@@ -73,7 +70,6 @@ class HausbusCover(HausbusEntity, CoverEntity):
             | CoverEntityFeature.STOP
             | CoverEntityFeature.SET_POSITION
         )
-        self._attr_reports_position = True
         self._position: int | None = None
 
     @property
@@ -154,8 +150,4 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
         elif isinstance(data, Status):
             self._position = 100 - data.getPosition()
-            self.async_write_ha_state()
-
-        elif isinstance(data, Configuration):
-            self._configuration = data
             self.async_write_ha_state()

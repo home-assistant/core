@@ -34,8 +34,6 @@ async def test_setup_and_unload_listener_symmetry(
     assert entry.state is ConfigEntryState.LOADED
 
     gateway = entry.runtime_data
-    # HomeServer() is patched separately for gateway.py by the fixture,
-    # so gateway.home_server is its own MagicMock instance.
     gateway.home_server.addBusEventListener.assert_called_once_with(gateway)
     gateway.home_server.addBusDeviceListener.assert_called_once_with(gateway)
 
