@@ -10,7 +10,7 @@ from homeassistant.helpers import llm
 from homeassistant.setup import async_setup_component
 
 ENTITY_ID = "humidifier.test"
-INTENTS = {"HassHumidifierMode", "HassHumidifierSetpoint"}
+TOOL_NAMES = {"humidifier__HassHumidifierMode", "humidifier__HassHumidifierSetpoint"}
 
 
 @pytest.fixture(autouse=True)
@@ -44,13 +44,13 @@ async def _tool_names(hass: HomeAssistant) -> set[str]:
 
 async def test_intent_tool_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is offered for an exposed humidifier entity."""
-    assert await _tool_names(hass) >= INTENTS
+    assert await _tool_names(hass) >= TOOL_NAMES
 
 
 async def test_intent_tool_not_exposed(hass: HomeAssistant) -> None:
     """Test the intent tool is hidden when no humidifier entity is exposed."""
     async_expose_entity(hass, "conversation", ENTITY_ID, False)
-    assert not INTENTS & await _tool_names(hass)
+    assert not TOOL_NAMES & await _tool_names(hass)
     assert humidifier_llm.async_get_tools(hass, _llm_context(), "assist") is None
 
 
