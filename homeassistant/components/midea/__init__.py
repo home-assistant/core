@@ -26,9 +26,11 @@ from .const import CONF_KEY, CONF_SUBTYPE, LOGGER
 from .entity import MideaConfigEntry
 
 _PLATFORMS: list[Platform] = [
+    Platform.BINARY_SENSOR,
     Platform.CLIMATE,
     Platform.FAN,
     Platform.HUMIDIFIER,
+    Platform.LIGHT,
     Platform.NUMBER,
     Platform.SELECT,
     Platform.SWITCH,

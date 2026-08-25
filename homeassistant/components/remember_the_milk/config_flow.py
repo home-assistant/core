@@ -1,12 +1,13 @@
 """Config flow for Remember The Milk integration."""
 
 import asyncio
+from collections.abc import Mapping
 from typing import Any, override
 
 from aiortm import AioRTMError, Auth, AuthError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import SOURCE_REAUTH, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_API_KEY, CONF_NAME, CONF_TOKEN, CONF_USERNAME
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.selector import (
@@ -78,11 +79,13 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 return await self.async_step_auth()
 
+        suggested_values: Mapping[str, Any] | None = user_input
+        if suggested_values is None and self.source == SOURCE_REAUTH:
+            suggested_values = self._get_reauth_entry().data
         return self.async_show_form(
             step_id="user",
             data_schema=self.add_suggested_values_to_schema(
-                STEP_USER_DATA_SCHEMA,
-                user_input,
+                STEP_USER_DATA_SCHEMA, suggested_values
             ),
             errors=errors,
         )
@@ -129,22 +132,46 @@ class RTMConfigFlow(ConfigFlow, domain=DOMAIN):
         api_key: str,
         shared_secret: str,
     ) -> ConfigFlowResult:
-        """Create the config entry from token data.
+        """Create or update the config entry from token data.
 
         The token data has the same structure whether it comes from get_token
         or check_token.
         """
         await self.async_set_unique_id(token_data["user"]["id"])
+        data = {
+            CONF_API_KEY: api_key,
+            CONF_SHARED_SECRET: shared_secret,
+            CONF_TOKEN: token_data["token"],
+            CONF_USERNAME: token_data["user"]["username"],
+        }
+        if self.source == SOURCE_REAUTH:
+            self._abort_if_unique_id_mismatch()
+            return self.async_update_reload_and_abort(
+                self._get_reauth_entry(),
+                data_updates=data,
+            )
         self._abort_if_unique_id_configured()
         return self.async_create_entry(
             title=token_data["user"]["fullname"],
-            data={
-                CONF_API_KEY: api_key,
-                CONF_SHARED_SECRET: shared_secret,
-                CONF_TOKEN: token_data["token"],
-                CONF_USERNAME: token_data["user"]["username"],
-            },
+            data=data,
         )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Perform reauth upon an API authentication error."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Dialog that informs the user that reauth is required."""
+        if user_input is None:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=vol.Schema({}),
+            )
+        return await self.async_step_user()
 
     async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from YAML.
