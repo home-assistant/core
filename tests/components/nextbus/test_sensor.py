@@ -1,7 +1,7 @@
 """The tests for the nexbus sensor component."""
 
 from copy import deepcopy
-from datetime import datetime, timedelta
+from datetime import timedelta
 from unittest.mock import MagicMock
 from urllib.error import HTTPError
 
@@ -15,6 +15,7 @@ from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_NAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.update_coordinator import UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from . import assert_setup_sensor
 from .const import (
@@ -135,7 +136,7 @@ async def test_verify_throttle(
     # Set rate limit past threshold, should be ignored for first request
     mock_client = mock_nextbus.return_value
     mock_client.rate_limit_percent = 99.0
-    mock_client.rate_limit_reset = datetime.now() + timedelta(seconds=30)  # pylint: disable=home-assistant-enforce-naive-now
+    mock_client.rate_limit_reset = dt_util.naive_now() + timedelta(seconds=30)
 
     # Do a request with the initial config and get predictions
     await assert_setup_sensor(hass, CONFIG_BASIC)

@@ -95,6 +95,10 @@ class DummyDevice:
         """Record set mode call."""
         self.calls.append(("set_mode", zone, mode))
 
+    def turn_on(self, fan_speed: int | None = None, mode: str | None = None) -> None:
+        """Record turn_on call."""
+        self.calls.append(("turn_on", fan_speed, mode))
+
     def connect(self, check_protocol: bool = False) -> bool:
         """Record connect call and mirror midealocal's availability handling."""
         self.calls.append(("connect", check_protocol))
