@@ -25,10 +25,10 @@ async def test_async_setup_entry(
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "reason"),
     [
-        TechnoVEConnectionError,
-        TechnoVEError,
+        (TechnoVEConnectionError, "Error communicating with TechnoVE API"),
+        (TechnoVEError, "Invalid response from TechnoVE API"),
     ],
 )
 async def test_async_setup_error(
@@ -36,6 +36,7 @@ async def test_async_setup_error(
     mock_technove: MagicMock,
     mock_config_entry: MockConfigEntry,
     exception: type[Exception],
+    reason: str,
 ) -> None:
     """Test a connection or update error during setup."""
     mock_technove.update.side_effect = exception
@@ -43,3 +44,4 @@ async def test_async_setup_error(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.reason == reason
