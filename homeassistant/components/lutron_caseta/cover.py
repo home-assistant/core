@@ -164,12 +164,8 @@ class LutronCasetaOpenCloseStopCover(LutronCasetaUpdatableEntity, CoverEntity):
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
     _attr_device_class = CoverDeviceClass.SHADE
-
-    @property
-    @override
-    def is_closed(self) -> bool | None:
-        """Return None because these zones do not report a position."""
-        return None
+    # These zones do not report a position, so the state is unknown
+    _attr_is_closed = None
 
     @override
     async def async_open_cover(self, **kwargs: Any) -> None:
