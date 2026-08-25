@@ -314,12 +314,10 @@ async def test_open_close_stop_cover_supported_features(hass: HomeAssistant) -> 
     state = hass.states.get(cover_entity_id)
 
     assert state is not None
-    # These zones report no level, so the state is unknown rather than closed
     assert state.state == STATE_UNKNOWN
     assert state.attributes[ATTR_SUPPORTED_FEATURES] == (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
-    # No position is reported for these zones
     assert ATTR_CURRENT_POSITION not in state.attributes
 
 

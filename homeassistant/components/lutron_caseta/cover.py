@@ -167,7 +167,6 @@ class LutronCasetaOpenCloseStopCover(LutronCasetaUpdatableEntity, CoverEntity):
     _attr_supported_features = (
         CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
     )
-    # These zones do not report a position, so the state is unknown
     _attr_is_closed = None
 
     @override
