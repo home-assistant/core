@@ -6,7 +6,7 @@ from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from .api import RedfishError
+from .api import RedfishAuthError, RedfishError
 from .const import DOMAIN
 from .coordinator import RedfishDataUpdateCoordinator
 from .models import RedfishSystem
@@ -25,11 +25,14 @@ class RedfishSystemEntity(CoordinatorEntity[RedfishDataUpdateCoordinator]):
         self._system_id = system_id
         system = coordinator.data.systems[system_id]
         assert coordinator.config_entry.unique_id is not None
-        self._system_identity = system.uuid or (
+        self._system_identity = (
             f"{coordinator.config_entry.unique_id}_{system.system_id}"
         )
+        identifiers = {(DOMAIN, self._system_identity)}
+        if system.uuid is not None:
+            identifiers.add((DOMAIN, system.uuid))
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, self._system_identity)},
+            identifiers=identifiers,
             name=system.name or system.system_id,
             manufacturer=system.manufacturer,
             model=system.model,
@@ -62,6 +65,12 @@ class RedfishSystemEntity(CoordinatorEntity[RedfishDataUpdateCoordinator]):
             )
         try:
             await self.coordinator.client.async_reset(system.reset_target, reset_type)
+        except RedfishAuthError as err:
+            self.coordinator.config_entry.async_start_reauth(self.hass)
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="authentication_failed",
+            ) from err
         except RedfishError as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
