@@ -237,7 +237,6 @@ async def test_setup_entry_recovers_from_optional_temperature_capability_failure
     "exception",
     [
         pytest.param(DucoError("API error"), id="duco_error"),
-        pytest.param(DucoConnectionError("Connection refused"), id="connection_error"),
     ],
 )
 async def test_setup_entry_ignores_optional_bypass_temperature_capability_failures(
@@ -254,6 +253,23 @@ async def test_setup_entry_ignores_optional_bypass_temperature_capability_failur
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_setup_entry_retries_on_optional_bypass_temperature_connection_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test setup retries when an optional bypass temperature read hits a connection error."""
+    mock_duco_client.async_get_bypass_supply_temperature_target.side_effect = (
+        DucoConnectionError("Connection refused")
+    )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
 async def test_unsupported_bypass_temperature_capabilities_are_not_repolled(
@@ -314,7 +330,7 @@ async def test_bypass_temperature_connection_failure_stops_remaining_zone_polls(
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test that a connection failure stops polling remaining bypass zones."""
+    """Test that a connection failure retries setup without polling remaining zones."""
 
     poll_count: dict[int, int] = dict.fromkeys(range(1, 5), 0)
 
@@ -338,7 +354,7 @@ async def test_bypass_temperature_connection_failure_stops_remaining_zone_polls(
         await hass.config_entries.async_setup(mock_config_entry.entry_id)
         await hass.async_block_till_done()
 
-        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
         assert poll_count[1] == 1
         for zone_id in range(2, 5):
             assert poll_count[zone_id] == 0
