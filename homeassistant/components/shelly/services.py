@@ -50,13 +50,10 @@ def async_get_config_entry_for_service_call(
         call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
     )
 
-    if get_device_entry_gen(config_entry) not in RPC_GENERATIONS:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="kvs_not_supported",
-            translation_placeholders={"device": config_entry.title},
-        )
-    if config_entry.data.get(CONF_SLEEP_PERIOD, 0) > 0:
+    if (
+        config_entry.data.get(CONF_SLEEP_PERIOD, 0) > 0
+        or get_device_entry_gen(config_entry) not in RPC_GENERATIONS
+    ):
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="kvs_not_supported",
