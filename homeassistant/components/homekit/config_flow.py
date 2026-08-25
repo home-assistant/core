@@ -1,6 +1,6 @@
 """Config flow for HomeKit integration."""
 
-from collections.abc import Iterable
+from collections.abc import Iterable, Mapping
 from copy import deepcopy
 from operator import itemgetter
 import random
@@ -42,6 +42,7 @@ from homeassistant.helpers import (
 )
 from homeassistant.loader import async_get_integrations
 
+from .accessories import get_accessory_type
 from .const import (
     CAMERA_MODE_STANDARD,
     CAMERA_MODES,
@@ -193,9 +194,12 @@ def _async_build_entities_filter(
 
 
 def _async_entity_ids_matching_filter(
-    hass: HomeAssistant, entity_filter: EntityFilterDict, domains: Iterable[str]
+    hass: HomeAssistant,
+    entity_filter: EntityFilterDict,
+    domains: Iterable[str],
+    entity_config: Mapping[str, dict[str, Any]] | None = None,
 ) -> list[str]:
-    """Return entities in domains selected by the shared precedence rules."""
+    """Return supported entities selected by the shared precedence rules."""
     include_targets = entity_filter.get("include_targets", {})
     exclude_targets = entity_filter.get("exclude_targets", {})
     included_entity_ids = async_target_entity_ids_by_type(hass, include_targets)
@@ -205,6 +209,7 @@ def _async_entity_ids_matching_filter(
         *include_targets.get(CONF_ENTITY_ID, []),
     }
     ent_reg = er.async_get(hass)
+    entity_config = entity_config or {}
     has_include_rules = bool(
         any(
             entity_filter.get(key)
@@ -224,7 +229,12 @@ def _async_entity_ids_matching_filter(
             include_entity_category=True,
             include_hidden=True,
         )
-        if (
+        if (state := hass.states.get(entity_id)) is not None
+        and get_accessory_type(
+            state, entity_config.get(entity_id, {}), log_errors=False
+        )
+        is not None
+        and (
             entity_id in explicitly_included
             or not _exclude_by_entity_registry(ent_reg, entity_id, False, False)
         )
@@ -238,11 +248,13 @@ def _async_entity_ids_matching_filter(
     ]
 
 
-def _entity_review_schema(entity_ids: list[str]) -> vol.Schema:
+def _entity_review_schema(entity_ids: list[str]) -> probatio.Schema:
     """Return a read-only entity selector for reviewing selected entities."""
-    return vol.Schema(
+    return probatio.Schema(
         {
-            vol.Optional(CONF_ENTITIES, default=entity_ids): selector.EntitySelector(
+            probatio.Optional(
+                CONF_ENTITIES, default=entity_ids
+            ): selector.EntitySelector(
                 selector.EntitySelectorConfig(
                     include_entities=entity_ids,
                     multiple=True,
@@ -296,6 +308,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         name_to_type_map = await _async_name_to_type_map(self.hass)
         return self.async_show_form(
             step_id="user",
+            last_step=False,
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
@@ -333,6 +346,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="include",
+            last_step=False,
             description_placeholders={
                 "domains": await _async_domain_names(self.hass, domains)
             },
@@ -356,6 +370,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         return self.async_show_form(
             step_id="review",
+            last_step=False,
             description_placeholders={"count": str(len(entity_ids))},
             data_schema=_entity_review_schema(entity_ids),
         )
@@ -385,6 +400,7 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
         hk_data[CONF_EXCLUDE_ACCESSORY_MODE] = True
         return self.async_show_form(
             step_id="pairing",
+            last_step=True,
             description_placeholders={"name": hk_data[CONF_NAME]},
         )
 
@@ -576,7 +592,11 @@ class OptionsFlowHandler(OptionsFlow):
                 for label, entity_id in self._climate_choices.items()
             }
         )
-        return self.async_show_form(step_id="climate", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="climate",
+            last_step=hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY,
+            data_schema=data_schema,
+        )
 
     @callback
     def _async_current_climate_accessories(self) -> dict[str, str]:
@@ -610,7 +630,7 @@ class OptionsFlowHandler(OptionsFlow):
             # at the moment
             return self.async_create_entry(title="", data=self.config_entry.options)
 
-        return self.async_show_form(step_id="yaml")
+        return self.async_show_form(step_id="yaml", last_step=True)
 
     async def async_step_bridged_device_triggers(
         self, user_input: dict[str, Any] | None = None
@@ -638,6 +658,7 @@ class OptionsFlowHandler(OptionsFlow):
         ]
         return self.async_show_form(
             step_id="bridged_device_triggers",
+            last_step=True,
             data_schema=probatio.Schema(
                 {
                     probatio.Optional(CONF_DEVICES, default=devices): cv.multi_select(
@@ -719,7 +740,11 @@ class OptionsFlowHandler(OptionsFlow):
                 )
             )
         data_schema = probatio.Schema(schema)
-        return self.async_show_form(step_id="cameras", data_schema=data_schema)
+        return self.async_show_form(
+            step_id="cameras",
+            last_step=hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY,
+            data_schema=data_schema,
+        )
 
     async def async_step_accessory(
         self, user_input: dict[str, Any] | None = None
@@ -735,13 +760,22 @@ class OptionsFlowHandler(OptionsFlow):
             self.included_cameras = _async_entities_in_domain(entities, CAMERA_DOMAIN)
             self.included_climates = _async_entities_in_domain(entities, CLIMATE_DOMAIN)
             hk_options[CONF_FILTER] = entity_filter
-            return await self.async_step_cameras()
+            return await self.async_step_review()
 
         entity_filter = hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        all_supported_entities = _async_get_matching_entities(
-            self.hass, domains, include_entity_category=True, include_hidden=True
-        )
+        entity_config = hk_options.get(CONF_ENTITY_CONFIG, {})
+        all_supported_entities = [
+            entity_id
+            for entity_id in _async_get_matching_entities(
+                self.hass, domains, include_entity_category=True, include_hidden=True
+            )
+            if (state := self.hass.states.get(entity_id)) is not None
+            and get_accessory_type(
+                state, entity_config.get(entity_id, {}), log_errors=False
+            )
+            is not None
+        ]
         # In accessory mode we can only have one
         default_value = next(
             iter(
@@ -754,6 +788,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         return self.async_show_form(
             step_id="accessory",
+            last_step=False,
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
@@ -797,11 +832,12 @@ class OptionsFlowHandler(OptionsFlow):
             if exclude_targets:
                 entity_filter["exclude_targets"] = exclude_targets
             hk_options[CONF_FILTER] = entity_filter
+            entity_config = hk_options.get(CONF_ENTITY_CONFIG)
             self.included_cameras = _async_entity_ids_matching_filter(
-                self.hass, entity_filter, [CAMERA_DOMAIN]
+                self.hass, entity_filter, [CAMERA_DOMAIN], entity_config
             )
             self.included_climates = _async_entity_ids_matching_filter(
-                self.hass, entity_filter, [CLIMATE_DOMAIN]
+                self.hass, entity_filter, [CLIMATE_DOMAIN], entity_config
             )
             return await self.async_step_review()
 
@@ -839,6 +875,7 @@ class OptionsFlowHandler(OptionsFlow):
         )
         return self.async_show_form(
             step_id="include",
+            last_step=False,
             description_placeholders={
                 "domains": await _async_domain_names(self.hass, domains)
             },
@@ -862,10 +899,16 @@ class OptionsFlowHandler(OptionsFlow):
             return await self.async_step_cameras()
 
         entity_ids = _async_entity_ids_matching_filter(
-            self.hass, self.hk_options[CONF_FILTER], SUPPORTED_DOMAINS
+            self.hass,
+            self.hk_options[CONF_FILTER],
+            SUPPORTED_DOMAINS,
+            self.hk_options.get(CONF_ENTITY_CONFIG),
         )
+        bridge_mode = self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_BRIDGE
         return self.async_show_form(
             step_id="review",
+            last_step=not bridge_mode
+            and not (self.included_cameras or self.included_climates),
             description_placeholders={"count": str(len(entity_ids))},
             data_schema=_entity_review_schema(entity_ids),
         )
@@ -879,7 +922,7 @@ class OptionsFlowHandler(OptionsFlow):
 
         if user_input is not None:
             self.hk_options.update(user_input)
-            if self.hk_options.get(CONF_HOMEKIT_MODE) == HOMEKIT_MODE_ACCESSORY:
+            if self.hk_options[CONF_HOMEKIT_MODE] == HOMEKIT_MODE_ACCESSORY:
                 return await self.async_step_accessory()
             return await self.async_step_include()
 
@@ -887,12 +930,13 @@ class OptionsFlowHandler(OptionsFlow):
         homekit_mode = self.hk_options.get(CONF_HOMEKIT_MODE, DEFAULT_HOMEKIT_MODE)
         entity_filter: EntityFilterDict = self.hk_options.get(CONF_FILTER, {})
         entities = entity_filter.get(CONF_INCLUDE_ENTITIES, [])
-        domains = entity_filter.get(CONF_INCLUDE_DOMAINS, [])
+        domains = list(entity_filter.get(CONF_INCLUDE_DOMAINS, []))
         if homekit_mode == HOMEKIT_MODE_ACCESSORY and entities:
             domains.extend(_domains_set_from_entities(entities))
         name_to_type_map = await _async_name_to_type_map(self.hass)
         return self.async_show_form(
             step_id="init",
+            last_step=False,
             data_schema=probatio.Schema(
                 {
                     probatio.Required(
