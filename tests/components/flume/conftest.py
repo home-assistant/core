@@ -97,6 +97,9 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
+TOKEN_SIGNING_KEY = "flume-test-token-signing-key-0123"
+
+
 def encode_access_token() -> str:
     """Encode the payload of the access token."""
     expiration_time = datetime.datetime.now() + datetime.timedelta(hours=12)  # pylint: disable=home-assistant-enforce-naive-now
@@ -104,7 +107,7 @@ def encode_access_token() -> str:
         "user_id": USER_ID,
         "exp": int(expiration_time.timestamp()),
     }
-    return jwt.encode(payload, key="secret")
+    return jwt.encode(payload, key=TOKEN_SIGNING_KEY)
 
 
 @pytest.fixture(name="access_token")

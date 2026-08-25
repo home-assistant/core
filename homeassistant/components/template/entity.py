@@ -89,11 +89,11 @@ class AbstractTemplateEntity(Entity):
 
         device_registry = dr.async_get(hass)
         # Allow linking to a main or child device, but not to a composite device.
-        if (
-            (device_id := config.get(CONF_DEVICE_ID)) is not None
-            and (device_entry := device_registry.async_get(device_id)) is not None
-            and not device_registry.async_is_composite_device_id(device_id)
-        ):
+        if (device_id := config.get(CONF_DEVICE_ID)) is not None and (
+            device_entry := device_registry.async_get(
+                device_id, include_composite_devices=False
+            )
+        ) is not None:
             self.device_entry = device_entry
 
     @property
