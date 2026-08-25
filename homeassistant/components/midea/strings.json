@@ -97,7 +97,42 @@
       }
     }
   },
-  "entity": {
+  "entity": {       
+    "binary_sensor": {
+      "arofene_link": {
+        "name": "Methanal"
+      },
+      "fall_asleep_status": {
+        "name": "Fall asleep"
+      },
+      "filter_cleaning_reminder": {
+        "name": "Filter cleaning"
+      },
+      "full_dust": {
+        "name": "Full dust"
+      },
+      "header_exist": {
+        "name": "Header"
+      },
+      "led_status": {
+        "name": "LED"
+      },
+      "night_mode": {
+        "name": "Night mode"
+      },
+      "rinse_aid": {
+        "name": "Rinse aid"
+      },
+      "salt": {
+        "name": "Salt"
+      },
+      "screen_status": {
+        "name": "Screen"
+      },
+      "tank_full": {
+        "name": "Tank full"
+      }
+    },
     "button": {
       "start": {
         "name": "Start"
@@ -109,6 +144,70 @@
       },
       "climate_zone2": {
         "name": "Zone 2 thermostat"
+      }
+    },
+    "fan": {
+      "fan": {
+        "state_attributes": {
+          "preset_mode": {
+            "state": {
+              "baby": "Baby",
+              "circulation": "Circulation",
+              "comfort": "Comfort",
+              "customize": "Customize",
+              "eco": "Eco",
+              "induction": "Induction",
+              "natural": "Natural",
+              "silent": "Silent",
+              "sleep": "Sleep",
+              "smart": "Smart",
+              "soft": "Soft",
+              "strong": "Strong",
+              "warm": "Warm"
+            }
+          }
+        }
+      }
+    },
+    "light": {
+      "light": {
+        "state_attributes": {
+          "effect": {
+            "state": {
+              "cinema": "Cinema",
+              "living": "Living",
+              "mildly": "Mildly",
+              "night": "Night",
+              "reading": "Reading"
+            }
+          }
+        }
+      }
+    },
+    "number": {
+      "dry_level": {
+        "name": "Dry level"
+      },
+      "flushing_days": {
+        "name": "Flushing days"
+      },
+      "heating_level": {
+        "name": "Heating level"
+      },
+      "leak_water_protection_value": {
+        "name": "Leak water protection value"
+      },
+      "seat_temp_level": {
+        "name": "Seat temperature level"
+      },
+      "vacation_days": {
+        "name": "Vacation days"
+      },
+      "water_hardness": {
+        "name": "Water hardness"
+      },
+      "water_temp_level": {
+        "name": "Water temperature level"
       }
     },
     "select": {
@@ -218,6 +317,47 @@
           "up": "Up",
           "up_mid": "Up middle"
         }
+      }
+    },
+    "switch": {
+      "anion": {
+        "name": "Anion"
+      },
+      "aux_heating": {
+        "name": "Auxiliary heating"
+      },
+      "disinfect": {
+        "name": "Disinfect"
+      },
+      "night_light": {
+        "name": "Night light"
+      },
+      "out_silent": {
+        "name": "Outdoor silent mode"
+      },
+      "prompt_tone": {
+        "name": "Prompt tone"
+      },
+      "screen_display": {
+        "name": "Screen display"
+      },
+      "self_clean": {
+        "name": "Self clean"
+      },
+      "smart_eye": {
+        "name": "Smart eye"
+      },
+      "sound": {
+        "name": "Sound"
+      },
+      "tbh": {
+        "name": "TBH"
+      },
+      "zone1_curve": {
+        "name": "Zone 1 curve"
+      },
+      "zone2_curve": {
+        "name": "Zone 2 curve"
       }
     }
   },

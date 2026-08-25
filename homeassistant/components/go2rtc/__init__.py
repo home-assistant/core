@@ -7,7 +7,7 @@ import shutil
 from tempfile import mkdtemp
 from typing import override
 
-from aiohttp import BasicAuth, ClientSession, UnixConnector
+from aiohttp import ClientSession, UnixConnector, encode_basic_auth
 from aiohttp.client_exceptions import ClientConnectionError, ServerConnectionError
 from awesomeversion import AwesomeVersion
 from go2rtc_client import Go2RtcRestClient
@@ -153,14 +153,13 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             password = token_hex()
             _LOGGER.debug("Generated random credentials for go2rtc server")
 
-        auth = BasicAuth(username, password)
         # HA will manage the binary
         temp_dir = mkdtemp(prefix="go2rtc-")
         # Manually created session (not using the helper) needs to be closed manually
         # See on_stop listener below
         session = ClientSession(
             connector=UnixConnector(path=get_go2rtc_unix_socket_path(temp_dir)),
-            auth=auth,
+            headers={"Authorization": encode_basic_auth(username, password)},
         )
         server = Server(
             hass,
@@ -186,9 +185,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
 
         url = HA_MANAGED_URL
     elif username and password:
-        # Create session with BasicAuth if credentials are provided
-        auth = BasicAuth(username, password)
-        session = async_create_clientsession(hass, auth=auth)
+        session = async_create_clientsession(
+            hass, headers={"Authorization": encode_basic_auth(username, password)}
+        )
     else:
         session = async_get_clientsession(hass)
 

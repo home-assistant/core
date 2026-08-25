@@ -57,6 +57,11 @@ KNOWN_ERRORS: list[tuple[Exception, type[Exception], str]] = [
         update_coordinator.UpdateFailed,
         "Error fetching test data",
     ),
+    (
+        ConfigEntryNotReady(),
+        ConfigEntryNotReady,
+        "Error fetching test data",
+    ),
 ]
 
 
@@ -780,6 +785,32 @@ async def test_async_config_entry_first_refresh_failure_passed_through(
     assert crd.last_update_success is False
     assert isinstance(crd.last_exception, err_msg[1])
     assert err_msg[2] not in caplog.text
+
+
+@pytest.mark.parametrize(
+    "method",
+    ["update_method", "setup_method"],
+)
+async def test_async_config_entry_first_refresh_not_ready(
+    hass: HomeAssistant,
+    method: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test ConfigEntryNotReady is treated as a recoverable error."""
+
+    entry = MockConfigEntry()
+    entry._async_set_state(
+        hass, config_entries.ConfigEntryState.SETUP_IN_PROGRESS, None
+    )
+    crd = get_crd(hass, DEFAULT_UPDATE_INTERVAL, entry)
+    setattr(crd, method, AsyncMock(side_effect=ConfigEntryNotReady("Not ready")))
+
+    with pytest.raises(ConfigEntryNotReady):
+        await crd.async_config_entry_first_refresh()
+
+    assert crd.last_update_success is False
+    assert isinstance(crd.last_exception, ConfigEntryNotReady)
+    assert "Unexpected error fetching test data" not in caplog.text
 
 
 async def test_async_config_entry_first_refresh_success(hass: HomeAssistant) -> None:

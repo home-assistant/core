@@ -19,6 +19,11 @@ from . import (
 from tests.common import MockConfigEntry
 
 
+def pytest_configure(config: pytest.Config) -> None:
+    """Register the mark used to select the dataset."""
+    config.addinivalue_line("markers", "dataset: mark test with the dataset to load")
+
+
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
     """Return a mocked config entry."""

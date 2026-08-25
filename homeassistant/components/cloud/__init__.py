@@ -8,7 +8,7 @@ from enum import Enum
 import logging
 from typing import Any, cast
 
-from hass_nabucasa import Cloud, NabuCasaBaseError
+from hass_nabucasa import Cloud, NabuCasaBaseError, RemoteNotConnected
 import voluptuous as vol
 
 from homeassistant.components import alexa, google_assistant
@@ -421,7 +421,10 @@ def _handle_prefs_updated(hass: HomeAssistant, cloud: Cloud[CloudClient]) -> Non
             if cur_remote_enabled := prefs.remote_enabled:
                 await cloud.remote.connect()
             else:
-                await cloud.remote.disconnect()
+                # Prefs are reset when a new user logs in, before the remote
+                # backend exists.
+                with suppress(RemoteNotConnected):
+                    await cloud.remote.disconnect()
 
     cloud.client.prefs.async_listen_updates(on_prefs_updated)
 

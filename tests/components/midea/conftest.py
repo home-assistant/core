@@ -1,6 +1,6 @@
 """Fixtures for Midea tests."""
 
-from collections.abc import Callable, Generator
+from collections.abc import Callable, Coroutine, Generator
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -25,6 +25,8 @@ from .const import (
 )
 
 from tests.common import MockConfigEntry
+
+type SetDeviceAttribute = Callable[[DummyDevice, str, Any], Coroutine[Any, Any, None]]
 
 
 class DummyDevice:
@@ -98,6 +100,10 @@ class DummyDevice:
     def start_work(self) -> None:
         """Record start_work call."""
         self.calls.append(("start_work",))
+        
+    def turn_on(self, fan_speed: int | None = None, mode: str | None = None) -> None:
+        """Record turn_on call."""
+        self.calls.append(("turn_on", fan_speed, mode))
 
     def connect(self, check_protocol: bool = False) -> bool:
         """Record connect call and mirror midealocal's availability handling."""
@@ -176,3 +182,17 @@ def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
         )
 
     return _create
+
+
+@pytest.fixture
+def set_device_attribute(hass: HomeAssistant) -> SetDeviceAttribute:
+    """Return a function that sets an attribute on a device and notifies the integration."""
+
+    async def _set_device_attribute(
+        device: DummyDevice, attribute: str, value: Any
+    ) -> None:
+        device.attributes[attribute] = value
+        device.notify_update({attribute: value})
+        await hass.async_block_till_done()
+
+    return _set_device_attribute
