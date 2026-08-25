@@ -61,16 +61,21 @@ Check all five. A PR fails the shortlist if any one fails.
    top-level body and no inline comments — such a PR has zero open review threads and looks
    clean to the check above. Take the latest submission per reviewer: a standing
    `CHANGES_REQUESTED` that no later `APPROVED` from the same person supersedes disqualifies
-   the PR. Do not lean on the `-review:changes_requested` search qualifier instead — the
+   the PR, regardless of whether its inline threads have since been resolved — resolving a
+   thread does not withdraw the review. Do not lean on the `-review:changes_requested`
+   search qualifier instead — the
    index is stale, and `mergeable_state: blocked` does not distinguish "needs an approval"
    from "changes were requested".
 
 5. **Review threads** — fetch review threads and read `is_resolved`. Judge a thread by
    whether it is resolved or substantively addressed, never by who wrote it: an unresolved
    finding from `copilot-pull-request-reviewer` is a bug report and can be a real defect,
-   so read it on its merits before discounting it. For every thread still open, say which
-   kind it is — an answered question, a nit the author passed on, or an open design debate
-   — because only the last of those should hold up a merge.
+   so read it on its merits before discounting it. Every thread still open counts against
+   the PR until you have read it and concluded it needs no change — the question was
+   answered, the suggestion was considered and declined, the point was fixed elsewhere in
+   the diff. Say for each open thread what it is and why it does or does not block. Never
+   discount one for the category it appears to fall into; an unaddressed defect is a
+   blocker whether or not anyone is arguing about it.
 
 ## Report
 
