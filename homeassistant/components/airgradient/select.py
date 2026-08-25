@@ -97,8 +97,6 @@ LEARNING_TIME_OFFSET_OPTIONS = [
     "720",
 ]
 
-MEASUREMENT_INTERVAL_OPTIONS = ["3", "10", "30", "60", "300", "900", "3600"]
-
 ABC_DAYS = [
     "1",
     "7",
@@ -163,17 +161,6 @@ CONTROL_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
 )
 
 GO_SELECT_ENTITIES: tuple[AirGradientSelectEntityDescription, ...] = (
-    AirGradientSelectEntityDescription(
-        key="measurement_interval",
-        translation_key="measurement_interval",
-        options=MEASUREMENT_INTERVAL_OPTIONS,
-        entity_category=EntityCategory.CONFIG,
-        config_key="measurement_interval",
-        value_fn=lambda config: _get_value(
-            config.measurement_interval, MEASUREMENT_INTERVAL_OPTIONS
-        ),
-        set_value_fn=lambda client, value: client.set_measurement_interval(int(value)),
-    ),
     AirGradientSelectEntityDescription(
         key="gps_mode",
         translation_key="gps_mode",
