@@ -11,7 +11,7 @@ import time
 from typing import IO, Any, cast, override
 
 from gazetteer_matcher import FrameCandidate, GazetteerMatcher
-from hassil.expression import Expression, Group, ListReference, TextChunk
+from hassil.expression import Expression, Group, ListReference
 from hassil.intents import (
     Intents,
     SlotList,
@@ -26,7 +26,6 @@ from hassil.recognize import (
     recognize_best,
 )
 from hassil.string_matcher import UnmatchedRangeEntity, UnmatchedTextEntity
-from hassil.trie import Trie
 from hassil.util import merge_dict, remove_punctuation
 from home_assistant_intents import (
     ErrorKey,
@@ -259,10 +258,7 @@ class DefaultAgent(ConversationEntity):
         # Slot lists for entities, areas, etc.
         self._slot_lists: dict[str, SlotList] | None = None
         self._unsub_clear_slot_list: list[Callable[[], None]] | None = None
-
-        # Used to filter slot lists before intent matching
-        self._exposed_names_trie: Trie | None = None
-        self._unexposed_names_trie: Trie | None = None
+        self._unexposed_names_list: TextSlotList | None = None
 
         # LRU cache to avoid unnecessary intent matching
         self._intent_cache = IntentCache(capacity=128)
@@ -382,14 +378,6 @@ class DefaultAgent(ConversationEntity):
 
         slot_lists = await self._make_slot_lists()
         intent_context = self._make_intent_context(user_input)
-
-        if self._exposed_names_trie is not None:
-            # Filter by input string
-            text = remove_punctuation(user_input.text).strip().lower()
-            slot_lists["name"] = TextSlotList(
-                name="name",
-                values=[result[2] for result in self._exposed_names_trie.find(text)],
-            )
 
         start = time.monotonic()
 
@@ -925,7 +913,7 @@ class DefaultAgent(ConversationEntity):
         if not skip_unexposed_entities_match:
             unexposed_entities_slot_lists = {
                 **slot_lists,
-                "name": self._get_unexposed_entity_names(user_input.text),
+                "name": self._get_unexposed_entity_names(),
             }
 
             start_time = time.monotonic()
@@ -1074,25 +1062,18 @@ class DefaultAgent(ConversationEntity):
 
         return maybe_result
 
-    def _get_unexposed_entity_names(self, text: str) -> TextSlotList:
-        """Get filtered slot list with unexposed entity names in Home Assistant."""
-        if self._unexposed_names_trie is None:
-            # Build trie
-            self._unexposed_names_trie = Trie()
-            for name_tuple in self._get_entity_name_tuples(exposed=False):
-                self._unexposed_names_trie.insert(
-                    name_tuple[0].lower(),
-                    TextSlotValue.from_tuple(name_tuple, allow_template=False),
-                )
+    def _get_unexposed_entity_names(self) -> TextSlotList:
+        """Get slot list with unexposed entity names in Home Assistant."""
+        if self._unexposed_names_list is None:
+            self._unexposed_names_list = TextSlotList(
+                name="name",
+                values=[
+                    TextSlotValue.from_tuple(name_tuple, allow_template=False)
+                    for name_tuple in self._get_entity_name_tuples(exposed=False)
+                ],
+            )
 
-        # Build filtered slot list
-        text_lower = remove_punctuation(text).strip().lower()
-        return TextSlotList(
-            name="name",
-            values=[
-                result[2] for result in self._unexposed_names_trie.find(text_lower)
-            ],
-        )
+        return self._unexposed_names_list
 
     def _get_entity_name_tuples(
         self, exposed: bool
@@ -1124,7 +1105,12 @@ class DefaultAgent(ConversationEntity):
                 self.hass, entity_entry, state=state
             ):
                 # Strip punctuation so aliases match the cleaned input text.
-                yield (remove_punctuation(name).strip(), name, context)
+                input_name = remove_punctuation(name).strip()
+                if not input_name:
+                    # An empty name would match anywhere in the input.
+                    continue
+
+                yield (input_name, name, context)
 
     def _recognize_strict(
         self,
@@ -1364,8 +1350,7 @@ class DefaultAgent(ConversationEntity):
         if self._unsub_clear_slot_list is None:
             return
         self._slot_lists = None
-        self._exposed_names_trie = None
-        self._unexposed_names_trie = None
+        self._unexposed_names_list = None
         for unsub in self._unsub_clear_slot_list:
             unsub()
         self._unsub_clear_slot_list = None
@@ -1420,13 +1405,7 @@ class DefaultAgent(ConversationEntity):
 
                 floor_names.append((remove_punctuation(alias).strip(), floor.name))
 
-        # Build trie
-        self._exposed_names_trie = Trie()
         name_list = TextSlotList.from_tuples(exposed_entity_names, allow_template=False)
-        for name_value in name_list.values:
-            assert isinstance(name_value.text_in, TextChunk)
-            name_text = remove_punctuation(name_value.text_in.text).strip().lower()
-            self._exposed_names_trie.insert(name_text, name_value)
 
         self._slot_lists = {
             "area": TextSlotList.from_tuples(area_names, allow_template=False),
