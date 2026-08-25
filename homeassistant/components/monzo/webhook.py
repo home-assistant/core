@@ -70,6 +70,7 @@ class MonzoWebhookManager:
         self._active = True
         self._register_lock = asyncio.Lock()
         self._retry_cancel: CALLBACK_TYPE | None = None
+        self._retrying = False
         self._webhook_url: str | None = None
         self._known_account_ids: set[str] = set()
 
@@ -125,7 +126,7 @@ class MonzoWebhookManager:
                             self.hass, self.entry.data[CONF_WEBHOOK_ID]
                         )
                     except cloud.CloudNotAvailable:
-                        self._schedule_retry()
+                        self._schedule_retry("Unable to create Monzo cloud webhook")
                         return
                     self.hass.config_entries.async_update_entry(
                         self.entry,
@@ -157,11 +158,11 @@ class MonzoWebhookManager:
                 return
             except (ClientError, InvalidMonzoAPIResponseError, TimeoutError) as err:
                 await self._async_rollback_remote_webhooks(registered_webhook_ids)
-                _LOGGER.warning("Unable to register Monzo webhooks: %s", err)
-                self._schedule_retry()
+                self._schedule_retry("Unable to register Monzo webhooks", err)
                 return
 
             self._cancel_retry()
+            self._log_retry_success()
             self._webhook_url = webhook_url
             if self.entry.data.get(CONF_WEBHOOK_URL) != webhook_url:
                 self.hass.config_entries.async_update_entry(
@@ -221,6 +222,8 @@ class MonzoWebhookManager:
     async def _async_remove_previous_remote_webhooks(self) -> None:
         """Remove remote webhooks when no callback URL is available."""
         if (previous_url := self.entry.data.get(CONF_WEBHOOK_URL)) is None:
+            self._cancel_retry()
+            self._retrying = False
             return
 
         try:
@@ -233,10 +236,11 @@ class MonzoWebhookManager:
             self.entry.async_start_reauth(self.hass)
             return
         except (ClientError, InvalidMonzoAPIResponseError, TimeoutError) as err:
-            _LOGGER.warning("Unable to remove obsolete Monzo webhooks: %s", err)
-            self._schedule_retry()
+            self._schedule_retry("Unable to remove obsolete Monzo webhooks", err)
             return
 
+        self._cancel_retry()
+        self._log_retry_success()
         self._webhook_url = None
         data = dict(self.entry.data)
         data.pop(CONF_WEBHOOK_URL, None)
@@ -343,13 +347,30 @@ class MonzoWebhookManager:
             name,
         )
 
-    def _schedule_retry(self) -> None:
+    def _schedule_retry(self, message: str, err: Exception | None = None) -> None:
         """Schedule another remote webhook registration attempt."""
         if self._retry_cancel is not None:
             return
+        if not self._retrying:
+            if err is None:
+                _LOGGER.info("%s; retrying in %s seconds", message, WEBHOOK_RETRY_DELAY)
+            else:
+                _LOGGER.info(
+                    "%s: %s; retrying in %s seconds",
+                    message,
+                    err,
+                    WEBHOOK_RETRY_DELAY,
+                )
+            self._retrying = True
         self._retry_cancel = async_call_later(
             self.hass, WEBHOOK_RETRY_DELAY, self._async_retry
         )
+
+    def _log_retry_success(self) -> None:
+        """Log when remote webhook management recovers."""
+        if self._retrying:
+            _LOGGER.info("Successfully updated Monzo webhooks after retrying")
+            self._retrying = False
 
     async def _async_retry(self, now: datetime) -> None:
         """Retry remote webhook registration."""

@@ -115,19 +115,23 @@ async def async_attach_trigger(
 
     @callback
     def async_on_value_updated(
-        value: Value, device: dr.DeviceEntry, event: dict
+        value_id: str, device: dr.DeviceEntry, event: dict
     ) -> None:
         """Handle value update."""
         event_value: Value = event["value"]
-        if event_value != value:
+        if event_value.value_id != value_id:
             return
 
         # Get previous value and its state value if it exists
         prev_value_raw = event["args"]["prevValue"]
-        prev_value = value.metadata.states.get(str(prev_value_raw), prev_value_raw)
+        prev_value = event_value.metadata.states.get(
+            str(prev_value_raw), prev_value_raw
+        )
         # Get current value and its state value if it exists
         curr_value_raw = event["args"]["newValue"]
-        curr_value = value.metadata.states.get(str(curr_value_raw), curr_value_raw)
+        curr_value = event_value.metadata.states.get(
+            str(curr_value_raw), curr_value_raw
+        )
         # Check from and to values against previous and current values respectively
         for value_to_eval, raw_value_to_eval, match in (
             (prev_value, prev_value_raw, from_value),
@@ -140,17 +144,17 @@ async def async_attach_trigger(
                 return
 
         device_name = device.name_by_user or device.name
-        description = f"Z-Wave value {value.value_id} updated on {device_name}"
+        description = f"Z-Wave value {event_value.value_id} updated on {device_name}"
         payload = {
             ATTR_DEVICE_ID: device.id,
-            ATTR_NODE_ID: value.node.node_id,
-            ATTR_COMMAND_CLASS: value.command_class,
-            ATTR_COMMAND_CLASS_NAME: value.command_class_name,
-            ATTR_PROPERTY: value.property_,
-            ATTR_PROPERTY_NAME: value.property_name,
+            ATTR_NODE_ID: event_value.node.node_id,
+            ATTR_COMMAND_CLASS: event_value.command_class,
+            ATTR_COMMAND_CLASS_NAME: event_value.command_class_name,
+            ATTR_PROPERTY: event_value.property_,
+            ATTR_PROPERTY_NAME: event_value.property_name,
             ATTR_ENDPOINT: endpoint,
-            ATTR_PROPERTY_KEY: value.property_key,
-            ATTR_PROPERTY_KEY_NAME: value.property_key_name,
+            ATTR_PROPERTY_KEY: event_value.property_key,
+            ATTR_PROPERTY_KEY_NAME: event_value.property_key_name,
             ATTR_PREVIOUS_VALUE: prev_value,
             ATTR_PREVIOUS_VALUE_RAW: prev_value_raw,
             ATTR_CURRENT_VALUE: curr_value,
@@ -185,12 +189,10 @@ async def async_attach_trigger(
             value_id = get_value_id_str(
                 node, command_class, property_, endpoint, property_key
             )
-            value = node.values[value_id]
-            # We need to store the current value and device for the callback
             unsubs.append(
                 node.on(
                     EVENT_VALUE_UPDATED,
-                    functools.partial(async_on_value_updated, value, device),
+                    functools.partial(async_on_value_updated, value_id, device),
                 )
             )
 

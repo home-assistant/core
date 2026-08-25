@@ -17,6 +17,7 @@
       "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
+      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_account": "Please ensure you reconfigure against the same account."
     },
     "create_entry": {
@@ -38,6 +39,16 @@
       "reauth_confirm": {
         "description": "The Home Connect integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "scopes": {
+        "data": {
+          "images_scope": "Images scope"
+        },
+        "data_description": {
+          "images_scope": "Allows Home Assistant to access images from your Home Connect devices."
+        },
+        "description": "Select the optional scopes you want to enable for Home Connect authentication.",
+        "title": "Scopes"
       }
     }
   },
@@ -146,6 +157,14 @@
             }
           }
         }
+      }
+    },
+    "image": {
+      "door_right_camera": {
+        "name": "Door right camera"
+      },
+      "interior_right_camera": {
+        "name": "Interior right camera"
       }
     },
     "light": {
@@ -1595,6 +1614,9 @@
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
     },
+    "fetch_image_error": {
+      "message": "Error obtaining image from the API: {error}"
+    },
     "fetch_program_error": {
       "message": "Error obtaining the selected or active program: {error}"
     },
@@ -1645,6 +1667,9 @@
     },
     "start_program": {
       "message": "Error starting program {program}: {error}"
+    },
+    "start_program_option_not_writable": {
+      "message": "Option {option} is not writable for program {program}"
     },
     "stop_program": {
       "message": "Error stopping program: {error}"
@@ -2315,6 +2340,10 @@
         "heating_ventilation_air_conditioning_air_conditioner_option_fan_speed_percentage": {
           "description": "Setting to adjust the venting level of the air conditioner as a percentage.",
           "name": "Fan speed percentage"
+        },
+        "heating_ventilation_air_conditioning_air_conditioner_option_setpoint_temperature": {
+          "description": "Defines the target temperature, which will be held by the air conditioner.",
+          "name": "[%key:component::home_connect::services::set_program_and_options::fields::cooking_oven_option_setpoint_temperature::name%]"
         },
         "laundry_care_common_option_silent_mode": {
           "description": "Defines if the silent mode is activated.",

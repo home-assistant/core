@@ -13,8 +13,12 @@ from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DEVICE_MODEL_ACCOUNT, DEVICE_MODEL_POT, NON_TRANSFER_ACCOUNT_TYPES
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoData
 from .entity import MonzoBaseEntity
+from .helpers import get_account_name
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -39,6 +43,13 @@ ACCOUNT_SENSORS = (
         device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
     ),
+    MonzoSensorEntityDescription(
+        key="spend_today",
+        translation_key="spend_today",
+        value_fn=lambda data: abs(data["balance"]["spend_today"]) / 100,
+        device_class=SensorDeviceClass.MONETARY,
+        suggested_display_precision=2,
+    ),
 )
 
 POT_SENSORS = (
@@ -50,8 +61,6 @@ POT_SENSORS = (
         suggested_display_precision=2,
     ),
 )
-
-MODEL_POT = "Pot"
 
 
 async def async_setup_entry(
@@ -76,6 +85,13 @@ async def async_setup_entry(
         new_pot_ids = current_pot_ids - known_pot_ids
         if not new_account_ids and not new_pot_ids:
             return
+        new_accounts = [
+            (account_id, coordinator.data.accounts[account_id])
+            for account_id in sorted(new_account_ids)
+        ]
+        new_pots = [
+            (pot_id, coordinator.data.pots[pot_id]) for pot_id in sorted(new_pot_ids)
+        ]
 
         async_add_entities(
             [
@@ -83,24 +99,30 @@ async def async_setup_entry(
                     coordinator,
                     entity_description,
                     account_id,
-                    coordinator.data.accounts[account_id]["name"],
-                    coordinator.data.accounts[account_id]["balance"]["currency"],
+                    (
+                        account["name"]
+                        if account["type"] in NON_TRANSFER_ACCOUNT_TYPES
+                        else DEVICE_MODEL_ACCOUNT
+                    ),
+                    get_account_name(account),
+                    account["balance"]["currency"],
                     lambda x: x.accounts,
                 )
                 for entity_description in ACCOUNT_SENSORS
-                for account_id in sorted(new_account_ids)
+                for account_id, account in new_accounts
             ]
             + [
                 MonzoSensor(
                     coordinator,
                     entity_description,
                     pot_id,
-                    MODEL_POT,
-                    coordinator.data.pots[pot_id]["currency"],
+                    DEVICE_MODEL_POT,
+                    pot["name"],
+                    pot["currency"],
                     lambda x: x.pots,
                 )
                 for entity_description in POT_SENSORS
-                for pot_id in sorted(new_pot_ids)
+                for pot_id, pot in new_pots
             ]
         )
         known_account_ids.update(new_account_ids)
@@ -123,11 +145,18 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         entity_description: MonzoSensorEntityDescription,
         resource_id: str,
         device_model: str,
+        device_name: str,
         currency: str,
         data_accessor: Callable[[MonzoData], dict[str, dict[str, Any]]],
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, resource_id, device_model, data_accessor)
+        super().__init__(
+            coordinator,
+            resource_id,
+            device_model,
+            device_name,
+            data_accessor,
+        )
         self.entity_description = entity_description
         self._attr_native_unit_of_measurement = currency
         self._attr_unique_id = f"{resource_id}_{entity_description.key}"

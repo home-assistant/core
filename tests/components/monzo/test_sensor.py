@@ -9,7 +9,11 @@ from monzopy import InvalidMonzoAPIResponseError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.monzo.const import DOMAIN
+from homeassistant.components.monzo.const import (
+    DEVICE_MODEL_ACCOUNT,
+    DEVICE_MODEL_POT,
+    DOMAIN,
+)
 from homeassistant.components.monzo.sensor import (
     ACCOUNT_SENSORS,
     POT_SENSORS,
@@ -33,6 +37,7 @@ from tests.typing import ClientSessionGenerator
 EXPECTED_VALUE_GETTERS = {
     "balance": lambda x: x["balance"]["balance"] / 100,
     "total_balance": lambda x: x["balance"]["total_balance"] / 100,
+    "spend_today": lambda x: abs(x["balance"]["spend_today"]) / 100,
     "pot_balance": lambda x: x["balance"] / 100,
 }
 
@@ -181,6 +186,7 @@ async def test_new_accounts_and_pots_are_discovered(
     hass: HomeAssistant,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test sensors are added for accounts and pots discovered after setup."""
     await setup_integration(hass, polling_config_entry)
@@ -189,6 +195,10 @@ async def test_new_accounts_and_pots_are_discovered(
         "name": "Joint Account",
         "type": "uk_retail_joint",
         "balance": {"balance": 456, "total_balance": 654, "currency": "GBP"},
+        "owners": [
+            {"preferred_name": "Jake Martin"},
+            {"preferred_name": "Jane Martin"},
+        ],
     }
     new_pot = {
         "id": "pot_holiday",
@@ -214,6 +224,18 @@ async def test_new_accounts_and_pots_are_discovered(
     pot_state = hass.states.get(pot_entity_id)
     assert pot_state is not None
     assert pot_state.state == "123.45"
+    account_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_account["id"]), polling_config_entry.entry_id
+    )
+    pot_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, new_pot["id"]), polling_config_entry.entry_id
+    )
+    assert account_device is not None
+    assert account_device.name == "Joint Account — Jake Martin & Jane Martin"
+    assert account_device.model == DEVICE_MODEL_ACCOUNT
+    assert pot_device is not None
+    assert pot_device.name == "Holiday"
+    assert pot_device.model == DEVICE_MODEL_POT
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
