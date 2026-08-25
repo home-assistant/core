@@ -3684,14 +3684,14 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             subentry of remove_config_entry_id. Use new_config_subentry_id to move, or
             async_remove_device to remove.
         """
+        if device_id not in self._devices and device_id in self._child_devices:
+            raise HomeAssistantError(
+                f"Device {device_id} is a child device; use async_update_child_device"
+            )
         if disabled_by is DeviceEntryDisabler.DEVICE:
             raise HomeAssistantError(
                 "disabled_by=DeviceEntryDisabler.DEVICE is only valid for a child "
                 "device"
-            )
-        if device_id not in self._devices and device_id in self._child_devices:
-            raise HomeAssistantError(
-                f"Device {device_id} is a child device; use async_update_child_device"
             )
         if (
             underlying_ids := self._async_device_ids_for_composite_device_id(device_id)

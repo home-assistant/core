@@ -10570,7 +10570,6 @@ async def test_update_device_wrong_kind_of_device_id_raises(
         device_registry, mock_config_entry.entry_id
     )
 
-    # async_update_device on a registered child id points at async_update_child_device
     with pytest.raises(
         HomeAssistantError,
         match=f"Device {child_device.id} is a child device; "
@@ -10578,14 +10577,12 @@ async def test_update_device_wrong_kind_of_device_id_raises(
     ):
         device_registry.async_update_device(child_device.id, name_by_user="Nope")
 
-    # async_update_child_device on a registered main id points at async_update_device
     with pytest.raises(
         HomeAssistantError,
         match=f"Device {parent.id} is a main device; use async_update_device",
     ):
         device_registry.async_update_child_device(parent.id, name_by_user="Nope")
 
-    # A truly-unknown id keeps its existing KeyError behavior
     with pytest.raises(KeyError):
         device_registry.async_update_device("unknown-device-id")
     with pytest.raises(KeyError):
