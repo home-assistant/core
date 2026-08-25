@@ -1698,6 +1698,78 @@ async def test_entity_device_id_rename_in_yaml(
     assert entity_entry.device_id == renamed_device.id
 
 
+_MOVE_SUB_DEVICES = [
+    SubDeviceInfo(device_id=11111111, name="Sub Device 1", area_id=0),
+    SubDeviceInfo(device_id=22222222, name="Sub Device 2", area_id=0),
+]
+_MOVE_INITIAL_INFOS = [
+    BinarySensorInfo(object_id="a", key=1, name="A", device_id=11111111),
+    BinarySensorInfo(object_id="b", key=1, name="B", device_id=22222222),
+]
+_MOVE_INITIAL_STATES = [
+    BinarySensorState(key=1, state=True, missing_state=False, device_id=11111111),
+    BinarySensorState(key=1, state=False, missing_state=False, device_id=22222222),
+]
+
+
+@pytest.mark.parametrize(
+    ("new_infos", "expected_states"),
+    [
+        pytest.param(
+            [
+                BinarySensorInfo(object_id="a", key=1, name="A", device_id=22222222),
+                BinarySensorInfo(object_id="b", key=1, name="B", device_id=11111111),
+            ],
+            [STATE_ON, STATE_OFF],
+            id="swap_sub_devices_same_key",
+        ),
+        pytest.param(
+            [BinarySensorInfo(object_id="a", key=5, name="A", device_id=22222222)],
+            [STATE_UNKNOWN],
+            id="move_with_new_key_drops_state",
+        ),
+        pytest.param(
+            [BinarySensorInfo(object_id="a", key=1, name="A", device_id=22222222)],
+            [STATE_ON],
+            id="move_onto_removed_entity_slot_keeps_own_state",
+        ),
+    ],
+)
+async def test_entity_move_between_devices_carries_cached_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    new_infos: list[BinarySensorInfo],
+    expected_states: list[str],
+) -> None:
+    """Test an entity that moves between devices keeps only its own cached state."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={"name": "test", "devices": _MOVE_SUB_DEVICES},
+        entity_info=_MOVE_INITIAL_INFOS,
+        states=_MOVE_INITIAL_STATES,
+    )
+    mac = device.device_info.mac_address
+
+    def _assert_states(infos: list[BinarySensorInfo], expected: list[str]) -> None:
+        for info, expected_state in zip(infos, expected, strict=True):
+            entity_id = entity_registry.async_get_entity_id(
+                Platform.BINARY_SENSOR, DOMAIN, build_device_unique_id(mac, info)
+            )
+            assert entity_id is not None
+            state = hass.states.get(entity_id)
+            assert state is not None
+            assert state.state == expected_state
+
+    _assert_states(_MOVE_INITIAL_INFOS, [STATE_ON, STATE_OFF])
+
+    # No states are replayed on connect so only the carried state is observable
+    await reconnect_with_updated_entity_info(hass, device, new_infos, states=[])
+
+    _assert_states(new_infos, expected_states)
+
+
 @pytest.mark.parametrize(
     ("unicode_name", "expected_entity_id"),
     [
