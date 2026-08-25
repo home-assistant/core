@@ -4,7 +4,6 @@ import asyncio
 from collections import defaultdict
 from collections.abc import Iterable
 from copy import deepcopy
-from fnmatch import fnmatchcase
 import ipaddress
 import logging
 import os
@@ -37,14 +36,11 @@ from homeassistant.components.lock import DOMAIN as LOCK_DOMAIN
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.const import (
-    ATTR_AREA_ID,
     ATTR_BATTERY_CHARGING,
     ATTR_BATTERY_LEVEL,
     ATTR_DEVICE_ID,
     ATTR_ENTITY_ID,
-    ATTR_FLOOR_ID,
     ATTR_HW_VERSION,
-    ATTR_LABEL_ID,
     ATTR_MANUFACTURER,
     ATTR_MODEL,
     ATTR_SW_VERSION,
@@ -154,7 +150,11 @@ from .const import (
 )
 from .iidmanager import AccessoryIIDStorage
 from .models import HomeKitConfigEntry, HomeKitEntryData
-from .target import async_track_target_entity_change
+from .target import (
+    async_target_entity_ids_by_type,
+    async_track_target_entity_change,
+    should_include_entity,
+)
 from .type_triggers import DeviceTriggerAccessory
 from .util import (
     accessory_friendly_name,
@@ -178,18 +178,6 @@ STATUS_STOPPED = 2
 STATUS_WAIT = 3
 
 PORT_CLEANUP_CHECK_INTERVAL_SECS = 1
-
-_TARGET_PRIORITY = {
-    ATTR_ENTITY_ID: 80,
-    ATTR_DEVICE_ID: 70,
-    ATTR_AREA_ID: 40,
-    ATTR_FLOOR_ID: 30,
-    ATTR_LABEL_ID: 20,
-}
-_ENTITY_GLOB_PRIORITY = 60
-_DOMAIN_PRIORITY = 50
-_UNKNOWN_TARGET_PRIORITY = 10
-_NO_MATCH_PRIORITY = -1
 
 _HOMEKIT_CONFIG_UPDATE_TIME = (
     10  # number of seconds to wait for homekit to see the c# change
@@ -244,22 +232,6 @@ def _entity_filter_config(config: dict[str, Any]) -> dict[str, Any]:
             CONF_INCLUDE_ENTITY_GLOBS,
         )
     }
-
-
-@callback
-def _async_target_entity_ids_by_type(
-    hass: HomeAssistant, targets: ConfigType
-) -> dict[str, set[str]]:
-    """Expand each target type separately to preserve match specificity."""
-    expanded: dict[str, set[str]] = {}
-    for target_type, target_ids in targets.items():
-        if not target_ids:
-            continue
-        selected = async_extract_referenced_entity_ids(
-            hass, TargetSelection({target_type: target_ids})
-        )
-        expanded[target_type] = selected.referenced | selected.indirectly_referenced
-    return expanded
 
 
 BRIDGE_SCHEMA = vol.All(
@@ -960,41 +932,6 @@ class HomeKit:
         )
 
     @callback
-    def _target_match_priority(
-        self, entity_id: str, expanded_targets: dict[str, set[str]]
-    ) -> int:
-        """Return the most specific target type matching an entity."""
-        return max(
-            (
-                _TARGET_PRIORITY.get(target_type, _UNKNOWN_TARGET_PRIORITY)
-                for target_type, entity_ids in expanded_targets.items()
-                if entity_id in entity_ids
-            ),
-            default=_NO_MATCH_PRIORITY,
-        )
-
-    @callback
-    def _base_filter_match_priority(self, entity_id: str, *, include: bool) -> int:
-        """Return the most specific base filter rule matching an entity."""
-        config = self._filter.config
-        if include:
-            entities_key = CONF_INCLUDE_ENTITIES
-            globs_key = CONF_INCLUDE_ENTITY_GLOBS
-            domains_key = CONF_INCLUDE_DOMAINS
-        else:
-            entities_key = CONF_EXCLUDE_ENTITIES
-            globs_key = CONF_EXCLUDE_ENTITY_GLOBS
-            domains_key = CONF_EXCLUDE_DOMAINS
-
-        if entity_id in config[entities_key]:
-            return _TARGET_PRIORITY[ATTR_ENTITY_ID]
-        if any(fnmatchcase(entity_id, pattern) for pattern in config[globs_key]):
-            return _ENTITY_GLOB_PRIORITY
-        if entity_id.partition(".")[0] in config[domains_key]:
-            return _DOMAIN_PRIORITY
-        return _NO_MATCH_PRIORITY
-
-    @callback
     def _should_include_entity(
         self,
         entity_id: str,
@@ -1003,19 +940,13 @@ class HomeKit:
         has_include_rules: bool,
     ) -> bool:
         """Resolve include and exclude rules by specificity."""
-        include_priority = max(
-            self._base_filter_match_priority(entity_id, include=True),
-            self._target_match_priority(entity_id, targeted_included_entity_ids),
+        return should_include_entity(
+            entity_id,
+            self._filter.config,
+            targeted_included_entity_ids,
+            targeted_excluded_entity_ids,
+            has_include_rules,
         )
-        exclude_priority = max(
-            self._base_filter_match_priority(entity_id, include=False),
-            self._target_match_priority(entity_id, targeted_excluded_entity_ids),
-        )
-        if include_priority != _NO_MATCH_PRIORITY:
-            return include_priority >= exclude_priority
-        if exclude_priority != _NO_MATCH_PRIORITY:
-            return False
-        return not has_include_rules
 
     async def async_configure_accessories(self) -> list[State]:
         """Configure accessories for the included states."""
@@ -1023,10 +954,10 @@ class HomeKit:
         ent_reg = er.async_get(self.hass)
         device_lookup: dict[str, dict[tuple[str, str | None], str]] = {}
         entity_states: list[State] = []
-        targeted_included_entity_ids = _async_target_entity_ids_by_type(
+        targeted_included_entity_ids = async_target_entity_ids_by_type(
             self.hass, self._include_targets
         )
-        targeted_excluded_entity_ids = _async_target_entity_ids_by_type(
+        targeted_excluded_entity_ids = async_target_entity_ids_by_type(
             self.hass, self._exclude_targets
         )
         has_include_rules = bool(

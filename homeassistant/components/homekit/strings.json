@@ -4,9 +4,21 @@
       "port_name_in_use": "An accessory or bridge with the same name or port is already configured."
     },
     "step": {
+      "include": {
+        "data": {
+          "exclude_targets": "Excluded targets",
+          "include_targets": "Included targets"
+        },
+        "description": "Selected domains are included in full, and selected targets are included independently. More specific selections take precedence, and exclusions win conflicts at the same specificity.",
+        "title": "Include and exclude targets"
+      },
       "pairing": {
         "description": "To complete pairing follow the instructions in “Notifications” under “HomeKit Pairing”.",
         "title": "Pair HomeKit"
+      },
+      "review": {
+        "description": "{count} entities will be selected for HomeKit.",
+        "title": "Review entity selection"
       },
       "user": {
         "data": {
@@ -44,28 +56,25 @@
         "description": "Choose which accessory each climate entity uses in HomeKit. Heater Cooler puts the mode, temperature, and the supported fan speed and swing controls on one air conditioner style tile; Thermostat is the classic temperature dial with a separate fan. Automatic keeps the accessory the entity already uses and picks the best fit when it is bridged for the first time. Changing the accessory type keeps the room and name, but HomeKit scenes or automations that used the old controls may need to be recreated.",
         "title": "Climate accessory configuration"
       },
-      "exclude": {
-        "data": {
-          "exclude_targets": "Excluded targets"
-        },
-        "description": "Select targets to exclude. Other entities in \u201c{domains}\u201d are included, except for categorized entities.",
-        "title": "Exclude targets"
-      },
       "include": {
         "data": {
+          "exclude_targets": "Excluded targets",
           "include_targets": "Included targets"
         },
-        "description": "Select targets to include. A selected domain is included in full unless one or more of its entities are selected directly.",
-        "title": "Include targets"
+        "description": "Selected domains are included in full, and selected targets are included independently. More specific selections take precedence, and exclusions win conflicts at the same specificity.",
+        "title": "Include and exclude targets"
       },
       "init": {
         "data": {
           "domains": "[%key:component::homekit::config::step::user::data::include_domains%]",
-          "include_exclude_mode": "Inclusion mode",
           "mode": "HomeKit mode"
         },
-        "description": "HomeKit can be configured to expose a bridge or a single accessory. In accessory mode, only a single entity can be used. Accessory mode is required for media players with the TV or RECEIVER device class to function properly. Entities in the “Domains to include” will be included to HomeKit. You will be able to select which entities to include or exclude from this list on the next screen.",
+        "description": "HomeKit can expose a bridge or a single accessory. Accessory mode supports one entity and is required for TV or receiver media players. In bridge mode, the next screens let you select independent include and exclude targets in addition to entire domains.",
         "title": "Select mode and domains."
+      },
+      "review": {
+        "description": "{count} entities will be selected for HomeKit.",
+        "title": "Review entity selection"
       },
       "yaml": {
         "description": "This entry is controlled via YAML",

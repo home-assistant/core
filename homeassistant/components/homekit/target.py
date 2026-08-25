@@ -1,10 +1,17 @@
 """Helpers for tracking HomeKit target selections."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Mapping
+from fnmatch import fnmatchcase
 import logging
 from typing import Any, override
 
-from homeassistant.const import ATTR_ENTITY_ID
+from homeassistant.const import (
+    ATTR_AREA_ID,
+    ATTR_DEVICE_ID,
+    ATTR_ENTITY_ID,
+    ATTR_FLOOR_ID,
+    ATTR_LABEL_ID,
+)
 from homeassistant.core import (
     CALLBACK_TYPE,
     Event,
@@ -20,6 +27,14 @@ from homeassistant.helpers import (
     target as target_helper,
 )
 from homeassistant.helpers.debounce import Debouncer
+from homeassistant.helpers.entityfilter import (
+    CONF_EXCLUDE_DOMAINS,
+    CONF_EXCLUDE_ENTITIES,
+    CONF_EXCLUDE_ENTITY_GLOBS,
+    CONF_INCLUDE_DOMAINS,
+    CONF_INCLUDE_ENTITIES,
+    CONF_INCLUDE_ENTITY_GLOBS,
+)
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelection
 from homeassistant.helpers.typing import ConfigType
@@ -27,6 +42,95 @@ from homeassistant.helpers.typing import ConfigType
 from .const import TARGET_CHANGE_RELOAD_COOLDOWN
 
 _LOGGER = logging.getLogger(__name__)
+
+_TARGET_PRIORITY = {
+    ATTR_ENTITY_ID: 80,
+    ATTR_DEVICE_ID: 70,
+    ATTR_AREA_ID: 50,
+    ATTR_FLOOR_ID: 40,
+    ATTR_LABEL_ID: 30,
+}
+_ENTITY_GLOB_PRIORITY = 60
+_DOMAIN_PRIORITY = 20
+_UNKNOWN_TARGET_PRIORITY = 10
+_NO_MATCH_PRIORITY = -1
+
+
+@callback
+def async_target_entity_ids_by_type(
+    hass: HomeAssistant, targets: Mapping[str, list[str]]
+) -> dict[str, set[str]]:
+    """Expand each target type separately to preserve match specificity."""
+    expanded: dict[str, set[str]] = {}
+    for target_type, target_ids in targets.items():
+        if not target_ids:
+            continue
+        selected = target_helper.async_extract_referenced_entity_ids(
+            hass, TargetSelection({target_type: target_ids})
+        )
+        expanded[target_type] = selected.referenced | selected.indirectly_referenced
+    return expanded
+
+
+def _target_match_priority(
+    entity_id: str, expanded_targets: Mapping[str, set[str]]
+) -> int:
+    """Return the most specific target type matching an entity."""
+    return max(
+        (
+            _TARGET_PRIORITY.get(target_type, _UNKNOWN_TARGET_PRIORITY)
+            for target_type, entity_ids in expanded_targets.items()
+            if entity_id in entity_ids
+        ),
+        default=_NO_MATCH_PRIORITY,
+    )
+
+
+def _base_filter_match_priority(
+    entity_id: str, filter_config: Mapping[str, Any], *, include: bool
+) -> int:
+    """Return the most specific base filter rule matching an entity."""
+    if include:
+        entities_key = CONF_INCLUDE_ENTITIES
+        globs_key = CONF_INCLUDE_ENTITY_GLOBS
+        domains_key = CONF_INCLUDE_DOMAINS
+    else:
+        entities_key = CONF_EXCLUDE_ENTITIES
+        globs_key = CONF_EXCLUDE_ENTITY_GLOBS
+        domains_key = CONF_EXCLUDE_DOMAINS
+
+    if entity_id in filter_config.get(entities_key, []):
+        return _TARGET_PRIORITY[ATTR_ENTITY_ID]
+    if any(
+        fnmatchcase(entity_id, pattern) for pattern in filter_config.get(globs_key, [])
+    ):
+        return _ENTITY_GLOB_PRIORITY
+    if entity_id.partition(".")[0] in filter_config.get(domains_key, []):
+        return _DOMAIN_PRIORITY
+    return _NO_MATCH_PRIORITY
+
+
+def should_include_entity(
+    entity_id: str,
+    filter_config: Mapping[str, Any],
+    included_targets: Mapping[str, set[str]],
+    excluded_targets: Mapping[str, set[str]],
+    has_include_rules: bool,
+) -> bool:
+    """Resolve include and exclude rules by specificity."""
+    include_priority = max(
+        _base_filter_match_priority(entity_id, filter_config, include=True),
+        _target_match_priority(entity_id, included_targets),
+    )
+    exclude_priority = max(
+        _base_filter_match_priority(entity_id, filter_config, include=False),
+        _target_match_priority(entity_id, excluded_targets),
+    )
+    if include_priority != _NO_MATCH_PRIORITY:
+        return include_priority > exclude_priority
+    if exclude_priority != _NO_MATCH_PRIORITY:
+        return False
+    return not has_include_rules
 
 
 # This functionality should move into the core target tracker in a later PR.

@@ -733,7 +733,7 @@ async def test_homekit_target_filter(
     assert hass.states.get("light.included_by_area_label") in filtered_states
     assert hass.states.get("light.included_by_id") in filtered_states
     assert hass.states.get("switch.domain_included") in filtered_states
-    assert hass.states.get("cover.excluded_by_domain") not in filtered_states
+    assert hass.states.get("cover.excluded_by_domain") in filtered_states
     assert hass.states.get(config_entity.entity_id) not in filtered_states
     assert hass.states.get("light.excluded_by_id") not in filtered_states
     assert hass.states.get("light.excluded_by_glob") not in filtered_states
@@ -826,7 +826,9 @@ async def test_homekit_native_target_expansion(
         (ATTR_AREA_ID, ATTR_DEVICE_ID, False),
         (ATTR_AREA_ID, ATTR_FLOOR_ID, True),
         (ATTR_FLOOR_ID, ATTR_AREA_ID, False),
-        (ATTR_DEVICE_ID, ATTR_DEVICE_ID, True),
+        (ATTR_DEVICE_ID, ATTR_DEVICE_ID, False),
+        (ATTR_AREA_ID, ATTR_AREA_ID, False),
+        (ATTR_FLOOR_ID, ATTR_FLOOR_ID, False),
     ],
 )
 async def test_homekit_expanded_target_specificity(
@@ -880,20 +882,30 @@ async def test_homekit_expanded_target_specificity(
     ("include_rule", "exclude_rule", "expected"),
     [
         ("entity", "device", True),
+        ("entity", "label", True),
+        ("entity", "entity", False),
         ("device", "entity", False),
         ("device", "glob", True),
+        ("device", "device", False),
         ("glob", "device", False),
-        ("glob", "domain", True),
-        ("domain", "glob", False),
-        ("domain", "area", True),
-        ("area", "domain", False),
+        ("glob", "area", True),
+        ("glob", "glob", False),
+        ("area", "glob", False),
         ("area", "floor", True),
+        ("area", "domain", True),
+        ("area", "area", False),
         ("floor", "area", False),
         ("floor", "label", True),
+        ("floor", "floor", False),
         ("label", "floor", False),
-        ("label", "unknown", True),
-        ("unknown", "label", False),
-        ("label", "label", True),
+        ("label", "domain", True),
+        ("label", "label", False),
+        ("domain", "area", False),
+        ("domain", "label", False),
+        ("domain", "unknown", True),
+        ("domain", "domain", False),
+        ("unknown", "domain", False),
+        ("unknown", "unknown", False),
     ],
 )
 async def test_homekit_target_filter_specificity(
@@ -902,7 +914,7 @@ async def test_homekit_target_filter_specificity(
     exclude_rule: str,
     expected: bool,
 ) -> None:
-    """Test that more specific filter rules take precedence."""
+    """Test specificity precedence and that exclusions win equal conflicts."""
     entity_id = "light.test"
 
     def _base_filter(rule: str, include: bool) -> EntityFilter:
