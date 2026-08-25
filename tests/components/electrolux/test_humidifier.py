@@ -57,7 +57,7 @@ async def test_humidifier(
         # turn on/off command tests
         (
             "electrolux_dehumidifier",
-            "humidifier.dehumidifier_dehumidifier",
+            "humidifier.dehumidifier",
             {},
             SERVICE_TURN_ON,
             {},
@@ -65,7 +65,7 @@ async def test_humidifier(
         ),
         (
             "electrolux_dehumidifier",
-            "humidifier.dehumidifier_dehumidifier",
+            "humidifier.dehumidifier",
             {},
             SERVICE_TURN_OFF,
             {},
@@ -74,7 +74,7 @@ async def test_humidifier(
         # set humidity command tests
         (
             "electrolux_dehumidifier",
-            "humidifier.dehumidifier_dehumidifier",
+            "humidifier.dehumidifier",
             {"applianceState": "RUNNING"},
             SERVICE_SET_HUMIDITY,
             {ATTR_HUMIDITY: 35},
@@ -82,7 +82,7 @@ async def test_humidifier(
         ),
         (
             "electrolux_dehumidifier",
-            "humidifier.dehumidifier_dehumidifier",
+            "humidifier.dehumidifier",
             {"applianceState": "RUNNING"},
             SERVICE_SET_HUMIDITY,
             {ATTR_HUMIDITY: 45},
@@ -90,7 +90,7 @@ async def test_humidifier(
         ),
         (
             "electrolux_dehumidifier",
-            "humidifier.dehumidifier_dehumidifier",
+            "humidifier.dehumidifier",
             {"applianceState": "RUNNING"},
             SERVICE_SET_HUMIDITY,
             {ATTR_HUMIDITY: 85},
@@ -99,7 +99,7 @@ async def test_humidifier(
         # set mode command tests
         (
             "electrolux_dehumidifier",
-            "humidifier.dehumidifier_dehumidifier",
+            "humidifier.dehumidifier",
             {"applianceState": "RUNNING"},
             SERVICE_SET_MODE,
             {ATTR_MODE: "AUTO"},
@@ -107,7 +107,7 @@ async def test_humidifier(
         ),
         (
             "electrolux_dehumidifier",
-            "humidifier.dehumidifier_dehumidifier",
+            "humidifier.dehumidifier",
             {"applianceState": "RUNNING"},
             SERVICE_SET_MODE,
             {ATTR_MODE: "CONTINUOUS"},
@@ -115,7 +115,7 @@ async def test_humidifier(
         ),
         (
             "electrolux_dehumidifier",
-            "humidifier.dehumidifier_dehumidifier",
+            "humidifier.dehumidifier",
             {"applianceState": "RUNNING"},
             SERVICE_SET_MODE,
             {ATTR_MODE: "DRY"},
@@ -123,7 +123,7 @@ async def test_humidifier(
         ),
         (
             "electrolux_dehumidifier",
-            "humidifier.dehumidifier_dehumidifier",
+            "humidifier.dehumidifier",
             {"applianceState": "RUNNING"},
             SERVICE_SET_MODE,
             {ATTR_MODE: "QUIET"},

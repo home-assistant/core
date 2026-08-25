@@ -155,11 +155,6 @@
         }
       }
     },
-    "humidifier": {
-      "dehumidifier": {
-        "name": "Dehumidifier"
-      }
-    },
     "light": {
       "bottomoven_cavity_light": {
         "name": "Lower cavity light"

@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_humidifier[humidifier.dehumidifier_dehumidifier-entry]
+# name: test_humidifier[humidifier.dehumidifier-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -23,7 +23,7 @@
     'disabled_by': None,
     'domain': 'humidifier',
     'entity_category': None,
-    'entity_id': 'humidifier.dehumidifier_dehumidifier',
+    'entity_id': 'humidifier.dehumidifier',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -31,12 +31,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Dehumidifier',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': <HumidifierDeviceClass.DEHUMIDIFIER: 'dehumidifier'>,
     'original_icon': None,
-    'original_name': 'Dehumidifier',
+    'original_name': None,
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -46,7 +46,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_humidifier[humidifier.dehumidifier_dehumidifier-state]
+# name: test_humidifier[humidifier.dehumidifier-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <HumidifierEntityCapabilityAttribute.AVAILABLE_MODES: 'available_modes'>: list([
@@ -58,7 +58,7 @@
       ]),
       <HumidifierEntityStateAttribute.CURRENT_HUMIDITY: 'current_humidity'>: 50,
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'dehumidifier',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier Dehumidifier',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Dehumidifier',
       <HumidifierEntityStateAttribute.HUMIDITY: 'humidity'>: 35,
       <HumidifierEntityCapabilityAttribute.MAX_HUMIDITY: 'max_humidity'>: 85,
       <HumidifierEntityCapabilityAttribute.MIN_HUMIDITY: 'min_humidity'>: 35,
@@ -66,7 +66,7 @@
       <EntityStateAttribute.SUPPORTED_FEATURES: 'supported_features'>: <HumidifierEntityFeature: 1>,
     }),
     'context': <ANY>,
-    'entity_id': 'humidifier.dehumidifier_dehumidifier',
+    'entity_id': 'humidifier.dehumidifier',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
