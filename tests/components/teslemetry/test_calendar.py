@@ -418,7 +418,6 @@ async def test_calendar_end_of_day_period(
 
     await setup_platform(hass, [Platform.CALENDAR])
 
-    # Before the fix, hour 24 raised ValueError while the state was written
     state = hass.states.get(ENTITY_BUY)
     assert state
     assert state.state == "on"
