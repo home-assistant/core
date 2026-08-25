@@ -554,6 +554,12 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
 
         try:
             nvr = await protect.get_nvr_public()
+        except NotAuthorized as ex:
+            # NotAuthorized subclasses ClientError, so it has to come first or
+            # a key this endpoint rejects reads as a connection failure.
+            _LOGGER.debug(ex)
+            errors[CONF_API_KEY] = "invalid_auth"
+            return None, "", errors
         except (TimeoutError, ClientError) as ex:
             _LOGGER.error(ex)
             errors["base"] = "cannot_connect"

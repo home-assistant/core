@@ -2219,7 +2219,7 @@ async def test_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
 
 
 @pytest.mark.parametrize(
-    ("meta_effect", "resolve_effect", "expected_errors"),
+    ("meta_effect", "nvr_effect", "expected_errors"),
     [
         pytest.param(
             NotAuthorized, lambda: None, {"api_key": "invalid_auth"}, id="invalid_auth"
@@ -2240,7 +2240,13 @@ async def test_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
             id="mac_unresolved",
         ),
         pytest.param(
-            _meta_info, ClientError, {"base": "cannot_connect"}, id="resolve_error"
+            _meta_info, ClientError, {"base": "cannot_connect"}, id="nvr_error"
+        ),
+        pytest.param(
+            _meta_info,
+            NotAuthorized,
+            {"api_key": "invalid_auth"},
+            id="nvr_invalid_auth",
         ),
     ],
 )
@@ -2248,7 +2254,7 @@ async def test_api_key_flow_errors(
     hass: HomeAssistant,
     nvr: NVR,
     meta_effect: type[Exception] | Callable[[], Mock],
-    resolve_effect: type[Exception] | Callable[[], None],
+    nvr_effect: type[Exception] | Callable[[], Mock | None],
     expected_errors: dict[str, str],
 ) -> None:
     """Validation failures surface the matching form error and can recover."""
@@ -2261,7 +2267,7 @@ async def test_api_key_flow_errors(
         ),
         patch(
             "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
-            side_effect=resolve_effect,
+            side_effect=nvr_effect,
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
