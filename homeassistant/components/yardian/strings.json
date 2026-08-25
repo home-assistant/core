@@ -29,7 +29,7 @@
         "name": "Standby"
       },
       "watering_running": {
-        "name": "Watering running"
+        "name": "Zone running"
       },
       "zone_enabled": {
         "name": "Enabled"
@@ -37,7 +37,7 @@
     },
     "button": {
       "stop_irrigation": {
-        "name": "Stop irrigation"
+        "name": "Stop all zones"
       }
     },
     "sensor": {
@@ -58,14 +58,14 @@
   },
   "services": {
     "start_irrigation": {
-      "description": "Starts the irrigation.",
+      "description": "Start a zone with a duration.",
       "fields": {
         "duration": {
           "description": "Duration for the target to be turned on.",
           "name": "Duration"
         }
       },
-      "name": "Start irrigation"
+      "name": "Start zone"
     }
   }
 }
