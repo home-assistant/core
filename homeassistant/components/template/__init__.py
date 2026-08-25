@@ -229,7 +229,6 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
                     conf_section[CONF_ACTIONS] = await async_validate_actions_config(
                         hass, actions_config
                     )
-                    coordinator_tasks.append(init_coordinator(hass, conf_section))
                 except (vol.Invalid, HomeAssistantError) as err:
                     breadcrumb = "template section"
                     if (unique_id := conf_section.get(CONF_UNIQUE_ID)) is not None:
@@ -240,7 +239,8 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
                         breadcrumb,
                         _humanize(err, actions_config),
                     )
-                continue
+
+                    continue
 
             coordinator_tasks.append(init_coordinator(hass, conf_section))
             continue
