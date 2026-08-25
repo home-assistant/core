@@ -1,0 +1,27 @@
+cover_set_configuration:
+  target:
+    entity:
+      integration: hausbus
+      domain: cover
+  fields:
+    close_time:
+      required: true
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 255
+          unit_of_measurement: s
+    open_time:
+      required: true
+      default: 30
+      selector:
+        number:
+          min: 1
+          max: 255
+          unit_of_measurement: s
+    invert_direction:
+      required: false
+      default: false
+      selector:
+        boolean:

@@ -2,12 +2,17 @@
 
 from unittest.mock import MagicMock
 
+import pytest
+
 from pyhausbus import HausBusUtils
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.params.EFirmwareId import (
     EFirmwareId,
 )
 from pyhausbus.de.hausbus.homeassistant.proxy.Rollladen import Rollladen
+from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Configuration import (
+    Configuration,
+)
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.EvClosed import EvClosed
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.EvOpen import EvOpen
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.EvStart import EvStart
@@ -19,6 +24,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import
 from homeassistant.components.hausbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -187,3 +193,53 @@ async def test_cover_open_close_stop_and_set_position(
         blocking=True,
     )
     channel.moveToPosition.assert_called_once_with(70)
+
+
+async def test_cover_set_configuration_success(
+    hass: HomeAssistant, mock_home_server: MagicMock
+) -> None:
+    """cover_set_configuration writes timing and direction to the device."""
+    entity_id, channel = await _setup_cover(hass, mock_home_server)
+
+    mock_options = MagicMock()
+    mock_config = MagicMock(spec=Configuration)
+    mock_config.getOptions.return_value = mock_options
+
+    async_dispatcher_send(hass, UPDATE_SIGNAL, mock_config)
+    await hass.async_block_till_done()
+
+    await hass.services.async_call(
+        DOMAIN,
+        "cover_set_configuration",
+        {
+            "entity_id": entity_id,
+            "close_time": 20,
+            "open_time": 25,
+            "invert_direction": True,
+        },
+        blocking=True,
+    )
+
+    mock_options.setInvertDirection.assert_called_once_with(True)
+    channel.setConfiguration.assert_called_once_with(20, 25, mock_options)
+    channel.getConfiguration.assert_called()
+
+
+async def test_cover_set_configuration_raises_when_not_ready(
+    hass: HomeAssistant, mock_home_server: MagicMock
+) -> None:
+    """cover_set_configuration raises HomeAssistantError before configuration is received."""
+    entity_id, _channel = await _setup_cover(hass, mock_home_server)
+
+    with pytest.raises(HomeAssistantError):
+        await hass.services.async_call(
+            DOMAIN,
+            "cover_set_configuration",
+            {
+                "entity_id": entity_id,
+                "close_time": 30,
+                "open_time": 30,
+                "invert_direction": False,
+            },
+            blocking=True,
+        )
