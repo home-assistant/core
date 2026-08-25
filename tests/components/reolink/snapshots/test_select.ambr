@@ -1336,7 +1336,7 @@
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'custom',
         'smart',
-        'powersaving',
+        'power_saving',
       ]),
     }),
     'config_entry_id': <ANY>,
@@ -1376,7 +1376,7 @@
       <SelectEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'custom',
         'smart',
-        'powersaving',
+        'power_saving',
       ]),
     }),
     'context': <ANY>,
