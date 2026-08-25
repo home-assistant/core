@@ -2,7 +2,12 @@
 
 from typing import override
 
-from technove import Station as TechnoVEStation, TechnoVE, TechnoVEError
+from technove import (
+    Station as TechnoVEStation,
+    TechnoVE,
+    TechnoVEConnectionError,
+    TechnoVEError,
+)
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_HOST
@@ -39,6 +44,11 @@ class TechnoVEDataUpdateCoordinator(DataUpdateCoordinator[TechnoVEStation]):
         """Fetch data from TechnoVE."""
         try:
             station = await self.technove.update()
+        except TechnoVEConnectionError as error:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+            ) from error
         except TechnoVEError as error:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
