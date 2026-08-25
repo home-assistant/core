@@ -4120,8 +4120,18 @@ class EntityRegistryDisabledHandler:
     def _async_handle_reload(self, _now: Any) -> None:
         """Handle a reload."""
         self._remove_call_later = None
-        to_reload = self.changed
+        # An entry may have been removed since the reload was scheduled. Scheduling a
+        # reload for it raises UnknownEntry, which would leave the rest of the batch
+        # unreloaded with nothing to retry it.
+        to_reload = {
+            entry_id
+            for entry_id in self.changed
+            if self.hass.config_entries.async_get_entry(entry_id) is not None
+        }
         self.changed = set()
+
+        if not to_reload:
+            return
 
         _LOGGER.info(
             (

@@ -4365,6 +4365,34 @@ async def test_devices_collection_operations(
     assert entry in device_registry.devices
 
 
+async def test_child_devices_collection_operations(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the supported `Collection[ChildDeviceEntry]` surface of `child_devices`.
+
+    Iteration yields the entries (not the ids), `len()` returns the count, and
+    `ChildDeviceEntry` membership works. Unlike `DeviceRegistry.devices`, the child
+    collection is a plain read-only view, so mapping-style access, `.values()`, and
+    mutation are unavailable.
+    """
+    _, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    assert list(device_registry.child_devices) == [child_device]
+    assert [device.id for device in device_registry.child_devices] == [child_device.id]
+    assert len(device_registry.child_devices) == 1
+    assert child_device in device_registry.child_devices
+
+    with pytest.raises(TypeError):
+        _ = device_registry.child_devices[child_device.id]  # type: ignore[index]
+    with pytest.raises(AttributeError):
+        device_registry.child_devices.values()  # type: ignore[attr-defined]
+    with pytest.raises(TypeError):
+        device_registry.child_devices[child_device.id] = child_device  # type: ignore[index]
+
+
 @pytest.mark.parametrize(
     ("integration_frame_path", "expectation", "expected_log"),
     [
@@ -4527,12 +4555,14 @@ async def test_async_get_device_deprecated(
 
 
 @pytest.mark.parametrize(
-    ("parameter", "value", "replacement"),
+    ("parameter", "value", "advice"),
     [
-        ("default_manufacturer", "manufacturer", "manufacturer"),
-        ("default_model", "model", "model"),
-        ("default_name", "name", "name"),
-        ("via_device", ("some_domain", "via_id"), "via_device_id"),
+        ("created_at", "2024-01-01T00:00:00+00:00", ", which is ignored"),
+        ("default_manufacturer", "manufacturer", "; use `manufacturer` instead"),
+        ("default_model", "model", "; use `model` instead"),
+        ("default_name", "name", "; use `name` instead"),
+        ("modified_at", "2024-01-01T00:00:00+00:00", ", which is ignored"),
+        ("via_device", ("some_domain", "via_id"), "; use `via_device_id` instead"),
     ],
 )
 @pytest.mark.parametrize(
@@ -4562,7 +4592,7 @@ async def test_async_get_or_create_deprecated_parameters(
     caplog: pytest.LogCaptureFixture,
     parameter: str,
     value: Any,
-    replacement: str,
+    advice: str,
     expectation: AbstractContextManager,
     expected_log: int,
 ) -> None:
@@ -4578,7 +4608,7 @@ async def test_async_get_or_create_deprecated_parameters(
 
     what = (
         "calls `device_registry.async_get_or_create` with a deprecated "
-        f"`{parameter}` parameter; use `{replacement}` instead"
+        f"`{parameter}` parameter{advice}"
     )
     with patch.object(frame, "_REPORTED_INTEGRATIONS", set()), expectation:
         device_registry.async_get_or_create(
@@ -4593,9 +4623,11 @@ async def test_async_get_or_create_deprecated_parameters(
 @pytest.mark.parametrize(
     ("parameter", "value"),
     [
+        ("created_at", "2024-01-01T00:00:00+00:00"),
         ("default_manufacturer", "manufacturer"),
         ("default_model", "model"),
         ("default_name", "name"),
+        ("modified_at", "2024-01-01T00:00:00+00:00"),
         ("via_device", ("some_domain", "via_id")),
     ],
 )
@@ -11123,7 +11155,10 @@ async def test_link_device_info_matching_child_raises(
     # The child device is left untouched: not converted, no new device created
     assert len(device_registry.devices) == 1
     assert len(device_registry.child_devices) == 1
-    assert device_registry._child_devices[child_device.id] == child_device
+    assert (
+        device_registry.async_get(child_device.id, include_main_devices=False)
+        == child_device
+    )
     assert child_device.identifiers == {("test", "strip_outlet_1")}
 
 
