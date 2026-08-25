@@ -310,6 +310,11 @@ class DefaultAgent(ConversationEntity):
         self, event_data: er.EventEntityRegistryUpdatedData
     ) -> bool:
         """Filter entity registry changed events."""
+        if event_data["action"] == "remove":
+            # An entry can go while its state lingers, and the gazetteer reads the
+            # names and area an entity answers to from that entry.
+            return True
+
         return event_data["action"] == "update" and any(
             field in event_data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
         )
@@ -319,6 +324,9 @@ class DefaultAgent(ConversationEntity):
         self, event_data: dr.EventDeviceRegistryUpdatedData
     ) -> bool:
         """Filter device registry changed events."""
+        if event_data["action"] == "remove":
+            return True
+
         return event_data["action"] == "update" and any(
             field in event_data["changes"] for field in _DEVICE_REGISTRY_UPDATE_FIELDS
         )
