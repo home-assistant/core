@@ -262,13 +262,13 @@ def async_remove_package_binary_sensor(
         registry.async_remove(entity.entity_id)
 
 
-# Sense settings whose read-only mirror was dropped, keyed by the mirror's own
-# (platform, key) and pointing at the (platform, key) of the control that
-# replaced it. Camera and light entities reuse these key strings, so the match
-# is scoped to the sensor MACs below.
-# Release the deprecated mirrors are removed in.
+# Release that removes the deprecated mirrors.
 SENSE_SETTING_MIRROR_BREAKS_IN = "2027.3.0"
 
+# Sense settings whose read-only mirror is deprecated, keyed by the mirror's own
+# (platform, key) and pointing at the (platform, key) of the control that
+# replaces it. Camera and light entities reuse these key strings, so the match
+# is scoped to the sensor MACs below.
 _SENSE_SETTING_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str]] = {
     (Platform.BINARY_SENSOR, "motion_enabled"): (Platform.SWITCH, "motion"),
     (Platform.BINARY_SENSOR, "temperature"): (Platform.SWITCH, "temperature"),

@@ -7,7 +7,10 @@ from uiprotect.data import Camera, Sensor
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
-from homeassistant.components.unifiprotect.migrate import SENSE_SETTING_MIRROR_BREAKS_IN
+from homeassistant.components.unifiprotect.migrate import (
+    SENSE_SETTING_MIRROR_BREAKS_IN,
+    async_deprecate_sense_setting_mirrors,
+)
 from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -476,6 +479,50 @@ async def test_migrate_sense_setting_mirror_in_use(
         Platform.SWITCH, DOMAIN, f"{sensor_all.mac}_alarm"
     )
     assert issue.translation_placeholders["replacement"] == replacement_id
+
+
+async def test_migrate_sense_setting_mirror_repair_clears_when_unused(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+    ufp: MockUFPFixture,
+    sensor_all: Sensor,
+) -> None:
+    """The deprecation repair goes away once the last usage is gone.
+
+    A removal repair has to persist, but the entity is still there, so the user
+    can act on this one and it must not keep nagging afterwards.
+    """
+    mirror = entity_registry.async_get_or_create(
+        Platform.BINARY_SENSOR,
+        DOMAIN,
+        f"{sensor_all.mac}_alarm",
+        config_entry=ufp.entry,
+    )
+    await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
+    assert entity_registry.async_get(mirror.entity_id) is not None
+
+    # The repair a previous run raised while the mirror was still in use.
+    issue_id = f"sense_setting_mirror_deprecated_{sensor_all.mac}_alarm"
+    ir.async_create_issue(
+        hass,
+        DOMAIN,
+        issue_id,
+        is_fixable=False,
+        breaks_in_ha_version=SENSE_SETTING_MIRROR_BREAKS_IN,
+        severity=ir.IssueSeverity.WARNING,
+        translation_key="sense_setting_mirror_deprecated",
+        translation_placeholders={
+            "entity_id": mirror.entity_id,
+            "replacement": "switch.test_sensor_alarm_sound_detection",
+            "items": "* `automation.gone`\n",
+        },
+    )
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
+
+    async_deprecate_sense_setting_mirrors(hass, ufp.entry, ufp.api.bootstrap)
+
+    assert issue_registry.async_get_issue(DOMAIN, issue_id) is None
 
 
 async def test_migrate_sense_setting_mirror_in_use_no_replacement(
