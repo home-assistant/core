@@ -67,9 +67,11 @@ class WatercrystDataUpdateCoordinator[DataT](DataUpdateCoordinator[DataT]):
             RequestError,
             TimeoutError,
         ) as err:
-            raise UpdateFailed("Failed to update state", retry_after=60) from err
+            raise UpdateFailed(f"Failed to update {self.name}", retry_after=60) from err
         except WTCApiUnauthorizedError as err:
-            raise ConfigEntryAuthFailed("Failed to update state, unauthorized") from err
+            raise ConfigEntryAuthFailed(
+                f"Failed to update {self.name}, unauthorized"
+            ) from err
 
     async def _async_fetch_data(self) -> DataT:
         """Fetch data from API."""
@@ -103,7 +105,7 @@ class WatercrystStateUpdateCoordinator(WatercrystDataUpdateCoordinator[StateResp
 
 
 class WatercrystMeasurementsUpdateCoordinator(
-    WatercrystDataUpdateCoordinator[MeasurementResponse | None]
+    WatercrystDataUpdateCoordinator[MeasurementResponse]
 ):
     """Measurements data update coordinator."""
 
@@ -126,7 +128,7 @@ class WatercrystMeasurementsUpdateCoordinator(
         self._state = state
 
     @override
-    async def _async_fetch_data(self) -> MeasurementResponse | None:
+    async def _async_fetch_data(self) -> MeasurementResponse:
         if self._state.data is None or not self._state.data.online:
-            return None
+            raise UpdateFailed("Failed to update measurements", retry_after=60)
         return await self._client.get_measurements()

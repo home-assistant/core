@@ -74,7 +74,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
     except RequestError as err:
         raise ConfigEntryNotReady("Temporary API error") from err
     except HTTPStatusError as err:
-        raise ConfigEntryError("Unexpected error") from err
+        raise ConfigEntryNotReady("Unexpected error") from err
 
     connections: set[tuple[str, str]] = set()
 
@@ -87,7 +87,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
         manufacturer="WATERCryst",
         model=" ".join(part for part in (info.line, info.series) if part) or None,
         model_id=info.device_type_number,
-        name=info.name,
+        name=info.name or entry.title,
         serial_number=info.biocat_serial,
         sw_version=info.current_firmware_version,
         hw_version=info.current_hardware_version,
@@ -102,7 +102,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: WatercrystConfigEntry) -
     measurements = WatercrystMeasurementsUpdateCoordinator(
         hass=hass, config_entry=entry, client=client, state=state
     )
-    await measurements.async_config_entry_first_refresh()
+    await measurements.async_refresh()
 
     entry.runtime_data = RuntimeData(
         biocat_serial_number=info.biocat_serial,

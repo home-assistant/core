@@ -1,6 +1,6 @@
 """Abstract entity definitions."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.helpers.entity import Entity, EntityDescription
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
@@ -14,7 +14,6 @@ class WatercrystEntity[CoordinatorT: WatercrystDataUpdateCoordinator[Any]](
 ):
     """An abstract class for WATERCryst entities."""
 
-    _attr_should_poll = False
     _attr_has_entity_name = True
 
     def __init__(
@@ -24,7 +23,7 @@ class WatercrystEntity[CoordinatorT: WatercrystDataUpdateCoordinator[Any]](
         entity_description: EntityDescription,
     ) -> None:
         """Initialize a WatercrystEntity instance."""
-        CoordinatorEntity.__init__(self, coordinator)
+        super().__init__(coordinator)
 
         data = config_entry.runtime_data
 
@@ -32,4 +31,14 @@ class WatercrystEntity[CoordinatorT: WatercrystDataUpdateCoordinator[Any]](
         self._attr_unique_id = f"{data.biocat_serial_number}_{entity_description.key}"
 
         self.entity_description = entity_description
-        self.runtime_data = data
+        self._state = data.state
+
+    @override
+    @property
+    def available(self) -> bool:
+        """Return whether the device is available."""
+        return (
+            super().available
+            and self._state.data is not None
+            and self._state.data.online
+        )

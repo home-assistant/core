@@ -21,7 +21,7 @@ def test_entity_initialization(config_entry: MockConfigEntry) -> None:
 
     assert entity.unique_id == "2026123456789123_pressure"
     assert entity.entity_description is description
-    assert entity.runtime_data is config_entry.runtime_data
+    assert entity._state is config_entry.runtime_data.state
     assert entity.device_info is config_entry.runtime_data.device_info
     assert entity.should_poll is False
     assert entity.has_entity_name is True

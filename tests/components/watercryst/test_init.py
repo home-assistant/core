@@ -74,7 +74,7 @@ async def test_setup_and_unload(hass: HomeAssistant) -> None:
         (WTCApiTemporaryError(), ConfigEntryState.SETUP_RETRY),
         (WTCApiUnauthorizedError(), ConfigEntryState.SETUP_ERROR),
         (request_error(), ConfigEntryState.SETUP_RETRY),
-        (http_status_error(503), ConfigEntryState.SETUP_ERROR),
+        (http_status_error(503), ConfigEntryState.SETUP_RETRY),
     ],
 )
 async def test_setup_api_error(

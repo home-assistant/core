@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from typing import Any, override
 
 from pyocat.models import MeasurementResponse, StateResponse
@@ -32,8 +33,8 @@ from .entity import WatercrystEntity
 class WatercrystSensorEntityDescription[DataT](SensorEntityDescription):
     """Describes a WATERCryst sensor entity."""
 
-    available_fn: Callable[[RuntimeData], bool] = lambda _: True
-    value_fn: Callable[[DataT | None], StateType]
+    supported_fn: Callable[[RuntimeData], bool] = lambda _: True
+    value_fn: Callable[[DataT], StateType | datetime]
 
 
 MODES = {
@@ -66,49 +67,42 @@ STATE_SENSORS: list[WatercrystSensorEntityDescription[StateResponse]] = [
     WatercrystSensorEntityDescription[StateResponse](
         key="mode.id",
         translation_key="mode_id",
-        icon="mdi:circle-double",
         device_class=SensorDeviceClass.ENUM,
         options=list(MODES.values()),
         value_fn=lambda data: (
-            MODES.get(data.mode.id) if data and data.mode and data.mode.id else None
+            MODES.get(data.mode.id) if data.mode and data.mode.id else None
         ),
     ),
     WatercrystSensorEntityDescription[StateResponse](
         key="event.event_id",
         translation_key="event_id",
-        icon="mdi:alert-circle-outline",
-        value_fn=lambda data: data.event.event_id if data and data.event else None,
+        value_fn=lambda data: data.event.event_id if data.event else None,
     ),
     WatercrystSensorEntityDescription[StateResponse](
         key="event.category",
         translation_key="event_category",
-        icon="mdi:alert-circle-outline",
         device_class=SensorDeviceClass.ENUM,
         options=["error", "warning", "info"],
-        value_fn=lambda data: data.event.category if data and data.event else None,
+        value_fn=lambda data: data.event.category if data.event else None,
     ),
     WatercrystSensorEntityDescription[StateResponse](
         key="water_protection.pause_leakage_protection_until_utc",
         translation_key="pause_leakage_protection_until_utc",
-        icon="mdi:pause-circle-outline",
         device_class=SensorDeviceClass.TIMESTAMP,
-        available_fn=lambda data: data.has_leakage_protection_system,
+        supported_fn=lambda data: data.has_leakage_protection_system,
         value_fn=lambda data: (
             data.water_protection.pause_leakage_protection_until_utc
-            if data and data.water_protection
+            if data.water_protection
             else None
         ),
     ),
     WatercrystSensorEntityDescription[StateResponse](
         key="ml_state",
         translation_key="ml_state",
-        icon="mdi:pipe-leak",
         device_class=SensorDeviceClass.ENUM,
         options=list(ML_STATES.values()),
-        available_fn=lambda data: data.has_leakage_protection_system,
-        value_fn=lambda data: (
-            ML_STATES.get(data.ml_state) if data and data.ml_state else None
-        ),
+        supported_fn=lambda data: data.has_leakage_protection_system,
+        value_fn=lambda data: ML_STATES.get(data.ml_state) if data.ml_state else None,
     ),
 ]
 
@@ -120,8 +114,8 @@ MEASUREMENT_SENSORS: list[WatercrystSensorEntityDescription[MeasurementResponse]
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         suggested_display_precision=0,
-        available_fn=lambda data: data.has_temperature_sensor,
-        value_fn=lambda data: data.water_temp if data else None,
+        supported_fn=lambda data: data.has_temperature_sensor,
+        value_fn=lambda data: data.water_temp,
     ),
     WatercrystSensorEntityDescription[MeasurementResponse](
         key="pressure",
@@ -129,8 +123,8 @@ MEASUREMENT_SENSORS: list[WatercrystSensorEntityDescription[MeasurementResponse]
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfPressure.BAR,
         suggested_display_precision=2,
-        available_fn=lambda data: data.has_pressure_sensor,
-        value_fn=lambda data: data.pressure if data else None,
+        supported_fn=lambda data: data.has_pressure_sensor,
+        value_fn=lambda data: data.pressure,
     ),
     WatercrystSensorEntityDescription[MeasurementResponse](
         key="flow_rate",
@@ -138,8 +132,8 @@ MEASUREMENT_SENSORS: list[WatercrystSensorEntityDescription[MeasurementResponse]
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfVolumeFlowRate.LITERS_PER_MINUTE,
         suggested_display_precision=2,
-        available_fn=lambda data: data.has_flow_rate_sensor,
-        value_fn=lambda data: data.flow_rate if data else None,
+        supported_fn=lambda data: data.has_flow_rate_sensor,
+        value_fn=lambda data: data.flow_rate,
     ),
     WatercrystSensorEntityDescription[MeasurementResponse](
         key="todays_consumption",
@@ -148,8 +142,8 @@ MEASUREMENT_SENSORS: list[WatercrystSensorEntityDescription[MeasurementResponse]
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_display_precision=2,
-        available_fn=lambda data: data.has_flow_rate_sensor,
-        value_fn=lambda data: data.todays_consumption if data else None,
+        supported_fn=lambda data: data.has_flow_rate_sensor,
+        value_fn=lambda data: data.todays_consumption,
     ),
     WatercrystSensorEntityDescription[MeasurementResponse](
         key="total_consumption",
@@ -158,28 +152,26 @@ MEASUREMENT_SENSORS: list[WatercrystSensorEntityDescription[MeasurementResponse]
         state_class=SensorStateClass.TOTAL_INCREASING,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_display_precision=2,
-        available_fn=lambda data: data.has_flow_rate_sensor,
-        value_fn=lambda data: data.total_consumption if data else None,
+        supported_fn=lambda data: data.has_flow_rate_sensor,
+        value_fn=lambda data: data.total_consumption,
     ),
     WatercrystSensorEntityDescription[MeasurementResponse](
         key="last_water_tap_volume",
         translation_key="last_water_tap_volume",
-        icon="mdi:cup-water",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
         suggested_display_precision=2,
-        available_fn=lambda data: data.has_flow_rate_sensor,
-        value_fn=lambda data: data.last_water_tap_volume if data else None,
+        supported_fn=lambda data: data.has_flow_rate_sensor,
+        value_fn=lambda data: data.last_water_tap_volume,
     ),
     WatercrystSensorEntityDescription[MeasurementResponse](
         key="last_water_tap_duration",
         translation_key="last_water_tap_duration",
-        icon="mdi:timer-outline",
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.SECONDS,
         suggested_display_precision=0,
-        available_fn=lambda data: data.has_flow_rate_sensor,
-        value_fn=lambda data: data.last_water_tap_duration if data else None,
+        supported_fn=lambda data: data.has_flow_rate_sensor,
+        value_fn=lambda data: data.last_water_tap_duration,
     ),
 ]
 
@@ -197,12 +189,12 @@ async def async_setup_entry(
             *(
                 WatercrystSensor(entry, data.state, description)
                 for description in STATE_SENSORS
-                if description.available_fn(data)
+                if description.supported_fn(data)
             ),
             *(
                 WatercrystSensor(entry, data.measurements, description)
                 for description in MEASUREMENT_SENSORS
-                if description.available_fn(data)
+                if description.supported_fn(data)
             ),
         ]
     )
@@ -217,39 +209,19 @@ class WatercrystSensor[DataT, CoordinatorT: WatercrystDataUpdateCoordinator[Any]
 
     entity_description: WatercrystSensorEntityDescription[DataT]
 
-    def __init__(
-        self,
-        config_entry: WatercrystConfigEntry,
-        coordinator: CoordinatorT,
-        entity_description: WatercrystSensorEntityDescription[DataT],
-    ) -> None:
-        """Initialize the sensor."""
-        WatercrystEntity.__init__(self, config_entry, coordinator, entity_description)
-
     @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to coordinator updates."""
         await super().async_added_to_hass()
 
-        if self.coordinator is not self.runtime_data.state:
+        if self.coordinator is not self._state:
             self.async_on_remove(
-                self.runtime_data.state.async_add_listener(self.async_write_ha_state)
+                self._state.async_add_listener(self.async_write_ha_state)
             )
 
     @override
     @property
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
+        if self.coordinator.data is None:
+            return None
         return self.entity_description.value_fn(self.coordinator.data)
-
-    @override
-    @property
-    def available(self) -> bool:
-        """Return whether the device is available."""
-        state = self.runtime_data.state
-        return (
-            super().available
-            and self.coordinator.data is not None
-            and state.last_update_success
-            and state.data is not None
-            and state.data.online
-        )

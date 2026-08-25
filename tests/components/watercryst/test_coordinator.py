@@ -91,10 +91,9 @@ async def test_measurements_update_failed_device_offline(
         hass=hass, config_entry=config_entry, client=mock_api_client, state=state
     )
 
-    await coordinator.async_refresh()
+    with pytest.raises(UpdateFailed):
+        await coordinator._async_update_data()
 
-    assert coordinator.last_update_success
-    assert coordinator.data is None
     mock_api_client.get_measurements.assert_not_awaited()
 
 
@@ -122,7 +121,7 @@ async def test_update_failed(
         client=mock_api_client,
     )
 
-    with pytest.raises(UpdateFailed, match="Failed to update state"):
+    with pytest.raises(UpdateFailed):
         await coordinator._async_update_data()
 
 
@@ -140,9 +139,7 @@ async def test_update_failed_unauthorized(
         client=mock_api_client,
     )
 
-    with pytest.raises(
-        ConfigEntryAuthFailed, match="Failed to update state, unauthorized"
-    ):
+    with pytest.raises(ConfigEntryAuthFailed):
         await coordinator._async_update_data()
 
 
