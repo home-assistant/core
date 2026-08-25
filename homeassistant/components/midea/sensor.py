@@ -806,10 +806,6 @@ class MideaSensor(MideaEntity, SensorEntity):
             and value in {0, 0xFF}
         ):
             return None
-        if self.entity_description.translation_key == "error_ed" and isinstance(
-            value, int
-        ):
-            return str(value)
         if value == "unknown":
             return None
         return cast("StateType", value)
