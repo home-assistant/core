@@ -86,18 +86,47 @@ MOCK_POOL_DATA: dict[str, Any] = {
     "MBF_PAR_HIDRO_COVER_REDUCTION": 0x0C19,
     "MBF_PAR_HIDRO_COVER_ENABLE": 0x0000,
     "Pool Cover": 0,
-    # Aux relays default to a manual (ALWAYS_OFF) timer mode so switch writes
-    # pass the manual-mode guard; auto-mode tests override these per case.
-    "relay_aux1_enable": 4,
-    "relay_aux2_enable": 4,
-    "relay_aux3_enable": 4,
-    "relay_aux4_enable": 4,
     "CELL_RUNTIME_TOTAL": 0x00010000,
     "CELL_RUNTIME_PART": 0x00000E10,
     "CELL_RUNTIME_POLA": 0x00000708,
     "CELL_RUNTIME_POLB": 0x00000708,
     "CELL_RUNTIME_POL_CHANGES": 0x00000007,
 }
+
+
+# Aux timer blocks default to manual mode (enable=4) so switch writes pass the
+# guard; auto-mode tests override the returned mode per case.
+def _timer_block(enable: int = 4) -> dict[str, Any]:
+    """Return a timer block dict for the mock read_all_timers."""
+    return {
+        "enable": enable,
+        "on": 0,
+        "interval": 0,
+        "period": 0,
+        "countdown": 0,
+        "stop": None,
+    }
+
+
+MOCK_TIMER_BLOCKS: dict[str, dict[str, Any]] = {
+    "relay_aux1": _timer_block(),
+    "relay_aux2": _timer_block(),
+    "relay_aux3": _timer_block(),
+    "relay_aux4": _timer_block(),
+}
+
+
+def _read_all_timers(
+    enabled_timers: list[str] | None = None, **_kwargs: Any
+) -> dict[str, dict[str, Any]]:
+    """Return the requested timer blocks, mirroring the library contract."""
+    if enabled_timers is None:
+        return {name: dict(block) for name, block in MOCK_TIMER_BLOCKS.items()}
+    return {
+        name: dict(MOCK_TIMER_BLOCKS[name])
+        for name in enabled_timers
+        if name in MOCK_TIMER_BLOCKS
+    }
 
 
 @pytest.fixture
@@ -186,7 +215,7 @@ def mock_neopool_client() -> Generator[MagicMock]:
     ):
         mock_client = mock_client_cls.return_value
         mock_client.async_read_all = AsyncMock(return_value=dict(MOCK_POOL_DATA))
-        mock_client.read_all_timers = AsyncMock(return_value={})
+        mock_client.read_all_timers = AsyncMock(side_effect=_read_all_timers)
         mock_client.async_set_relay_state = AsyncMock(return_value={})
         mock_client.async_set_manual_filtration = AsyncMock(return_value={})
         mock_client.async_set_binary_flag = AsyncMock(return_value={})

@@ -297,12 +297,12 @@ async def test_aux_relay_turn_on_off_writes_relay_state(
 
 
 @pytest.mark.parametrize(
-    ("aux_suffix", "enable_key"),
+    ("aux_suffix", "block"),
     [
-        ("_aux1", "relay_aux1_enable"),
-        ("_aux2", "relay_aux2_enable"),
-        ("_aux3", "relay_aux3_enable"),
-        ("_aux4", "relay_aux4_enable"),
+        ("_aux1", "relay_aux1"),
+        ("_aux2", "relay_aux2"),
+        ("_aux3", "relay_aux3"),
+        ("_aux4", "relay_aux4"),
     ],
 )
 @pytest.mark.parametrize(
@@ -320,19 +320,31 @@ async def test_aux_relay_refuses_when_not_in_manual_mode(
     mock_neopool_client: MagicMock,
     freezer: FrozenDateTimeFactory,
     aux_suffix: str,
-    enable_key: str,
+    block: str,
     enable_value: int | None,
 ) -> None:
     """Aux relay refuses to fire unless the relay is in a manual mode."""
+
+    def _timers(
+        enabled_timers: list[str] | None = None, **_kwargs: Any
+    ) -> dict[str, dict[str, Any]]:
+        if enable_value is None:
+            return {}
+        return {
+            block: {
+                "enable": enable_value,
+                "on": 0,
+                "interval": 0,
+                "period": 0,
+                "countdown": 0,
+                "stop": None,
+            }
+        }
+
+    mock_neopool_client.read_all_timers.side_effect = _timers
     await setup_integration(hass, mock_config_entry_switch)
     entity_id = _entity_id_by_suffix(hass, mock_config_entry_switch, aux_suffix)
 
-    data: dict[str, Any] = {**MOCK_POOL_DATA}
-    if enable_value is None:
-        data.pop(enable_key, None)
-    else:
-        data[enable_key] = enable_value
-    mock_neopool_client.async_read_all.return_value = data
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
