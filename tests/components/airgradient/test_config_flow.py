@@ -366,6 +366,9 @@ async def test_zeroconf_flow_v1_hint(hass: HomeAssistant) -> None:
         client.get_current_measures.return_value = load_measures_fixture(
             "measures_v1_full.json", ApiVersion.V1
         )
+        client.get_config.return_value.configuration_control = (
+            ConfigurationControl.LOCAL
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -373,11 +376,15 @@ async def test_zeroconf_flow_v1_hint(hass: HomeAssistant) -> None:
             data=discovery_info,
         )
 
-    assert result["type"] is FlowResultType.FORM
-    assert result["step_id"] == "discovery_confirm"
-    mock_client.assert_called_once_with(
-        "10.0.0.131", session=ANY, api_version=ApiVersion.V1
-    )
+        assert result["type"] is FlowResultType.FORM
+        assert result["step_id"] == "discovery_confirm"
+        mock_client.assert_called_once_with(
+            "10.0.0.131", session=ANY, api_version=ApiVersion.V1
+        )
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize(
@@ -402,6 +409,9 @@ async def test_zeroconf_flow_probes_for_missing_or_unknown_api_hint(
         client.get_current_measures.return_value = load_measures_fixture(
             "current_measures_indoor.json"
         )
+        client.get_config.return_value.configuration_control = (
+            ConfigurationControl.LOCAL
+        )
 
         result = await hass.config_entries.flow.async_init(
             DOMAIN,
@@ -409,8 +419,12 @@ async def test_zeroconf_flow_probes_for_missing_or_unknown_api_hint(
             data=discovery_info,
         )
 
-    assert result["type"] is FlowResultType.FORM
-    mock_client.assert_called_once_with("10.0.0.131", session=ANY, api_version=None)
+        assert result["type"] is FlowResultType.FORM
+        mock_client.assert_called_once_with("10.0.0.131", session=ANY, api_version=None)
+
+        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
