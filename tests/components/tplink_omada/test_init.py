@@ -34,7 +34,7 @@ MOCK_ENTRY_DATA = {
         (
             UnsupportedControllerVersion("4.0.0"),
             ConfigEntryState.SETUP_ERROR,
-            "auth_failed",
+            "unsupported_controller",
         ),
         (
             LoginFailed(401, "invalid credentials"),

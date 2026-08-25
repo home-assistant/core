@@ -132,6 +132,9 @@
     },
     "unexpected_error": {
       "message": "Unexpected error connecting to Omada controller."
+    },
+    "unsupported_controller": {
+      "message": "Omada controller version not supported."
     }
   },
   "services": {

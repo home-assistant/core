@@ -52,10 +52,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         client = await create_omada_client(hass, entry.data)
         await client.login()
 
-    except (LoginFailed, UnsupportedControllerVersion) as ex:
+    except LoginFailed as ex:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="auth_failed",
+        ) from ex
+    except UnsupportedControllerVersion as ex:
+        raise ConfigEntryAuthFailed(
+            translation_domain=DOMAIN,
+            translation_key="unsupported_controller",
         ) from ex
     except ConnectionFailed as ex:
         raise ConfigEntryNotReady(
