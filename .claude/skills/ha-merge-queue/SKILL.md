@@ -1,6 +1,6 @@
 ---
 name: ha-merge-queue
-description: Finds open Home Assistant pull requests that are genuinely ready to merge, checking CI, the merge-gate statuses, code-owner approval, merge conflicts and unresolved review threads. Use when looking for PRs to merge, doing merge-queue triage, or asking for "quick wins" from the open PR backlog.
+description: Finds open Home Assistant pull requests that are genuinely ready to merge, checking CI, the merge-gate statuses, code-owner approval, merge conflicts, requested changes and unresolved review threads. Use when looking for PRs to merge, doing merge-queue triage, or asking for "quick wins" from the open PR backlog.
 ---
 
 # Find Ready-to-Merge Pull Requests
@@ -27,7 +27,7 @@ verify every finalist with the per-PR checks below.
 
 ## Verify each finalist
 
-Check all four. A PR fails the shortlist if any one fails.
+Check all five. A PR fails the shortlist if any one fails.
 
 1. **Merge-gate statuses** — fetch the combined commit status. This is the cheapest and
    most informative call, and it is what actually blocks the merge button. Five contexts
@@ -56,7 +56,16 @@ Check all four. A PR fails the shortlist if any one fails.
      `homeassistant/generated/integrations.json` conflicts constantly, so PRs adding
      integrations go stale fast.
 
-4. **Review threads** — fetch review threads and read `is_resolved`. Judge a thread by
+4. **Review submissions** — fetch the reviews, not just the threads. A `CHANGES_REQUESTED`
+   review is returned here and nowhere else, and a reviewer can request changes with only a
+   top-level body and no inline comments — such a PR has zero open review threads and looks
+   clean to the check above. Take the latest submission per reviewer: a standing
+   `CHANGES_REQUESTED` that no later `APPROVED` from the same person supersedes disqualifies
+   the PR. Do not lean on the `-review:changes_requested` search qualifier instead — the
+   index is stale, and `mergeable_state: blocked` does not distinguish "needs an approval"
+   from "changes were requested".
+
+5. **Review threads** — fetch review threads and read `is_resolved`. Judge a thread by
    whether it is resolved or substantively addressed, never by who wrote it: an unresolved
    finding from `copilot-pull-request-reviewer` is a bug report and can be a real defect,
    so read it on its merits before discounting it. For every thread still open, say which
@@ -75,6 +84,7 @@ recurring ones:
 - A failing test unrelated to the diff — name the test, say re-run the job.
 - `required-labels` red — name the label to add (`bugfix`, `new-feature`, …).
 - Awaiting code-owner approval — name the code owner from `manifest.json`.
+- A standing `CHANGES_REQUESTED` review — name the reviewer, and say what they asked for.
 - `dirty` — the author must merge `dev` and regenerate any generated files.
 
 Call out mismatches worth a maintainer's attention: a PR whose body declares a breaking
