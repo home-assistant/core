@@ -137,7 +137,6 @@ def mock_forecast_solar(hass: HomeAssistant) -> Generator[MagicMock]:
         }
 
         forecast_solar.estimate.return_value = estimate
-        # Store the mock class on the instance so tests can access call_args
         forecast_solar._mock_class = forecast_solar_mock
         yield forecast_solar
 

@@ -1,9 +1,20 @@
 {
   "config": {
+    "abort": {
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
+    },
     "error": {
       "location_required": "Enter a latitude and longitude or check the home zone option above."
     },
     "step": {
+      "reconfigure": {
+        "data": {
+          "latitude": "[%key:common::config_flow::data::latitude%]",
+          "longitude": "[%key:common::config_flow::data::longitude%]",
+          "track_home_location": "[%key:component::forecast_solar::config::step::user::data::track_home_location%]"
+        },
+        "description": "Choose whether to track your Home Zone's location or use fixed coordinates."
+      },
       "user": {
         "data": {
           "azimuth": "Azimuth (360 degrees, 0 = North, 90 = East, 180 = South, 270 = West). Ignored if sensor is selected.",

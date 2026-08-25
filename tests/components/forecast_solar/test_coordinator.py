@@ -92,7 +92,7 @@ async def test_coordinator_update_fails_when_sensor_out_of_range(
     hass: HomeAssistant,
     sensor_plane_config_entry: MockConfigEntry,
 ) -> None:
-    """Test an out-of-range sensor value fails setup (unlike an unavailable sensor, which fails a later poll)."""
+    """Test an out-of-range sensor value fails setup."""
     hass.states.async_set("sensor.roof_azimuth", "500", {"unit_of_measurement": "°"})
     sensor_plane_config_entry.add_to_hass(hass)
     result = await hass.config_entries.async_setup(sensor_plane_config_entry.entry_id)

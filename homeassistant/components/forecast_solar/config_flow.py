@@ -57,6 +57,29 @@ def _get_angle_sensor_ids(hass: HomeAssistant) -> list[str]:
     ]
 
 
+def _location_data(
+    user_input: Mapping[str, Any],
+) -> tuple[dict[str, Any], dict[str, str]]:
+    """Resolve location data from a submitted form, returning data and errors."""
+    if user_input[CONF_TRACK_HOME_LOCATION]:
+        return {}, {}
+    if CONF_LATITUDE in user_input and CONF_LONGITUDE in user_input:
+        return {
+            CONF_LATITUDE: user_input[CONF_LATITUDE],
+            CONF_LONGITUDE: user_input[CONF_LONGITUDE],
+        }, {}
+    return {}, {"base": "location_required"}
+
+
+_LOCATION_SCHEMA = vol.Schema(
+    {
+        vol.Optional(CONF_TRACK_HOME_LOCATION, default=True): bool,
+        vol.Optional(CONF_LATITUDE): cv.latitude,
+        vol.Optional(CONF_LONGITUDE): cv.longitude,
+    }
+)
+
+
 def _plane_data(user_input: Mapping[str, Any]) -> dict[str, Any]:
     """Extract a plane's stored fields from a submitted plane form."""
     return {
@@ -164,15 +187,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
 
         if user_input is not None:
-            if user_input[CONF_TRACK_HOME_LOCATION]:
-                location_data = {}
-            elif CONF_LATITUDE in user_input and CONF_LONGITUDE in user_input:
-                location_data = {
-                    CONF_LATITUDE: user_input[CONF_LATITUDE],
-                    CONF_LONGITUDE: user_input[CONF_LONGITUDE],
-                }
-            else:
-                errors["base"] = "location_required"
+            location_data, errors = _location_data(user_input)
 
             if not errors:
                 plane_data = _plane_data(user_input)
@@ -189,13 +204,7 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     ],
                 )
 
-        schema = vol.Schema(
-            {
-                vol.Optional(CONF_TRACK_HOME_LOCATION, default=True): bool,
-                vol.Optional(CONF_LATITUDE): cv.latitude,
-                vol.Optional(CONF_LONGITUDE): cv.longitude,
-            }
-        ).extend(_plane_schema(self.hass).schema)
+        schema = _LOCATION_SCHEMA.extend(_plane_schema(self.hass).schema)
 
         return self.async_show_form(
             step_id="user",
@@ -207,6 +216,35 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_DECLINATION: DEFAULT_DECLINATION,
                     CONF_AZIMUTH: DEFAULT_AZIMUTH,
                     CONF_MODULES_POWER: DEFAULT_MODULES_POWER,
+                },
+            ),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of an existing entry's location."""
+        errors: dict[str, str] = {}
+        entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            location_data, errors = _location_data(user_input)
+            if not errors:
+                return self.async_update_reload_and_abort(entry, data=location_data)
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                _LOCATION_SCHEMA,
+                {
+                    CONF_TRACK_HOME_LOCATION: not entry.data,
+                    CONF_LATITUDE: entry.data.get(
+                        CONF_LATITUDE, self.hass.config.latitude
+                    ),
+                    CONF_LONGITUDE: entry.data.get(
+                        CONF_LONGITUDE, self.hass.config.longitude
+                    ),
                 },
             ),
             errors=errors,

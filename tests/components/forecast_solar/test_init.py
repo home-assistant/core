@@ -273,10 +273,8 @@ async def test_coordinator_multi_plane_initialization(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    # Entry must load successfully (coordinator init must not raise)
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
-    # Get mock class to check constructor call arguments
     forecast_solar_mock = mock_forecast_solar._mock_class
     forecast_solar_mock.assert_called_once()
     _, kwargs = forecast_solar_mock.call_args
