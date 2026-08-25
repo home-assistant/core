@@ -238,6 +238,7 @@ def _init_host_mock(host_mock: MagicMock) -> None:
     host_mock.baichuan.audio_noise_reduction.return_value = 50
     host_mock.baichuan.cry_sensitivity.return_value = 3
     host_mock.baichuan.ir_brightness.return_value = 100
+    host_mock.baichuan.pre_record_fps_list.return_value = ["1", "3", "5"]
     host_mock.baichuan.pre_record_time.return_value = 10
     host_mock.baichuan.pre_record_battery_stop.return_value = 10
     host_mock.whiteled_brightness.return_value = None

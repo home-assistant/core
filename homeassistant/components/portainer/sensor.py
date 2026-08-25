@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
 from itertools import chain
-from typing import override
+from typing import TYPE_CHECKING, override
 
 from pyportainer import StackType
 from pyportainer.models.docker import DockerContainerState, DockerSystemDF
@@ -19,6 +20,7 @@ from homeassistant.components.sensor import (
 from homeassistant.const import UnitOfInformation, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
 from .coordinator import (
     PortainerConfigEntry,
@@ -42,7 +44,7 @@ PARALLEL_UPDATES = 0
 class PortainerContainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer container sensor description."""
 
-    value_fn: Callable[[PortainerContainerData], StateType]
+    value_fn: Callable[[PortainerContainerData], StateType | datetime]
     supported_fn: Callable[[PortainerContainerData], bool] = lambda _: True
 
 
@@ -79,6 +81,39 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         key="image",
         translation_key="image",
         value_fn=lambda data: data.container.image,
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="image_version",
+        translation_key="image_version",
+        supported_fn=lambda data: bool(
+            data.container.labels
+            and data.container.labels.get("org.opencontainers.image.version")
+        ),
+        value_fn=lambda data: (
+            data.container.labels.get("org.opencontainers.image.version")
+            if data.container.labels
+            else None
+        ),
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="image_created",
+        translation_key="image_created",
+        supported_fn=lambda data: bool(
+            data.container.labels
+            and data.container.labels.get("org.opencontainers.image.created")
+        ),
+        value_fn=lambda data: (
+            parsed
+            if data.container.labels
+            and (
+                created := data.container.labels.get("org.opencontainers.image.created")
+            )
+            and (parsed := dt_util.parse_datetime(created)) is not None
+            and parsed.tzinfo is not None
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerContainerSensorEntityDescription(
         key="container_state",
@@ -376,7 +411,8 @@ async def async_setup_entry(
     """Set up Portainer sensors based on a config entry."""
     coordinator = entry.runtime_data
     ds_coordinator = coordinator.docker_disk_space
-    assert ds_coordinator is not None
+    if TYPE_CHECKING:
+        assert ds_coordinator is not None
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
         """Add new endpoint sensors."""
@@ -487,7 +523,7 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
 
     @property
     @override
-    def native_value(self) -> StateType:
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.container_data)
 

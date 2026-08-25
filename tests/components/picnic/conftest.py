@@ -6,6 +6,7 @@ import json
 from unittest.mock import MagicMock, patch
 
 import pytest
+from python_picnic_api2.models import Cart, DeliverySummary, Eta, User
 
 from homeassistant.components.picnic import CONF_COUNTRY_CODE, DOMAIN
 from homeassistant.const import CONF_ACCESS_TOKEN
@@ -19,7 +20,7 @@ ENTITY_ID = "todo.mock_title_shopping_cart"
 
 SetupDeliveryFixture = Callable[
     [str, tuple[timedelta, timedelta] | None, tuple[timedelta, timedelta]],
-    Awaitable[dict],
+    Awaitable[DeliverySummary],
 ]
 
 
@@ -42,10 +43,14 @@ def mock_picnic_api():
     with patch("homeassistant.components.picnic.PicnicAPI") as mock:
         client = mock.return_value
         client.session.auth_token = "3q29fpwhulzes"
-        client.get_cart.return_value = json.loads(load_fixture("picnic/cart.json"))
-        client.get_user.return_value = json.loads(load_fixture("picnic/user.json"))
+        client.get_cart.return_value = Cart.from_api(
+            json.loads(load_fixture("picnic/cart.json"))
+        )
+        client.get_user.return_value = User.from_api(
+            json.loads(load_fixture("picnic/user.json"))
+        )
         client.get_deliveries.return_value = [
-            json.loads(load_fixture("picnic/delivery.json"))
+            DeliverySummary.from_api(json.loads(load_fixture("picnic/delivery.json")))
         ]
         client.get_delivery_position.return_value = {}
         yield client
@@ -63,19 +68,18 @@ def setup_delivery(
         status: str,
         eta2: tuple[timedelta, timedelta] | None,
         slot_window: tuple[timedelta, timedelta],
-    ) -> dict:
+    ) -> DeliverySummary:
         delivery = mock_picnic_api.get_deliveries.return_value[0]
-        delivery["status"] = status
-        delivery["delivery_time"] = None
+        delivery.status = status
+        # delivery_time isn't a modelled field; it lives on the raw payload
+        delivery.raw["delivery_time"] = None
         # eta2 is the API's field name for the route-planning ETA
-        delivery["eta2"] = eta2 and {
-            "start": (dt_util.utcnow() + eta2[0]).isoformat(),
-            "end": (dt_util.utcnow() + eta2[1]).isoformat(),
-        }
-        delivery["slot"]["window_start"] = (
-            dt_util.utcnow() + slot_window[0]
-        ).isoformat()
-        delivery["slot"]["window_end"] = (dt_util.utcnow() + slot_window[1]).isoformat()
+        delivery.eta2 = eta2 and Eta(
+            start=(dt_util.utcnow() + eta2[0]).isoformat(),
+            end=(dt_util.utcnow() + eta2[1]).isoformat(),
+        )
+        delivery.slot.window_start = (dt_util.utcnow() + slot_window[0]).isoformat()
+        delivery.slot.window_end = (dt_util.utcnow() + slot_window[1]).isoformat()
 
         mock_config_entry.add_to_hass(hass)
         await hass.config_entries.async_setup(mock_config_entry.entry_id)

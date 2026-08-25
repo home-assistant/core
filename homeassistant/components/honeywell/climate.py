@@ -39,10 +39,10 @@ from homeassistant.util.unit_conversion import TemperatureConverter
 
 from . import HoneywellConfigEntry, HoneywellData
 from .const import (
-    _LOGGER,
     CONF_COOL_AWAY_TEMPERATURE,
     CONF_HEAT_AWAY_TEMPERATURE,
     DOMAIN,
+    LOGGER,
     RETRY,
 )
 
@@ -403,7 +403,7 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
-            _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
+            LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
             raise ServiceValidationError(
                 translation_domain=DOMAIN,
                 translation_key="temp_failed_value",
@@ -428,7 +428,7 @@ class HoneywellUSThermostat(ClimateEntity):
                 ) from err
 
             except SomeComfortError as err:
-                _LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
+                LOGGER.error("Invalid temperature %.1f: %s", temperature, err)
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="temp_failed_value",
@@ -484,7 +484,7 @@ class HoneywellUSThermostat(ClimateEntity):
             ) from err
 
         except SomeComfortError as err:
-            _LOGGER.error(
+            LOGGER.error(
                 "Temperature out of range. Mode: %s,"
                 " Heat Temperature:  %.1f,"
                 " Cool Temperature: %.1f",
@@ -516,13 +516,13 @@ class HoneywellUSThermostat(ClimateEntity):
                     await self._device.set_hold_heat(True)
 
             except SomeComfortError as err:
-                _LOGGER.error("Couldn't set permanent hold")
+                LOGGER.error("Couldn't set permanent hold")
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
                     translation_key="set_hold_failed",
                 ) from err
         else:
-            _LOGGER.error("Invalid system mode returned: %s", mode)
+            LOGGER.error("Invalid system mode returned: %s", mode)
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="set_mode_failed",
@@ -538,7 +538,7 @@ class HoneywellUSThermostat(ClimateEntity):
             await self._device.set_hold_heat(False)
 
         except SomeComfortError as err:
-            _LOGGER.error("Can not stop hold mode")
+            LOGGER.error("Can not stop hold mode")
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="stop_hold_failed",

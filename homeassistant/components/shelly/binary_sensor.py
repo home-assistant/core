@@ -123,7 +123,12 @@ class RpcBluTrvBinarySensor(RpcBinarySensor):
         ble_addr: str = coordinator.device.config[key]["addr"]
         fw_ver = coordinator.device.status[key].get("fw_ver")
         self._attr_device_info = get_blu_trv_device_info(
-            coordinator.device.config[key], ble_addr, coordinator.mac, fw_ver
+            coordinator.hass,
+            coordinator.config_entry.entry_id,
+            coordinator.device.config[key],
+            ble_addr,
+            coordinator.mac,
+            fw_ver,
         )
 
 
@@ -391,6 +396,17 @@ RPC_SENSORS: Final = {
             False if status is None else "orientation_plug_rotated" in status
         ),
         supported=lambda status: status.get("slots") is not None,
+    ),
+    "camera_motion": RpcBinarySensorDescription(
+        key="camera",
+        sub_key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    "motion": RpcBinarySensorDescription(
+        key="motion",
+        sub_key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        removal_condition=lambda config, _, key: not config[key].get("enable", True),
     ),
 }
 

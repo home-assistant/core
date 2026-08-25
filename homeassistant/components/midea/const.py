@@ -3,7 +3,7 @@
 from enum import IntEnum
 import logging
 
-_LOGGER = logging.getLogger(__package__)
+LOGGER = logging.getLogger(__package__)
 
 DOMAIN = "midea"
 
@@ -12,6 +12,8 @@ CONF_KEY = "key"
 CONF_SUBTYPE = "subtype"
 CONF_ACCOUNT = "account"
 CONF_SERVER = "server"
+
+PRESET_MODE_NONE = "none"
 
 
 class FanSpeed(IntEnum):
