@@ -1667,7 +1667,7 @@ nad-receiver==0.4.0
 ndms2-client==0.1.2
 
 # homeassistant.components.neopool
-neopool-modbus==4.5.1
+neopool-modbus==4.5.2
 
 # homeassistant.components.ness_alarm
 nessclient==1.3.1
