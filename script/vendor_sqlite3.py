@@ -20,6 +20,7 @@ import argparse
 import io
 from pathlib import Path
 import platform
+import shutil
 import subprocess
 import sys
 import tarfile
@@ -29,48 +30,7 @@ import urllib.request
 import zipfile
 
 DOWNLOAD_ATTEMPTS = 3
-
-SETUP_PY = '''\
-"""Build CPython's own Modules/_sqlite against a bundled SQLite amalgamation."""
-
-from pathlib import Path
-import sysconfig
-
-from setuptools import Extension, setup
-
-setup(
-    name="ha-sqlite3-vendor",
-    version="0.1.0",
-    packages=["ha_sqlite3_vendor"],
-    ext_modules=[
-        Extension(
-            # The extension must be named _sqlite3 to match the sources'
-            # PyInit__sqlite3, hence the wrapping package
-            "ha_sqlite3_vendor._sqlite3",
-            sources=sorted(str(p) for p in Path("src").glob("*.c"))
-            + ["sqlite3.c"],
-            include_dirs=[
-                "src",
-                ".",
-                str(Path(sysconfig.get_paths()["include"]) / "internal"),
-            ],
-            define_macros=[
-                ("Py_BUILD_CORE_MODULE", "1"),
-                # Feature flags matching common distro builds
-                ("SQLITE_ENABLE_FTS5", "1"),
-                ("SQLITE_ENABLE_RTREE", "1"),
-                ("SQLITE_ENABLE_MATH_FUNCTIONS", "1"),
-            ],
-        )
-    ],
-)
-'''
-
-PYPROJECT_TOML = """\
-[build-system]
-requires = ["setuptools>=69"]
-build-backend = "setuptools.build_meta"
-"""
+FIXTURE_DIR = Path(__file__).parent / "sqlite3_vendor"
 
 
 def open_url(url: str) -> io.BufferedIOBase:
@@ -132,18 +92,20 @@ def main() -> None:
     args = parser.parse_args()
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        workdir = Path(tmpdir)
+        workdir = Path(tmpdir) / "build"
+        shutil.copytree(FIXTURE_DIR, workdir)
         fetch_module_sources(workdir)
         fetch_amalgamation(workdir, args.version, args.year)
-        (workdir / "setup.py").write_text(SETUP_PY)
-        (workdir / "pyproject.toml").write_text(PYPROJECT_TOML)
-        package = workdir / "ha_sqlite3_vendor"
-        package.mkdir()
-        (package / "__init__.py").write_text(
-            '"""CPython sqlite3 C module built against a custom SQLite."""\n'
-        )
         subprocess.run(
-            ["uv", "pip", "install", "--python", sys.executable, "--reinstall", tmpdir],
+            [
+                "uv",
+                "pip",
+                "install",
+                "--python",
+                sys.executable,
+                "--reinstall",
+                str(workdir),
+            ],
             check=True,
         )
 
