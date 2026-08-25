@@ -2012,6 +2012,8 @@ async def test_websocket_http_config(
 
     # Staging a new config triggers a restart so the pending config is applied.
     restart_calls = async_mock_service(hass, "homeassistant", "restart")
+    hass.config.internal_url = "http://homeassistant.local:8123"
+    hass.config.external_url = "https://home.example:8123"
 
     # On a fresh setup the stable slot is seeded with the schema defaults and
     # there is no pending config.
@@ -2042,6 +2044,8 @@ async def test_websocket_http_config(
     response = await ws_client.receive_json()
     assert response["success"]
     assert response["result"] == {"restart": True}
+    assert hass.config.internal_url == "http://homeassistant.local:9123"
+    assert hass.config.external_url == "https://home.example:9123"
     assert hass_storage["http"]["data"]["pending"] == {
         **new_config,
         "created_at": created_at,

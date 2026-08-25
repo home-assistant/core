@@ -12,7 +12,12 @@ from homeassistant.components.homeassistant import (
 from homeassistant.core import CoreState, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 
-from .config import HTTP_STORAGE_SCHEMA, ConfData, async_get_and_load_store
+from .config import (
+    HTTP_STORAGE_SCHEMA,
+    ConfData,
+    async_get_and_load_store,
+    update_url_port,
+)
 from .const import ATTR_CONFIG, CONF_SERVER_PORT
 from .server import async_verify_can_bind
 
@@ -106,6 +111,21 @@ async def websocket_set_config(
         except HomeAssistantError as err:
             connection.send_error(msg["id"], ERR_BIND_FAILED, str(err))
             return
+
+        old_port = hass.http.server_port
+        new_port = config[CONF_SERVER_PORT]
+        url_updates = {
+            attr: updated_url
+            for attr in ("internal_url", "external_url")
+            if (
+                updated_url := update_url_port(
+                    getattr(hass.config, attr), old_port, new_port
+                )
+            )
+            != getattr(hass.config, attr)
+        }
+        if url_updates:
+            await hass.config.async_update(**url_updates)
 
     store = await async_get_and_load_store(hass)
     previous_pending = store.pending

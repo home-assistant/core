@@ -9,6 +9,7 @@ import os
 from typing import Any, Final, TypedDict, cast, override
 
 import voluptuous as vol
+from yarl import URL
 
 from homeassistant.const import SERVER_PORT
 from homeassistant.core import CALLBACK_TYPE, HassJob, HomeAssistant, callback
@@ -68,6 +69,18 @@ def default_server_port() -> int:
             default,
         )
         return default
+
+
+def update_url_port(url: str | None, old_port: int, new_port: int) -> str | None:
+    """Update an explicitly configured URL that used the old server port."""
+    if url is None:
+        return None
+
+    parsed = URL(url)
+    if parsed.port != old_port or f":{old_port}" not in parsed.raw_authority:
+        return url
+
+    return str(parsed.with_port(new_port))
 
 
 STORAGE_KEY: Final = DOMAIN
