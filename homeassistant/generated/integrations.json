@@ -981,6 +981,11 @@
       "iot_class": "cloud_polling",
       "single_config_entry": true
     },
+    "carrier": {
+      "name": "Carrier",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "casper_glow": {
       "name": "Casper Glow",
       "integration_type": "device",
