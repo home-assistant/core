@@ -206,8 +206,8 @@ async def test_data_api_sensors_with_empty_external_ids(
                 },
             )
             for device_id, name in (
-                ("charger-left", "Charger left"),
                 ("charger-right", "Charger right"),
+                ("charger-left", "Charger left"),
             )
         },
     }
