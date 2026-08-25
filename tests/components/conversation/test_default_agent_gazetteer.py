@@ -1010,3 +1010,126 @@ async def test_an_antecedent_needs_a_session_to_belong_to(
     fallback.async_remember("orphan", (TargetReference.for_entity(KITCHEN_LIGHT),))
 
     assert not fallback._previous_targets
+
+
+async def test_home_lock_releases_every_reader_when_a_rebuild_gives_up() -> None:
+    """Test a queued rebuild that is cancelled frees all the sentences it held off.
+
+    They were all waiting on the same thing -- that no rebuild is queued -- so they
+    all become free together. `Condition.wait` wakes one of them on its way out of a
+    cancelled wait, which avoids a stall but would leave the rest waiting on the
+    first to finish for no reason.
+    """
+    lock = _HomeLock()
+    reading = asyncio.Event()
+    queued = asyncio.Event()
+    entered: list[str] = []
+
+    async def holder() -> None:
+        async with lock.read():
+            entered.append("holder")
+            reading.set()
+            await asyncio.sleep(0.4)
+
+    async def rebuild() -> None:
+        await reading.wait()
+        async with lock.write():
+            entered.append("rebuild")
+
+    async def latecomer(number: int) -> None:
+        await queued.wait()
+        async with lock.read():
+            entered.append(f"reader{number}")
+            await asyncio.sleep(0.3)
+
+    held = asyncio.create_task(holder())
+    writer = asyncio.create_task(rebuild())
+    await reading.wait()
+    await asyncio.sleep(0)
+    assert lock._writers_waiting == 1
+
+    latecomers = [asyncio.create_task(latecomer(number)) for number in (1, 2, 3)]
+    queued.set()
+    # Long enough for all three to reach the condition and sleep on it.
+    await asyncio.sleep(0.05)
+    assert entered == ["holder"], "the queued rebuild should be holding them off"
+
+    writer.cancel()
+    await asyncio.sleep(0.05)
+
+    assert entered == ["holder", "reader1", "reader2", "reader3"]
+    await asyncio.gather(held, writer, *latecomers, return_exceptions=True)
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_a_rebuild_that_fails_leaves_the_home_out_of_date(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """Test a rebuild that did not finish is tried again rather than given up on."""
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+    async_mock_service(hass, "light", "turn_on")
+
+    await conversation.async_converse(
+        hass, "turn on the kichen lights", None, Context(), None
+    )
+
+    area_registry.async_update("kitchen_id", name="Scullery")
+    assert agent._gazetteer._stale
+
+    with (
+        patch.object(
+            GazetteerMatcher, "set_home", side_effect=RuntimeError("no can do")
+        ),
+        pytest.raises(RuntimeError),
+    ):
+        await conversation.async_converse(
+            hass, "turn on the scullary lights", None, Context(), None
+        )
+
+    # The matcher still holds the old home, so it has to still count as stale.
+    assert agent._gazetteer._stale
+
+    result = await conversation.async_converse(
+        hass, "turn on the scullary lights", None, Context(), None
+    )
+    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
+
+
+@pytest.mark.usefixtures("init_components", "home")
+@pytest.mark.parametrize(
+    ("registry", "field", "outdated"),
+    [
+        ("entity", "area_id", True),
+        ("entity", "name", True),
+        ("entity", "icon", False),
+        ("device", "area_id", True),
+        ("device", "parent_device_id", True),
+        ("device", "sw_version", False),
+    ],
+    ids=[
+        "entity_moved",
+        "entity_renamed",
+        "entity_restyled",
+        "device_moved",
+        "device_became_a_child",
+        "device_upgraded",
+    ],
+)
+async def test_what_outdates_the_home(
+    hass: HomeAssistant, registry: str, field: str, outdated: bool
+) -> None:
+    """Test the registry changes that move an entity between rooms are noticed.
+
+    An entity takes its area from its own, or from its device, or from that
+    device's parent once it becomes a child, so all three have to reach the home.
+    """
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    matches = {
+        "entity": agent._filter_entity_registry_changes,
+        "device": agent._filter_device_registry_changes,
+    }[registry]
+
+    assert matches({"action": "update", "changes": {field: None}}) is outdated
