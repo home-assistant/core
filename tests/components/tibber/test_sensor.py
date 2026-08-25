@@ -78,12 +78,27 @@ async def test_data_api_sensors_migrate_to_device_id(
     data_api_client_mock: AsyncMock,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    tibber_mock: MagicMock,
 ) -> None:
     """Test Data API sensors migrate to Tibber device IDs."""
+    home = create_tibber_home()
+    tibber_mock.get_homes.return_value = [home]
+    home_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, home.home_id)},
+    )
     legacy_device = device_registry.async_get_or_create(
         config_entry_id=config_entry.entry_id,
         identifiers={(DOMAIN, "external-id")},
         name="Test Device",
+    )
+    orphaned_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "orphaned-external-id")},
+    )
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, "stale-device")},
     )
     legacy_entity = entity_registry.async_get_or_create(
         "sensor",
@@ -93,11 +108,21 @@ async def test_data_api_sensors_migrate_to_device_id(
         config_entry=config_entry,
         device_id=legacy_device.id,
     )
+    orphaned_tibber_device = create_tibber_device(
+        device_id="orphaned-device-id",
+        external_id="orphaned-external-id",
+    )
     data_api_client_mock.get_all_devices = AsyncMock(
-        return_value={"device-id": create_tibber_device(state_of_charge=72.0)}
+        return_value={
+            "device-id": create_tibber_device(state_of_charge=72.0),
+            "orphaned-device-id": orphaned_tibber_device,
+        }
     )
     data_api_client_mock.update_devices = AsyncMock(
-        return_value={"device-id": create_tibber_device(state_of_charge=83.0)}
+        return_value={
+            "device-id": create_tibber_device(state_of_charge=83.0),
+            "orphaned-device-id": orphaned_tibber_device,
+        }
     )
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -115,6 +140,13 @@ async def test_data_api_sensors_migrate_to_device_id(
     )
     assert device is not None
     assert device.id == legacy_device.id
+    migrated_orphaned_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "orphaned-device-id"), config_entry.entry_id
+    )
+    assert migrated_orphaned_device is not None
+    assert migrated_orphaned_device.id == orphaned_device.id
+    assert device_registry.async_get(home_device.id) is not None
+    assert device_registry.async_get(stale_device.id) is None
 
     state = hass.states.get(entity_id)
     assert state is not None

@@ -53,13 +53,18 @@ def _migrate_data_api_registry_entries(
     hass: HomeAssistant,
     entry: TibberConfigEntry,
     coordinator: TibberDataAPICoordinator,
+    home_ids: set[str],
 ) -> None:
     """Migrate Data API registry entries to Tibber device IDs."""
     entity_registry = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
 
     migrations: dict[str, tuple[str, str]] = {}
+    device_id_by_identifier = {home_id: home_id for home_id in home_ids}
     for device in coordinator.data.values():
+        device_id_by_identifier[device.id] = device.id
+        if device.external_id:
+            device_id_by_identifier.setdefault(device.external_id, device.id)
         for sensor in device.sensors:
             new_unique_id = f"{device.id}_{sensor.id}"
             migration = (new_unique_id, device.id)
@@ -79,15 +84,25 @@ def _migrate_data_api_registry_entries(
             )
 
     device_registry = dr.async_get(hass)
-    for registry_device_id, tibber_device_id in device_migrations.items():
-        registry_device = device_registry.async_get(registry_device_id)
-        if (
-            registry_device
-            and (DOMAIN, tibber_device_id) not in registry_device.identifiers
-        ):
+    for registry_device in dr.async_entries_for_config_entry(
+        device_registry, entry.entry_id
+    ):
+        if not (tibber_device_id := device_migrations.get(registry_device.id)):
+            expected_device_ids = {
+                device_id_by_identifier[identifier]
+                for domain, identifier in registry_device.identifiers
+                if domain == DOMAIN and identifier in device_id_by_identifier
+            }
+            if len(expected_device_ids) != 1:
+                device_registry.async_remove_device(registry_device.id)
+                continue
+            tibber_device_id = expected_device_ids.pop()
+
+        identifiers = {(DOMAIN, tibber_device_id)}
+        if registry_device.identifiers != identifiers:
             device_registry.async_update_device(
-                registry_device_id,
-                new_identifiers={(DOMAIN, tibber_device_id)},
+                registry_device.id,
+                new_identifiers=identifiers,
             )
 
 
@@ -218,7 +233,8 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     coordinator = TibberDataAPICoordinator(hass, entry)
     await coordinator.async_config_entry_first_refresh()
     entry.runtime_data.data_api_coordinator = coordinator
-    _migrate_data_api_registry_entries(hass, entry, coordinator)
+    home_ids = {home.home_id for home in tibber_connection.get_homes(only_active=False)}
+    _migrate_data_api_registry_entries(hass, entry, coordinator, home_ids)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
