@@ -27,8 +27,8 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Sofar Inverter Modbus sensor platform."""
-    runtime_data = entry.runtime_data
-    served = runtime_data.served_components
+    coordinator = entry.runtime_data
+    served = coordinator.served_components
 
     entities: list[SensorEntity] = [
         (
@@ -36,7 +36,7 @@ async def async_setup_entry(
             if description.state_class
             in (SensorStateClass.TOTAL, SensorStateClass.TOTAL_INCREASING)
             else SofarSensor
-        )(runtime_data, description)
+        )(coordinator, description)
         for description in SENSOR_DESCRIPTIONS
         if description.component in served
     ]

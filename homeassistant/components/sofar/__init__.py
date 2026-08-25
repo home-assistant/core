@@ -1,7 +1,4 @@
-"""Owns both coordinators; modbus hands out the unit, sofar-modbus reads."""
-
-from datetime import timedelta
-import logging
+"""Owns the coordinator; modbus hands out the unit, sofar-modbus reads."""
 
 from modbus_connection import ModbusTcpParams
 from sofar_modbus.modern.device import SofarInverter, identify
@@ -11,10 +8,8 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .const import CONF_UNIT_ID, DEFAULT_SCAN_INTERVAL, DOMAIN, SETTINGS_SCAN_INTERVAL
-from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
-
-_LOGGER = logging.getLogger(__name__)
+from .const import CONF_UNIT_ID, DOMAIN
+from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -45,28 +40,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         inverter_type=inverter_type,
     )
 
-    readings = SofarDataUpdateCoordinator(
-        hass,
-        entry,
-        device,
-        device.async_update_readings,
-        timedelta(seconds=DEFAULT_SCAN_INTERVAL),
-    )
-    settings = SofarDataUpdateCoordinator(
-        hass,
-        entry,
-        device,
-        device.async_update_settings,
-        timedelta(seconds=SETTINGS_SCAN_INTERVAL),
-    )
-    # Sequential: both share one device/unit, and a Modbus link answers
-    # one request at a time - concurrent setups would race each other.
-    await readings.async_config_entry_first_refresh()
-    # No settings-backed platform exists yet, so a settings failure must
-    # not block setup of the working reading-backed sensors.
-    await settings.async_refresh()
+    coordinator = SofarDataUpdateCoordinator(hass, entry, device)
+    await coordinator.async_config_entry_first_refresh()
 
-    entry.runtime_data = SofarRuntimeData(readings, settings)
+    entry.runtime_data = coordinator
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True

@@ -1,12 +1,10 @@
 """Test the Sofar Inverter Modbus coordinator's poll-failure handling."""
 
-from datetime import timedelta
-
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
 from modbus_connection.mock import MockModbusConnection
 
-from homeassistant.components.sofar.const import DEFAULT_SCAN_INTERVAL
+from homeassistant.components.sofar.coordinator import SCAN_INTERVAL
 from homeassistant.core import HomeAssistant
 
 from tests.common import MockConfigEntry, async_fire_time_changed
@@ -19,35 +17,18 @@ async def test_timeouts_mark_unavailable_and_recover(
     init_integration: MockConfigEntry,
 ) -> None:
     """Test repeated timeouts fail the update, and a later poll recovers it."""
-    coordinator = init_integration.runtime_data.readings
+    coordinator = init_integration.runtime_data
     unit = mock_connection.for_unit(1)
 
     unit.fail_requests(ModbusTimeoutError("stuck"))
     for _ in range(3):
-        freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+        freezer.tick(SCAN_INTERVAL)
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
         assert not coordinator.last_update_success
 
     unit.fail_requests(None)
-    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
     assert coordinator.last_update_success
-
-
-async def test_runtime_data_routes_components_to_their_own_coordinator(
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test served_components/coordinator_for span both coordinators."""
-    runtime_data = init_integration.runtime_data
-
-    assert "grid" in runtime_data.readings.served_components
-    assert "active_power_control" in runtime_data.settings.served_components
-    assert runtime_data.served_components == (
-        runtime_data.readings.served_components
-        | runtime_data.settings.served_components
-    )
-
-    assert runtime_data.coordinator_for("grid") is runtime_data.readings
-    assert runtime_data.coordinator_for("active_power_control") is runtime_data.settings

@@ -1,7 +1,5 @@
-"""Runs one of SofarInverter's update methods on its own interval."""
+"""Polls the inverter's reading registers on a fixed interval."""
 
-from collections.abc import Awaitable, Callable
-from dataclasses import dataclass
 from datetime import timedelta
 import logging
 from typing import override
@@ -20,9 +18,11 @@ from .const import ATTR_MANUFACTURER, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
+SCAN_INTERVAL = timedelta(seconds=5)
+
 
 class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
-    """Runs one of SofarInverter's update methods on its own interval."""
+    """Polls the inverter's reading registers on a fixed interval."""
 
     config_entry: SofarConfigEntry
     device: SofarInverter
@@ -32,8 +32,6 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         hass: HomeAssistant,
         entry: SofarConfigEntry,
         device: SofarInverter,
-        poll: Callable[[], Awaitable[UpdateReport]],
-        interval: timedelta,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
@@ -41,10 +39,9 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             _LOGGER,
             config_entry=entry,
             name=entry.title,
-            update_interval=interval,
+            update_interval=SCAN_INTERVAL,
         )
         self.device = device
-        self._poll = poll
         self._consecutive_failures: dict[str, int] = {}
 
     @cached_property
@@ -61,15 +58,13 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @property
     def served_components(self) -> frozenset[str]:
-        """Component names this poll serves; empty before first refresh."""
-        if self.data is not None:
-            return frozenset(self.data.updated | set(self.data.failed))
-        return frozenset()
+        """Component names the inverter answered for on the last poll."""
+        return frozenset(self.data.updated | set(self.data.failed))
 
     @override
     async def _async_update_data(self) -> UpdateReport:
         try:
-            report = await self._poll()
+            report = await self.device.async_update_readings()
             report = await self._retry_failed(report)
             if not report.updated:
                 errors = list(report.failed.values())
@@ -128,23 +123,4 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         return report
 
 
-@dataclass
-class SofarRuntimeData:
-    """Both coordinators, tiered by how often their components change."""
-
-    readings: SofarDataUpdateCoordinator
-    settings: SofarDataUpdateCoordinator
-
-    @property
-    def served_components(self) -> frozenset[str]:
-        """Component names either poll serves; empty before first refresh."""
-        return self.readings.served_components | self.settings.served_components
-
-    def coordinator_for(self, component: str) -> SofarDataUpdateCoordinator:
-        """Which coordinator owns a given component's data."""
-        if component in self.readings.served_components:
-            return self.readings
-        return self.settings
-
-
-type SofarConfigEntry = ConfigEntry[SofarRuntimeData]
+type SofarConfigEntry = ConfigEntry[SofarDataUpdateCoordinator]
