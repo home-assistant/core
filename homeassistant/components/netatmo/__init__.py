@@ -3,10 +3,8 @@
 import logging
 
 from aiohttp import ClientError
-import pyatmo
 
 from homeassistant.components import cloud
-from homeassistant.components.webhook import async_unregister as webhook_unregister
 from homeassistant.const import CONF_WEBHOOK_ID, EVENT_HOMEASSISTANT_STOP
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import (
@@ -87,6 +85,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> b
     await data_handler.async_setup()
 
     webhook_manager = NetatmoWebhookManager(hass, entry)
+    data_handler.webhook_manager = webhook_manager
     entry.async_on_unload(webhook_manager.cancel_pending_attempt)
 
     if cloud.async_active_subscription(hass):
@@ -122,14 +121,10 @@ async def async_config_entry_updated(
 
 async def async_unload_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> bool:
     """Unload a config entry."""
-    if CONF_WEBHOOK_ID in entry.data:
-        webhook_unregister(hass, entry.data[CONF_WEBHOOK_ID])
-        try:
-            await entry.runtime_data.auth.async_dropwebhook()
-        except pyatmo.ApiError, TimeoutError, ClientError:
-            # Best effort: an unreachable API must not block unloading the entry
-            _LOGGER.debug("No webhook to be dropped")
-        _LOGGER.debug("Unregister Netatmo webhook")
+    # Through the manager, so the drop cannot overtake a registration in flight.
+    # A setup that never got as far as the data handler has nothing to drop.
+    if (data_handler := getattr(entry, "runtime_data", None)) is not None:
+        await data_handler.webhook_manager.async_unregister()
 
     return await hass.config_entries.async_unload_platforms(entry, PLATFORMS)
 

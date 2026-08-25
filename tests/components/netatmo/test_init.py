@@ -1597,16 +1597,20 @@ async def test_a_second_disconnect_replaces_the_pending_retry(
         mock_auth.return_value.async_post_api_request.side_effect = partial(
             fake_post_request, hass
         )
-        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
         mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+        # A registration that never settles, so that a retry which fires cannot
+        # be waved through by the already-registered guard - every armed retry
+        # then shows up as one more call
+        mock_auth.return_value.async_addwebhook = AsyncMock(
+            side_effect=pyatmo.ApiError("Webhook listing timed out")
+        )
 
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
         mock_auth.return_value.async_addwebhook.reset_mock()
 
-        # The cloud stays reachable, so every retry that fires does register -
-        # the count then reflects how many retries were armed
+        # Staggered, so two armed retries would come due at different times
         for _ in range(2):
             async_dispatcher_send(
                 hass,
@@ -1615,8 +1619,13 @@ async def test_a_second_disconnect_replaces_the_pending_retry(
             )
             await hass.async_block_till_done()
 
-        # Long enough for every scheduled retry to fire
-        freezer.tick(timedelta(seconds=TEST_RETRY_DELAY * 2))
+            freezer.tick(timedelta(seconds=TEST_RETRY_DELAY // 3))
+            async_fire_time_changed(hass)
+            await hass.async_block_till_done()
+
+        # Past the deadline of the retry armed last, and of the one it replaced,
+        # but short of the deadline the retry that fires arms next
+        freezer.tick(timedelta(seconds=TEST_RETRY_DELAY))
         async_fire_time_changed(hass)
         await hass.async_block_till_done()
 
@@ -2078,3 +2087,160 @@ async def test_a_disconnect_waits_for_a_registration_in_flight(
 
     # A drop that overtakes the add leaves the registration live at Netatmo
     assert calls == ["drop", "add", "drop"]
+
+
+async def test_an_unload_waits_for_a_registration_in_flight(
+    hass: HomeAssistant, config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that unloading cannot drop a webhook the retry is still adding."""
+    calls: list[str] = []
+    registering = asyncio.Event()
+    release = asyncio.Event()
+
+    async def _blocking_addwebhook(*args: Any) -> None:
+        registering.set()
+        await release.wait()
+        calls.append("add")
+
+    async def _dropwebhook(*args: Any) -> None:
+        calls.append("drop")
+
+    with (
+        _patched_retry_delays(),
+        _cloud_subscribed(hass),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_dropwebhook = AsyncMock(side_effect=_dropwebhook)
+        # The registration at setup fails, so a retry is armed to run below
+        mock_auth.return_value.async_addwebhook = AsyncMock(
+            side_effect=pyatmo.ApiError("Webhook listing timed out")
+        )
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_auth.return_value.async_addwebhook = AsyncMock(
+            side_effect=_blocking_addwebhook
+        )
+        calls.clear()
+
+        freezer.tick(timedelta(seconds=TEST_RETRY_DELAY))
+        async_fire_time_changed(hass)
+        async with asyncio.timeout(10):
+            await registering.wait()
+
+        unloading = hass.async_create_task(
+            hass.config_entries.async_unload(config_entry.entry_id)
+        )
+        await asyncio.sleep(0)
+        release.set()
+        assert await unloading
+
+    # A drop that overtakes the add leaves the registration live at Netatmo
+    assert calls == ["add", "drop"]
+
+
+async def test_the_register_action_settles_the_registration(
+    hass: HomeAssistant, config_entry: MockConfigEntry
+) -> None:
+    """Test that a webhook the action registered is not registered again."""
+    with (
+        _cloud_subscribed(hass),
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Drop what setup registered, so the action is what registers again
+        async_dispatcher_send(
+            hass,
+            SIGNAL_CLOUD_CONNECTION_STATE,
+            cloud.CloudConnectionState.CLOUD_DISCONNECTED,
+        )
+        await hass.async_block_till_done()
+
+        await hass.services.async_call(DOMAIN, "register_webhook", blocking=True)
+        await hass.async_block_till_done()
+
+        mock_auth.return_value.async_addwebhook.reset_mock()
+
+        # The action left the webhook registered, so the reconnect has nothing to do
+        async_dispatcher_send(
+            hass,
+            SIGNAL_CLOUD_CONNECTION_STATE,
+            cloud.CloudConnectionState.CLOUD_CONNECTED,
+        )
+        await hass.async_block_till_done()
+
+    mock_auth.return_value.async_addwebhook.assert_not_called()
+
+
+@pytest.mark.parametrize(
+    ("home_disabled", "expected_success"),
+    [
+        pytest.param(True, False, id="a_disabled_home_keeps_its_child"),
+        pytest.param(False, True, id="a_polled_home_releases_a_stale_child"),
+    ],
+)
+async def test_a_child_device_walks_up_to_its_home(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+    device_registry: dr.DeviceRegistry,
+    config_entry: MockConfigEntry,
+    netatmo_auth: AsyncMock,
+    home_disabled: bool,
+    expected_success: bool,
+) -> None:
+    """Test the walk to a home reaches it from a child device."""
+    assert await async_setup_component(hass, "config", {})
+
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, HOME_ID)},
+        disabled_by=dr.DeviceEntryDisabler.USER if home_disabled else None,
+    )
+
+    with selected_platforms([Platform.CLIMATE]):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+
+        await hass.async_block_till_done()
+
+    home_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, HOME_ID), config_entry.entry_id
+    )
+    assert home_device is not None
+
+    # A child reports through parent_device_id, where a module reports through
+    # via_device_id, so the walk up to the home has to follow both
+    child_device = device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={(DOMAIN, f"{HOME_ID}-child")},
+        name="Child",
+        parent_device_id=home_device.id,
+    )
+    assert child_device.parent_device_id == home_device.id
+
+    client = await hass_ws_client(hass)
+    response = await client.remove_device(child_device.id)
+    assert response["success"] is expected_success

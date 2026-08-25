@@ -6,7 +6,7 @@ from datetime import datetime, timedelta
 from itertools import islice
 import logging
 from time import time
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 import aiohttp
 import pyatmo
@@ -61,6 +61,9 @@ from .device import (
     async_sync_home_disabled_state,
     netatmo_module_parents,
 )
+
+if TYPE_CHECKING:
+    from .webhook import NetatmoWebhookManager
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -156,6 +159,7 @@ class NetatmoDataHandler:
     """Manages the Netatmo data handling."""
 
     account: pyatmo.AsyncAccount
+    webhook_manager: NetatmoWebhookManager
     _interval_factor: int
 
     def __init__(
