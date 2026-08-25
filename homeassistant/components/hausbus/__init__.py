@@ -43,7 +43,9 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     # setup does not block on it. The task is stored on the gateway so
     # async_unload_entry can cancel and await it before tearing down the
     # HomeServer singleton.
-    gateway.discovery_task = hass.async_create_task(gateway.start_discovery())
+    gateway.discovery_task = entry.async_create_background_task(
+        hass, gateway.start_discovery(), "Haus-Bus discovery"
+    )
     return True
 
 

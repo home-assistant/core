@@ -1,11 +1,9 @@
 rules:
   # Bronze
   action-setup:
-    status: done
+    status: exempt
     comment: |
-      cover_set_configuration is registered as an entity service in cover.py
-      via platform.async_register_entity_service inside async_setup_entry,
-      which is the required pattern for entity-scoped actions.
+      This integration does not register any actions.
   appropriate-polling:
     status: exempt
     comment: |
@@ -24,9 +22,9 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: todo
+    status: exempt
     comment: |
-      cover_set_configuration needs to be documented.
+      This integration does not register any actions.
   docs-conditions:
     status: exempt
     comment: |
