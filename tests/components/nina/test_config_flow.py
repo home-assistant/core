@@ -342,8 +342,7 @@ async def test_reconfigure_flow_no_selection(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
 
-    assert mock_config_entry.data == {
-        CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
+    assert mock_config_entry.data == DUMMY_USER_INPUT | {
         CONF_REGIONS: {
             "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
         },
@@ -388,7 +387,12 @@ async def test_reconfigure_flow_init(
     assert result["reason"] == "reconfigure_successful"
 
     assert dict(mock_config_entry.data) == {
-        CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
+        CONST_REGION_A_TO_D: ["095760000000_0"],
+        CONST_REGION_E_TO_H: [],
+        CONST_REGION_I_TO_L: [],
+        CONST_REGION_M_TO_Q: [],
+        CONST_REGION_R_TO_U: [],
+        CONST_REGION_V_TO_Z: [],
         CONF_REGIONS: {"095760000000": "Allersberg, M (Roth - Bayern)"},
     }
 

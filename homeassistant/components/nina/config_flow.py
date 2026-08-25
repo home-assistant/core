@@ -202,19 +202,14 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
 
             if user_input[CONF_REGIONS]:
                 regions_data = prepare_user_input(
-                    {CONF_REGIONS: user_input[CONF_REGIONS]},
+                    user_input,
                     self._all_region_codes_sorted,
                 )
 
                 await self._remove_unused_devices(reconfigure_entry, regions_data)
 
-                new_data = {
-                    **reconfigure_entry.data,
-                    CONF_REGIONS: regions_data[CONF_REGIONS],
-                }
-
                 return self.async_update_reload_and_abort(
-                    reconfigure_entry, data=new_data
+                    reconfigure_entry, data=user_input
                 )
 
             errors["base"] = "no_selection"
