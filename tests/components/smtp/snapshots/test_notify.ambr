@@ -70,7 +70,7 @@
   '''
   MIME-Version: 1.0
   Subject: Home Assistant
-  Content-Type: multipart/alternative;
+  Content-Type: multipart/related;
    boundary="===============1234567890123456789=="
   From: Home Assistant <email@example.com>
   To: Recipient <recipient@example.com>
@@ -88,6 +88,7 @@
   Content-Type: text/html; charset="utf-8"
   Content-Transfer-Encoding: 7bit
   MIME-Version: 1.0
+  Content-Disposition: inline
   
   <html><body><img src="cid:avatar.png"></body></html>
   
@@ -108,7 +109,7 @@
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
   --===============1234567890123456789==.0
-  Content-Type: multipart/alternative;
+  Content-Type: multipart/related;
    boundary="===============1234567890123456789=="
   
   --===============1234567890123456789==
@@ -121,6 +122,7 @@
   Content-Type: text/html; charset="utf-8"
   Content-Transfer-Encoding: 7bit
   MIME-Version: 1.0
+  Content-Disposition: inline
   
   <html><body><img src="cid:1312"></body></html>
   
@@ -130,7 +132,7 @@
   Content-Type: image/jpeg
   Content-Transfer-Encoding: base64
   Content-Disposition: inline; filename="Epic Sax Guy 10 Hours.jpg"
-  Content-ID: 1312
+  Content-ID: <1312>
   MIME-Version: 1.0
   
   SSBwbGF5IHRoZSBzYXgK
@@ -152,7 +154,7 @@
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
   --===============1234567890123456789==.0
-  Content-Type: multipart/alternative;
+  Content-Type: multipart/related;
    boundary="===============1234567890123456789=="
   
   --===============1234567890123456789==
@@ -165,6 +167,7 @@
   Content-Type: text/html; charset="utf-8"
   Content-Transfer-Encoding: 7bit
   MIME-Version: 1.0
+  Content-Disposition: inline
   
   <html><body><img src="cid:1312"></body></html>
   
@@ -174,7 +177,7 @@
   Content-Type: image/jpeg
   Content-Transfer-Encoding: base64
   Content-Disposition: inline; filename="test.png"
-  Content-ID: 1312
+  Content-ID: <1312>
   MIME-Version: 1.0
   
   iVBORw==
@@ -225,7 +228,7 @@
   Message-Id: <177777777700.12345.12345678901234567890@mock>
   
   --===============1234567890123456789==.0
-  Content-Type: multipart/alternative;
+  Content-Type: multipart/related;
    boundary="===============1234567890123456789=="
   
   --===============1234567890123456789==
@@ -238,6 +241,7 @@
   Content-Type: text/html; charset="utf-8"
   Content-Transfer-Encoding: 7bit
   MIME-Version: 1.0
+  Content-Disposition: inline
   
   <html><body><img src="cid:1312"></body></html>
   

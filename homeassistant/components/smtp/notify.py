@@ -222,7 +222,7 @@ class MailNotifyEntity(NotifyEntity):
         msg["Subject"] = title or ATTR_TITLE_DEFAULT
 
         if ATTR_HTML in kwargs:
-            msg.add_alternative(kwargs[ATTR_HTML], subtype="html")
+            msg.add_related(kwargs[ATTR_HTML], subtype="html")
 
         attachments = kwargs.get(ATTR_ATTACHMENTS, [])
 
@@ -238,7 +238,7 @@ class MailNotifyEntity(NotifyEntity):
         ):
             main_type, subtype = (
                 mime_type.split("/", 1)
-                if mime_type is not None
+                if mime_type is not None and "/" in mime_type
                 else ("application", "octet-stream")
             )
 
@@ -256,7 +256,7 @@ class MailNotifyEntity(NotifyEntity):
                 maintype=main_type,
                 subtype=subtype,
                 filename=target_filename,
-                cid=file.get(ATTR_CONTENT_ID),
+                cid=f"<{cid}>" if (cid := file.get(ATTR_CONTENT_ID)) else None,
                 disposition="inline" if ATTR_CONTENT_ID in file else "attachment",
             )
 
