@@ -771,7 +771,7 @@ class GuntamaticSensor(CoordinatorEntity[GuntamaticCoordinator], SensorEntity):
         """Return the current value of the sensor."""
         value = self.coordinator.data[self.entity_description.key][0]
         if self.entity_description.device_class is SensorDeviceClass.DATE:
-            return dt_util.now().date() + timedelta(days=float(value))
+            return (dt_util.now() + timedelta(days=float(value))).date()
         if (
             self.entity_description.device_class is SensorDeviceClass.ENUM
             and value not in (self.entity_description.options or [])
