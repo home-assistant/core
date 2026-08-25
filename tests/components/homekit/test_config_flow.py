@@ -15,6 +15,7 @@ from homeassistant.components.homekit.const import (
     DOMAIN,
     SHORT_BRIDGE_NAME,
 )
+from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import SOURCE_IGNORE, SOURCE_IMPORT
 from homeassistant.const import (
     ATTR_AREA_ID,
@@ -67,6 +68,7 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] is None
+    assert result["last_step"] is False
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -74,6 +76,7 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "include"
+    assert result2["last_step"] is False
 
     include_targets = {ATTR_LABEL_ID: ["homekit"]}
     result3 = await hass.config_entries.flow.async_configure(
@@ -82,10 +85,12 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
     )
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "review"
+    assert result3["last_step"] is False
 
     result3 = await hass.config_entries.flow.async_configure(result3["flow_id"], {})
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "pairing"
+    assert result3["last_step"] is True
 
     with (
         patch(
@@ -143,6 +148,7 @@ async def test_setup_in_bridge_mode_entity_review(
             "switch.excluded_at_equal_specificity",
             {include_label.label_id, exclude_label.label_id},
         ),
+        ("sensor.unsupported_by_homekit", {include_label.label_id}),
     ):
         domain, object_id = entity_id.split(".", 1)
         entry = entity_registry.async_get_or_create(
@@ -849,6 +855,7 @@ async def test_options_flow_with_include_and_exclude_targets(
     result = await hass.config_entries.options.async_init(
         config_entry.entry_id, context={"show_advanced_options": False}
     )
+    assert result["last_step"] is False
     result = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={
@@ -858,6 +865,7 @@ async def test_options_flow_with_include_and_exclude_targets(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "include"
+    assert result["last_step"] is False
     assert _get_schema_default(result["data_schema"].schema, CONF_INCLUDE_TARGETS) == {}
 
     include_targets = {
@@ -876,10 +884,12 @@ async def test_options_flow_with_include_and_exclude_targets(
         },
     )
     assert result2["description_placeholders"] == {"count": "2"}
+    assert result2["last_step"] is False
     result2 = await _async_submit_review_step(hass, result2)
 
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "climate"
+    assert result2["last_step"] is False
 
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"], user_input=result2["data_schema"]({})
@@ -1481,7 +1491,11 @@ async def test_options_flow_include_mode_basic_accessory(
     config_entry = _mock_config_entry_with_options_populated()
     await async_init_entry(hass, config_entry)
 
-    hass.states.async_set("media_player.tv", "off")
+    hass.states.async_set(
+        "media_player.tv",
+        "off",
+        {"device_class": MediaPlayerDeviceClass.TV},
+    )
     hass.states.async_set("media_player.sonos", "off")
 
     await hass.async_block_till_done()
@@ -1514,6 +1528,15 @@ async def test_options_flow_include_mode_basic_accessory(
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
         user_input={"entities": "media_player.tv"},
+    )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "review"
+    assert _get_schema_default(result3["data_schema"].schema, CONF_ENTITIES) == [
+        "media_player.tv"
+    ]
+
+    result3 = await hass.config_entries.options.async_configure(
+        result3["flow_id"], user_input={}
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
@@ -1553,6 +1576,12 @@ async def test_options_flow_include_mode_basic_accessory(
     result3 = await hass.config_entries.options.async_configure(
         result2["flow_id"],
         user_input={"entities": "media_player.tv"},
+    )
+    assert result3["type"] is FlowResultType.FORM
+    assert result3["step_id"] == "review"
+
+    result3 = await hass.config_entries.options.async_configure(
+        result3["flow_id"], user_input={}
     )
     assert result3["type"] is FlowResultType.CREATE_ENTRY
     assert config_entry.options == {
@@ -1656,6 +1685,12 @@ async def test_converting_bridge_to_accessory_mode(
     result2 = await hass.config_entries.options.async_configure(
         result["flow_id"],
         user_input={"entities": "camera.tv"},
+    )
+    assert result2["type"] is FlowResultType.FORM
+    assert result2["step_id"] == "review"
+
+    result2 = await hass.config_entries.options.async_configure(
+        result2["flow_id"], user_input={}
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "cameras"

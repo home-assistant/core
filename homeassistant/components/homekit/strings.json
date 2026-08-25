@@ -6,29 +6,29 @@
     "step": {
       "include": {
         "data": {
-          "exclude_targets": "Excluded targets",
-          "include_targets": "Included targets"
+          "exclude_targets": "Exclude",
+          "include_targets": "Also include"
         },
-        "description": "Selected domains are included in full, and selected targets are included independently. More specific selections take precedence, and exclusions win conflicts at the same specificity.",
-        "title": "Include and exclude targets"
+        "description": "Use “Also include” to add exceptions to the selected domains and “Exclude” to remove them. More specific choices override broader ones, if equally specific choices conflict, exclude wins.",
+        "title": "Refine entity selection"
       },
       "pairing": {
-        "description": "To complete pairing follow the instructions in “Notifications” under “HomeKit Pairing”.",
+        "description": "Home Assistant will create a bridge and a separate HomeKit accessory for each selected camera, lock, TV, receiver, projector, or activity-based remote. Pair each one using the instructions in “Notifications” under “HomeKit Pairing”.",
         "title": "Pair HomeKit"
       },
       "review": {
         "data": {
-          "entities": "Selected entities"
+          "entities": "Entities shared with HomeKit"
         },
-        "description": "{count} entities will be selected for HomeKit. Review them below before continuing.",
-        "title": "Review entity selection"
+        "description": "HomeKit will expose the following entities ({count} total):",
+        "title": "Review shared entities"
       },
       "user": {
         "data": {
           "include_domains": "Domains to include"
         },
-        "description": "Choose the domains to be included. All supported entities in the domain will be included except for categorized entities. A separate HomeKit instance in accessory mode will be created for each tv/receiver media player, activity based remote, lock, and camera.",
-        "title": "Select domains to be included"
+        "description": "Choose the domains to include in HomeKit.",
+        "title": "Choose domains to include"
       }
     }
   },
@@ -61,26 +61,26 @@
       },
       "include": {
         "data": {
-          "exclude_targets": "Excluded targets",
-          "include_targets": "Included targets"
+          "exclude_targets": "[%key:component::homekit::config::step::include::data::exclude_targets%]",
+          "include_targets": "[%key:component::homekit::config::step::include::data::include_targets%]"
         },
-        "description": "Selected domains are included in full, and selected targets are included independently. More specific selections take precedence, and exclusions win conflicts at the same specificity.",
-        "title": "Include and exclude targets"
+        "description": "[%key:component::homekit::config::step::include::description%]",
+        "title": "[%key:component::homekit::config::step::include::title%]"
       },
       "init": {
         "data": {
           "domains": "[%key:component::homekit::config::step::user::data::include_domains%]",
           "mode": "HomeKit mode"
         },
-        "description": "HomeKit can expose a bridge or a single accessory. Accessory mode supports one entity and is required for TV or receiver media players. In bridge mode, the next screens let you select independent include and exclude targets in addition to entire domains.",
-        "title": "Select mode and domains."
+        "description": "Choose Bridge to share several entities, or Accessory to share one. Cameras, locks, TVs, receivers, projectors, and activity-based remotes require Accessory mode. Choose the domains to include in HomeKit.",
+        "title": "Choose mode and domains"
       },
       "review": {
         "data": {
-          "entities": "Selected entities"
+          "entities": "[%key:component::homekit::config::step::review::data::entities%]"
         },
-        "description": "{count} entities will be selected for HomeKit. Review them below before saving.",
-        "title": "Review entity selection"
+        "description": "[%key:component::homekit::config::step::review::description%]",
+        "title": "[%key:component::homekit::config::step::review::title%]"
       },
       "yaml": {
         "description": "This entry is controlled via YAML",

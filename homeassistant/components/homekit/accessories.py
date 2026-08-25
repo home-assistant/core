@@ -268,22 +268,11 @@ def _async_resolve_climate_type(
     return None
 
 
-def get_accessory(  # noqa: C901
-    hass: HomeAssistant, driver: HomeDriver, state: State, aid: int | None, config: dict
-) -> HomeAccessory | None:
-    """Take state and return an accessory object if supported."""
-    if not aid:
-        _LOGGER.warning(
-            (
-                'The entity "%s" is not supported, since it '
-                "generates an invalid aid, please change it"
-            ),
-            state.entity_id,
-        )
-        return None
-
+def get_accessory_type(  # noqa: C901
+    state: State, config: dict, *, log_errors: bool = True
+) -> str | None:
+    """Return the HomeKit accessory type for a supported entity."""
     a_type = None
-    name = config.get(CONF_NAME, state.name)
     features = state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
 
     if state.domain == ALARM_CONTROL_PANEL_DOMAIN:
@@ -351,7 +340,7 @@ def get_accessory(  # noqa: C901
             MediaPlayerDeviceClass.PROJECTOR,
         ):
             a_type = "TelevisionMediaPlayer"
-        elif validate_media_player_features(state, feature_list):
+        elif validate_media_player_features(state, feature_list, log_errors=log_errors):
             a_type = "MediaPlayer"
 
     elif state.domain == SENSOR_DOMAIN:
@@ -447,7 +436,25 @@ def get_accessory(  # noqa: C901
     elif state.domain == CAMERA_DOMAIN:
         a_type = "Camera"
 
-    if a_type is None:
+    return a_type
+
+
+def get_accessory(
+    hass: HomeAssistant, driver: HomeDriver, state: State, aid: int | None, config: dict
+) -> HomeAccessory | None:
+    """Take state and return an accessory object if supported."""
+    if not aid:
+        _LOGGER.warning(
+            (
+                'The entity "%s" is not supported, since it '
+                "generates an invalid aid, please change it"
+            ),
+            state.entity_id,
+        )
+        return None
+
+    name = config.get(CONF_NAME, state.name)
+    if (a_type := get_accessory_type(state, config)) is None:
         return None
 
     _LOGGER.debug('Add "%s" as "%s"', state.entity_id, a_type)
