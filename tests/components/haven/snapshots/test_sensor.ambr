@@ -145,7 +145,7 @@
     'state': '30.0',
   })
 # ---
-# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_co2-entry]
+# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_atmospheric_pressure-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -161,7 +161,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.central_air_monitor_test_cam_0001_co2',
+    'entity_id': 'sensor.central_air_monitor_test_cam_0001_atmospheric_pressure',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -169,31 +169,92 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'CO2',
+    'object_id_base': 'Atmospheric pressure',
     'options': dict({
+      'sensor': dict({
+        'suggested_display_precision': 2,
+      }),
+      'sensor.private': dict({
+        'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+      }),
     }),
-    'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
+    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
     'original_icon': None,
-    'original_name': 'CO2',
+    'original_name': 'Atmospheric pressure',
     'platform': 'haven',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'carbon_dioxide',
+    'translation_key': None,
+    'unique_id': 'TEST-CAM-0001_pressure_kpa',
+    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
+  })
+# ---
+# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_atmospheric_pressure-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Central Air Monitor TEST-CAM-0001 Atmospheric pressure',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.central_air_monitor_test_cam_0001_atmospheric_pressure',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1013.0',
+  })
+# ---
+# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_carbon_dioxide-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.central_air_monitor_test_cam_0001_carbon_dioxide',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Carbon dioxide',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
+    'original_icon': None,
+    'original_name': 'Carbon dioxide',
+    'platform': 'haven',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
     'unique_id': 'TEST-CAM-0001_co2_ppm',
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
-# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_co2-state]
+# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Central Air Monitor TEST-CAM-0001 CO2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Central Air Monitor TEST-CAM-0001 Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.central_air_monitor_test_cam_0001_co2',
+    'entity_id': 'sensor.central_air_monitor_test_cam_0001_carbon_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -234,7 +295,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'humidity',
+    'translation_key': None,
     'unique_id': 'TEST-CAM-0001_humidity_pct',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
@@ -253,6 +314,61 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '45.0',
+  })
+# ---
+# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.central_air_monitor_test_cam_0001_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM10',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'haven',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'TEST-CAM-0001_pm10_ugm3',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
+  })
+# ---
+# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Central Air Monitor TEST-CAM-0001 PM10',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.central_air_monitor_test_cam_0001_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
   })
 # ---
 # name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pm10_count-entry]
@@ -309,7 +425,7 @@
     'state': '0.9',
   })
 # ---
-# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pm10_mass-entry]
+# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -325,7 +441,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.central_air_monitor_test_cam_0001_pm10_mass',
+    'entity_id': 'sensor.central_air_monitor_test_cam_0001_pm2_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -333,31 +449,31 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'PM10 mass',
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
-    'original_name': 'PM10 mass',
+    'original_name': 'PM2.5',
     'platform': 'haven',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm10_mass',
-    'unique_id': 'TEST-CAM-0001_pm10_ugm3',
+    'translation_key': None,
+    'unique_id': 'TEST-CAM-0001_pm25_ugm3',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
-# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pm10_mass-state]
+# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Central Air Monitor TEST-CAM-0001 PM10 mass',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Central Air Monitor TEST-CAM-0001 PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.central_air_monitor_test_cam_0001_pm10_mass',
+    'entity_id': 'sensor.central_air_monitor_test_cam_0001_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -418,122 +534,6 @@
     'state': '0.9',
   })
 # ---
-# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pm2_5_mass-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.central_air_monitor_test_cam_0001_pm2_5_mass',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'PM2.5 mass',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
-    'original_icon': None,
-    'original_name': 'PM2.5 mass',
-    'platform': 'haven',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pm25_mass',
-    'unique_id': 'TEST-CAM-0001_pm25_ugm3',
-    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
-  })
-# ---
-# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pm2_5_mass-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Central Air Monitor TEST-CAM-0001 PM2.5 mass',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.central_air_monitor_test_cam_0001_pm2_5_mass',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.0',
-  })
-# ---
-# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pressure-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.central_air_monitor_test_cam_0001_pressure',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'Pressure',
-    'options': dict({
-      'sensor': dict({
-        'suggested_display_precision': 2,
-      }),
-      'sensor.private': dict({
-        'suggested_unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
-      }),
-    }),
-    'original_device_class': <SensorDeviceClass.ATMOSPHERIC_PRESSURE: 'atmospheric_pressure'>,
-    'original_icon': None,
-    'original_name': 'Pressure',
-    'platform': 'haven',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pressure',
-    'unique_id': 'TEST-CAM-0001_pressure_kpa',
-    'unit_of_measurement': <UnitOfPressure.HPA: 'hPa'>,
-  })
-# ---
-# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_pressure-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'atmospheric_pressure',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Central Air Monitor TEST-CAM-0001 Pressure',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPressure.HPA: 'hPa'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.central_air_monitor_test_cam_0001_pressure',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1013.0',
-  })
-# ---
 # name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -571,7 +571,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': 'TEST-CAM-0001_temperature_c',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })
@@ -592,7 +592,7 @@
     'state': '22.5',
   })
 # ---
-# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_tvoc-entry]
+# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_volatile_organic_compounds_parts-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -608,7 +608,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.central_air_monitor_test_cam_0001_tvoc',
+    'entity_id': 'sensor.central_air_monitor_test_cam_0001_volatile_organic_compounds_parts',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -616,31 +616,31 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'tVOC',
+    'object_id_base': 'Volatile organic compounds parts',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS: 'volatile_organic_compounds_parts'>,
     'original_icon': None,
-    'original_name': 'tVOC',
+    'original_name': 'Volatile organic compounds parts',
     'platform': 'haven',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'tvoc',
+    'translation_key': None,
     'unique_id': 'TEST-CAM-0001_tvoc_ppb',
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
   })
 # ---
-# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_tvoc-state]
+# name: test_cam_entities[sensor.central_air_monitor_test_cam_0001_volatile_organic_compounds_parts-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volatile_organic_compounds_parts',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Central Air Monitor TEST-CAM-0001 tVOC',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Central Air Monitor TEST-CAM-0001 Volatile organic compounds parts',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_BILLION: 'ppb'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.central_air_monitor_test_cam_0001_tvoc',
+    'entity_id': 'sensor.central_air_monitor_test_cam_0001_volatile_organic_compounds_parts',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -677,7 +677,7 @@
     'via_device_id': None,
   })
 # ---
-# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_co2-entry]
+# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_carbon_dioxide-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -693,7 +693,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.room_air_monitor_test_ram_0001_co2',
+    'entity_id': 'sensor.room_air_monitor_test_ram_0001_carbon_dioxide',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -701,31 +701,31 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'CO2',
+    'object_id_base': 'Carbon dioxide',
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.CO2: 'carbon_dioxide'>,
     'original_icon': None,
-    'original_name': 'CO2',
+    'original_name': 'Carbon dioxide',
     'platform': 'haven',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'carbon_dioxide',
+    'translation_key': None,
     'unique_id': 'TEST-RAM-0001_co2_ppm',
     'unit_of_measurement': <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
   })
 # ---
-# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_co2-state]
+# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_carbon_dioxide-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'carbon_dioxide',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Air Monitor TEST-RAM-0001 CO2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Air Monitor TEST-RAM-0001 Carbon dioxide',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfRatio.PARTS_PER_MILLION: 'ppm'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.room_air_monitor_test_ram_0001_co2',
+    'entity_id': 'sensor.room_air_monitor_test_ram_0001_carbon_dioxide',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -824,7 +824,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'humidity',
+    'translation_key': None,
     'unique_id': 'TEST-RAM-0001_humidity_pct',
     'unit_of_measurement': <UnitOfRatio.PERCENTAGE: '%'>,
   })
@@ -952,6 +952,116 @@
     'state': '0.7',
   })
 # ---
+# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm1-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm1',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM1',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
+    'original_icon': None,
+    'original_name': 'PM1',
+    'platform': 'haven',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'TEST-RAM-0001_pm1_ugm3',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
+  })
+# ---
+# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm1-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Air Monitor TEST-RAM-0001 PM1',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm1',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '0.1',
+  })
+# ---
+# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm10-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+    }),
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'sensor',
+    'entity_category': None,
+    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm10',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'PM10',
+    'options': dict({
+    }),
+    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
+    'original_icon': None,
+    'original_name': 'PM10',
+    'platform': 'haven',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': None,
+    'unique_id': 'TEST-RAM-0001_pm10_ugm3',
+    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
+  })
+# ---
+# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm10-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Air Monitor TEST-RAM-0001 PM10',
+      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
+    }),
+    'context': <ANY>,
+    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm10',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': '1.0',
+  })
+# ---
 # name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm10_count-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1004,61 +1114,6 @@
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': '0.9',
-  })
-# ---
-# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm10_mass-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm10_mass',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'PM10 mass',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PM10: 'pm10'>,
-    'original_icon': None,
-    'original_name': 'PM10 mass',
-    'platform': 'haven',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pm10_mass',
-    'unique_id': 'TEST-RAM-0001_pm10_ugm3',
-    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
-  })
-# ---
-# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm10_mass-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm10',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Air Monitor TEST-RAM-0001 PM10 mass',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm10_mass',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.0',
   })
 # ---
 # name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm1_0_count-entry]
@@ -1115,7 +1170,7 @@
     'state': '0.9',
   })
 # ---
-# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm1_0_mass-entry]
+# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm2_5-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1131,7 +1186,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm1_0_mass',
+    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm2_5',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1139,35 +1194,35 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'PM1.0 mass',
+    'object_id_base': 'PM2.5',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.PM1: 'pm1'>,
+    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
     'original_icon': None,
-    'original_name': 'PM1.0 mass',
+    'original_name': 'PM2.5',
     'platform': 'haven',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm1_mass',
-    'unique_id': 'TEST-RAM-0001_pm1_ugm3',
+    'translation_key': None,
+    'unique_id': 'TEST-RAM-0001_pm25_ugm3',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
-# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm1_0_mass-state]
+# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm2_5-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm1',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Air Monitor TEST-RAM-0001 PM1.0 mass',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Air Monitor TEST-RAM-0001 PM2.5',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm1_0_mass',
+    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm2_5',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '0.1',
+    'state': '1.0',
   })
 # ---
 # name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm2_5_count-entry]
@@ -1224,7 +1279,7 @@
     'state': '0.9',
   })
 # ---
-# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm2_5_mass-entry]
+# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm4-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -1240,7 +1295,7 @@
     'disabled_by': None,
     'domain': 'sensor',
     'entity_category': None,
-    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm2_5_mass',
+    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm4',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -1248,31 +1303,31 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'PM2.5 mass',
+    'object_id_base': 'PM4',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.PM25: 'pm25'>,
+    'original_device_class': <SensorDeviceClass.PM4: 'pm4'>,
     'original_icon': None,
-    'original_name': 'PM2.5 mass',
+    'original_name': 'PM4',
     'platform': 'haven',
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'pm25_mass',
-    'unique_id': 'TEST-RAM-0001_pm25_ugm3',
+    'translation_key': None,
+    'unique_id': 'TEST-RAM-0001_pm4_ugm3',
     'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
   })
 # ---
-# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm2_5_mass-state]
+# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm25',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Air Monitor TEST-RAM-0001 PM2.5 mass',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Air Monitor TEST-RAM-0001 PM4',
       <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
     }),
     'context': <ANY>,
-    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm2_5_mass',
+    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm4',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -1333,61 +1388,6 @@
     'state': '0.9',
   })
 # ---
-# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm4_0_mass-entry]
-  EntityRegistryEntrySnapshot({
-    'aliases': list([
-      None,
-    ]),
-    'area_id': None,
-    'capabilities': dict({
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-    }),
-    'config_entry_id': <ANY>,
-    'config_subentry_id': <ANY>,
-    'device_class': None,
-    'device_id': <ANY>,
-    'disabled_by': None,
-    'domain': 'sensor',
-    'entity_category': None,
-    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm4_0_mass',
-    'has_entity_name': True,
-    'hidden_by': None,
-    'icon': None,
-    'id': <ANY>,
-    'labels': set({
-    }),
-    'name': None,
-    'object_id_base': 'PM4.0 mass',
-    'options': dict({
-    }),
-    'original_device_class': <SensorDeviceClass.PM4: 'pm4'>,
-    'original_icon': None,
-    'original_name': 'PM4.0 mass',
-    'platform': 'haven',
-    'previous_unique_id': None,
-    'suggested_object_id': None,
-    'supported_features': 0,
-    'translation_key': 'pm4_mass',
-    'unique_id': 'TEST-RAM-0001_pm4_ugm3',
-    'unit_of_measurement': <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
-  })
-# ---
-# name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_pm4_0_mass-state]
-  StateSnapshot({
-    'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'pm4',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Room Air Monitor TEST-RAM-0001 PM4.0 mass',
-      <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
-      <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfDensity.MICROGRAMS_PER_CUBIC_METER: 'μg/m³'>,
-    }),
-    'context': <ANY>,
-    'entity_id': 'sensor.room_air_monitor_test_ram_0001_pm4_0_mass',
-    'last_changed': <ANY>,
-    'last_reported': <ANY>,
-    'last_updated': <ANY>,
-    'state': '1.0',
-  })
-# ---
 # name: test_ram_sensors[sensor.room_air_monitor_test_ram_0001_temperature-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
@@ -1425,7 +1425,7 @@
     'previous_unique_id': None,
     'suggested_object_id': None,
     'supported_features': 0,
-    'translation_key': 'temperature',
+    'translation_key': None,
     'unique_id': 'TEST-RAM-0001_temperature_c',
     'unit_of_measurement': <UnitOfTemperature.CELSIUS: '°C'>,
   })

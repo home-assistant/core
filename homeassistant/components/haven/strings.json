@@ -32,22 +32,13 @@
     "sensor": {
       "airflow": { "name": "Airflow" },
       "airflow_duration": { "name": "Airflow duration" },
-      "carbon_dioxide": { "name": "CO2" },
       "dew_point": { "name": "Dew point" },
-      "humidity": { "name": "Humidity" },
       "nox_index": { "name": "NOx index" },
       "pm05_count": { "name": "PM0.5 count" },
       "pm10_count": { "name": "PM10 count" },
-      "pm10_mass": { "name": "PM10 mass" },
       "pm1_count": { "name": "PM1.0 count" },
-      "pm1_mass": { "name": "PM1.0 mass" },
       "pm25_count": { "name": "PM2.5 count" },
-      "pm25_mass": { "name": "PM2.5 mass" },
       "pm4_count": { "name": "PM4.0 count" },
-      "pm4_mass": { "name": "PM4.0 mass" },
-      "pressure": { "name": "Pressure" },
-      "temperature": { "name": "Temperature" },
-      "tvoc": { "name": "tVOC" },
       "tvoc_index": { "name": "tVOC index" }
     }
   },

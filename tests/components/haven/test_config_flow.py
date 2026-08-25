@@ -49,34 +49,14 @@ async def test_user_flow_success(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_user_flow_cannot_connect_then_recovers(
-    hass: HomeAssistant, mock_haven_client: AsyncMock
-) -> None:
-    """Test manual setup recovers from a connection failure."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    mock_haven_client.get_info.side_effect = [
-        HavenApiError("Unable to connect"),
-        DeviceInfo.from_dict(TEST_INFO),
-    ]
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST}
-    )
-    assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "cannot_connect"}
-
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST}
-    )
-
-    assert result["type"] is FlowResultType.CREATE_ENTRY
-
-
 @pytest.mark.parametrize(
-    ("error", "expected"),
+    ("first_response", "expected"),
     [
+        pytest.param(
+            HavenApiError("Unable to connect"),
+            "cannot_connect",
+            id="cannot-connect",
+        ),
         pytest.param(
             HavenUnsupportedApiVersionError("Unsupported API version"),
             "unsupported_api_version",
@@ -87,41 +67,45 @@ async def test_user_flow_cannot_connect_then_recovers(
             "unsupported_product",
             id="unsupported-product",
         ),
+        pytest.param(
+            DeviceInfo.from_dict(TEST_UNSUPPORTED_CONTROLLER_INFO),
+            "unsupported_product",
+            id="missing-air-quality-capability",
+        ),
     ],
 )
-async def test_user_flow_rejects_unsupported_device(
+async def test_user_flow_error_then_recovers(
     hass: HomeAssistant,
     mock_haven_client: AsyncMock,
-    error: Exception,
+    first_response: DeviceInfo | Exception,
     expected: str,
 ) -> None:
-    """Test unsupported API and product errors remain actionable."""
+    """Test manual setup errors remain actionable."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
     )
-    mock_haven_client.get_info.side_effect = error
-    result = await hass.config_entries.flow.async_configure(
-        result["flow_id"], {CONF_HOST: TEST_HOST}
-    )
-    assert result["errors"] == {"base": expected}
+    mock_haven_client.get_info.side_effect = [
+        first_response,
+        DeviceInfo.from_dict(TEST_INFO),
+    ]
 
-
-async def test_user_flow_rejects_controller(
-    hass: HomeAssistant, mock_haven_client: AsyncMock
-) -> None:
-    """Test the initial integration rejects products without air-quality data."""
-    result = await hass.config_entries.flow.async_init(
-        DOMAIN, context={"source": SOURCE_USER}
-    )
-    mock_haven_client.get_info.return_value = DeviceInfo.from_dict(
-        TEST_UNSUPPORTED_CONTROLLER_INFO
-    )
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], {CONF_HOST: TEST_HOST}
     )
 
     assert result["type"] is FlowResultType.FORM
-    assert result["errors"] == {"base": "unsupported_product"}
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": expected}
+
+    new_host = "192.0.2.2"
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: new_host}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == f"Room Air Monitor {TEST_SERIAL}"
+    assert result["data"] == {CONF_HOST: new_host}
+    assert result["result"].unique_id == TEST_SERIAL
 
 
 async def test_user_flow_aborts_duplicate(

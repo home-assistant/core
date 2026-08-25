@@ -2,11 +2,13 @@
 
 from unittest.mock import AsyncMock
 
+from freezegun.api import FrozenDateTimeFactory
 from haveniaq import DeviceInfo, HavenApiError, SensorData
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.haven.const import DOMAIN
+from homeassistant.components.haven.coordinator import UPDATE_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -20,7 +22,7 @@ from . import (
     setup_integration,
 )
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
 @pytest.fixture
@@ -70,6 +72,37 @@ async def test_cam_entities(
     )
     assert device is not None
     assert device == snapshot(name="cam-device")
+
+
+@pytest.mark.usefixtures("mock_haven_client")
+@pytest.mark.parametrize(
+    "key",
+    [
+        "pm05_count_cm3",
+        "pm1_count_cm3",
+        "pm25_count_cm3",
+        "pm4_count_cm3",
+        "pm10_count_cm3",
+    ],
+)
+async def test_particle_count_sensors_disabled_by_default(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+    key: str,
+) -> None:
+    """Test particle count sensors are disabled by default."""
+    await setup_integration(hass, mock_config_entry)
+
+    entity_id = entity_registry.async_get_entity_id(
+        "sensor", DOMAIN, f"{TEST_SERIAL}_{key}"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id) is None
+
+    entry = entity_registry.async_get(entity_id)
+    assert entry is not None
+    assert entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
@@ -122,12 +155,14 @@ async def test_sensors_unavailable_after_refresh_failure(
     mock_haven_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors become unavailable after a refresh failure."""
     await setup_integration(hass, mock_config_entry)
     mock_haven_client.get_sensors.side_effect = HavenApiError("Unable to connect")
 
-    await mock_config_entry.runtime_data.async_refresh()
+    freezer.tick(UPDATE_INTERVAL)
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     temp_entity = entity_registry.async_get_entity_id(

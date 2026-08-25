@@ -1,6 +1,6 @@
 """Coordinator for HAVEN local API polling."""
 
-from dataclasses import dataclass
+from datetime import timedelta
 from typing import override
 
 from haveniaq import (
@@ -19,19 +19,14 @@ from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DEFAULT_SCAN_INTERVAL, DOMAIN, LOGGER
+from .const import DOMAIN, LOGGER
+
+UPDATE_INTERVAL = timedelta(minutes=1)
 
 type HavenConfigEntry = ConfigEntry[HavenDataUpdateCoordinator]
 
 
-@dataclass(frozen=True, slots=True)
-class HavenCoordinatorData:
-    """Data returned by one coordinated device update."""
-
-    sensors: SensorData
-
-
-class HavenDataUpdateCoordinator(DataUpdateCoordinator[HavenCoordinatorData]):
+class HavenDataUpdateCoordinator(DataUpdateCoordinator[SensorData]):
     """Coordinate sequential polling of a HAVEN device."""
 
     def __init__(self, hass: HomeAssistant, entry: HavenConfigEntry) -> None:
@@ -41,7 +36,7 @@ class HavenDataUpdateCoordinator(DataUpdateCoordinator[HavenCoordinatorData]):
             hass,
             logger=LOGGER,
             name=f"{DOMAIN}_{host}",
-            update_interval=DEFAULT_SCAN_INTERVAL,
+            update_interval=UPDATE_INTERVAL,
             config_entry=entry,
         )
         self.client = HavenClient(host, session=async_get_clientsession(hass))
@@ -63,21 +58,17 @@ class HavenDataUpdateCoordinator(DataUpdateCoordinator[HavenCoordinatorData]):
                 translation_key="unsupported_product",
             ) from err
         except HavenApiError as err:
-            raise _update_failed() from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from err
 
     @override
-    async def _async_update_data(self) -> HavenCoordinatorData:
+    async def _async_update_data(self) -> SensorData:
         try:
-            sensors = await self.client.get_sensors()
+            return await self.client.get_sensors()
         except HavenApiError as err:
-            raise _update_failed() from err
-
-        return HavenCoordinatorData(sensors=sensors)
-
-
-def _update_failed() -> UpdateFailed:
-    """Create a translated coordinator update error."""
-    return UpdateFailed(
-        translation_domain=DOMAIN,
-        translation_key="update_error",
-    )
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+            ) from err
