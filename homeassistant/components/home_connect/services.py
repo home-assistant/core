@@ -3,7 +3,7 @@
 from collections.abc import Awaitable, Callable
 from functools import partial
 import logging
-from typing import Any, cast
+from typing import Any
 
 from aiohomeconnect.client import Client as HomeConnectClient
 from aiohomeconnect.model import (
@@ -167,9 +167,11 @@ SERVICE_START_SELECTED_PROGRAM_SCHEMA = vol.All(
 async def _get_client_and_ha_id(
     hass: HomeAssistant, device_id: str
 ) -> tuple[HomeConnectClient, str]:
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_id)
-    if device_entry is None:
+    config_entry: HomeConnectConfigEntry | None
+    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device_id, domain=DOMAIN
+    )
+    if device is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_entry_not_found",
@@ -177,14 +179,7 @@ async def _get_client_and_ha_id(
                 "device_id": device_id,
             },
         )
-    entry: HomeConnectConfigEntry | None = None
-    for entry_id in device_entry.config_entries:
-        _entry = hass.config_entries.async_get_entry(entry_id)
-        assert _entry
-        if _entry.domain == DOMAIN:
-            entry = cast(HomeConnectConfigEntry, _entry)
-            break
-    if entry is None:
+    if config_entry is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_found",
@@ -194,11 +189,7 @@ async def _get_client_and_ha_id(
         )
 
     ha_id = next(
-        (
-            identifier[1]
-            for identifier in device_entry.identifiers
-            if identifier[0] == DOMAIN
-        ),
+        (identifier[1] for identifier in device.identifiers if identifier[0] == DOMAIN),
         None,
     )
     if ha_id is None:
@@ -209,7 +200,7 @@ async def _get_client_and_ha_id(
                 "device_id": device_id,
             },
         )
-    return entry.runtime_data.client, ha_id
+    return config_entry.runtime_data.client, ha_id
 
 
 async def async_service_setting(call: ServiceCall) -> None:
