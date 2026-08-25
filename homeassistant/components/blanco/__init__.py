@@ -13,7 +13,6 @@ from homeassistant.const import (
     __version__ as HA_VERSION,
 )
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 
 from .const import (
@@ -32,31 +31,6 @@ _LOGGER = logging.getLogger(__name__)
 _PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 type BlancoConfigEntry = ConfigEntry[BlancoDataUpdateCoordinator]
-
-
-async def _async_ensure_app_registered(
-    hass: HomeAssistant, entry: BlancoConfigEntry
-) -> str:
-    """Return the stored app_id, registering with the API if not yet done."""
-    if app_id := entry.data.get(CONF_APP_ID):
-        return str(app_id)
-
-    locale = hass.config.language.split("-")[0][:2]
-    session = async_get_clientsession(hass)
-    client = BlancoApiClient(session, os_version=HA_VERSION)
-    try:
-        reg = await client.register_app(locale)
-    except BlancoConnectionError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="cannot_connect",
-        ) from err
-
-    hass.config_entries.async_update_entry(
-        entry,
-        data={**entry.data, CONF_APP_ID: reg["app_id"], CONF_APP_LOCALE: locale},
-    )
-    return str(reg["app_id"])
 
 
 async def _async_setup_language_listener(
@@ -97,7 +71,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: BlancoConfigEntry) -> bo
     """Set up blanco from a config entry."""
     _LOGGER.debug("Setting up %s", DOMAIN)
 
-    app_id = await _async_ensure_app_registered(hass, entry)
+    app_id = str(entry.data[CONF_APP_ID])
     await _async_setup_language_listener(hass, entry)
     coordinator = BlancoDataUpdateCoordinator(
         hass,
