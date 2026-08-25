@@ -45,7 +45,7 @@
       "name": "Actron Air",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "adax": {
       "name": "Adax",
@@ -734,6 +734,12 @@
         "zigbee"
       ]
     },
+    "besen": {
+      "name": "Besen",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "bge": {
       "name": "Baltimore Gas and Electric (BGE)",
       "integration_type": "virtual",
@@ -1108,6 +1114,11 @@
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "collection_image": {
+      "integration_type": "service",
+      "config_flow": true,
+      "iot_class": "calculated"
     },
     "color_extractor": {
       "name": "ColorExtractor",
@@ -3373,7 +3384,7 @@
       "name": "IntesisHome",
       "integration_type": "hub",
       "config_flow": false,
-      "iot_class": "cloud_push"
+      "iot_class": "cloud_polling"
     },
     "iometer": {
       "name": "IOmeter",
@@ -4786,8 +4797,8 @@
     },
     "netio": {
       "name": "Netio",
-      "integration_type": "hub",
-      "config_flow": false,
+      "integration_type": "device",
+      "config_flow": true,
       "iot_class": "local_polling"
     },
     "neurio_energy": {
@@ -6231,6 +6242,12 @@
           "iot_class": "local_polling",
           "name": "Samsung Family Hub"
         },
+        "samsung_exlink": {
+          "integration_type": "device",
+          "config_flow": true,
+          "iot_class": "local_polling",
+          "name": "Samsung TV via ExLink"
+        },
         "samsung_infrared": {
           "integration_type": "device",
           "config_flow": true,
@@ -7396,6 +7413,12 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "tonewinner": {
+      "name": "Tonewinner",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
     "toon": {
       "name": "Toon",
       "integration_type": "device",
@@ -7762,6 +7785,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "vandelo": {
+      "name": "Vandelo",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "vasttrafik": {
       "name": "V\u00e4sttrafik",
       "integration_type": "hub",
@@ -7931,6 +7959,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "wahin": {
+      "name": "Wahin",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "wake_on_lan": {
       "name": "Wake on LAN",
@@ -8570,6 +8603,7 @@
     "alert",
     "aurora",
     "cert_expiry",
+    "collection_image",
     "counter",
     "cpuspeed",
     "demo",

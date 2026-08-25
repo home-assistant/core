@@ -3,8 +3,9 @@
 from abc import abstractmethod
 import asyncio
 from collections.abc import Callable
+import dataclasses
 from dataclasses import dataclass
-from datetime import timedelta
+from datetime import datetime, timedelta
 import logging
 import time
 from typing import override
@@ -15,6 +16,8 @@ from pyportainer import (
     Portainer,
     PortainerAuthenticationError,
     PortainerConnectionError,
+    PortainerEventListener,
+    PortainerEventListenerResult,
     PortainerTimeoutError,
 )
 from pyportainer.models.docker import (
@@ -34,13 +37,14 @@ from yarl import URL
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 import homeassistant.helpers.device_registry as dr
 from homeassistant.helpers.device_registry import DeviceEntryType
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
-from .const import DEFAULT_NAME, DOMAIN
+from .const import CONTAINER_STATE_ACTIONS, DEFAULT_NAME, DOMAIN
 from .util import sanitize_container_name
 
 type PortainerConfigEntry = ConfigEntry[PortainerCoordinator]
@@ -65,6 +69,14 @@ class PortainerCoordinatorData:
     volumes: dict[str, PortainerVolumeData]
 
 
+@dataclass(slots=True, frozen=True)
+class ContainerDockerEvent:
+    """A classified Docker event applied to a single container."""
+
+    action: str
+    occurred_at: datetime
+
+
 @dataclass(slots=True)
 class PortainerContainerData:
     """Container data held by the Portainer coordinator."""
@@ -76,6 +88,7 @@ class PortainerContainerData:
     stats: DockerContainerStats | None
     stats_pre: DockerContainerStats | None
     image_status: PortainerImageUpdateStatus | None = None
+    last_docker_event: ContainerDockerEvent | None = None
 
 
 @dataclass(slots=True)
@@ -203,6 +216,9 @@ class PortainerCoordinator(
         self._image_cache: dict[
             tuple[int, str], tuple[float, LocalImageInformation]
         ] = {}
+        self._event_listeners: dict[int, PortainerEventListener] = {}
+        self._event_listeners_enabled = False
+        self._container_ids_by_endpoint: dict[int, dict[str, str]] = {}
 
     @override
     async def update_data(self) -> dict[int, PortainerCoordinatorData]:
@@ -399,6 +415,10 @@ class PortainerCoordinator(
                 for container_name, stats in container_stats.items():
                     container_map[container_name].stats = stats
 
+            self._container_ids_by_endpoint[endpoint.id] = {
+                data.container.id: name for name, data in container_map.items()
+            }
+
             mapped_endpoints[endpoint.id] = PortainerCoordinatorData(
                 id=endpoint.id,
                 name=endpoint.name,
@@ -411,6 +431,7 @@ class PortainerCoordinator(
             )
 
         self._async_add_remove_endpoints(mapped_endpoints)
+        self._async_sync_event_listeners(mapped_endpoints)
 
         return mapped_endpoints
 
@@ -583,6 +604,91 @@ class PortainerCoordinator(
             local_image,
         )
         return local_image
+
+    def _async_sync_event_listeners(
+        self, mapped_endpoints: dict[int, PortainerCoordinatorData]
+    ) -> None:
+        """Start/stop per-endpoint Docker event listeners to match up endpoints."""
+        current_endpoints = set(mapped_endpoints)
+
+        for endpoint_id in self._event_listeners.keys() - current_endpoints:
+            self._event_listeners.pop(endpoint_id).stop()
+            self._container_ids_by_endpoint.pop(endpoint_id, None)
+
+        for endpoint_id in current_endpoints - self._event_listeners.keys():
+            listener = PortainerEventListener(
+                self.portainer,
+                endpoint_id=endpoint_id,
+                event_types=["container"],
+            )
+            listener.register_callback(self._async_handle_docker_event)
+            self._event_listeners[endpoint_id] = listener
+            if self._event_listeners_enabled:
+                listener.start()
+
+    @callback
+    def async_start_event_listeners(self) -> None:
+        """Start all tracked event listeners."""
+        self._event_listeners_enabled = True
+        for listener in self._event_listeners.values():
+            listener.start()
+
+    @callback
+    def async_stop_event_listeners(self) -> None:
+        """Stop all tracked event listeners."""
+        for listener in self._event_listeners.values():
+            listener.stop()
+
+    async def _async_handle_docker_event(
+        self, result: PortainerEventListenerResult
+    ) -> None:
+        """React to a single Docker event pushed by a per-endpoint listener."""
+        event, endpoint_id = result.event, result.endpoint_id
+
+        if event.action is None or (
+            event.action not in CONTAINER_STATE_ACTIONS
+            and not event.action.startswith("health_status")
+        ):
+            return
+
+        _LOGGER.debug(
+            "Received Docker event for endpoint %d: %s",
+            endpoint_id,
+            event,
+        )
+
+        actor_id = event.actor.id if event.actor else None
+        container_name = (
+            self._container_ids_by_endpoint.get(endpoint_id, {}).get(actor_id)
+            if actor_id is not None
+            else None
+        )
+
+        if (
+            container_name is None
+            or (endpoint_data := self.data.get(endpoint_id)) is None
+            or (container_data := endpoint_data.containers.get(container_name)) is None
+        ):
+            return
+
+        updated_containers = dict(endpoint_data.containers)
+        updated_containers[container_name] = dataclasses.replace(
+            container_data,
+            last_docker_event=ContainerDockerEvent(
+                action=(
+                    f"health_status_{event.action.rsplit(': ', 1)[-1]}"
+                    if event.action.startswith("health_status")
+                    else event.action
+                ),
+                occurred_at=dt_util.utcnow(),
+            ),
+        )
+        merged = dict(self.data)
+        merged[endpoint_id] = dataclasses.replace(
+            endpoint_data, containers=updated_containers
+        )
+        self.data = merged
+        self.async_update_listeners()
 
 
 class PortainerDockerDiskSpaceCoordinator(
