@@ -100,8 +100,7 @@ Da `busDataReceived` und `newDeviceDetected` aus Hintergrundthreads aufgerufen w
 
 ### `gateway.py` (`HausbusGateway`)
 - Implementiert `IBusDataListener` und `IBusDeviceListener`
-- **`async_get_home_server`**: stellt sicher, dass `HomeServer` nur einmal pro HA-Instanz erstellt wird  
-  (Singleton-Problem: `HomeServer.__new__` gibt immer dieselbe Instanz zurück, aber `__init__` startet jedes Mal neue Threads)
+- **`async_create`**: erstellt `HausbusGateway` und ruft `HomeServer()` im Executor auf (thread-sicher dank Singleton-Lock)
 - **`newDeviceDetected`**: registriert Gerät in der HA-Device-Registry, dispatcht Kanäle über `NEW_CHANNEL_ADDED`
 - **`busDataReceived`**: leitet eingehende Nachrichten per Dispatcher an die zugehörige Entity weiter  
   (`"hausbus_update_{objectId}"`)
@@ -225,8 +224,8 @@ Immer invertieren: `ha_pos = 100 - bus_pos`
 - Für HA-Loop-Calls immer `hass.loop.call_soon_threadsafe(...)` oder `asyncio.run_coroutine_threadsafe(...)` verwenden
 - Entity-Callbacks müssen `@callback` haben (sonst führt der Dispatcher sie im Executor aus)
 
-### HomeServer-Singleton-Problem
-`HomeServer.__new__` gibt immer die gleiche Instanz zurück, aber `HomeServer.__init__` startet jedes Mal neue Hintergrundthreads. Deshalb wird `HomeServer` nur einmal pro HA-Instanz in `async_get_home_server` erzeugt (gespeichert in `hass.data[DOMAIN]["home_server"]`).
+### HomeServer-Singleton
+`HomeServer` ist ein thread-sicherer Singleton (Lock in `__new__`, `_initialized`-Guard in `__init__`). `HomeServer()` kann direkt im Executor aufgerufen werden – mehrfache Aufrufe geben immer dieselbe vollständig initialisierte Instanz zurück.
 
 ---
 
