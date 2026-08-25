@@ -2910,7 +2910,7 @@ rapt-ble==0.1.2
 raspyrfm-client==1.2.9
 
 # homeassistant.components.redfish
-redfish[aiohttp]==3.3.9
+redfish[aiohttp]==3.4.0
 
 # homeassistant.components.redgtech
 redgtech-api==0.1.38
