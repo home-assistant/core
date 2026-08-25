@@ -209,7 +209,7 @@
           "use_aux2": "[%key:component::neopool::options::step::init::data_description::use_aux1%]",
           "use_aux3": "[%key:component::neopool::options::step::init::data_description::use_aux1%]",
           "use_aux4": "[%key:component::neopool::options::step::init::data_description::use_aux1%]",
-          "use_cover_sensor": "Enables the cover-related switches (hydrolysis cover reduction and shutdown on high temperature).",
+          "use_cover_sensor": "Enables the hydrolysis cover reduction switch.",
           "use_light": "Creates entities to control and monitor the pool light relay."
         },
         "description": "Changes take effect immediately and reload the integration.",

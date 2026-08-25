@@ -70,25 +70,7 @@
       }
     },
     "switch": {
-      "aux1": {
-        "default": "mdi:electric-switch",
-        "state": {
-          "on": "mdi:electric-switch-closed"
-        }
-      },
-      "aux2": {
-        "default": "mdi:electric-switch",
-        "state": {
-          "on": "mdi:electric-switch-closed"
-        }
-      },
-      "aux3": {
-        "default": "mdi:electric-switch",
-        "state": {
-          "on": "mdi:electric-switch-closed"
-        }
-      },
-      "aux4": {
+      "aux": {
         "default": "mdi:electric-switch",
         "state": {
           "on": "mdi:electric-switch-closed"
