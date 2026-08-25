@@ -1,8 +1,7 @@
 """Representation of a Haus-Bus Entity."""
 
 import logging
-from typing import Any
-from typing import override
+from typing import Any, override
 
 from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.ObjectId import ObjectId

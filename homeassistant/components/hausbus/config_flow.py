@@ -2,8 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
-from typing import override
+from typing import Any, override
 
 from pyhausbus.HomeServer import HomeServer
 import voluptuous as vol

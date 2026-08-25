@@ -45,7 +45,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     # setup does not block on it. Cancel it on unload/reload so a still
     # running search does not keep using a torn-down gateway.
     discovery_task = hass.async_create_task(gateway.start_discovery())
-    entry.async_on_unload(lambda: discovery_task.cancel())
+
+    def _cancel_discovery() -> None:
+        discovery_task.cancel()
+
+    entry.async_on_unload(_cancel_discovery)
     return True
 
 
