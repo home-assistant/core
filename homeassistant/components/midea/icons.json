@@ -29,9 +29,6 @@
       }
     },
     "sensor": {
-      "error_ed": {
-        "default": "mdi:alert-box"
-      },
       "filter_life": {
         "default": "mdi:air-filter"
       },
