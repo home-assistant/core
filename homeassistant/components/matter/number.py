@@ -359,7 +359,7 @@ DISCOVERY_SCHEMAS = [
             entity_category=EntityCategory.CONFIG,
             translation_key="temperature_offset",
             # Matter 1.4 dropped the ±2.5°C constraint; fall back to the
-            # int8 storage range of the raw attribute (-128..127 in 0.1°C units)
+            # symmetric int8 storage range of the raw attribute (±127 in 0.1°C units)
             native_max_value=12.7,
             native_min_value=-12.7,
             native_step=0.5,

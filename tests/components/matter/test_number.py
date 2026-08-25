@@ -516,10 +516,9 @@ async def test_occupancy_sensing_pir_attributes(
     ],
 )
 @pytest.mark.parametrize("node_fixture", ["mock_thermostat"])
+@pytest.mark.usefixtures("matter_node")
 async def test_temperature_offset_cluster_revision(
     hass: HomeAssistant,
-    matter_client: MagicMock,
-    matter_node: MatterNode,
     expected_min: float,
     expected_max: float,
 ) -> None:

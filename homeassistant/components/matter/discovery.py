@@ -61,16 +61,16 @@ def _resolve_cluster_revision(
     endpoint: MatterEndpoint,
     primary_attribute: type[ClusterAttributeDescriptor],
     schema: MatterDiscoverySchema,
-) -> tuple[bool, int | None]:
-    """Return whether the endpoint's ClusterRevision matches the schema, and its value."""
+) -> bool:
+    """Return whether the endpoint's ClusterRevision matches the schema."""
     if schema.cluster_revision_min is None and schema.cluster_revision_max is None:
-        return True, None
+        return True
     raw_cluster_revision = endpoint.get_attribute_value(
         primary_attribute.cluster_id, CLUSTER_REVISION_ATTRIBUTE_ID
     )
     if raw_cluster_revision in (None, NullValue):
         # ClusterRevision could not be read; do not filter out the schema
-        return True, None
+        return True
     cluster_revision_value = int(raw_cluster_revision)
     if (
         schema.cluster_revision_min is not None
@@ -79,8 +79,8 @@ def _resolve_cluster_revision(
         schema.cluster_revision_max is not None
         and cluster_revision_value > schema.cluster_revision_max
     ):
-        return False, cluster_revision_value
-    return True, cluster_revision_value
+        return False
+    return True
 
 
 @callback
@@ -172,10 +172,7 @@ def async_discover_entities(
             continue
 
         # check for required cluster revision range
-        matches_cluster_revision, cluster_revision_value = _resolve_cluster_revision(
-            endpoint, primary_attribute, schema
-        )
-        if not matches_cluster_revision:
+        if not _resolve_cluster_revision(endpoint, primary_attribute, schema):
             continue
 
         # BEGIN checks on actual attribute values
@@ -252,7 +249,6 @@ def async_discover_entities(
             entity_description=schema.entity_description,
             entity_class=schema.entity_class,
             discovery_schema=schema,
-            cluster_revision=cluster_revision_value,
         )
 
         # prevent re-discovery of the primary attribute if not allowed

@@ -61,9 +61,6 @@ class MatterEntityInfo:
     # the original discovery schema used to create this entity
     discovery_schema: MatterDiscoverySchema
 
-    # [optional] cluster revision value if required by discovery schema
-    cluster_revision: int | None = None
-
     @property
     def primary_attribute(self) -> type[ClusterAttributeDescriptor]:
         """Return Primary Attribute belonging to the entity."""
