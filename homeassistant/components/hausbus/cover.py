@@ -1,8 +1,7 @@
 """Support for Haus-Bus cover (Rolladen)."""
 
 import logging
-from typing import TYPE_CHECKING, Any
-from typing import override
+from typing import TYPE_CHECKING, Any, override
 
 from pyhausbus.de.hausbus.homeassistant.proxy.Rollladen import Rollladen
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Configuration import (
