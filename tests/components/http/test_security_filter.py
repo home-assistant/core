@@ -4,6 +4,7 @@ import asyncio
 from http import HTTPStatus
 
 from aiohttp import web
+from aiohttp.test_utils import make_mocked_request
 import pytest
 import urllib3
 
@@ -12,7 +13,7 @@ from homeassistant.components.http.security_filter import setup_security_filter
 from tests.typing import ClientSessionGenerator
 
 
-async def mock_handler(request):
+async def mock_handler(request: web.Request) -> web.Response:
     """Return OK."""
     return web.Response(text="OK")
 
@@ -25,10 +26,15 @@ async def mock_handler(request):
         ("/frontend_latest/chunk.4c9e2d8dc10f77b885b0.js", {}),
         ("/static/translations/en-f96a262a5a6eede29234dc45dc63abf2.json", {}),
         ("/", {"test": "123"}),
+        ("/", {"some": "\thing"}),
+        ("/", {"\newline": "cinema"}),
+        ("/", {"return": "t\rue"}),
     ],
 )
 async def test_ok_requests(
-    request_path, request_params, aiohttp_client: ClientSessionGenerator
+    request_path: str,
+    request_params: dict[str, str],
+    aiohttp_client: ClientSessionGenerator,
 ) -> None:
     """Test request paths that should not be filtered."""
     app = web.Application()
@@ -72,9 +78,9 @@ async def test_ok_requests(
     ],
 )
 async def test_bad_requests(
-    request_path,
-    request_params,
-    fail_on_query_string,
+    request_path: str,
+    request_params: dict[str, str],
+    fail_on_query_string: bool,
     aiohttp_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -116,15 +122,12 @@ async def test_bad_requests(
         ("/some\thing", {}, False),
         ("/new\nline/cinema", {}, False),
         ("/return\r/to/sender", {}, False),
-        ("/", {"some": "\thing"}, True),
-        ("/", {"\newline": "cinema"}, True),
-        ("/", {"return": "t\rue"}, True),
     ],
 )
 async def test_bad_requests_with_unsafe_bytes(
-    request_path,
-    request_params,
-    fail_on_query_string,
+    request_path: str,
+    request_params: dict[str, str],
+    fail_on_query_string: bool,
     aiohttp_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -158,3 +161,19 @@ async def test_bad_requests_with_unsafe_bytes(
     if fail_on_query_string:
         message = "Filtered a request with unsafe byte query string:"
     assert message in caplog.text
+
+
+@pytest.mark.parametrize("unsafe_byte", ["\t", "\r", "\n"])
+async def test_bad_requests_with_literal_unsafe_bytes_in_query_string(
+    unsafe_byte: str, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Test requests with literal unsafe bytes in their query strings."""
+    app = web.Application()
+    setup_security_filter(app)
+
+    request = make_mocked_request("GET", f"/?q=a{unsafe_byte}b", app=app)
+
+    with pytest.raises(web.HTTPBadRequest):
+        await app.middlewares[0](request, mock_handler)
+
+    assert "Filtered a request with unsafe byte query string:" in caplog.text

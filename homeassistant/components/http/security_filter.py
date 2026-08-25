@@ -56,6 +56,8 @@ def setup_security_filter(app: Application) -> None:
     ) -> StreamResponse:
         """Process request and block commonly known exploit attempts."""
         query_string = request.query_string
+        # Check the raw query string so percent-encoded control bytes remain valid values.
+        raw_query_string = request.raw_path.partition("?")[2]
         # Most requests (WebSocket/API traffic) have no query string; avoid the
         # concat and only scan the path in that case.
         if query_string:
@@ -64,15 +66,15 @@ def setup_security_filter(app: Application) -> None:
             path_with_query_string = request.path
 
         for unsafe_byte in UNSAFE_URL_BYTES:
-            if unsafe_byte in path_with_query_string:
-                if unsafe_byte in query_string:
-                    _LOGGER.warning(
-                        "Filtered a request with unsafe byte query string: %s",
-                        request.raw_path,
-                    )
-                    raise HTTPBadRequest
+            if unsafe_byte in request.path:
                 _LOGGER.warning(
                     "Filtered a request with an unsafe byte in path: %s",
+                    request.raw_path,
+                )
+                raise HTTPBadRequest
+            if unsafe_byte in raw_query_string:
+                _LOGGER.warning(
+                    "Filtered a request with unsafe byte query string: %s",
                     request.raw_path,
                 )
                 raise HTTPBadRequest
