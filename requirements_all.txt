@@ -1293,7 +1293,7 @@ holidays==0.103
 home-assistant-frontend==20260729.7
 
 # homeassistant.components.conversation
-home-assistant-intents==2026.7.30
+home-assistant-intents==2026.8.25
 
 # homeassistant.components.homekit
 homekit-audio-proxy==1.2.1
@@ -1667,7 +1667,7 @@ nad-receiver==0.4.0
 ndms2-client==0.1.2
 
 # homeassistant.components.neopool
-neopool-modbus==4.5.1
+neopool-modbus==4.5.2
 
 # homeassistant.components.ness_alarm
 nessclient==1.3.1
@@ -3081,6 +3081,9 @@ snapcast==2.3.8
 
 # homeassistant.components.sonos
 soco==0.31.2
+
+# homeassistant.components.sofar
+sofar-modbus==0.3.0
 
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
