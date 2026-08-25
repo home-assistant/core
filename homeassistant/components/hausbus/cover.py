@@ -14,6 +14,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Status import Statu
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import (
     EDirection,
 )
+
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,

@@ -119,4 +119,3 @@ class HausbusGateway(IBusDataListener):
             f"hausbus_update_{object_id.getValue()}",
             data,
         )
-
