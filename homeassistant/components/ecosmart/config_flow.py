@@ -3,7 +3,12 @@
 import logging
 from typing import Any, override
 
-from aioecosmart import EcosmartAuthError, EcosmartClient, EcosmartConnectionError
+from aioecosmart import (
+    EcosmartAuthError,
+    EcosmartClient,
+    EcosmartConnectionError,
+    EcosmartRateLimitError,
+)
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
@@ -47,6 +52,9 @@ class EcosmartConfigFlow(ConfigFlow, domain=DOMAIN):
                 identity = await client.me()
             except EcosmartAuthError:
                 errors["base"] = "invalid_auth"
+            except EcosmartRateLimitError:
+                # Expected: the key is simply out of budget for the moment.
+                errors["base"] = "rate_limited"
             except EcosmartConnectionError:
                 errors["base"] = "cannot_connect"
             except Exception:

@@ -3,7 +3,11 @@
 from dataclasses import replace
 from unittest.mock import AsyncMock
 
-from aioecosmart import EcosmartAuthError, EcosmartConnectionError
+from aioecosmart import (
+    EcosmartAuthError,
+    EcosmartConnectionError,
+    EcosmartRateLimitError,
+)
 import pytest
 
 from homeassistant.components.ecosmart.const import DOMAIN
@@ -62,6 +66,7 @@ async def test_user_flow_unlabelled_key(
     [
         (EcosmartAuthError("nope"), "invalid_auth"),
         (EcosmartConnectionError("offline"), "cannot_connect"),
+        (EcosmartRateLimitError("slow down", retry_after=30), "rate_limited"),
         (Exception("boom"), "unknown"),
     ],
 )
