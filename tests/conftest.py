@@ -158,6 +158,12 @@ asyncio.set_event_loop_policy = lambda policy: None
 # Capture the real socket functions before any test patches them
 _real_getaddrinfo = socket.getaddrinfo
 
+# Guard for CI jobs that pin the SQLite version via tests.sqlite3_shim
+if expected_sqlite := os.environ.get("EXPECTED_SQLITE_VERSION"):
+    assert sqlite3.sqlite_version == expected_sqlite, (
+        f"Expected SQLite {expected_sqlite}, got {sqlite3.sqlite_version}"
+    )
+
 
 def pytest_addoption(parser: pytest.Parser) -> None:
     """Register custom pytest options."""
