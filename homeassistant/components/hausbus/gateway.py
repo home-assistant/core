@@ -45,6 +45,7 @@ class HausbusGateway(IBusDataListener):
 
         # to prevent duplicate channels but to allow to add channels even if it was registered before
         self.registered_channels: set[int] = set()
+        self.discovery_task: asyncio.Task[None] | None = None
 
     @classmethod
     async def async_create(
