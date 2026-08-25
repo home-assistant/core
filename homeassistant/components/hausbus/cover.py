@@ -64,12 +64,6 @@ async def async_setup_entry(
     platform = entity_platform.async_get_current_platform()
 
     platform.async_register_entity_service(
-        "cover_toggle",
-        {},
-        "async_cover_toggle",
-    )
-
-    platform.async_register_entity_service(
         "cover_set_configuration",
         {
             vol.Required("close_time", default=30): vol.All(
@@ -143,16 +137,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
         _LOGGER.debug(
             "set cover position to %s for %s", position, self._debug_identifier
         )
-        await self.hass.async_add_executor_job(
-            self._channel.moveToPosition, 100 - position
-        )
-
-    async def async_cover_toggle(self) -> None:
-        """Start the cover in the opposite direction from last movement."""
-        _LOGGER.debug("toggle cover %s", self._debug_identifier)
-        await self.hass.async_add_executor_job(
-            self._channel.start, EDirection.TOGGLE
-        )
+        await self.hass.async_add_executor_job(self._channel.start, EDirection.TOGGLE)
 
     async def async_cover_set_configuration(
         self, close_time: int, open_time: int, invert_direction: bool
@@ -171,10 +156,12 @@ class HausbusCover(HausbusEntity, CoverEntity):
             )
         options = self._configuration.getOptions()
         options.setInvertDirection(invert_direction)
-        await self.hass.async_add_executor_job(
-            self._channel.setConfiguration, close_time, open_time, options
-        )
-        await self.hass.async_add_executor_job(self._channel.getConfiguration)
+
+        def _apply() -> None:
+            self._channel.setConfiguration(close_time, open_time, options)
+            self._channel.getConfiguration()
+
+        await self.hass.async_add_executor_job(_apply)
 
     @callback
     @override

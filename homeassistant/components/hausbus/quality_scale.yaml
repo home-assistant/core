@@ -1,9 +1,11 @@
 rules:
   # Bronze
   action-setup:
-    status: exempt
+    status: done
     comment: |
-      This integration does not register any actions.
+      cover_set_configuration is registered as an entity service in cover.py
+      via platform.async_register_entity_service inside async_setup_entry,
+      which is the required pattern for entity-scoped actions.
   appropriate-polling:
     status: exempt
     comment: |
@@ -22,9 +24,9 @@ rules:
   config-flow: done
   dependency-transparency: done
   docs-actions:
-    status: exempt
+    status: todo
     comment: |
-      This integration does not register any actions.
+      cover_set_configuration needs to be documented.
   docs-conditions:
     status: exempt
     comment: |
@@ -32,15 +34,15 @@ rules:
   docs-high-level-description:
     status: done
     comment: |
-       https://github.com/home-assistant/home-assistant.io/pull/47601
+      https://github.com/home-assistant/home-assistant.io/pull/47601
   docs-installation-instructions:
     status: done
     comment: |
-       https://github.com/home-assistant/home-assistant.io/pull/47601
+      https://github.com/home-assistant/home-assistant.io/pull/47601
   docs-removal-instructions:
     status: done
     comment: |
-       https://github.com/home-assistant/home-assistant.io/pull/47601
+      https://github.com/home-assistant/home-assistant.io/pull/47601
   docs-triggers:
     status: exempt
     comment: |
@@ -89,7 +91,6 @@ rules:
     comment: |
       This integration does not require authentication.
   test-coverage: todo
-
   # Gold
   devices: todo
   diagnostics: todo

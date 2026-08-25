@@ -48,7 +48,9 @@ def _make_gateway(hass: HomeAssistant, home_server: MagicMock) -> HausbusGateway
 
 
 async def test_new_device_detected_registers_device_and_dispatches_channel(
-    hass: HomeAssistant, mock_home_server: MagicMock
+    hass: HomeAssistant,
+    mock_home_server: MagicMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """A newly discovered device is registered and its channel dispatched."""
     gateway = _make_gateway(hass, mock_home_server)
@@ -72,7 +74,6 @@ async def test_new_device_detected_registers_device_and_dispatches_channel(
     )
     await hass.async_block_till_done()
 
-    device_registry = dr.async_get(hass)
     device = device_registry.async_get_device(identifiers={(DOMAIN, "100")})
     assert device is not None
     assert device.manufacturer == "HausBus"
@@ -144,7 +145,9 @@ async def test_bus_data_received_dispatches_update(
 
 
 async def test_register_device_is_idempotent(
-    hass: HomeAssistant, mock_home_server: MagicMock
+    hass: HomeAssistant,
+    mock_home_server: MagicMock,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Registering the same device twice does not create a duplicate entry."""
     gateway = _make_gateway(hass, mock_home_server)
@@ -159,7 +162,6 @@ async def test_register_device_is_idempotent(
     await gateway.async_register_device(100, device_info)
     await gateway.async_register_device(100, device_info)
 
-    device_registry = dr.async_get(hass)
     devices = [
         device
         for device in device_registry.devices.values()

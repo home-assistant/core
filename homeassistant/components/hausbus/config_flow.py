@@ -26,10 +26,12 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         self._entry_created: bool = False
 
     @override
-    async def async_remove(self) -> None:
+    def async_remove(self) -> None:
         """Shut down HomeServer if the flow is abandoned without creating an entry."""
         if self.home_server is not None and not self._entry_created:
-            await self.hass.async_add_executor_job(self.home_server.shutdown)
+            self.hass.async_create_task(
+                self.hass.async_add_executor_job(self.home_server.shutdown)
+            )
 
     @override
     async def async_step_user(
@@ -96,6 +98,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         if self.home_server is None:
             self.home_server = await self.hass.async_add_executor_job(HomeServer)
 
+        assert self.home_server is not None
         await self.hass.async_add_executor_job(self.home_server.searchDevices)
         # wait for up to 5 seconds to find devices
         await asyncio.wait_for(self._check_device_found(), 5)
