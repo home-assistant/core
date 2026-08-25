@@ -47,7 +47,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.pool_id: str = pool_id
         self.pool_name: str = pool_name
         self.subscription: ResilientPoolSubscription | None = None
-        self._pending_optimistic: dict[str, tuple[Any, float]] = {}
+        self._pending_optimistic: dict[str, list[tuple[Any, float]]] = {}
         self._optimistic_handles: dict[str, asyncio.TimerHandle] = {}
 
         super().__init__(
@@ -101,7 +101,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def apply_optimistic(self, value_path: str, value: Any) -> None:
         """Reflect a just-written value and protect it from stale Firestore pushes."""
-        self._pending_optimistic[value_path] = (value, monotonic())
+        self._pending_optimistic.setdefault(value_path, []).append((value, monotonic()))
         _set_path(self.data, value_path, value)
         if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
             handle.cancel()
@@ -116,15 +116,20 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     def _merge_optimistic(self, data: dict[str, Any]) -> dict[str, Any]:
         """Overlay unconfirmed optimistic writes onto freshly fetched data."""
         now = monotonic()
-        for path, (value, written_at) in list(self._pending_optimistic.items()):
-            remote_value = AquariteClient.get_value(data, path)
-            if (
-                _values_agree(remote_value, value)
-                or now - written_at >= OPTIMISTIC_TTL_SECONDS
-            ):
+        for path, writes in list(self._pending_optimistic.items()):
+            if now - writes[-1][1] >= OPTIMISTIC_TTL_SECONDS:
                 self._clear_optimistic(path)
-            else:
-                _set_path(data, path, value)
+                continue
+            remote_value = AquariteClient.get_value(data, path)
+            # A push can only confirm writes in order: with ON then OFF in
+            # flight, a pre-ON echo carrying OFF must not lift protection,
+            # or the later ON confirmation would flip the entity back.
+            if _values_agree(remote_value, writes[0][0]):
+                writes.pop(0)
+                if not writes:
+                    self._clear_optimistic(path)
+                    continue
+            _set_path(data, path, writes[-1][0])
         return data
 
     def _apply_remote_data(self, data: dict[str, Any]) -> None:

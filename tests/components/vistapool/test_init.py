@@ -345,6 +345,43 @@ async def test_apply_optimistic_suppresses_stale_push(
     assert coordinator.data["light"]["status"] == 1
 
 
+async def test_apply_optimistic_rapid_toggle_confirms_writes_in_order(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a push cannot confirm a later write while an earlier one is unconfirmed."""
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+    # Rapid toggle: ON then OFF, both awaiting their confirming pushes.
+    coordinator.apply_optimistic("light.status", 1)
+    coordinator.apply_optimistic("light.status", 0)
+
+    # A pre-write echo carrying OFF matches the newest write but must not
+    # lift protection while the ON write is still unconfirmed.
+    on_data({"light": {"status": 0}})
+    await hass.async_block_till_done()
+    assert coordinator.data["light"]["status"] == 0
+
+    # The ON write's confirmation arrives; the entity must not flip back on.
+    on_data({"light": {"status": 1}})
+    await hass.async_block_till_done()
+    assert coordinator.data["light"]["status"] == 0
+
+    # The OFF write's confirmation clears protection; a later real push sticks.
+    on_data({"light": {"status": 0}})
+    await hass.async_block_till_done()
+    on_data({"light": {"status": 1}})
+    await hass.async_block_till_done()
+    assert coordinator.data["light"]["status"] == 1
+
+
 async def test_apply_optimistic_accepts_confirming_push(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
