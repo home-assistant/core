@@ -63,13 +63,13 @@ async def test_user_flow_creates_entry(hass: HomeAssistant) -> None:
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "manual_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert isinstance(result["data"]["roles"], dict)
 
 
@@ -83,7 +83,7 @@ async def test_user_flow_aborts_when_already_configured(hass: HomeAssistant) -> 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "single_instance_allowed"
 
 
@@ -92,12 +92,12 @@ async def test_user_flow_aborts_when_already_in_progress(hass: HomeAssistant) ->
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
 
@@ -113,13 +113,13 @@ async def test_zeroconf_flow_creates_entry(hass: HomeAssistant) -> None:
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=_zc_info(PLUG_MAC),
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "discovery_confirm"
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], user_input={}
     )
-    assert result["type"] == FlowResultType.CREATE_ENTRY
+    assert result["type"] is FlowResultType.CREATE_ENTRY
     assert isinstance(result["data"]["roles"], dict)
 
 
@@ -137,7 +137,7 @@ async def test_zeroconf_second_plug_aborts_when_configured(hass: HomeAssistant) 
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=_zc_info(SECOND_MAC, ip="192.168.0.37"),
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
 
 
 async def test_zeroconf_simultaneous_discoveries_deduplicate(
@@ -149,20 +149,20 @@ async def test_zeroconf_simultaneous_discoveries_deduplicate(
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=_zc_info(PLUG_MAC),
     )
-    assert result1["type"] == FlowResultType.FORM
+    assert result1["type"] is FlowResultType.FORM
 
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_ZEROCONF},
         data=_zc_info(SECOND_MAC, ip="192.168.0.37"),
     )
-    assert result2["type"] == FlowResultType.ABORT
+    assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_in_progress"
 
     result1 = await hass.config_entries.flow.async_configure(
         result1["flow_id"], user_input={}
     )
-    assert result1["type"] == FlowResultType.CREATE_ENTRY
+    assert result1["type"] is FlowResultType.CREATE_ENTRY
 
 
 async def test_zeroconf_missing_id_aborts(hass: HomeAssistant) -> None:
@@ -180,7 +180,7 @@ async def test_zeroconf_missing_id_aborts(hass: HomeAssistant) -> None:
             properties={"version": "1"},  # no 'id'
         ),
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "firmware_not_compatible"
 
 
@@ -238,7 +238,7 @@ async def test_reconfigure_applies_role(
             "entry_id": loaded_entry.entry_id,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     received: list[tuple[str, str | None]] = []
 
@@ -257,7 +257,7 @@ async def test_reconfigure_applies_role(
     )
     unsub()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "roles_applied"
     assert ("cafebabe", "water") in received
 
@@ -275,7 +275,7 @@ async def test_reconfigure_unknown_role_sends_none(
             "entry_id": loaded_entry.entry_id,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     received: list[tuple[str, str | None]] = []
 
@@ -293,7 +293,7 @@ async def test_reconfigure_unknown_role_sends_none(
     )
     unsub()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert ("d3adB33f", None) in received
 
 
@@ -314,7 +314,7 @@ async def test_reconfigure_aborts_when_entry_not_loaded(
         DOMAIN,
         context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": "x"},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_reconfigure"
 
 
@@ -331,7 +331,7 @@ async def test_reconfigure_skips_sensor_that_disappeared(
             "entry_id": loaded_entry.entry_id,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     # Capture the name for cafebabe before removing it from the dispatcher.
     mac2name = {
@@ -352,7 +352,7 @@ async def test_reconfigure_skips_sensor_that_disappeared(
     )
     unsub()
 
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert "cafebabe" not in fired
 
 
@@ -369,7 +369,7 @@ async def test_reconfigure_none_role_shown_as_unknown(
             "entry_id": loaded_entry.entry_id,
         },
     )
-    assert result["type"] == FlowResultType.FORM
+    assert result["type"] is FlowResultType.FORM
 
     assert result["data_schema"] is not None
     schema = result["data_schema"].schema
@@ -400,7 +400,7 @@ async def test_reconfigure_aborts_when_runtime_data_missing(
         DOMAIN,
         context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": "x"},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_reconfigure"
 
 
@@ -427,5 +427,5 @@ async def test_reconfigure_aborts_when_dispatcher_is_none(
         DOMAIN,
         context={"source": config_entries.SOURCE_RECONFIGURE, "entry_id": "x"},
     )
-    assert result["type"] == FlowResultType.ABORT
+    assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "cannot_reconfigure"

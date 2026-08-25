@@ -139,6 +139,7 @@ async def test_sensor_with_persisted_housenet_role_creates_full_entities(
     mock_devices: MagicMock,
     mock_async_zeroconf: MagicMock,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A sensor whose role is already in entry.data gets all housenet entities on discovery."""
     entry = MockConfigEntry(
@@ -160,8 +161,7 @@ async def test_sensor_with_persisted_housenet_role_creates_full_entities(
     await cb({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
     await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(reg, entry.entry_id)
+    entities = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
     assert len(entities) == _HOUSENET_SENSOR_COUNT
 
     unique_ids = {e.unique_id for e in entities}
@@ -249,6 +249,7 @@ async def test_measurement_updates_entity_state(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """A measurement event updates the corresponding entity's state value."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
@@ -264,8 +265,9 @@ async def test_measurement_updates_entity_state(
     )
     await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
-    entity_id = reg.async_get_entity_id(Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_power")
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_power"
+    )
     assert entity_id is not None
     state = hass.states.get(entity_id)
     assert state is not None
@@ -276,6 +278,7 @@ async def test_battery_level_converted_from_volts(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Battery voltage is converted to a percentage (3.3V=0%, 4.15V=100%)."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
@@ -288,8 +291,7 @@ async def test_battery_level_converted_from_volts(
     )
     await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
-    entity_id = reg.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_battery_level"
     )
     assert entity_id is not None
@@ -302,6 +304,7 @@ async def test_energy_converted_from_joules(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """summation_joules is converted to kWh before storing state."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
@@ -325,8 +328,7 @@ async def test_energy_converted_from_joules(
     )
     await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
-    entity_id = reg.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_total_energy"
     )
     assert entity_id is not None
@@ -421,10 +423,10 @@ async def test_vhh_mains_entities_created_when_housenet_sensor_found(
     await hass.async_block_till_done()
 
     unique_ids = {e.unique_id for e in _registered(hass, config_entry)}
-    assert f"{DOMAIN}_vhh_home_usage" in unique_ids
-    assert f"{DOMAIN}_vhh_from_grid" in unique_ids
-    assert f"{DOMAIN}_vhh_home_usage_summation" in unique_ids
-    assert f"{DOMAIN}_vhh_from_grid_summation" in unique_ids
+    assert "vhh_home_usage" in unique_ids
+    assert "vhh_from_grid" in unique_ids
+    assert "vhh_home_usage_summation" in unique_ids
+    assert "vhh_from_grid_summation" in unique_ids
 
 
 async def test_vhh_solar_entities_added_when_solar_sensor_found(
@@ -440,8 +442,8 @@ async def test_vhh_solar_entities_added_when_solar_sensor_found(
     await hass.async_block_till_done()
 
     unique_ids = {e.unique_id for e in _registered(hass, config_entry)}
-    assert f"{DOMAIN}_vhh_to_grid" in unique_ids
-    assert f"{DOMAIN}_vhh_solar_generation" in unique_ids
+    assert "vhh_to_grid" in unique_ids
+    assert "vhh_solar_generation" in unique_ids
 
 
 async def test_vhh_solar_not_created_without_mains(
@@ -455,8 +457,8 @@ async def test_vhh_solar_not_created_without_mains(
     await hass.async_block_till_done()
 
     unique_ids = {e.unique_id for e in _registered(hass, config_entry)}
-    assert f"{DOMAIN}_vhh_home_usage" not in unique_ids
-    assert f"{DOMAIN}_vhh_to_grid" not in unique_ids
+    assert "vhh_home_usage" not in unique_ids
+    assert "vhh_to_grid" not in unique_ids
 
 
 async def test_vhh_mains_not_duplicated_on_repeated_signal(
@@ -486,6 +488,7 @@ async def test_entity_becomes_unavailable_after_timeout(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """An entity goes unavailable once no updates arrive within the timeout window."""
 
@@ -493,8 +496,7 @@ async def test_entity_becomes_unavailable_after_timeout(
     await fire({"event": "battery_level", "mac": SENSOR_MAC, "volts": 4.0})
     await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
-    entity_id = reg.async_get_entity_id(
+    entity_id = entity_registry.async_get_entity_id(
         Platform.SENSOR, DOMAIN, f"{SENSOR_MAC}_battery_level"
     )
     assert entity_id is not None
@@ -745,14 +747,16 @@ async def test_schedule_unavailable_before_added_to_hass_is_noop(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """_schedule_unavailable guards against being called before hass is set."""
     # Discover a plug so its entities exist in the registry.
     await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
     await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
-    entity_id = reg.async_get_entity_id(Platform.SENSOR, DOMAIN, f"{PLUG_MAC}_power")
+    entity_id = entity_registry.async_get_entity_id(
+        Platform.SENSOR, DOMAIN, f"{PLUG_MAC}_power"
+    )
     assert entity_id is not None
 
     # Verify the entity is in the expected available state after receiving data.

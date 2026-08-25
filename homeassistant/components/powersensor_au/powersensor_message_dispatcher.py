@@ -30,7 +30,7 @@ now_relaying_for role hint
 --------------------------
 When relay_now_relaying_for=True is passed to PowersensorZeroconfDevices, the
 library forwards the raw now_relaying_for event to the callback immediately
-after synthesising the device_found event for the sensor.  This event carries
+after synthesizing the device_found event for the sensor.  This event carries
 the role field directly from the wire message, which lets us seed the role in
 HA without waiting for the first measurement event to arrive.
 

@@ -53,13 +53,13 @@ async def test_plug_entity_snapshot(
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Snapshot all plug entities after discovery."""
     await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
     await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(reg, config_entry.entry_id)
+    entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     # Stable sort so snapshot order is deterministic.
     entities.sort(key=lambda e: e.unique_id)
     assert entities == snapshot
@@ -75,13 +75,13 @@ async def test_sensor_no_role_entity_snapshot(
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Snapshot universal sensor entities before any role is assigned."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
     await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
-    entities = er.async_entries_for_config_entry(reg, config_entry.entry_id)
+    entities = er.async_entries_for_config_entry(entity_registry, config_entry.entry_id)
     entities.sort(key=lambda e: e.unique_id)
     assert entities == snapshot
 
@@ -96,6 +96,7 @@ async def test_sensor_housenet_state_snapshot(
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Snapshot entity states for a house-net sensor after representative events."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
@@ -134,11 +135,10 @@ async def test_sensor_housenet_state_snapshot(
     )
     await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
     states = {
         e.unique_id: hass.states.get(e.entity_id)
         for e in sorted(
-            er.async_entries_for_config_entry(reg, config_entry.entry_id),
+            er.async_entries_for_config_entry(entity_registry, config_entry.entry_id),
             key=lambda e: e.unique_id,
         )
     }
@@ -155,6 +155,7 @@ async def test_vhh_full_state_snapshot(
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     snapshot: SnapshotAssertion,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Snapshot VHH entity states after mains and solar sensors are active."""
     # Mains sensor
@@ -187,11 +188,12 @@ async def test_vhh_full_state_snapshot(
 
     await hass.async_block_till_done()
 
-    reg = er.async_get(hass)
     vhh_entries = [
         e
-        for e in er.async_entries_for_config_entry(reg, config_entry.entry_id)
-        if e.unique_id.startswith(f"{DOMAIN}_vhh_")
+        for e in er.async_entries_for_config_entry(
+            entity_registry, config_entry.entry_id
+        )
+        if e.unique_id.startswith("vhh_")
     ]
     states = {
         e.unique_id: hass.states.get(e.entity_id)
@@ -210,13 +212,15 @@ async def test_plug_device_registry_snapshot(
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Snapshot the device registry entry for a discovered plug."""
     await fire({"event": "device_found", "mac": PLUG_MAC, "device_type": "plug"})
     await hass.async_block_till_done()
 
-    dev_reg = dr.async_get(hass)
-    device = dev_reg.async_get_device(identifiers={(DOMAIN, PLUG_MAC)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, PLUG_MAC), config_entry.entry_id
+    )
     assert device is not None
     assert device == snapshot
 
@@ -226,18 +230,22 @@ async def test_sensor_device_registry_renames_on_role(
     config_entry: MockConfigEntry,
     fire: Callable[[dict[str, Any]], Coroutine[Any, Any, None]],
     snapshot: SnapshotAssertion,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
     """Device registry entry is updated (translation_key changes) when role is assigned."""
     await fire({"event": "device_found", "mac": SENSOR_MAC, "device_type": "sensor"})
     await hass.async_block_till_done()
 
-    dev_reg = dr.async_get(hass)
-    device_before = dev_reg.async_get_device(identifiers={(DOMAIN, SENSOR_MAC)})
+    device_before = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SENSOR_MAC), config_entry.entry_id
+    )
     assert device_before is not None
     assert device_before == snapshot(name="before_role")
 
     await fire({"event": "now_relaying_for", "mac": SENSOR_MAC, "role": ROLE_HOUSENET})
     await hass.async_block_till_done()
 
-    device_after = dev_reg.async_get_device(identifiers={(DOMAIN, SENSOR_MAC)})
+    device_after = device_registry.async_get_device_by_identifier(
+        (DOMAIN, SENSOR_MAC), config_entry.entry_id
+    )
     assert device_after == snapshot(name="after_role")

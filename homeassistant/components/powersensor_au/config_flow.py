@@ -1,7 +1,7 @@
 """Config flow for the Powersensor integration."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -36,7 +36,7 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
     ) -> ConfigFlowResult:
         """Handle reconfigure step. The primary use case is adding roles to sensors."""
         entry = self._get_reconfigure_entry()
-        if entry.state != ConfigEntryState.LOADED:
+        if entry.state is not ConfigEntryState.LOADED:
             return self.async_abort(reason="cannot_reconfigure")
 
         try:
@@ -101,6 +101,7 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         self.context.update({"title_placeholders": {"name": "Powersensor"}})
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -109,6 +110,7 @@ class PowersensorConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
             return result
         return await self.async_step_manual_confirm()
 
+    @override
     async def async_step_zeroconf(
         self, discovery_info: zeroconf.ZeroconfServiceInfo
     ) -> ConfigFlowResult:

@@ -2,8 +2,8 @@
 # name: test_plug_device_registry_snapshot
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -24,7 +24,6 @@
     'model_id': None,
     'name': 'Powersensor Plug (aabbccddeeff)',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -38,7 +37,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -75,7 +74,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -112,7 +111,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'options': list([
+        <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
           'appliance',
           'house_net',
           'solar',
@@ -155,7 +154,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -195,7 +194,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -232,7 +231,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -272,7 +271,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -308,8 +307,8 @@
 # name: test_sensor_device_registry_renames_on_role[after_role]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -330,7 +329,6 @@
     'model_id': None,
     'name': 'Powersensor Mains Sensor (112233445566)',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -339,8 +337,8 @@
 # name: test_sensor_device_registry_renames_on_role[before_role]
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -361,7 +359,6 @@
     'model_id': None,
     'name': 'Powersensor Sensor (112233445566)',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': None,
     'sw_version': None,
     'via_device_id': None,
@@ -371,10 +368,10 @@
   dict({
     '112233445566_battery_level': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'battery',
-        'friendly_name': 'Powersensor Mains Sensor (112233445566) Battery Level',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': '%',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'battery',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Mains Sensor (112233445566) Battery Level',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: '%',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_sensor_112233445566_battery_level',
@@ -385,9 +382,9 @@
     }),
     '112233445566_device_role': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'enum',
-        'friendly_name': 'Powersensor Mains Sensor (112233445566) Device Role',
-        'options': list([
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Mains Sensor (112233445566) Device Role',
+        <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
           'appliance',
           'house_net',
           'solar',
@@ -404,10 +401,10 @@
     }),
     '112233445566_power': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Powersensor Mains Sensor (112233445566) Power',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Mains Sensor (112233445566) Power',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_mains_sensor_112233445566_power',
@@ -418,10 +415,10 @@
     }),
     '112233445566_rssi_ble': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'signal_strength',
-        'friendly_name': 'Powersensor Mains Sensor (112233445566) Signal strength (Bluetooth)',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': 'dB',
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'signal_strength',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Mains Sensor (112233445566) Signal strength (Bluetooth)',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: 'dB',
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_sensor_112233445566_signal_strength_bluetooth',
@@ -432,10 +429,10 @@
     }),
     '112233445566_total_energy': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'energy',
-        'friendly_name': 'Powersensor Mains Sensor (112233445566) Total Energy',
-        'state_class': <SensorStateClass.TOTAL: 'total'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Mains Sensor (112233445566) Total Energy',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL: 'total'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_mains_sensor_112233445566_total_energy',
@@ -444,12 +441,12 @@
       'last_updated': <ANY>,
       'state': '5.0',
     }),
-    'powersensor_au_vhh_from_grid': StateSnapshot({
+    'vhh_from_grid': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Powersensor Household View Power - From grid',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Power - From grid',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_power_from_grid',
@@ -458,12 +455,12 @@
       'last_updated': <ANY>,
       'state': '1500',
     }),
-    'powersensor_au_vhh_from_grid_summation': StateSnapshot({
+    'vhh_from_grid_summation': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'energy',
-        'friendly_name': 'Powersensor Household View Energy - From grid',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Energy - From grid',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_energy_from_grid',
@@ -472,12 +469,12 @@
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
-    'powersensor_au_vhh_home_usage': StateSnapshot({
+    'vhh_home_usage': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Powersensor Household View Power - Home use',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Power - Home use',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_power_home_use',
@@ -486,12 +483,12 @@
       'last_updated': <ANY>,
       'state': '1500',
     }),
-    'powersensor_au_vhh_home_usage_summation': StateSnapshot({
+    'vhh_home_usage_summation': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'energy',
-        'friendly_name': 'Powersensor Household View Energy - Home usage',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Energy - Home usage',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_energy_home_usage',
@@ -510,7 +507,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -550,7 +547,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'options': list([
+        <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
           'appliance',
           'house_net',
           'solar',
@@ -593,7 +590,7 @@
       ]),
       'area_id': None,
       'capabilities': dict({
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
       }),
       'config_entry_id': <ANY>,
       'config_subentry_id': <ANY>,
@@ -631,12 +628,12 @@
 # ---
 # name: test_vhh_full_state_snapshot
   dict({
-    'powersensor_au_vhh_from_grid': StateSnapshot({
+    'vhh_from_grid': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Powersensor Household View Power - From grid',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Power - From grid',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_power_from_grid',
@@ -645,12 +642,12 @@
       'last_updated': <ANY>,
       'state': '800',
     }),
-    'powersensor_au_vhh_from_grid_summation': StateSnapshot({
+    'vhh_from_grid_summation': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'energy',
-        'friendly_name': 'Powersensor Household View Energy - From grid',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Energy - From grid',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_energy_from_grid',
@@ -659,12 +656,12 @@
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
-    'powersensor_au_vhh_home_usage': StateSnapshot({
+    'vhh_home_usage': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Powersensor Household View Power - Home use',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Power - Home use',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_power_home_use',
@@ -673,12 +670,12 @@
       'last_updated': <ANY>,
       'state': '800',
     }),
-    'powersensor_au_vhh_home_usage_summation': StateSnapshot({
+    'vhh_home_usage_summation': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'energy',
-        'friendly_name': 'Powersensor Household View Energy - Home usage',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Energy - Home usage',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_energy_home_usage',
@@ -687,12 +684,12 @@
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
-    'powersensor_au_vhh_solar_generation': StateSnapshot({
+    'vhh_solar_generation': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Powersensor Household View Power - Solar generation',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Power - Solar generation',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_power_solar_generation',
@@ -701,12 +698,12 @@
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
-    'powersensor_au_vhh_solar_generation_summation': StateSnapshot({
+    'vhh_solar_generation_summation': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'energy',
-        'friendly_name': 'Powersensor Household View Energy - Solar generation',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Energy - Solar generation',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_energy_solar_generation',
@@ -715,12 +712,12 @@
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
-    'powersensor_au_vhh_to_grid': StateSnapshot({
+    'vhh_to_grid': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'power',
-        'friendly_name': 'Powersensor Household View Power - To grid',
-        'state_class': <SensorStateClass.MEASUREMENT: 'measurement'>,
-        'unit_of_measurement': <UnitOfPower.WATT: 'W'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'power',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Power - To grid',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.MEASUREMENT: 'measurement'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfPower.WATT: 'W'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_power_to_grid',
@@ -729,12 +726,12 @@
       'last_updated': <ANY>,
       'state': 'unknown',
     }),
-    'powersensor_au_vhh_to_grid_summation': StateSnapshot({
+    'vhh_to_grid_summation': StateSnapshot({
       'attributes': ReadOnlyDict({
-        'device_class': 'energy',
-        'friendly_name': 'Powersensor Household View Energy - To grid',
-        'state_class': <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
-        'unit_of_measurement': <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
+        <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'energy',
+        <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Powersensor Household View Energy - To grid',
+        <SensorEntityCapabilityAttribute.STATE_CLASS: 'state_class'>: <SensorStateClass.TOTAL_INCREASING: 'total_increasing'>,
+        <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfEnergy.KILO_WATT_HOUR: 'kWh'>,
       }),
       'context': <ANY>,
       'entity_id': 'sensor.powersensor_household_view_energy_to_grid',

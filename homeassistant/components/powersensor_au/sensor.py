@@ -15,7 +15,7 @@ from collections.abc import Callable
 from dataclasses import dataclass, field
 from datetime import datetime, timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from powersensor_local import VirtualHousehold
 
@@ -69,9 +69,7 @@ from .powersensor_message_dispatcher import PowersensorMessageDispatcher
 _LOGGER = logging.getLogger(__name__)
 
 
-# ---------------------------------------------------------------------------
-# Conversion helpers
-# ---------------------------------------------------------------------------
+# MARK: - Conversion helpers
 
 
 def _volts_to_battery_pct(volts: float) -> float:
@@ -84,9 +82,7 @@ def _joules_to_kwh(joules: float) -> float:
     return joules / 3_600_000.0
 
 
-# ---------------------------------------------------------------------------
-# Entity descriptions
-# ---------------------------------------------------------------------------
+# MARK: - Entity descriptions
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -122,9 +118,7 @@ class PowersensorVirtualHouseholdSensorEntityDescription(SensorEntityDescription
     formatter: Callable[[float], int | float] = field(default=int)
 
 
-# ---------------------------------------------------------------------------
-# Module-level description tuples
-# ---------------------------------------------------------------------------
+# MARK: - Module-level description tuples
 
 SENSOR_DESCRIPTIONS: tuple[PowersensorSensorEntityDescription, ...] = (
     PowersensorSensorEntityDescription(
@@ -397,9 +391,7 @@ PRODUCTION_DESCRIPTIONS: tuple[
 )
 
 
-# ---------------------------------------------------------------------------
-# Base entity
-# ---------------------------------------------------------------------------
+# MARK: - Base entity
 
 
 class PowersensorEntity(SensorEntity):
@@ -431,10 +423,12 @@ class PowersensorEntity(SensorEntity):
 
     @property
     @abstractmethod
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info. Subclasses must implement."""
 
     @property
+    @override
     def available(self) -> bool:
         """Return True when at least one update has been received recently."""
         return self._has_recently_received_update_message
@@ -461,6 +455,7 @@ class PowersensorEntity(SensorEntity):
             self._remove_unavailability_tracker()
             self._remove_unavailability_tracker = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to the data-update signal and register the unavailability timer.
 
@@ -486,7 +481,7 @@ class PowersensorEntity(SensorEntity):
                 self._attr_native_value = desc.conversion_function(raw)
             elif desc.key == "device_role":
                 # State translation keys must be snake_case.  The wire value
-                # "house-net" is normalised to "house_net" so it matches the
+                # "house-net" is normalized to "house_net" so it matches the
                 # key in strings.json.  All other role strings are already valid.
                 # None means the sensor has no role yet; map to "unknown" so the
                 # entity always has a valid translation key rather than a None state.
@@ -501,9 +496,7 @@ class PowersensorEntity(SensorEntity):
         self.async_write_ha_state()
 
 
-# ---------------------------------------------------------------------------
-# Electricity / water sensor entity
-# ---------------------------------------------------------------------------
+# MARK: - Electricity / water sensor entity
 
 
 class PowersensorSensorEntity(PowersensorEntity):
@@ -521,6 +514,7 @@ class PowersensorSensorEntity(PowersensorEntity):
         self._current_translation_key: str | None = self._get_translation_key()
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info for this sensor hardware unit."""
         return DeviceInfo(
@@ -557,6 +551,7 @@ class PowersensorSensorEntity(PowersensorEntity):
         )
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to data-update signal and also ROLE_UPDATE_SIGNAL.
 
@@ -572,15 +567,14 @@ class PowersensorSensorEntity(PowersensorEntity):
         )
 
 
-# ---------------------------------------------------------------------------
-# Smart plug entity
-# ---------------------------------------------------------------------------
+# MARK: - Smart plug entity
 
 
 class PowersensorPlugEntity(PowersensorEntity):
     """Entity representing a single measurement from a Powersensor smart plug."""
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info for this smart plug."""
         return DeviceInfo(
@@ -592,9 +586,7 @@ class PowersensorPlugEntity(PowersensorEntity):
         )
 
 
-# ---------------------------------------------------------------------------
-# Virtual Household entity
-# ---------------------------------------------------------------------------
+# MARK: - Virtual Household entity
 
 
 class PowersensorHouseholdEntity(SensorEntity):
@@ -618,9 +610,10 @@ class PowersensorHouseholdEntity(SensorEntity):
         self.entity_description: PowersensorVirtualHouseholdSensorEntityDescription = (
             description
         )
-        self._attr_unique_id = f"{DOMAIN}_vhh_{description.event}"
+        self._attr_unique_id = f"vhh_{description.event}"
 
     @property
+    @override
     def device_info(self) -> DeviceInfo:
         """Return device info for the virtual household device."""
         return DeviceInfo(
@@ -630,6 +623,7 @@ class PowersensorHouseholdEntity(SensorEntity):
             translation_key="virtual_household_view",
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to VirtualHousehold events."""
         desc = self.entity_description
@@ -648,9 +642,7 @@ class PowersensorHouseholdEntity(SensorEntity):
             self.async_write_ha_state()
 
 
-# ---------------------------------------------------------------------------
-# Platform setup
-# ---------------------------------------------------------------------------
+# MARK: - Platform setup
 
 
 async def async_setup_entry(
@@ -674,10 +666,7 @@ async def async_setup_entry(
 
     entry_id = entry.entry_id
 
-    # ------------------------------------------------------------------
     # Role update handling
-    # ------------------------------------------------------------------
-
     @callback
     def handle_role_update(mac_address: str, new_role: str | None) -> None:
         """Persist role changes and trigger a VHH refresh when needed."""
@@ -735,10 +724,7 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, ROLE_UPDATE_SIGNAL, handle_role_update)
     )
 
-    # ------------------------------------------------------------------
     # Sensor discovery
-    # ------------------------------------------------------------------
-
     @callback
     def handle_discovered_sensor(sensor_mac: str, sensor_role: str | None) -> None:
         """Create entities for a newly discovered sensor."""
@@ -763,10 +749,7 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, CREATE_SENSOR_SIGNAL, handle_discovered_sensor)
     )
 
-    # ------------------------------------------------------------------
     # Plug discovery
-    # ------------------------------------------------------------------
-
     @callback
     def handle_discovered_plug(plug_mac: str) -> None:
         """Create entities for a newly discovered plug."""
@@ -783,10 +766,7 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, CREATE_PLUG_SIGNAL, handle_discovered_plug)
     )
 
-    # ------------------------------------------------------------------
     # Virtual Household
-    # ------------------------------------------------------------------
-
     @callback
     def update_virtual_household_entities() -> None:
         """Add VHH sensor entities once the required sensor roles are present.
