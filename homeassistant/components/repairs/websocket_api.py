@@ -143,7 +143,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
         try:
             result = await self._flow_mgr.async_init(
                 data["handler"],
-                data={"issue_id": data["issue_id"]},
+                context={"issue_id": data["issue_id"]},
             )
         except data_entry_flow.UnknownFlow as ex:
             return self.json_message(
@@ -156,7 +156,7 @@ class RepairsFlowIndexView(FlowManagerIndexView[RepairsFlowManager]):
             return self.json_message(
                 f"Config entry {ex!s} not found in next_flow", HTTPStatus.BAD_REQUEST
             )
-        return self.json(self._prepare_result_json(result))
+        return self.json(self._prepare_result_json(result))  # type: ignore[arg-type]
 
     @override
     def _prepare_result_json(
