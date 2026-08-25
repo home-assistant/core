@@ -8,8 +8,7 @@ from enum import Enum
 import logging
 from typing import Any, cast
 
-from hass_nabucasa import Cloud, NabuCasaBaseError
-from hass_nabucasa.remote import RemoteNotConnected
+from hass_nabucasa import Cloud, NabuCasaBaseError, RemoteNotConnected
 import voluptuous as vol
 
 from homeassistant.components import alexa, google_assistant
