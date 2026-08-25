@@ -28,7 +28,12 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
     @override
     def async_remove(self) -> None:
         """Shut down HomeServer if the flow is abandoned without creating an entry."""
-        if self.home_server is not None and not self._entry_created:
+        if (
+            self.home_server is not None
+            and not self._entry_created
+            and not self._async_current_entries()
+            and not self._async_in_progress()
+        ):
             home_server = self.home_server
 
             async def _shutdown() -> None:

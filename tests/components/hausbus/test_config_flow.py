@@ -97,3 +97,28 @@ async def test_single_instance_allowed(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+
+
+async def test_abandoned_flow_does_not_shut_down_concurrent_flow(
+    hass: HomeAssistant, mock_home_server: MagicMock
+) -> None:
+    """Test that aborting one flow doesn't shut down a concurrently running flow."""
+    mock_home_server.is_any_device_found.return_value = False
+
+    # Start two flows concurrently.
+    result1 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result2 = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    # Abort the second flow; the first flow's HomeServer must not be torn down.
+    await hass.config_entries.flow.async_abort(result2["flow_id"])
+
+    assert mock_home_server.shutdown.call_count == 0
+
+    # The first flow can still complete successfully.
+    mock_home_server.is_any_device_found.return_value = True
+    result1 = await _resolve_progress(hass, result1["flow_id"])
+    assert result1["type"] is FlowResultType.CREATE_ENTRY
