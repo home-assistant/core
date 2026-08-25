@@ -14,6 +14,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Status import Statu
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import (
     EDirection,
 )
+import voluptuous as vol
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
@@ -23,6 +24,8 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -58,6 +61,28 @@ async def async_setup_entry(
         async_dispatcher_connect(hass, NEW_CHANNEL_ADDED, _handle_channel_added)
     )
 
+    platform = entity_platform.async_get_current_platform()
+
+    platform.async_register_entity_service(
+        "cover_toggle",
+        {},
+        "async_cover_toggle",
+    )
+
+    platform.async_register_entity_service(
+        "cover_set_configuration",
+        {
+            vol.Required("close_time", default=30): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=255)
+            ),
+            vol.Required("open_time", default=30): vol.All(
+                vol.Coerce(int), vol.Range(min=1, max=255)
+            ),
+            vol.Optional("invert_direction", default=False): vol.Coerce(bool),
+        },
+        "async_cover_set_configuration",
+    )
+
 
 class HausbusCover(HausbusEntity, CoverEntity):
     """Representation of a Haus-Bus cover."""
@@ -73,6 +98,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
             | CoverEntityFeature.STOP
             | CoverEntityFeature.SET_POSITION
         )
+        self._attr_reports_position = True
         self._position: int | None = None
 
     @property
@@ -121,6 +147,35 @@ class HausbusCover(HausbusEntity, CoverEntity):
             self._channel.moveToPosition, 100 - position
         )
 
+    async def async_cover_toggle(self) -> None:
+        """Start the cover in the opposite direction from last movement."""
+        _LOGGER.debug("toggle cover %s", self._debug_identifier)
+        await self.hass.async_add_executor_job(
+            self._channel.start, EDirection.TOGGLE
+        )
+
+    async def async_cover_set_configuration(
+        self, close_time: int, open_time: int, invert_direction: bool
+    ) -> None:
+        """Set cover motor timing and direction."""
+        _LOGGER.debug(
+            "set configuration close_time=%s open_time=%s invert_direction=%s for %s",
+            close_time,
+            open_time,
+            invert_direction,
+            self._debug_identifier,
+        )
+        if self._configuration is None:
+            raise HomeAssistantError(
+                "Configuration not yet received from device. Please try again."
+            )
+        options = self._configuration.getOptions()
+        options.setInvertDirection(invert_direction)
+        await self.hass.async_add_executor_job(
+            self._channel.setConfiguration, close_time, open_time, options
+        )
+        await self.hass.async_add_executor_job(self._channel.getConfiguration)
+
     @callback
     @override
     def handle_event(self, data: Any) -> None:
@@ -157,3 +212,4 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
         elif isinstance(data, Configuration):
             self._configuration = data
+            self.async_write_ha_state()
