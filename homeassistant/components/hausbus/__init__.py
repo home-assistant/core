@@ -56,20 +56,13 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
     # have actually unloaded. pyhausbus removes listeners via list.remove(),
     # which raises if called twice, so deregistering unconditionally here
     # would break a retry after a failed platform unload.
+    if gateway.discovery_task is not None:
+        try:
+            await gateway.discovery_task
+        except Exception:
+            pass
+
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
-        # Cancel and await any in-progress discovery before shutting down the
-        # HomeServer singleton. Merely cancelling the Task is not enough:
-        # searchDevices runs in an executor thread, and cancel() only cancels
-        # the coroutine awaiting the executor job — the thread keeps running.
-        # Awaiting the cancelled task ensures the executor job finishes before
-        # shutdown() tears down BusHandler, preventing searchDevices from
-        # recreating it on a dead socket.
-        if gateway.discovery_task is not None:
-            gateway.discovery_task.cancel()
-            try:
-                await gateway.discovery_task
-            except Exception:
-                pass
         gateway.home_server.removeBusEventListener(gateway)
         gateway.home_server.removeBusDeviceListener(gateway)
         # manifest.json sets single_config_entry, so this is always the
