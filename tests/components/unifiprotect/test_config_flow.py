@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, Mock, patch
 import pytest
 from uiprotect import NotAuthorized, NvrError, ProtectApiClient
 from uiprotect.data import NVR, Bootstrap, CloudAccount, Version
+from uiprotect.data.public_devices import PublicNVR
 from uiprotect.exceptions import ClientError
 
 from homeassistant import config_entries
@@ -69,6 +70,9 @@ RECONFIGURE_USER_INPUT = {
 
 UNIFI_DISCOVERY_DICT = asdict(UNIFI_DISCOVERY)
 UNIFI_DISCOVERY_DICT_PARTIAL = asdict(UNIFI_DISCOVERY_PARTIAL)
+
+# Name of the NVR fixture, which the API-key flow uses as the entry title.
+NVR_NAME = "UnifiProtect"
 
 
 async def _advance_menu(
@@ -2167,6 +2171,15 @@ def _meta_info(version: str = "7.2.105") -> Mock:
     return meta
 
 
+def _public_nvr(mac: str | None, name: str = NVR_NAME) -> Mock:
+    """Build the ``GET /v1/nvrs`` payload the API-key flow reads."""
+    public = Mock(spec=PublicNVR)
+    public.mac = mac
+    public.name = name
+    public.display_name = name
+    return public
+
+
 async def test_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
     """A valid API key creates a public-only config entry."""
     result = await _start_api_key_flow(hass)
@@ -2177,8 +2190,8 @@ async def test_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
             return_value=_meta_info(),
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            return_value=nvr.mac,
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
+            return_value=_public_nvr(nvr.mac),
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
@@ -2197,9 +2210,10 @@ async def test_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
         "port": 443,
         "verify_ssl": False,
         "api_key": "test-api-key",
-        "id": "1.1.1.1",
+        "id": NVR_NAME,
         "connection_mode": "api_key_only",
     }
+    assert result["title"] == NVR_NAME
     assert result["result"].unique_id == _async_unifi_mac_from_hass(nvr.mac)
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -2220,7 +2234,10 @@ async def test_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
             id="version_too_old",
         ),
         pytest.param(
-            _meta_info, lambda: None, {"base": "cannot_connect"}, id="mac_unresolved"
+            _meta_info,
+            lambda: _public_nvr(None),
+            {"base": "cannot_connect"},
+            id="mac_unresolved",
         ),
         pytest.param(
             _meta_info, ClientError, {"base": "cannot_connect"}, id="resolve_error"
@@ -2243,7 +2260,7 @@ async def test_api_key_flow_errors(
             side_effect=meta_effect,
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
             side_effect=resolve_effect,
         ),
     ):
@@ -2261,8 +2278,8 @@ async def test_api_key_flow_errors(
             return_value=_meta_info(),
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            return_value=nvr.mac,
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
+            return_value=_public_nvr(nvr.mac),
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
@@ -2298,8 +2315,8 @@ async def test_reconfigure_flip_to_api_key(
             return_value=_meta_info(),
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            return_value=nvr.mac,
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
+            return_value=_public_nvr(nvr.mac),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2381,8 +2398,8 @@ async def test_reconfigure_mode_round_trip(
             return_value=_meta_info(),
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            return_value=nvr.mac,
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
+            return_value=_public_nvr(nvr.mac),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2441,8 +2458,8 @@ async def test_reconfigure_flip_to_full_clears_session(
             return_value=_meta_info(),
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            return_value=nvr.mac,
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
+            return_value=_public_nvr(nvr.mac),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2490,8 +2507,8 @@ async def test_reconfigure_flip_wrong_nvr(
             return_value=_meta_info(),
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            return_value="ffffffffffff",
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
+            return_value=_public_nvr("ffffffffffff", "Other NVR"),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2537,7 +2554,7 @@ async def test_reauth_public_only_api_key(
             return_value=_meta_info(),
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
             return_value=MAC_ADDR,
         ),
     ):
@@ -2632,8 +2649,8 @@ async def test_discovery_api_key_flow(hass: HomeAssistant, nvr: NVR) -> None:
             return_value=_meta_info(),
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            return_value=nvr.mac,
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
+            return_value=_public_nvr(nvr.mac),
         ),
         patch(
             "homeassistant.components.unifiprotect.async_setup_entry",
@@ -2689,8 +2706,8 @@ async def test_discovery_api_key_flow_already_configured(
             return_value=_meta_info(),
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            return_value=nvr.mac,
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
+            return_value=_public_nvr(nvr.mac),
         ),
     ):
         result = await hass.config_entries.flow.async_configure(
@@ -2708,10 +2725,9 @@ async def test_reauth_public_only_survives_identity_resolution_failure(
 ) -> None:
     """Reauth never re-checks identity: the stored host pins the console.
 
-    Reauth validates only the key and version; it must not call
-    ``resolve_nvr_mac`` at all, so a transient failure there (for example the
-    `/api/system` fallback being unreachable) cannot block a valid new key,
-    and a divergent resolved mac cannot lock the user out.
+    Reauth validates only the key and version; it must not fetch the NVR at
+    all, so a transient failure there cannot block a valid new key, and a
+    divergent resolved mac cannot lock the user out.
     """
     ufp_public_only_entry.add_to_hass(hass)
 
@@ -2723,16 +2739,16 @@ async def test_reauth_public_only_survives_identity_resolution_failure(
             return_value=_meta_info(),
         ),
         patch(
-            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.resolve_nvr_mac",
-            side_effect=ClientError("api/system unreachable"),
-        ) as mock_resolve,
+            "homeassistant.components.unifiprotect.config_flow.ProtectApiClient.get_nvr_public",
+            side_effect=ClientError("/v1/nvrs unreachable"),
+        ) as mock_get_nvr,
     ):
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"], {CONF_API_KEY: "new-api-key"}
         )
         await hass.async_block_till_done()
 
-    mock_resolve.assert_not_called()
+    mock_get_nvr.assert_not_called()
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
     assert ufp_public_only_entry.data[CONF_API_KEY] == "new-api-key"

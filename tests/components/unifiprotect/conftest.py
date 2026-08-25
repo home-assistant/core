@@ -602,7 +602,7 @@ def mock_ufp_public_only_entry():
         data={
             CONF_HOST: DEFAULT_HOST,
             CONF_API_KEY: DEFAULT_API_KEY,
-            "id": DEFAULT_HOST,
+            "id": "UnifiProtect",
             CONF_PORT: DEFAULT_PORT,
             CONF_VERIFY_SSL: DEFAULT_VERIFY_SSL,
             CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,

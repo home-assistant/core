@@ -323,7 +323,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
                     CONF_API_KEY: user_input[CONF_API_KEY],
                     CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
                 }
-                mac, errors = await self._async_get_public_nvr_identity(attempt)
+                mac, _, errors = await self._async_get_public_nvr_identity(attempt)
                 if mac and not errors:
                     # Store the resolved NVR mac as the unique id (like the
                     # manual API-key flow) so the entry's identity does not
@@ -541,26 +541,28 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
     async def _async_get_public_nvr_identity(
         self,
         user_input: dict[str, Any],
-    ) -> tuple[str | None, dict[str, str]]:
-        """Validate a public-API-only (API-key) connection and resolve its NVR.
+    ) -> tuple[str | None, str, dict[str, str]]:
+        """Validate a public-API-only (API-key) connection and fetch its NVR.
 
-        Returns the resolved NVR mac (the unique id) and any errors, via
-        ``resolve_nvr_mac`` (public bootstrap, else the console fallback).
+        Returns the NVR mac (the unique id), its display name (the entry title)
+        and any errors. ``GET /v1/nvrs`` carries both, and its mac is required
+        from the minimum supported version on.
         """
         protect, errors = await self._async_validate_public_api_key(user_input)
         if protect is None:
-            return None, errors
+            return None, "", errors
 
         try:
-            mac = await protect.resolve_nvr_mac()
+            nvr = await protect.get_nvr_public()
         except (TimeoutError, ClientError) as ex:
             _LOGGER.error(ex)
             errors["base"] = "cannot_connect"
-            return None, errors
+            return None, "", errors
 
-        if not mac:
+        if not nvr.mac:
             errors["base"] = "cannot_connect"
-        return mac, errors
+            return None, "", errors
+        return nvr.mac, nvr.display_name, errors
 
     async def async_step_api_key(
         self, user_input: dict[str, Any] | None = None
@@ -568,12 +570,12 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         """Handle the public-API-only (API key, no local user) setup."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            mac, errors = await self._async_get_public_nvr_identity(user_input)
+            mac, name, errors = await self._async_get_public_nvr_identity(user_input)
             if mac and not errors:
                 await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
                 self._abort_if_unique_id_configured()
                 return self._async_create_entry(
-                    user_input[CONF_HOST],
+                    name or user_input[CONF_HOST],
                     {
                         **user_input,
                         CONF_CONNECTION_MODE: CONNECTION_MODE_API_KEY_ONLY,
@@ -703,7 +705,7 @@ class ProtectFlowHandler(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
 
         if user_input is not None:
-            mac, errors = await self._async_get_public_nvr_identity(user_input)
+            mac, _, errors = await self._async_get_public_nvr_identity(user_input)
             if mac and not errors:
                 await self.async_set_unique_id(_async_unifi_mac_from_hass(mac))
                 self._abort_if_unique_id_mismatch(reason="wrong_nvr")
