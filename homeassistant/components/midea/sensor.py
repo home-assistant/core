@@ -771,14 +771,6 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
     ),
-    MideaSensorEntityDescription(
-        key="error",
-        translation_key="error_ed",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        device_class=SensorDeviceClass.ENUM,
-        options=["0", "1", "2", "3", "4", "225", "229", "230", "231"],
-        models=[DeviceType.ED],
-    ),
 ]
 
 

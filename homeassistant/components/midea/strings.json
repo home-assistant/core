@@ -357,20 +357,6 @@
       "energy_consumption": {
         "name": "Energy consumption"
       },
-      "error_ed": {
-        "name": "Error",
-        "state": {
-          "0": "No error",
-          "1": "Position not found",
-          "2": "Photo sensor no signal",
-          "3": "Motor not running",
-          "4": "Wrong position",
-          "225": "Motor fault",
-          "229": "Communication fault",
-          "230": "Salt sensor fault",
-          "231": "Chlorine sterilization fault"
-        }
-      },
       "evaporator_temperature": {
         "name": "Evaporator temperature"
       },

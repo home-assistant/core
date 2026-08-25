@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_all_entities[ac][binary_sensor.bedroom_ac_full_dust-entry]
+# name: test_all_entities[ac][binary_sensor.bedroom_ac_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -13,7 +13,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bedroom_ac_full_dust',
+    'entity_id': 'binary_sensor.bedroom_ac_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -21,12 +21,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Full dust',
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Full dust',
+    'original_name': 'Problem',
     'platform': 'midea',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -36,14 +36,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[ac][binary_sensor.bedroom_ac_full_dust-state]
+# name: test_all_entities[ac][binary_sensor.bedroom_ac_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Full dust',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bedroom_ac_full_dust',
+    'entity_id': 'binary_sensor.bedroom_ac_problem',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
@@ -101,7 +101,7 @@
     'state': 'on',
   })
 # ---
-# name: test_all_entities[e1][binary_sensor.bedroom_ac_rinse_aid-entry]
+# name: test_all_entities[e1][binary_sensor.bedroom_ac_problem-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -115,7 +115,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bedroom_ac_rinse_aid',
+    'entity_id': 'binary_sensor.bedroom_ac_problem',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -123,12 +123,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Rinse aid',
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Rinse aid',
+    'original_name': 'Problem',
     'platform': 'midea',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -138,21 +138,21 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[e1][binary_sensor.bedroom_ac_rinse_aid-state]
+# name: test_all_entities[e1][binary_sensor.bedroom_ac_problem-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Rinse aid',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bedroom_ac_rinse_aid',
+    'entity_id': 'binary_sensor.bedroom_ac_problem',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_all_entities[e1][binary_sensor.bedroom_ac_salt-entry]
+# name: test_all_entities[e1][binary_sensor.bedroom_ac_problem_2-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -166,7 +166,7 @@
     'disabled_by': None,
     'domain': 'binary_sensor',
     'entity_category': <EntityCategory.DIAGNOSTIC: 'diagnostic'>,
-    'entity_id': 'binary_sensor.bedroom_ac_salt',
+    'entity_id': 'binary_sensor.bedroom_ac_problem_2',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -174,12 +174,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Salt',
+    'object_id_base': 'Problem',
     'options': dict({
     }),
     'original_device_class': <BinarySensorDeviceClass.PROBLEM: 'problem'>,
     'original_icon': None,
-    'original_name': 'Salt',
+    'original_name': 'Problem',
     'platform': 'midea',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -189,14 +189,14 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[e1][binary_sensor.bedroom_ac_salt-state]
+# name: test_all_entities[e1][binary_sensor.bedroom_ac_problem_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'problem',
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Salt',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Bedroom AC Problem',
     }),
     'context': <ANY>,
-    'entity_id': 'binary_sensor.bedroom_ac_salt',
+    'entity_id': 'binary_sensor.bedroom_ac_problem_2',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
