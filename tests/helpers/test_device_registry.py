@@ -11506,18 +11506,8 @@ async def test_child_device_stored_fragment(
     """
     freezer.move_to("2024-01-01T00:00:00+00:00")
     entry_id = mock_config_entry_with_subentries.entry_id
-    parent = device_registry.async_get_or_create(
-        config_entry_id=entry_id,
-        config_subentry_id="mock-subentry-id-1-1",
-        identifiers={("test", "strip")},
-        name="Power strip",
-    )
-    child_device = device_registry.async_get_or_create_child(
-        config_entry_id=entry_id,
-        config_subentry_id="mock-subentry-id-1-1",
-        identifiers={("test", "strip_outlet_1")},
-        parent_device_id=parent.id,
-        name="Outlet 1",
+    parent, child_device = _create_parent_and_child(
+        device_registry, entry_id, config_subentry_id="mock-subentry-id-1-1"
     )
     device_registry.async_update_child_device(
         child_device.id,
