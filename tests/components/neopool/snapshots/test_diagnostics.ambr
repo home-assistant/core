@@ -16,6 +16,13 @@
       'version': 6,
     }),
     'connection_stats': dict({
+      'connected': True,
+      'host': '**REDACTED**',
+      'port': '**REDACTED**',
+      'success_rate_percent': 100.0,
+      'successful_operations': 10,
+      'total_operations': 10,
+      'unit_id': 1,
     }),
     'coordinator': dict({
       'data': dict({
