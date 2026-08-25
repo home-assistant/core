@@ -29,9 +29,12 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
     def async_remove(self) -> None:
         """Shut down HomeServer if the flow is abandoned without creating an entry."""
         if self.home_server is not None and not self._entry_created:
-            self.hass.async_create_task(
-                self.hass.async_add_executor_job(self.home_server.shutdown)
-            )
+            home_server = self.home_server
+
+            async def _shutdown() -> None:
+                await self.hass.async_add_executor_job(home_server.shutdown)
+
+            self.hass.async_create_task(_shutdown())
 
     @override
     async def async_step_user(
