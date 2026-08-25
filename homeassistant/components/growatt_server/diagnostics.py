@@ -6,9 +6,6 @@ from homeassistant.components.diagnostics import async_redact_data
 from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_UNIQUE_ID, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-# __init__.py always sets this package attribute (to the generated module or
-# None) before diagnostics.py can be imported, so this can't raise ImportError.
-from . import _build_info
 from .const import CONF_PLANT_ID
 from .coordinator import GrowattConfigEntry
 
@@ -49,14 +46,6 @@ async def async_get_config_entry_diagnostics(
     total_data = runtime_data.total_coordinator.data or {}
     return async_redact_data(
         {
-            "build": (
-                {
-                    "commit": _build_info.BUILD_COMMIT,
-                    "deployed": _build_info.BUILD_TIME,
-                }
-                if _build_info is not None
-                else None
-            ),
             "config_entry": config_entry.as_dict(),
             "total_coordinator": {
                 k: v for k, v in total_data.items() if k in _TOTAL_SAFE_KEYS
