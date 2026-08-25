@@ -1,6 +1,6 @@
 """Services for the TP-Link Omada integration."""
 
-from typing import cast
+from typing import Literal, cast
 
 from tplink_omada_client.exceptions import OmadaClientException
 import voluptuous as vol
@@ -10,13 +10,24 @@ from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import config_validation as cv, selector
+from homeassistant.helpers.service import async_register_admin_service
 
 from .const import DOMAIN
 from .controller import OmadaSiteController
 
 SERVICE_RECONNECT_CLIENT = "reconnect_client"
+SERVICE_RECONNECT = "reconnect"
+SERVICE_BLOCK = "block"
+SERVICE_UNBLOCK = "unblock"
 
 ATTR_MAC = "mac"
+
+SERVICE_ACTIONS: dict[str, Literal["reconnect", "block", "unblock"]] = {
+    SERVICE_RECONNECT_CLIENT: "reconnect",
+    SERVICE_RECONNECT: "reconnect",
+    SERVICE_BLOCK: "block",
+    SERVICE_UNBLOCK: "unblock",
+}
 
 
 def _get_controller(call: ServiceCall) -> OmadaSiteController:
@@ -55,26 +66,43 @@ SCHEMA_RECONNECT_CLIENT = vol.Schema(
 )
 
 
-async def _handle_reconnect_client(call: ServiceCall) -> None:
-    """Handle the service action to force reconnection of a network client."""
+async def _handle_client_action(call: ServiceCall) -> None:
+    """Handle a service action for a network client."""
     controller = _get_controller(call)
-
     mac: str = call.data[ATTR_MAC]
+    action = SERVICE_ACTIONS[call.service]
 
     try:
-        await controller.omada_client.reconnect_client(mac)
+        if action == "reconnect":
+            await controller.omada_client.reconnect_client(mac)
+        elif action == "block":
+            await controller.omada_client.block_client(mac)
+        else:
+            await controller.omada_client.unblock_client(mac)
     except OmadaClientException as ex:
-        raise HomeAssistantError(f"Failed to reconnect client with MAC {mac}") from ex
-
-
-SERVICES = [
-    (SERVICE_RECONNECT_CLIENT, SCHEMA_RECONNECT_CLIENT, _handle_reconnect_client)
-]
+        raise HomeAssistantError(f"Failed to {action} client with MAC {mac}") from ex
 
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
     """Set up the services for the TP-Link Omada integration."""
-
-    for service_name, schema, handler in SERVICES:
-        hass.services.async_register(DOMAIN, service_name, handler, schema=schema)
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RECONNECT_CLIENT,
+        _handle_client_action,
+        schema=SCHEMA_RECONNECT_CLIENT,
+    )
+    hass.services.async_register(
+        DOMAIN,
+        SERVICE_RECONNECT,
+        _handle_client_action,
+        schema=SCHEMA_RECONNECT_CLIENT,
+    )
+    for service in (SERVICE_BLOCK, SERVICE_UNBLOCK):
+        async_register_admin_service(
+            hass,
+            DOMAIN,
+            service,
+            _handle_client_action,
+            schema=SCHEMA_RECONNECT_CLIENT,
+        )

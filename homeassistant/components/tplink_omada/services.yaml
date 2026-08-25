@@ -1,3 +1,36 @@
+reconnect:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: tplink_omada
+    mac:
+      required: true
+      example: "01-23-45-67-89-AB"
+      selector:
+        text:
+block:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: tplink_omada
+    mac:
+      required: true
+      example: "01-23-45-67-89-AB"
+      selector:
+        text:
+unblock:
+  fields:
+    config_entry_id:
+      selector:
+        config_entry:
+          integration: tplink_omada
+    mac:
+      required: true
+      example: "01-23-45-67-89-AB"
+      selector:
+        text:
 reconnect_client:
   fields:
     config_entry_id:

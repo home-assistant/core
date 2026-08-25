@@ -5,20 +5,20 @@ from typing import override
 from tplink_omada_client.clients import OmadaWirelessClient
 
 from homeassistant.components.device_tracker import ScannerEntity
+from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
-from . import OmadaConfigEntry
 from .config_flow import CONF_SITE
-from .controller import OmadaClientsCoordinator
+from .controller import OmadaClientsCoordinator, OmadaSiteController
 
 PARALLEL_UPDATES = 0
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: OmadaConfigEntry,
+    config_entry: ConfigEntry[OmadaSiteController],
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up device trackers and scanners."""

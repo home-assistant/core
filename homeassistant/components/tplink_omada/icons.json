@@ -29,8 +29,17 @@
     }
   },
   "services": {
+    "block": {
+      "service": "mdi:link-off"
+    },
+    "reconnect": {
+      "service": "mdi:sync"
+    },
     "reconnect_client": {
       "service": "mdi:sync"
+    },
+    "unblock": {
+      "service": "mdi:link"
     }
   }
 }
