@@ -8,7 +8,7 @@ from modbus_connection import ModbusError
 import voluptuous as vol
 
 from homeassistant.components.modbus import async_get_temporary_unit
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.selector import (
@@ -116,6 +116,8 @@ class FlexitConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             data = {CONF_TYPE: connection_type, **user_input}
+            if connection_type == TYPE_TCP:
+                data[CONF_HOST] = data[CONF_HOST].lower()
             self._async_abort_entries_match(data)
             error = await check_connection(self.hass, data)
             if error is not None:
@@ -142,10 +144,18 @@ class FlexitConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             data = {CONF_TYPE: connection_type, **user_input}
+            if connection_type == TYPE_TCP:
+                data[CONF_HOST] = data[CONF_HOST].lower()
             self._async_abort_entries_match(data)
+
+            entry_was_loaded = config_entry.state is ConfigEntryState.LOADED
+            if entry_was_loaded:
+                await self.hass.config_entries.async_unload(config_entry.entry_id)
             error = await check_connection(self.hass, data)
             if error is not None:
                 errors["base"] = error
+                if entry_was_loaded:
+                    await self.hass.config_entries.async_setup(config_entry.entry_id)
             else:
                 return self.async_update_reload_and_abort(
                     config_entry, data_updates=data

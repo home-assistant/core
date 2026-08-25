@@ -1,13 +1,17 @@
 """Test the Flexit config flow."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from modbus_connection import ModbusError, ModbusTcpParams
 from modbus_connection.mock import MockModbusUnit
 import pytest
 
 from homeassistant.components.flexit.const import CONF_UNIT, DOMAIN, TYPE_TCP
-from homeassistant.config_entries import SOURCE_RECONFIGURE, SOURCE_USER
+from homeassistant.config_entries import (
+    SOURCE_RECONFIGURE,
+    SOURCE_USER,
+    ConfigEntryState,
+)
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
@@ -54,6 +58,23 @@ async def test_full_flow(
     mock_get_temporary_modbus_unit.assert_called_once_with(
         hass, ModbusTcpParams(host="1.1.1.1", port=502), 1
     )
+
+
+async def test_tcp_host_is_normalized(hass: HomeAssistant) -> None:
+    """Test TCP hosts are stored in lowercase."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "tcp"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**TCP_USER_INPUT, CONF_HOST: "Device.Local"}
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"][CONF_HOST] == "device.local"
 
 
 async def test_maximum_unit(hass: HomeAssistant) -> None:
@@ -250,6 +271,65 @@ async def test_reconfigure_flow_serial(
     assert mock_serial_config_entry.data[CONF_DEVICE] == "/dev/ttyUSB1"
 
 
+async def test_reconfigure_loaded_entry_releases_connection(
+    hass: HomeAssistant,
+    mock_serial_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration releases the active connection before validation."""
+    mock_serial_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_serial_config_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_serial_config_entry.entry_id,
+        },
+    )
+
+    async def check_connection_after_unload(*_: object) -> None:
+        assert mock_serial_config_entry.state is not ConfigEntryState.LOADED
+
+    with patch(
+        "homeassistant.components.flexit.config_flow.check_connection",
+        AsyncMock(side_effect=check_connection_after_unload),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**SERIAL_USER_INPUT, "baudrate": 38400}
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+
+
+async def test_reconfigure_loaded_entry_restored_after_error(
+    hass: HomeAssistant,
+    mock_serial_config_entry: MockConfigEntry,
+) -> None:
+    """Test failed reconfiguration restores the active connection."""
+    mock_serial_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_serial_config_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_serial_config_entry.entry_id,
+        },
+    )
+
+    with patch(
+        "homeassistant.components.flexit.config_flow.check_connection",
+        AsyncMock(return_value="cannot_connect"),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**SERIAL_USER_INPUT, "baudrate": 38400}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+    assert mock_serial_config_entry.state is ConfigEntryState.LOADED
+
+
 async def test_reconfigure_flow_errors(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -324,6 +404,29 @@ async def test_already_configured(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         TCP_USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_already_configured_host_case_insensitive(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test hostname case differences cannot create duplicate entries."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, data={**mock_config_entry.data, CONF_HOST: "device.local"}
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "tcp"}
+    )
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {**TCP_USER_INPUT, CONF_HOST: "Device.Local"}
     )
 
     assert result["type"] is FlowResultType.ABORT

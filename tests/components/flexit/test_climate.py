@@ -1,6 +1,6 @@
 """Test the Flexit climate entity."""
 
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from modbus_connection import ModbusError
 from modbus_connection.mock import MockModbusUnit
@@ -66,12 +66,37 @@ async def _setup_integration(
 async def test_deprecated_yaml_issue(
     hass: HomeAssistant, issue_registry: ir.IssueRegistry
 ) -> None:
-    """Test deprecated YAML creates an issue six months ahead."""
-    await async_setup_platform(hass, {}, MagicMock())
+    """Test deprecated YAML remains functional and creates a repair issue."""
+    async_add_entities = MagicMock()
+    with patch("homeassistant.components.flexit.climate.get_hub") as get_hub:
+        register_values = {
+            ("holding", 8): 215,
+            ("holding", 17): 2,
+            ("input", 9): 65516,
+            ("input", 11): 65486,
+        }
+        get_hub.return_value.async_pb_call = AsyncMock(
+            side_effect=lambda _slave, register, _count, register_type: MagicMock(
+                registers=[register_values.get((register_type, register), 0)]
+            )
+        )
+        await async_setup_platform(
+            hass,
+            {"hub": "modbus_hub", "slave": 1, "name": "Flexit"},
+            async_add_entities,
+        )
 
     issue = issue_registry.async_get_issue(DOMAIN, "deprecated_yaml_no_import")
     assert issue is not None
     assert issue.breaks_in_ha_version == "2027.3.0"
+    get_hub.assert_called_once_with(hass, "modbus_hub")
+    async_add_entities.assert_called_once()
+    legacy_entity = async_add_entities.call_args.args[0][0]
+    await legacy_entity.async_update()
+    assert legacy_entity.target_temperature == 21.5
+    assert legacy_entity.current_temperature == -2.0
+    assert legacy_entity.fan_mode == "Medium"
+    assert legacy_entity.extra_state_attributes["outdoor_air_temp"] == -5.0
 
 
 async def test_climate_entity(
