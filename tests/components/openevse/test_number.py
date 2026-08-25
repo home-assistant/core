@@ -6,6 +6,7 @@ from aiohttp import ContentTypeError, ServerTimeoutError
 from openevsehttp.exceptions import (
     AuthenticationError,
     ParseJSONError,
+    UnknownError,
     UnsupportedFeature,
 )
 import pytest
@@ -67,47 +68,68 @@ async def test_set_value(
 @pytest.mark.parametrize(
     ("raised", "expected", "translation_key", "translation_placeholders"),
     [
-        (
+        pytest.param(
             ValueError("out of range"),
             ServiceValidationError,
             "invalid_value",
             {"value": "32.0"},
+            id="value_error",
         ),
-        (
+        pytest.param(
             AuthenticationError("bad creds"),
             ConfigEntryAuthFailed,
             "authentication_error",
             None,
+            id="auth_error",
         ),
-        (
+        pytest.param(
             TimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="timeout_error",
         ),
-        (
+        pytest.param(
             ServerTimeoutError("timed out"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="server_timeout_error",
         ),
-        (
+        pytest.param(
             ParseJSONError("bad json"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="parse_json_error",
         ),
-        (
+        pytest.param(
             UnsupportedFeature("old firmware"),
             HomeAssistantError,
             "unsupported_feature",
             None,
+            id="unsupported_feature",
         ),
-        (
+        pytest.param(
             ContentTypeError(MagicMock(), (), message="bad content"),
             HomeAssistantError,
             "communication_error",
             None,
+            id="content_type_error",
+        ),
+        pytest.param(
+            UnknownError("unknown error"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+            id="unknown_error",
+        ),
+        pytest.param(
+            RuntimeError("runtime error"),
+            HomeAssistantError,
+            "communication_error",
+            None,
+            id="runtime_error",
         ),
     ],
 )

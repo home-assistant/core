@@ -461,6 +461,10 @@ DHCP: Final[list[dict[str, str | bool]]] = [
         "macaddress": "0024BD*",
     },
     {
+        "domain": "harbor",
+        "hostname": "harborc-*",
+    },
+    {
         "domain": "home_connect",
         "hostname": "balay-*",
         "macaddress": "C8D778*",

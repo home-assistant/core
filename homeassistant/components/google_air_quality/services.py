@@ -6,7 +6,6 @@ from typing import Final, cast
 from google_air_quality_api.exceptions import GoogleAirQualityApiError
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import (
     HomeAssistant,
@@ -16,7 +15,7 @@ from homeassistant.core import (
     callback,
 )
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import device_registry as dr, selector
+from homeassistant.helpers import selector, service
 
 from .const import DOMAIN
 from .coordinator import GoogleAirQualityConfigEntry
@@ -41,28 +40,18 @@ def _get_config_entry_and_subentry_id(
     hass: HomeAssistant, device_id: str
 ) -> tuple[GoogleAirQualityConfigEntry, str]:
     """Get the config entry and subentry from a selected location device."""
-    device = dr.async_get(hass).async_get(device_id)
-    if device is not None:
-        for entry_id, subentry_ids in device.config_entries_subentries.items():
-            config_entry: ConfigEntry | None = hass.config_entries.async_get_entry(
-                entry_id
-            )
-            if config_entry is None or config_entry.domain != DOMAIN:
-                continue
-
-            gaq_config_entry = cast(GoogleAirQualityConfigEntry, config_entry)
-            for subentry_id in subentry_ids:
-                if (
-                    subentry_id is not None
-                    and subentry_id
-                    in gaq_config_entry.runtime_data.subentries_runtime_data
-                ):
-                    return gaq_config_entry, subentry_id
-
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="device_not_found",
+    config_entry: GoogleAirQualityConfigEntry
+    device, config_entry = service.async_get_device_and_config_entry(
+        hass, DOMAIN, device_id
     )
+    if (
+        subentry_id := device.config_subentry_id
+    ) is None or subentry_id not in config_entry.runtime_data.subentries_runtime_data:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="device_not_found",
+        )
+    return config_entry, subentry_id
 
 
 async def _async_get_forecast(call: ServiceCall) -> ServiceResponse:
