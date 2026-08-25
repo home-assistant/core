@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the Remember The Milk integration."""
 
+import asyncio
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from types import MappingProxyType
@@ -18,7 +19,7 @@ from .const import CONF_LIST_ID, DOMAIN, LOGGER, SUBENTRY_TYPE_LIST
 UPDATE_INTERVAL = timedelta(minutes=5)
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True)
 class RtmList:
     """An RTM list with its name and current tasks."""
 
@@ -26,7 +27,7 @@ class RtmList:
     tasks: dict[str, RtmTask]
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True)
 class RtmTask:
     """An RTM task with its HA representation and note metadata."""
 
@@ -35,7 +36,7 @@ class RtmTask:
     note_id: int | None
 
 
-@dataclass
+@dataclass(kw_only=True, frozen=True)
 class RememberTheMilkData:
     """Runtime data for a Remember The Milk config entry."""
 
@@ -67,17 +68,26 @@ class RtmTodoCoordinator(DataUpdateCoordinator[dict[int, RtmList]]):
             update_interval=UPDATE_INTERVAL,
         )
         self.client = client
+        self.syncing_subentries = False
 
     @override
     async def _async_update_data(self) -> dict[int, RtmList]:
         """Fetch lists and tasks from the RTM API and sync subentries."""
         try:
-            lists_response = await self.client.rtm.lists.get_list()
-            tasks_response = await self.client.rtm.tasks.get_list()
+            lists_response, tasks_response = await asyncio.gather(
+                self.client.rtm.lists.get_list(),
+                self.client.rtm.tasks.get_list(),
+            )
         except AuthError as err:
-            raise ConfigEntryAuthFailed("Invalid token") from err
+            raise ConfigEntryAuthFailed(
+                translation_domain=DOMAIN,
+                translation_key="invalid_auth",
+            ) from err
         except AioRTMError as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
         result: dict[int, RtmList] = {
             lst.id: RtmList(name=lst.name, tasks={})
@@ -132,24 +142,28 @@ class RtmTodoCoordinator(DataUpdateCoordinator[dict[int, RtmList]]):
             subentry.data[CONF_LIST_ID]: subentry
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LIST)
         }
-        for list_id, rtm_list in lists.items():
-            subentry = existing.get(list_id)
-            if subentry is None:
-                self.hass.config_entries.async_add_subentry(
-                    entry,
-                    ConfigSubentry(
-                        data=MappingProxyType({CONF_LIST_ID: list_id}),
-                        subentry_type=SUBENTRY_TYPE_LIST,
-                        title=rtm_list.name,
-                        unique_id=str(list_id),
-                    ),
-                )
-            elif subentry.title != rtm_list.name:
-                self.hass.config_entries.async_update_subentry(
-                    entry, subentry, title=rtm_list.name
-                )
-        for list_id, subentry in existing.items():
-            if list_id not in lists:
-                self.hass.config_entries.async_remove_subentry(
-                    entry, subentry.subentry_id
-                )
+        self.syncing_subentries = True
+        try:
+            for list_id, rtm_list in lists.items():
+                subentry = existing.get(list_id)
+                if subentry is None:
+                    self.hass.config_entries.async_add_subentry(
+                        entry,
+                        ConfigSubentry(
+                            data=MappingProxyType({CONF_LIST_ID: list_id}),
+                            subentry_type=SUBENTRY_TYPE_LIST,
+                            title=rtm_list.name,
+                            unique_id=str(list_id),
+                        ),
+                    )
+                elif subentry.title != rtm_list.name:
+                    self.hass.config_entries.async_update_subentry(
+                        entry, subentry, title=rtm_list.name
+                    )
+            for list_id, subentry in existing.items():
+                if list_id not in lists:
+                    self.hass.config_entries.async_remove_subentry(
+                        entry, subentry.subentry_id
+                    )
+        finally:
+            self.syncing_subentries = False

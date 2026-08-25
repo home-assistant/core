@@ -125,10 +125,14 @@ async def test_import_creates_deprecation_issue(
     ("side_effect", "expected_state"),
     [
         pytest.param(
-            AuthError("Invalid token!"), ConfigEntryState.SETUP_ERROR, id="auth_error"
+            AuthError("Invalid token!"),
+            ConfigEntryState.SETUP_ERROR,
+            id="auth_error",
         ),
         pytest.param(
-            AioRTMError("Boom!"), ConfigEntryState.SETUP_RETRY, id="api_error"
+            AioRTMError("Boom!"),
+            ConfigEntryState.SETUP_RETRY,
+            id="api_error",
         ),
     ],
 )
@@ -427,6 +431,46 @@ async def test_coordinator_does_not_delete_server_removed_list(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     assert len(config_entry.subentries) == 0
+    client.rtm.lists.delete.assert_not_called()
+
+
+@pytest.mark.usefixtures("storage")
+async def test_coordinator_sync_multiple_new_lists_no_deletion(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    make_rtm_list_mock: Callable[..., MagicMock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that discovering multiple new lists in one poll doesn't delete any of them.
+
+    Each async_add_subentry call fires the update listener eagerly. Without the
+    syncing_subentries guard, the listener would see an incomplete subentry set
+    mid-sync and wrongly delete the not-yet-added list from the server.
+    """
+    lists_response = MagicMock()
+    lists_response.lists = [make_rtm_list_mock(LIST_ID, "Shopping")]
+    client.rtm.lists.get_list.return_value = lists_response
+
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(config_entry.subentries) == 1
+
+    # Two new lists appear simultaneously on the server on the next poll.
+    lists_response = MagicMock()
+    lists_response.lists = [
+        make_rtm_list_mock(LIST_ID, "Shopping"),
+        make_rtm_list_mock(LIST_ID + 1, "Work"),
+        make_rtm_list_mock(LIST_ID + 2, "Personal"),
+    ]
+    client.rtm.lists.get_list.return_value = lists_response
+
+    freezer.tick(timedelta(minutes=10))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert len(config_entry.subentries) == 3
     client.rtm.lists.delete.assert_not_called()
 
 

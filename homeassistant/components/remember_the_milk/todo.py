@@ -4,7 +4,7 @@ import asyncio
 from collections.abc import Awaitable, Callable, Coroutine
 from datetime import datetime
 from functools import wraps
-from typing import Any, cast, override
+from typing import TYPE_CHECKING, Any, cast, override
 
 from aiortm import AioRTMError, AuthError
 
@@ -22,7 +22,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import CONF_LIST_ID, DOMAIN, SUBENTRY_TYPE_LIST
-from .coordinator import RememberTheMilkConfigEntry, RtmTask, RtmTodoCoordinator
+from .coordinator import RememberTheMilkConfigEntry, RtmTodoCoordinator
 
 PARALLEL_UPDATES = 0
 
@@ -104,11 +104,6 @@ class RtmTodoListEntity(CoordinatorEntity[RtmTodoCoordinator], TodoListEntity):
             for rtm_task in (rtm_list.tasks.values() if rtm_list else [])
         ]
 
-    def _find_rtm_task(self, uid: str) -> RtmTask | None:
-        """Return the RtmTask for the given UID, or None if not found."""
-        rtm_list = self.coordinator.data.get(self._list_id)
-        return rtm_list.tasks.get(uid) if rtm_list else None
-
     @handle_api_errors
     @override
     async def async_create_todo_item(self, item: TodoItem) -> None:
@@ -116,7 +111,8 @@ class RtmTodoListEntity(CoordinatorEntity[RtmTodoCoordinator], TodoListEntity):
         client = self.coordinator.client
         timeline_response = await client.rtm.timelines.create()
         timeline = timeline_response.timeline
-        assert item.summary is not None
+        if TYPE_CHECKING:
+            assert item.summary is not None
         result = await client.rtm.tasks.add(
             timeline=timeline,
             name=item.summary,
@@ -153,7 +149,8 @@ class RtmTodoListEntity(CoordinatorEntity[RtmTodoCoordinator], TodoListEntity):
         """Update a To-do item."""
         uid = cast(str, item.uid)
         list_id, taskseries_id, task_id = _parse_uid(uid)
-        existing = self._find_rtm_task(uid)
+        rtm_list = self.coordinator.data.get(self._list_id)
+        existing = rtm_list.tasks.get(uid) if rtm_list else None
         client = self.coordinator.client
         timeline_response = await client.rtm.timelines.create()
         timeline = timeline_response.timeline

@@ -599,10 +599,11 @@ async def test_create_error(
     hass: HomeAssistant,
     client: MagicMock,
     config_entry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
     exception: type[Exception],
     error: str,
 ) -> None:
-    """Test that an API error in the create step shows an error."""
+    """Test that an API error in the create step shows an error and can recover."""
     client.rtm.lists.add = AsyncMock(side_effect=exception("server error"))
 
     await hass.config_entries.async_setup(config_entry.entry_id)
@@ -620,6 +621,23 @@ async def test_create_error(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+
+    # Clear the error and verify the flow recovers to success.
+    list_add_response = MagicMock()
+    list_add_response.list.id = 42
+
+    async def _add_list(*args: object, **kwargs: object) -> MagicMock:
+        rtm_list_mock(42, "Failing List")
+        return list_add_response
+
+    client.rtm.lists.add.side_effect = _add_list
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], user_input={CONF_NAME: "Failing List"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Failing List"
+    assert result["data"] == {CONF_LIST_ID: 42}
 
 
 async def test_entry_not_loaded(
@@ -710,8 +728,8 @@ async def test_reconfigure_error(
     error: str,
     rtm_list_mock: Callable[[int, str], MagicMock],
 ) -> None:
-    """Test that an API error in the reconfigure step shows an error."""
-    rtm_list_mock(LIST_ID, "Shopping")
+    """Test that an API error in the reconfigure step shows an error and can recover."""
+    lst = rtm_list_mock(LIST_ID, "Shopping")
     client.rtm.lists.set_name = AsyncMock(side_effect=exception("server error"))
 
     await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
@@ -732,3 +750,20 @@ async def test_reconfigure_error(
     )
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": error}
+
+    # Clear the error and verify the flow recovers to success.
+    def _set_name(*args: object, name: str, **kwargs: object) -> MagicMock:
+        lst.name = name
+        return MagicMock()
+
+    client.rtm.lists.set_name.side_effect = _set_name
+
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"],
+        user_input={CONF_NAME: "Grocery Shopping"},
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+
+    subentry = next(iter(config_entry_with_subentry.subentries.values()))
+    assert subentry.title == "Grocery Shopping"
