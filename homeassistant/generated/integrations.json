@@ -7470,6 +7470,11 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "toshiba_lifestyle": {
+      "name": "Toshiba Lifestyle",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "totalconnect": {
       "name": "Total Connect",
       "integration_type": "hub",
