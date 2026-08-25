@@ -465,10 +465,24 @@ async def test_async_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
 
 @pytest.mark.parametrize("debug", [False, True], ids=["no_debug", "debug"])
 def test_create_event_loop(debug: bool) -> None:
-    """Test the created loop carries the Home Assistant customizations."""
-    loop = runner.create_event_loop(debug)
+    """Test the created loop is configured and becomes the thread's current loop."""
+    created: list[asyncio.AbstractEventLoop] = []
+    current: list[asyncio.AbstractEventLoop] = []
+
+    # In a thread of its own so the current loop of the test thread is untouched
+    def _create() -> None:
+        created.append(runner.create_event_loop(debug))
+        current.append(asyncio.get_event_loop())
+
+    create_thread = threading.Thread(target=_create)
+    create_thread.start()
+    create_thread.join()
+
+    loop = created[0]
     try:
         _assert_hass_event_loop(loop)
         assert loop.get_debug() is debug
+        # asyncio.Runner relies on the loop factory to do this
+        assert current == [loop]
     finally:
         loop.close()
