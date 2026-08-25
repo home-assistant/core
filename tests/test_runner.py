@@ -145,8 +145,8 @@ def test_run_does_not_block_forever_with_shielded_task(
     # runner.run() deliberately abandons the shielded inner task after timeout.
     # Suppress the asyncio GC warning so it doesn't fire nondeterministically
     # during a later test's log-capture window.
-    if shielded_inner_task is not None:
-        shielded_inner_task._log_destroy_pending = False
+    assert shielded_inner_task is not None
+    shielded_inner_task._log_destroy_pending = False
 
 
 async def test_unhandled_exception_traceback(
