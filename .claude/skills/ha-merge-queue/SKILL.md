@@ -37,21 +37,31 @@ Check all four. A PR fails the shortlist if any one fails.
    `blocking-label-awaiting-frontend`.
 
 2. **Check runs** — the commit statuses do not cover GitHub Actions. Fetch the check runs
-   and look for any job with conclusion `failure`. Ignore `skipped`. A green combined
-   status with a red test job is common.
+   and require every one to have reached an acceptable terminal result: `status` must be
+   `completed`, and `conclusion` must be `success`, `skipped` or `neutral`. Everything else
+   disqualifies — `failure`, `cancelled`, `timed_out`, `action_required` and `stale`, and
+   any run still `queued` or `in_progress`. A green combined status sitting on top of a red
+   or still-running test job is common, so the status list alone is never enough.
 
-3. **Merge conflicts** — read `mergeable_state`. GitHub computes it lazily: the first
-   request usually returns `unknown` and kicks off the computation, so **request it a
-   second time** and use that value.
+3. **Merge conflicts** — read `mergeable_state`. GitHub computes it asynchronously: a
+   request that finds no cached answer returns `unknown` and starts the computation, and
+   the request after that can still return `unknown`. Poll with bounded retries — a few
+   attempts, pausing between them — and treat an `unknown` that never resolves as not
+   ready, rather than assuming it is fine.
    - `clean` — approved and mergeable; merge now
    - `blocked` — mergeable, no conflict, waiting on an approving review (the normal state)
-   - `dirty` — merge conflict; the author must rebase. `homeassistant/generated/integrations.json`
-     conflicts constantly, so PRs adding integrations go stale fast.
+   - `dirty` — merge conflict. The author needs to merge `dev` into the branch. Do not tell
+     them to rebase: `AGENTS.md` forbids rewriting history on a PR branch once the PR is
+     open, because reviewers need to see what changed since their last review.
+     `homeassistant/generated/integrations.json` conflicts constantly, so PRs adding
+     integrations go stale fast.
 
-4. **Review threads** — fetch review threads and read `is_resolved`. Only unresolved
-   threads from humans block. Resolved threads, and long chains from
-   `copilot-pull-request-reviewer`, do not. Watch for an unresolved thread that is really
-   an answered question versus one that is an open design debate — say which it is.
+4. **Review threads** — fetch review threads and read `is_resolved`. Judge a thread by
+   whether it is resolved or substantively addressed, never by who wrote it: an unresolved
+   finding from `copilot-pull-request-reviewer` is a bug report and can be a real defect,
+   so read it on its merits before discounting it. For every thread still open, say which
+   kind it is — an answered question, a nit the author passed on, or an open design debate
+   — because only the last of those should hold up a merge.
 
 ## Report
 
