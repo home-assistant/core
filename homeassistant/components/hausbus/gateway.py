@@ -3,6 +3,7 @@
 import asyncio
 import logging
 from typing import TYPE_CHECKING
+from weakref import WeakKeyDictionary
 
 from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.BusDataMessage import BusDataMessage
@@ -24,6 +25,54 @@ if TYPE_CHECKING:
     from . import HausbusConfigEntry
 
 LOGGER = logging.getLogger(__name__)
+
+# Guards _home_server_refs below. A plain module-level lock is fine here:
+# it only ever serializes the (very short) acquire/release critical
+# section, it holds no data of its own, and unrelated hass instances
+# contending on it briefly is harmless.
+_home_server_lock = asyncio.Lock()
+
+# HomeServer is a process-wide singleton (see pyhausbus.HomeServer), not
+# something scoped to a single hass instance, and it must be reachable
+# from a config flow before any config entry - and its runtime_data -
+# exists. So its reference count is tracked here, keyed on the HomeServer
+# instance itself, rather than in hass.data. Using a WeakKeyDictionary
+# also means this needs no manual reset between tests: a mocked HomeServer
+# is a fresh object per test and simply starts out with no entry.
+_home_server_refs: WeakKeyDictionary[HomeServer, int] = WeakKeyDictionary()
+
+
+async def async_acquire_home_server(hass: HomeAssistant) -> HomeServer:
+    """Acquire a reference to the shared HomeServer, creating it on first use.
+
+    Every HomeServer() call in this process returns the very same object
+    until shutdown() is called. In-progress config flows (discovering
+    devices) and the active config entry's gateway can all hold a
+    reference to it at the same time, so teardown has to be reference
+    counted here rather than triggered by whichever caller happens to
+    finish first - otherwise one flow being aborted could tear down the
+    HomeServer that another flow, or the config entry, is still using.
+
+    Always pair a call to this with async_release_home_server(), passing
+    back the exact object this returned.
+    """
+    async with _home_server_lock:
+        home_server = await hass.async_add_executor_job(HomeServer)
+        _home_server_refs[home_server] = _home_server_refs.get(home_server, 0) + 1
+        return home_server
+
+
+async def async_release_home_server(
+    hass: HomeAssistant, home_server: HomeServer
+) -> None:
+    """Release a HomeServer reference, shutting it down once no longer used."""
+    async with _home_server_lock:
+        refcount = _home_server_refs.get(home_server, 0) - 1
+        if refcount <= 0:
+            _home_server_refs.pop(home_server, None)
+            await hass.async_add_executor_job(home_server.shutdown)
+        else:
+            _home_server_refs[home_server] = refcount
 
 
 class HausbusGateway(IBusDataListener):
@@ -51,7 +100,7 @@ class HausbusGateway(IBusDataListener):
         cls, hass: HomeAssistant, config_entry: HausbusConfigEntry
     ) -> HausbusGateway:
         """Create the gateway, opening the Haus-Bus network connection."""
-        home_server = await hass.async_add_executor_job(HomeServer)
+        home_server = await async_acquire_home_server(hass)
         return cls(hass, config_entry, home_server)
 
     async def start_discovery(self) -> None:

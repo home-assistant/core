@@ -1,5 +1,6 @@
 """Integration for all haus-bus.de modules."""
 
+import contextlib
 import logging
 
 from homeassistant.config_entries import ConfigEntry
@@ -7,7 +8,7 @@ from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryNotReady
 
-from .gateway import HausbusGateway
+from .gateway import HausbusGateway, async_release_home_server
 
 PLATFORMS: list[Platform] = [
     Platform.COVER,
@@ -35,7 +36,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
     except Exception:
         gateway.home_server.removeBusEventListener(gateway)
         gateway.home_server.removeBusDeviceListener(gateway)
-        await hass.async_add_executor_job(gateway.home_server.shutdown)
+        await async_release_home_server(hass, gateway.home_server)
         raise
 
     # Start device discovery in the background: it is a best-effort UDP
@@ -57,21 +58,18 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
     # which raises if called twice, so deregistering unconditionally here
     # would break a retry after a failed platform unload.
     if gateway.discovery_task is not None:
-        try:
+        with contextlib.suppress(Exception):
             await gateway.discovery_task
-        except Exception:
-            pass
 
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
         gateway.home_server.removeBusEventListener(gateway)
         gateway.home_server.removeBusDeviceListener(gateway)
-        # manifest.json sets single_config_entry, so this is always the
-        # only config entry using the process-wide HomeServer singleton -
-        # it is exclusively ours to tear down. Otherwise its UDP listener
-        # and worker/collector threads would keep running indefinitely
-        # after unload. Runs in the executor since shutdown() joins those
-        # threads (blocking). Drop the cached reference too, so a reload
-        # builds a genuinely fresh HomeServer instead of reusing the one
-        # that was just shut down.
-        await hass.async_add_executor_job(gateway.home_server.shutdown)
+        # HomeServer is a process-wide singleton that an in-progress config
+        # flow can also be holding a reference to (see
+        # gateway.async_acquire_home_server), so release our reference
+        # rather than shutting it down unconditionally here - it is only
+        # actually shut down once nothing else still needs it. Otherwise
+        # its UDP listener and worker/collector threads would keep running
+        # indefinitely after unload.
+        await async_release_home_server(hass, gateway.home_server)
     return unload_ok

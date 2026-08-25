@@ -10,6 +10,7 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
+from .gateway import async_acquire_home_server, async_release_home_server
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -23,18 +24,21 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._search_task: asyncio.Task | None = None
         self.home_server: HomeServer | None = None
-        self._entry_created: bool = False
 
     @override
     def async_remove(self) -> None:
-        """Shut down HomeServer if the flow is abandoned without creating an entry."""
-        if self.home_server is not None and not self._entry_created:
-            home_server = self.home_server
+        """Release this flow's HomeServer reference, if it acquired one.
 
-            async def _shutdown() -> None:
-                await self.hass.async_add_executor_job(home_server.shutdown)
-
-            self.hass.async_create_task(_shutdown())
+        HomeServer is a process-wide singleton shared with any other
+        in-progress flow and with the config entry created by this flow
+        (see gateway.async_acquire_home_server), so it must not be shut
+        down unconditionally here - only once nothing else still holds a
+        reference to it.
+        """
+        if self.home_server is not None:
+            self.hass.async_create_task(
+                async_release_home_server(self.hass, self.home_server)
+            )
 
     @override
     async def async_step_user(
@@ -93,13 +97,12 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create a configuration entry for the hausbus devices."""
-        self._entry_created = True
         return self.async_create_entry(title="Haus-Bus", data={})
 
     async def _async_wait_for_device(self) -> None:
         """Start searching for devices and wait until at least one device was found or timeout is reached."""
         if self.home_server is None:
-            self.home_server = await self.hass.async_add_executor_job(HomeServer)
+            self.home_server = await async_acquire_home_server(self.hass)
 
         assert self.home_server is not None
         await self.hass.async_add_executor_job(self.home_server.searchDevices)

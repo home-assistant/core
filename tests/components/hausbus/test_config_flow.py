@@ -63,10 +63,15 @@ async def test_user_flow_search_timeout_then_retry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "search_timeout"
 
-    # Retrying completes when a device is found.
+    # Retrying completes when a device is found. Home Assistant schedules
+    # flow tasks eagerly, and the device is already "found" by the time
+    # this call is made, so the retry may finish synchronously right here
+    # (never showing progress) instead of needing another poll - only
+    # fall back to _resolve_progress if it doesn't.
     mock_home_server.is_any_device_found.return_value = True
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    result = await _resolve_progress(hass, result["flow_id"])
+    if result["type"] is FlowResultType.SHOW_PROGRESS:
+        result = await _resolve_progress(hass, result["flow_id"])
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
@@ -97,7 +102,6 @@ async def test_single_instance_allowed(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
-<<<<<<< HEAD
 
 
 async def test_abandoned_flow_does_not_shut_down_concurrent_flow(
@@ -115,7 +119,8 @@ async def test_abandoned_flow_does_not_shut_down_concurrent_flow(
     )
 
     # Abort the second flow; the first flow's HomeServer must not be torn down.
-    await hass.config_entries.flow.async_abort(result2["flow_id"])
+    hass.config_entries.flow.async_abort(result2["flow_id"])
+    await hass.async_block_till_done()
 
     assert mock_home_server.shutdown.call_count == 0
 
@@ -123,5 +128,3 @@ async def test_abandoned_flow_does_not_shut_down_concurrent_flow(
     mock_home_server.is_any_device_found.return_value = True
     result1 = await _resolve_progress(hass, result1["flow_id"])
     assert result1["type"] is FlowResultType.CREATE_ENTRY
-=======
->>>>>>> branch 'hausbus-cover-v2' of https://github.com/hausbus/hacore.git
