@@ -234,6 +234,8 @@ class SpecializedTurboCoordinator(
         service_info: bluetooth.BluetoothServiceInfoBleak,
     ) -> None:
         """Log and publish a passive Bluetooth availability change."""
+        if self.connected:
+            return
         if not self._was_unavailable:
             self.logger.info("Specialized Turbo at %s is unavailable", self._address)
             self._was_unavailable = True
@@ -246,12 +248,7 @@ class SpecializedTurboCoordinator(
         service_info: bluetooth.BluetoothServiceInfoBleak,
         change: bluetooth.BluetoothChange,
     ) -> None:
-        """Log recovery before handling a Bluetooth advertisement."""
-        if self._was_unavailable and self.connected:
-            self.logger.info(
-                "Specialized Turbo at %s is available again", self._address
-            )
-            self._was_unavailable = False
+        """Handle a Bluetooth advertisement."""
         super()._async_handle_bluetooth_event(service_info, change)
 
     @callback

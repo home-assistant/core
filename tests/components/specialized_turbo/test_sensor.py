@@ -5,6 +5,7 @@ import logging
 import time
 from unittest.mock import MagicMock, patch
 
+from bleak import BleakError
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
@@ -160,14 +161,14 @@ async def test_disconnect_marks_entities_unavailable(
         )
 
 
-async def test_stale_advertisement_marks_entities_unavailable(
+async def test_stale_advertisement_keeps_connected_entities_available(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_library: MockLibrary,
     entity_registry: er.EntityRegistry,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test Bluetooth expiry and recovery log once and update availability."""
+    """Test Bluetooth expiry does not override an active GATT connection."""
     start_monotonic = time.monotonic()
     mock_library.monitor.snapshot = make_populated_snapshot()
     await setup_integration(hass, mock_config_entry, TCX_SERVICE_INFO)
@@ -188,28 +189,38 @@ async def test_stale_advertisement_marks_entities_unavailable(
 
         battery = hass.states.get(battery_entity_id)
         assert battery is not None
-        assert battery.state == STATE_UNAVAILABLE
+        assert battery.state == "85"
         assert mock_library.connection.is_connected is True
-        assert (
-            caplog.text.count("Specialized Turbo at DC:DD:BB:4A:D6:55 is unavailable")
-            == 1
-        )
+        assert "is unavailable" not in caplog.text
 
-        with patch(
-            "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
-        ):
-            inject_bluetooth_service_info(hass, TCX_SERVICE_INFO)
+
+async def test_stale_advertisement_logs_failed_connection_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_library: MockLibrary,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test advertisement expiry logs an unavailable disconnected bike once."""
+    start_monotonic = time.monotonic()
+    mock_library.connection.connect.side_effect = BleakError("failed")
+    await setup_integration(hass, mock_config_entry, TCX_SERVICE_INFO)
+
+    monotonic_now = start_monotonic + FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1
+    with (
+        caplog.at_level(logging.INFO),
+        patch_bluetooth_time(monotonic_now),
+        patch_all_discovered_devices([]),
+    ):
+        async_fire_time_changed(
+            hass,
+            dt_util.utcnow()
+            + timedelta(seconds=FALLBACK_MAXIMUM_STALE_ADVERTISEMENT_SECONDS + 1),
+        )
         await hass.async_block_till_done()
 
-        battery = hass.states.get(battery_entity_id)
-        assert battery is not None
-        assert battery.state == "85"
-        assert (
-            caplog.text.count(
-                "Specialized Turbo at DC:DD:BB:4A:D6:55 is available again"
-            )
-            == 1
-        )
+    assert (
+        caplog.text.count("Specialized Turbo at DC:DD:BB:4A:D6:55 is unavailable") == 1
+    )
 
 
 @pytest.mark.parametrize("assist_level", [None, 99])
