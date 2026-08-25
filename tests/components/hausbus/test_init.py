@@ -21,10 +21,10 @@ async def test_setup_and_unload_listener_symmetry(
     listener forever - a real leak given HomeServer is a process-wide
     singleton whose side effects persist across config entry reload cycles.
 
-    Unload must also shut down the HomeServer itself and drop it from
-    hass.data: manifest.json sets single_config_entry, so this entry is
-    always the only one using it, and leaving it running would leak its
-    UDP listener plus worker/collector threads indefinitely after unload.
+    Unload must also shut down the HomeServer itself: manifest.json sets
+    single_config_entry, so this entry is always the only one using it,
+    and leaving it running would leak its UDP listener plus worker/collector
+    threads indefinitely after unload.
     """
     entry = MockConfigEntry(domain=DOMAIN)
     entry.add_to_hass(hass)
@@ -46,4 +46,4 @@ async def test_setup_and_unload_listener_symmetry(
     gateway.home_server.removeBusEventListener.assert_called_once_with(gateway)
     gateway.home_server.removeBusDeviceListener.assert_called_once_with(gateway)
     gateway.home_server.shutdown.assert_called_once()
-    assert "home_server" not in hass.data[DOMAIN]
+    assert DOMAIN not in hass.data
