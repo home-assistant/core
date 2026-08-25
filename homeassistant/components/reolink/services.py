@@ -28,18 +28,11 @@ SERVICE_PTZ_MOVE = "ptz_move"
 async def _async_play_chime(service_call: ServiceCall) -> None:
     """Play a ringtone."""
     service_data = service_call.data
-    device_registry = dr.async_get(service_call.hass)
 
     for device_id in service_data[ATTR_DEVICE_ID]:
-        config_entry = None
-        device = device_registry.async_get(device_id, include_child_devices=False)
-        if device is not None:
-            for entry_id in device.config_entries:
-                config_entry = service_call.hass.config_entries.async_get_entry(
-                    entry_id
-                )
-                if config_entry is not None and config_entry.domain == DOMAIN:
-                    break
+        device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+            service_call.hass, device_id, domain=DOMAIN
+        )
         if (
             config_entry is None
             or device is None
