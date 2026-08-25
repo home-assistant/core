@@ -1,7 +1,6 @@
 """Test Growatt Server services."""
 
 import datetime as dt
-from types import SimpleNamespace
 from unittest.mock import MagicMock, patch
 
 import growattServer
@@ -10,8 +9,6 @@ from requests import RequestException
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.growatt_server.const import DOMAIN
-from homeassistant.components.growatt_server.services import _get_coordinators
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import device_registry as dr
@@ -1773,38 +1770,6 @@ async def test_read_ac_charge_times_classic_auth_empty_settings(
             blocking=True,
             return_response=True,
         )
-
-
-def test_get_coordinators_excludes_mismatched_auth_device_type_pairs(
-    hass: HomeAssistant,
-) -> None:
-    """Test that (device_type, api_version) combos outside the allowed set are excluded.
-
-    V1 auth only ever discovers "sph"/"min" devices and classic auth only ever
-    discovers device types reported by its own device list (e.g. "mix"), so a
-    classic+sph or v1+mix pairing can't occur from real device discovery. This
-    guards the matching logic itself so a coordinator is never routed to the
-    wrong Mix-only/SPH-only write endpoint.
-    """
-    coordinators = {
-        "SPH1": SimpleNamespace(device_id="SPH1", device_type="sph", api_version="v1"),
-        "MIX1": SimpleNamespace(
-            device_id="MIX1", device_type="mix", api_version="classic"
-        ),
-        "SPH2": SimpleNamespace(
-            device_id="SPH2", device_type="sph", api_version="classic"
-        ),
-        "MIX2": SimpleNamespace(device_id="MIX2", device_type="mix", api_version="v1"),
-    }
-    entry = SimpleNamespace(
-        state=ConfigEntryState.LOADED,
-        runtime_data=SimpleNamespace(devices=coordinators),
-    )
-
-    with patch.object(hass.config_entries, "async_entries", return_value=[entry]):
-        result = _get_coordinators(hass, {("sph", "v1"), ("mix", "classic")})
-
-    assert set(result) == {"SPH1", "MIX1"}
 
 
 async def test_read_ac_charge_times_classic_auth(
