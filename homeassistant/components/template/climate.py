@@ -2,8 +2,9 @@
 
 from collections.abc import Callable
 import contextlib
+from dataclasses import dataclass
 from decimal import ROUND_HALF_UP, Decimal
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self, override
 
 import voluptuous as vol
 
@@ -12,24 +13,32 @@ from homeassistant.components.climate import (
     ATTR_TARGET_TEMP_HIGH,
     ATTR_TARGET_TEMP_LOW,
     DEFAULT_MAX_HUMIDITY,
-    DEFAULT_MAX_TEMP,
     DEFAULT_MIN_HUMIDITY,
-    DEFAULT_MIN_TEMP,
     DOMAIN as CLIMATE_DOMAIN,
     ENTITY_ID_FORMAT,
     ClimateEntity,
+    ClimateEntityCapabilityAttribute,
     ClimateEntityFeature,
+    ClimateEntityStateAttribute,
     HVACAction,
     HVACMode,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import ATTR_TEMPERATURE, CONF_NAME, CONF_TEMPERATURE_UNIT
+from homeassistant.const import (
+    ATTR_TEMPERATURE,
+    CONF_NAME,
+    CONF_TEMPERATURE_UNIT,
+    PRECISION_HALVES,
+    PRECISION_TENTHS,
+    PRECISION_WHOLE,
+)
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util.unit_conversion import TemperatureConverter
 
@@ -44,7 +53,7 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -62,6 +71,7 @@ CONF_MAX_HUMIDITY = "max_humidity"
 CONF_MAX_TEMP = "max_temp"
 CONF_MIN_HUMIDITY = "min_humidity"
 CONF_MIN_TEMP = "min_temp"
+CONF_PRECISION = "precision"
 CONF_PRESET_MODE = "preset_mode"
 CONF_PRESET_MODES = "preset_modes"
 CONF_SWING_HORIZONTAL_MODE = "swing_horizontal_mode"
@@ -69,6 +79,7 @@ CONF_SWING_HORIZONTAL_MODES = "swing_horizontal_modes"
 CONF_SWING_MODE = "swing_mode"
 CONF_SWING_MODES = "swing_modes"
 CONF_TARGET_HUMIDITY = "target_humidity"
+CONF_TARGET_HUMIDITY_STEP = "target_humidity_step"
 CONF_TARGET_TEMPERATURE = "target_temperature"
 CONF_TARGET_TEMPERATURE_HIGH = "target_temperature_high"
 CONF_TARGET_TEMPERATURE_LOW = "target_temperature_low"
@@ -124,16 +135,22 @@ CLIMATE_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_FAN_MODES): cv.template,
         vol.Optional(CONF_HVAC_ACTION): cv.template,
         vol.Optional(CONF_HVAC_MODE): cv.template,
-        vol.Optional(CONF_HVAC_MODES): cv.template,
+        vol.Required(CONF_HVAC_MODES): cv.template,
         vol.Optional(CONF_MAX_HUMIDITY, default=DEFAULT_MAX_HUMIDITY): vol.Coerce(int),
-        vol.Optional(CONF_MAX_TEMP, default=DEFAULT_MAX_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_MAX_TEMP): vol.Coerce(float),
         vol.Optional(CONF_MIN_HUMIDITY, default=DEFAULT_MIN_HUMIDITY): vol.Coerce(int),
-        vol.Optional(CONF_MIN_TEMP, default=DEFAULT_MIN_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_MIN_TEMP): vol.Coerce(float),
+        vol.Optional(CONF_PRECISION): vol.Any(
+            PRECISION_HALVES, PRECISION_TENTHS, PRECISION_WHOLE
+        ),
         vol.Optional(CONF_PRESET_MODE): cv.template,
         vol.Optional(CONF_PRESET_MODES): cv.template,
         vol.Optional(CONF_SWING_MODE): cv.template,
         vol.Optional(CONF_SWING_MODES): cv.template,
+        vol.Optional(CONF_SWING_HORIZONTAL_MODE): cv.template,
+        vol.Optional(CONF_SWING_HORIZONTAL_MODES): cv.template,
         vol.Optional(CONF_TARGET_HUMIDITY): cv.template,
+        vol.Optional(CONF_TARGET_HUMIDITY_STEP): cv.positive_int,
         vol.Optional(CONF_TARGET_TEMPERATURE_HIGH): cv.template,
         vol.Optional(CONF_TARGET_TEMPERATURE_LOW): cv.template,
         vol.Optional(CONF_TARGET_TEMPERATURE_STEP): cv.positive_float,
@@ -141,20 +158,47 @@ CLIMATE_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_TEMPERATURE_UNIT): vol.In(TemperatureConverter.VALID_UNITS),
         vol.Optional(SET_FAN_MODE_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(SET_HUMIDITY_ACTION): cv.SCRIPT_SCHEMA,
-        vol.Optional(SET_HVAC_MODE_ACTION): cv.SCRIPT_SCHEMA,
+        vol.Required(SET_HVAC_MODE_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(SET_PRESET_MODE_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(SET_SWING_HORIZONTAL_MODE_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(SET_SWING_MODE_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(SET_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
-    }
+    },
 )
 
-CLIMATE_YAML_SCHEMA = CLIMATE_COMMON_SCHEMA.extend(
-    TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(make_template_entity_common_modern_schema(CLIMATE_DOMAIN, DEFAULT_NAME).schema)
+_CLIMATE_INCLUSIVE_GROUPS = (
+    template_validators.inclusive_group(
+        "fan_mode", CONF_FAN_MODE, CONF_FAN_MODES, SET_FAN_MODE_ACTION
+    ),
+    template_validators.inclusive_group(
+        "preset_mode", CONF_PRESET_MODE, CONF_PRESET_MODES, SET_PRESET_MODE_ACTION
+    ),
+    template_validators.inclusive_group(
+        "swing_mode", CONF_SWING_MODE, CONF_SWING_MODES, SET_SWING_MODE_ACTION
+    ),
+    template_validators.inclusive_group(
+        "horizontal_swing_mode",
+        CONF_SWING_HORIZONTAL_MODE,
+        CONF_SWING_HORIZONTAL_MODES,
+        SET_SWING_HORIZONTAL_MODE_ACTION,
+    ),
+)
 
-CLIMATE_CONFIG_ENTRY_SCHEMA = CLIMATE_COMMON_SCHEMA.extend(
-    TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema
+
+CLIMATE_YAML_SCHEMA = vol.All(
+    CLIMATE_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA).extend(
+        make_template_entity_common_schema(
+            CLIMATE_DOMAIN,
+            DEFAULT_NAME,
+            (ClimateEntityCapabilityAttribute, ClimateEntityStateAttribute),
+        ).schema
+    ),
+    *_CLIMATE_INCLUSIVE_GROUPS,
+)
+
+CLIMATE_CONFIG_ENTRY_SCHEMA = vol.All(
+    CLIMATE_COMMON_SCHEMA.extend(TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA.schema),
+    *_CLIMATE_INCLUSIVE_GROUPS,
 )
 
 
@@ -216,7 +260,7 @@ def _string_to_list(result: str) -> list[str]:
 def hvac_modes_list(
     entity: AbstractTemplateClimate,
 ) -> Callable[[Any], list[HVACMode] | None]:
-    """Convert the result to a list of numbers that represent hue and saturation."""
+    """Convert the result to a list of numbers that represent hvac modes."""
 
     expected = f"expected a list of hvac modes: [{', '.join([str(item) for item in HVACMode])}]"
 
@@ -254,13 +298,102 @@ def hvac_modes_list(
     return convert
 
 
-class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
+@dataclass(kw_only=True)
+class ClimateExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    current_humidity: float | None
+    current_temperature: float | None
+    fan_mode: str | None
+    fan_modes: list[str] | None
+    hvac_action: HVACAction | None
+    hvac_mode: HVACMode | None
+    hvac_modes: list[HVACMode] | None
+    preset_mode: str | None
+    preset_modes: list[str] | None
+    swing_mode: str | None
+    swing_modes: list[str] | None
+    swing_horizontal_mode: str | None
+    swing_horizontal_modes: list[str] | None
+    target_humidity: float | None = None
+    target_temperature_high: float | None
+    target_temperature_low: float | None
+    target_temperature: float | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return {
+            "current_humidity": self.current_humidity,
+            "current_temperature": self.current_temperature,
+            "fan_mode": self.fan_mode,
+            "fan_modes": self.fan_modes,
+            "hvac_action": self.hvac_action.value if self.hvac_action else None,
+            "hvac_mode": self.hvac_mode.value if self.hvac_mode else None,
+            "hvac_modes": (
+                [mode.value for mode in self.hvac_modes] if self.hvac_modes else None
+            ),
+            "preset_mode": self.preset_mode,
+            "preset_modes": self.preset_modes,
+            "swing_mode": self.swing_mode,
+            "swing_modes": self.swing_modes,
+            "swing_horizontal_mode": self.swing_horizontal_mode,
+            "swing_horizontal_modes": self.swing_horizontal_modes,
+            "target_humidity": self.target_humidity,
+            "target_temperature_high": self.target_temperature_high,
+            "target_temperature_low": self.target_temperature_low,
+            "target_temperature": self.target_temperature,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored state from a dict."""
+
+        try:
+            hvac_action: HVACAction | None = None
+            if _hvac_action := restored["hvac_action"]:
+                hvac_action = HVACAction(_hvac_action)
+
+            hvac_mode: HVACMode | None = None
+            if _hvac_mode := restored["hvac_mode"]:
+                hvac_mode = HVACMode(_hvac_mode)
+
+            hvac_modes: list[HVACMode] | None = None
+            if _hvac_modes := restored["hvac_modes"]:
+                hvac_modes = [HVACMode(item) for item in _hvac_modes]
+
+            return cls(
+                current_humidity=restored["current_humidity"],
+                current_temperature=restored["current_temperature"],
+                fan_mode=restored["fan_mode"],
+                fan_modes=restored["fan_modes"],
+                hvac_action=hvac_action,
+                hvac_mode=hvac_mode,
+                hvac_modes=hvac_modes,
+                preset_mode=restored["preset_mode"],
+                preset_modes=restored["preset_modes"],
+                swing_mode=restored["swing_mode"],
+                swing_modes=restored["swing_modes"],
+                swing_horizontal_mode=restored["swing_horizontal_mode"],
+                swing_horizontal_modes=restored["swing_horizontal_modes"],
+                target_humidity=restored["target_humidity"],
+                target_temperature_high=restored["target_temperature_high"],
+                target_temperature_low=restored["target_temperature_low"],
+                target_temperature=restored["target_temperature"],
+            )
+        except KeyError, ValueError:
+            return None
+
+
+class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity, RestoreEntity):
     """Representation of template climate features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
     _optimistic_entity = True
     _state_option = CONF_HVAC_MODE
     _extra_optimistic_options = _EXTRA_OPTIMISTIC_OPTIONS
+    _restore_state_extra_data = ClimateExtraStoredData
+    _restore_state_properties = ("_attr_hvac_mode",)
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -434,6 +567,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         self._attr_hvac_mode = hvac_mode
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the climate off."""
         if self._attr_hvac_mode is None:
@@ -444,11 +578,13 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
 
         await self.async_set_hvac_mode(HVACMode.OFF)
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the climate on."""
         if (last_on := self._last_on) is not None:
             await self.async_set_hvac_mode(last_on)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set the HVAC mode."""
         if script := self._action_scripts.get(SET_HVAC_MODE_ACTION):
@@ -461,6 +597,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
         if self._attr_assumed_state:
             self._update_optimistic_hvac(hvac_mode)
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set the preset mode."""
         if script := self._action_scripts.get(SET_PRESET_MODE_ACTION):
@@ -474,6 +611,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
             self._attr_preset_mode = preset_mode
             self.async_write_ha_state()
 
+    @override
     async def async_set_fan_mode(self, fan_mode: str) -> None:
         """Set the fan mode."""
         if script := self._action_scripts.get(SET_FAN_MODE_ACTION):
@@ -487,6 +625,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
             self._attr_fan_mode = fan_mode
             self.async_write_ha_state()
 
+    @override
     async def async_set_swing_mode(self, swing_mode: str) -> None:
         """Set the swing mode."""
         if script := self._action_scripts.get(SET_SWING_MODE_ACTION):
@@ -500,6 +639,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
             self._attr_swing_mode = swing_mode
             self.async_write_ha_state()
 
+    @override
     async def async_set_swing_horizontal_mode(self, swing_horizontal_mode: str) -> None:
         """Set the swing horizontal mode."""
         if script := self._action_scripts.get(SET_SWING_HORIZONTAL_MODE_ACTION):
@@ -513,6 +653,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
             self._attr_swing_horizontal_mode = swing_horizontal_mode
             self.async_write_ha_state()
 
+    @override
     async def async_set_humidity(self, humidity: int) -> None:
         """Set the target humidity."""
         if script := self._action_scripts.get(SET_HUMIDITY_ACTION):
@@ -526,6 +667,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
             self._attr_target_humidity = humidity
             self.async_write_ha_state()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set one or more target temperatures."""
         common_params: dict[str, Any] = {}
@@ -583,7 +725,7 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
                     self,
                     breadcrumb,
                     hvac_mode.value,
-                    tuple([str(mode) for mode in self._attr_hvac_modes]),
+                    tuple(str(mode) for mode in self._attr_hvac_modes),
                 )
 
         if script := self._action_scripts.get(SET_TEMPERATURE_ACTION):
@@ -595,6 +737,51 @@ class AbstractTemplateClimate(AbstractTemplateEntity, ClimateEntity):
 
         if write_state:
             self.async_write_ha_state()
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> ClimateExtraStoredData:
+        """Return climate specific state data to be restored."""
+        return ClimateExtraStoredData(
+            current_humidity=self._attr_current_humidity,
+            current_temperature=self._attr_current_temperature,
+            fan_mode=self._attr_fan_mode,
+            fan_modes=self._attr_fan_modes,
+            hvac_action=self._attr_hvac_action,
+            hvac_mode=self._attr_hvac_mode,
+            hvac_modes=self._attr_hvac_modes,
+            preset_mode=self._attr_preset_mode,
+            preset_modes=self._attr_preset_modes,
+            swing_mode=self._attr_swing_mode,
+            swing_modes=self._attr_swing_modes,
+            swing_horizontal_mode=self._attr_swing_horizontal_mode,
+            swing_horizontal_modes=self._attr_swing_horizontal_modes,
+            target_humidity=self._attr_target_humidity,
+            target_temperature_high=self._attr_target_temperature_high,
+            target_temperature_low=self._attr_target_temperature_low,
+            target_temperature=self._attr_target_temperature,
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: ClimateExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_current_humidity = extra_data.current_humidity
+        self._attr_current_temperature = extra_data.current_temperature
+        self._attr_fan_mode = extra_data.fan_mode
+        self._attr_fan_modes = extra_data.fan_modes
+        self._attr_hvac_action = extra_data.hvac_action
+        self._attr_hvac_mode = extra_data.hvac_mode
+        self._attr_hvac_modes = extra_data.hvac_modes or []
+        self._attr_preset_mode = extra_data.preset_mode
+        self._attr_preset_modes = extra_data.preset_modes
+        self._attr_swing_mode = extra_data.swing_mode
+        self._attr_swing_modes = extra_data.swing_modes
+        self._attr_swing_horizontal_mode = extra_data.swing_horizontal_mode
+        self._attr_swing_horizontal_modes = extra_data.swing_horizontal_modes
+        self._attr_target_humidity = extra_data.target_humidity
+        self._attr_target_temperature_high = extra_data.target_temperature_high
+        self._attr_target_temperature_low = extra_data.target_temperature_low
+        self._attr_target_temperature = extra_data.target_temperature
 
 
 class StateClimateEntity(TemplateEntity, AbstractTemplateClimate):
