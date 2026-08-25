@@ -219,20 +219,22 @@ class FroniusModbusInverterUpdateCoordinator(FroniusCoordinatorBase):
     async def _update_method(self) -> dict[SolarNetId, Any]:
         """Return data per solar net id from the Modbus interface."""
         mppt = await self._update_mppt()
-        data: dict[str, Any] = {}
-        for index, module in enumerate(mppt.modules, start=1):
-            data[f"mppt_{index}_current_dc"] = {"value": module.current}
-            data[f"mppt_{index}_voltage_dc"] = {"value": module.voltage}
-            data[f"mppt_{index}_power_dc"] = {"value": module.power}
-            data[f"mppt_{index}_energy_dc"] = {"value": module.energy}
-        data["energy_total_pv"] = {"value": mppt.pv_energy_total}
-        data["storage_energy_charged_total"] = {
-            "value": mppt.storage_charge_energy_total
+        values: dict[str, float | None] = {
+            "energy_total_pv": mppt.pv_energy_total,
+            "storage_energy_charged_total": mppt.storage_charge_energy_total,
+            "storage_energy_discharged_total": mppt.storage_discharge_energy_total,
         }
-        data["storage_energy_discharged_total"] = {
-            "value": mppt.storage_discharge_energy_total
+        for number, module in enumerate(mppt.modules, start=1):
+            values[f"mppt_{number}_current_dc"] = module.current
+            values[f"mppt_{number}_voltage_dc"] = module.voltage
+            values[f"mppt_{number}_power_dc"] = module.power
+            values[f"mppt_{number}_energy_dc"] = module.energy
+        # entities read the SolarAPI's {"value": ...} shape, so match it here
+        return {
+            self.inverter_info.solar_net_id: {
+                key: {"value": value} for key, value in values.items()
+            }
         }
-        return {self.inverter_info.solar_net_id: data}
 
     async def _update_mppt(self) -> Mppt:
         """Refresh the MPPT model, re-discovering once on a register map shift."""
