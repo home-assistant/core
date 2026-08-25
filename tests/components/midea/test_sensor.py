@@ -19,7 +19,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
-from .conftest import DummyDevice, entity_entries
+from .conftest import DummyDevice, SetDeviceAttribute, entity_entries
 from .const import TEST_DEVICE_ID
 
 from tests.common import MockConfigEntry, snapshot_platform
@@ -192,6 +192,7 @@ async def test_all_entities(
 
 async def test_sensor_state_update(
     hass: HomeAssistant,
+    set_device_attribute: SetDeviceAttribute,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
 ) -> None:
     """Test sensor state follows push updates from the device."""
@@ -220,8 +221,7 @@ async def test_sensor_state_update(
     assert state is not None
     assert state.state == "21.0"
 
-    device.set_attribute(ACAttributes.indoor_temperature, 19.5)
-    await hass.async_block_till_done()
+    await set_device_attribute(device, ACAttributes.indoor_temperature, 19.5)
 
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
@@ -241,8 +241,7 @@ async def test_sensor_state_update(
     assert state is not None
     assert state.state == "unknown"
 
-    device.set_attribute(ACAttributes.indoor_humidity, 255)
-    await hass.async_block_till_done()
+    await set_device_attribute(device, ACAttributes.indoor_humidity, 255)
     state = hass.states.get(entity_entry.entity_id)
     assert state is not None
     assert state.state == "unknown"
