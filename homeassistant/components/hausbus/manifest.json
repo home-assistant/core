@@ -8,6 +8,6 @@
   "loggers": ["pyhausbus"],
   "requirements": ["pyhausbus==1.0.61"],
   "single_config_entry": true,
-  "integration_type": "device",
+  "integration_type": "hub",
   "quality_scale": "bronze"
 }
