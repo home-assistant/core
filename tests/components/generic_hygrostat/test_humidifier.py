@@ -1856,7 +1856,7 @@ async def test_device_id(
         device_id=source_device_entry.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("switch.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     helper_config_entry = MockConfigEntry(
         data={},
@@ -1864,7 +1864,7 @@ async def test_device_id(
         options={
             "device_class": "humidifier",
             "dry_tolerance": 2.0,
-            "humidifier": "switch.test_source",
+            "humidifier": source_entity.entity_id,
             "name": "Test",
             "target_sensor": ENT_SENSOR,
             "wet_tolerance": 4.0,
@@ -1876,7 +1876,7 @@ async def test_device_id(
     assert await hass.config_entries.async_setup(helper_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    helper_entity = entity_registry.async_get("humidifier.test")
+    helper_entity = entity_registry.async_get("humidifier.mock_title_test")
     assert helper_entity is not None
     assert helper_entity.device_id == source_entity.device_id
 
@@ -1895,7 +1895,7 @@ async def test_device_id_yaml(
         identifiers={("switch", "identifier_test")},
         connections={("mac", "30:31:32:33:34:35")},
     )
-    entity_registry.async_get_or_create(
+    source_entity = entity_registry.async_get_or_create(
         "switch",
         "test",
         "source",
@@ -1911,7 +1911,7 @@ async def test_device_id_yaml(
             "humidifier": {
                 "platform": "generic_hygrostat",
                 "name": "test",
-                "humidifier": "switch.test_source",
+                "humidifier": source_entity.entity_id,
                 "target_sensor": ENT_SENSOR,
                 "unique_id": "generic_hygrostat_yaml",
             }

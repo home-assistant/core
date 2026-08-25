@@ -17,6 +17,7 @@ from aiohomeconnect.model import (
 from aiohomeconnect.model.error import HomeConnectApiError, TooManyRequestsError
 from freezegun.api import FrozenDateTimeFactory
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.home_connect.const import (
     BSH_DOOR_STATE_CLOSED,
@@ -33,7 +34,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 TEST_HC_APP = "Dishwasher"
 
@@ -898,3 +899,18 @@ async def test_sensor_unit_fetching_after_rate_limit_error(
     entity_state = hass.states.get(entity_id)
     assert entity_state
     assert entity_state.attributes["unit_of_measurement"] == unit
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_all_entities(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    integration_setup: Callable[[MagicMock], Awaitable[bool]],
+    client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
+) -> None:
+    """Snapshot all sensor entities to fixate the full set and their attributes."""
+    assert await integration_setup(client)
+    assert config_entry.state is ConfigEntryState.LOADED
+    await snapshot_platform(hass, entity_registry, snapshot, config_entry.entry_id)

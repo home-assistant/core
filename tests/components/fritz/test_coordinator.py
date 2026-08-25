@@ -724,8 +724,8 @@ async def test_old_discovery_does_not_self_reference_box(
 
     assert entry.state is ConfigEntryState.LOADED
 
-    router = device_registry.async_get_device(
-        identifiers={(DOMAIN, MOCK_SERIAL_NUMBER)}
+    router = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL_NUMBER), entry.entry_id
     )
     assert router is not None
     assert router.via_device_id is None

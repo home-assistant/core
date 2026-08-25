@@ -41,7 +41,6 @@ VENTILATION_TEMPERATURE_ENTITY_IDS = (
 @pytest.mark.parametrize(
     "ventilation_node_type",
     [
-        pytest.param(NodeType.BOX, id="box"),
         pytest.param(NodeType.VLV, id="vlv"),
         pytest.param(NodeType.VLVRH, id="vlvrh"),
         pytest.param(NodeType.VLVVOC, id="vlvvoc"),
@@ -60,10 +59,57 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
     mock_sensor_nodes: list[Node],
     ventilation_node_type: NodeType,
 ) -> None:
-    """Test ventilation-related sensors are created for supported node families."""
+    """Test ventilation-related sensors are created for supported non-box node families."""
+    # Mutate a non-box node (node 50 "Kitchen RH", index 3); mutating the box
+    # node would make its via_device link resolve to itself.
     supported_node = replace(
+        mock_sensor_nodes[3],
+        general=replace(mock_sensor_nodes[3].general, node_type=ventilation_node_type),
+        ventilation=replace(
+            mock_sensor_nodes[3].ventilation,
+            flow_lvl_tgt=42,
+            time_state_end=1700000459,
+        ),
+    )
+    mock_duco_client.async_get_nodes.return_value = [
+        *mock_sensor_nodes[:3],
+        supported_node,
+        *mock_sensor_nodes[4:],
+    ]
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.SENSOR])
+
+    state = hass.states.get("sensor.kitchen_rh_ventilation_state")
+    assert state is not None
+    assert state.state == "auto"
+
+    state = hass.states.get("sensor.kitchen_rh_target_flow_level")
+    assert state is not None
+    assert state.state == "42"
+
+    state = hass.states.get("sensor.kitchen_rh_state_end_time")
+    assert state is not None
+    assert state.state == "2023-11-14T22:20:59+00:00"
+
+    assert hass.states.get("sensor.office_co2_ventilation_state") is None
+    assert hass.states.get("sensor.office_co2_target_flow_level") is None
+    assert hass.states.get("sensor.office_co2_state_end_time") is None
+
+
+async def test_ventilation_related_sensors_created_for_box_node(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+    mock_sensor_nodes: list[Node],
+) -> None:
+    """Test ventilation-related sensors are created for the box node.
+
+    The box (node 1) keeps its own device; unlike the satellite nodes it sets no
+    via_device, so it is exercised here on the real box node rather than by mutating
+    a satellite into a second box that would merge with the controller device.
+    """
+    box_node = replace(
         mock_sensor_nodes[0],
-        general=replace(mock_sensor_nodes[0].general, node_type=ventilation_node_type),
         ventilation=replace(
             mock_sensor_nodes[0].ventilation,
             flow_lvl_tgt=42,
@@ -71,7 +117,7 @@ async def test_ventilation_related_sensors_created_for_supported_node_types(
         ),
     )
     mock_duco_client.async_get_nodes.return_value = [
-        supported_node,
+        box_node,
         *mock_sensor_nodes[1:],
     ]
 
