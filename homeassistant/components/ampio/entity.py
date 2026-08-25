@@ -83,21 +83,21 @@ class AmpioEntity(Entity):
         """Subscribe to the pushes that affect this entity's state."""
         client = self._data.client
         self.async_on_remove(
-            client.subscribe(self._object_changed, of=(ObjectUpdated, ObjectRemoved))
+            client.subscribe(
+                self._push_received,
+                of=(ObjectUpdated, ObjectRemoved),
+                object_id=self._object_id,
+            )
         )
         self.async_on_remove(
-            client.subscribe(self._availability_changed, of=AvailabilityChanged)
+            client.subscribe(self._push_received, of=AvailabilityChanged)
         )
 
     @callback
-    def _object_changed(self, event: ObjectUpdated | ObjectRemoved) -> None:
-        """Write state when the backing object updates or is evicted."""
-        if event.object.id == self._object_id:
-            self.async_write_ha_state()
-
-    @callback
-    def _availability_changed(self, event: AvailabilityChanged) -> None:
-        """Write state on every broker connection transition."""
+    def _push_received(
+        self, event: ObjectUpdated | ObjectRemoved | AvailabilityChanged
+    ) -> None:
+        """Write state when the backing object or the connection changes."""
         self.async_write_ha_state()
 
     @property

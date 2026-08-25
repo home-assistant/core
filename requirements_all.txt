@@ -522,7 +522,7 @@ amberelectric==2.0.12
 amcrest==1.9.9
 
 # homeassistant.components.ampio
-ampio-mqtt==0.25.0
+ampio-mqtt==0.26.0
 
 # homeassistant.components.androidtv
 androidtv[async]==0.0.75

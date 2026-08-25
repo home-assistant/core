@@ -137,9 +137,12 @@ def emit(client: MagicMock, event: Any) -> None:
     subscriptions (a reload re-running setup) must not receive this event
     on its replacement registrations too.
     """
-    for listener, of in list(client.live_subscriptions):
-        if isinstance(event, of):
-            listener(event)
+    for listener, of, object_id in list(client.live_subscriptions):
+        if not isinstance(event, of):
+            continue
+        if object_id is not None and event.object.id != object_id:
+            continue
+        listener(event)
 
 
 @pytest.fixture
@@ -188,10 +191,15 @@ def mock_client_class() -> Generator[MagicMock]:
         # Track live registrations so unsubscribing works: emit() must not
         # reach listeners from a torn-down setup. Unsubscribing is idempotent,
         # matching the real client's documented contract.
-        subscriptions: list[tuple[Any, type | tuple[type, ...]]] = []
+        subscriptions: list[tuple[Any, type | tuple[type, ...], int | None]] = []
 
-        def subscribe(listener: Any, *, of: type | tuple[type, ...]) -> Any:
-            registration = (listener, of)
+        def subscribe(
+            listener: Any,
+            *,
+            of: type | tuple[type, ...],
+            object_id: int | None = None,
+        ) -> Any:
+            registration = (listener, of, object_id)
             subscriptions.append(registration)
 
             def unsubscribe() -> None:
