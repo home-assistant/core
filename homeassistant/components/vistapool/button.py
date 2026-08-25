@@ -73,14 +73,21 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
     @override
     async def async_press(self) -> None:
         """Send a color-advance pulse to the pool LED fixture."""
+        if self.coordinator.get_value(_LIGHT_STATUS_PATH) in (True, "1"):
+            await self._async_write_status(0)
+            await asyncio.sleep(_LED_PULSE_DELAY_SECONDS)
+        await self._async_write_status(1)
+
+    async def _async_write_status(self, value: int) -> None:
+        """Write light.status and record it for stale-push protection.
+
+        Recording the intermediate off write matters: a stale pre-pulse
+        push would otherwise confirm the final on value early and let the
+        off echo flicker the light entity.
+        """
         try:
-            if self.coordinator.get_value(_LIGHT_STATUS_PATH) in (True, "1"):
-                await self.coordinator.api.set_value(
-                    self.coordinator.pool_id, _LIGHT_STATUS_PATH, 0
-                )
-                await asyncio.sleep(_LED_PULSE_DELAY_SECONDS)
             await self.coordinator.api.set_value(
-                self.coordinator.pool_id, _LIGHT_STATUS_PATH, 1
+                self.coordinator.pool_id, _LIGHT_STATUS_PATH, value
             )
         except AquariteError as err:
             raise HomeAssistantError(
@@ -88,4 +95,4 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
-        self.coordinator.apply_optimistic(_LIGHT_STATUS_PATH, 1)
+        self.coordinator.apply_optimistic(_LIGHT_STATUS_PATH, value)

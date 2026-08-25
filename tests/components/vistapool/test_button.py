@@ -175,6 +175,49 @@ async def test_button_press_rapid_repeat_after_off(
     )
 
 
+async def test_button_press_pulse_survives_stale_push(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a stale pre-pulse push cannot let the pulse's off echo through."""
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasLED": 1, "version": 1},
+        "light": {"status": 1},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+    await hass.services.async_call(
+        BUTTON_DOMAIN,
+        SERVICE_PRESS,
+        {ATTR_ENTITY_ID: _BUTTON},
+        blocking=True,
+    )
+
+    # Stale pre-pulse push still carrying on: must not confirm the final on.
+    on_data({"light": {"status": 1}})
+    await hass.async_block_till_done()
+    assert coordinator.data["light"]["status"] == 1
+
+    # The pulse's off echo must not flicker the light state off.
+    on_data({"light": {"status": 0}})
+    await hass.async_block_till_done()
+    assert coordinator.data["light"]["status"] == 1
+
+    # The final on echo confirms; a later real push then sticks.
+    on_data({"light": {"status": 1}})
+    await hass.async_block_till_done()
+    on_data({"light": {"status": 0}})
+    await hass.async_block_till_done()
+    assert coordinator.data["light"]["status"] == 0
+
+
 async def test_button_press_raises_on_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
