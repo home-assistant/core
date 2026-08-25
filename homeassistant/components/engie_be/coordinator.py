@@ -19,7 +19,7 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 from homeassistant.util import dt as dt_util
 
-from .const import DOMAIN, LOGGER, PRICES_SCAN_INTERVAL, RELATIONS_SCAN_INTERVAL
+from .const import DOMAIN, LOGGER, PRICES_SCAN_INTERVAL
 
 if TYPE_CHECKING:
     from . import EngieBeConfigEntry
@@ -94,7 +94,6 @@ class EngieBeRelationsCoordinator(DataUpdateCoordinator[dict[str, BusinessAgreem
             LOGGER,
             config_entry=config_entry,
             name=f"{DOMAIN}_relations",
-            update_interval=RELATIONS_SCAN_INTERVAL,
         )
         self.client = client
 
