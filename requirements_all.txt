@@ -577,6 +577,7 @@ asusrouter==1.21.3
 # homeassistant.components.samsungtv
 # homeassistant.components.ssdp
 # homeassistant.components.upnp
+# homeassistant.components.wiim
 # homeassistant.components.yeelight
 async-upnp-client==0.48.1
 
@@ -1072,6 +1073,9 @@ fressnapftracker==0.2.2
 # homeassistant.components.fritz
 # homeassistant.components.fritzbox_callmonitor
 fritzconnection[qr]==1.15.1
+
+# homeassistant.components.fronius
+fronius-modbus==0.2.0
 
 # homeassistant.components.fumis
 fumis==0.4.0
