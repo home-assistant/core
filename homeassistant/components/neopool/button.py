@@ -4,7 +4,11 @@ from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
 from typing import Any, override
 
-from neopool_modbus.capabilities import is_hydrolysis_present
+from neopool_modbus.capabilities import (
+    is_hydrolysis_present,
+    is_ionization_present,
+    is_uv_lamp_present,
+)
 from neopool_modbus.exceptions import NeoPoolError
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
@@ -49,7 +53,11 @@ BUTTON_DESCRIPTIONS: dict[str, NeoPoolButtonEntityDescription] = {
         translation_key="reset_cell_partial",
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
-        supported_fn=is_hydrolysis_present,
+        supported_fn=lambda data: (
+            is_hydrolysis_present(data)
+            or is_ionization_present(data)
+            or is_uv_lamp_present(data)
+        ),
         press_fn=lambda entity: entity.coordinator.client.async_reset_user_counters(),
     ),
 }

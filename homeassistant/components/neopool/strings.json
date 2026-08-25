@@ -32,7 +32,7 @@
         "name": "Clear error messages"
       },
       "reset_cell_partial": {
-        "name": "Reset cell runtime counter"
+        "name": "Reset partial runtime counters"
       },
       "sync_time": {
         "name": "Synchronize device time"

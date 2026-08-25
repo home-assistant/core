@@ -49,7 +49,7 @@
     'state': 'unknown',
   })
 # ---
-# name: test_all_entities[button.neopool_reset_cell_runtime_counter-entry]
+# name: test_all_entities[button.neopool_reset_partial_runtime_counters-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -63,7 +63,7 @@
     'disabled_by': None,
     'domain': 'button',
     'entity_category': <EntityCategory.CONFIG: 'config'>,
-    'entity_id': 'button.neopool_reset_cell_runtime_counter',
+    'entity_id': 'button.neopool_reset_partial_runtime_counters',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -71,12 +71,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Reset cell runtime counter',
+    'object_id_base': 'Reset partial runtime counters',
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Reset cell runtime counter',
+    'original_name': 'Reset partial runtime counters',
     'platform': 'neopool',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -86,13 +86,13 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_all_entities[button.neopool_reset_cell_runtime_counter-state]
+# name: test_all_entities[button.neopool_reset_partial_runtime_counters-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Reset cell runtime counter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'NeoPool Reset partial runtime counters',
     }),
     'context': <ANY>,
-    'entity_id': 'button.neopool_reset_cell_runtime_counter',
+    'entity_id': 'button.neopool_reset_partial_runtime_counters',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

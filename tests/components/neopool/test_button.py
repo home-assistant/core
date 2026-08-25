@@ -9,7 +9,6 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.components.neopool.helpers import prepare_device_time
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
@@ -50,6 +49,8 @@ async def test_sync_time_button_writes_time_and_commit(
     freezer: FrozenDateTimeFactory,
 ) -> None:
     """SYNC_TIME button writes the encoded local time and refreshes."""
+    await hass.config.async_set_time_zone("America/New_York")
+    freezer.move_to("2024-01-02 08:04:05+00:00")
     await setup_integration(hass, mock_config_entry)
 
     entity_id = _button_entity_id(hass, mock_config_entry, "sync_time")
@@ -57,9 +58,7 @@ async def test_sync_time_button_writes_time_and_commit(
     reads_before = mock_neopool_client.async_read_all.await_count
     await _press(hass, entity_id)
 
-    mock_neopool_client.async_sync_device_time.assert_awaited_once_with(
-        prepare_device_time(hass)
-    )
+    mock_neopool_client.async_sync_device_time.assert_awaited_once_with(1704164645)
     assert mock_neopool_client.async_read_all.await_count > reads_before
 
 
@@ -112,16 +111,17 @@ async def test_reset_cell_partial_button_disabled_by_default(
     assert matches[0].disabled_by is er.RegistryEntryDisabler.INTEGRATION
 
 
-async def test_reset_cell_partial_button_skipped_without_hydrolysis(
+async def test_reset_cell_partial_button_skipped_without_wear_modules(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
 ) -> None:
-    """No RESET_CELL_PARTIAL entity is registered when hydrolysis isn't detected."""
-    no_hidro_data = dict(mock_neopool_client.async_read_all.return_value)
-    no_hidro_data["Hydrolysis module detected"] = False
-    mock_neopool_client.async_read_all.return_value = no_hidro_data
+    """No RESET_CELL_PARTIAL entity when no hydrolysis/ION/UV module is present."""
+    no_wear_data = dict(mock_neopool_client.async_read_all.return_value)
+    no_wear_data["Hydrolysis module detected"] = False
+    no_wear_data["MBF_PAR_MODEL"] = 0
+    mock_neopool_client.async_read_all.return_value = no_wear_data
 
     await setup_integration(hass, mock_config_entry)
 
@@ -133,6 +133,38 @@ async def test_reset_cell_partial_button_skipped_without_hydrolysis(
         if e.domain == BUTTON_DOMAIN and e.unique_id.endswith("_reset_cell_partial")
     ]
     assert matches == []
+
+
+@pytest.mark.parametrize(
+    "model",
+    [
+        pytest.param(0x0001, id="ionization-only"),
+        pytest.param(0x0004, id="uv-only"),
+    ],
+)
+async def test_reset_cell_partial_button_registers_for_wear_modules(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+    model: int,
+) -> None:
+    """RESET_CELL_PARTIAL registers when ION or UV wear counters are present."""
+    data = dict(mock_neopool_client.async_read_all.return_value)
+    data["Hydrolysis module detected"] = False
+    data["MBF_PAR_MODEL"] = model
+    mock_neopool_client.async_read_all.return_value = data
+
+    await setup_integration(hass, mock_config_entry)
+
+    matches = [
+        e
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if e.domain == BUTTON_DOMAIN and e.unique_id.endswith("_reset_cell_partial")
+    ]
+    assert len(matches) == 1
 
 
 @pytest.mark.parametrize(
