@@ -77,7 +77,7 @@ def update_url_port(url: str | None, old_port: int, new_port: int) -> str | None
         return None
 
     parsed = URL(url)
-    if parsed.port != old_port or f":{old_port}" not in parsed.raw_authority:
+    if parsed.explicit_port != old_port:
         return url
 
     return str(parsed.with_port(new_port))
