@@ -788,7 +788,7 @@ async def websocket_cloud_status(
     cloud = hass.data[DATA_CLOUD]
     data = await _account_data(hass, cloud)
 
-    # The pending registration is only for the admin who registered.
+    # Only admins are shown the email of a pending registration.
     if (
         not cloud.is_logged_in
         and connection.user.is_admin
