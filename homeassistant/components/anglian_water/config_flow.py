@@ -48,7 +48,7 @@ STEP_MFA_DATA_SCHEMA = vol.Schema(
 )
 
 
-async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
+async def validate_credentials(auth: MSOB2CAuth) -> str | None:
     """Validate the provided credentials."""
     try:
         await auth.send_login_request()
@@ -61,7 +61,7 @@ async def validate_credentials(auth: MSOB2CAuth) -> str | MSOB2CAuth:
     except Exception:
         _LOGGER.exception("Unexpected exception")
         return "unknown"
-    return auth
+    return None
 
 
 def humanize_account_data(account: dict) -> str:
@@ -86,14 +86,14 @@ async def get_accounts(auth: MSOB2CAuth) -> list[selector.SelectOptionDict]:
     ]
 
 
-async def validate_account(auth: MSOB2CAuth, account_number: str) -> str | MSOB2CAuth:
+async def validate_account(auth: MSOB2CAuth, account_number: str) -> str | None:
     """Validate the provided account number."""
     _aw = AnglianWater(authenticator=auth)
     try:
         await _aw.validate_smart_meter(account_number)
     except InvalidAccountIdError, SmartMeterUnavailableError:
         return "smart_meter_unavailable"
-    return auth
+    return None
 
 
 class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
@@ -151,19 +151,18 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             self.authenticator = self._create_authenticator(user_input)
-            validation_response = await validate_credentials(self.authenticator)
-            if isinstance(validation_response, str):
-                if validation_response == "mfa_required":
-                    self.user_input = user_input
-                    return await self.async_step_mfa()
-                errors["base"] = validation_response
+            validation_error = await validate_credentials(self.authenticator)
+            if validation_error == "mfa_required":
+                self.user_input = user_input
+                return await self.async_step_mfa()
+            if validation_error:
+                errors["base"] = validation_error
             else:
                 account_error = await self._async_get_accounts()
-                if account_error:
-                    errors["base"] = account_error
-                else:
+                if not account_error:
                     self.user_input = user_input
                     return await self.async_step_select_account()
+                errors["base"] = account_error
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -182,10 +181,9 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = error
             else:
                 account_error = await self._async_get_accounts()
-                if account_error:
-                    errors["base"] = account_error
-                else:
+                if not account_error:
                     return await self.async_step_select_account()
+                errors["base"] = account_error
         return self.async_show_form(
             step_id="mfa", data_schema=STEP_MFA_DATA_SCHEMA, errors=errors
         )
@@ -209,10 +207,9 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                 self.authenticator,
                 user_input[CONF_ACCOUNT_NUMBER],
             )
-            if isinstance(validation_result, str):
-                errors["base"] = validation_result
-            else:
+            if not validation_result:
                 return await self.async_step_complete(user_input)
+            errors["base"] = validation_result
         return self.async_show_form(
             step_id="select_account",
             data_schema=vol.Schema(
@@ -260,13 +257,12 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             self.authenticator = self._create_authenticator(user_input)
             validation_response = await validate_credentials(self.authenticator)
-            if isinstance(validation_response, str):
-                if validation_response == "mfa_required":
-                    self.user_input = user_input
-                    return await self.async_step_reauth_mfa()
-                errors["base"] = validation_response
-            else:
+            if not validation_response:
                 return await self._async_finish_reauth()
+            if validation_response == "mfa_required":
+                self.user_input = user_input
+                return await self.async_step_reauth_mfa()
+            errors["base"] = validation_response
         return self.async_show_form(
             step_id="reauth_confirm", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
         )
@@ -280,10 +276,9 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             if TYPE_CHECKING:
                 assert self.authenticator
             error = await self._async_validate_mfa(user_input[CONF_CODE])
-            if error:
-                errors["base"] = error
-            else:
+            if not error:
                 return await self._async_finish_reauth()
+            errors["base"] = error
         return self.async_show_form(
             step_id="reauth_mfa", data_schema=STEP_MFA_DATA_SCHEMA, errors=errors
         )
