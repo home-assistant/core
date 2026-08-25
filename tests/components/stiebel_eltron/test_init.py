@@ -1,17 +1,23 @@
 """Tests for the STIEBEL ELTRON integration."""
 
-from unittest.mock import AsyncMock, MagicMock, patch
+from datetime import timedelta
+from typing import Any
+from unittest.mock import MagicMock, patch
 
-from modbus_connection import ModbusError, ModbusTimeoutError
+from freezegun.api import FrozenDateTimeFactory
+from modbus_connection import ModbusError, ModbusTcpParams
 from modbus_connection.mock import MockModbusConnection
 from pystiebeleltron import StiebelEltronModbusError
+import pytest
 
-from homeassistant.components.stiebel_eltron.const import DOMAIN
+from homeassistant.components.stiebel_eltron.const import DEFAULT_SCAN_INTERVAL, DOMAIN
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_HOST, CONF_PORT
+from homeassistant.const import CONF_HOST, CONF_PORT, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+
+CLIMATE_ENTITY_ID = "climate.stiebel_eltron_lwz"
 
 
 async def test_async_setup_entry_success(
@@ -26,55 +32,39 @@ async def test_async_setup_entry_success(
     assert mock_config_entry.state is ConfigEntryState.LOADED
 
 
-async def test_async_setup_entry_with_custom_port(
+@pytest.mark.parametrize(
+    ("entry_data", "expected_params"),
+    [
+        pytest.param(
+            {CONF_HOST: "192.168.1.100", CONF_PORT: 5020},
+            ModbusTcpParams(host="192.168.1.100", port=5020),
+            id="custom_port",
+        ),
+        pytest.param(
+            {CONF_HOST: "192.168.1.100"},
+            ModbusTcpParams(host="192.168.1.100", port=502),
+            id="default_port",
+        ),
+    ],
+)
+async def test_async_setup_entry_requests_unit(
     hass: HomeAssistant,
-    mock_connect_tcp: AsyncMock,
+    mock_modbus_connection_class: MagicMock,
+    entry_data: dict[str, Any],
+    expected_params: ModbusTcpParams,
 ) -> None:
-    """Test setup with custom port."""
+    """Test the unit is taken on a connection with the configured host and port."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
         title="Stiebel Eltron",
-        data={CONF_HOST: "192.168.1.100", CONF_PORT: 5020},
+        data=entry_data,
     )
     config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.async_setup(config_entry.entry_id)
 
     assert result is True
-    mock_connect_tcp.assert_called_once_with("192.168.1.100", port=5020)
-
-
-async def test_async_setup_entry_without_port(
-    hass: HomeAssistant,
-    mock_connect_tcp: AsyncMock,
-) -> None:
-    """Test setup without port (should use default)."""
-    config_entry = MockConfigEntry(
-        domain=DOMAIN,
-        title="Stiebel Eltron",
-        data={CONF_HOST: "192.168.1.100"},
-    )
-    config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.async_setup(config_entry.entry_id)
-
-    assert result is True
-    mock_connect_tcp.assert_called_once_with("192.168.1.100", port=502)
-
-
-async def test_async_setup_entry_cannot_connect(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_connect_tcp: AsyncMock,
-) -> None:
-    """Test setup retries when the connection cannot be opened."""
-    mock_connect_tcp.side_effect = ModbusTimeoutError("could not connect")
-    mock_config_entry.add_to_hass(hass)
-
-    result = await hass.config_entries.async_setup(mock_config_entry.entry_id)
-
-    assert result is False
-    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_modbus_connection_class.assert_called_once_with(expected_params)
 
 
 async def test_async_setup_entry_modbus_error(
@@ -82,7 +72,7 @@ async def test_async_setup_entry_modbus_error(
     mock_config_entry: MockConfigEntry,
     mock_get_controller_model: MagicMock,
 ) -> None:
-    """Test setup retries when reading the controller model fails."""
+    """Test setup retries when the device cannot be reached or read."""
     mock_config_entry.add_to_hass(hass)
     mock_get_controller_model.side_effect = StiebelEltronModbusError()
 
@@ -109,22 +99,27 @@ async def test_async_setup_entry_coordinator_update_fails(
     assert mock_modbus_connection.connected is False
 
 
-async def test_connection_lost_reloads_entry(
+async def test_entities_unavailable_when_update_fails(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
-    mock_modbus_connection: MockModbusConnection,
+    mock_lwz_api: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test a lost connection schedules a reload of the config entry."""
+    """Test the entities go unavailable when the device stops answering."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    with patch.object(
-        hass.config_entries, "async_schedule_reload"
-    ) as mock_schedule_reload:
-        mock_modbus_connection.simulate_connection_lost()
+    assert (state := hass.states.get(CLIMATE_ENTITY_ID))
+    assert state.state != STATE_UNAVAILABLE
 
-    mock_schedule_reload.assert_called_once_with(mock_config_entry.entry_id)
+    mock_lwz_api.async_update.side_effect = ModbusError("update failed")
+    freezer.tick(timedelta(seconds=DEFAULT_SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (state := hass.states.get(CLIMATE_ENTITY_ID))
+    assert state.state == STATE_UNAVAILABLE
 
 
 async def test_unload_entry_closes_connection(
