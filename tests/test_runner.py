@@ -454,7 +454,6 @@ def _assert_hass_event_loop(loop: asyncio.AbstractEventLoop) -> None:
 
 def test_sync_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
     """Test a synchronous test builds the async hass fixture on our loop."""
-    # pytest-asyncio only parametrizes the loop factory for async tests
     _assert_hass_event_loop(hass.loop)
 
 
