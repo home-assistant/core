@@ -66,7 +66,7 @@ async def test_press_button_via_service(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
-    init_integration: MagicMock,
+    mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """Pressing a button calls the vendor library through the coordinator."""
     entries = er.async_entries_for_config_entry(
@@ -82,8 +82,8 @@ async def test_press_button_via_service(
         blocking=True,
     )
 
-    init_integration.async_press_button.assert_awaited_once()
-    call = init_integration.async_press_button.await_args
+    mock_imou_ha_device_manager.async_press_button.assert_awaited_once()
+    call = mock_imou_ha_device_manager.async_press_button.await_args
     assert call is not None
     assert call.args[1] == PARAM_MUTE
     assert call.args[2] == 0
@@ -93,7 +93,7 @@ async def test_press_button_via_service(
 async def test_press_ptz_button_passes_move_duration(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    init_integration: MagicMock,
+    mock_imou_ha_device_manager: MagicMock,
     mock_config_entry: MockConfigEntry,
 ) -> None:
     """PTZ buttons pass the configured move duration to the vendor library."""
@@ -109,8 +109,8 @@ async def test_press_ptz_button_passes_move_duration(
         blocking=True,
     )
 
-    init_integration.async_press_button.assert_awaited_once()
-    call = init_integration.async_press_button.await_args
+    mock_imou_ha_device_manager.async_press_button.assert_awaited_once()
+    call = mock_imou_ha_device_manager.async_press_button.await_args
     assert call is not None
     assert call.args[1] == PARAM_PTZ_UP
     assert call.args[2] == PTZ_MOVE_DURATION_MS
@@ -119,10 +119,12 @@ async def test_press_ptz_button_passes_move_duration(
 @pytest.mark.usefixtures("init_integration")
 async def test_press_button_service_propagates_api_error(
     hass: HomeAssistant,
-    init_integration: MagicMock,
+    mock_imou_ha_device_manager: MagicMock,
 ) -> None:
     """Imou API errors from async_press_button surface to the service call."""
-    init_integration.async_press_button.side_effect = ImouException("cloud failure")
+    mock_imou_ha_device_manager.async_press_button.side_effect = ImouException(
+        "cloud failure"
+    )
 
     entity_id = hass.states.async_all("button")[0].entity_id
 
@@ -157,7 +159,6 @@ async def test_press_unavailable_offline_device_via_service(
     entity_registry: er.EntityRegistry,
     mock_config_entry: MockConfigEntry,
     mock_imou_ha_device_manager: MagicMock,
-    init_integration: MagicMock,
 ) -> None:
     """Pressing an offline device does not call the vendor library."""
     mute_entry = next(
@@ -187,7 +188,7 @@ async def test_press_unavailable_offline_device_via_service(
         blocking=True,
     )
 
-    init_integration.async_press_button.assert_not_called()
+    mock_imou_ha_device_manager.async_press_button.assert_not_called()
 
 
 @pytest.mark.usefixtures("init_integration")
