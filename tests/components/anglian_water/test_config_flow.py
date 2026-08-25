@@ -234,6 +234,98 @@ async def test_single_account_flow_with_mfa_exception(
     assert result["result"].unique_id == ACCOUNT_NUMBER
 
 
+@pytest.mark.parametrize(
+    ("exception_type", "expected_error"),
+    [
+        (ExpiredAccessTokenError, "cannot_connect"),
+        (
+            UnknownEndpointError(status=500, response="Service Unavailable"),
+            "cannot_connect",
+        ),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_account_fetch_exception(
+    hass: HomeAssistant,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+    exception_type: Exception,
+    expected_error: str,
+) -> None:
+    """Test that the flow handles account-fetch exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_anglian_water_client.api.get_associated_accounts.side_effect = exception_type
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"] == {"base": expected_error}
+
+
+@pytest.mark.parametrize(
+    ("exception_type", "expected_error"),
+    [
+        (ExpiredAccessTokenError, "cannot_connect"),
+        (
+            UnknownEndpointError(status=500, response="Service Unavailable"),
+            "cannot_connect",
+        ),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_mfa_account_fetch_exception(
+    hass: HomeAssistant,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+    exception_type: Exception,
+    expected_error: str,
+) -> None:
+    """Test that the MFA flow handles account-fetch exceptions."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    assert result is not None
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    mock_anglian_water_authenticator.send_login_request.side_effect = MFARequiredError
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+
+    mock_anglian_water_client.api.get_associated_accounts.side_effect = exception_type
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_CODE: "123456"},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "mfa"
+    assert result["errors"] == {"base": expected_error}
+
+
 @pytest.mark.usefixtures("mock_setup_entry")
 async def test_already_configured(
     hass: HomeAssistant,
