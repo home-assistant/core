@@ -171,7 +171,6 @@ async def test_reauth_invalid_auth(
         result["flow_id"],
         {"password": "new-password"},
     )
-    await hass.async_block_till_done()
 
     mock_pyschlage_auth.authenticate.assert_called_once_with()
     assert result2["type"] is FlowResultType.FORM
@@ -182,7 +181,6 @@ async def test_reauth_invalid_auth(
         result2["flow_id"],
         {"password": "new-password"},
     )
-    await hass.async_block_till_done()
 
     assert result3["type"] is FlowResultType.ABORT
     assert result3["reason"] == "reauth_successful"

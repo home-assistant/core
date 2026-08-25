@@ -11,12 +11,15 @@ from . import MockSchlageConfigEntry
 from tests.components.diagnostics import get_diagnostics_for_config_entry
 from tests.typing import ClientSessionGenerator
 
-# Mirrors what pyschlage returns: the raw device JSON, with everything outside
-# the library's allow-list already redacted.
+# The raw device JSON as pyschlage redacts it: everything outside the library's
+# allow-list is replaced with "<REDACTED>", lists collapse to a single redacted
+# element, and nested dicts are redacted key by key.
 LOCK_DIAGNOSTICS = {
-    "CAT": "**REDACTED**",
-    "SAT": "**REDACTED**",
+    "CAT": "<REDACTED>",
+    "SAT": "<REDACTED>",
     "attributes": {
+        "CAT": "<REDACTED>",
+        "SAT": "<REDACTED>",
         "accessCodeLength": 4,
         "actAlarmBuzzerEnabled": 0,
         "actAlarmState": 0,
@@ -32,7 +35,7 @@ LOCK_DIAGNOSTICS = {
         "batterySaverState": 0,
         "beeperEnabled": 1,
         "bleFirmwareVersion": "9.2.15.3011",
-        "diagnostics": "**REDACTED**",
+        "diagnostics": {"deviceId": "<REDACTED>", "serialNumber": "<REDACTED>"},
         "firmwareUpdate": {"status": {"additionalInfo": None, "code": -1}},
         "homePosCurrentMax": 153,
         "keypadFirmwareVersion": "b3aa601",
@@ -46,16 +49,16 @@ LOCK_DIAGNOSTICS = {
             "mainFirmwareVersion": "10.00.00264232",
             "newValue": 0,
             "oldValue": 1,
-            "serialNumber": "**REDACTED**",
+            "serialNumber": "d0d0d0d0",
             "wifiFirmwareVersion": "03.00.00250052",
         },
-        "macAddress": "**REDACTED**",
+        "macAddress": "<REDACTED>",
         "mainFirmwareVersion": "10.00.00264232",
         "mode": 2,
         "modelName": "<model-name>",
         "periodicDeepQueryTimeSetting": 60,
         "psPollEnabled": 1,
-        "serialNumber": "**REDACTED**",
+        "serialNumber": "<REDACTED>",
         "timezone": -20,
         "wifiFirmwareVersion": "03.00.00250052",
         "wifiRssi": -42,
@@ -63,17 +66,17 @@ LOCK_DIAGNOSTICS = {
     "connected": True,
     "connectivityUpdated": "2022-12-04T20:58:22.000Z",
     "created": "2022-12-04T20:58:22.000Z",
-    "deviceId": "**REDACTED**",
+    "deviceId": "<REDACTED>",
     "devicetypeId": "be489wifi",
     "lastUpdated": "2022-12-04T20:58:22.000Z",
-    "macAddress": "**REDACTED**",
+    "macAddress": "<REDACTED>",
     "modelName": "<model-name>",
-    "name": "**REDACTED**",
-    "physicalId": "**REDACTED**",
+    "name": "Vault Door",
+    "physicalId": "<REDACTED>",
     "role": "owner",
-    "serialNumber": "**REDACTED**",
+    "serialNumber": "<REDACTED>",
     "timezone": -20,
-    "users": "**REDACTED**",
+    "users": ["<REDACTED>"],
 }
 
 
