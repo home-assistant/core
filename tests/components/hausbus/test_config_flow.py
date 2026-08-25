@@ -45,7 +45,11 @@ async def test_user_flow_creates_entry(
     # cover platform (and its dispatcher listeners) are even set up, so a
     # fresh search is needed afterwards to actually populate entities.
     # Both go through the same per-hass HomeServer, so the mock sees both.
-    await hass.async_block_till_done()
+    # A plain async_block_till_done() excludes tasks started via
+    # entry.async_create_background_task (which start_discovery is), so
+    # wait_background_tasks=True is needed here or this can race the
+    # gateway's discovery task and miss its searchDevices() call.
+    await hass.async_block_till_done(wait_background_tasks=True)
     assert mock_home_server.searchDevices.call_count == 2
 
 
