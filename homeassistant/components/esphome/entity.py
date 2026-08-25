@@ -55,7 +55,7 @@ def get_temperature_unit(
         and (ha_unit := TEMPERATURE_UNIT_MAP.get(temperature_unit)) is not None
     ):
         return ha_unit
-    _LOGGER.debug(
+    _LOGGER.warning(
         "%s (device_id=%s): Unrecognized ESPHome temperature unit %r, defaulting to Celsius",
         static_info.name,
         static_info.device_id,

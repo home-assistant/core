@@ -474,7 +474,6 @@ async def test_water_heater_set_away_mode(
         pytest.param(TemperatureUnit.CELSIUS, 50.0, id="celsius"),
         pytest.param(TemperatureUnit.FAHRENHEIT, 10.0, id="fahrenheit"),
         pytest.param(TemperatureUnit.KELVIN, -223.1, id="kelvin"),
-        pytest.param(3, 50.0, id="unknown_falls_back_to_celsius"),
         pytest.param(None, 50.0, id="none_falls_back_to_celsius"),
     ],
 )

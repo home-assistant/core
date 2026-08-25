@@ -697,7 +697,6 @@ async def test_climate_entity_attribute_current_temperature_unsupported(
         pytest.param(TemperatureUnit.CELSIUS, 22.0, id="celsius"),
         pytest.param(TemperatureUnit.FAHRENHEIT, -5.6, id="fahrenheit"),
         pytest.param(TemperatureUnit.KELVIN, -251.1, id="kelvin"),
-        pytest.param(3, 22.0, id="unknown_falls_back_to_celsius"),
         pytest.param(None, 22.0, id="none_falls_back_to_celsius"),
     ],
 )

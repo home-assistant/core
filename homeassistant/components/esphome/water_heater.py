@@ -31,6 +31,7 @@ from .enum_mapper import EsphomeEnumMapper
 
 PARALLEL_UPDATES = 0
 
+
 _WATER_HEATER_MODES: EsphomeEnumMapper[WaterHeaterMode, str] = EsphomeEnumMapper(
     {
         WaterHeaterMode.OFF: "off",
