@@ -117,6 +117,7 @@ async def test_state_unavailable(
             id="heating_circulation_pump",
         ),
         pytest.param("auxiliary_pump", TRANSLATE_PUMP_MODE, id="auxiliary_pump"),
+        pytest.param("extra_dhw_boost", TRANSLATE_PUMP_MODE, id="extra_dhw_boost"),
     ],
 )
 def test_enum_options_match_library(
