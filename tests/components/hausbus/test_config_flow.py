@@ -71,6 +71,22 @@ async def test_user_flow_search_timeout_then_retry(
     )
 
 
+@pytest.mark.parametrize("exc", [OSError("socket error"), OSError()])
+async def test_user_flow_oserror_shows_retry(
+    hass: HomeAssistant, mock_home_server: MagicMock, exc: Exception
+) -> None:
+    """Test that an OSError during discovery lands on the search_timeout retry form."""
+    mock_home_server.searchDevices.side_effect = exc
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await _resolve_progress(hass, result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "search_timeout"
+
+
 async def test_single_instance_allowed(
     hass: HomeAssistant, mock_home_server: MagicMock
 ) -> None:

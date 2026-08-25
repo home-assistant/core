@@ -23,6 +23,13 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         """Initialize the config flow."""
         self._search_task: asyncio.Task | None = None
         self.home_server: HomeServer | None = None
+        self._entry_created: bool = False
+
+    @override
+    async def async_remove(self) -> None:
+        """Shut down HomeServer if the flow is abandoned without creating an entry."""
+        if self.home_server is not None and not self._entry_created:
+            await self.hass.async_add_executor_job(self.home_server.shutdown)
 
     @override
     async def async_step_user(
@@ -81,6 +88,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
         """Create a configuration entry for the hausbus devices."""
+        self._entry_created = True
         return self.async_create_entry(title="Haus-Bus", data={})
 
     async def _async_wait_for_device(self) -> None:
