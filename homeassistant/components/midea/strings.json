@@ -402,7 +402,7 @@
         "name": "Humidity compensation"
       },
       "humidity_raw": {
-        "name": "Humidity raw"
+        "name": "Raw humidity"
       },
       "in_tds": {
         "name": "In TDS"
@@ -541,7 +541,7 @@
         "name": "Predicted mean vote"
       },
       "realtime_power": {
-        "name": "Realtime power"
+        "name": "Real-time power"
       },
       "refrigerator_actual_temp": {
         "name": "Refrigerator actual temperature"
@@ -595,7 +595,7 @@
         "name": "Temperature compensation"
       },
       "temperature_raw": {
-        "name": "Temperature raw"
+        "name": "Raw temperature"
       },
       "top_compartment_temperature": {
         "name": "Top compartment temperature"
