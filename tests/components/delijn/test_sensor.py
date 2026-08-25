@@ -1,5 +1,6 @@
 """Test the De Lijn sensor platform."""
 
+import asyncio
 from datetime import UTC, datetime
 from unittest.mock import MagicMock, patch
 
@@ -26,8 +27,10 @@ from homeassistant.components.delijn.const import (
 )
 from homeassistant.components.delijn.sensor import (
     CONF_NEXT_DEPARTURE,
+    _async_add_subentries_to_entry,
     async_setup_platform,
 )
+from homeassistant.config_entries import ConfigSubentry
 from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import (
@@ -341,6 +344,201 @@ async def test_yaml_import_multiple_stops_added_to_existing_entry_once(
         )
         assert entity_id is not None
         assert hass.states.get(entity_id) is not None
+
+
+async def test_yaml_import_concurrent_blocks_same_key_no_duplicate_error(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test two concurrent YAML platform blocks importing the same account.
+
+    Overlapping stops previously raced past validation together: both
+    passed, and the loser's subentry add raised AbortFlow, aborting that
+    block's import before its repair-issue bookkeeping ran. The import
+    lock now serializes the two blocks so this can no longer race.
+    """
+    overlapping_stop = STOP_NUMBER
+    unique_stop_a = "200113"
+    unique_stop_b = "200114"
+
+    async def _get_stop(stop_id: str) -> Stop:
+        return Stop(
+            entity_number="2",
+            number=stop_id,
+            name=f"Stop {stop_id}",
+            municipality="Gent",
+        )
+
+    mock_delijn_client.get_stop.side_effect = _get_stop
+
+    config_a = {
+        "platform": DOMAIN,
+        CONF_API_KEY: API_KEY,
+        CONF_NEXT_DEPARTURE: [
+            {CONF_STOP_ID: overlapping_stop, CONF_NUMBER_OF_DEPARTURES: 3},
+            {CONF_STOP_ID: unique_stop_a, CONF_NUMBER_OF_DEPARTURES: 3},
+        ],
+    }
+    config_b = {
+        "platform": DOMAIN,
+        CONF_API_KEY: API_KEY,
+        CONF_NEXT_DEPARTURE: [
+            {CONF_STOP_ID: overlapping_stop, CONF_NUMBER_OF_DEPARTURES: 3},
+            {CONF_STOP_ID: unique_stop_b, CONF_NUMBER_OF_DEPARTURES: 3},
+        ],
+    }
+
+    await asyncio.gather(
+        async_setup_platform(hass, config_a, MagicMock()),
+        async_setup_platform(hass, config_b, MagicMock()),
+    )
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    subentry_numbers = {
+        subentry.unique_id for subentry in entries[0].subentries.values()
+    }
+    assert subentry_numbers == {overlapping_stop, unique_stop_a, unique_stop_b}
+
+    for number in subentry_numbers:
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{number}_next_departure"
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id) is not None
+
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_delijn"
+    )
+
+
+async def test_add_subentries_to_entry_skips_stop_added_concurrently(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    mock_stop_subentry: ConfigSubentry,
+    mock_stop: Stop,
+) -> None:
+    """Test a stop added while unloading isn't re-added, and doesn't raise.
+
+    Unloading the entry awaits; a concurrent subentry flow (e.g. from the
+    UI) could add one of the pending stops in that window.
+    ``async_add_subentry`` raises ``AbortFlow`` on a duplicate unique_id, so
+    each stop is re-checked immediately before it's added and skipped if
+    another task already added it.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    real_async_unload = hass.config_entries.async_unload
+    raced = False
+
+    async def _unload_and_race(entry_id: str, **kwargs: object) -> bool:
+        nonlocal raced
+        result = await real_async_unload(entry_id, **kwargs)
+        if not raced:
+            raced = True
+            hass.config_entries.async_add_subentry(
+                mock_config_entry, mock_stop_subentry
+            )
+        return result
+
+    with patch.object(
+        hass.config_entries, "async_unload", side_effect=_unload_and_race
+    ):
+        await _async_add_subentries_to_entry(hass, mock_config_entry, [(mock_stop, 5)])
+
+    assert len(mock_config_entry.subentries) == 1
+
+
+async def test_yaml_import_skips_stop_configured_on_another_entry(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    mock_config_entry_with_subentry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test YAML import skips a stop already configured on a different entry.
+
+    Sensor unique ids are scoped to the stop number only; importing the
+    same stop into a second account would silently collide, so it is
+    treated as already-configured: no API call, no add.
+    """
+    mock_config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+    mock_delijn_client.get_stop.reset_mock()
+
+    platform_config = {
+        "platform": DOMAIN,
+        CONF_API_KEY: "other-api-key",
+        CONF_NEXT_DEPARTURE: [
+            {CONF_STOP_ID: STOP_NUMBER, CONF_NUMBER_OF_DEPARTURES: 3},
+        ],
+    }
+    await async_setup_platform(hass, platform_config, MagicMock())
+    await hass.async_block_till_done()
+
+    mock_delijn_client.get_stop.assert_not_called()
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert not issue_registry.async_get_issue(
+        DOMAIN, f"deprecated_yaml_import_issue_{STOP_NUMBER}"
+    )
+
+
+async def test_yaml_import_failure_tracked_per_account_for_same_stop(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a failure under one API key isn't hidden by success under another.
+
+    The generic deprecated-YAML notice is gated on a failed-import set keyed
+    by (api_key, stop_id); a second account's block successfully importing
+    the same stop id must only resolve that account's own failure, not
+    another account's, so the generic notice must stay withheld. (The
+    per-stop repair issue itself stays stop-scoped and may be cleared by
+    either account's success — that's expected.)
+    """
+    shared_stop_id = STOP_NUMBER
+    failing_key = "account-a-key"
+    succeeding_key = "account-b-key"
+
+    mock_delijn_client.get_stop.side_effect = DeLijnNotFoundError
+    failing_config = {
+        "platform": DOMAIN,
+        CONF_API_KEY: failing_key,
+        CONF_NEXT_DEPARTURE: [
+            {CONF_STOP_ID: shared_stop_id, CONF_NUMBER_OF_DEPARTURES: 3},
+        ],
+    }
+    await async_setup_platform(hass, failing_config, MagicMock())
+    await hass.async_block_till_done()
+
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_delijn"
+    )
+
+    mock_delijn_client.get_stop.side_effect = None
+    succeeding_config = {
+        "platform": DOMAIN,
+        CONF_API_KEY: succeeding_key,
+        CONF_NEXT_DEPARTURE: [
+            {CONF_STOP_ID: shared_stop_id, CONF_NUMBER_OF_DEPARTURES: 3},
+        ],
+    }
+    await async_setup_platform(hass, succeeding_config, MagicMock())
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert entries[0].data == {CONF_API_KEY: succeeding_key}
+    assert not issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_delijn"
+    )
 
 
 async def test_yaml_import_adds_to_existing_entry(

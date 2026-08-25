@@ -190,10 +190,16 @@ class StopSubentryFlowHandler(ConfigSubentryFlow):
         return self._get_entry().data[CONF_API_KEY]
 
     def _is_stop_configured(self, stop_number: str) -> bool:
-        """Return whether the stop is already configured on this entry."""
+        """Return whether the stop is already configured on any De Lijn entry.
+
+        Sensor unique ids are scoped to the stop number only, so the same
+        stop configured on two entries would collide; it must be rejected
+        as a duplicate no matter which account already has it.
+        """
         return any(
             subentry.unique_id == stop_number
-            for subentry in self._get_entry().subentries.values()
+            for entry in self.hass.config_entries.async_entries(DOMAIN)
+            for subentry in entry.subentries.values()
         )
 
     async def _async_finish(self, stop: Stop) -> SubentryFlowResult:

@@ -20,6 +20,10 @@ CONF_SUBENTRIES: Final = "subentries"
 
 DATA_FAILED_IMPORT_STOPS: Final = "failed_import_stops"
 
+# Serializes the whole import body across concurrent YAML platform blocks so
+# overlapping stops can't race past validation together.
+DATA_IMPORT_LOCK: Final = "import_lock"
+
 DEFAULT_NUMBER_OF_DEPARTURES: Final = 5
 
 SCAN_INTERVAL: Final = timedelta(seconds=60)

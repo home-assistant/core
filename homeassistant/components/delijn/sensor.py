@@ -1,5 +1,6 @@
 """Sensor for De Lijn (Flemish public transport) departure information."""
 
+import asyncio
 from datetime import datetime
 from types import MappingProxyType
 from typing import Any, override
@@ -46,6 +47,7 @@ from .const import (
     CONF_STOP_NUMBER,
     CONF_SUBENTRIES,
     DATA_FAILED_IMPORT_STOPS,
+    DATA_IMPORT_LOCK,
     DOMAIN,
     LOGGER,
     MANUFACTURER,
@@ -88,15 +90,42 @@ def _is_stop_on_entry(entry: DeLijnConfigEntry, stop_number: str) -> bool:
     )
 
 
-def _get_failed_import_stops(hass: HomeAssistant) -> set[str]:
-    """Return the set of stop ids that failed to import, shared across YAML blocks.
+def _is_stop_on_any_entry(hass: HomeAssistant, stop_number: str) -> bool:
+    """Return whether a stop is already configured on any De Lijn entry.
 
-    This tracks failures across separate accounts (API keys) and even
-    across a YAML block whose entry doesn't exist yet, so it cannot live on
-    a single config entry's runtime_data.
+    Sensor unique ids are scoped to the stop number only, so the same stop
+    configured on two entries would collide; it must be treated as a single
+    global account-independent resource.
+    """
+    return any(
+        _is_stop_on_entry(entry, stop_number)
+        for entry in hass.config_entries.async_entries(DOMAIN)
+    )
+
+
+def _get_failed_import_stops(hass: HomeAssistant) -> set[tuple[str, str]]:
+    """Return the set of (api_key, stop_id) pairs that failed to import.
+
+    Shared across YAML platform blocks and keyed by account so that one
+    account's success can't hide another account's still-failing stop.
+    This cannot live on a single config entry's runtime_data since it
+    tracks failures across separate accounts (API keys) and even across a
+    YAML block whose entry doesn't exist yet.
     """
     # pylint: disable-next=home-assistant-use-runtime-data
     return hass.data.setdefault(DOMAIN, {}).setdefault(DATA_FAILED_IMPORT_STOPS, set())
+
+
+def _get_import_lock(hass: HomeAssistant) -> asyncio.Lock:
+    """Return the lock serializing YAML platform imports across all blocks.
+
+    Concurrent import blocks that share an API key could otherwise both
+    pass validation for the same stop and race to add it as a subentry;
+    the loser's ``async_add_subentry`` call raises ``AbortFlow``, aborting
+    that block's import before its repair-issue bookkeeping runs.
+    """
+    # pylint: disable-next=home-assistant-use-runtime-data
+    return hass.data.setdefault(DOMAIN, {}).setdefault(DATA_IMPORT_LOCK, asyncio.Lock())
 
 
 def _build_subentry_data(stop: Stop, number_of_departures: int) -> ConfigSubentryData:
@@ -122,10 +151,18 @@ async def _async_add_subentries_to_entry(
     Unloading first (when currently loaded) removes the update listener
     registered via ``entry.async_on_unload``, so the additions below don't
     each queue their own reload; a single explicit reload applies them all.
+
+    Unloading awaits, so a concurrent subentry flow (e.g. from the UI)
+    could add one of these stops in the meantime; ``async_add_subentry``
+    raises ``AbortFlow`` on a duplicate unique_id, so every stop is
+    re-checked against the entry's current subentries immediately before
+    it is added, and skipped if it's already there.
     """
     if entry.state is ConfigEntryState.LOADED:
         await hass.config_entries.async_unload(entry.entry_id)
     for stop, number_of_departures in to_add:
+        if _is_stop_on_entry(entry, stop.number):
+            continue
         subentry_data = _build_subentry_data(stop, number_of_departures)
         hass.config_entries.async_add_subentry(
             entry,
@@ -162,7 +199,21 @@ async def async_setup_platform(
     the entry is set up once with everything already present; adding stops
     to an entry that already exists removes its update listener by
     unloading first, so nothing reloads until the explicit reload at the end.
+
+    Multiple YAML platform blocks run as separate, concurrently scheduled
+    setup tasks. With the same API key and an overlapping stop, both could
+    otherwise pass validation before either commits it, and the loser of
+    the resulting ``async_add_subentry`` race would raise ``AbortFlow``,
+    aborting that whole block's import before its repair-issue bookkeeping
+    ran. The entire import body therefore runs under a single lock shared
+    by all blocks.
     """
+    async with _get_import_lock(hass):
+        await _async_import_platform(hass, config)
+
+
+async def _async_import_platform(hass: HomeAssistant, config: ConfigType) -> None:
+    """Run one YAML platform block's import, serialized by the caller."""
     api_key = config[CONF_API_KEY]
     entry = _find_entry_by_api_key(hass, api_key)
 
@@ -175,11 +226,9 @@ async def async_setup_platform(
         stop_id = departure[CONF_STOP_ID]
         issue_id = f"deprecated_yaml_import_issue_{stop_id}"
 
-        if (
-            entry is not None and _is_stop_on_entry(entry, stop_id)
-        ) or stop_id in pending_numbers:
+        if _is_stop_on_any_entry(hass, stop_id) or stop_id in pending_numbers:
             ir.async_delete_issue(hass, DOMAIN, issue_id)
-            failed_stops.discard(stop_id)
+            failed_stops.discard((api_key, stop_id))
             continue
 
         try:
@@ -207,7 +256,7 @@ async def async_setup_platform(
             reason = None
 
         if reason is not None:
-            failed_stops.add(stop_id)
+            failed_stops.add((api_key, stop_id))
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -226,11 +275,9 @@ async def async_setup_platform(
 
         # A successful import, or one already configured in a prior
         # restart, resolves any previously reported import failure.
-        failed_stops.discard(stop_id)
+        failed_stops.discard((api_key, stop_id))
         ir.async_delete_issue(hass, DOMAIN, issue_id)
-        if (
-            entry is not None and _is_stop_on_entry(entry, stop.number)
-        ) or stop.number in pending_numbers:
+        if _is_stop_on_any_entry(hass, stop.number) or stop.number in pending_numbers:
             continue
 
         pending_numbers.add(stop.number)

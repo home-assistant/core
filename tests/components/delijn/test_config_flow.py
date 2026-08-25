@@ -690,6 +690,43 @@ async def test_subentry_already_configured(
     assert result["reason"] == "already_configured"
 
 
+async def test_subentry_already_configured_on_another_entry(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    mock_config_entry_with_subentry: MockConfigEntry,
+) -> None:
+    """Test aborting when the stop is already configured on a different entry.
+
+    Sensor unique ids are scoped to the stop number only, so the same stop
+    on two entries would collide; the stop must be rejected as a duplicate
+    no matter which account already has it.
+    """
+    mock_config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_API_KEY: "other-api-key"}, title="De Lijn"
+    )
+    other_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(other_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.subentries.async_init(
+        (other_entry.entry_id, SUBENTRY_TYPE_STOP),
+        context={"source": SOURCE_USER},
+    )
+    result = await hass.config_entries.subentries.async_configure(
+        result["flow_id"], {CONF_STOP: STOP_NUMBER}
+    )
+    assert result["type"] is FlowResultType.MENU
+
+    result = await _select_menu_option(hass, result["flow_id"], "create_entry")
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
 async def test_subentry_confirm_search_again(
     hass: HomeAssistant, mock_main_entry: MockConfigEntry, mock_delijn_client: MagicMock
 ) -> None:
