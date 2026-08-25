@@ -79,17 +79,19 @@ def mock_site_info_invalid_season(mock_site_info) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
-def mock_site_info_end_of_day(mock_site_info) -> Generator[AsyncMock]:
-    """Mock site_info with a real end-of-day tariff period ending at hour 24."""
+def mock_site_info_end_of_day(
+    request: pytest.FixtureRequest, mock_site_info
+) -> Generator[AsyncMock]:
+    """Mock site_info with a real end-of-day tariff period ending at the day boundary."""
     site_info = deepcopy(SITE_INFO)
     tariff = site_info["response"]["tariff_content_v2"]
     # 23:30->24:00 period taken verbatim from a PowerSync Flow Power tariff,
-    # where Tesla encodes the end of the day as hour 24.
+    # where Tesla encodes the end of the day as hour 24 or minute 60.
     tariff["energy_charges"]["Summer"]["rates"] = {"PERIOD_23_30": 0.3561}
     tariff["seasons"]["Summer"]["tou_periods"] = {
         "PERIOD_23_30": {
             "periods": [
-                {"toDayOfWeek": 6, "fromHour": 23, "fromMinute": 30, "toHour": 24}
+                {"toDayOfWeek": 6, "fromHour": 23, "fromMinute": 30, **request.param}
             ]
         }
     }
@@ -405,13 +407,21 @@ async def test_calendar_midnight_crossing_local_start(
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "mock_site_info_end_of_day",
+    [
+        pytest.param({"toHour": 24}, id="hour_24"),
+        pytest.param({"toHour": 23, "toMinute": 60}, id="minute_60"),
+    ],
+    indirect=True,
+)
 async def test_calendar_end_of_day_period(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_legacy: AsyncMock,
     mock_site_info_end_of_day: AsyncMock,
 ) -> None:
-    """Test a tariff period ending at hour 24 parses instead of crashing."""
+    """Test a tariff period ending at the day boundary parses instead of crashing."""
     tz = dt_util.get_default_time_zone()
     # Sunday 23:45, inside the 23:30->24:00 end-of-day period
     freezer.move_to(datetime(2024, 1, 7, 23, 45, 0, tzinfo=tz))
@@ -435,7 +445,7 @@ async def test_calendar_end_of_day_period(
     )
     events = result[ENTITY_BUY]["events"]
     assert len(events) == 1
-    # Hour 24 normalises to the following midnight
+    # The day boundary normalises to the following midnight
     assert dt_util.parse_datetime(events[0]["end"]) == datetime(
         2024, 1, 8, 0, 0, 0, tzinfo=tz
     )
