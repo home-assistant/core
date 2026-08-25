@@ -42,7 +42,6 @@ class FlexitDataCoordinator(DataUpdateCoordinator[None]):
         self.device = Flexit(unit)
         self.device_info = DeviceInfo(
             identifiers={(DOMAIN, entry.entry_id)},
-            configuration_url=None,
             name=self.name,
             model=self.device.info.model,
             manufacturer=self.device.info.manufacturer,
