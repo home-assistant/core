@@ -20,5 +20,6 @@ async def async_get_config_entry_diagnostics(
 
     return {
         "entry_data": dict(entry.data),
+        "entry_options": dict(entry.options),
         "data": runtime_data_dict,
     }

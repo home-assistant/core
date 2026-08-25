@@ -13,6 +13,7 @@ from .const import (
     CONF_FILTER_CORONA,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
+    CONF_MESSAGE_SLOTS,
     DOMAIN,
     LOGGER,
     NO_MATCH_REGEX,
@@ -56,7 +57,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bo
 
     LOGGER.debug("Migrating from version %s.%s", version, minor_version)
 
-    new_data: dict[str, Any] = {**entry.data, CONF_FILTERS: {}}
+    new_data: dict[str, Any] = {**entry.data}
 
     if version == 1 and minor_version == 1:
         if CONF_HEADLINE_FILTER not in entry.data:
@@ -79,6 +80,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bo
         minor_version = 2
 
     if version == 1 and minor_version == 2:
+        new_data[CONF_FILTERS] = {}
         new_data[CONF_FILTERS][CONF_HEADLINE_FILTER] = entry.data[CONF_HEADLINE_FILTER]
         new_data.pop(CONF_HEADLINE_FILTER, None)
 
@@ -89,6 +91,25 @@ async def async_migrate_entry(hass: HomeAssistant, entry: NinaConfigEntry) -> bo
             entry,
             data=new_data,
             minor_version=3,
+        )
+        minor_version = 3
+
+    if version == 1 and minor_version == 3:
+        new_data_options: dict[str, Any] = {}
+
+        if CONF_MESSAGE_SLOTS in entry.data:
+            new_data_options[CONF_MESSAGE_SLOTS] = entry.data[CONF_MESSAGE_SLOTS]
+            new_data.pop(CONF_MESSAGE_SLOTS, None)
+
+        if CONF_FILTERS in entry.data:
+            new_data_options[CONF_FILTERS] = entry.data[CONF_FILTERS]
+            new_data.pop(CONF_FILTERS, None)
+
+        hass.config_entries.async_update_entry(
+            entry,
+            data=new_data,
+            options=new_data_options,
+            minor_version=4,
         )
 
     return True

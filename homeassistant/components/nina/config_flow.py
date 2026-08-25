@@ -89,13 +89,20 @@ def prepare_user_input(
     return user_input
 
 
-def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
-    """Create the schema for the flows."""
+def create_regions_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
+    """Create schema for region selection."""
     schema_dict: VolDictType = {
         **{
             vol.Optional(region): cv.multi_select(regions[region])
             for region in CONST_REGIONS
         },
+    }
+    return vol.Schema(schema_dict)
+
+
+def create_options_schema() -> vol.Schema:
+    """Create schema for options flow (filters and slots)."""
+    schema_dict: VolDictType = {
         vol.Required(
             CONF_MESSAGE_SLOTS,
             default=5,
@@ -113,7 +120,6 @@ def create_schema(regions: dict[str, dict[str, Any]]) -> vol.Schema:
             )
         ),
     }
-
     return vol.Schema(schema_dict)
 
 
@@ -121,7 +127,7 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for NINA."""
 
     VERSION: int = 1
-    MINOR_VERSION: int = 3
+    MINOR_VERSION: int = 4
 
     def __init__(self) -> None:
         """Initialize."""
@@ -162,64 +168,38 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                 if group_input := user_input.get(group):
                     user_input[CONF_REGIONS] += group_input
 
-            if not user_input[CONF_FILTERS][CONF_HEADLINE_FILTER]:
-                user_input[CONF_FILTERS][CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
-
             if user_input[CONF_REGIONS]:
+                regions_data = {CONF_REGIONS: user_input[CONF_REGIONS]}
                 return self.async_create_entry(
                     title="NINA",
-                    data=prepare_user_input(user_input, self._all_region_codes_sorted),
+                    data=prepare_user_input(
+                        regions_data, self._all_region_codes_sorted
+                    ),
+                    options={
+                        CONF_MESSAGE_SLOTS: 5,
+                        CONF_FILTERS: {
+                            CONF_HEADLINE_FILTER: NO_MATCH_REGEX,
+                            CONF_AREA_FILTER: ALL_MATCH_REGEX,
+                        },
+                    },
                 )
 
             errors["base"] = "no_selection"
 
-        default_filters = {
-            CONF_FILTERS: {
-                CONF_HEADLINE_FILTER: NO_MATCH_REGEX,
-                CONF_AREA_FILTER: ALL_MATCH_REGEX,
-            }
-        }
-
-        schema_with_suggested = self.add_suggested_values_to_schema(
-            create_schema(self.regions), default_filters
-        )
-
         return self.async_show_form(
             step_id="user",
-            data_schema=schema_with_suggested,
+            data_schema=self.add_suggested_values_to_schema(
+                create_regions_schema(self.regions), {}
+            ),
             errors=errors,
         )
 
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: ConfigEntry,
-    ) -> OptionsFlowHandler:
-        """Get the options flow for this handler."""
-        return OptionsFlowHandler(config_entry)
-
-
-class OptionsFlowHandler(OptionsFlowWithReload):
-    """Handle an option flow for NINA."""
-
-    def __init__(self, config_entry: ConfigEntry) -> None:
-        """Initialize options flow."""
-        self.data = dict(config_entry.data)
-
-        self._all_region_codes_sorted: dict[str, str] = {}
-        self.regions: dict[str, dict[str, Any]] = {}
-
-        for name in CONST_REGIONS:
-            self.regions[name] = {}
-            if name not in self.data:
-                self.data[name] = []
-
-    async def async_step_init(
+    async def async_step_reconfigure(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Handle options flow."""
-        errors: dict[str, str] = {}
+        """Handle reconfiguration of regions."""
+        reconfigure_entry = self._get_reconfigure_entry()
+        errors: dict[str, Any] = {}
 
         if not self._all_region_codes_sorted:
             nina: Nina = Nina(async_get_clientsession(self.hass))
@@ -244,45 +224,86 @@ class OptionsFlowHandler(OptionsFlowWithReload):
                     user_input[CONF_REGIONS] += group_input
 
             if user_input[CONF_REGIONS]:
-                user_input = prepare_user_input(
-                    user_input, self._all_region_codes_sorted
+                regions_data = prepare_user_input(
+                    {CONF_REGIONS: user_input[CONF_REGIONS]},
+                    self._all_region_codes_sorted,
                 )
 
-                await self.remove_unused_entities(user_input)
-                await self.remove_unused_devices(user_input)
+                await self._remove_unused_devices(reconfigure_entry, regions_data)
 
-                self.hass.config_entries.async_update_entry(
-                    self.config_entry, data=user_input
+                new_data = {
+                    **reconfigure_entry.data,
+                    CONF_REGIONS: regions_data[CONF_REGIONS],
+                }
+
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data=new_data
                 )
-
-                return self.async_create_entry(title="", data={})
 
             errors["base"] = "no_selection"
 
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                create_regions_schema(self.regions),
+                {**reconfigure_entry.data},
+            ),
+            errors=errors,
+        )
+
+    async def _remove_unused_devices(
+        self, config_entry: ConfigEntry, regions_data: dict[str, Any]
+    ) -> None:
+        """Remove devices from regions that are not selected."""
+        device_registry = dr.async_get(self.hass)
+
+        removed_regions = set(config_entry.data[CONF_REGIONS]) - set(
+            regions_data[CONF_REGIONS]
+        )
+
+        for region in removed_regions:
+            if device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, region), config_entry.entry_id
+            ):
+                device_registry.async_remove_device(device.id)
+
+    @staticmethod
+    @callback
+    @override
+    def async_get_options_flow(
+        config_entry: ConfigEntry,
+    ) -> OptionsFlowHandler:
+        """Get the options flow for this handler."""
+        return OptionsFlowHandler()
+
+
+class OptionsFlowHandler(OptionsFlowWithReload):
+    """Handle an option flow for NINA - filters and slots only."""
+
+    async def async_step_init(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle options flow - filters and slots only."""
+        if user_input is not None:
+            if not user_input[CONF_FILTERS][CONF_HEADLINE_FILTER]:
+                user_input[CONF_FILTERS][CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
+
+            if CONF_MESSAGE_SLOTS in user_input:
+                await self._remove_unused_entities(user_input)
+
+            return self.async_create_entry(title="", data=user_input)
+
         schema_with_suggested = self.add_suggested_values_to_schema(
-            create_schema(self.regions), self.data
+            create_options_schema(), dict(self.config_entry.options)
         )
 
         return self.async_show_form(
             step_id="init",
             data_schema=schema_with_suggested,
-            errors=errors,
         )
 
-    async def remove_unused_devices(self, user_input: dict[str, Any]) -> None:
-        """Remove devices from regions that are not selected."""
-        device_registry = dr.async_get(self.hass)
-
-        removed_regions = set(self.data[CONF_REGIONS]) - set(user_input[CONF_REGIONS])
-
-        for region in removed_regions:
-            if device := device_registry.async_get_device_by_identifier(
-                (DOMAIN, region), self.config_entry.entry_id
-            ):
-                device_registry.async_remove_device(device.id)
-
-    async def remove_unused_entities(self, user_input: dict[str, Any]) -> None:
-        """Remove entities which are not used anymore."""
+    async def _remove_unused_entities(self, user_input: dict[str, Any]) -> None:
+        """Remove entities which are not used anymore due to slot changes."""
         entity_registry = er.async_get(self.hass)
 
         entries = er.async_entries_for_config_entry(
@@ -291,24 +312,20 @@ class OptionsFlowHandler(OptionsFlowWithReload):
 
         id_type_suffix = [f"-{sensor_id}" for sensor_id in SENSOR_SUFFIXES] + [""]
 
-        removed_entities_slots = [
-            f"{region}-{slot_id}{suffix}"
-            for region in self.data[CONF_REGIONS]
-            for slot_id in range(self.data[CONF_MESSAGE_SLOTS] + 1)
-            for suffix in id_type_suffix
-            if slot_id > user_input[CONF_MESSAGE_SLOTS]
-        ]
+        old_slots = self.config_entry.options.get(CONF_MESSAGE_SLOTS, 5)
+        new_slots = user_input[CONF_MESSAGE_SLOTS]
 
-        removed_entities_area = [
-            f"{cfg_region}-{slot_id}{suffix}"
-            for slot_id in range(1, self.data[CONF_MESSAGE_SLOTS] + 1)
-            for cfg_region in self.data[CONF_REGIONS]
-            for suffix in id_type_suffix
-            if cfg_region not in user_input[CONF_REGIONS]
-        ]
+        if new_slots < old_slots:
+            removed_entities_slots = [
+                f"{region}-{slot_id}{suffix}"
+                for region in self.config_entry.data[CONF_REGIONS]
+                for slot_id in range(old_slots + 1)
+                for suffix in id_type_suffix
+                if slot_id > new_slots
+            ]
 
-        removed_uids = set(removed_entities_slots + removed_entities_area)
+            removed_uids = set(removed_entities_slots)
 
-        for entry in entries:
-            if entry.unique_id in removed_uids:
-                entity_registry.async_remove(entry.entity_id)
+            for entry in entries:
+                if entry.unique_id in removed_uids:
+                    entity_registry.async_remove(entry.entity_id)
