@@ -667,29 +667,30 @@ async def test_network_neighbors_cancelled(
     ]
 
 
-async def test_network_neighbors_cancelled_while_restoring_rf(
+async def test_network_neighbors_handler_cancelled(
     hass: HomeAssistant,
+    multisensor_6: Node,
     integration: MockConfigEntry,
     client: MagicMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test the lock is held until the radio is back on after a cancellation."""
+    """Test an abandoned request doesn't interrupt the refresh.
+
+    The refresh must keep the lock and turn the radio back on even when the
+    websocket command handler is cancelled, e.g. by a closing connection.
+    """
     ws_client = await hass_ws_client(hass)
-    restore_started = asyncio.Event()
-    resume_restore = asyncio.Event()
-    handler_tasks: list[asyncio.Task[None]] = []
+    read_started = asyncio.Event()
+    resume_read = asyncio.Event()
 
     async def handler(message: dict[str, Any]) -> dict[str, Any]:
         if message["command"] == "controller.get_node_neighbors":
-            # the reads run in the handler task, the restore does not
-            handler_tasks.append(asyncio.current_task())
+            read_started.set()
+            await resume_read.wait()
             return {"neighbors": []}
-        if message["enabled"]:
-            restore_started.set()
-            await resume_restore.wait()
         return {"success": True}
 
-    mock_neighbors_commands(client, handler)
+    commands = mock_neighbors_commands(client, handler)
     lock = integration.runtime_data.network_neighbors_lock
 
     await ws_client.send_json_auto_id(
@@ -698,20 +699,28 @@ async def test_network_neighbors_cancelled_while_restoring_rf(
             ENTRY_ID: integration.entry_id,
         }
     )
-    await restore_started.wait()
-    assert lock.locked()
+    await read_started.wait()
 
-    handler_tasks[0].cancel()
+    handler_task = next(
+        task
+        for task in asyncio.all_tasks()
+        if "_handle_async_response" in repr(task.get_coro())
+    )
+    handler_task.cancel()
     for _ in range(5):
         await asyncio.sleep(0)
-    # The radio is still being turned back on, so the lock must not be free yet
+    # The abandoned refresh keeps reading with the lock held
     assert lock.locked()
 
-    resume_restore.set()
-    for _ in range(10):
-        await asyncio.sleep(0)
+    resume_read.set()
     await hass.async_block_till_done()
     assert not lock.locked()
+    assert commands == [
+        {"command": "controller.toggle_rf", "enabled": False},
+        {"command": "controller.get_node_neighbors", "nodeId": 1},
+        {"command": "controller.get_node_neighbors", "nodeId": multisensor_6.node_id},
+        {"command": "controller.toggle_rf", "enabled": True},
+    ]
 
 
 async def test_network_neighbors_concurrent(

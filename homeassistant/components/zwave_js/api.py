@@ -656,43 +656,41 @@ async def websocket_network_neighbors(
         except BaseZwaveJSServerError:
             return False
 
-    neighbors: dict[int, list[int]] = {}
-    rf_disabled = False
-    rf_restored = False
-    async with entry.runtime_data.network_neighbors_lock:
-        try:
-            rf_disabled = await controller.async_toggle_rf(False)
-            if rf_disabled:
-                # Snapshot the nodes, inclusion/exclusion can mutate the
-                # collection while it is being iterated
-                for node in list(controller.nodes.values()):
-                    # Long range nodes are not part of the mesh
-                    if node.protocol is Protocols.ZWAVE_LONG_RANGE:
-                        continue
-                    try:
-                        neighbors[
-                            node.node_id
-                        ] = await controller.async_get_node_neighbors(node)
-                    except FailedCommand:
-                        continue
-        finally:
-            # Shielded so the radio comes back on even when the connection is
-            # closed while the routing table is being read
-            restore = hass.async_create_task(restore_rf())
+    async def read_network_neighbors() -> tuple[bool, bool, dict[int, list[int]]]:
+        """Read the neighbors of all nodes while the radio is off."""
+        neighbors: dict[int, list[int]] = {}
+        rf_disabled = False
+        async with entry.runtime_data.network_neighbors_lock:
             try:
-                rf_restored = await asyncio.shield(restore)
-            except asyncio.CancelledError:
-                # Hold the lock until the radio is back on, so a queued
-                # refresh can't race the restore
-                rf_restored = await asyncio.shield(restore)
-                raise
+                rf_disabled = await controller.async_toggle_rf(False)
+                if rf_disabled:
+                    # Snapshot the nodes, inclusion/exclusion can mutate the
+                    # collection while it is being iterated
+                    for node in list(controller.nodes.values()):
+                        # Long range nodes are not part of the mesh
+                        if node.protocol is Protocols.ZWAVE_LONG_RANGE:
+                            continue
+                        try:
+                            neighbors[
+                                node.node_id
+                            ] = await controller.async_get_node_neighbors(node)
+                        except FailedCommand:
+                            continue
             finally:
+                rf_restored = await restore_rf()
                 if not rf_restored:
                     _LOGGER.error(
                         "Failed to re-enable RF after reading the neighbors of"
                         " the nodes of config entry %s",
                         entry.entry_id,
                     )
+        return rf_disabled, rf_restored, neighbors
+
+    # The refresh runs as its own task and is only abandoned on cancellation,
+    # so a closing connection can't interrupt it while the radio is off
+    rf_disabled, rf_restored, neighbors = await asyncio.shield(
+        hass.async_create_task(read_network_neighbors())
+    )
     if not rf_disabled:
         connection.send_error(msg[ID], ERR_RF_TOGGLE_FAILED, "Failed to disable RF")
         return
