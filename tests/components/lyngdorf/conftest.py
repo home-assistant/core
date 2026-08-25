@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from lyngdorf.const import LyngdorfModel
 from lyngdorf.device import Receiver
 from lyngdorf.models.base import NumericRange
+from lyngdorf.remote import RemoteKey
 import pytest
 
 from homeassistant.components.lyngdorf.const import (
@@ -63,15 +64,25 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver = MagicMock(spec=Receiver)
         receiver.name = "Mock Lyngdorf"
         receiver.connected = True
+        receiver.has_remote_keys = True
+        receiver.available_remote_keys = frozenset(
+            {
+                RemoteKey.UP,
+                RemoteKey.DOWN,
+                RemoteKey.ENTER,
+                RemoteKey.MENU,
+                RemoteKey.DIGIT_0,
+            }
+        )
 
         # Diagnostics reports the whole receiver, so every property it reads
         # needs a value here; an unset one is a mock the response cannot encode.
         receiver.model = LyngdorfModel.MP_60
         receiver.max_volume = 0.0
-        receiver.room_perfect_position = None
-        receiver.available_room_perfect_positions = []
-        receiver.voicing = None
-        receiver.available_voicings = []
+        receiver.room_perfect_position = "Focus 1"
+        receiver.available_room_perfect_positions = ["Global", "Focus 1"]
+        receiver.voicing = "Neutral"
+        receiver.available_voicings = ["Neutral", "Music", "Movie"]
         receiver.lipsync = None
         receiver.lipsync_range = NumericRange(0, 500, 1)
         for _t in ("bass", "treble"):
@@ -100,6 +111,28 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver.available_audio_inputs = ["optical", "aux"]
         receiver.available_video_inputs = ["hdmi"]
         receiver.available_stream_types = ["AirPlay", "DLNA"]
+
+        receiver.now_playing = None
+        receiver.has_position = False
+        receiver.position_ms = None
+        receiver.position_updated_at = None
+        receiver.shuffle = None
+        receiver.repeat = None
+        receiver.can_shuffle = False
+        receiver.available_repeat_modes = frozenset()
+
+        receiver.lipsync = 50
+        receiver.lipsync_range = NumericRange(0, 500, 1)
+        receiver.trim_bass = 3.0
+        receiver.trim_treble = 0.0
+        receiver.trim_centre = 0.0
+        receiver.trim_height = 4.0
+        receiver.trim_lfe = 3.0
+        receiver.trim_surround = 0.0
+        receiver.trim_bass_range = NumericRange(-12.0, 12.0, 0.1)
+        receiver.trim_treble_range = NumericRange(-12.0, 12.0, 0.1)
+        for _trim in ("centre", "height", "lfe", "surround"):
+            setattr(receiver, f"trim_{_trim}_range", NumericRange(-10.0, 10.0, 0.1))
 
         receiver.zone_b_power_on = False
         receiver.zone_b_volume = -40.0
@@ -137,6 +170,12 @@ def notify_receiver_update(receiver: MagicMock) -> None:
     """Fire every notification callback the entities registered."""
     for call in receiver.register_notification_callback.call_args_list:
         call.args[0]()
+
+
+def notify_position_jump(receiver: MagicMock, position_ms: int | None) -> None:
+    """Fire every position jump callback the entities registered."""
+    for call in receiver.register_position_jump_callback.call_args_list:
+        call.args[0](position_ms)
 
 
 @pytest.fixture

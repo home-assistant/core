@@ -40,6 +40,7 @@ from homeassistant.const import (
 from homeassistant.core import Event, HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryNotReady, HomeAssistantError
 from homeassistant.helpers import (
+    area_registry as ar,
     config_validation as cv,
     device_registry as dr,
     entity_registry as er,
@@ -162,13 +163,27 @@ PLATFORMS = [
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Z-Wave JS component."""
-    for entry in hass.config_entries.async_entries(DOMAIN):
-        if not isinstance(entry.unique_id, str):
-            hass.config_entries.async_update_entry(
-                entry, unique_id=str(entry.unique_id)
-            )
-
     async_setup_services(hass)
+
+    return True
+
+
+async def async_migrate_entry(hass: HomeAssistant, entry: ZwaveJSConfigEntry) -> bool:
+    """Migrate old config entry."""
+    if entry.version == 1 and entry.minor_version < 2:
+        unique_id = entry.unique_id
+        if not isinstance(unique_id, str):
+            # Old entries stored the home ID as int.
+            unique_id = str(unique_id)
+        data = dict(entry.data)
+        # s0_legacy_key was saved as network_key before s2 was added.
+        if CONF_NETWORK_KEY in data:
+            network_key = data.pop(CONF_NETWORK_KEY)
+            if not data.get(CONF_S0_LEGACY_KEY):
+                data[CONF_S0_LEGACY_KEY] = network_key
+        hass.config_entries.async_update_entry(
+            entry, data=data, unique_id=unique_id, minor_version=2
+        )
 
     return True
 
@@ -847,6 +862,10 @@ class NodeEvents:
             issue_id = f"device_config_file_changed.{device.id}"
             if await node.async_has_device_config_changed():
                 device_name = device.name_by_user or device.name or "Unnamed device"
+                if device.area_id and (
+                    area := ar.async_get(self.hass).async_get_area(device.area_id)
+                ):
+                    device_name = f"{device_name} ({area.name})"
                 async_create_issue(
                     self.hass,
                     DOMAIN,
@@ -1210,10 +1229,7 @@ async def async_ensure_addon_running(
 
     usb_path: str | None = entry.data[CONF_USB_PATH]
     socket_path: str | None = entry.data.get(CONF_SOCKET_PATH)
-    # s0_legacy_key was saved as network_key before s2 was added.
     s0_legacy_key: str = entry.data.get(CONF_S0_LEGACY_KEY, "")
-    if not s0_legacy_key:
-        s0_legacy_key = entry.data.get(CONF_NETWORK_KEY, "")
     s2_access_control_key: str = entry.data.get(CONF_S2_ACCESS_CONTROL_KEY, "")
     s2_authenticated_key: str = entry.data.get(CONF_S2_AUTHENTICATED_KEY, "")
     s2_unauthenticated_key: str = entry.data.get(CONF_S2_UNAUTHENTICATED_KEY, "")

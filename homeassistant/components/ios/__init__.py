@@ -16,7 +16,6 @@ from homeassistant.helpers import config_validation as cv, discovery
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.json import save_json
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
 from homeassistant.util.json import load_json_object
 
 from .const import (
@@ -71,8 +70,6 @@ ATTR_DEFAULT_BEHAVIOR = "default"
 ATTR_TEXT_INPUT_BEHAVIOR = "textInput"
 
 BEHAVIORS = [ATTR_DEFAULT_BEHAVIOR, ATTR_TEXT_INPUT_BEHAVIOR]
-
-ATTR_LAST_SEEN_AT = "lastSeenAt"
 
 ATTR_PUSH_TOKEN = "pushToken"
 ATTR_APP = "app"
@@ -341,8 +338,6 @@ class iOSIdentifyDeviceView(HomeAssistantView):
             return self.json_message("Invalid JSON", HTTPStatus.BAD_REQUEST)
 
         hass = request.app[KEY_HASS]
-
-        data[ATTR_LAST_SEEN_AT] = dt_util.now().isoformat()
 
         device_id = data[ATTR_DEVICE_ID]
 
