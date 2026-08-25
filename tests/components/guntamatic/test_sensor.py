@@ -238,15 +238,7 @@ async def test_service_date_fractional_days(
     freezer: FrozenDateTimeFactory,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test service date correctly handles fractional days.
-
-    Regression for the fix that computes ``(now() + timedelta).date()``
-    instead of ``(now().date() + timedelta)``. With a non-midnight
-    frozen time fractional days must roll over correctly.
-    """
-    # Use the hass default time zone (US/Pacific in tests) so 15:00 local
-    # exposes the off-by-one: 15:00 + 1.5d (=36h) => 03:00 two days later.
-    # The buggy ``date + timedelta`` would discard the 12h and give 27th.
+    """Fractional service_days roll over correctly when time is not midnight."""
     frozen = datetime(2026, 8, 26, 15, 00, tzinfo=dt_util.get_default_time_zone())
     freezer.move_to(frozen)
 
@@ -255,10 +247,6 @@ async def test_service_date_fractional_days(
     mock_heater.parse_data.return_value = data
 
     await setup_integration(hass, mock_config_entry)
-
-    # Service date is disabled by default (entity_registry_enabled_default=False)
-    # so enable it and reload to make state available. Always enable+reload
-    # to avoid branching while keeping the test deterministic.
     entity_registry.async_update_entity(
         "sensor.mock_title_service_date", disabled_by=None
     )
@@ -267,15 +255,4 @@ async def test_service_date_fractional_days(
 
     state = hass.states.get("sensor.mock_title_service_date")
     assert state is not None
-
-    expected = (frozen + timedelta(days=1.5)).date().isoformat()
-    # For 2026-08-26 15:00 + 1.5d (=36h) the correct date is 2026-08-28.
-    # The buggy ``date + timedelta`` discards the time and would give
-    # 2026-08-27 (date(2026,8,26)+1.5d truncates the 12h).
-    assert expected == "2026-08-28"
-    # Also verify against dt_util.now() to guarantee timezone alignment
-    assert expected == (dt_util.now() + timedelta(days=1.5)).date().isoformat()
-    assert state.state == expected, (
-        f"Expected {expected} from (datetime+timedelta).date(), "
-        "buggy date+timedelta would give 2026-08-27"
-    )
+    assert state.state == (frozen + timedelta(days=1.5)).date().isoformat()

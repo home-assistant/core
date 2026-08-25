@@ -243,45 +243,22 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         native_unit_of_measurement=PERCENTAGE,
         entity_registry_enabled_default=False,
     ),
-    SensorEntityDescription(
-        key="auxiliary_pump_0",
-        translation_key="auxiliary_pump",
-        translation_placeholders={"pump": "1"},
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            "auto",
-            "off",
-            "nonstop",
-        ],
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="auxiliary_pump_1",
-        translation_key="auxiliary_pump",
-        translation_placeholders={"pump": "2"},
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            "auto",
-            "off",
-            "nonstop",
-        ],
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="auxiliary_pump_2",
-        translation_key="auxiliary_pump",
-        translation_placeholders={"pump": "3"},
-        device_class=SensorDeviceClass.ENUM,
-        options=[
-            "auto",
-            "off",
-            "nonstop",
-        ],
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
+    *[
+        SensorEntityDescription(
+            key=f"auxiliary_pump_{nr}",
+            translation_key="auxiliary_pump",
+            translation_placeholders={"pump": str(nr + 1)},
+            device_class=SensorDeviceClass.ENUM,
+            options=[
+                "auto",
+                "off",
+                "nonstop",
+            ],
+            entity_registry_enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+        for nr in range(3)
+    ],
     SensorEntityDescription(
         key="suction_fan",
         translation_key="suction_fan",
@@ -316,44 +293,29 @@ GUNTAMATIC_SENSORS: list[SensorEntityDescription] = [
         entity_registry_enabled_default=False,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    SensorEntityDescription(
-        key="dhw_pump_0",
-        translation_key="dhw_pump",
-        translation_placeholders={"circuit": "1"},
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="dhw_pump_1",
-        translation_key="dhw_pump",
-        translation_placeholders={"circuit": "2"},
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
-    SensorEntityDescription(
-        key="dhw_pump_2",
-        translation_key="dhw_pump",
-        translation_placeholders={"circuit": "3"},
-        state_class=SensorStateClass.MEASUREMENT,
-        native_unit_of_measurement=PERCENTAGE,
-        entity_registry_enabled_default=False,
-        entity_category=EntityCategory.DIAGNOSTIC,
-    ),
+    *[
+        SensorEntityDescription(
+            key=f"dhw_pump_{nr}",
+            translation_key="dhw_pump",
+            translation_placeholders={"circuit": str(nr + 1)},
+            state_class=SensorStateClass.MEASUREMENT,
+            native_unit_of_measurement=PERCENTAGE,
+            entity_registry_enabled_default=False,
+            entity_category=EntityCategory.DIAGNOSTIC,
+        )
+        for nr in range(3)
+    ],
     *[
         SensorEntityDescription(
             key=f"extra_dhw_{nr}_temperature",
             translation_key="extra_dhw_temperature",
-            translation_placeholders={"circuit": str(nr + 1)},
+            translation_placeholders={"circuit": str(nr)},
             device_class=SensorDeviceClass.TEMPERATURE,
             state_class=SensorStateClass.MEASUREMENT,
             native_unit_of_measurement=UnitOfTemperature.CELSIUS,
             entity_registry_enabled_default=False,
         )
-        for nr in (1, 2)
+        for nr in range(3)
     ],
     *[
         SensorEntityDescription(
