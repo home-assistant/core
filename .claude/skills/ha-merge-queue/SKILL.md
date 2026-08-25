@@ -15,7 +15,7 @@ Search open PRs, excluding those that are structurally not mergeable:
 
 ```
 repo:home-assistant/core is:open is:pr draft:false status:success -review:changes_requested
-  -label:"awaiting-frontend" -label:"needs-more-info" -label:"stale" -label:"cla-needed"
+  -label:"awaiting-frontend" -label:"stale" -label:"cla-needed"
 ```
 
 Add `label:"small-pr"` for quick wins, or `label:"code-owner-approved"` / `review:approved`
