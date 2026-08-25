@@ -2,7 +2,7 @@
 
 from dataclasses import replace
 from ipaddress import ip_address
-from unittest.mock import ANY, AsyncMock, patch
+from unittest.mock import ANY, AsyncMock, MagicMock
 
 from airgradient import (
     AirGradientBusyError,
@@ -20,8 +20,6 @@ from homeassistant.const import CONF_HOST
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
-
-from . import load_measures_fixture
 
 from tests.common import MockConfigEntry
 
@@ -346,7 +344,11 @@ async def test_zeroconf_flow_abort_unsupported_firmware(
 
 
 @pytest.mark.usefixtures("mock_setup_entry")
-async def test_zeroconf_flow_v1_hint(hass: HomeAssistant) -> None:
+async def test_zeroconf_flow_v1_hint(
+    hass: HomeAssistant,
+    mock_airgradient_client_class: MagicMock,
+    mock_v1_airgradient_client: AsyncMock,
+) -> None:
     """Test zeroconf V1 hint seeds the client and skips the legacy gate."""
     discovery_info = replace(
         ZEROCONF_DISCOVERY,
@@ -357,32 +359,23 @@ async def test_zeroconf_flow_v1_hint(hass: HomeAssistant) -> None:
             "model": "P-1PSG",
         },
     )
-    with patch(
-        "homeassistant.components.airgradient.config_flow.AirGradientClient",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        client.api_version = ApiVersion.V1
-        client.get_current_measures.return_value = load_measures_fixture(
-            "measures_v1_full.json", ApiVersion.V1
-        )
-        client.get_config.return_value.configuration_control = (
-            ConfigurationControl.LOCAL
-        )
+    mock_v1_airgradient_client.get_config.return_value.configuration_control = (
+        ConfigurationControl.LOCAL
+    )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        assert result["step_id"] == "discovery_confirm"
-        mock_client.assert_called_once_with(
-            "10.0.0.131", session=ANY, api_version=ApiVersion.V1
-        )
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+    mock_airgradient_client_class.assert_called_once_with(
+        "10.0.0.131", session=ANY, api_version=ApiVersion.V1
+    )
 
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
@@ -394,67 +387,49 @@ async def test_zeroconf_flow_v1_hint(hass: HomeAssistant) -> None:
         pytest.param({**ZEROCONF_DISCOVERY.properties, "api": "2"}, id="unknown"),
     ],
 )
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_airgradient_client", "mock_setup_entry")
 async def test_zeroconf_flow_probes_for_missing_or_unknown_api_hint(
-    hass: HomeAssistant, properties: dict[str, str]
+    hass: HomeAssistant,
+    mock_airgradient_client_class: MagicMock,
+    properties: dict[str, str],
 ) -> None:
     """Test missing and unknown API hints leave the client unseeded."""
     discovery_info = replace(ZEROCONF_DISCOVERY, properties=properties)
-    with patch(
-        "homeassistant.components.airgradient.config_flow.AirGradientClient",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        client.api_version = ApiVersion.LEGACY
-        client.get_current_measures.return_value = load_measures_fixture(
-            "current_measures_indoor.json"
-        )
-        client.get_config.return_value.configuration_control = (
-            ConfigurationControl.LOCAL
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    assert result["type"] is FlowResultType.FORM
+    mock_airgradient_client_class.assert_called_once_with(
+        "10.0.0.131", session=ANY, api_version=None
+    )
 
-        assert result["type"] is FlowResultType.FORM
-        mock_client.assert_called_once_with("10.0.0.131", session=ANY, api_version=None)
-
-        result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_setup_entry")
+@pytest.mark.usefixtures("mock_airgradient_client", "mock_setup_entry")
 async def test_zeroconf_flow_stale_v1_hint_applies_legacy_gate(
     hass: HomeAssistant,
+    mock_airgradient_client_class: MagicMock,
 ) -> None:
     """Test a stale V1 hint still enforces the legacy minimum firmware."""
     discovery_info = replace(
         OLD_ZEROCONF_DISCOVERY,
         properties={**OLD_ZEROCONF_DISCOVERY.properties, "api": "1"},
     )
-    with patch(
-        "homeassistant.components.airgradient.config_flow.AirGradientClient",
-        autospec=True,
-    ) as mock_client:
-        client = mock_client.return_value
-        client.api_version = ApiVersion.LEGACY
-        client.get_current_measures.return_value = load_measures_fixture(
-            "current_measures_indoor.json"
-        )
-
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_ZEROCONF},
-            data=discovery_info,
-        )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=discovery_info,
+    )
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "invalid_version"
-    mock_client.assert_called_once_with(
+    mock_airgradient_client_class.assert_called_once_with(
         "10.0.0.131", session=ANY, api_version=ApiVersion.V1
     )
 
