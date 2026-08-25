@@ -6081,6 +6081,7 @@ async def test_name_conflict_migrate_recovered_entry(
     assert len(hass.config_entries.async_entries(DOMAIN)) == 1
 
 
+@pytest.mark.parametrize("ignore_translations_for_mock_domains", ["other_domain"])
 async def test_name_conflict_migrate_deletes_old_issues(
     hass: HomeAssistant,
     issue_registry: ir.IssueRegistry,
@@ -6098,11 +6099,16 @@ async def test_name_conflict_migrate_deletes_old_issues(
         hass,
         DOMAIN,
         old_issue_id,
-        is_fixable=False,
+        is_fixable=True,
         is_persistent=True,
         severity=ir.IssueSeverity.WARNING,
         translation_key="deprecated_firmware",
-        translation_placeholders={"device_name": "Test name", "model": MODEL_PLUS_2PM},
+        translation_placeholders={
+            "device_name": "Test name",
+            "ip_address": "10.10.10.10",
+            "firmware": "20230913-112003/v1.14.0-gcb84623",
+            "ha_version": "2025.6.0",
+        },
     )
     # An issue of another integration that happens to end with the same MAC.
     ir.async_create_issue(
