@@ -61,7 +61,7 @@
       "message": "Failed to fetch data."
     },
     "unknown_error": {
-      "message": "Unknown error."
+      "message": "The device could not complete the requested action."
     }
   }
 }
