@@ -443,12 +443,17 @@ def _next_horizon_crossing(
     case at any latitude that never has a midnight sun or polar night.
     """
     event_func = getattr(astral.sun, event)
-    # Start two days back so the very next crossing has a prior sample to compare.
-    # The window is a bit over a year so that, when rescheduling from just inside
-    # a period, the next year's crossing is still found.
-    local_date = dt_util.as_local(utc_point_in_time).date() - timedelta(days=2)
+    # A positive ("after") offset delays the fire time past the crossing itself,
+    # so a crossing up to `offset` in the past can still be pending; look back
+    # that far. The extra two days give the first crossing a prior sample to
+    # compare against. Negative ("before") offsets only bring fire times earlier,
+    # so they need no extra lookback.
+    lookback = timedelta(days=2) + max(offset, timedelta(0))
+    local_date = dt_util.as_local(utc_point_in_time - lookback).date()
     prev_above: bool | None = None
-    for _ in range(400):
+    # Scan the lookback window plus a bit over a year so that, when rescheduling
+    # from just inside a period, the next year's crossing is still found.
+    for _ in range(lookback.days + 400):
         event_time: datetime = event_func(observer, local_date)
         above = astral.sun.elevation(observer, event_time) > ELEVATION_HORIZON
         if (

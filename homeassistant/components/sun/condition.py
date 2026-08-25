@@ -36,12 +36,7 @@ from homeassistant.helpers.selector import (
     NumericThresholdSelector,
     NumericThresholdSelectorConfig,
 )
-from homeassistant.helpers.sun import (
-    get_astral_event_date,
-    get_astral_event_next,
-    get_astral_observer,
-    is_up,
-)
+from homeassistant.helpers.sun import get_astral_event_date, get_astral_observer, is_up
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
@@ -414,17 +409,43 @@ class _BlueHourCondition(_GoldenBlueHourCondition):
     _high = ELEVATION_BLUE_HOUR_HIGH
 
 
+def _elevation_at_last_solar_extreme(hass: HomeAssistant, event: str) -> float:
+    """Return the sun's elevation at the most recent solar noon or midnight.
+
+    Evaluating the current cycle's extreme (the one at or before now), rather than
+    the next one, keeps ``is_midnight_sun``/``is_polar_night`` in step with their
+    start/end triggers: those fire at the solar noon/midnight whose elevation
+    crosses the horizon, and looking ahead would flip the condition up to a day
+    early.
+    """
+    observer = get_astral_observer(hass)
+    now = dt_util.utcnow()
+    event_func = getattr(astral.sun, event)
+    # Scan a short window and keep the latest extreme at or before now. Starting
+    # two days back guarantees the first candidate precedes now even for time
+    # zones skewed far from their meridian.
+    local_date = dt_util.as_local(now).date() - timedelta(days=2)
+    latest: datetime = event_func(observer, local_date)
+    for _ in range(4):
+        local_date += timedelta(days=1)
+        candidate: datetime = event_func(observer, local_date)
+        if candidate <= now:
+            latest = candidate
+    elevation: float = astral.sun.elevation(observer, latest)
+    return elevation
+
+
 class _MidnightSunCondition(_SunStateCondition):
     """Test if it is midnight sun (the sun stays above the horizon for 24h)."""
 
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
-        observer = get_astral_observer(self._hass)
         # The sun's daily low is at solar midnight; if even that is above the
         # horizon the sun never sets during this cycle.
-        next_midnight = get_astral_event_next(self._hass, _SUN_EVENT_SOLAR_MIDNIGHT)
-        elevation: float = astral.sun.elevation(observer, next_midnight)
+        elevation = _elevation_at_last_solar_extreme(
+            self._hass, _SUN_EVENT_SOLAR_MIDNIGHT
+        )
         return elevation > ELEVATION_HORIZON
 
 
@@ -434,11 +455,9 @@ class _PolarNightCondition(_SunStateCondition):
     @override
     def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
         """Check the condition."""
-        observer = get_astral_observer(self._hass)
         # The sun's daily high is at solar noon; if even that is below the
         # horizon the sun never rises during this cycle.
-        next_noon = get_astral_event_next(self._hass, _SUN_EVENT_SOLAR_NOON)
-        elevation: float = astral.sun.elevation(observer, next_noon)
+        elevation = _elevation_at_last_solar_extreme(self._hass, _SUN_EVENT_SOLAR_NOON)
         return elevation < ELEVATION_HORIZON
 
 

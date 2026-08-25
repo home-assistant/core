@@ -1,5 +1,6 @@
 """The tests for the sun automation."""
 
+from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime, timedelta
 from typing import Any
 
@@ -841,6 +842,39 @@ async def test_midnight_sun_trigger_stays_unscheduled_outside_polar(
     assert len(service_calls) == 0
 
 
+async def test_midnight_sun_trigger_offset_catches_pending_crossing(
+    hass: HomeAssistant, service_calls: list[ServiceCall]
+) -> None:
+    """Test a multi-day ``after`` offset still fires for an already-passed crossing.
+
+    With an ``after`` offset the fire time trails the crossing, so when the trigger
+    is (re)armed in the window between the two, the pending crossing must still be
+    found and scheduled rather than skipped to the next year.
+    """
+    latitude, longitude, time_zone = _SVALBARD
+    await hass.config.async_set_time_zone(time_zone)
+    await hass.config.async_update(latitude=latitude, longitude=longitude, elevation=0)
+
+    # Midnight sun starts at the 2015-04-18 22:56 solar midnight; a 3-day "after"
+    # offset pushes the fire time to 2015-04-21. now sits between the two.
+    now = datetime(2015, 4, 20, 12, tzinfo=dt_util.UTC)
+    expected = datetime(2015, 4, 21, 22, 56, 36, tzinfo=dt_util.UTC)
+    with freeze_time(now):
+        await _arm_automation(
+            hass,
+            {
+                "platform": "sun.midnight_sun_started",
+                "options": {"offset": {"days": 3}, "offset_type": "after"},
+            },
+            {},
+        )
+
+        async_fire_time_changed(hass, expected + timedelta(seconds=2))
+        await hass.async_block_till_done()
+
+    assert len(service_calls) == 1
+
+
 # --- Sun elevation triggers --------------------------------------------------
 
 
@@ -978,25 +1012,25 @@ async def test_dawn_dusk_twilight_validation(
 
 
 @pytest.mark.parametrize(
-    "trigger_key",
-    ["sun.golden_hour_started", "sun.blue_hour_ended"],
-)
-@pytest.mark.parametrize(
-    ("period", "valid"),
+    ("trigger_key", "period", "expectation"),
     [
-        ("any", True),
-        ("morning", True),
-        ("evening", True),
-        ("invalid", False),
+        ("sun.golden_hour_started", "any", nullcontext()),
+        ("sun.golden_hour_started", "morning", nullcontext()),
+        ("sun.golden_hour_started", "evening", nullcontext()),
+        ("sun.golden_hour_started", "invalid", pytest.raises(vol.Invalid)),
+        ("sun.blue_hour_ended", "any", nullcontext()),
+        ("sun.blue_hour_ended", "morning", nullcontext()),
+        ("sun.blue_hour_ended", "evening", nullcontext()),
+        ("sun.blue_hour_ended", "invalid", pytest.raises(vol.Invalid)),
     ],
 )
 async def test_golden_blue_hour_period_validation(
-    hass: HomeAssistant, trigger_key: str, period: str, valid: bool
+    hass: HomeAssistant,
+    trigger_key: str,
+    period: str,
+    expectation: AbstractContextManager,
 ) -> None:
     """Test the golden/blue hour triggers validate the period option."""
     config = {"platform": trigger_key, "options": {"period": period}}
-    if valid:
+    with expectation:
         await async_validate_trigger_config(hass, [config])
-    else:
-        with pytest.raises(vol.Invalid):
-            await async_validate_trigger_config(hass, [config])

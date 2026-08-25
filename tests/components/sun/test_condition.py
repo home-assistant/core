@@ -1,5 +1,6 @@
 """The tests for sun conditions."""
 
+from contextlib import AbstractContextManager, nullcontext
 from datetime import datetime, timedelta
 
 from freezegun import freeze_time
@@ -1836,23 +1837,100 @@ async def test_midnight_sun_polar_night_condition(
     assert bool(service_calls) is expected
 
 
-@pytest.mark.parametrize("condition_key", ["sun.is_golden_hour", "sun.is_blue_hour"])
 @pytest.mark.parametrize(
-    ("period", "valid"),
+    ("condition_key", "crossing", "before_expected", "after_expected"),
     [
-        ("any", True),
-        ("morning", True),
-        ("evening", True),
-        ("invalid", False),
+        # The condition must flip at the same solar noon/midnight where its
+        # start/end trigger fires (Svalbard crossings, truncated to whole seconds).
+        # Midnight sun starts at this solar midnight (elevation crosses above).
+        (
+            "sun.is_midnight_sun",
+            datetime(2015, 4, 18, 22, 56, 36, tzinfo=dt_util.UTC),
+            False,
+            True,
+        ),
+        # Midnight sun ends at this solar midnight (crosses below).
+        (
+            "sun.is_midnight_sun",
+            datetime(2015, 8, 25, 22, 59, 19, tzinfo=dt_util.UTC),
+            True,
+            False,
+        ),
+        # Polar night ends at this solar noon (crosses above).
+        (
+            "sun.is_polar_night",
+            datetime(2015, 2, 15, 11, 11, 34, tzinfo=dt_util.UTC),
+            True,
+            False,
+        ),
+        # Polar night starts at this solar noon (crosses below).
+        (
+            "sun.is_polar_night",
+            datetime(2015, 10, 28, 10, 41, 13, tzinfo=dt_util.UTC),
+            False,
+            True,
+        ),
+    ],
+)
+async def test_midnight_sun_polar_night_condition_flips_at_crossing(
+    hass: HomeAssistant,
+    service_calls: list[ServiceCall],
+    condition_key: str,
+    crossing: datetime,
+    before_expected: bool,
+    after_expected: bool,
+) -> None:
+    """Test the conditions flip at the same solar extreme as the start/end trigger."""
+    latitude, longitude, time_zone = _SVALBARD
+    await hass.config.async_set_time_zone(time_zone)
+    hass.config.latitude = latitude
+    hass.config.longitude = longitude
+    await async_setup_component(
+        hass,
+        automation.DOMAIN,
+        {
+            automation.DOMAIN: {
+                "trigger": {"platform": "event", "event_type": "test_event"},
+                "condition": {"condition": condition_key},
+                "action": {"service": "test.automation"},
+            }
+        },
+    )
+
+    # A minute before the crossing the previous cycle's state still holds.
+    with freeze_time(crossing - timedelta(minutes=1)):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert bool(service_calls) is before_expected
+    calls_before = len(service_calls)
+
+    # A minute after the crossing the condition has flipped to the new state.
+    with freeze_time(crossing + timedelta(minutes=1)):
+        hass.bus.async_fire("test_event")
+        await hass.async_block_till_done()
+    assert (len(service_calls) > calls_before) is after_expected
+
+
+@pytest.mark.parametrize(
+    ("condition_key", "period", "expectation"),
+    [
+        ("sun.is_golden_hour", "any", nullcontext()),
+        ("sun.is_golden_hour", "morning", nullcontext()),
+        ("sun.is_golden_hour", "evening", nullcontext()),
+        ("sun.is_golden_hour", "invalid", pytest.raises(vol.Invalid)),
+        ("sun.is_blue_hour", "any", nullcontext()),
+        ("sun.is_blue_hour", "morning", nullcontext()),
+        ("sun.is_blue_hour", "evening", nullcontext()),
+        ("sun.is_blue_hour", "invalid", pytest.raises(vol.Invalid)),
     ],
 )
 async def test_golden_blue_hour_condition_period_validation(
-    hass: HomeAssistant, condition_key: str, period: str, valid: bool
+    hass: HomeAssistant,
+    condition_key: str,
+    period: str,
+    expectation: AbstractContextManager,
 ) -> None:
     """Test the golden/blue hour conditions validate the period option."""
     config = {"condition": condition_key, "options": {"period": period}}
-    if valid:
+    with expectation:
         await async_validate_condition_config(hass, config)
-    else:
-        with pytest.raises(vol.Invalid):
-            await async_validate_condition_config(hass, config)
