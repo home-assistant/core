@@ -1,6 +1,7 @@
 """Test the gazetteer fallback in the default agent."""
 
 import asyncio
+import threading
 from typing import Any
 from unittest.mock import patch
 
@@ -13,6 +14,7 @@ from homeassistant.components.conversation.chat_log import async_get_chat_log
 from homeassistant.components.conversation.gazetteer import (
     _PREVIOUS_TARGETS_CAPACITY,
     GazetteerFallback,
+    _HomeLock,
     join_speech,
 )
 from homeassistant.components.conversation.models import ConversationInput
@@ -830,3 +832,159 @@ async def test_the_home_is_built_off_the_event_loop(
         )
 
     assert off_loop == [True, True]
+
+
+async def test_home_lock_lets_interpretations_run_together() -> None:
+    """Test the read side does not serialize what it does not need to."""
+    lock = _HomeLock()
+    both_inside = asyncio.Event()
+
+    async def reader() -> None:
+        async with lock.read():
+            held.append(1)
+            if len(held) == 2:
+                both_inside.set()
+            await both_inside.wait()
+
+    held: list[int] = []
+    async with asyncio.timeout(5):
+        await asyncio.gather(reader(), reader())
+
+    assert held == [1, 1]
+
+
+async def test_home_lock_keeps_a_rebuild_out_while_interpreting() -> None:
+    """Test a rebuild waits for the interpretations already in flight."""
+    lock = _HomeLock()
+    events: list[str] = []
+    reading = asyncio.Event()
+    release = asyncio.Event()
+
+    async def reader() -> None:
+        async with lock.read():
+            events.append("read enter")
+            reading.set()
+            await release.wait()
+            events.append("read exit")
+
+    async def writer() -> None:
+        await reading.wait()
+        async with lock.write():
+            events.append("write enter")
+
+    async def finish() -> None:
+        await reading.wait()
+        # Give the writer every chance to barge in before letting the reader go.
+        await asyncio.sleep(0)
+        release.set()
+
+    async with asyncio.timeout(5):
+        await asyncio.gather(reader(), writer(), finish())
+
+    assert events == ["read enter", "read exit", "write enter"]
+
+
+async def test_home_lock_holds_off_interpretations_while_rebuilding() -> None:
+    """Test an interpretation waits for a rebuild rather than reading a half-swap."""
+    lock = _HomeLock()
+    events: list[str] = []
+    writing = asyncio.Event()
+    release = asyncio.Event()
+
+    async def writer() -> None:
+        async with lock.write():
+            events.append("write enter")
+            writing.set()
+            await release.wait()
+            events.append("write exit")
+
+    async def reader() -> None:
+        await writing.wait()
+        async with lock.read():
+            events.append("read enter")
+
+    async def finish() -> None:
+        await writing.wait()
+        await asyncio.sleep(0)
+        release.set()
+
+    async with asyncio.timeout(5):
+        await asyncio.gather(writer(), reader(), finish())
+
+    assert events == ["write enter", "write exit", "read enter"]
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_a_rebuild_waits_for_an_interpretation_in_flight(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """Test the agent takes the lock, not just that the lock works.
+
+    Both halves run in executor threads, so without the lock a rebuild could swap the
+    tagger out from under a sentence being read. Holding one sentence inside the
+    matcher is the only way to have something for a rebuild to collide with.
+    """
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+    async_mock_service(hass, "light", "turn_on")
+
+    # Build the matcher up front, so the sentences below only read from it.
+    await conversation.async_converse(
+        hass, "turn on the kichen lights", None, Context(), None
+    )
+
+    spans: list[str] = []
+    inside = threading.Event()
+    release = threading.Event()
+    real_interpret = GazetteerMatcher.interpret
+    real_set_home = GazetteerMatcher.set_home
+
+    def interpret(self, text, **kwargs):
+        """Hold the first sentence inside the matcher until released."""
+        spans.append("interpret enter")
+        if not inside.is_set():
+            inside.set()
+            release.wait(timeout=10)
+        try:
+            return real_interpret(self, text, **kwargs)
+        finally:
+            spans.append("interpret exit")
+
+    def set_home(self, home):
+        spans.append("rebuild enter")
+        try:
+            real_set_home(self, home)
+        finally:
+            spans.append("rebuild exit")
+
+    with (
+        patch.object(GazetteerMatcher, "interpret", interpret),
+        patch.object(GazetteerMatcher, "set_home", set_home),
+    ):
+        held = hass.async_create_task(
+            conversation.async_converse(
+                hass, "turn on the kichen lights", None, Context(), None
+            )
+        )
+        await hass.async_add_executor_job(inside.wait, 10)
+
+        # That sentence is now inside the matcher. Outdate the home and ask for
+        # another, which cannot be answered without rebuilding first. Nothing here
+        # may wait on the held task, which is the point of holding it.
+        area_registry.async_update("kitchen_id", name="Scullery")
+        assert agent._gazetteer._stale
+        waiting = hass.async_create_task(
+            conversation.async_converse(
+                hass, "turn on the scullary lights", None, Context(), None
+            )
+        )
+        await asyncio.sleep(0.25)
+
+        assert "rebuild enter" not in spans, "rebuilt while a sentence was being read"
+
+        release.set()
+        async with asyncio.timeout(10):
+            await asyncio.gather(held, waiting)
+
+    assert spans.index("interpret exit") < spans.index("rebuild enter")
+    assert spans[-2:] == ["interpret enter", "interpret exit"]
