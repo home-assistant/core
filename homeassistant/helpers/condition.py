@@ -87,6 +87,8 @@ from . import config_validation as cv, entity_registry as er, selector
 from .automation import (
     DomainSpec,
     ThresholdConfig,
+    ValidationIssueReporter,
+    async_call_platform_validator,
     filter_by_domain_specs,
     get_absolute_description_key,
     get_relative_description_key,
@@ -1993,7 +1995,10 @@ def state_validate_config(hass: HomeAssistant, config: ConfigType) -> ConfigType
 
 
 async def async_validate_condition_config(
-    hass: HomeAssistant, config: ConfigType | str
+    hass: HomeAssistant,
+    config: ConfigType | str,
+    *,
+    issue_reporter: ValidationIssueReporter | None = None,
 ) -> ConfigType:
     """Validate config."""
     if isinstance(config, str):
@@ -2006,7 +2011,9 @@ async def async_validate_condition_config(
     if condition_key in ("and", "not", "or"):
         conditions = []
         for sub_cond in config["conditions"]:
-            sub_cond = await async_validate_condition_config(hass, sub_cond)
+            sub_cond = await async_validate_condition_config(
+                hass, sub_cond, issue_reporter=issue_reporter
+            )
             conditions.append(sub_cond)
         config["conditions"] = conditions
         return config
@@ -2020,7 +2027,9 @@ async def async_validate_condition_config(
         )
         if not (condition_class := condition_descriptors.get(relative_condition_key)):
             raise vol.Invalid(f"Invalid condition '{condition_key}' specified")
-        return await condition_class.async_validate_complete_config(hass, config)
+        return await async_call_platform_validator(
+            condition_class.async_validate_complete_config, hass, config, issue_reporter
+        )
 
     config = move_options_fields_to_top_level(config, _CONDITION_BASE_SCHEMA)
 
@@ -2031,18 +2040,29 @@ async def async_validate_condition_config(
                 sys.modules[__name__], VALIDATE_CONFIG_FORMAT.format(condition_key)
             ),
         )
-        return validator(hass, config)
+        return await async_call_platform_validator(
+            validator, hass, config, issue_reporter
+        )
 
     return config
 
 
 async def async_validate_conditions_config(
-    hass: HomeAssistant, conditions: list[ConfigType]
+    hass: HomeAssistant,
+    conditions: list[ConfigType],
+    *,
+    issue_reporter: ValidationIssueReporter | None = None,
 ) -> list[ConfigType | Template]:
-    """Validate config."""
+    """Validate config.
+
+    See ``async_validate_condition_config`` for the ``issue_reporter`` behavior.
+    """
     # No gather here because async_validate_condition_config is unlikely
     # to suspend and the overhead of creating many tasks is not worth it
-    return [await async_validate_condition_config(hass, cond) for cond in conditions]
+    return [
+        await async_validate_condition_config(hass, cond, issue_reporter=issue_reporter)
+        for cond in conditions
+    ]
 
 
 async def async_conditions_from_config(

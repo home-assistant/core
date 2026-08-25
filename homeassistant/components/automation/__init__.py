@@ -49,6 +49,11 @@ from homeassistant.helpers import (
     config_validation as cv,
     trigger as trigger_helper,
 )
+from homeassistant.helpers.automation import (
+    ValidationFinding,
+    async_clear_validation_issues,
+    async_create_validation_issue,
+)
 from homeassistant.helpers.entity import ToggleEntity
 from homeassistant.helpers.entity_component import EntityComponent
 from homeassistant.helpers.issue_registry import (
@@ -492,6 +497,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         raw_config: ConfigType | None,
         blueprint_inputs: ConfigType | None,
         trace_config: ConfigType,
+        validation_findings: list[ValidationFinding],
     ) -> None:
         """Initialize an automation entity."""
         self._attr_name = name
@@ -509,6 +515,8 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         self._blueprint_inputs = blueprint_inputs
         self._trace_config = trace_config
         self._attr_unique_id = automation_id
+        self._validation_findings = validation_findings
+        self._validation_issue_ids: set[str] = set()
 
     @property
     @override
@@ -657,6 +665,19 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
 
         if enable_automation:
             await self._async_enable()
+
+        for finding in self._validation_findings:
+            self._validation_issue_ids.add(
+                async_create_validation_issue(
+                    self.hass,
+                    finding,
+                    issue_domain=DOMAIN,
+                    owner_key=self.unique_id or self.entity_id,
+                    name=self._attr_name or self.entity_id,
+                    entity_id=self.entity_id,
+                    edit_url=f"/config/automation/edit/{self.unique_id}",
+                )
+            )
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -821,6 +842,7 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
     async def async_will_remove_from_hass(self) -> None:
         """Remove listeners when removing automation from Home Assistant."""
         await super().async_will_remove_from_hass()
+        async_clear_validation_issues(self.hass, self._validation_issue_ids)
         if self.registry_entry and self.registry_entry.entity_id != self.entity_id:
             # Entity ID change, do not unload the script or conditions as they will
             # be reused.
@@ -983,6 +1005,7 @@ class AutomationEntityConfig:
     raw_config: ConfigType | None
     validation_error: str | None
     validation_status: ValidationStatus
+    validation_findings: list[ValidationFinding]
 
 
 async def _prepare_automation_config(
@@ -1004,6 +1027,9 @@ async def _prepare_automation_config(
         raw_blueprint_inputs = cast(AutomationConfig, config_block).raw_blueprint_inputs
         validation_error = cast(AutomationConfig, config_block).validation_error
         validation_status = cast(AutomationConfig, config_block).validation_status
+        validation_findings = (
+            cast(AutomationConfig, config_block).validation_findings or []
+        )
         automation_configs.append(
             AutomationEntityConfig(
                 config_block,
@@ -1012,6 +1038,7 @@ async def _prepare_automation_config(
                 raw_config,
                 validation_error,
                 validation_status,
+                validation_findings,
             )
         )
 
@@ -1098,6 +1125,7 @@ async def _create_automation_entities(
             automation_config.raw_config,
             automation_config.raw_blueprint_inputs,
             config_block[CONF_TRACE],
+            automation_config.validation_findings,
         )
         entities.append(entity)
 
