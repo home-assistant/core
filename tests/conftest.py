@@ -388,6 +388,12 @@ async def configure_event_loop() -> None:
     runner.configure_event_loop(asyncio.get_running_loop())
 
 
+@pytest_asyncio.fixture(autouse=True, scope="session", loop_scope="session")
+async def configure_session_event_loop() -> None:
+    """Configure the session loop, which session scoped fixtures run on."""
+    runner.configure_event_loop(asyncio.get_running_loop())
+
+
 @pytest.fixture(autouse=True)
 async def enable_event_loop_debug() -> None:
     """Enable event loop debug mode."""
