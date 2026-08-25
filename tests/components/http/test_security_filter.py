@@ -70,6 +70,7 @@ async def test_ok_requests(
         ("/test/%2525252E%2525252E%2525252f%2525252E%2525252E/api", {}, False),
         ("/", {"sql": ";UNION SELECT (a, b"}, True),
         ("/", {"sql": "UNION%20SELECT%20%28a%2C%20b"}, True),
+        ("/", {"sql": "UNION\nSELECT (a, b"}, True),
         ("/UNION%20SELECT%20%28a%2C%20b", {}, False),
         ("/", {"sql": "concat(..."}, True),
         ("/", {"xss": "<script >"}, True),
@@ -117,17 +118,15 @@ async def test_bad_requests(
 
 
 @pytest.mark.parametrize(
-    ("request_path", "request_params", "fail_on_query_string"),
+    "request_path",
     [
-        ("/some\thing", {}, False),
-        ("/new\nline/cinema", {}, False),
-        ("/return\r/to/sender", {}, False),
+        "/some\thing",
+        "/new\nline/cinema",
+        "/return\r/to/sender",
     ],
 )
 async def test_bad_requests_with_unsafe_bytes(
     request_path: str,
-    request_params: dict[str, str],
-    fail_on_query_string: bool,
     aiohttp_client: ClientSessionGenerator,
     caplog: pytest.LogCaptureFixture,
 ) -> None:
@@ -139,28 +138,17 @@ async def test_bad_requests_with_unsafe_bytes(
 
     mock_api_client = await aiohttp_client(app)
 
-    # Manual params handling
-    if request_params:
-        raw_params = "&".join(f"{val}={key}" for val, key in request_params.items())
-        man_params = f"?{raw_params}"
-    else:
-        man_params = ""
-
     http = urllib3.PoolManager()
     resp = await asyncio.get_running_loop().run_in_executor(
         None,
         http.request,
         "GET",
-        f"http://{mock_api_client.host}:{mock_api_client.port}{request_path}{man_params}",
-        request_params,
+        f"http://{mock_api_client.host}:{mock_api_client.port}{request_path}",
     )
 
     assert resp.status == HTTPStatus.BAD_REQUEST
 
-    message = "Filtered a request with an unsafe byte in path:"
-    if fail_on_query_string:
-        message = "Filtered a request with unsafe byte query string:"
-    assert message in caplog.text
+    assert "Filtered a request with an unsafe byte in path:" in caplog.text
 
 
 @pytest.mark.parametrize("unsafe_byte", ["\t", "\r", "\n"])

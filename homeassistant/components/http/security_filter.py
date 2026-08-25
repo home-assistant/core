@@ -31,7 +31,7 @@ FILTERS: Final = re.compile(
     r"|concat.*\("
 
     r")",
-    flags=re.IGNORECASE,
+    flags=re.IGNORECASE | re.DOTALL,
 )
 # fmt: on
 
