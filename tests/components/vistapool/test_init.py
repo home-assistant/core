@@ -495,6 +495,38 @@ async def test_apply_optimistic_self_heal_retries_after_failed_refresh(
     assert coordinator.data["light"]["status"] == 0
 
 
+async def test_self_heal_stops_on_unload(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test unloading the entry stops the self-heal retry loop."""
+    mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
+        "light": {"status": 0}
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    coordinator.apply_optimistic("light.status", 1)
+
+    # The TTL expiry fires, the fetch fails, and a retry is armed.
+    mock_vistapool_client.fetch_pool_data.side_effect = AquariteError("cloud down")
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done()
+    assert coordinator.last_update_success is False
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    # A leftover retry would refetch; the unload must have cancelled it.
+    mock_vistapool_client.fetch_pool_data.reset_mock()
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done()
+    mock_vistapool_client.fetch_pool_data.assert_not_called()
+
+
 async def test_refresh_preserves_other_pending_optimistic_values(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

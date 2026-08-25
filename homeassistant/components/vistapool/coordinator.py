@@ -50,6 +50,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._pending_optimistic: dict[str, list[tuple[Any, float]]] = {}
         self._optimistic_handles: dict[str, asyncio.TimerHandle] = {}
         self._self_heal_handle: asyncio.TimerHandle | None = None
+        self._self_heal_task: asyncio.Task[None] | None = None
 
         super().__init__(
             hass,
@@ -92,6 +93,9 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._optimistic_handles.clear()
         self._pending_optimistic.clear()
         self._cancel_self_heal()
+        if self._self_heal_task is not None:
+            self._self_heal_task.cancel()
+            self._self_heal_task = None
         if self.subscription is not None:
             await self.subscription.aclose()
             self.subscription = None
@@ -151,7 +155,13 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if value_path not in self._pending_optimistic:
             return
         del self._pending_optimistic[value_path]
-        self.hass.async_create_task(self._async_self_heal())
+        self._start_self_heal()
+
+    def _start_self_heal(self) -> None:
+        """Launch the self-heal refresh unless one is already running."""
+        if self._self_heal_task is not None and not self._self_heal_task.done():
+            return
+        self._self_heal_task = self.hass.async_create_task(self._async_self_heal())
 
     async def _async_self_heal(self) -> None:
         """Fetch authoritative data after an expired write, retrying on failure.
@@ -165,12 +175,8 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if self.last_update_success:
             return
         self._self_heal_handle = self.hass.loop.call_later(
-            OPTIMISTIC_TTL_SECONDS, self._schedule_self_heal
+            OPTIMISTIC_TTL_SECONDS, self._start_self_heal
         )
-
-    def _schedule_self_heal(self) -> None:
-        """Run the self-heal retry from a loop timer."""
-        self.hass.async_create_task(self._async_self_heal())
 
     def _cancel_self_heal(self) -> None:
         """Drop a scheduled self-heal retry, if any."""
