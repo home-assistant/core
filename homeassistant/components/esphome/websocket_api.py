@@ -33,8 +33,23 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, get_device_capabilities)
 
 
-def _serial_port_type_name(port_type: SerialProxyPortType | int) -> str | None:
+def _is_main_esphome_device(device: dr.DeviceEntry, mac_address: str | None) -> bool:
+    """Return True if device is the MAC-connected ESPHome node."""
+    if mac_address is None:
+        return any(
+            conn_type == dr.CONNECTION_NETWORK_MAC
+            for conn_type, _ in device.connections
+        )
+    return (
+        dr.CONNECTION_NETWORK_MAC,
+        dr.format_mac(mac_address),
+    ) in device.connections
+
+
+def _serial_port_type_name(port_type: SerialProxyPortType | int | None) -> str | None:
     """Return the SerialProxyPortType name, or None if unknown."""
+    if port_type is None:
+        return None
     try:
         return SerialProxyPortType(port_type).name
     except ValueError:
@@ -106,16 +121,33 @@ def get_device_capabilities(
         )
         return
 
-    if entry.state is not ConfigEntryState.LOADED:
-        connection.send_result(msg["id"], _UNAVAILABLE_CAPABILITIES)
+    # Sub-devices share the config entry but not node-level proxy capabilities.
+    if not isinstance(device, dr.DeviceEntry):
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_NOT_FOUND,
+            "Device is not the main ESPHome device",
+        )
         return
 
-    entry_data = entry.runtime_data
-    device_info = entry_data.device_info
+    device_info = None
+    if entry.state is ConfigEntryState.LOADED:
+        device_info = entry.runtime_data.device_info
+
+    mac_address = device_info.mac_address if device_info is not None else None
+    if not _is_main_esphome_device(device, mac_address):
+        connection.send_error(
+            msg["id"],
+            websocket_api.ERR_NOT_FOUND,
+            "Device is not the main ESPHome device",
+        )
+        return
+
     if device_info is None:
         connection.send_result(msg["id"], _UNAVAILABLE_CAPABILITIES)
         return
 
+    entry_data = entry.runtime_data
     connection.send_result(
         msg["id"],
         {

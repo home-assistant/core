@@ -1,9 +1,9 @@
 """Tests for ESPHome websocket API."""
 
 from aioesphomeapi import APIClient
-from aioesphomeapi.model import SerialProxyInfo, SerialProxyPortType
+from aioesphomeapi.model import SerialProxyInfo, SerialProxyPortType, SubDeviceInfo
 
-from homeassistant.components.esphome.const import CONF_NOISE_PSK
+from homeassistant.components.esphome.const import CONF_NOISE_PSK, DOMAIN
 from homeassistant.components.esphome.serial_proxy import build_url
 from homeassistant.components.esphome.websocket_api import DEVICE_ID, ENTRY_ID, TYPE
 from homeassistant.core import HomeAssistant
@@ -70,6 +70,7 @@ async def test_get_device_capabilities(
                 SerialProxyInfo(name="uart0", port_type=SerialProxyPortType.TTL),
                 SerialProxyInfo(name="amp", port_type=SerialProxyPortType.RS232),
                 SerialProxyInfo(name="bus", port_type=SerialProxyPortType.RS485),
+                SerialProxyInfo(name="unknown", port_type=None),
             ],
         },
     )
@@ -106,6 +107,11 @@ async def test_get_device_capabilities(
                 "name": "bus",
                 "port_type": "RS485",
                 "url": str(build_url(device.entry.entry_id, "bus")),
+            },
+            {
+                "name": "unknown",
+                "port_type": None,
+                "url": str(build_url(device.entry.entry_id, "unknown")),
             },
         ],
     }
@@ -158,6 +164,42 @@ async def test_get_device_capabilities_wrong_domain(
     assert response["error"]["message"] == "Device is not an ESPHome device"
 
 
+async def test_get_device_capabilities_sub_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_client: APIClient,
+    mock_esphome_device: MockESPHomeDeviceType,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test capabilities are not exposed on ESPHome sub-devices."""
+    device = await mock_esphome_device(
+        mock_client=mock_client,
+        device_info={
+            "devices": [
+                SubDeviceInfo(device_id=11111111, name="Motion Sensor", area_id=0),
+            ],
+        },
+    )
+
+    sub_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{device.device_info.mac_address}_11111111"), device.entry.entry_id
+    )
+    assert sub_device is not None
+
+    websocket_client = await hass_ws_client()
+    await websocket_client.send_json_auto_id(
+        {
+            TYPE: "esphome/get_device_capabilities",
+            DEVICE_ID: sub_device.id,
+        }
+    )
+
+    response = await websocket_client.receive_json()
+    assert response["success"] is False
+    assert response["error"]["code"] == "not_found"
+    assert response["error"]["message"] == "Device is not the main ESPHome device"
+
+
 async def test_get_device_capabilities_unavailable(
     hass: HomeAssistant,
     device_registry: dr.DeviceRegistry,
@@ -175,7 +217,7 @@ async def test_get_device_capabilities_unavailable(
             "zwave_home_id": 1234567890,
         },
     )
-    await device.mock_disconnect(expected_disconnect=False)
+    device.entry.runtime_data.available = False
 
     websocket_client = await hass_ws_client()
     await websocket_client.send_json_auto_id(
