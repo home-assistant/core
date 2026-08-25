@@ -10,7 +10,6 @@ import voluptuous as vol
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
-from .gateway import async_get_home_server
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -87,9 +86,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
     async def _async_wait_for_device(self) -> None:
         """Start searching for devices and wait until at least one device was found or timeout is reached."""
         if self.home_server is None:
-            # Only fetched once the user actually proceeds with setup,
-            # rather than on every flow initialization.
-            self.home_server = await async_get_home_server(self.hass)
+            self.home_server = await self.hass.async_add_executor_job(HomeServer)
 
         await self.hass.async_add_executor_job(self.home_server.searchDevices)
         # wait for up to 5 seconds to find devices
