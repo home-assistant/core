@@ -63,7 +63,9 @@ env:
   POSTGRESQL_VERSIONS: "['postgres:12.22','postgres:15.19', 'postgres:18.6']"
   # 3.40.1 is the oldest supported version (recorder MIN_VERSION_SQLITE),
   # shipped in Debian 12 (bookworm)
-  # 3.53.4 is the latest (as of 25 Aug 2026)
+  # 3.53.4 is the latest (as of 25 Aug 2026) and the version shipped with
+  # HA OS and the official container images (Alpine 3.24); when bumping the
+  # latest, keep an entry for the version the container images ship
   # The year is part of the sqlite.org amalgamation download URL
   SQLITE_VERSIONS: '[{"version": "3.40.1", "year": "2022"}, {"version": "3.53.4", "year": "2026"}]'
   RECORDER_TEST_DIRS: >-
