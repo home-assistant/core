@@ -2,6 +2,7 @@
 
 import asyncio
 from collections.abc import Iterator
+import contextlib
 import fcntl
 import json
 import os
@@ -464,16 +465,16 @@ async def test_async_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
 
 
 def test_create_event_loop() -> None:
-    """Test created loops are configured and become the thread's current loop."""
+    """Test created loops are configured and leave the current loop alone."""
     created: list[asyncio.AbstractEventLoop] = []
     current: list[asyncio.AbstractEventLoop] = []
 
-    # In a thread of its own so the current loop of the test thread is untouched
+    # A thread of its own starts out without a current event loop
     def _create() -> None:
         created.append(runner.create_event_loop())
-        current.append(asyncio.get_event_loop())
         created.append(runner.create_event_loop(debug=True))
-        current.append(asyncio.get_event_loop())
+        with contextlib.suppress(RuntimeError):
+            current.append(asyncio.get_event_loop())
 
     create_thread = threading.Thread(target=_create)
     create_thread.start()
@@ -485,8 +486,9 @@ def test_create_event_loop() -> None:
         # The other loop is only debug free when the interpreter is, so is not
         # asserted on: CI runs with -X dev and PYTHONASYNCIODEBUG set.
         assert created[1].get_debug()
-        # asyncio.Runner relies on the loop factory to do this
-        assert current == created
+        # asyncio.Runner only unsets the current loop when it set it itself, so
+        # a factory that sets it leaves a closed loop behind after asyncio.run()
+        assert current == []
     finally:
         for loop in created:
             loop.close()

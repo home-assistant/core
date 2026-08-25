@@ -177,8 +177,6 @@ def create_event_loop(debug: bool = False) -> asyncio.AbstractEventLoop:
     """Create the Home Assistant event loop."""
     loop: asyncio.AbstractEventLoop = asyncio.EventLoop()
     configure_event_loop(loop, debug)
-    # asyncio.Runner leaves this to the factory when one is supplied
-    asyncio.set_event_loop(loop)
     return loop
 
 
@@ -278,6 +276,7 @@ def run(runtime_config: RuntimeConfig) -> int:
     # Backport of cpython 3.9 asyncio.run with a _cancel_all_tasks that times out
     loop = create_event_loop(runtime_config.debug)
     try:
+        asyncio.set_event_loop(loop)
         return loop.run_until_complete(setup_and_run_hass(runtime_config))
     finally:
         try:
