@@ -25,7 +25,7 @@ MIDEA_DEVICE_NAMES: dict[DeviceType, str] = {
     DeviceType.E1: "Dishwasher",
     DeviceType.E2: "Electric Water Heater",
     DeviceType.E3: "Gas Water Heater",
-    DeviceType.E6: "Gas Boilers",
+    DeviceType.E6: "Gas Boiler",
     DeviceType.E8: "Electric Slow Cooker",
     DeviceType.EA: "Electric Rice Cooker",
     DeviceType.EC: "Electric Pressure Cooker",
