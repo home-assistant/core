@@ -83,11 +83,14 @@ async def test_coordinator_update_failure_is_translated(
     coordinator = OmadaCoordinator(
         hass, mock_config_entry, mock_omada_site_client, "test"
     )
-    with patch.object(
-        OmadaCoordinator,
-        "poll_update",
-        side_effect=OmadaClientException("boom"),
-    ), pytest.raises(UpdateFailed) as err:
+    with (
+        patch.object(
+            OmadaCoordinator,
+            "poll_update",
+            side_effect=OmadaClientException("boom"),
+        ),
+        pytest.raises(UpdateFailed) as err,
+    ):
         await coordinator._async_update_data()
 
     assert err.value.translation_domain == DOMAIN
