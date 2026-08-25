@@ -12,6 +12,7 @@ from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
+from homeassistant.util import slugify
 
 from .conftest import setup_integration
 
@@ -87,7 +88,10 @@ async def test_device_preregistration(
 
     _preregister_devices(hass, entry, mock_nexia_home)
 
-    for thermostat_id in mock_nexia_home.get_thermostat_ids():
+    thermostat_ids = mock_nexia_home.get_thermostat_ids()
+    assert len(thermostat_ids) > 0
+
+    for thermostat_id in thermostat_ids:
         thermostat = mock_nexia_home.get_thermostat_by_id(thermostat_id)
         device = device_registry.async_get_device_by_identifier(
             (DOMAIN, thermostat.thermostat_id),  # type: ignore[arg-type] # until fix issue #139773
@@ -95,13 +99,17 @@ async def test_device_preregistration(
         )
         assert device is not None
 
-        for zone_id in thermostat.get_zone_ids():
+        zone_ids = thermostat.get_zone_ids()
+        assert len(zone_ids) > 0
+
+        for zone_id in zone_ids:
             zone = thermostat.get_zone_by_id(zone_id)
             device = device_registry.async_get_device_by_identifier(
                 (DOMAIN, zone.zone_id),  # type: ignore[arg-type] # until fix issue #139773
                 entry.entry_id,
             )
             assert device is not None
+            assert device.area_id == slugify(zone.get_name())
 
 
 async def test_device_via_device_links(
