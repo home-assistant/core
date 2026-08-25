@@ -37,7 +37,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
         gateway.home_server.removeBusEventListener(gateway)
         gateway.home_server.removeBusDeviceListener(gateway)
         await hass.async_add_executor_job(gateway.home_server.shutdown)
-        hass.data[DOMAIN].pop("home_server", None)
         raise
 
     # Start device discovery in the background: it is a best-effort UDP
@@ -72,5 +71,4 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
         # builds a genuinely fresh HomeServer instead of reusing the one
         # that was just shut down.
         await hass.async_add_executor_job(gateway.home_server.shutdown)
-        hass.data[DOMAIN].pop("home_server", None)
     return unload_ok

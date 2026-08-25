@@ -27,30 +27,6 @@ if TYPE_CHECKING:
 LOGGER = logging.getLogger(__name__)
 
 
-async def async_get_home_server(hass: HomeAssistant) -> HomeServer:
-    """Return the Haus-Bus HomeServer for this Home Assistant instance.
-
-    HomeServer.__new__ always returns the same process-wide singleton, but
-    its __init__ unconditionally reruns on every HomeServer() call and
-    starts new background threads that are never stopped, orphaning the
-    previous ones. Building it directly on the event loop would also block
-    on the UDP broadcast socket it opens. This helper ensures it is
-    constructed at most once per Home Assistant instance, off the event
-    loop, and shared between the config flow and the gateway.
-
-    The construction itself is serialized with a lock: without it, two
-    concurrent callers could both see "home_server" missing before either
-    finishes awaiting the executor job, constructing HomeServer twice - the
-    exact double-construction this helper exists to prevent.
-    """
-    domain_data = hass.data.setdefault(DOMAIN, {})
-    lock: asyncio.Lock = domain_data.setdefault("home_server_lock", asyncio.Lock())
-    async with lock:
-        if "home_server" not in domain_data:
-            domain_data["home_server"] = await hass.async_add_executor_job(HomeServer)
-        return domain_data["home_server"]
-
-
 class HausbusGateway(IBusDataListener):
     """Manages a Haus-Bus gateway."""
 
@@ -75,7 +51,7 @@ class HausbusGateway(IBusDataListener):
         cls, hass: HomeAssistant, config_entry: HausbusConfigEntry
     ) -> HausbusGateway:
         """Create the gateway, opening the Haus-Bus network connection."""
-        home_server = await async_get_home_server(hass)
+        home_server = await hass.async_add_executor_job(HomeServer)
         return cls(hass, config_entry, home_server)
 
     async def start_discovery(self) -> None:
