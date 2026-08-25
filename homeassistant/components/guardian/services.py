@@ -59,18 +59,17 @@ SERVICE_UPGRADE_FIRMWARE_SCHEMA = vol.Schema(
 def async_get_entry_id_for_service_call(call: ServiceCall) -> GuardianConfigEntry:
     """Get the entry ID related to a service call (by device ID)."""
     device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(call.hass)
 
-    if (device_entry := device_registry.async_get(device_id)) is None:
+    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        call.hass, device_id, domain=DOMAIN
+    )
+    if device is None:
         raise ValueError(f"Invalid Guardian device ID: {device_id}")
 
-    for entry_id in device_entry.config_entries:
-        if (entry := call.hass.config_entries.async_get_entry(entry_id)) is None:
-            continue
-        if entry.domain == DOMAIN:
-            return entry
+    if config_entry is None:
+        raise ValueError(f"No config entry for device ID: {device_id}")
 
-    raise ValueError(f"No config entry for device ID: {device_id}")
+    return config_entry
 
 
 @callback

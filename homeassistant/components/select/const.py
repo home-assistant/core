@@ -1,8 +1,9 @@
 """Provides the constants needed for the component."""
 
 from enum import StrEnum
+from typing import Final
 
-DOMAIN = "select"
+DOMAIN: Final = "select"
 
 
 class SelectEntityCapabilityAttribute(StrEnum):
