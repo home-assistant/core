@@ -1,76 +1,16 @@
 """Handle Cloud assist pipelines."""
 
-import asyncio
 from typing import Any
 
 from homeassistant.components.assist_pipeline import (
-    async_create_default_pipeline,
     async_get_pipelines,
     async_setup_pipeline_store,
     async_update_pipeline,
 )
-from homeassistant.components.conversation import HOME_ASSISTANT_AGENT
-from homeassistant.components.stt import DOMAIN as STT_DOMAIN
-from homeassistant.components.tts import DOMAIN as TTS_DOMAIN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
 
-from .const import (
-    DATA_PLATFORMS_SETUP,
-    DOMAIN,
-    STT_ENTITY_UNIQUE_ID,
-    TTS_ENTITY_UNIQUE_ID,
-)
-
-
-async def async_create_cloud_pipeline(hass: HomeAssistant) -> str | None:
-    """Create a cloud assist pipeline."""
-    # Wait for stt and tts platforms to set up and entities to be added
-    # before creating the pipeline.
-    platforms_setup = hass.data[DATA_PLATFORMS_SETUP]
-    await asyncio.gather(*(event.wait() for event in platforms_setup.values()))
-    # Make sure the pipeline store is loaded, needed because assist_pipeline
-    # is an after dependency of cloud
-    await async_setup_pipeline_store(hass)
-
-    entity_registry = er.async_get(hass)
-    new_stt_engine_id = entity_registry.async_get_entity_id(
-        STT_DOMAIN, DOMAIN, STT_ENTITY_UNIQUE_ID
-    )
-    new_tts_engine_id = entity_registry.async_get_entity_id(
-        TTS_DOMAIN, DOMAIN, TTS_ENTITY_UNIQUE_ID
-    )
-    if new_stt_engine_id is None or new_tts_engine_id is None:
-        # If there's no cloud stt or tts entity, we can't create a cloud pipeline.
-        return None
-
-    def cloud_assist_pipeline(hass: HomeAssistant) -> str | None:
-        """Return the ID of a cloud-enabled assist pipeline or None.
-
-        Check if a cloud pipeline already exists with either
-        legacy or current cloud engine ids.
-        """
-        for pipeline in async_get_pipelines(hass):
-            if (
-                pipeline.conversation_engine == HOME_ASSISTANT_AGENT
-                and pipeline.stt_engine in (DOMAIN, new_stt_engine_id)
-                and pipeline.tts_engine in (DOMAIN, new_tts_engine_id)
-            ):
-                return pipeline.id
-        return None
-
-    if (cloud_assist_pipeline(hass)) is not None or (
-        cloud_pipeline := await async_create_default_pipeline(
-            hass,
-            stt_engine_id=new_stt_engine_id,
-            tts_engine_id=new_tts_engine_id,
-            pipeline_name="Home Assistant Cloud",
-        )
-    ) is None:
-        return None
-
-    return cloud_pipeline.id
+from .const import DATA_PLATFORMS_SETUP, DOMAIN
 
 
 async def async_migrate_cloud_pipeline_engine(

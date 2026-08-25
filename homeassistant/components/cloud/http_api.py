@@ -15,8 +15,8 @@ from typing import Any, Concatenate, cast
 import aiohttp
 from aiohttp import web
 import attr
-from hass_nabucasa import AlreadyConnectedError, Cloud, CloudEvent, CloudEventType, auth
-from hass_nabucasa.const import AUTO_LOGIN_MAX_TOTAL_BACKOFF, STATE_DISCONNECTED
+from hass_nabucasa import AlreadyConnectedError, Cloud, auth
+from hass_nabucasa.const import STATE_DISCONNECTED
 from hass_nabucasa.voice_data import TTS_VOICES
 import voluptuous as vol
 
@@ -31,6 +31,7 @@ from homeassistant.components.homeassistant import exposed_entities
 from homeassistant.components.http import KEY_HASS, HomeAssistantView, require_admin
 from homeassistant.components.http.data_validator import RequestDataValidator
 from homeassistant.components.system_health import get_info as get_system_health_info
+from homeassistant.components.websocket_api import ERR_NOT_FOUND
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
@@ -48,12 +49,12 @@ from homeassistant.util.location import async_detect_location_info
 from homeassistant.util.package import async_get_installed_packages
 
 from .alexa_config import entity_supported as entity_supported_by_alexa
-from .assist_pipeline import async_create_cloud_pipeline
 from .client import CloudClient
 from .const import (
     DATA_CLOUD,
     DATA_CLOUD_LOG_HANDLER,
-    DATA_LOGIN_STATE,
+    DATA_PENDING_AUTO_LOGIN,
+    DOMAIN,
     EVENT_CLOUD_EVENT,
     LOGIN_MFA_TIMEOUT,
     ONBOARDING_ITEMS,
@@ -70,11 +71,13 @@ from .const import (
     VOICE_STYLE_SEPERATOR,
 )
 from .google_config import CLOUD_GOOGLE
-from .models import CloudLoginState, PendingAutoLogin
+from .models import PendingAutoLogin
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
 
 _LOGGER = logging.getLogger(__name__)
+
+_NO_PENDING_AUTO_LOGIN = "no_pending_auto_login"
 
 
 _CLOUD_ERRORS: dict[
@@ -136,25 +139,6 @@ def async_setup(hass: HomeAssistant) -> None:
     hass.http.register_view(CloudResendConfirmView)
     hass.http.register_view(CloudForgotPasswordView)
     hass.http.register_view(DownloadSupportPackageView)
-
-    login_state = hass.data[DATA_LOGIN_STATE] = CloudLoginState()
-    cloud = hass.data[DATA_CLOUD]
-
-    async def _on_cloud_login(event: CloudEvent) -> None:
-        """Handle a successful login, interactive or auto-login alike."""
-        login_state.pending_auto_login = None
-        login_state.new_cloud_pipeline_id = None
-        if "assist_pipeline" in hass.config.components:
-            login_state.new_cloud_pipeline_id = await async_create_cloud_pipeline(hass)
-
-        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
-
-    async def _on_cloud_logout(event: CloudEvent) -> None:
-        """Forget a pending auto-login, the library cancels it on logout."""
-        login_state.pending_auto_login = None
-
-    cloud.events.subscribe(event_type=CloudEventType.LOGIN, handler=_on_cloud_login)
-    cloud.events.subscribe(event_type=CloudEventType.LOGOUT, handler=_on_cloud_logout)
 
     _CLOUD_ERRORS.update(
         {
@@ -347,14 +331,7 @@ class CloudLoginView(HomeAssistantView):
             self._mfa_tokens_set_time = time.time()
             raise
 
-        # The cloud login event handler does the post-login work, and it has
-        # already run: hass_nabucasa awaits the event before login returns.
-        return self.json(
-            {
-                "success": True,
-                "cloud_pipeline": hass.data[DATA_LOGIN_STATE].new_cloud_pipeline_id,
-            }
-        )
+        return self.json({"success": True})
 
 
 class CloudLogoutView(HomeAssistantView):
@@ -456,10 +433,8 @@ class CloudRegisterAutoLoginView(HomeAssistantView):
                 client_metadata=client_metadata,
             )
 
-        hass.data[DATA_LOGIN_STATE].pending_auto_login = PendingAutoLogin(
+        hass.data[DATA_PENDING_AUTO_LOGIN] = PendingAutoLogin(
             email=data["email"],
-            expires_at=dt_util.utcnow()
-            + timedelta(seconds=AUTO_LOGIN_MAX_TOTAL_BACKOFF),
             controller=controller,
         )
         return self.json_message("ok")
@@ -766,14 +741,11 @@ async def websocket_cloud_remove_data(
         )
         return
 
-    login_state = hass.data[DATA_LOGIN_STATE]
-    if (pending := login_state.pending_auto_login) is not None:
-        # A pending auto-login would log back in and rewrite the removed data.
-        pending.controller.cancel()
-        login_state.pending_auto_login = None
-
     await cloud.remove_data()
     await cloud.client.prefs.async_erase_config()
+    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is not None:
+        hass.data[DATA_PENDING_AUTO_LOGIN] = None
+        pending.controller.cancel()
 
     connection.send_message(websocket_api.result_message(msg["id"]))
 
@@ -790,9 +762,15 @@ async def websocket_cloud_status(
     Async friendly.
     """
     cloud = hass.data[DATA_CLOUD]
-    connection.send_message(
-        websocket_api.result_message(msg["id"], await _account_data(hass, cloud))
-    )
+    data = await _account_data(hass, cloud)
+
+    if not cloud.is_logged_in:
+        # The pending registration email is only for the admin who registered.
+        data["auto_login"] = None
+        if connection.user.is_admin and (pending := hass.data[DATA_PENDING_AUTO_LOGIN]):
+            data["auto_login"] = {"email": pending.email}
+
+    connection.send_message(websocket_api.result_message(msg["id"], data))
 
 
 @websocket_api.require_admin
@@ -824,8 +802,17 @@ def websocket_attempt_auto_login_now(
     msg: dict[str, Any],
 ) -> None:
     """Attempt a pending auto-login now instead of waiting for the backoff."""
-    if (pending := hass.data[DATA_LOGIN_STATE].pending_auto_login) is not None:
-        pending.controller.attempt_now()
+    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_FOUND,
+            "There is no pending auto-login.",
+            translation_domain=DOMAIN,
+            translation_key=_NO_PENDING_AUTO_LOGIN,
+        )
+        return
+
+    pending.controller.attempt_now()
     connection.send_result(msg["id"])
 
 
@@ -841,9 +828,19 @@ async def websocket_resend_auto_login_confirm(
     msg: dict[str, Any],
 ) -> None:
     """Resend the confirmation email for a pending auto-login."""
-    if (pending := hass.data[DATA_LOGIN_STATE].pending_auto_login) is not None:
-        async with asyncio.timeout(REQUEST_TIMEOUT):
-            await pending.controller.resend()
+    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_FOUND,
+            "There is no pending auto-login.",
+            translation_domain=DOMAIN,
+            translation_key=_NO_PENDING_AUTO_LOGIN,
+        )
+        return
+
+    async with asyncio.timeout(REQUEST_TIMEOUT):
+        await pending.controller.resend()
+
     connection.send_result(msg["id"])
 
 
@@ -856,10 +853,18 @@ def websocket_cancel_auto_login(
     msg: dict[str, Any],
 ) -> None:
     """Cancel a pending auto-login after registration."""
-    login_state = hass.data[DATA_LOGIN_STATE]
-    if (pending := login_state.pending_auto_login) is not None:
-        pending.controller.cancel()
-        login_state.pending_auto_login = None
+    if (pending := hass.data[DATA_PENDING_AUTO_LOGIN]) is None:
+        connection.send_error(
+            msg["id"],
+            ERR_NOT_FOUND,
+            "There is no pending auto-login.",
+            translation_domain=DOMAIN,
+            translation_key=_NO_PENDING_AUTO_LOGIN,
+        )
+        return
+
+    hass.data[DATA_PENDING_AUTO_LOGIN] = None
+    pending.controller.cancel()
     connection.send_result(msg["id"])
 
 
@@ -1088,23 +1093,10 @@ async def _account_data(
 
     assert hass.config.api
     if not cloud.is_logged_in:
-        login_state = hass.data[DATA_LOGIN_STATE]
-        pending = login_state.pending_auto_login
-        if pending is not None and pending.expires_at < dt_util.utcnow():
-            pending.controller.cancel()
-            login_state.pending_auto_login = pending = None
         return {
             "logged_in": False,
             "cloud": STATE_DISCONNECTED,
             "http_use_ssl": hass.config.api.use_ssl,
-            "auto_login": (
-                {
-                    "email": pending.email,
-                    "expires_at": pending.expires_at.isoformat(),
-                }
-                if pending is not None
-                else None
-            ),
         }
 
     claims = cloud.claims

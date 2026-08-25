@@ -8,7 +8,15 @@ from enum import Enum
 import logging
 from typing import Any, cast
 
-from hass_nabucasa import Cloud, NabuCasaBaseError, RemoteNotConnected
+from hass_nabucasa import (
+    Cloud,
+    CloudEvent,
+    CloudEventType,
+    LoginFailedEvent,
+    LoginFailedReason,
+    NabuCasaBaseError,
+    RemoteNotConnected,
+)
 import voluptuous as vol
 
 from homeassistant.components import alexa, google_assistant
@@ -63,8 +71,10 @@ from .const import (
     CONF_USER_POOL_ID,
     DATA_CLOUD,
     DATA_CLOUD_LOG_HANDLER,
+    DATA_PENDING_AUTO_LOGIN,
     DATA_PLATFORMS_SETUP,
     DOMAIN,
+    EVENT_CLOUD_EVENT,
     MODE_DEV,
     MODE_PROD,
 )
@@ -98,6 +108,14 @@ _SIGNAL_CLOUDHOOKS_UPDATED: SignalType[dict[str, Any]] = SignalType(
 )
 
 STARTUP_REPAIR_DELAY = 1  # 1 hour
+
+# Spelled out rather than derived from the reason, so the keys stay greppable and
+# a reason hass_nabucasa adds later does not silently point at a missing string.
+AUTO_LOGIN_FAILED_TRANSLATION_KEYS = {
+    LoginFailedReason.CLOUD_ERROR: "auto_login_failed_cloud_error",
+    LoginFailedReason.TIMEOUT: "auto_login_failed_timeout",
+    LoginFailedReason.UNEXPECTED_ERROR: "auto_login_failed_unexpected_error",
+}
 
 ALEXA_ENTITY_SCHEMA = vol.Schema(
     {
@@ -328,11 +346,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     loaded = False
     stt_platform_loaded = asyncio.Event()
     tts_platform_loaded = asyncio.Event()
-    stt_tts_entities_added = asyncio.Event()
     hass.data[DATA_PLATFORMS_SETUP] = {
         Platform.STT: stt_platform_loaded,
         Platform.TTS: tts_platform_loaded,
-        "stt_tts_entities_added": stt_tts_entities_added,
     }
 
     async def _on_start() -> None:
@@ -364,10 +380,45 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         """Update preferences."""
         await prefs.async_update(remote_domain=cloud.remote.instance_domain)
 
+    hass.data[DATA_PENDING_AUTO_LOGIN] = None
+
+    async def _on_cloud_login(event: CloudEvent) -> None:
+        """Handle a successful login, interactive or auto-login alike."""
+        # Never cancel the controller here, hass_nabucasa cancels the retry loop
+        # itself and this may be running inside that very loop.
+        hass.data[DATA_PENDING_AUTO_LOGIN] = None
+        async_dispatcher_send(hass, EVENT_CLOUD_EVENT, {"type": "login"})
+
+    async def _on_cloud_login_failed(event: CloudEvent) -> None:
+        """Handle hass_nabucasa giving up on a pending auto-login."""
+        # The event bus types every handler against the CloudEvent base class.
+        if not isinstance(event, LoginFailedEvent) or not event.auto:
+            return
+
+        hass.data[DATA_PENDING_AUTO_LOGIN] = None
+        async_dispatcher_send(
+            hass,
+            EVENT_CLOUD_EVENT,
+            {
+                "type": "auto_login_failed",
+                "reason": event.reason,
+                "translation_key": AUTO_LOGIN_FAILED_TRANSLATION_KEYS.get(event.reason),
+            },
+        )
+
+    async def _on_cloud_logout(event: CloudEvent) -> None:
+        """Forget a pending auto-login, hass_nabucasa cancels it on logout."""
+        hass.data[DATA_PENDING_AUTO_LOGIN] = None
+
     cloud.register_on_start(_on_start)
     cloud.iot.register_on_connect(_on_connect)
     cloud.iot.register_on_disconnect(_on_disconnect)
     cloud.register_on_initialized(_on_initialized)
+    cloud.events.subscribe(event_type=CloudEventType.LOGIN, handler=_on_cloud_login)
+    cloud.events.subscribe(
+        event_type=CloudEventType.LOGIN_FAILED, handler=_on_cloud_login_failed
+    )
+    cloud.events.subscribe(event_type=CloudEventType.LOGOUT, handler=_on_cloud_logout)
 
     await cloud.initialize()
     http_api.async_setup(hass)
@@ -439,8 +490,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
     await hass.config_entries.async_forward_entry_setups(entry, platforms)
     entry.runtime_data = {"platforms": platforms}
-    stt_tts_entities_added = hass.data[DATA_PLATFORMS_SETUP]["stt_tts_entities_added"]
-    stt_tts_entities_added.set()
 
     return True
 
