@@ -1112,6 +1112,7 @@ async def test_update_child_device(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
     device_registry: dr.DeviceRegistry,
+    label_registry: lr.LabelRegistry,
     payload_key: str,
     payload_value: Any,
     expected_registry_value: Any,
@@ -1119,6 +1120,7 @@ async def test_update_child_device(
     """Test updating a child device through the websocket API."""
     assert await async_setup_component(hass, DOMAIN, {})
     client = await hass_ws_client(hass)
+    label_registry.async_create("label1")
     _, _, child_device = _create_parent_and_child(hass, device_registry)
 
     await client.send_json_auto_id(

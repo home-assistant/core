@@ -69,7 +69,6 @@ def websocket_create_area(
         data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
-        # Strip labels which are not in the label registry
         labels = set(data["labels"])
         data["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
@@ -140,9 +139,6 @@ def websocket_update_area(
         data["aliases"] = {s_strip for s in data["aliases"] if (s_strip := s.strip())}
 
     if "labels" in data:
-        # Strip labels which are not in the label registry. This also cleans up
-        # any stale labels already stored on the area (e.g. left behind by a
-        # deleted label) the next time it is saved.
         labels = set(data["labels"])
         data["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 

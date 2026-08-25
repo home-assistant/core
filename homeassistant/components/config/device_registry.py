@@ -176,9 +176,6 @@ def websocket_update_device(
         msg["disabled_by"] = DeviceEntryDisabler(msg["disabled_by"])
 
     if "labels" in msg:
-        # Strip labels which are not in the label registry. This also cleans up
-        # any stale labels already stored on the device (e.g. left behind by a
-        # deleted label) the next time it is saved.
         labels = set(msg["labels"])
         msg["labels"] = labels - lr.async_get_missing_label_ids(hass, labels)
 
