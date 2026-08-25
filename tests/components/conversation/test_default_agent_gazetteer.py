@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import threading
+from typing import Any
 from unittest.mock import patch
 
 from gazetteer_matcher import GazetteerMatcher, TargetReference
@@ -1098,31 +1099,39 @@ async def test_a_rebuild_that_fails_leaves_the_home_out_of_date(
 
 @pytest.mark.usefixtures("init_components", "home")
 @pytest.mark.parametrize(
-    ("registry", "field", "outdated"),
+    ("registry", "event", "outdated"),
     [
-        ("entity", "area_id", True),
-        ("entity", "name", True),
-        ("entity", "icon", False),
-        ("device", "area_id", True),
-        ("device", "parent_device_id", True),
-        ("device", "sw_version", False),
+        ("entity", {"action": "update", "changes": {"area_id": None}}, True),
+        ("entity", {"action": "update", "changes": {"name": None}}, True),
+        ("entity", {"action": "update", "changes": {"icon": None}}, False),
+        ("entity", {"action": "remove"}, True),
+        ("entity", {"action": "create"}, False),
+        ("device", {"action": "update", "changes": {"area_id": None}}, True),
+        ("device", {"action": "update", "changes": {"parent_device_id": None}}, True),
+        ("device", {"action": "update", "changes": {"sw_version": None}}, False),
+        ("device", {"action": "remove"}, True),
     ],
     ids=[
         "entity_moved",
         "entity_renamed",
         "entity_restyled",
+        "entity_removed",
+        "entity_created",
         "device_moved",
         "device_became_a_child",
         "device_upgraded",
+        "device_removed",
     ],
 )
 async def test_what_outdates_the_home(
-    hass: HomeAssistant, registry: str, field: str, outdated: bool
+    hass: HomeAssistant, registry: str, event: dict[str, Any], outdated: bool
 ) -> None:
-    """Test the registry changes that move an entity between rooms are noticed.
+    """Test the registry events that change what an entity is called or where.
 
-    An entity takes its area from its own, or from its device, or from that
-    device's parent once it becomes a child, so all three have to reach the home.
+    An entity takes its names and its area from its own entry, from its device, or
+    from that device's parent once it becomes a child, and an entry can go while
+    the state it describes lingers. A newly created entry arrives with the state
+    that goes with it, which is watched separately.
     """
     agent = conversation.async_get_agent(hass)
     assert isinstance(agent, default_agent.DefaultAgent)
@@ -1132,4 +1141,4 @@ async def test_what_outdates_the_home(
         "device": agent._filter_device_registry_changes,
     }[registry]
 
-    assert matches({"action": "update", "changes": {field: None}}) is outdated
+    assert matches(event) is outdated
