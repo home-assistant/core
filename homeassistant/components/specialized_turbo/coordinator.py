@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 import logging
+from typing import override
 
 from bleak import BleakClient
 from bleak.backends.device import BLEDevice
@@ -152,12 +153,6 @@ class SpecializedTurboCoordinator(
         self._snapshot = monitor.snapshot
         self.data = self._snapshot
 
-        if self._was_unavailable:
-            self.logger.info(
-                "Specialized Turbo at %s is available again", self._address
-            )
-            self._was_unavailable = False
-
     def _update_protocol_metadata(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -219,6 +214,33 @@ class SpecializedTurboCoordinator(
     def _on_disconnect(self, _client: BleakClient) -> None:
         """Schedule disconnect handling on the Home Assistant event loop."""
         self.hass.loop.call_soon_threadsafe(self._handle_disconnect)
+
+    @callback
+    @override
+    def _async_handle_unavailable(
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+    ) -> None:
+        """Log and publish a passive Bluetooth availability change."""
+        if not self._was_unavailable:
+            self.logger.info("Specialized Turbo at %s is unavailable", self._address)
+            self._was_unavailable = True
+        super()._async_handle_unavailable(service_info)
+
+    @callback
+    @override
+    def _async_handle_bluetooth_event(
+        self,
+        service_info: bluetooth.BluetoothServiceInfoBleak,
+        change: bluetooth.BluetoothChange,
+    ) -> None:
+        """Log recovery before handling a Bluetooth advertisement."""
+        if self._was_unavailable:
+            self.logger.info(
+                "Specialized Turbo at %s is available again", self._address
+            )
+            self._was_unavailable = False
+        super()._async_handle_bluetooth_event(service_info, change)
 
     @callback
     def _handle_disconnect(self) -> None:

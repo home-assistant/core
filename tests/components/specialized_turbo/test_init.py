@@ -1,6 +1,9 @@
 """Tests for Specialized Turbo integration setup."""
 
+from datetime import timedelta
 import logging
+import time
+from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 import pytest
 from specialized_turbo import (
@@ -18,23 +21,25 @@ from homeassistant.components.specialized_turbo.const import (
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
-from homeassistant.const import CONF_ADDRESS, CONF_PIN
+from homeassistant.const import CONF_ADDRESS
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import format_mac
+from homeassistant.util import dt as dt_util
 
 from . import setup_integration
 from .conftest import (
     ENCRYPTED_SERVICE_INFO,
     MOCK_ADDRESS,
-    MOCK_ADDRESS_FORMATTED,
+    MOCK_MANUFACTURER_DATA,
     NAME_ONLY_SERVICE_INFO,
     TCU1_SERVICE_INFO,
     TCX_SERVICE_INFO,
     MockLibrary,
-    make_wrapped_key,
+    make_service_info,
 )
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
+from tests.components.bluetooth import inject_bluetooth_service_info
 
 
 async def test_setup_and_unload_entry(
@@ -56,6 +61,68 @@ async def test_setup_and_unload_entry(
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
     mock_library.monitor.stop.assert_awaited_once()
     mock_library.connection.disconnect.assert_awaited_once()
+
+
+async def test_runtime_uses_managed_ble_client(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_library: MockLibrary,
+) -> None:
+    """Test the runtime library client factory uses bleak_retry_connector."""
+    await setup_integration(hass, mock_config_entry, TCX_SERVICE_INFO)
+    client_factory = mock_library.connection_constructor.call_args.kwargs[
+        "client_factory"
+    ]
+    client = MagicMock()
+    disconnected_callback = MagicMock()
+
+    with patch(
+        "homeassistant.components.specialized_turbo.coordinator.establish_connection",
+        new_callable=AsyncMock,
+        return_value=client,
+    ) as establish_connection:
+        result_client = await client_factory(
+            TCX_SERVICE_INFO.device,
+            disconnected_callback,
+        )
+
+    assert result_client is client
+    establish_connection.assert_awaited_once_with(
+        ANY,
+        TCX_SERVICE_INFO.device,
+        MOCK_ADDRESS,
+        disconnected_callback=disconnected_callback,
+    )
+
+
+async def test_periodic_poll_reuses_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_library: MockLibrary,
+) -> None:
+    """Test a periodic poll does not create another library connection."""
+    with patch(
+        "homeassistant.components.bluetooth.active_update_coordinator.monotonic_time_coarse",
+        return_value=0.0,
+    ):
+        await setup_integration(hass, mock_config_entry, TCX_SERVICE_INFO)
+        service_info = make_service_info(
+            manufacturer_data={
+                **MOCK_MANUFACTURER_DATA,
+                0xFFFF: b"\x01",
+            },
+            time=time.monotonic() + 61,
+        )
+
+        with patch(
+            "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
+        ):
+            inject_bluetooth_service_info(hass, service_info)
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+        await hass.async_block_till_done()
+
+    assert mock_library.monitor.poll.await_count == 2
+    mock_library.connection_constructor.assert_called_once()
 
 
 async def test_setup_succeeds_without_bike_in_range(
@@ -180,31 +247,3 @@ async def test_unload_tolerates_library_cleanup_errors(
 
     assert "Error stopping telemetry monitor" in caplog.text
     assert "Error disconnecting" in caplog.text
-
-
-async def test_migrate_removes_legacy_pin(
-    hass: HomeAssistant,
-    mock_library: MockLibrary,
-) -> None:
-    """Test migration removes the unused legacy PIN."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        version=1,
-        data={
-            CONF_ADDRESS: MOCK_ADDRESS,
-            CONF_PIN: "012345",
-            CONF_HMI_HARDWARE: "B.3.3",
-            CONF_HMI_SERIAL: "80005338",
-            CONF_WRAPPED_KEY: make_wrapped_key(),
-        },
-        unique_id=MOCK_ADDRESS_FORMATTED,
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-
-    assert entry.version == 3
-    assert CONF_PIN not in entry.data
-    assert entry.data[CONF_WRAPPED_KEY] == make_wrapped_key()
-    mock_library.connection_constructor.assert_not_called()

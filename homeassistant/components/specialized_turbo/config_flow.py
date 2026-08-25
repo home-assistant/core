@@ -193,12 +193,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
         errors: dict[str, str] = {}
         if user_input is not None:
             if self._requires_encryption:
-                source = user_input.get(CONF_KEY_SOURCE)
-                if source is None:
-                    return await self.async_step_key_source()
-                if source == KEY_SOURCE_MANUAL:
-                    return await self.async_step_manual_key()
-                return await self.async_step_account()
+                return await self.async_step_key_source()
             try:
                 valid = await self._async_test_connection()
             except EncryptionKeyRequiredError:
@@ -220,16 +215,12 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_key_source(
         self,
-        user_input: dict[str, Any] | None = None,
+        _user_input: dict[str, Any] | None = None,
     ) -> ConfigFlowResult:
         """Choose automatic account lookup or manual wrapped key."""
-        if user_input is not None:
-            if user_input[CONF_KEY_SOURCE] == KEY_SOURCE_MANUAL:
-                return await self.async_step_manual_key()
-            return await self.async_step_account()
-        return self.async_show_form(
+        return self.async_show_menu(
             step_id="key_source",
-            data_schema=self._key_source_schema(),
+            menu_options=["account", "manual_key"],
         )
 
     async def async_step_account(
@@ -322,21 +313,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
                 hmi_hardware=hmi_hardware,
                 hmi_serial=hmi_serial,
             )
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
-        self,
-        user_input: dict[str, Any] | None = None,
-    ) -> ConfigFlowResult:
-        """Choose account or manual key reauthentication."""
-        if user_input is not None:
-            if user_input[CONF_KEY_SOURCE] == KEY_SOURCE_MANUAL:
-                return await self.async_step_manual_key()
-            return await self.async_step_account()
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=self._key_source_schema(),
-        )
+        return await self.async_step_key_source()
 
     async def async_step_reconfigure(
         self,
@@ -403,22 +380,7 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
                     for address, info in self._discovered_devices.items()
                 }
             )
-        if self._requires_encryption:
-            fields[vol.Required(CONF_KEY_SOURCE, default=KEY_SOURCE_ACCOUNT)] = vol.In(
-                [KEY_SOURCE_ACCOUNT, KEY_SOURCE_MANUAL]
-            )
         return vol.Schema(fields)
-
-    @staticmethod
-    def _key_source_schema() -> vol.Schema:
-        return vol.Schema(
-            {
-                vol.Required(
-                    CONF_KEY_SOURCE,
-                    default=KEY_SOURCE_ACCOUNT,
-                ): vol.In([KEY_SOURCE_ACCOUNT, KEY_SOURCE_MANUAL])
-            }
-        )
 
     def _create_or_update_entry(
         self,

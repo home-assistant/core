@@ -27,23 +27,15 @@
         "title": "Sign in to Specialized"
       },
       "bluetooth_confirm": {
-        "data": {
-          "key_source": "Encryption key source"
-        },
-        "data_description": {
-          "key_source": "Use your Specialized account to retrieve the bike key automatically, or enter a wrapped key manually."
-        },
         "description": "A Specialized Turbo bike was found at {address} ({name}). Pairing prompts are handled by the active Bluetooth backend.",
         "title": "Discovered Specialized Turbo bike"
       },
       "key_source": {
-        "data": {
-          "key_source": "Encryption key source"
-        },
-        "data_description": {
-          "key_source": "Choose account retrieval or manual wrapped-key entry."
-        },
         "description": "Use your Specialized account to retrieve the bike key automatically, or enter a wrapped key manually.",
+        "menu_options": {
+          "account": "[%key:component::specialized_turbo::config::step::account::title%]",
+          "manual_key": "[%key:component::specialized_turbo::config::step::manual_key::title%]"
+        },
         "title": "Choose encryption key source"
       },
       "manual_key": {
@@ -56,28 +48,16 @@
         "description": "Enter the 64-character wrapped key returned by the Specialized keystore service.",
         "title": "Enter wrapped bike key"
       },
-      "reauth_confirm": {
-        "data": {
-          "key_source": "Encryption key source"
-        },
-        "data_description": {
-          "key_source": "Choose account retrieval or manual wrapped-key entry."
-        },
-        "description": "This bike requires an encryption key. Choose how to retrieve it.",
-        "title": "Encryption key required"
-      },
       "reconfigure": {
         "description": "Replace the encryption key for your Specialized Turbo bike.",
         "title": "Reconfigure Specialized Turbo"
       },
       "user": {
         "data": {
-          "address": "Bike",
-          "key_source": "Encryption key source"
+          "address": "Bike"
         },
         "data_description": {
-          "address": "Select the Specialized Turbo bike you want to add.",
-          "key_source": "Use your Specialized account to retrieve the bike key automatically, or enter a wrapped key manually."
+          "address": "Select the Specialized Turbo bike you want to add."
         },
         "description": "Select your Specialized Turbo bike from the discovered devices.",
         "title": "Add Specialized Turbo bike"

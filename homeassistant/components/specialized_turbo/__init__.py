@@ -5,7 +5,7 @@ import logging
 from specialized_turbo import BikeAdvertisement, BLEProfile, ProtocolEncryptionMethod
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import CONF_ADDRESS, CONF_PIN, Platform
+from homeassistant.const import CONF_ADDRESS, Platform
 from homeassistant.core import HomeAssistant
 
 from .const import CONF_HMI_HARDWARE, CONF_HMI_SERIAL, CONF_WRAPPED_KEY
@@ -76,15 +76,3 @@ async def async_unload_entry(
         await entry.runtime_data.async_shutdown()
 
     return unload_ok
-
-
-async def async_migrate_entry(
-    hass: HomeAssistant,
-    entry: SpecializedTurboConfigEntry,
-) -> bool:
-    """Remove the legacy PIN field while preserving encryption key material."""
-    if entry.version < 3:
-        data = dict(entry.data)
-        data.pop(CONF_PIN, None)
-        hass.config_entries.async_update_entry(entry, data=data, version=3)
-    return True
