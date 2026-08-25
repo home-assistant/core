@@ -5,7 +5,7 @@ from dataclasses import dataclass, field
 from datetime import UTC, datetime
 from typing import Any, override
 
-from blanco_smart_home_api_client import BlancoErrorType
+from blanco_smart_home_api_client import BLANCO_DEVICE_NAMES, BlancoErrorType
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -14,7 +14,7 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfTemperature
+from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -23,7 +23,6 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from . import BlancoConfigEntry
 from .const import DOMAIN
 from .coordinator import BlancoDataUpdateCoordinator
-from .definitions import BLANCO_DEVICE_NAMES, BlancoDeviceType
 
 # Updates are driven by the DataUpdateCoordinator; no concurrency limit needed.
 PARALLEL_UPDATES = 0
@@ -84,82 +83,12 @@ SENSOR_DESCRIPTIONS_COMMON: tuple[BlancoSensorEntityDescription, ...] = (
     _DESC_ERROR_COUNT_CRITICAL,
     _DESC_ERROR_COUNT_WARNING,
 )
-"""Sensor descriptions shared by every BLANCO device type."""
+"""Sensor descriptions shared by every BLANCO device type.
 
-# ── AIO (CHOICE.ALL) — full set ───────────────────────────────────────────────
-
-_DESC_SET_POINT_COOLING = BlancoSensorEntityDescription(
-    key="set_point_cooling",
-    translation_key="set_point_cooling",
-    value_fn=lambda data: (
-        data.get("settings", {}).get("params", {}).get("set_point_cooling")
-    ),
-    device_class=SensorDeviceClass.TEMPERATURE,
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=UnitOfTemperature.CELSIUS,  # range: 4-10 °C
-    suggested_display_precision=0,
-)
-_DESC_SET_POINT_HEATING = BlancoSensorEntityDescription(
-    key="set_point_heating",
-    translation_key="set_point_heating",
-    value_fn=lambda data: (
-        data.get("settings", {}).get("params", {}).get("set_point_heating")
-    ),
-    device_class=SensorDeviceClass.TEMPERATURE,
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=UnitOfTemperature.CELSIUS,  # range: 65-100 °C
-    suggested_display_precision=0,
-)
-_DESC_CO2_REST = BlancoSensorEntityDescription(
-    key="co2_rest",
-    translation_key="co2_rest",
-    value_fn=lambda data: data.get("status", {}).get("params", {}).get("co2_rest"),
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,  # range: 0-100 %
-    suggested_display_precision=0,
-)
-_DESC_FILTER_REST = BlancoSensorEntityDescription(
-    key="filter_rest",
-    translation_key="filter_rest",
-    value_fn=lambda data: data.get("status", {}).get("params", {}).get("filter_rest"),
-    state_class=SensorStateClass.MEASUREMENT,
-    native_unit_of_measurement=PERCENTAGE,  # range: 0-100 %
-    suggested_display_precision=0,
-)
-
-SENSOR_DESCRIPTIONS_AIO: tuple[BlancoSensorEntityDescription, ...] = (
-    _DESC_SET_POINT_COOLING,
-    _DESC_SET_POINT_HEATING,
-    _DESC_CO2_REST,
-    _DESC_FILTER_REST,
-)
-"""Sensor descriptions specific to the AIO (CHOICE.ALL) device type."""
-
-# ── SODA (EVOL-S PRO) — no hot water temperature ─────────────────────────────
-
-SENSOR_DESCRIPTIONS_SODA: tuple[BlancoSensorEntityDescription, ...] = (
-    _DESC_SET_POINT_COOLING,
-    _DESC_CO2_REST,
-    _DESC_FILTER_REST,
-)
-"""Sensor descriptions specific to the SODA (EVOL-S PRO) device type."""
-
-# ── Lookup: device type → descriptions (common + device-specific) ─────────────
-
-SENSOR_DESCRIPTIONS_BY_TYPE: dict[
-    BlancoDeviceType, tuple[BlancoSensorEntityDescription, ...]
-] = {  # Maps each device type to its full set of sensor descriptions.
-    BlancoDeviceType.AIO: SENSOR_DESCRIPTIONS_COMMON + SENSOR_DESCRIPTIONS_AIO,
-    BlancoDeviceType.SODA: SENSOR_DESCRIPTIONS_COMMON + SENSOR_DESCRIPTIONS_SODA,
-    BlancoDeviceType.SODA2: SENSOR_DESCRIPTIONS_COMMON,
-    BlancoDeviceType.FILTER: SENSOR_DESCRIPTIONS_COMMON,
-    BlancoDeviceType.HOT: SENSOR_DESCRIPTIONS_COMMON,
-    BlancoDeviceType.SELECT: SENSOR_DESCRIPTIONS_COMMON,
-    BlancoDeviceType.FLEXON: SENSOR_DESCRIPTIONS_COMMON,
-    BlancoDeviceType.SEPURA: SENSOR_DESCRIPTIONS_COMMON,
-    BlancoDeviceType.AQUA: SENSOR_DESCRIPTIONS_COMMON,
-    BlancoDeviceType.BIOSORT: SENSOR_DESCRIPTIONS_COMMON,
-}
+Currently the only sensors provided — the coordinator only polls /system and
+/errors; device-specific temperature, CO2, and filter sensors require the
+/status and /settings endpoints, which are not polled yet.
+"""
 
 
 async def async_setup_entry(
@@ -169,14 +98,9 @@ async def async_setup_entry(
 ) -> None:
     """Set up BLANCO sensors from a config entry."""
     coordinator = entry.runtime_data
-    dev_type = coordinator.dev_type
-    descriptions = (
-        SENSOR_DESCRIPTIONS_BY_TYPE.get(dev_type, SENSOR_DESCRIPTIONS_COMMON)
-        if dev_type is not None
-        else SENSOR_DESCRIPTIONS_COMMON
-    )
     async_add_entities(
-        BlancoSensorEntity(coordinator, description) for description in descriptions
+        BlancoSensorEntity(coordinator, description)
+        for description in SENSOR_DESCRIPTIONS_COMMON
     )
 
 

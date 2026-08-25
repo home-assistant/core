@@ -26,26 +26,14 @@
   },
   "entity": {
     "sensor": {
-      "co2_rest": {
-        "name": "CO2: Remaining capacity"
-      },
       "error_count_critical": {
         "name": "Critical errors"
       },
       "error_count_warning": {
         "name": "Warnings"
       },
-      "filter_rest": {
-        "name": "Filter: Remaining capacity"
-      },
       "online": {
         "name": "Last online"
-      },
-      "set_point_cooling": {
-        "name": "Temperature: Cold"
-      },
-      "set_point_heating": {
-        "name": "Temperature: Hot"
       }
     }
   },
