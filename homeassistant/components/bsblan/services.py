@@ -128,41 +128,33 @@ def _resolve_config_entry(
     """Resolve device_id from a service call into a loaded BSBLAN config entry."""
     device_id: str = service_call.data[ATTR_DEVICE_ID]
 
-    device_registry = dr.async_get(service_call.hass)
-    device_entry = device_registry.async_get(device_id)
+    config_entry: BSBLanConfigEntry | None
+    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        service_call.hass, device_id, domain=DOMAIN
+    )
 
-    if device_entry is None:
+    if device is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_device_id",
             translation_placeholders={"device_id": device_id},
         )
 
-    # Find the config entry for this device
-    matching_entries: list[BSBLanConfigEntry] = [
-        entry
-        for entry in service_call.hass.config_entries.async_entries(DOMAIN)
-        if entry.entry_id in device_entry.config_entries
-    ]
-
-    if not matching_entries:
+    if config_entry is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="no_config_entry_for_device",
-            translation_placeholders={"device_id": device_entry.name or device_id},
+            translation_placeholders={"device_id": device.name or device_id},
         )
 
-    entry = matching_entries[0]
-
-    # Verify the config entry is loaded
-    if entry.state is not ConfigEntryState.LOADED:
+    if config_entry.state is not ConfigEntryState.LOADED:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="config_entry_not_loaded",
-            translation_placeholders={"device_name": device_entry.name or device_id},
+            translation_placeholders={"device_name": device.name or device_id},
         )
 
-    return entry, device_entry
+    return config_entry, device
 
 
 def _device_name(device_entry: dr.DeviceEntry) -> str:

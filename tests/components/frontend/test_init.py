@@ -20,6 +20,7 @@ from homeassistant.components.frontend import (
     CONF_GITHUB_TOKEN,
     CONF_THEMES,
     CONFIG_SCHEMA,
+    DATA_PANELS,
     DEFAULT_THEME_COLOR,
     DOMAIN,
     EVENT_PANELS_UPDATED,
@@ -500,7 +501,7 @@ async def test_themes_reload_themes(
             {
                 "invalid0": "blue",
             },
-            "expected a dictionary",
+            "expected a mapping",
             None,
         ),
         (
@@ -511,13 +512,13 @@ async def test_themes_reload_themes(
                 }
             },
             None,
-            "expected a dictionary",
+            "expected a mapping",
         ),
         (
             {
                 "invalid2": None,
             },
-            "expected a dictionary",
+            "expected a mapping",
             None,
         ),
         (
@@ -537,7 +538,7 @@ async def test_themes_reload_themes(
                     "modes": None,
                 }
             },
-            "string value is None for dictionary value",
+            "string value is None",
             None,
         ),
         (
@@ -547,7 +548,7 @@ async def test_themes_reload_themes(
                     "modes": {"light": {}, "dank": {}},
                 }
             },
-            "extra keys not allowed.*dank",
+            "not a valid option.*dank",
             None,
         ),
     ],
@@ -756,6 +757,23 @@ async def test_async_panel_exists(hass: HomeAssistant) -> None:
 
     async_remove_panel(hass, "test_panel")
     assert async_panel_exists(hass, "test_panel") is False
+
+
+async def test_register_panel_collision_names_the_owner(hass: HomeAssistant) -> None:
+    """Test that the collision error says which component holds the URL path.
+
+    The path is often claimed by a dashboard or a custom panel rather than by
+    the integration that fails, and the failure takes that integration down,
+    so the message has to point at the holder.
+    """
+    async_register_built_in_panel(hass, "lovelace", frontend_url_path="todo")
+
+    with pytest.raises(ValueError, match="Overwriting panel todo owned by lovelace"):
+        async_register_built_in_panel(hass, "todo", frontend_url_path="todo")
+
+    # Registering with update=True stays allowed.
+    async_register_built_in_panel(hass, "todo", frontend_url_path="todo", update=True)
+    assert hass.data[DATA_PANELS]["todo"].component_name == "todo"
 
 
 async def test_get_panels_non_admin(

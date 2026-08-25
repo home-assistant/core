@@ -44,12 +44,12 @@ async def test_device_remove_devices(
         entry.entry_id,
     )
     client = await hass_ws_client(hass)
-    response = await client.remove_device(device_entry.id, entry.entry_id)
+    response = await client.remove_device(device_entry.id)
     assert not response["success"]
 
     dead_device_entry = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, "not_seen")},
     )
-    response = await client.remove_device(dead_device_entry.id, entry.entry_id)
+    response = await client.remove_device(dead_device_entry.id)
     assert response["success"]
