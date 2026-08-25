@@ -24,7 +24,7 @@ cronsim==2.7
 cryptography==48.0.1
 fnv-hash-fast==2.0.3
 ha-ffmpeg==3.2.2
-hass-nabucasa==2.3.0
+hass-nabucasa==2.4.0
 hassil==3.11.0
 home-assistant-bluetooth==2.0.0
 home-assistant-intents==2026.7.30
