@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import asyncio
+from typing import Any
 from unittest.mock import AsyncMock, MagicMock, patch
 
 from aioaquarite import AquariteError, AuthenticationError
@@ -521,6 +523,52 @@ async def test_self_heal_stops_on_unload(
     await hass.async_block_till_done()
 
     # A leftover retry would refetch; the unload must have cancelled it.
+    mock_vistapool_client.fetch_pool_data.reset_mock()
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done()
+    mock_vistapool_client.fetch_pool_data.assert_not_called()
+
+
+async def test_push_discards_in_flight_self_heal(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test an authoritative push cancels an in-flight self-heal refresh."""
+    mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
+        "light": {"status": 0}
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+    coordinator.apply_optimistic("light.status", 1)
+
+    # The TTL expiry fires and the self-heal fetch hangs mid-flight.
+    release = asyncio.Event()
+
+    async def _hanging_fetch(*_args: Any, **_kwargs: Any) -> dict[str, Any]:
+        await release.wait()
+        raise AquariteError("late failure")
+
+    mock_vistapool_client.fetch_pool_data.reset_mock()
+    mock_vistapool_client.fetch_pool_data.side_effect = _hanging_fetch
+    async_fire_time_changed(hass, fire_all=True)
+    for _ in range(5):
+        await asyncio.sleep(0)
+    assert mock_vistapool_client.fetch_pool_data.called
+
+    # The push must win: the hung fetch's late failure may neither mark the
+    # coordinator unavailable nor re-arm the retry.
+    on_data({"light": {"status": 0}})
+    release.set()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success is True
+    assert coordinator.data["light"]["status"] == 0
+
     mock_vistapool_client.fetch_pool_data.reset_mock()
     async_fire_time_changed(hass, fire_all=True)
     await hass.async_block_till_done()

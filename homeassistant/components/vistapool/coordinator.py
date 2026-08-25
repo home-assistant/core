@@ -93,9 +93,6 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._optimistic_handles.clear()
         self._pending_optimistic.clear()
         self._cancel_self_heal()
-        if self._self_heal_task is not None:
-            self._self_heal_task.cancel()
-            self._self_heal_task = None
         if self.subscription is not None:
             await self.subscription.aclose()
             self.subscription = None
@@ -159,6 +156,9 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _start_self_heal(self) -> None:
         """Launch the self-heal refresh unless one is already running."""
+        if self._self_heal_handle is not None:
+            self._self_heal_handle.cancel()
+            self._self_heal_handle = None
         if self._self_heal_task is not None and not self._self_heal_task.done():
             return
         self._self_heal_task = self.hass.async_create_task(self._async_self_heal())
@@ -166,23 +166,36 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     async def _async_self_heal(self) -> None:
         """Fetch authoritative data after an expired write, retrying on failure.
 
-        Without a polling interval, a failed refresh with a quiet Firestore
-        document would otherwise leave the entities unavailable indefinitely.
-        A successful refresh or an incoming push cancels the retry.
+        Fetches directly instead of going through async_refresh: the base
+        class marks a cancelled refresh as unsuccessful, which would undo
+        the push that cancelled this task. Without a polling interval, a
+        failed fetch with a quiet Firestore document would otherwise leave
+        the entities unavailable indefinitely, so a failure re-arms the
+        retry; a successful fetch or an incoming push cancels it.
         """
-        self._cancel_self_heal()
-        await self.async_refresh()
-        if self.last_update_success:
+        try:
+            data = await self.api.fetch_pool_data(self.pool_id)
+        except AquariteError as err:
+            self.async_set_update_error(err)
+            self._self_heal_handle = self.hass.loop.call_later(
+                OPTIMISTIC_TTL_SECONDS, self._start_self_heal
+            )
             return
-        self._self_heal_handle = self.hass.loop.call_later(
-            OPTIMISTIC_TTL_SECONDS, self._start_self_heal
-        )
+        self.async_set_updated_data(self._merge_optimistic(data))
 
     def _cancel_self_heal(self) -> None:
-        """Drop a scheduled self-heal retry, if any."""
+        """Stop the self-heal retry: the pending timer and the in-flight task.
+
+        The in-flight task matters too: its late fetch result could
+        overwrite an authoritative push with older data, and its late
+        failure would re-arm the retry against fresh data.
+        """
         if self._self_heal_handle is not None:
             self._self_heal_handle.cancel()
             self._self_heal_handle = None
+        if self._self_heal_task is not None:
+            self._self_heal_task.cancel()
+            self._self_heal_task = None
 
 
 def _set_path(data: dict[str, Any], value_path: str, value: Any) -> None:
