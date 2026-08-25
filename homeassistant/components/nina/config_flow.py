@@ -159,12 +159,9 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                     user_input[CONF_REGIONS] += group_input
 
             if user_input[CONF_REGIONS]:
-                regions_data = {CONF_REGIONS: user_input[CONF_REGIONS]}
                 return self.async_create_entry(
                     title="NINA",
-                    data=prepare_user_input(
-                        regions_data, self._all_region_codes_sorted
-                    ),
+                    data=prepare_user_input(user_input, self._all_region_codes_sorted),
                     options={
                         CONF_MESSAGE_SLOTS: 5,
                         CONF_FILTERS: {

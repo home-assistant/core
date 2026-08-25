@@ -39,7 +39,7 @@ def assert_dummy_entry_created(result: dict[str, Any]) -> None:
     """Asserts that an entry from DUMMY_USER_INPUT is created."""
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "NINA"
-    assert result["data"] == {
+    assert result["data"] == DUMMY_USER_INPUT | {
         CONF_REGIONS: {
             "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
         }
@@ -343,9 +343,10 @@ async def test_reconfigure_flow_no_selection(
     assert result["reason"] == "reconfigure_successful"
 
     assert mock_config_entry.data == {
+        CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
         CONF_REGIONS: {
             "095760000000": "Allersberg, M (Roth - Bayern) + Büchenbach (Roth - Bayern)"
-        }
+        },
     }
     assert mock_config_entry.options == {
         CONF_MESSAGE_SLOTS: 5,
@@ -385,8 +386,10 @@ async def test_reconfigure_flow_init(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
-    assert mock_config_entry.data[CONF_REGIONS] == {
-        "095760000000": "Allersberg, M (Roth - Bayern)"
+
+    assert dict(mock_config_entry.data) == {
+        CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
+        CONF_REGIONS: {"095760000000": "Allersberg, M (Roth - Bayern)"},
     }
 
 

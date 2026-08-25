@@ -1,5 +1,6 @@
 """Common constants for NINA tests."""
 
+from copy import deepcopy
 from typing import Any
 
 from homeassistant.components.nina.const import (
@@ -34,6 +35,7 @@ DUMMY_OPTIONS_INPUT: dict[str, Any] = {
 }
 
 DUMMY_CONFIG_ENTRY: dict[str, Any] = {
+    CONST_REGION_A_TO_D: deepcopy(DUMMY_USER_INPUT[CONST_REGION_A_TO_D]),
     CONF_REGIONS: {"095760000000": "Aach"},
 }
 

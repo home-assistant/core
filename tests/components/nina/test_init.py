@@ -12,6 +12,7 @@ from homeassistant.components.nina.const import (
     CONF_HEADLINE_FILTER,
     CONF_MESSAGE_SLOTS,
     CONF_REGIONS,
+    CONST_REGION_A_TO_D,
     DOMAIN,
 )
 from homeassistant.config_entries import ConfigEntryState
@@ -22,6 +23,7 @@ from . import setup_platform
 from tests.common import MockConfigEntry
 
 ENTRY_DATA: dict[str, Any] = {
+    CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
     CONF_REGIONS: {"083350000000": "Aach, Stadt"},
 }
 
@@ -43,6 +45,7 @@ async def test_config_migration_from1_1(
     old_entry_data: dict[str, Any] = {
         CONF_MESSAGE_SLOTS: 5,
         CONF_FILTER_CORONA: True,
+        CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
         CONF_REGIONS: {"083350000000": "Aach, Stadt"},
     }
 
@@ -71,6 +74,7 @@ async def test_config_migration_from1_2(
         CONF_MESSAGE_SLOTS: 5,
         CONF_HEADLINE_FILTER: ".*corona.*",
         CONF_AREA_FILTER: ".*",
+        CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
         CONF_REGIONS: {"083350000000": "Aach, Stadt"},
     }
 
@@ -99,6 +103,7 @@ async def test_config_migration_from1_3(
     old_entry_data: dict[str, Any] = {
         CONF_MESSAGE_SLOTS: 5,
         CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+        CONST_REGION_A_TO_D: ["095760000000_0", "095760000000_1"],
         CONF_FILTERS: {
             CONF_HEADLINE_FILTER: ".*corona.*",
             CONF_AREA_FILTER: ".*",
