@@ -598,8 +598,8 @@ async def test_state_reported_event(
     assert len(service_calls) == 0
     assert (
         "Unnamed automation failed to setup triggers and has been disabled: Can't "
-        "listen to state_reported in event trigger for dictionary value @ "
-        "data['event_type']. Got None" in caplog.text
+        "listen to state_reported in event trigger at 'event_type'. Got None"
+        in caplog.text
     )
 
 
@@ -657,13 +657,13 @@ def split_devices(
         identifiers={("itg2", "1")},
         name="Split device 2",
     )
-    device_registry.devices[device_1.id] = attr.evolve(
+    device_registry._devices[device_1.id] = attr.evolve(
         device_1, composite_device_id=COMPOSITE_ID
     )
-    device_registry.devices[device_2.id] = attr.evolve(
+    device_registry._devices[device_2.id] = attr.evolve(
         device_2, composite_device_id=COMPOSITE_ID
     )
-    return device_registry.devices[device_1.id], device_registry.devices[device_2.id]
+    return device_registry._devices[device_1.id], device_registry._devices[device_2.id]
 
 
 _EVENT_TRIGGER = {
