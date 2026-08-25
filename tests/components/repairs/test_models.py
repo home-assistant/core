@@ -7,6 +7,7 @@ import pytest
 
 from homeassistant.components.repairs import (
     DOMAIN,
+    ConfirmRepairFlow,
     FlowType,
     RepairsFlow,
     RepairsFlowResult,
@@ -44,6 +45,8 @@ async def mock_repairs_integration(hass: HomeAssistant) -> None:
         issue_id: str,
         data: dict[str, str | int | float | None] | None,
     ) -> RepairsFlow:
+        if issue_id == "set_issue_id":
+            return MockInvalidFlowFix()
         return MockFixFlowNextFlow()
 
     mock_platform(
@@ -117,7 +120,6 @@ class MockFixFlowNextFlow(RepairsFlow):
                 return self.async_create_entry(
                     next_flow=(FlowType.OPTIONS_FLOW, next_flow["flow_id"]), data={}
                 )
-            # self.issue_id == "subentry_config_issue"
             assert len(mock_entry.subentries) == 1
             next_flow = await self.hass.config_entries.subentries.async_init(
                 (mock_entry.entry_id, "fake_subentry"),
@@ -133,17 +135,17 @@ class MockFixFlowNextFlow(RepairsFlow):
             )
 
 
-@pytest.mark.parametrize(
-    ("flow_type", "ignore_translations_for_mock_domains"),
-    [
-        (FlowType.OPTIONS_FLOW, ["fake_integration"]),
-        (FlowType.CONFIG_SUBENTRIES_FLOW, ["fake_integration"]),
-    ],
-)
-async def test_fix_issue_next_flow(hass: HomeAssistant, flow_type: FlowType) -> None:
-    """Test that that a repair flow can refer to an options flow."""
-    assert await async_setup_component(hass, DOMAIN, {})
+class MockInvalidFlowFix(ConfirmRepairFlow):
+    """Flow fix to test deprecated use of issue_id."""
 
+    def __init__(self) -> None:
+        """Initialize a flow fix."""
+        self.issue_id = "fake_issue_id"
+
+
+@pytest.fixture(autouse=True)
+def mock_entry(hass: HomeAssistant) -> MockConfigEntry:
+    """Mock entry for repairs tests."""
     mock_entry = MockConfigEntry(
         domain="comp",
         data={},
@@ -157,6 +159,21 @@ async def test_fix_issue_next_flow(hass: HomeAssistant, flow_type: FlowType) -> 
         ],
     )
     mock_entry.add_to_hass(hass)
+    return mock_entry
+
+
+@pytest.mark.parametrize(
+    ("flow_type", "ignore_translations_for_mock_domains"),
+    [
+        (FlowType.OPTIONS_FLOW, ["fake_integration"]),
+        (FlowType.CONFIG_SUBENTRIES_FLOW, ["fake_integration"]),
+    ],
+)
+async def test_fix_issue_next_flow(
+    hass: HomeAssistant, flow_type: FlowType, mock_entry: MockConfigEntry
+) -> None:
+    """Test that that a repair flow can refer to an options flow."""
+    assert await async_setup_component(hass, DOMAIN, {})
 
     ir.async_create_issue(
         hass,
@@ -169,9 +186,94 @@ async def test_fix_issue_next_flow(hass: HomeAssistant, flow_type: FlowType) -> 
 
     assert (repairs := repairs_flow_manager(hass))
 
-    flow = await repairs.async_init("fake_integration", data={"issue_id": flow_type})
+    flow = await repairs.async_init(
+        "fake_integration", context={"issue_id": str(flow_type)}
+    )
 
     next_flow_type, _ = flow["next_flow"]
 
     assert next_flow_type is flow_type
     assert mock_entry == flow["result"]
+
+
+@pytest.mark.parametrize(
+    ("ignore_translations_for_mock_domains"),
+    [
+        (["fake_integration"]),
+    ],
+)
+async def test_fix_issue_data_deprecation_warning(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Check that a deprecation warning is logged when passing "issue_id" via data."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ir.async_create_issue(
+        hass,
+        issue_id="fake_issue",
+        domain="fake_integration",
+        is_fixable=True,
+        severity="error",
+        translation_key="fake_key",
+    )
+
+    assert (repairs := repairs_flow_manager(hass))
+
+    await repairs.async_init("fake_integration", data={"issue_id": "fake_issue"})
+
+    assert (
+        "initializes a RepairsFlow using issue_id in a deprecated manner" in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    ("ignore_translations_for_mock_domains"),
+    [
+        (["fake_integration"]),
+    ],
+)
+async def test_fix_issue_no_context(hass: HomeAssistant) -> None:
+    """Check that we raise a key error if nothing passed via context."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ir.async_create_issue(
+        hass,
+        issue_id="fake_issue",
+        domain="fake_integration",
+        is_fixable=True,
+        severity="error",
+        translation_key="fake_key",
+    )
+
+    assert (repairs := repairs_flow_manager(hass))
+
+    with pytest.raises(KeyError, match="issue_id was not set in context"):
+        await repairs.async_init("fake_integration")
+
+
+@pytest.mark.parametrize(
+    ("ignore_translations_for_mock_domains"),
+    [
+        (["fake_integration"]),
+    ],
+)
+async def test_set_issue_id_on_flow(
+    hass: HomeAssistant, caplog: pytest.LogCaptureFixture
+) -> None:
+    """Check that a deprecation warning is logged when trying to set issue_id directly on flow."""
+    assert await async_setup_component(hass, DOMAIN, {})
+
+    ir.async_create_issue(
+        hass,
+        issue_id="set_issue_id",
+        domain="fake_integration",
+        is_fixable=True,
+        severity="error",
+        translation_key="fake_key",
+    )
+
+    assert (repairs := repairs_flow_manager(hass))
+
+    await repairs.async_init("fake_integration", data={"issue_id": "set_issue_id"})
+
+    assert "attempts to set issue_id directly in a RepairsFlow" in caplog.text

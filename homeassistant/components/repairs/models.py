@@ -10,26 +10,54 @@ from homeassistant.config_entries import (
     SubentryFlowResult,
 )
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers.frame import report_usage
 
 from .const import FlowType
 
 
+class RepairsFlowContext(data_entry_flow.FlowContext, total=False):
+    """Typed flow context for repairs flow."""
+
+    issue_id: str
+
+
 class RepairsFlowResult(
-    data_entry_flow.FlowResult[data_entry_flow.FlowContext, str], total=False
+    data_entry_flow.FlowResult[
+        RepairsFlowContext,
+        str,
+    ],
+    total=False,
 ):
-    """Typed result dict for repair flow."""
+    """Typed result dict for repairs flow."""
 
     next_flow: tuple[FlowType, str]
     result: ConfigEntry | None
 
 
 class RepairsFlow(
-    data_entry_flow.FlowHandler[data_entry_flow.FlowContext, RepairsFlowResult, str]
+    data_entry_flow.FlowHandler[
+        RepairsFlowContext,
+        RepairsFlowResult,
+        str,
+    ]
 ):
     """Handle a flow for fixing an issue."""
 
-    issue_id: str
     data: dict[str, str | int | float | None] | None
+
+    @property
+    def issue_id(self) -> str:
+        """Return the flow's issue_id."""
+        return self.context["issue_id"]
+
+    @issue_id.setter
+    def issue_id(self, issue_id: str) -> None:
+        """Provide deprecation warning."""
+        report_usage(
+            "attempts to set issue_id directly in a RepairsFlow which is unnecessary since issue_id is set by the repairs flow manager",
+            breaks_in_ha_version="2027.8.0",
+            integration_domain=self.handler,
+        )
 
     @override
     @callback
