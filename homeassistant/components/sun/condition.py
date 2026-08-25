@@ -36,18 +36,37 @@ from homeassistant.helpers.selector import (
     NumericThresholdSelector,
     NumericThresholdSelectorConfig,
 )
-from homeassistant.helpers.sun import get_astral_event_date, get_astral_observer, is_up
+from homeassistant.helpers.sun import (
+    get_astral_event_date,
+    get_astral_event_next,
+    get_astral_observer,
+    is_up,
+)
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.util import dt as dt_util
 
 from .const import (
     DOMAIN,
     ELEVATION_ASTRONOMICAL,
+    ELEVATION_BLUE_HOUR_HIGH,
+    ELEVATION_BLUE_HOUR_LOW,
     ELEVATION_CIVIL,
+    ELEVATION_GOLDEN_HOUR_HIGH,
+    ELEVATION_GOLDEN_HOUR_LOW,
     ELEVATION_HORIZON,
     ELEVATION_NAUTICAL,
     STATE_ATTR_ELEVATION,
 )
+
+# Names of the solar noon/midnight events in the astral.sun module.
+_SUN_EVENT_SOLAR_NOON = "noon"
+_SUN_EVENT_SOLAR_MIDNIGHT = "midnight"
+
+CONF_PERIOD = "period"
+_PERIOD_ANY = "any"
+_PERIOD_MORNING = "morning"
+_PERIOD_EVENING = "evening"
+_PERIODS = (_PERIOD_ANY, _PERIOD_MORNING, _PERIOD_EVENING)
 
 _OPTIONS_SCHEMA_DICT: dict[vol.Marker, Any] = {
     vol.Optional("before"): cv.sun_event,
@@ -334,6 +353,95 @@ class _EveningTwilightCondition(_TwilightCondition):
     _rising = False
 
 
+_PERIOD_CONDITION_SCHEMA = vol.Schema(
+    {
+        vol.Required(CONF_OPTIONS, default=dict): {
+            vol.Optional(CONF_PERIOD, default=_PERIOD_ANY): vol.In(_PERIODS),
+        }
+    }
+)
+
+
+class _GoldenBlueHourCondition(Condition):
+    """Base class for the golden and blue hour conditions.
+
+    The sun is in golden/blue hour when its elevation is within the band; the
+    ``period`` option narrows this to the rising (morning) or descending
+    (evening) pass through the band.
+    """
+
+    _low: float
+    _high: float
+
+    @classmethod
+    @override
+    async def async_validate_config(
+        cls, hass: HomeAssistant, config: ConfigType
+    ) -> ConfigType:
+        """Validate config."""
+        return cast(ConfigType, _PERIOD_CONDITION_SCHEMA(config))
+
+    def __init__(self, hass: HomeAssistant, config: ConditionConfig) -> None:
+        """Initialize condition."""
+        super().__init__(hass, config)
+        assert config.options is not None
+        self._period = config.options[CONF_PERIOD]
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        elevation, rising = _solar_position(self._hass)
+        if not self._low <= elevation <= self._high:
+            return False
+        if self._period == _PERIOD_MORNING:
+            return rising
+        if self._period == _PERIOD_EVENING:
+            return not rising
+        return True
+
+
+class _GoldenHourCondition(_GoldenBlueHourCondition):
+    """Test if it is golden hour."""
+
+    _low = ELEVATION_GOLDEN_HOUR_LOW
+    _high = ELEVATION_GOLDEN_HOUR_HIGH
+
+
+class _BlueHourCondition(_GoldenBlueHourCondition):
+    """Test if it is blue hour."""
+
+    _low = ELEVATION_BLUE_HOUR_LOW
+    _high = ELEVATION_BLUE_HOUR_HIGH
+
+
+class _MidnightSunCondition(_SunStateCondition):
+    """Test if it is midnight sun (the sun stays above the horizon for 24h)."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        observer = get_astral_observer(self._hass)
+        # The sun's daily low is at solar midnight; if even that is above the
+        # horizon the sun never sets during this cycle.
+        next_midnight = get_astral_event_next(self._hass, _SUN_EVENT_SOLAR_MIDNIGHT)
+        elevation: float = astral.sun.elevation(observer, next_midnight)
+        return elevation > ELEVATION_HORIZON
+
+
+class _PolarNightCondition(_SunStateCondition):
+    """Test if it is polar night (the sun stays below the horizon for 24h)."""
+
+    @override
+    def _async_check(self, **kwargs: Unpack[ConditionCheckParams]) -> bool:
+        """Check the condition."""
+        observer = get_astral_observer(self._hass)
+        # The sun's daily high is at solar noon; if even that is below the
+        # horizon the sun never rises during this cycle.
+        next_noon = get_astral_event_next(self._hass, _SUN_EVENT_SOLAR_NOON)
+        elevation: float = astral.sun.elevation(observer, next_noon)
+        return elevation < ELEVATION_HORIZON
+
+
 _ELEVATION_CONDITION_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_OPTIONS, default=dict): {
@@ -375,6 +483,10 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_night": _NightCondition,
     "is_morning_twilight": _MorningTwilightCondition,
     "is_evening_twilight": _EveningTwilightCondition,
+    "is_golden_hour": _GoldenHourCondition,
+    "is_blue_hour": _BlueHourCondition,
+    "is_midnight_sun": _MidnightSunCondition,
+    "is_polar_night": _PolarNightCondition,
 }
 
 
