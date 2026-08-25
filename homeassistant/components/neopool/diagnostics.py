@@ -9,7 +9,7 @@ from homeassistant.core import HomeAssistant
 
 from .coordinator import NeoPoolConfigEntry
 
-TO_REDACT = {"password", "token", "host", "port", "MBF_PAR_SERNUM"}
+TO_REDACT = {"password", "token", "host", "port", "name", "MBF_PAR_SERNUM"}
 
 
 async def async_get_config_entry_diagnostics(

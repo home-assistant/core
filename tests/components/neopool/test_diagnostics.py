@@ -35,7 +35,6 @@ async def test_entry_diagnostics(
             "created_at",
             "modified_at",
             "entry_id",
-            "update_interval",
         )
     )
 
