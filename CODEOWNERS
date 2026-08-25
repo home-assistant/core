@@ -1478,8 +1478,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/qbittorrent/ @geoffreylagaisse @finder39
 /homeassistant/components/qbus/ @Qbus-iot @thomasddn
 /tests/components/qbus/ @Qbus-iot @thomasddn
-/homeassistant/components/qingping/ @bdraco
-/tests/components/qingping/ @bdraco
+/homeassistant/components/qingping/ @bdraco @ClearGrass @tengfeili-qingping
+/tests/components/qingping/ @bdraco @ClearGrass @tengfeili-qingping
 /homeassistant/components/qld_bushfire/ @exxamalte
 /tests/components/qld_bushfire/ @exxamalte
 /homeassistant/components/qnap/ @disforw
