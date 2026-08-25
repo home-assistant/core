@@ -9,7 +9,7 @@
           "exclude_targets": "Exclude",
           "include_targets": "Also include"
         },
-        "description": "Use “Also include” to add exceptions to the selected domains and “Exclude” to remove them. More specific choices override broader ones, if equally specific choices conflict, exclude wins.",
+        "description": "Include or exclude additional targets. More specific selections override less specific ones. When selections are equally specific, exclusions win.",
         "title": "Refine entity selection"
       },
       "pairing": {
@@ -20,7 +20,7 @@
         "data": {
           "entities": "Entities shared with HomeKit"
         },
-        "description": "HomeKit will expose the following entities ({count} total):",
+        "description": "HomeKit will expose the following {count} entities:",
         "title": "Review shared entities"
       },
       "user": {
