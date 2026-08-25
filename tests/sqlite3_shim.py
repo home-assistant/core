@@ -12,10 +12,9 @@ import sys
 
 from ha_sqlite3_vendor import _sqlite3
 
-sys.modules.pop("sqlite3", None)
-sys.modules.pop("sqlite3.dbapi2", None)
+if "sqlite3" in sys.modules:
+    raise RuntimeError(
+        "sqlite3 was already imported, load this module earlier with "
+        "pytest -p tests.sqlite3_shim"
+    )
 sys.modules["_sqlite3"] = _sqlite3
-
-import sqlite3  # noqa: E402
-
-assert sqlite3.sqlite_version == _sqlite3.sqlite_version

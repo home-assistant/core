@@ -66,6 +66,11 @@ env:
   # 3.53.4 is the latest (as of 25 Aug 2026)
   # The year is part of the sqlite.org amalgamation download URL
   SQLITE_VERSIONS: '[{"version": "3.40.1", "year": "2022"}, {"version": "3.53.4", "year": "2026"}]'
+  RECORDER_TEST_DIRS: >-
+    tests/components/history
+    tests/components/logbook
+    tests/components/recorder
+    tests/components/sensor
   UV_CACHE_DIR: /tmp/uv-cache
   APT_CACHE_VERSION: 1
   SQLALCHEMY_WARN_20: 1
@@ -1049,10 +1054,7 @@ jobs:
             -p no:sugar \
             --exclude-warning-annotations \
             --dburl=mysql://root:password@127.0.0.1/homeassistant-test \
-            tests/components/history \
-            tests/components/logbook \
-            tests/components/recorder \
-            tests/components/sensor \
+            ${RECORDER_TEST_DIRS} \
               2>&1 | tee pytest-${PYTHON_VERSION}-${mariadb}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
@@ -1200,10 +1202,7 @@ jobs:
             -p no:sugar \
             --exclude-warning-annotations \
             --dburl=postgresql://postgres:password@127.0.0.1/homeassistant-test \
-            tests/components/history \
-            tests/components/logbook \
-            tests/components/recorder \
-            tests/components/sensor \
+            ${RECORDER_TEST_DIRS} \
               2>&1 | tee pytest-${PYTHON_VERSION}-${postgresql}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'
@@ -1286,13 +1285,25 @@ jobs:
       - name: Register Python problem matcher
         run: |
           echo "::add-matcher::.github/workflows/matchers/python.json"
-      - name: Build sqlite3 module with SQLite ${{ matrix.sqlite-group.version }}
+      - name: Restore vendored sqlite3 wheel cache
+        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
+        with:
+          path: ~/sqlite3-vendor-wheel
+          key: >-
+            sqlite3-vendor-wheel-${{ runner.os }}-${{ runner.arch }}-${{
+            steps.python.outputs.python-version }}-${{
+            matrix.sqlite-group.version }}-${{
+            hashFiles('script/vendor_sqlite3.py', 'script/sqlite3_vendor/**') }}
+      - name: Install sqlite3 module with SQLite ${{ matrix.sqlite-group.version }}
         env:
           SQLITE_VERSION: ${{ matrix.sqlite-group.version }}
           SQLITE_YEAR: ${{ matrix.sqlite-group.year }}
         run: |
           . venv/bin/activate
-          python3 script/vendor_sqlite3.py --version "${SQLITE_VERSION}" --year "${SQLITE_YEAR}"
+          python3 -m script.vendor_sqlite3 \
+            --version "${SQLITE_VERSION}" \
+            --year "${SQLITE_YEAR}" \
+            --wheel-dir ~/sqlite3-vendor-wheel
       - name: Compile English translations
         run: |
           . venv/bin/activate
@@ -1324,10 +1335,7 @@ jobs:
             -p no:sugar \
             -p tests.sqlite3_shim \
             --exclude-warning-annotations \
-            tests/components/history \
-            tests/components/logbook \
-            tests/components/recorder \
-            tests/components/sensor \
+            ${RECORDER_TEST_DIRS} \
               2>&1 | tee pytest-${PYTHON_VERSION}-sqlite-${EXPECTED_SQLITE_VERSION}.txt
       - name: Upload pytest output
         if: success() || failure() && steps.pytest-partial.conclusion == 'failure'

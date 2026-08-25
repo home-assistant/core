@@ -9,15 +9,11 @@ suite run against any SQLite version, independent of the one bundled with the
 interpreter. Rebuilding the module is required because uv managed interpreters
 statically link SQLite with hidden symbols, so it cannot be replaced with
 LD_PRELOAD.
-
-Usage: python3 script/vendor_sqlite3.py --version 3.40.1 --year 2022
-
-The year is part of the sqlite.org amalgamation download URL and can be found
-at https://www.sqlite.org/chronology.html.
 """
 
 import argparse
 import io
+import os
 from pathlib import Path
 import platform
 import shutil
@@ -59,14 +55,16 @@ def fetch_module_sources(workdir: Path) -> None:
         open_url(url) as response,
         tarfile.open(fileobj=response, mode="r|gz") as tar,
     ):
+        seen = False
         for member in tar:
-            if not member.isfile() or not member.name.startswith(prefix):
-                continue
-            target = src / member.name.removeprefix(prefix)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            extracted = tar.extractfile(member)
-            assert extracted is not None
-            target.write_bytes(extracted.read())
+            if member.name.startswith(prefix):
+                seen = True
+                if member.isfile():
+                    member.name = member.name.removeprefix(prefix)
+                    tar.extract(member, src, filter="data")
+            elif seen:
+                # Tar entries are sorted, so everything wanted has been seen
+                break
 
 
 def fetch_amalgamation(workdir: Path, version: str, year: str) -> None:
@@ -74,12 +72,27 @@ def fetch_amalgamation(workdir: Path, version: str, year: str) -> None:
     major, minor, patch = (int(part) for part in version.split("."))
     release = f"{major}{minor:02d}{patch:02d}00"
     url = f"https://www.sqlite.org/{year}/sqlite-amalgamation-{release}.zip"
-    with open_url(url) as response:
-        archive_bytes = response.read()
-    with zipfile.ZipFile(io.BytesIO(archive_bytes)) as archive:
+    with (
+        open_url(url) as response,
+        zipfile.ZipFile(io.BytesIO(response.read())) as archive,
+    ):
         for filename in ("sqlite3.c", "sqlite3.h"):
             data = archive.read(f"sqlite-amalgamation-{release}/{filename}")
             (workdir / filename).write_bytes(data)
+
+
+def build_wheel(wheel_dir: Path, version: str, year: str) -> None:
+    """Build a ha_sqlite3_vendor wheel for the given SQLite version."""
+    with tempfile.TemporaryDirectory() as tmpdir:
+        workdir = Path(tmpdir) / "build"
+        shutil.copytree(FIXTURE_DIR, workdir)
+        fetch_module_sources(workdir)
+        fetch_amalgamation(workdir, version, year)
+        subprocess.run(
+            ["uv", "build", "--wheel", str(workdir), "--out-dir", str(wheel_dir)],
+            check=True,
+            env={**os.environ, "SQLITE_VERSION": version},
+        )
 
 
 def main() -> None:
@@ -87,15 +100,26 @@ def main() -> None:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--version", required=True, help="SQLite version, e.g. 3.40.1")
     parser.add_argument(
-        "--year", required=True, help="Release year in the sqlite.org download URL"
+        "--year",
+        required=True,
+        help="Release year in the sqlite.org download URL, "
+        "see https://www.sqlite.org/chronology.html",
+    )
+    parser.add_argument(
+        "--wheel-dir",
+        type=Path,
+        help="Keep the built wheel here and reuse it if one already exists",
     )
     args = parser.parse_args()
 
     with tempfile.TemporaryDirectory() as tmpdir:
-        workdir = Path(tmpdir) / "build"
-        shutil.copytree(FIXTURE_DIR, workdir)
-        fetch_module_sources(workdir)
-        fetch_amalgamation(workdir, args.version, args.year)
+        wheel_dir = args.wheel_dir or Path(tmpdir)
+        pattern = f"ha_sqlite3_vendor-{args.version}-*.whl"
+        if wheels := sorted(wheel_dir.glob(pattern)):
+            print(f"Using cached wheel {wheels[0]}")
+        else:
+            build_wheel(wheel_dir, args.version, args.year)
+            wheels = sorted(wheel_dir.glob(pattern))
         subprocess.run(
             [
                 "uv",
@@ -104,7 +128,7 @@ def main() -> None:
                 "--python",
                 sys.executable,
                 "--reinstall",
-                str(workdir),
+                str(wheels[0]),
             ],
             check=True,
         )
