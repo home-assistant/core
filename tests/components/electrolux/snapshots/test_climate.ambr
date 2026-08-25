@@ -1,5 +1,5 @@
 # serializer version: 1
-# name: test_climate[climate.air_conditioner_climate-entry]
+# name: test_climate[climate.air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -28,7 +28,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.air_conditioner_climate',
+    'entity_id': 'climate.air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -36,12 +36,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Climate',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Climate',
+    'original_name': None,
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -51,7 +51,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate[climate.air_conditioner_climate-state]
+# name: test_climate[climate.air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 22.0,
@@ -62,7 +62,7 @@
         'low',
         'medium',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner Climate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Air Conditioner',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.COOL: 'cool'>,
         <HVACMode.FAN_ONLY: 'fan_only'>,
@@ -75,14 +75,14 @@
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 26.0,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.air_conditioner_climate',
+    'entity_id': 'climate.air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
     'state': 'off',
   })
 # ---
-# name: test_climate[climate.portable_air_conditioner_climate-entry]
+# name: test_climate[climate.portable_air_conditioner-entry]
   EntityRegistryEntrySnapshot({
     'aliases': list([
       None,
@@ -113,7 +113,7 @@
     'disabled_by': None,
     'domain': 'climate',
     'entity_category': None,
-    'entity_id': 'climate.portable_air_conditioner_climate',
+    'entity_id': 'climate.portable_air_conditioner',
     'has_entity_name': True,
     'hidden_by': None,
     'icon': None,
@@ -121,12 +121,12 @@
     'labels': set({
     }),
     'name': None,
-    'object_id_base': 'Climate',
+    'object_id_base': None,
     'options': dict({
     }),
     'original_device_class': None,
     'original_icon': None,
-    'original_name': 'Climate',
+    'original_name': None,
     'platform': 'electrolux',
     'previous_unique_id': None,
     'suggested_object_id': None,
@@ -136,7 +136,7 @@
     'unit_of_measurement': None,
   })
 # ---
-# name: test_climate[climate.portable_air_conditioner_climate-state]
+# name: test_climate[climate.portable_air_conditioner-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <ClimateEntityStateAttribute.CURRENT_TEMPERATURE: 'current_temperature'>: 25,
@@ -147,7 +147,7 @@
         'medium',
         'high',
       ]),
-      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Portable Air Conditioner Climate',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Portable Air Conditioner',
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
         <HVACMode.AUTO: 'auto'>,
         <HVACMode.COOL: 'cool'>,
@@ -162,7 +162,7 @@
       <ClimateEntityStateAttribute.TEMPERATURE: 'temperature'>: 19,
     }),
     'context': <ANY>,
-    'entity_id': 'climate.portable_air_conditioner_climate',
+    'entity_id': 'climate.portable_air_conditioner',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,

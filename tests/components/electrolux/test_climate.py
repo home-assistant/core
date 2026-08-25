@@ -67,7 +67,7 @@ async def test_climate(
         # set temperature command tests
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {},
             SERVICE_SET_TEMPERATURE,
             {ATTR_TEMPERATURE: 20},
@@ -75,7 +75,7 @@ async def test_climate(
         ),
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {"temperatureRepresentation": "FAHRENHEIT", "targetTemperatureF": 70},
             SERVICE_SET_TEMPERATURE,
             {ATTR_TEMPERATURE: 26.6},
@@ -83,7 +83,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {},
             SERVICE_SET_TEMPERATURE,
             {ATTR_TEMPERATURE: 20},
@@ -92,7 +92,7 @@ async def test_climate(
         # turn on/off command tests
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {},
             SERVICE_TURN_ON,
             {},
@@ -100,7 +100,7 @@ async def test_climate(
         ),
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {},
             SERVICE_TURN_OFF,
             {},
@@ -108,7 +108,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {},
             SERVICE_TURN_ON,
             {},
@@ -116,7 +116,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {},
             SERVICE_TURN_OFF,
             {},
@@ -125,7 +125,7 @@ async def test_climate(
         # set HVAC mode command tests
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {"applianceState": "RUNNING", "mode": "COOL"},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.COOL},
@@ -133,7 +133,7 @@ async def test_climate(
         ),
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {"applianceState": "RUNNING"},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.COOL},
@@ -141,7 +141,7 @@ async def test_climate(
         ),
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {"applianceState": "RUNNING"},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
@@ -149,7 +149,7 @@ async def test_climate(
         ),
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {"applianceState": "RUNNING"},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.OFF},
@@ -157,7 +157,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "running", "mode": "cool"}},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.COOL},
@@ -165,7 +165,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "running", "mode": "dry"}},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.COOL},
@@ -173,7 +173,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "running"}},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.AUTO},
@@ -181,7 +181,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "running"}},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.DRY},
@@ -189,7 +189,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "running"}},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.FAN_ONLY},
@@ -197,7 +197,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "running"}},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.OFF},
@@ -206,7 +206,7 @@ async def test_climate(
         # set HVAC mode while appliance off command tests
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {"applianceState": "OFF"},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.COOL},
@@ -214,7 +214,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "off", "mode": None}},
             SERVICE_SET_HVAC_MODE,
             {ATTR_HVAC_MODE: HVACMode.COOL},
@@ -223,7 +223,7 @@ async def test_climate(
         # set fan mode command tests
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {"applianceState": "RUNNING"},
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: FAN_LOW},
@@ -231,7 +231,7 @@ async def test_climate(
         ),
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {"applianceState": "RUNNING"},
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: FAN_MEDIUM},
@@ -239,7 +239,7 @@ async def test_climate(
         ),
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {"applianceState": "RUNNING"},
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: FAN_HIGH},
@@ -247,7 +247,7 @@ async def test_climate(
         ),
         (
             "electrolux_ac",
-            "climate.air_conditioner_climate",
+            "climate.air_conditioner",
             {"applianceState": "RUNNING"},
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: FAN_AUTO},
@@ -255,7 +255,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "running"}},
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: FAN_LOW},
@@ -263,7 +263,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "running"}},
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: FAN_MEDIUM},
@@ -271,7 +271,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "running"}},
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: FAN_HIGH},
@@ -279,7 +279,7 @@ async def test_climate(
         ),
         (
             "electrolux_dam_ac",
-            "climate.portable_air_conditioner_climate",
+            "climate.portable_air_conditioner",
             {"airConditioner": {"applianceState": "running"}},
             SERVICE_SET_FAN_MODE,
             {ATTR_FAN_MODE: FAN_AUTO},
