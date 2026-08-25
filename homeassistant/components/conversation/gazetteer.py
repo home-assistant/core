@@ -20,7 +20,6 @@ do.
 """
 
 import asyncio
-from collections import OrderedDict
 from collections.abc import AsyncIterator, Sequence
 from contextlib import asynccontextmanager
 from functools import partial
@@ -42,6 +41,7 @@ from homeassistant.const import ATTR_DEVICE_CLASS
 from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import (
     area_registry as ar,
+    chat_session,
     entity_registry as er,
     floor_registry as fr,
     intent,
@@ -52,14 +52,6 @@ from .const import DOMAIN
 
 LANGUAGE = "en"
 """The matcher ships an English vocabulary and nothing else."""
-
-_PREVIOUS_TARGETS_CAPACITY = 8
-"""Conversations whose targets stay referrable.
-
-No expiry to go with it: Home Assistant retires a conversation id after
-`chat_session.CONVERSATION_TIMEOUT` and issues a fresh one, so an entry old enough to be
-stale is one that will never be asked for again.
-"""
 
 
 @callback
@@ -187,6 +179,21 @@ def async_targets_from_intent(
     return ()
 
 
+async def _run_uninterrupted[_T](future: asyncio.Future[_T]) -> _T:
+    """Await an executor job without returning before its thread stops.
+
+    Cancelling an await on `run_in_executor` does not interrupt the worker, so a
+    cancelled request would leave the lock around the call while the thread was
+    still inside the matcher -- which is the overlap the lock exists to prevent.
+    The caller is still cancelled; it just does not get to run ahead of the work.
+    """
+    try:
+        return await asyncio.shield(future)
+    except asyncio.CancelledError:
+        await asyncio.wait([future])
+        raise
+
+
 class _HomeLock:
     """Many interpretations at once, or one rebuild, never both.
 
@@ -251,9 +258,7 @@ class GazetteerFallback:
         self._matcher: GazetteerMatcher | None = None
         self._lock = _HomeLock()
         self._stale = False
-        self._previous_targets: OrderedDict[str, tuple[TargetReference, ...]] = (
-            OrderedDict()
-        )
+        self._previous_targets: dict[str, tuple[TargetReference, ...]] = {}
 
     @callback
     def async_invalidate(self) -> None:
@@ -286,17 +291,21 @@ class GazetteerFallback:
 
         async with self._lock.read():
             try:
-                result = await self.hass.async_add_executor_job(
-                    partial(
-                        interpret,
-                        context_area=area.id if area else None,
-                        context_floor=area.floor_id if area else None,
+                result = await _run_uninterrupted(
+                    self.hass.async_add_executor_job(
+                        partial(
+                            interpret,
+                            context_area=area.id if area else None,
+                            context_floor=area.floor_id if area else None,
+                        )
                     )
                 )
             except ValueError:
                 # The registries moved on from the snapshot mid-request. The sentence
                 # is still worth trying unplaced; shapes needing a room refuse anyway.
-                result = await self.hass.async_add_executor_job(interpret)
+                result = await _run_uninterrupted(
+                    self.hass.async_add_executor_job(interpret)
+                )
 
         return matcher, result
 
@@ -304,11 +313,27 @@ class GazetteerFallback:
     def async_remember(
         self, conversation_id: str, targets: Sequence[TargetReference] = ()
     ) -> None:
-        """Make this turn the one a pronoun refers back to (it/them)."""
-        self._previous_targets.pop(conversation_id, None)
+        """Make this turn the one a pronoun refers back to (it/them).
+
+        What a conversation was about lasts exactly as long as the conversation: the
+        entry is dropped when its chat session is cleaned up. Bounding the number of
+        conversations instead would let a house busy enough to hold several at once
+        take the antecedent away from whoever spoke least recently, however lately
+        they spoke.
+        """
+        if conversation_id not in self._previous_targets:
+            session = chat_session.current_session.get()
+            if session is None:
+                # Nothing would ever clean this up, so do not start it.
+                return
+            session.async_on_cleanup(partial(self.async_forget, conversation_id))
+
         self._previous_targets[conversation_id] = tuple(targets)
-        while len(self._previous_targets) > _PREVIOUS_TARGETS_CAPACITY:
-            self._previous_targets.popitem(last=False)
+
+    @callback
+    def async_forget(self, conversation_id: str) -> None:
+        """Drop what a conversation was about, once it is over."""
+        self._previous_targets.pop(conversation_id, None)
 
     async def _async_get_matcher(self) -> GazetteerMatcher:
         """Return the matcher, over a home built or refreshed from the registries.
@@ -324,15 +349,22 @@ class GazetteerFallback:
             return self._matcher
 
         async with self._lock.write():
+            # Cleared before the home is read, so a registry change arriving while
+            # this rebuilds sets it again rather than being erased on the way out.
+            stale, self._stale = self._stale, False
+
             if self._matcher is None:
-                self._matcher = await self.hass.async_add_executor_job(
-                    partial(GazetteerMatcher, home=async_build_home(self.hass))
+                self._matcher = await _run_uninterrupted(
+                    self.hass.async_add_executor_job(
+                        partial(GazetteerMatcher, home=async_build_home(self.hass))
+                    )
                 )
-            elif self._stale:
-                await self.hass.async_add_executor_job(
-                    self._matcher.set_home, async_build_home(self.hass)
+            elif stale:
+                await _run_uninterrupted(
+                    self.hass.async_add_executor_job(
+                        self._matcher.set_home, async_build_home(self.hass)
+                    )
                 )
-            self._stale = False
 
         return self._matcher
 

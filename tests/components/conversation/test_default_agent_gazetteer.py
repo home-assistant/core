@@ -1,6 +1,7 @@
 """Test the gazetteer fallback in the default agent."""
 
 import asyncio
+from datetime import timedelta
 import threading
 from unittest.mock import patch
 
@@ -11,7 +12,6 @@ from homeassistant.components import conversation
 from homeassistant.components.conversation import default_agent
 from homeassistant.components.conversation.chat_log import async_get_chat_log
 from homeassistant.components.conversation.gazetteer import (
-    _PREVIOUS_TARGETS_CAPACITY,
     GazetteerFallback,
     _HomeLock,
     join_speech,
@@ -34,10 +34,11 @@ from homeassistant.helpers import (
     intent,
 )
 from homeassistant.setup import async_setup_component
+from homeassistant.util import dt as dt_util
 
 from . import expose_entity
 
-from tests.common import MockConfigEntry, async_mock_service
+from tests.common import MockConfigEntry, async_fire_time_changed, async_mock_service
 
 KITCHEN_LIGHT = "light.kitchen_ceiling"
 BEDROOM_BLINDS = "cover.bedroom_blinds"
@@ -583,22 +584,39 @@ def test_join_speech(parts: list[str], expected: str) -> None:
     assert join_speech(parts) == expected
 
 
-def test_previous_targets_are_bounded() -> None:
-    """Test old conversations are forgotten rather than kept for ever.
+@pytest.mark.usefixtures("init_components", "home")
+async def test_an_antecedent_lasts_as_long_as_its_conversation(
+    hass: HomeAssistant,
+) -> None:
+    """Test what a conversation was about is dropped when the conversation ends.
 
-    Home Assistant retires a conversation id after its session times out and issues a
-    fresh one, so an entry old enough to be evicted is one nothing will ask for again.
+    Bounding the number of conversations instead would take the antecedent from
+    whoever spoke least recently, however lately they spoke.
     """
-    fallback = GazetteerFallback(None)  # type: ignore[arg-type]
-    target = TargetReference.for_entity(KITCHEN_LIGHT)
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+    async_mock_service(hass, "light", "turn_on")
 
-    for index in range(_PREVIOUS_TARGETS_CAPACITY + 1):
-        fallback.async_remember(f"conversation-{index}", (target,))
+    result = await conversation.async_converse(
+        hass, "turn on the kichen lights", None, Context(), None
+    )
+    conversation_id = result.conversation_id
+    assert conversation_id in agent._gazetteer._previous_targets
 
-    remembered = list(fallback._previous_targets)
-    assert len(remembered) == _PREVIOUS_TARGETS_CAPACITY
-    assert "conversation-0" not in remembered
-    assert remembered[-1] == f"conversation-{_PREVIOUS_TARGETS_CAPACITY}"
+    # Nothing evicts it while other conversations come and go.
+    for _ in range(12):
+        await conversation.async_converse(
+            hass, "turn on the kichen lights", None, Context(), None
+        )
+    assert conversation_id in agent._gazetteer._previous_targets
+
+    # Its session expiring is what ends it.
+    async_fire_time_changed(
+        hass, dt_util.utcnow() + chat_session.CONVERSATION_TIMEOUT * 2 + timedelta(1)
+    )
+    await hass.async_block_till_done()
+
+    assert conversation_id not in agent._gazetteer._previous_targets
 
 
 @pytest.mark.usefixtures("init_components", "home")
@@ -857,3 +875,138 @@ async def test_a_rebuild_waits_for_an_interpretation_in_flight(
 
     assert spans.index("interpret exit") < spans.index("rebuild enter")
     assert spans[-2:] == ["interpret enter", "interpret exit"]
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_a_cancelled_sentence_still_holds_off_a_rebuild(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """Test cancelling a request does not hand the matcher to a rebuild.
+
+    An executor job cannot be interrupted, so a cancelled await would drop the read
+    lock while the worker thread was still inside the matcher -- the exact overlap
+    the lock exists to prevent.
+    """
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+    async_mock_service(hass, "light", "turn_on")
+
+    await conversation.async_converse(
+        hass, "turn on the kichen lights", None, Context(), None
+    )
+
+    spans: list[str] = []
+    inside = threading.Event()
+    release = threading.Event()
+    real_interpret = GazetteerMatcher.interpret
+    real_set_home = GazetteerMatcher.set_home
+
+    def interpret(self, text, **kwargs):
+        spans.append("interpret enter")
+        if not inside.is_set():
+            inside.set()
+            release.wait(timeout=10)
+        try:
+            return real_interpret(self, text, **kwargs)
+        finally:
+            spans.append("interpret exit")
+
+    def set_home(self, home):
+        spans.append("rebuild enter")
+        try:
+            real_set_home(self, home)
+        finally:
+            spans.append("rebuild exit")
+
+    with (
+        patch.object(GazetteerMatcher, "interpret", interpret),
+        patch.object(GazetteerMatcher, "set_home", set_home),
+    ):
+        cancelled = hass.async_create_task(
+            conversation.async_converse(
+                hass, "turn on the kichen lights", None, Context(), None
+            )
+        )
+        await hass.async_add_executor_job(inside.wait, 10)
+
+        # Give up on that sentence while its thread is still inside the matcher.
+        cancelled.cancel()
+        await asyncio.sleep(0)
+
+        area_registry.async_update("kitchen_id", name="Scullery")
+        assert agent._gazetteer._stale
+        waiting = hass.async_create_task(
+            conversation.async_converse(
+                hass, "turn on the scullary lights", None, Context(), None
+            )
+        )
+        await asyncio.sleep(0.25)
+
+        assert "rebuild enter" not in spans, "rebuilt while a cancelled thread was in"
+
+        release.set()
+        async with asyncio.timeout(10):
+            await asyncio.gather(cancelled, waiting, return_exceptions=True)
+
+    assert spans.index("interpret exit") < spans.index("rebuild enter")
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_a_change_during_a_rebuild_is_not_lost(
+    hass: HomeAssistant, area_registry: ar.AreaRegistry
+) -> None:
+    """Test a registry change arriving mid-rebuild still outdates the home.
+
+    The home is read before the rebuild is handed to the executor, so a change
+    landing during it is not in the snapshot and has to survive the flag reset.
+    """
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+    async_mock_service(hass, "light", "turn_on")
+
+    await conversation.async_converse(
+        hass, "turn on the kichen lights", None, Context(), None
+    )
+
+    rebuilding = threading.Event()
+    release = threading.Event()
+    real_set_home = GazetteerMatcher.set_home
+
+    def set_home(self, home):
+        rebuilding.set()
+        release.wait(timeout=10)
+        real_set_home(self, home)
+
+    area_registry.async_update("kitchen_id", name="Scullery")
+    assert agent._gazetteer._stale
+
+    with patch.object(GazetteerMatcher, "set_home", set_home):
+        pending = hass.async_create_task(
+            conversation.async_converse(
+                hass, "turn on the scullary lights", None, Context(), None
+            )
+        )
+        await hass.async_add_executor_job(rebuilding.wait, 10)
+
+        # This arrives after the home was read, so the rebuild in flight misses it.
+        area_registry.async_update("bedroom_id", name="Nursery")
+        release.set()
+        async with asyncio.timeout(10):
+            await pending
+
+    assert agent._gazetteer._stale, "the change made during the rebuild was erased"
+
+
+async def test_an_antecedent_needs_a_session_to_belong_to(
+    hass: HomeAssistant,
+) -> None:
+    """Test nothing is kept for a turn with no session to end it.
+
+    Every turn the agent answers has one. Keeping an entry without one would mean
+    keeping it for the life of the process, so it is not kept at all.
+    """
+    fallback = GazetteerFallback(hass)
+
+    fallback.async_remember("orphan", (TargetReference.for_entity(KITCHEN_LIGHT),))
+
+    assert not fallback._previous_targets

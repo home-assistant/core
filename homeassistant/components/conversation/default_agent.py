@@ -89,8 +89,18 @@ _LOGGER = logging.getLogger(__name__)
 
 
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
-_ENTITY_REGISTRY_UPDATE_FIELDS = ["aliases", "device_id", "name", "original_name"]
-_DEVICE_REGISTRY_UPDATE_FIELDS = ["name", "name_by_user"]
+# `area_id` is here for the gazetteer, which binds each entity to the area it is
+# in; hassil keeps areas in a list of their own and does not need it. Rebuilding
+# is lazy, so the cost of the wider net is one extra rebuild on the next sentence
+# after somebody moves an entity or a device.
+_ENTITY_REGISTRY_UPDATE_FIELDS = [
+    "aliases",
+    "area_id",
+    "device_id",
+    "name",
+    "original_name",
+]
+_DEVICE_REGISTRY_UPDATE_FIELDS = ["area_id", "name", "name_by_user"]
 
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 
@@ -802,8 +812,7 @@ class DefaultAgent(ConversationEntity):
             user_input.satellite_id, user_input.device_id
         )
 
-        intent_response: intent.IntentResponse | None = None
-        speech: list[str] = []
+        responses: list[intent.IntentResponse] = []
         for frame in frames:
             intent_response = await self._async_execute_intent(
                 frame.intent,
@@ -823,14 +832,12 @@ class DefaultAgent(ConversationEntity):
             if intent_response.response_type is intent.IntentResponseType.ERROR:
                 return intent_response
 
-            if frame_speech := intent_response.speech.get("plain", {}).get("speech"):
-                speech.append(frame_speech)
+            responses.append(intent_response)
 
-        assert intent_response is not None
-        if len(frames) > 1:
-            intent_response.async_set_speech(join_speech(speech))
+        if len(responses) == 1:
+            return responses[0]
 
-        return intent_response
+        return _merge_intent_responses(responses, language)
 
     def _recognize(
         self,
@@ -1671,6 +1678,47 @@ class DefaultAgent(ConversationEntity):
     async def async_get_language_scores(self) -> dict[str, LanguageScores]:
         """Get support scores per language."""
         return await self.hass.async_add_executor_job(get_language_scores)
+
+
+def _merge_intent_responses(
+    responses: list[intent.IntentResponse], language: str
+) -> intent.IntentResponse:
+    """Combine what each frame of one coordinated command did into one response.
+
+    Every frame ran, so every frame's targets belong in the result: an assist
+    pipeline reads them to decide whether everything it acted on was in the
+    satellite's own area, and would otherwise see only the last command's.
+
+    A command that asked something as well as doing something is reported as a
+    query, since the answer is the part a caller has to relay.
+    """
+    merged = intent.IntentResponse(language=language, intent=responses[0].intent)
+    merged.response_type = (
+        intent.IntentResponseType.QUERY_ANSWER
+        if any(
+            response.response_type is intent.IntentResponseType.QUERY_ANSWER
+            for response in responses
+        )
+        else responses[0].response_type
+    )
+
+    for response in responses:
+        merged.success_results.extend(response.success_results)
+        merged.failed_results.extend(response.failed_results)
+        merged.matched_states.extend(response.matched_states)
+        merged.unmatched_states.extend(response.unmatched_states)
+        merged.speech_slots.update(response.speech_slots)
+
+    merged.async_set_speech(
+        join_speech(
+            [
+                speech
+                for response in responses
+                if (speech := response.speech.get("plain", {}).get("speech"))
+            ]
+        )
+    )
+    return merged
 
 
 def _make_error_result(
