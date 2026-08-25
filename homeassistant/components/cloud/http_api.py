@@ -114,7 +114,7 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_postpone)
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_complete)
     websocket_api.async_register_command(hass, websocket_subscribe_events)
-    websocket_api.async_register_command(hass, websocket_attempt_auto_login)
+    websocket_api.async_register_command(hass, websocket_retry_auto_login)
     websocket_api.async_register_command(hass, websocket_cancel_auto_login)
 
     websocket_api.async_register_command(hass, google_assistant_get)
@@ -815,9 +815,9 @@ def websocket_subscribe_events(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "cloud/attempt_auto_login"})
+@websocket_api.websocket_command({vol.Required("type"): "cloud/retry_auto_login"})
 @callback
-def websocket_attempt_auto_login(
+def websocket_retry_auto_login(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],

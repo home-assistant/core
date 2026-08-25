@@ -1004,19 +1004,19 @@ async def test_logout_clears_auto_login(
 
 
 @pytest.mark.usefixtures("setup_cloud")
-async def test_attempt_auto_login_now(
+async def test_retry_auto_login(
     hass: HomeAssistant,
     cloud: MagicMock,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test asking for an immediate auto-login attempt."""
+    """Test asking for an immediate auto-login retry."""
     cloud.id_token = None
     await register_auto_login(hass_client)
     controller = cloud.register_and_auto_login.return_value
 
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 5, "type": "cloud/attempt_auto_login"})
+    await client.send_json({"id": 5, "type": "cloud/retry_auto_login"})
     response = await client.receive_json()
 
     assert response["success"]
@@ -1032,14 +1032,14 @@ async def test_attempt_auto_login_now(
 
 
 @pytest.mark.usefixtures("setup_cloud")
-async def test_attempt_auto_login_without_pending(
+async def test_retry_auto_login_without_pending(
     hass: HomeAssistant,
     cloud: MagicMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test asking for an attempt when no auto-login is pending."""
+    """Test asking for a retry when no auto-login is pending."""
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 5, "type": "cloud/attempt_auto_login"})
+    await client.send_json({"id": 5, "type": "cloud/retry_auto_login"})
     response = await client.receive_json()
 
     assert response["success"]
@@ -2274,7 +2274,7 @@ async def test_support_package_requires_admin(
         {"type": "cloud/onboarding/postpone"},
         {"type": "cloud/onboarding/complete", "items": ["remote"]},
         {"type": "cloud/events"},
-        {"type": "cloud/attempt_auto_login"},
+        {"type": "cloud/retry_auto_login"},
         {"type": "cloud/cancel_auto_login"},
     ],
 )
