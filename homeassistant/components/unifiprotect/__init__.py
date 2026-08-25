@@ -220,8 +220,6 @@ async def _async_setup_public_only_entry(
             translation_key="public_bootstrap_failed",
         ) from err
 
-    # update_public() backfills the NVR mac from the console fallback on
-    # firmware that omits it, so it is available here for the device identity.
     nvr = protect.public_bootstrap.nvr
     if nvr is None or not nvr.mac:
         await data_service.async_stop()

@@ -19,12 +19,14 @@ from homeassistant.components.unifiprotect.const import (
     AUTH_RETRIES,
     CONF_ALLOW_EA,
     DOMAIN,
+    PLATFORMS,
+    PUBLIC_ONLY_PLATFORMS,
 )
 from homeassistant.components.unifiprotect.data import (
     async_ufp_instance_for_config_entry_ids,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntry, ConfigEntryState
-from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE, Platform
+from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.setup import async_setup_component
@@ -760,17 +762,20 @@ async def test_public_only_setup(
     assert state.state == AlarmControlPanelState.DISARMED
 
 
-async def test_public_only_only_alarm_and_camera_platforms(
+async def test_public_only_forwards_only_public_platforms(
     hass: HomeAssistant,
     setup_public_only: Callable[[], Coroutine[Any, Any, None]],
 ) -> None:
-    """Only the alarm panel and camera are forwarded in public-only mode."""
+    """Only ``PUBLIC_ONLY_PLATFORMS`` are forwarded in public-only mode.
+
+    Every other platform enumerates from the private bootstrap, which an
+    API-key-only entry never has.
+    """
     await setup_public_only()
 
-    # No sensors / etc. — those still need the private bootstrap.
-    assert not hass.states.async_entity_ids(Platform.SENSOR.value)
-    assert not hass.states.async_entity_ids(Platform.BINARY_SENSOR.value)
-    assert len(hass.states.async_entity_ids(Platform.ALARM_CONTROL_PANEL.value)) == 1
+    private_platforms = [p for p in PLATFORMS if p not in PUBLIC_ONLY_PLATFORMS]
+    for platform in private_platforms:
+        assert not hass.states.async_entity_ids(platform.value)
 
 
 async def test_public_only_auth_failed_triggers_reauth(
