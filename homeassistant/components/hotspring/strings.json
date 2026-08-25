@@ -26,6 +26,14 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "heating": {
+        "name": "Heating"
+      },
+      "spa_connected": {
+        "name": "Spa connected"
+      }
+    },
     "number": {
       "target_temperature": {
         "name": "Target temperature"
