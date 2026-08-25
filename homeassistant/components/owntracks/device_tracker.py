@@ -4,18 +4,14 @@
 from typing import Any, override
 
 from homeassistant.components.device_tracker import (
-    ATTR_SOURCE_TYPE,
     DOMAIN as DEVICE_TRACKER_DOMAIN,
+    DeviceTrackerEntityStateAttribute,
     SourceType,
     TrackerEntity,
+    TrackerEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    ATTR_BATTERY_LEVEL,
-    ATTR_GPS_ACCURACY,
-    ATTR_LATITUDE,
-    ATTR_LONGITUDE,
-)
+from homeassistant.const import ATTR_BATTERY_LEVEL, EntityStateAttribute
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
@@ -53,7 +49,7 @@ async def async_setup_entry(
     dev_reg = dr.async_get(hass)
     dev_ids = {
         identifier[1]
-        for device in dev_reg.devices.get_devices_for_config_entry_id(entry.entry_id)
+        for device in dr.async_entries_for_config_entry(dev_reg, entry.entry_id)
         for identifier in device.identifiers
     }
 
@@ -177,10 +173,13 @@ class OwnTracksEntity(TrackerEntity, RestoreEntity):
 
         self._data = {
             "host_name": state.name,
-            "gps": (attr.get(ATTR_LATITUDE), attr.get(ATTR_LONGITUDE)),
-            "gps_accuracy": attr.get(ATTR_GPS_ACCURACY),
+            "gps": (
+                attr.get(EntityStateAttribute.LATITUDE),
+                attr.get(EntityStateAttribute.LONGITUDE),
+            ),
+            "gps_accuracy": attr.get(TrackerEntityStateAttribute.GPS_ACCURACY),
             "battery": attr.get(ATTR_BATTERY_LEVEL),
-            "source_type": attr.get(ATTR_SOURCE_TYPE),
+            "source_type": attr.get(DeviceTrackerEntityStateAttribute.SOURCE_TYPE),
             "attributes": attributes,
         }
 

@@ -292,20 +292,26 @@ class Timer(collection.CollectionEntity, RestoreEntity):
 
         # Begin restoring state
         self._state = state.state
-        self._last_transition = state.attributes.get(ATTR_LAST_TRANSITION)
+        self._last_transition = state.attributes.get(
+            TimerEntityStateAttribute.LAST_TRANSITION
+        )
 
         # Nothing more to do if the timer is idle
         if self._state == STATUS_IDLE:
             return
 
-        self._running_duration = cv.time_period(state.attributes[ATTR_DURATION])
+        self._running_duration = cv.time_period(
+            state.attributes[TimerEntityStateAttribute.DURATION]
+        )
         # If the timer was paused, we restore the remaining time
         if self._state == STATUS_PAUSED:
-            self._remaining = cv.time_period(state.attributes[ATTR_REMAINING])
+            self._remaining = cv.time_period(
+                state.attributes[TimerEntityStateAttribute.REMAINING]
+            )
             return
         # If we get here, the timer must have been active so we need to decide what
         # to do based on end time and the current time
-        end = cv.datetime(state.attributes[ATTR_FINISHES_AT])
+        end = cv.datetime(state.attributes[TimerEntityStateAttribute.FINISHES_AT])
         # If there is time remaining in the timer, restore the remaining time then
         # start the timer
         if (remaining := end - dt_util.utcnow().replace(microsecond=0)) > timedelta(0):

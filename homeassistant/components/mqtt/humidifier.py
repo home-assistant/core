@@ -17,7 +17,9 @@ from homeassistant.components.humidifier import (
     HumidifierAction,
     HumidifierDeviceClass,
     HumidifierEntity,
+    HumidifierEntityCapabilityAttribute,
     HumidifierEntityFeature,
+    HumidifierEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
@@ -81,11 +83,11 @@ DEFAULT_PAYLOAD_RESET = "None"
 
 MQTT_HUMIDIFIER_ATTRIBUTES_BLOCKED = frozenset(
     {
-        humidifier.ATTR_HUMIDITY,
-        humidifier.ATTR_MAX_HUMIDITY,
-        humidifier.ATTR_MIN_HUMIDITY,
-        humidifier.ATTR_MODE,
-        humidifier.ATTR_AVAILABLE_MODES,
+        HumidifierEntityStateAttribute.HUMIDITY,
+        HumidifierEntityCapabilityAttribute.MAX_HUMIDITY,
+        HumidifierEntityCapabilityAttribute.MIN_HUMIDITY,
+        HumidifierEntityStateAttribute.MODE,
+        HumidifierEntityCapabilityAttribute.AVAILABLE_MODES,
     }
 )
 

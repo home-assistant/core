@@ -6,6 +6,7 @@ import logging
 from typing import Any, override
 
 from reolink_aio.api import (
+    AntiFlickerEnum,
     BinningModeEnum,
     Chime,
     ChimeToneEnum,
@@ -218,6 +219,19 @@ SELECT_ENTITIES = (
         method=lambda api, ch, name: api.set_exposure(ch, ExposureEnum[name].value),
     ),
     ReolinkSelectEntityDescription(
+        key="anti_flicker",
+        cmd_key="GetIsp",
+        translation_key="anti_flicker",
+        entity_category=EntityCategory.CONFIG,
+        entity_registry_enabled_default=False,
+        get_options=[method.name for method in AntiFlickerEnum],
+        supported=lambda api, ch: api.supported(ch, "anti_flicker"),
+        value=lambda api, ch: AntiFlickerEnum(api.anti_flicker_mode(ch)).name,
+        method=lambda api, ch, name: api.set_anti_flicker(
+            ch, AntiFlickerEnum[name].value
+        ),
+    ),
+    ReolinkSelectEntityDescription(
         key="binning_mode",
         cmd_key="GetIsp",
         translation_key="binning_mode",
@@ -313,7 +327,7 @@ SELECT_ENTITIES = (
         entity_category=EntityCategory.CONFIG,
         entity_registry_enabled_default=False,
         unit_of_measurement=UnitOfFrequency.HERTZ,
-        get_options=["1", "2", "5"],
+        get_options=lambda api, ch: api.baichuan.pre_record_fps_list(ch),
         supported=lambda api, ch: api.supported(ch, "pre_record"),
         value=lambda api, ch: str(api.baichuan.pre_record_fps(ch)),
         method=lambda api, ch, value: api.baichuan.set_pre_recording(
@@ -434,7 +448,7 @@ async def async_setup_entry(
     entities: list[SelectEntity] = [
         ReolinkSelectEntity(reolink_data, channel, entity_description)
         for entity_description in SELECT_ENTITIES
-        for channel in reolink_data.host.api.channels
+        for channel in reolink_data.host.api.stream_channels
         if entity_description.supported(reolink_data.host.api, channel)
     ]
     entities.extend(

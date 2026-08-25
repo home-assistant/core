@@ -1,5 +1,6 @@
 """Tests for the BSBLan integration."""
 
+import asyncio
 from datetime import timedelta
 from unittest.mock import MagicMock
 
@@ -291,6 +292,37 @@ async def test_coordinator_dhw_config_update_error(
     assert mock_bsblan.hot_water_schedule.called
 
 
+async def test_setup_does_not_block_on_slow_fetch(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_bsblan: MagicMock,
+) -> None:
+    """Test setup does not wait for the background slow-data fetch."""
+    release = asyncio.Event()
+    config_value = mock_bsblan.hot_water_config.return_value
+
+    async def _blocking_config(*args: object, **kwargs: object) -> object:
+        await release.wait()
+        return config_value
+
+    mock_bsblan.hot_water_config.side_effect = _blocking_config
+
+    mock_config_entry.add_to_hass(hass)
+    try:
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        # Setup finished even though the slow-data fetch is still pending.
+        assert mock_config_entry.state is ConfigEntryState.LOADED
+        assert not mock_bsblan.hot_water_schedule.called
+    finally:
+        # Release the fetch so it can complete and clean up.
+        release.set()
+        await hass.async_block_till_done()
+
+    assert mock_bsblan.hot_water_schedule.called
+
+
 async def test_coordinator_slow_first_fetch_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -454,8 +486,8 @@ async def test_configuration_url_default_port(
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90")}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90"), mock_config_entry.entry_id
     )
     assert device is not None
     assert device.configuration_url == "http://127.0.0.1"
@@ -483,8 +515,8 @@ async def test_configuration_url_non_default_port(
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(
-        connections={(dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90")}
+    device = device_registry.async_get_device_by_connection(
+        (dr.CONNECTION_NETWORK_MAC, "00:80:41:19:69:90"), config_entry.entry_id
     )
     assert device is not None
     assert device.configuration_url == "http://192.168.1.100:8080"
