@@ -130,6 +130,9 @@
     "reconnect_failed": {
       "message": "Failed to reconnect client with MAC {mac}"
     },
+    "switch_action_failed": {
+      "message": "Failed to update the switch."
+    },
     "unexpected_error": {
       "message": "Unexpected error connecting to Omada controller."
     },
