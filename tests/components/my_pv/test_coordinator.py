@@ -58,14 +58,23 @@ async def test_coordinator_update_data_not_connected(
     mock_my_pv_client.connect = AsyncMock(return_value=False)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    mock_my_pv_client.connect.assert_awaited_once_with()
     states = hass.states.async_all()
     assert False not in [state.state == STATE_UNAVAILABLE for state in states]
 
     # Test successful data fetch
     freezer.tick(UPDATE_INTERVAL)
-    mock_my_pv_client.connected = True
-    mock_my_pv_client.connect = AsyncMock(return_value=True)
+    mock_my_pv_client.connected = False
+    mock_my_pv_client.connect.reset_mock()
+
+    async def reconnect() -> bool:
+        mock_my_pv_client.connected = True
+        return True
+
+    mock_my_pv_client.connect.side_effect = reconnect
+
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    mock_my_pv_client.connect.assert_awaited_once_with()
     states = hass.states.async_all()
     assert False not in [state.state != STATE_UNAVAILABLE for state in states]
