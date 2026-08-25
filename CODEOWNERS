@@ -739,6 +739,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/harman_luxury/ @sbesh91
 /homeassistant/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
 /tests/components/harmony/ @ehendrix23 @bdraco @mkeesey @Aohzan
+/homeassistant/components/hausbus/ @hausbus
+/tests/components/hausbus/ @hausbus
 /homeassistant/components/hassio/ @home-assistant/supervisor
 /tests/components/hassio/ @home-assistant/supervisor
 /homeassistant/components/hdfury/ @glenndehaan
