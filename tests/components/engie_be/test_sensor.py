@@ -210,7 +210,7 @@ async def test_duplicate_type_suffix(
         names[ean] = state.name
 
     for ean in eans:
-        assert names[ean].endswith(bare_ean(ean)[-4:])
+        assert names[ean].endswith(f"({bare_ean(ean)[-4:]})")
     assert names[OFFTAKE_INJECTION_EAN] != names[SECOND_ELECTRICITY_EAN]
 
 

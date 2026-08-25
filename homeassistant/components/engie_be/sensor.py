@@ -134,12 +134,14 @@ class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEnti
         normalized_slot_code = normalize_slot_code(slot_code)
         suffix = _SLOT_CODE_SUFFIXES.get(normalized_slot_code, _FALLBACK_SLOT_SUFFIX)
         translation_key = f"{type_key}_price_{direction}{suffix}"
-        self._attr_translation_key = (
-            f"{translation_key}_excl_vat" if excl_vat else translation_key
-        )
-        translation_placeholders = {
-            "ean_suffix": f" {ean_suffix}" if ean_suffix else "",
-        }
+        if excl_vat:
+            translation_key = f"{translation_key}_excl_vat"
+        if ean_suffix:
+            translation_key = f"{translation_key}_with_ean"
+        self._attr_translation_key = translation_key
+        translation_placeholders: dict[str, str] = {}
+        if ean_suffix:
+            translation_placeholders["ean_suffix"] = ean_suffix
         if suffix == _FALLBACK_SLOT_SUFFIX:
             translation_placeholders["slot_code"] = normalized_slot_code.lower()
         self._attr_translation_placeholders = translation_placeholders
