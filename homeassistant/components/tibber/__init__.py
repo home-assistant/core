@@ -80,6 +80,7 @@ def _migrate_data_api_registry_entries(
             if device.external_id:
                 migrations[f"{device.external_id}_{sensor.id}"] = migration
             else:
+                # An empty external ID produced a legacy leading-underscore unique ID.
                 migrations.setdefault(f"_{sensor.id}", migration)
 
     device_migrations: dict[str, str] = {}
