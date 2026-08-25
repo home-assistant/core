@@ -16,13 +16,20 @@ from homeassistant.components.imou.const import (
     CONF_APP_SECRET,
     DOMAIN,
 )
-from homeassistant.config_entries import SOURCE_USER
+from homeassistant.config_entries import SOURCE_DHCP, SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.service_info.dhcp import DhcpServiceInfo
 
 from .const import TEST_APP_ID, TEST_APP_SECRET, USER_INPUT
 
 from tests.common import MockConfigEntry
+
+DHCP_DISCOVERY = DhcpServiceInfo(
+    ip="127.0.0.1",
+    hostname="imou",
+    macaddress="1c4d895f7a29",
+)
 
 
 async def test_user_flow_success(
@@ -150,3 +157,82 @@ async def test_user_flow_success_per_region(
     assert result["title"] == "Imou"
     assert result["data"] == user_input
     assert result["result"].unique_id == user_input[CONF_APP_ID]
+
+
+async def test_dhcp_discovery_success(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_imou_openapi_client: AsyncMock,
+) -> None:
+    """DHCP discovery confirms, then completes the existing user login form."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discovery_confirm"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["title"] == "Imou"
+    assert result["data"] == USER_INPUT
+    assert result["result"].unique_id == USER_INPUT[CONF_APP_ID]
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_dhcp_discovery_aborts_when_already_configured(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Any existing Imou entry suppresses further DHCP discovery."""
+    mock_config_entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+async def test_dhcp_discovery_invalid_auth(
+    hass: HomeAssistant,
+    mock_setup_entry: AsyncMock,
+    mock_imou_openapi_client: AsyncMock,
+) -> None:
+    """After confirm, bad credentials stay on the user step."""
+    mock_imou_openapi_client.async_get_token.side_effect = (
+        InvalidAppIdOrSecretException("fail")
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], user_input={}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input=USER_INPUT,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "user"
+    assert result["errors"]["base"] == "invalid_auth"
