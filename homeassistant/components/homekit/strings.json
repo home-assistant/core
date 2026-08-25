@@ -17,7 +17,10 @@
         "title": "Pair HomeKit"
       },
       "review": {
-        "description": "{count} entities will be selected for HomeKit.",
+        "data": {
+          "entities": "Selected entities"
+        },
+        "description": "{count} entities will be selected for HomeKit. Review them below before continuing.",
         "title": "Review entity selection"
       },
       "user": {
@@ -73,7 +76,10 @@
         "title": "Select mode and domains."
       },
       "review": {
-        "description": "{count} entities will be selected for HomeKit.",
+        "data": {
+          "entities": "Selected entities"
+        },
+        "description": "{count} entities will be selected for HomeKit. Review them below before saving.",
         "title": "Review entity selection"
       },
       "yaml": {

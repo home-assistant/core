@@ -22,6 +22,7 @@ from homeassistant.const import (
     ATTR_ENTITY_ID,
     ATTR_FLOOR_ID,
     ATTR_LABEL_ID,
+    CONF_ENTITIES,
     CONF_NAME,
     CONF_PORT,
     EntityCategory,
@@ -82,9 +83,7 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "review"
 
-    result3 = await hass.config_entries.flow.async_configure(
-        result3["flow_id"], {CONF_EXCLUDE_TARGETS: {}}
-    )
+    result3 = await hass.config_entries.flow.async_configure(result3["flow_id"], {})
     assert result3["type"] is FlowResultType.FORM
     assert result3["step_id"] == "pairing"
 
@@ -127,12 +126,12 @@ async def test_setup_in_bridge_mode(hass: HomeAssistant) -> None:
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-async def test_setup_in_bridge_mode_entity_count(
+async def test_setup_in_bridge_mode_entity_review(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
-    """Test the review count expands and filters combined targets."""
+    """Test the review lists entities expanded from combined targets."""
     include_label = label_registry.async_create("HomeKit")
     exclude_label = label_registry.async_create("Private")
 
@@ -176,6 +175,18 @@ async def test_setup_in_bridge_mode_entity_count(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "review"
     assert result["description_placeholders"] == {"count": "2"}
+    selected_entities = {
+        "light.included_by_domain",
+        "switch.included_by_label",
+    }
+    schema = result["data_schema"].schema
+    assert set(_get_schema_default(schema, CONF_ENTITIES)) == selected_entities
+    entity_selector = next(
+        value for key, value in schema.items() if key.schema == CONF_ENTITIES
+    )
+    assert entity_selector.config["read_only"] is True
+    assert entity_selector.config["multiple"] is True
+    assert set(entity_selector.config["include_entities"]) == selected_entities
 
 
 async def test_setup_in_bridge_mode_name_taken(hass: HomeAssistant) -> None:
@@ -206,9 +217,7 @@ async def test_setup_in_bridge_mode_name_taken(hass: HomeAssistant) -> None:
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "review"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"], {CONF_EXCLUDE_TARGETS: {}}
-    )
+    result2 = await hass.config_entries.flow.async_configure(result2["flow_id"], {})
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pairing"
 
@@ -304,9 +313,7 @@ async def test_setup_creates_entries_for_accessory_mode_devices(
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "review"
 
-    result2 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"], {CONF_EXCLUDE_TARGETS: {}}
-    )
+    result2 = await hass.config_entries.flow.async_configure(result2["flow_id"], {})
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pairing"
 
@@ -1584,9 +1591,7 @@ async def test_converting_bridge_to_accessory_mode(
     )
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "review"
-    result2 = await hass.config_entries.flow.async_configure(
-        result2["flow_id"], {CONF_EXCLUDE_TARGETS: {}}
-    )
+    result2 = await hass.config_entries.flow.async_configure(result2["flow_id"], {})
     assert result2["type"] is FlowResultType.FORM
     assert result2["step_id"] == "pairing"
 
@@ -2180,7 +2185,7 @@ async def test_options_flow_climate_step_shows_current_accessory(
         )
         if result2["step_id"] == "review":
             result2 = await hass.config_entries.options.async_configure(
-                result2["flow_id"], user_input={CONF_EXCLUDE_TARGETS: {}}
+                result2["flow_id"], user_input={}
             )
         assert result2["step_id"] == "climate"
         assert [str(key) for key in result2["data_schema"].schema] == [

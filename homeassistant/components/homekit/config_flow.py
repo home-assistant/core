@@ -236,12 +236,18 @@ def _async_entity_ids_matching_filter(
     ]
 
 
-def _async_selected_entity_count(
-    hass: HomeAssistant, entity_filter: EntityFilterDict
-) -> int:
-    """Return the number of supported entities selected by a filter."""
-    return len(
-        _async_entity_ids_matching_filter(hass, entity_filter, SUPPORTED_DOMAINS)
+def _entity_review_schema(entity_ids: list[str]) -> vol.Schema:
+    """Return a read-only entity selector for reviewing selected entities."""
+    return vol.Schema(
+        {
+            vol.Optional(CONF_ENTITIES, default=entity_ids): selector.EntitySelector(
+                selector.EntitySelectorConfig(
+                    include_entities=entity_ids,
+                    multiple=True,
+                    read_only=True,
+                )
+            )
+        }
     )
 
 
@@ -339,17 +345,17 @@ class HomeKitConfigFlow(ConfigFlow, domain=DOMAIN):
     async def async_step_review(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Review the number of selected entities."""
+        """Review the selected entities."""
         if user_input is not None:
             return await self.async_step_pairing()
 
+        entity_ids = _async_entity_ids_matching_filter(
+            self.hass, self.hk_data[CONF_FILTER], SUPPORTED_DOMAINS
+        )
         return self.async_show_form(
             step_id="review",
-            description_placeholders={
-                "count": str(
-                    _async_selected_entity_count(self.hass, self.hk_data[CONF_FILTER])
-                )
-            },
+            description_placeholders={"count": str(len(entity_ids))},
+            data_schema=_entity_review_schema(entity_ids),
         )
 
     async def async_step_pairing(
@@ -837,19 +843,17 @@ class OptionsFlowHandler(OptionsFlow):
     async def async_step_review(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
-        """Review the number of selected entities."""
+        """Review the selected entities."""
         if user_input is not None:
             return await self.async_step_cameras()
 
+        entity_ids = _async_entity_ids_matching_filter(
+            self.hass, self.hk_options[CONF_FILTER], SUPPORTED_DOMAINS
+        )
         return self.async_show_form(
             step_id="review",
-            description_placeholders={
-                "count": str(
-                    _async_selected_entity_count(
-                        self.hass, self.hk_options[CONF_FILTER]
-                    )
-                )
-            },
+            description_placeholders={"count": str(len(entity_ids))},
+            data_schema=_entity_review_schema(entity_ids),
         )
 
     async def async_step_init(
