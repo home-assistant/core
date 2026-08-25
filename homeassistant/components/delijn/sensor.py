@@ -1,9 +1,18 @@
 """Sensor for De Lijn (Flemish public transport) departure information."""
 
 from datetime import datetime
+from types import MappingProxyType
 from typing import Any, override
 
-from pydelijn import Passage
+from pydelijn import (
+    DeLijnAuthError,
+    DeLijnClient,
+    DeLijnConnectionError,
+    DeLijnError,
+    DeLijnNotFoundError,
+    Passage,
+    Stop,
+)
 import voluptuous as vol
 
 from homeassistant.components.sensor import (
@@ -11,11 +20,12 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT
+from homeassistant.config_entries import SOURCE_IMPORT, ConfigSubentry
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
+from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -30,9 +40,12 @@ from .const import (
     CONF_STOP_ID,
     CONF_STOP_NUMBER,
     DOMAIN,
+    LOGGER,
     MANUFACTURER,
+    SUBENTRY_TYPE_STOP,
 )
 from .coordinator import DeLijnConfigEntry, DeLijnCoordinator
+from .util import stop_delijn_url, stop_title
 
 PARALLEL_UPDATES = 0
 
@@ -51,31 +64,101 @@ PLATFORM_SCHEMA = SENSOR_PLATFORM_SCHEMA.extend(
 )
 
 
+def _find_entry_by_api_key(
+    hass: HomeAssistant, api_key: str
+) -> DeLijnConfigEntry | None:
+    """Return the existing De Lijn entry using this API key, if any."""
+    for entry in hass.config_entries.async_entries(DOMAIN):
+        if entry.data[CONF_API_KEY] == api_key:
+            return entry
+    return None
+
+
+def _is_stop_on_entry(entry: DeLijnConfigEntry, stop_number: str) -> bool:
+    """Return whether a stop is already configured as a subentry of entry."""
+    return any(
+        subentry.unique_id == stop_number for subentry in entry.subentries.values()
+    )
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
     async_add_entities: AddEntitiesCallback,
     discovery_info: DiscoveryInfoType | None = None,
 ) -> None:
-    """Import the legacy YAML configuration into config entries."""
+    """Import the legacy YAML configuration into config entries.
+
+    One main entry is used per API key; each configured stop becomes a
+    subentry of it. Subentries can only be created from a user-initiated
+    flow, so each stop is validated here and added directly.
+
+    Adding a subentry fires the entry's update listener as a separately
+    scheduled task (not awaited here), which reloads the entry. That reload
+    rebuilds every coordinator from entry.subentries as it stands at the
+    moment it actually runs. If stops were added one at a time with an
+    ``await`` in between (e.g. the API lookup), a scheduled reload can start
+    and even finish while only some of the stops have been added, settling
+    on an incomplete set with nothing left to correct it afterwards.
+    Every stop is therefore first validated (the only part that awaits),
+    and only then are all of the resulting subentries added back-to-back
+    with no ``await`` between them, so nothing can run in between and act on
+    a partial set. A reload is triggered once at the end regardless, both to
+    apply the change promptly and as a safety net.
+    """
+    api_key = config[CONF_API_KEY]
+    entry = _find_entry_by_api_key(hass, api_key)
+    if entry is None:
+        entry_result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": SOURCE_IMPORT},
+            data={CONF_API_KEY: api_key},
+        )
+        if entry_result.get("type") is FlowResultType.CREATE_ENTRY:
+            entry = entry_result["result"]
+        else:
+            # A race created the entry between our lookup and this call.
+            entry = _find_entry_by_api_key(hass, api_key)
+    assert entry is not None
+
+    client = DeLijnClient(api_key, async_get_clientsession(hass))
     any_failure = False
+    to_add: list[tuple[Stop, int]] = []
+    pending_numbers: set[str] = set()
+
     for departure in config[CONF_NEXT_DEPARTURE]:
         stop_id = departure[CONF_STOP_ID]
         issue_id = f"deprecated_yaml_import_issue_{stop_id}"
-        result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={
-                CONF_API_KEY: config[CONF_API_KEY],
-                CONF_STOP_ID: stop_id,
-                CONF_NUMBER_OF_DEPARTURES: departure[CONF_NUMBER_OF_DEPARTURES],
-            },
-        )
-        reason = result.get("reason")
-        if (
-            result.get("type") is FlowResultType.ABORT
-            and reason != "already_configured"
-        ):
+
+        if _is_stop_on_entry(entry, stop_id) or stop_id in pending_numbers:
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
+            continue
+
+        try:
+            stop = await client.get_stop(stop_id)
+        except DeLijnNotFoundError:
+            reason: str | None = "invalid_stop"
+        except DeLijnAuthError as err:
+            LOGGER.error(
+                "De Lijn rejected the API key while importing stop %s: %s",
+                stop_id,
+                err,
+            )
+            reason = "invalid_auth"
+        except DeLijnConnectionError as err:
+            LOGGER.error(
+                "Error connecting to the De Lijn API while importing stop %s: %s",
+                stop_id,
+                err,
+            )
+            reason = "cannot_connect"
+        except DeLijnError:
+            LOGGER.exception("Unexpected error importing De Lijn stop %s", stop_id)
+            reason = "unknown"
+        else:
+            reason = None
+
+        if reason is not None:
             any_failure = True
             ir.async_create_issue(
                 hass,
@@ -91,10 +174,35 @@ async def async_setup_platform(
                     "stop_id": stop_id,
                 },
             )
-        else:
-            # A successful import, or one already configured in a prior
-            # restart, resolves any previously reported import failure.
-            ir.async_delete_issue(hass, DOMAIN, issue_id)
+            continue
+
+        # A successful import, or one already configured in a prior
+        # restart, resolves any previously reported import failure.
+        ir.async_delete_issue(hass, DOMAIN, issue_id)
+        if _is_stop_on_entry(entry, stop.number) or stop.number in pending_numbers:
+            continue
+
+        pending_numbers.add(stop.number)
+        to_add.append((stop, departure[CONF_NUMBER_OF_DEPARTURES]))
+
+    for stop, number_of_departures in to_add:
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(
+                    {
+                        CONF_STOP_NUMBER: stop.number,
+                        CONF_NUMBER_OF_DEPARTURES: number_of_departures,
+                    }
+                ),
+                subentry_type=SUBENTRY_TYPE_STOP,
+                title=stop_title(stop),
+                unique_id=stop.number,
+            ),
+        )
+
+    if to_add:
+        await hass.config_entries.async_reload(entry.entry_id)
 
     generic_issue_id = f"deprecated_yaml_{DOMAIN}"
     if any_failure:
@@ -122,8 +230,12 @@ async def async_setup_entry(
     entry: DeLijnConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up the De Lijn sensor from a config entry."""
-    async_add_entities([DeLijnSensor(entry.runtime_data, entry)])
+    """Set up the De Lijn sensors from a config entry, one per stop subentry."""
+    for subentry_id, coordinator in entry.runtime_data.items():
+        subentry = entry.subentries[subentry_id]
+        async_add_entities(
+            [DeLijnSensor(coordinator, subentry)], config_subentry_id=subentry_id
+        )
 
 
 def _due_in_minutes(due_at: datetime | None) -> int | None:
@@ -184,18 +296,21 @@ class DeLijnSensor(CoordinatorEntity[DeLijnCoordinator], SensorEntity):
     _attr_device_class = SensorDeviceClass.TIMESTAMP
 
     def __init__(
-        self, coordinator: DeLijnCoordinator, entry: DeLijnConfigEntry
+        self, coordinator: DeLijnCoordinator, subentry: ConfigSubentry
     ) -> None:
         """Initialize the sensor."""
         super().__init__(coordinator)
-        stop_number = entry.data[CONF_STOP_NUMBER]
-        self._stopname = entry.title
-        self._attr_unique_id = f"{entry.unique_id}_next_departure"
+        stop_number = subentry.data[CONF_STOP_NUMBER]
+        self._stopname = subentry.title
+        self._attr_unique_id = f"{stop_number}_next_departure"
         self._attr_device_info = DeviceInfo(
             identifiers={(DOMAIN, stop_number)},
-            name=entry.title,
+            name=subentry.title,
             manufacturer=MANUFACTURER,
             entry_type=DeviceEntryType.SERVICE,
+            configuration_url=stop_delijn_url(stop_number),
+            model="Stop",
+            model_id=stop_number,
         )
 
     @property

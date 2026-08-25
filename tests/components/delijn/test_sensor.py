@@ -1,6 +1,6 @@
 """Test the De Lijn sensor platform."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from pydelijn import (
@@ -11,6 +11,7 @@ from pydelijn import (
     DeLijnResponseError,
     Line,
     Passage,
+    Stop,
 )
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -22,50 +23,70 @@ from homeassistant.components.delijn.const import (
     DOMAIN,
     SCAN_INTERVAL,
 )
-from homeassistant.components.delijn.sensor import CONF_NEXT_DEPARTURE
+from homeassistant.components.delijn.sensor import (
+    CONF_NEXT_DEPARTURE,
+    async_setup_platform,
+)
 from homeassistant.const import CONF_API_KEY, STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.helpers import entity_registry as er, issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
 from homeassistant.setup import async_setup_component
 
-from .conftest import STOP_NUMBER
+from .conftest import API_KEY, STOP_NUMBER
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
-
-API_KEY = "test-api-key"
 
 
 async def test_sensor(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_delijn_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_subentry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
     snapshot: SnapshotAssertion,
 ) -> None:
     """Test the De Lijn sensor entity state and attributes."""
     freezer.move_to("2026-08-06T12:00:00+00:00")
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
     await hass.async_block_till_done()
 
-    await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
+    await snapshot_platform(
+        hass, entity_registry, snapshot, mock_config_entry_with_subentry.entry_id
+    )
+
+
+async def test_sensor_device_info(
+    hass: HomeAssistant,
+    load_integration: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the device card exposes a delijn.be link and the stop number."""
+    device = device_registry.async_get_device(identifiers={(DOMAIN, STOP_NUMBER)})
+    assert device is not None
+    assert device.configuration_url == f"https://www.delijn.be/nl/haltes/{STOP_NUMBER}/"
+    assert device.model == "Stop"
+    assert device.model_id == STOP_NUMBER
 
 
 async def test_sensor_no_passages(
     hass: HomeAssistant,
     mock_delijn_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_subentry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test the sensor when there are no upcoming passages."""
     mock_delijn_client.get_passages.return_value = []
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.unique_id}_next_departure"
+        "sensor", DOMAIN, f"{STOP_NUMBER}_next_departure"
     )
     state = hass.states.get(entity_id)
     assert state is not None
@@ -77,7 +98,7 @@ async def test_sensor_no_passages(
 async def test_sensor_passage_without_due_time(
     hass: HomeAssistant,
     mock_delijn_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_subentry: MockConfigEntry,
     mock_line: Line,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -85,12 +106,12 @@ async def test_sensor_passage_without_due_time(
     mock_delijn_client.get_passages.return_value = [
         Passage(line=mock_line, due_at_schedule=None, due_at_realtime=None),
     ]
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.unique_id}_next_departure"
+        "sensor", DOMAIN, f"{STOP_NUMBER}_next_departure"
     )
     state = hass.states.get(entity_id)
     assert state is not None
@@ -101,7 +122,7 @@ async def test_sensor_passage_without_due_time(
 async def test_sensor_passage_without_colours(
     hass: HomeAssistant,
     mock_delijn_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
+    mock_config_entry_with_subentry: MockConfigEntry,
     mock_line: Line,
     entity_registry: er.EntityRegistry,
 ) -> None:
@@ -112,12 +133,12 @@ async def test_sensor_passage_without_colours(
     mock_delijn_client.get_passages.return_value = [
         Passage(line=line_without_colours),
     ]
-    mock_config_entry.add_to_hass(hass)
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    mock_config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{mock_config_entry.unique_id}_next_departure"
+        "sensor", DOMAIN, f"{STOP_NUMBER}_next_departure"
     )
     state = hass.states.get(entity_id)
     assert state is not None
@@ -141,7 +162,7 @@ async def test_sensor_becomes_unavailable_on_update_failure(
 ) -> None:
     """Test the sensor becomes unavailable when a coordinator update fails."""
     entity_id = entity_registry.async_get_entity_id(
-        "sensor", DOMAIN, f"{load_integration.unique_id}_next_departure"
+        "sensor", DOMAIN, f"{STOP_NUMBER}_next_departure"
     )
     assert hass.states.get(entity_id).state != STATE_UNAVAILABLE
 
@@ -173,14 +194,178 @@ async def test_yaml_import(
 
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
-    assert entries[0].data[CONF_STOP_NUMBER] == STOP_NUMBER
-    assert entries[0].options == {CONF_NUMBER_OF_DEPARTURES: 3}
+    assert entries[0].data == {CONF_API_KEY: API_KEY}
+    assert len(entries[0].subentries) == 1
+    subentry = next(iter(entries[0].subentries.values()))
+    assert subentry.unique_id == STOP_NUMBER
+    assert subentry.data == {
+        CONF_STOP_NUMBER: STOP_NUMBER,
+        CONF_NUMBER_OF_DEPARTURES: 3,
+    }
 
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, "deprecated_yaml_delijn"
     )
     assert not issue_registry.async_get_issue(
-        DOMAIN, f"deprecated_yaml_import_issue_{STOP_NUMBER}_invalid_stop"
+        DOMAIN, f"deprecated_yaml_import_issue_{STOP_NUMBER}"
+    )
+
+
+async def test_yaml_import_multiple_stops_creates_all_sensors(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test importing several YAML stops creates a sensor for every stop.
+
+    Regression test: adding each subentry used to fire an overlapping
+    entry reload that could settle on only the first stop's sensor.
+    """
+    stop_numbers = ["200112", "200113", "200114"]
+    mock_delijn_client.get_stop.side_effect = [
+        Stop(
+            entity_number="2",
+            number=number,
+            name=f"Stop {number}",
+            municipality="Gent",
+        )
+        for number in stop_numbers
+    ]
+
+    config = {
+        "sensor": {
+            "platform": DOMAIN,
+            CONF_API_KEY: API_KEY,
+            CONF_NEXT_DEPARTURE: [
+                {CONF_STOP_ID: number, CONF_NUMBER_OF_DEPARTURES: 3}
+                for number in stop_numbers
+            ],
+        }
+    }
+    assert await async_setup_component(hass, "sensor", config)
+    await hass.async_block_till_done()
+
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert len(entries[0].subentries) == 3
+
+    for number in stop_numbers:
+        entity_id = entity_registry.async_get_entity_id(
+            "sensor", DOMAIN, f"{number}_next_departure"
+        )
+        assert entity_id is not None
+        assert hass.states.get(entity_id) is not None
+
+
+async def test_yaml_import_adds_to_existing_entry(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test importing YAML adds a stop subentry to an existing entry."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    platform_config = {
+        "platform": DOMAIN,
+        CONF_API_KEY: API_KEY,
+        CONF_NEXT_DEPARTURE: [
+            {CONF_STOP_ID: STOP_NUMBER, CONF_NUMBER_OF_DEPARTURES: 3},
+        ],
+    }
+    await async_setup_platform(hass, platform_config, MagicMock())
+    await hass.async_block_till_done()
+
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    assert len(mock_config_entry.subentries) == 1
+
+
+async def test_yaml_import_race_falls_back_to_lookup(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test the entry lookup falls back if it appears between check and creation."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    platform_config = {
+        "platform": DOMAIN,
+        CONF_API_KEY: API_KEY,
+        CONF_NEXT_DEPARTURE: [
+            {CONF_STOP_ID: STOP_NUMBER, CONF_NUMBER_OF_DEPARTURES: 3},
+        ],
+    }
+    with patch(
+        "homeassistant.components.delijn.sensor._find_entry_by_api_key",
+        side_effect=[None, mock_config_entry],
+    ):
+        await async_setup_platform(hass, platform_config, MagicMock())
+        await hass.async_block_till_done()
+
+    assert len(mock_config_entry.subentries) == 1
+
+
+async def test_yaml_import_duplicate_canonical_number_skipped(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test two differently-spelled YAML stop ids resolving to the same stop.
+
+    The pre-API-call check only catches an exact stop_id match; a second
+    check after the lookup catches stops that resolve to the same canonical
+    number under a different spelling.
+    """
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    platform_config = {
+        "platform": DOMAIN,
+        CONF_API_KEY: API_KEY,
+        CONF_NEXT_DEPARTURE: [
+            {CONF_STOP_ID: STOP_NUMBER, CONF_NUMBER_OF_DEPARTURES: 3},
+            {CONF_STOP_ID: f"0{STOP_NUMBER}", CONF_NUMBER_OF_DEPARTURES: 5},
+        ],
+    }
+    await async_setup_platform(hass, platform_config, MagicMock())
+    await hass.async_block_till_done()
+
+    assert len(mock_config_entry.subentries) == 1
+
+
+async def test_yaml_import_duplicate_stop_no_api_call(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+    mock_config_entry_with_subentry: MockConfigEntry,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a stop already configured on the entry is skipped without an API call."""
+    mock_config_entry_with_subentry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+
+    platform_config = {
+        "platform": DOMAIN,
+        CONF_API_KEY: API_KEY,
+        CONF_NEXT_DEPARTURE: [
+            {CONF_STOP_ID: STOP_NUMBER, CONF_NUMBER_OF_DEPARTURES: 3},
+        ],
+    }
+    mock_delijn_client.get_stop.reset_mock()
+    await async_setup_platform(hass, platform_config, MagicMock())
+    await hass.async_block_till_done()
+
+    assert len(mock_config_entry_with_subentry.subentries) == 1
+    mock_delijn_client.get_stop.assert_not_called()
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, "deprecated_yaml_delijn"
     )
 
 
@@ -209,7 +394,9 @@ async def test_yaml_import_failure_creates_issue(
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    assert not hass.config_entries.async_entries(DOMAIN)
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert not entries[0].subentries
     issue = issue_registry.async_get_issue(
         DOMAIN, f"deprecated_yaml_import_issue_{unknown_stop}"
     )
@@ -334,7 +521,9 @@ async def test_yaml_import_partial_failure_no_generic_issue(
     assert await async_setup_component(hass, "sensor", config)
     await hass.async_block_till_done()
 
-    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    entries = hass.config_entries.async_entries(DOMAIN)
+    assert len(entries) == 1
+    assert len(entries[0].subentries) == 1
     assert issue_registry.async_get_issue(
         DOMAIN, f"deprecated_yaml_import_issue_{unknown_stop}"
     )

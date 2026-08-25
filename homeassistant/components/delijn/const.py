@@ -19,3 +19,5 @@ DEFAULT_NUMBER_OF_DEPARTURES: Final = 5
 SCAN_INTERVAL: Final = timedelta(seconds=60)
 
 MANUFACTURER: Final = "De Lijn"
+
+SUBENTRY_TYPE_STOP: Final = "stop"

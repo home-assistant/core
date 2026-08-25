@@ -14,9 +14,11 @@ from pydelijn import (
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
-    OptionsFlowWithReload,
+    ConfigSubentryFlow,
+    SubentryFlowResult,
 )
 from homeassistant.const import (
     CONF_API_KEY,
@@ -41,83 +43,163 @@ from homeassistant.util import dt as dt_util
 
 from .const import (
     CONF_NUMBER_OF_DEPARTURES,
-    CONF_STOP_ID,
     CONF_STOP_NUMBER,
     DEFAULT_NUMBER_OF_DEPARTURES,
     DOMAIN,
     LOGGER,
+    SUBENTRY_TYPE_STOP,
 )
-from .coordinator import DeLijnConfigEntry
+from .util import stop_delijn_url, stop_label, stop_map_url, stop_title
 
 MAX_SEARCH_RESULTS = 10
 PREVIEW_PASSAGES = 3
 
 
-def _stop_title(stop: Stop) -> str:
-    """Return the config entry title for a stop."""
-    if stop.municipality:
-        return f"{stop.name}, {stop.municipality}"
-    return stop.name
-
-
-def _stop_label(stop: Stop) -> str:
-    """Return the select option label for a stop."""
-    if stop.municipality:
-        label = f"{stop.name}, {stop.municipality} ({stop.number})"
-    else:
-        label = f"{stop.name} ({stop.number})"
-    if stop.distance is not None:
-        label += f" – {stop.distance} m"
-    return label
-
-
-def _stop_delijn_url(stop: Stop) -> str:
-    """Return the delijn.be page URL for a stop."""
-    return f"https://www.delijn.be/nl/haltes/{stop.number}/"
-
-
-def _stop_map_url(stop: Stop) -> str:
-    """Return an OpenStreetMap URL for a stop.
-
-    Falls back to the delijn.be page when coordinates are unknown; every
-    real Stop has coordinates, so this is defensive only.
-    """
-    if stop.latitude is not None and stop.longitude is not None:
-        return (
-            "https://www.openstreetmap.org/?mlat="
-            f"{stop.latitude}&mlon={stop.longitude}"
-            f"#map=19/{stop.latitude}/{stop.longitude}"
-        )
-    return _stop_delijn_url(stop)
-
-
 class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for De Lijn."""
+    """Handle a config flow for De Lijn: the account (API key) only."""
 
     VERSION = 1
+    MINOR_VERSION = 1
+
+    async def _async_validate_api_key(self, api_key: str) -> dict[str, str]:
+        """Validate an API key with a cheap call. Returns a dict of errors."""
+        client = DeLijnClient(api_key, async_get_clientsession(self.hass))
+        try:
+            await client.get_stops_near(
+                self.hass.config.latitude, self.hass.config.longitude, max_results=1
+            )
+        except DeLijnAuthError:
+            return {"base": "invalid_auth"}
+        except DeLijnConnectionError:
+            return {"base": "cannot_connect"}
+        except DeLijnError:
+            LOGGER.exception("Unexpected error validating the De Lijn API key")
+            return {"base": "unknown"}
+        return {}
+
+    @classmethod
+    @callback
+    @override
+    def async_get_supported_subentry_types(
+        cls, config_entry: ConfigEntry
+    ) -> dict[str, type[ConfigSubentryFlow]]:
+        """Return subentries supported by this integration."""
+        return {SUBENTRY_TYPE_STOP: StopSubentryFlowHandler}
+
+    @override
+    async def async_step_user(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle the initial step: collect and validate the API key."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            api_key = user_input[CONF_API_KEY]
+            self._async_abort_entries_match({CONF_API_KEY: api_key})
+            errors = await self._async_validate_api_key(api_key)
+            if not errors:
+                return self.async_create_entry(
+                    title="De Lijn", data={CONF_API_KEY: api_key}
+                )
+
+        return self.async_show_form(
+            step_id="user",
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            errors=errors,
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle changing the API key on the main entry."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            api_key = user_input[CONF_API_KEY]
+            self._async_abort_entries_match({CONF_API_KEY: api_key})
+            errors = await self._async_validate_api_key(api_key)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry, data_updates={CONF_API_KEY: api_key}
+                )
+
+        schema = self.add_suggested_values_to_schema(
+            vol.Schema({vol.Required(CONF_API_KEY): str}),
+            {CONF_API_KEY: reconfigure_entry.data[CONF_API_KEY]},
+        )
+        return self.async_show_form(
+            step_id="reconfigure", data_schema=schema, errors=errors
+        )
+
+    async def async_step_reauth(
+        self, entry_data: Mapping[str, Any]
+    ) -> ConfigFlowResult:
+        """Handle reauthentication."""
+        return await self.async_step_reauth_confirm()
+
+    async def async_step_reauth_confirm(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reauthentication with a new API key."""
+        errors: dict[str, str] = {}
+
+        if user_input is not None:
+            api_key = user_input[CONF_API_KEY]
+            errors = await self._async_validate_api_key(api_key)
+            if not errors:
+                return self.async_update_reload_and_abort(
+                    self._get_reauth_entry(), data_updates={CONF_API_KEY: api_key}
+                )
+
+        return self.async_show_form(
+            step_id="reauth_confirm",
+            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
+            errors=errors,
+        )
+
+    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
+        """Create the bare main entry (API key only) during YAML import.
+
+        Stop subentries are added afterwards, one at a time, by the sensor
+        platform's import handler.
+        """
+        api_key = import_data[CONF_API_KEY]
+        self._async_abort_entries_match({CONF_API_KEY: api_key})
+        return self.async_create_entry(title="De Lijn", data={CONF_API_KEY: api_key})
+
+
+class StopSubentryFlowHandler(ConfigSubentryFlow):
+    """Handle adding, and reconfiguring, a De Lijn stop."""
 
     def __init__(self) -> None:
-        """Initialize the config flow."""
-        self._api_key = ""
+        """Initialize the subentry flow."""
         self._search_results: list[Stop] = []
         self._pending_stop: Stop | None = None
 
-    @staticmethod
-    @callback
-    @override
-    def async_get_options_flow(
-        config_entry: DeLijnConfigEntry,
-    ) -> DeLijnOptionsFlow:
-        """Get the options flow for this handler."""
-        return DeLijnOptionsFlow()
+    @property
+    def _api_key(self) -> str:
+        """Return the API key of the parent config entry."""
+        return self._get_entry().data[CONF_API_KEY]
 
-    async def _async_finish(self, stop: Stop) -> ConfigFlowResult:
-        """Create the config entry for the given stop."""
-        await self.async_set_unique_id(stop.number)
-        self._abort_if_unique_id_configured()
+    def _is_stop_configured(self, stop_number: str) -> bool:
+        """Return whether the stop is already configured on this entry."""
+        return any(
+            subentry.unique_id == stop_number
+            for subentry in self._get_entry().subentries.values()
+        )
+
+    async def _async_finish(self, stop: Stop) -> SubentryFlowResult:
+        """Create the subentry for the given stop."""
+        if self._is_stop_configured(stop.number):
+            return self.async_abort(reason="already_configured")
         return self.async_create_entry(
-            title=_stop_title(stop),
-            data={CONF_API_KEY: self._api_key, CONF_STOP_NUMBER: stop.number},
+            title=stop_title(stop),
+            data={
+                CONF_STOP_NUMBER: stop.number,
+                CONF_NUMBER_OF_DEPARTURES: DEFAULT_NUMBER_OF_DEPARTURES,
+            },
+            unique_id=stop.number,
         )
 
     async def _async_departure_preview(self, stop: Stop) -> str:
@@ -150,56 +232,9 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             lines.append(f"{line_number} → {passage.destination} ({due_at})")
         return "\n".join(lines)
 
-    async def async_step_confirm(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Show a departure preview so the user can confirm the right stop."""
-        stop = self._pending_stop
-        assert stop is not None
-
-        menu_options = (
-            ["create_entry"] + (["pick"] if self._search_results else []) + ["stop"]
-        )
-        return self.async_show_menu(
-            step_id="confirm",
-            menu_options=menu_options,
-            description_placeholders={
-                "name": stop.name,
-                "municipality": f", {stop.municipality}" if stop.municipality else "",
-                "number": stop.number,
-                "departures": await self._async_departure_preview(stop),
-                "delijn_url": _stop_delijn_url(stop),
-                "map_url": _stop_map_url(stop),
-            },
-        )
-
-    async def async_step_create_entry(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Create the config entry for the stop confirmed in the menu step."""
-        stop = self._pending_stop
-        assert stop is not None
-        return await self._async_finish(stop)
-
-    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle the initial step: collect the API key."""
-        if user_input is not None:
-            self._api_key = user_input[CONF_API_KEY]
-            return await self.async_step_stop()
-
-        schema = vol.Schema({vol.Required(CONF_API_KEY): str})
-        if existing_entries := self._async_current_entries():
-            schema = self.add_suggested_values_to_schema(
-                schema, {CONF_API_KEY: existing_entries[0].data[CONF_API_KEY]}
-            )
-        return self.async_show_form(step_id="user", data_schema=schema)
-
-    async def async_step_stop(
-        self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Handle the stop lookup step.
 
         A stop number or free-text search takes priority; otherwise a
@@ -302,7 +337,7 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
                         return await self.async_step_pick()
 
         return self.async_show_form(
-            step_id="stop",
+            step_id="user",
             data_schema=vol.Schema(
                 {
                     vol.Optional(CONF_STOP): str,
@@ -314,7 +349,7 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_pick(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
+    ) -> SubentryFlowResult:
         """Handle picking a stop from the search results."""
         if user_input is not None:
             selected_number = user_input[CONF_STOP]
@@ -327,7 +362,7 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
                 return await self.async_step_confirm()
 
         options = [
-            SelectOptionDict(value=stop.number, label=_stop_label(stop))
+            SelectOptionDict(value=stop.number, label=stop_label(stop))
             for stop in self._search_results
         ]
         return self.async_show_form(
@@ -343,111 +378,55 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
         )
 
-    async def async_step_reauth(
-        self, entry_data: Mapping[str, Any]
-    ) -> ConfigFlowResult:
-        """Handle reauthentication."""
-        return await self.async_step_reauth_confirm()
-
-    async def async_step_reauth_confirm(
+    async def async_step_confirm(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Handle reauthentication with a new API key."""
-        errors: dict[str, str] = {}
-        reauth_entry = self._get_reauth_entry()
+    ) -> SubentryFlowResult:
+        """Show a departure preview so the user can confirm the right stop."""
+        stop = self._pending_stop
+        assert stop is not None
 
-        if user_input is not None:
-            api_key = user_input[CONF_API_KEY]
-            client = DeLijnClient(api_key, async_get_clientsession(self.hass))
-            try:
-                await client.get_stop(reauth_entry.data[CONF_STOP_NUMBER])
-            except DeLijnAuthError as err:
-                LOGGER.error(
-                    "De Lijn rejected the API key during reauthentication: %s", err
-                )
-                errors["base"] = "invalid_auth"
-            except DeLijnConnectionError as err:
-                LOGGER.error(
-                    "Error connecting to the De Lijn API during reauthentication: %s",
-                    err,
-                )
-                errors["base"] = "cannot_connect"
-            except DeLijnError:
-                LOGGER.exception("Unexpected error during De Lijn reauthentication")
-                errors["base"] = "unknown"
-            else:
-                return self.async_update_reload_and_abort(
-                    reauth_entry, data_updates={CONF_API_KEY: api_key}
-                )
-
-        return self.async_show_form(
-            step_id="reauth_confirm",
-            data_schema=vol.Schema({vol.Required(CONF_API_KEY): str}),
-            errors=errors,
+        menu_options = (
+            ["create_entry"] + (["pick"] if self._search_results else []) + ["user"]
+        )
+        return self.async_show_menu(
+            step_id="confirm",
+            menu_options=menu_options,
+            description_placeholders={
+                "name": stop.name,
+                "municipality": f", {stop.municipality}" if stop.municipality else "",
+                "number": stop.number,
+                "departures": await self._async_departure_preview(stop),
+                "delijn_url": stop_delijn_url(stop.number),
+                "map_url": stop_map_url(stop),
+            },
         )
 
-    async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Handle import of a stop from the legacy YAML sensor platform."""
-        api_key = import_data[CONF_API_KEY]
-        stop_id = import_data[CONF_STOP_ID]
-
-        # Check for a duplicate before calling the API, so an already-imported
-        # stop doesn't hit the API (and possibly abort with cannot_connect)
-        # on every restart while the YAML configuration is still present.
-        await self.async_set_unique_id(stop_id)
-        self._abort_if_unique_id_configured()
-
-        client = DeLijnClient(api_key, async_get_clientsession(self.hass))
-
-        try:
-            stop = await client.get_stop(stop_id)
-        except DeLijnNotFoundError:
-            return self.async_abort(reason="invalid_stop")
-        except DeLijnAuthError as err:
-            LOGGER.error(
-                "De Lijn rejected the API key while importing stop %s: %s",
-                stop_id,
-                err,
-            )
-            return self.async_abort(reason="invalid_auth")
-        except DeLijnConnectionError as err:
-            LOGGER.error(
-                "Error connecting to the De Lijn API while importing stop %s: %s",
-                stop_id,
-                err,
-            )
-            return self.async_abort(reason="cannot_connect")
-        except DeLijnError:
-            LOGGER.exception("Unexpected error importing De Lijn stop %s", stop_id)
-            return self.async_abort(reason="unknown")
-
-        await self.async_set_unique_id(stop.number)
-        self._abort_if_unique_id_configured()
-
-        return self.async_create_entry(
-            title=_stop_title(stop),
-            data={CONF_API_KEY: api_key, CONF_STOP_NUMBER: stop.number},
-            options={CONF_NUMBER_OF_DEPARTURES: import_data[CONF_NUMBER_OF_DEPARTURES]},
-        )
-
-
-class DeLijnOptionsFlow(OptionsFlowWithReload):
-    """Handle De Lijn options."""
-
-    async def async_step_init(
+    async def async_step_create_entry(
         self, user_input: dict[str, Any] | None = None
-    ) -> ConfigFlowResult:
-        """Manage the options."""
+    ) -> SubentryFlowResult:
+        """Create the subentry for the stop confirmed in the menu step."""
+        stop = self._pending_stop
+        assert stop is not None
+        return await self._async_finish(stop)
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> SubentryFlowResult:
+        """Handle changing the number of departures for an existing stop."""
+        subentry = self._get_reconfigure_subentry()
+
         if user_input is not None:
-            return self.async_create_entry(title="", data=user_input)
+            return self.async_update_and_abort(
+                self._get_entry(), subentry, data_updates=user_input
+            )
 
         return self.async_show_form(
-            step_id="init",
+            step_id="reconfigure",
             data_schema=vol.Schema(
                 {
                     vol.Required(
                         CONF_NUMBER_OF_DEPARTURES,
-                        default=self.config_entry.options.get(
+                        default=subentry.data.get(
                             CONF_NUMBER_OF_DEPARTURES, DEFAULT_NUMBER_OF_DEPARTURES
                         ),
                     ): vol.All(
@@ -460,4 +439,7 @@ class DeLijnOptionsFlow(OptionsFlowWithReload):
                     ),
                 }
             ),
+            description_placeholders={
+                "stop_number": subentry.data[CONF_STOP_NUMBER],
+            },
         )
