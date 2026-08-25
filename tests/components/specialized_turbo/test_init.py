@@ -1,5 +1,6 @@
 """Tests for Specialized Turbo integration setup."""
 
+import asyncio
 from datetime import timedelta
 import logging
 import time
@@ -179,6 +180,20 @@ async def test_setup_encrypted_entry(
     assert kwargs["advertisement"].hmi_serial == "80005338"
 
 
+async def test_setup_encrypted_entry_with_partial_advertisement(
+    hass: HomeAssistant,
+    encrypted_config_entry: MockConfigEntry,
+    mock_library: MockLibrary,
+) -> None:
+    """Test stored HMI metadata reconstructs bike info after a partial advertisement."""
+    await setup_integration(hass, encrypted_config_entry, NAME_ONLY_SERVICE_INFO)
+
+    kwargs = mock_library.connection_constructor.call_args.kwargs
+    assert kwargs["bike_info"] is None
+    assert kwargs["advertisement"].hmi_hardware == "B.3.3"
+    assert kwargs["advertisement"].hmi_serial == "80005338"
+
+
 @pytest.mark.parametrize(
     "error",
     [
@@ -228,6 +243,49 @@ async def test_monitor_start_failure_disconnects(
 
     assert mock_config_entry.state is ConfigEntryState.LOADED
     mock_library.connection.disconnect.assert_awaited_once()
+
+
+async def test_unload_waits_for_in_flight_connection(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_library: MockLibrary,
+) -> None:
+    """Test unload waits for a connection poll and then closes it."""
+    connect_started = asyncio.Event()
+    connect_continue = asyncio.Event()
+
+    async def connect() -> None:
+        connect_started.set()
+        await connect_continue.wait()
+        mock_library.connection.is_connected = True
+
+    mock_library.connection.connect.side_effect = connect
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    coordinator = mock_config_entry.runtime_data
+
+    with patch(
+        "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
+    ):
+        inject_bluetooth_service_info(hass, TCX_SERVICE_INFO)
+    await connect_started.wait()
+
+    unload_task = hass.async_create_task(
+        hass.config_entries.async_unload(mock_config_entry.entry_id),
+        "Unload Specialized Turbo during connection",
+    )
+    await asyncio.sleep(0)
+    assert not unload_task.done()
+
+    connect_continue.set()
+    assert await unload_task
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
+    mock_library.monitor.stop.assert_awaited_once()
+    mock_library.connection.disconnect.assert_awaited_once()
+    assert coordinator.connected is False
 
 
 async def test_unload_tolerates_library_cleanup_errors(

@@ -1,5 +1,6 @@
 """BLE coordinator for Specialized Turbo bikes."""
 
+import asyncio
 from collections.abc import Callable
 import logging
 from typing import override
@@ -63,6 +64,8 @@ class SpecializedTurboCoordinator(
         self._snapshot = TelemetrySnapshot()
         self._reauth_callback = reauth_callback
         self._reauth_requested = False
+        self._poll_lock = asyncio.Lock()
+        self._shutdown_requested = False
         self._was_unavailable = False
         self.data = self._snapshot
 
@@ -79,7 +82,7 @@ class SpecializedTurboCoordinator(
     ) -> bool:
         """Return whether the bike needs a connection or periodic poll."""
         self._update_protocol_metadata(service_info)
-        return (
+        return not self._shutdown_requested and (
             not self.connected
             or seconds_since_last_poll is None
             or seconds_since_last_poll >= _POLL_INTERVAL
@@ -90,10 +93,13 @@ class SpecializedTurboCoordinator(
         service_info: bluetooth.BluetoothServiceInfoBleak,
     ) -> TelemetrySnapshot:
         """Connect if needed and poll the active protocol."""
-        await self._ensure_connected(service_info)
-        if self._monitor is not None:
-            await self._monitor.poll()
-        return self._snapshot
+        async with self._poll_lock:
+            if self._shutdown_requested:  # pragma: no cover - scheduling race guard
+                return self._snapshot
+            await self._ensure_connected(service_info)
+            if self._monitor is not None:
+                await self._monitor.poll()
+            return self._snapshot
 
     async def _ensure_connected(
         self,
@@ -180,7 +186,7 @@ class SpecializedTurboCoordinator(
             service_info.name or "",
             service_info.manufacturer_data,
         )
-        if bike_info.complete or self._bike_info is None:
+        if bike_info.complete or (self._bike_info is None and not current_has_hmi):
             self._bike_info = bike_info
 
     def _request_reauth(self) -> None:
@@ -254,10 +260,13 @@ class SpecializedTurboCoordinator(
 
     async def async_shutdown(self) -> None:
         """Stop monitoring and close the upstream connection."""
-        monitor = self._monitor
-        connection = self._connection
-        self._monitor = None
-        self._connection = None
+        self._shutdown_requested = True
+        self._async_stop()
+        async with self._poll_lock:
+            monitor = self._monitor
+            connection = self._connection
+            self._monitor = None
+            self._connection = None
         if monitor is not None:
             try:
                 await monitor.stop()
