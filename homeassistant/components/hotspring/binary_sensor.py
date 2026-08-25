@@ -28,6 +28,13 @@ class HotSpringBinarySensorEntityDescription(BinarySensorEntityDescription):
     is_on_fn: Callable[[Spa], bool | None]
 
 
+def _is_problem(spa: Spa) -> bool | None:
+    """Return False if OK, None if unavailable or unknown."""
+    if spa.diagnostics.spa_failure_state is SpaFailureState.OK:
+        return False
+    return None
+
+
 BINARY_SENSORS: tuple[HotSpringBinarySensorEntityDescription, ...] = (
     HotSpringBinarySensorEntityDescription(
         key="heating",
@@ -46,9 +53,7 @@ BINARY_SENSORS: tuple[HotSpringBinarySensorEntityDescription, ...] = (
         key="problem",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
-        is_on_fn=lambda spa: (
-            spa.diagnostics.spa_failure_state is not SpaFailureState.OK
-        ),
+        is_on_fn=_is_problem,
     ),
 )
 
