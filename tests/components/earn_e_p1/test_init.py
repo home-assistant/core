@@ -91,7 +91,9 @@ async def test_device_info_with_mac(
     trigger_callback(mock_listener)
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, MOCK_SERIAL)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), mock_config_entry.entry_id
+    )
     assert device is not None
     assert (dr.CONNECTION_NETWORK_MAC, "aa:bb:cc:11:22:33") in device.connections
 
