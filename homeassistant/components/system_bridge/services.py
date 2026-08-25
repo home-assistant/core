@@ -149,29 +149,17 @@ def _get_coordinator(
 ) -> SystemBridgeDataUpdateCoordinator:
     """Return the coordinator for a device id."""
 
-    device_registry = dr.async_get(hass)
-    device_entry = device_registry.async_get(device_id)
-
-    if device_entry is None:
+    device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device_id, domain=DOMAIN
+    )
+    if device is None or config_entry is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="device_not_found",
             translation_placeholders={"device": device_id},
         )
-    try:
-        entry_id = next(
-            entry.entry_id
-            for entry in hass.config_entries.async_entries(DOMAIN)
-            if entry.entry_id in device_entry.config_entries
-        )
-    except StopIteration as e:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-            translation_placeholders={"device": device_id},
-        ) from e
     entry: SystemBridgeConfigEntry = service.async_get_config_entry(
-        hass, DOMAIN, entry_id
+        hass, DOMAIN, config_entry.entry_id
     )
     return entry.runtime_data
 

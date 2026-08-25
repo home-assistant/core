@@ -113,7 +113,10 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                 errors["base"] = "entity_disabled"
             else:
                 state = self.hass.states.get(location_entity)
-                if state is None or (location := get_state_coordinates(state)) is None:
+                if (
+                    state is None
+                    or (coordinates := get_state_coordinates(state)) is None
+                ):
                     errors["base"] = "entity_no_coordinates"
                 else:
                     data = {
@@ -128,8 +131,8 @@ class NWSConfigFlow(ConfigFlow, domain=DOMAIN):
                             self.hass,
                             {
                                 CONF_API_KEY: user_input[CONF_API_KEY],
-                                CONF_LATITUDE: location.latitude,
-                                CONF_LONGITUDE: location.longitude,
+                                CONF_LATITUDE: coordinates.latitude,
+                                CONF_LONGITUDE: coordinates.longitude,
                             },
                         )
                         return self.async_create_entry(title=location_entity, data=data)

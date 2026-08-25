@@ -72,6 +72,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         # executor thread (_sync_update_data). Bool assignment is atomic under CPython's GIL.
         self._fetch_device_list: bool = False
 
+        # api is an OpenApiV1 (v1) or its base class GrowattApi (classic), chosen
+        # by api_version. The two expose different method sets, and mypy cannot
+        # narrow self.api by api_version at each call site, so it is typed as Any.
+        self.api: Any
         if self.api_version == "v1":
             self.username = None
             self.password = None
