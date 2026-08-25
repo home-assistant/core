@@ -348,16 +348,7 @@ async def test_slow_interval_poll_retries_missing_schedule(
 ) -> None:
     """Test interval polls retry transient schedule failures until success."""
     schedule_value = mock_bsblan.hot_water_schedule.return_value
-    fetch_failed = False
-
-    async def _schedule(*args: object, **kwargs: object) -> object:
-        nonlocal fetch_failed
-        if not fetch_failed:
-            fetch_failed = True
-            raise exception
-        return schedule_value
-
-    mock_bsblan.hot_water_schedule.side_effect = _schedule
+    mock_bsblan.hot_water_schedule.side_effect = [exception, schedule_value]
 
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
