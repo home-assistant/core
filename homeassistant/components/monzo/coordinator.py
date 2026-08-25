@@ -76,16 +76,18 @@ class MonzoCoordinator(DataUpdateCoordinator[MonzoData]):
             accounts={account["id"]: account for account in accounts},
             pots={pot["id"]: pot for pot in pots},
         )
-        if self.data:
-            stale_resource_ids = (self.data.accounts.keys() | self.data.pots.keys()) - (
-                data.accounts.keys() | data.pots.keys()
-            )
-            device_registry = dr.async_get(self.hass)
-            for resource_id in stale_resource_ids:
-                if device := device_registry.async_get_device_by_identifier(
-                    (DOMAIN, resource_id), self.config_entry.entry_id
-                ):
-                    device_registry.async_remove_device(device.id)
+        current_resource_ids = data.accounts.keys() | data.pots.keys()
+        device_registry = dr.async_get(self.hass)
+        for device in dr.async_entries_for_config_entry(
+            device_registry, self.config_entry.entry_id
+        ):
+            resource_ids = {
+                identifier[1]
+                for identifier in device.identifiers
+                if identifier[0] == DOMAIN
+            }
+            if resource_ids and resource_ids.isdisjoint(current_resource_ids):
+                device_registry.async_remove_device(device.id)
 
         return data
 

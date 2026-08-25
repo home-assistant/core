@@ -181,6 +181,34 @@ async def test_deleted_pot_is_removed_and_can_be_rediscovered(
     assert restored_entry.name == "Rainy day fund"
 
 
+@pytest.mark.usefixtures("entity_registry_enabled_by_default", "monzo")
+async def test_stale_resource_is_removed_during_initial_refresh(
+    hass: HomeAssistant,
+    polling_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a resource removed while Home Assistant was stopped is cleaned up."""
+    polling_config_entry.add_to_hass(hass)
+    stale_device = device_registry.async_get_or_create(
+        config_entry_id=polling_config_entry.entry_id,
+        identifiers={(DOMAIN, "pot_deleted")},
+        name="Deleted pot",
+    )
+    stale_entity = entity_registry.async_get_or_create(
+        domain=SENSOR_DOMAIN,
+        platform=DOMAIN,
+        unique_id="pot_deleted_pot_balance",
+        config_entry=polling_config_entry,
+        device_id=stale_device.id,
+    )
+
+    assert await hass.config_entries.async_setup(polling_config_entry.entry_id)
+
+    assert device_registry.async_get(stale_device.id) is None
+    assert entity_registry.async_get(stale_entity.entity_id) is None
+
+
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_new_accounts_and_pots_are_discovered(
     hass: HomeAssistant,
