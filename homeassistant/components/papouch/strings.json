@@ -20,14 +20,12 @@
         "data": {
           "ip_address": "IPv4 address",
           "password": "Password (optional)",
-          "refresh_rate": "Scan interval (seconds)",
-          "web_port": "HTTP Port"
+          "port": "HTTP Port"
         },
         "data_description": {
           "ip_address": "Enter the IPv4 address of your device.",
           "password": "Leave blank if your device does not require authentication.",
-          "refresh_rate": "How often Home Assistant should poll the device for new data.",
-          "web_port": "The HTTP port of the device. Default is 80."
+          "port": "The HTTP port of the device. Default is 80."
         },
         "title": "Add a new device"
       }
@@ -35,47 +33,41 @@
   },
   "entity": {
     "sensor": {
-      "sensor_batt_placeholder": {
-        "name": "{placeholder} Battery"
+      "batt_custom": {
+        "name": "{name} battery"
       },
-      "sensor_co2_placeholder": {
-        "name": "{placeholder} CO2"
+      "co2_custom": {
+        "name": "{name} CO2"
       },
-      "sensor_counter_placeholder": {
-        "name": "Input {placeholder} Count"
+      "counter_custom": {
+        "name": "Input {name} count"
       },
-      "sensor_dew_point": {
+      "dew_point": {
         "name": "Dew Point"
       },
-      "sensor_dew_point_placeholder": {
-        "name": "{placeholder} Dew Point"
+      "dew_point_custom": {
+        "name": "{name} dew point"
       },
-      "sensor_humidity": {
-        "name": "Humidity"
+      "humidity_custom": {
+        "name": "{name} humidity"
       },
-      "sensor_humidity_placeholder": {
-        "name": "{placeholder} Humidity"
+      "pressure_custom": {
+        "name": "{name} pressure"
       },
-      "sensor_pressure_placeholder": {
-        "name": "{placeholder} Pressure"
+      "rain_custom": {
+        "name": "{name} rainfall"
       },
-      "sensor_rain_placeholder": {
-        "name": "{placeholder} Rainfall"
+      "rsii_custom": {
+        "name": "{name} signal strength"
       },
-      "sensor_rsii_placeholder": {
-        "name": "{placeholder} Signal Strength"
+      "temperature_custom": {
+        "name": "{name} temperature"
       },
-      "sensor_temperature": {
-        "name": "Temperature"
+      "wind_direction_custom": {
+        "name": "{name} wind direction"
       },
-      "sensor_temperature_placeholder": {
-        "name": "{placeholder} Temperature"
-      },
-      "sensor_wind_direction_placeholder": {
-        "name": "{placeholder} Wind Direction"
-      },
-      "sensor_wind_speed_placeholder": {
-        "name": "{placeholder} Wind Speed"
+      "wind_speed_custom": {
+        "name": "{name} wind speed"
       }
     }
   },

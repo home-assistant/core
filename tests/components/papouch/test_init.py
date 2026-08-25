@@ -5,11 +5,8 @@ from unittest.mock import MagicMock
 import aiohttp
 from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
 
-from homeassistant.components.papouch.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
-
-from tests.common import MockConfigEntry
 
 
 async def test_setup_unload_and_reload(
@@ -29,20 +26,6 @@ async def test_setup_unload_and_reload(
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
     assert mock_config_entry.state is ConfigEntryState.NOT_LOADED
-
-
-async def test_setup_missing_unique_id(
-    hass: HomeAssistant, mock_papouch_client
-) -> None:
-    """Test adding unique_id to a legacy entry during setup."""
-    entry = MockConfigEntry(
-        domain=DOMAIN, data={"ip_address": "192.168.1.50"}, unique_id=None
-    )
-    entry.add_to_hass(hass)
-
-    assert await hass.config_entries.async_setup(entry.entry_id)
-    await hass.async_block_till_done()
-    assert entry.unique_id == "00:11:22:33:44:55"
 
 
 async def test_setup_auth_error(

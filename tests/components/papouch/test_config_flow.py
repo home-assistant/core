@@ -63,9 +63,8 @@ async def test_user_success(
         result["flow_id"],
         {
             "ip_address": "192.168.1.50",
-            "refresh_rate": 60,
             "password": "admin",
-            "web_port": 80,
+            "port": 80,
         },
     )
 
@@ -74,7 +73,7 @@ async def test_user_success(
     assert result2["data"]["ip_address"] == "192.168.1.50"
     assert result2["data"]["password"] == "admin"
     assert result2["data"]["device_name"] == "Quido (Lab)"
-    assert result2["data"]["web_port"] == 80
+    assert result2["data"]["port"] == 80
     assert len(mock_setup_entry.mock_calls) == 1
 
 
@@ -86,7 +85,7 @@ async def test_invalid_ip_format(hass: HomeAssistant) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "999.invalid.ip", "refresh_rate": 60, "password": "supersecret"},
+        {"ip_address": "999.invalid.ip", "password": "supersecret"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
@@ -104,7 +103,7 @@ async def test_user_connection_error(hass: HomeAssistant, mock_api_client) -> No
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "supersecret"},
+        {"ip_address": "192.168.1.50", "password": "supersecret"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
@@ -122,7 +121,7 @@ async def test_user_auth_error(hass: HomeAssistant, mock_api_client) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "wrong"},
+        {"ip_address": "192.168.1.50", "password": "wrong"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
@@ -140,7 +139,7 @@ async def test_user_mode_missing(hass: HomeAssistant, mock_api_client) -> None:
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60},
+        {"ip_address": "192.168.1.50"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
@@ -158,7 +157,7 @@ async def test_user_web_mode_required(hass: HomeAssistant, mock_api_client) -> N
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60},
+        {"ip_address": "192.168.1.50"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
@@ -182,7 +181,6 @@ async def test_user_mac_auth_error(
         user_input={
             "ip_address": "192.168.1.50",
             "password": "wrong_password",
-            "refresh_rate": 60,
         },
     )
 
@@ -204,7 +202,7 @@ async def test_user_mac_connection_error(
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "admin"},
+        {"ip_address": "192.168.1.50", "password": "admin"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.FORM
@@ -213,11 +211,7 @@ async def test_user_mac_connection_error(
 
 async def test_user_already_configured(hass: HomeAssistant, mock_api_client) -> None:
     """Test that manual IP entry aborts if the IP is already configured."""
-    entry = MockConfigEntry(
-        domain=DOMAIN,
-        data={"ip_address": "192.168.1.50"},
-        options={"refresh_rate": 60},
-    )
+    entry = MockConfigEntry(domain=DOMAIN, data={"ip_address": "192.168.1.50"})
     entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -226,7 +220,7 @@ async def test_user_already_configured(hass: HomeAssistant, mock_api_client) -> 
 
     result2 = await hass.config_entries.flow.async_configure(
         result["flow_id"],
-        {"ip_address": "192.168.1.50", "refresh_rate": 60, "password": "password"},
+        {"ip_address": "192.168.1.50", "password": "password"},
     )
 
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT

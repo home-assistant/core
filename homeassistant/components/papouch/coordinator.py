@@ -2,22 +2,21 @@
 
 from datetime import timedelta
 import logging
-from typing import TYPE_CHECKING, override
+from typing import override
 
+from aiopapouch import PapouchDevice, PapouchTransport
 from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
 
+from homeassistant.config_entries import ConfigEntry
+from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator
 
 from .const import DEFAULT_SCAN_INTERVAL, DOMAIN
 
-if TYPE_CHECKING:
-    from aiopapouch import PapouchDevice, PapouchTransport
-
-    from homeassistant.config_entries import ConfigEntry
-    from homeassistant.core import HomeAssistant
-
 _LOGGER = logging.getLogger(__name__)
+
+type PapouchConfigEntry = ConfigEntry[PapouchDataUpdateCoordinator]
 
 
 class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
@@ -27,17 +26,16 @@ class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
         self,
         hass: HomeAssistant,
         api_client: PapouchTransport,
-        entry: ConfigEntry,
+        entry: PapouchConfigEntry,
         device: PapouchDevice,
     ) -> None:
         """Initialize the coordinator."""
-        interval = entry.options.get("refresh_rate", DEFAULT_SCAN_INTERVAL)
         super().__init__(
             hass,
             _LOGGER,
             name=DOMAIN,
             config_entry=entry,
-            update_interval=timedelta(seconds=interval),
+            update_interval=timedelta(seconds=DEFAULT_SCAN_INTERVAL),
         )
         self.api_client = api_client
         self.device = device

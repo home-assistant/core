@@ -1,6 +1,6 @@
 """Config flow for the Papouch integration."""
 
-import re
+import ipaddress
 from typing import Any, override
 
 import aiohttp
@@ -13,10 +13,11 @@ from aiopapouch.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.device_registry import format_mac
 
-from .const import DEFAULT_SCAN_INTERVAL, DEFAULT_WEB_PORT, DOMAIN
+from .const import DEFAULT_WEB_PORT, DOMAIN
 from .utils import _get_device_name
 
 WEB_MODE_INDEX = 3
@@ -34,8 +35,10 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self, ip_address: str, password: str = "", web_port: int = DEFAULT_WEB_PORT
     ) -> tuple[dict[str, str], int | None]:
         """Test the connection and return any errors and the device mode."""
-        if not re.match(r"^(?:[0-9]{1,3}\.){3}[0-9]{1,3}$", ip_address):
-            return {"ip_address": "invalid_ip_format"}, None
+        try:
+            ipaddress.ip_address(ip_address)
+        except ValueError:
+            return {CONF_IP_ADDRESS: "invalid_ip_format"}, None
 
         session = async_get_clientsession(self.hass)
         client = PapouchHTTPClient(
@@ -60,16 +63,14 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self, user_input: dict[str, Any]
     ) -> tuple[dict[str, str], ConfigFlowResult | None]:
         """Process user input, test connection, and determine the next routing step."""
-        for entry in self._async_current_entries():
-            if entry.data.get("ip_address") == user_input["ip_address"]:
-                return {}, self.async_abort(reason="already_configured")
+        self._async_abort_entries_match({CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]})
 
-        ip_address = user_input["ip_address"]
-        password = str(user_input.get("password", ""))
-        web_port = int(user_input["web_port"])
+        ip_address = user_input[CONF_IP_ADDRESS]
+        password = str(user_input.get(CONF_PASSWORD, ""))
+        web_port = int(user_input[CONF_PORT])
 
         errors, mode_device = await self._test_connection(
-            user_input["ip_address"], password, web_port
+            user_input[CONF_IP_ADDRESS], password, web_port
         )
 
         if errors:
@@ -104,14 +105,14 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
             self._abort_if_unique_id_configured()
 
         data = {
-            "ip_address": user_input["ip_address"],
-            "password": password,
+            CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],
+            CONF_PASSWORD: password,
             "device_name": title_name,
-            "web_port": web_port,
+            CONF_PORT: web_port,
         }
 
         return {}, self.async_create_entry(
-            title=f"{title_name} - {user_input['ip_address']}", data=data
+            title=f"{title_name} - {user_input[CONF_IP_ADDRESS]}", data=data
         )
 
     @override
@@ -127,28 +128,20 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
                 return result
 
         default_ip = self.discovered_ip or ""
-        default_interval = DEFAULT_SCAN_INTERVAL
         default_web_port = DEFAULT_WEB_PORT
 
-        if self._saved_input and "refresh_rate" in self._saved_input:
-            default_interval = self._saved_input["refresh_rate"]
-        if user_input and "refresh_rate" in user_input:
-            default_interval = user_input["refresh_rate"]
-        if user_input and "ip_address" in user_input:
-            default_ip = user_input["ip_address"]
-        if user_input and "web_port" in user_input:
-            default_web_port = user_input["web_port"]
+        if user_input and CONF_IP_ADDRESS in user_input:
+            default_ip = user_input[CONF_IP_ADDRESS]
+        if user_input and CONF_PORT in user_input:
+            default_web_port = user_input[CONF_PORT]
 
         schema = vol.Schema(
             {
-                vol.Required("ip_address", default=default_ip): str,
-                vol.Required("refresh_rate", default=default_interval): vol.All(
-                    int, vol.Range(min=1, max=3600)
-                ),
-                vol.Optional("web_port", default=default_web_port): vol.All(
+                vol.Required(CONF_IP_ADDRESS, default=default_ip): str,
+                vol.Optional(CONF_PORT, default=default_web_port): vol.All(
                     int, vol.Range(min=1, max=65536)
                 ),
-                vol.Optional("password"): str,
+                vol.Optional(CONF_PASSWORD): str,
             }
         )
 
