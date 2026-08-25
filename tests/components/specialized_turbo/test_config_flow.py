@@ -4,7 +4,12 @@ from unittest.mock import ANY, AsyncMock, MagicMock, patch
 
 from bleak import BleakError
 import pytest
-from specialized_turbo import EncryptionKeyRequiredError, IdentificationError
+from specialized_turbo import (
+    DecryptionError,
+    EncryptionKeyProviderError,
+    EncryptionKeyRequiredError,
+    IdentificationError,
+)
 from specialized_turbo.cloud import CloudAuthenticationError, CloudRequestError
 
 from homeassistant import config_entries
@@ -319,26 +324,24 @@ async def test_encrypted_account_setup_uses_managed_http_client(
 
 
 @pytest.mark.parametrize(
-    ("error", "expected_error"),
+    ("method_name", "error", "expected_error"),
     [
-        (CloudAuthenticationError("failed"), "invalid_auth"),
-        (CloudRequestError("failed"), "key_unavailable"),
+        ("login", CloudAuthenticationError("failed"), "invalid_auth"),
+        ("get_wrapped_key", CloudRequestError("failed"), "key_unavailable"),
     ],
 )
 async def test_encrypted_account_errors(
     hass: HomeAssistant,
     mock_library: MockLibrary,
+    method_name: str,
     error: Exception,
     expected_error: str,
 ) -> None:
     """Test account authentication and key retrieval errors."""
     cloud = MagicMock()
-    cloud.login = AsyncMock(
-        side_effect=error if isinstance(error, CloudAuthenticationError) else None
-    )
-    cloud.get_wrapped_key = AsyncMock(
-        side_effect=error if isinstance(error, CloudRequestError) else None
-    )
+    cloud.login = AsyncMock()
+    cloud.get_wrapped_key = AsyncMock(return_value=make_wrapped_key())
+    getattr(cloud, method_name).side_effect = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},
@@ -363,9 +366,57 @@ async def test_encrypted_account_errors(
         assert result["errors"] == {"base": expected_error}
         mock_library.connection.connect.assert_not_awaited()
 
-        cloud.login.side_effect = None
-        cloud.get_wrapped_key.side_effect = None
-        cloud.get_wrapped_key.return_value = make_wrapped_key()
+        getattr(cloud, method_name).side_effect = None
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_EMAIL: "rider@example.com", CONF_PASSWORD: "secret"},
+        )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+
+@pytest.mark.parametrize(
+    "error",
+    [
+        DecryptionError("stale"),
+        EncryptionKeyProviderError("invalid"),
+        EncryptionKeyRequiredError("missing"),
+    ],
+)
+async def test_encrypted_account_key_errors(
+    hass: HomeAssistant,
+    mock_library: MockLibrary,
+    error: Exception,
+) -> None:
+    """Test key-specific account failures recover on the same form."""
+    cloud = MagicMock()
+    cloud.login = AsyncMock()
+    cloud.get_wrapped_key = AsyncMock(return_value=make_wrapped_key())
+    mock_library.connection.connect.side_effect = error
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_BLUETOOTH},
+        data=ENCRYPTED_SERVICE_INFO,
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={},
+    )
+    result = await _choose_key_source(hass, result, "account")
+
+    with patch(
+        "homeassistant.components.specialized_turbo.config_flow.SpecializedCloudClient",
+        return_value=cloud,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            user_input={CONF_EMAIL: "rider@example.com", CONF_PASSWORD: "secret"},
+        )
+
+        assert result["type"] is FlowResultType.FORM
+        assert result["errors"] == {"base": "key_unavailable"}
+
+        mock_library.connection.connect.side_effect = None
         result = await hass.config_entries.flow.async_configure(
             result["flow_id"],
             user_input={CONF_EMAIL: "rider@example.com", CONF_PASSWORD: "secret"},
@@ -454,12 +505,21 @@ async def test_encrypted_manual_key_setup(
     mock_library.connection.connect.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    "error",
+    [
+        DecryptionError("stale"),
+        EncryptionKeyProviderError("invalid"),
+        EncryptionKeyRequiredError("missing"),
+    ],
+)
 async def test_manual_key_rejected_by_bike(
     hass: HomeAssistant,
     mock_library: MockLibrary,
+    error: Exception,
 ) -> None:
     """Test a wrapped key rejected by the bike remains on the form."""
-    mock_library.connection.connect.side_effect = EncryptionKeyRequiredError("invalid")
+    mock_library.connection.connect.side_effect = error
     result = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": config_entries.SOURCE_BLUETOOTH},

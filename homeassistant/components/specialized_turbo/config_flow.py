@@ -11,6 +11,8 @@ from specialized_turbo import (
     BikeAdvertisement,
     BikeInfo,
     BLEProfile,
+    DecryptionError,
+    EncryptionKeyProviderError,
     EncryptionKeyRequiredError,
     IdentificationError,
     ProtocolEncryptionMethod,
@@ -21,11 +23,7 @@ from specialized_turbo import (
     parse_bike_info,
     unwrap_keystore_key,
 )
-from specialized_turbo.cloud import (
-    CloudAuthenticationError,
-    CloudRequestError,
-    SpecializedCloudClient,
-)
+from specialized_turbo.cloud import CloudAuthenticationError, SpecializedCloudClient
 import voluptuous as vol
 
 from homeassistant.components.bluetooth import (
@@ -109,7 +107,11 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
         )
         try:
             await connection.connect()
-        except EncryptionKeyRequiredError:
+        except (
+            DecryptionError,
+            EncryptionKeyProviderError,
+            EncryptionKeyRequiredError,
+        ):
             raise
         except (
             BleakError,
@@ -246,7 +248,11 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
                     )
             except CloudAuthenticationError:
                 errors["base"] = "invalid_auth"
-            except CloudRequestError, EncryptionKeyRequiredError:
+            except (
+                DecryptionError,
+                EncryptionKeyProviderError,
+                EncryptionKeyRequiredError,
+            ):
                 errors["base"] = "key_unavailable"
 
         return self.async_show_form(
@@ -275,7 +281,11 @@ class SpecializedTurboConfigFlow(ConfigFlow, domain=DOMAIN):
             else:
                 try:
                     valid = await self._async_validate_encrypted_connection(wrapped_key)
-                except EncryptionKeyRequiredError:
+                except (
+                    DecryptionError,
+                    EncryptionKeyProviderError,
+                    EncryptionKeyRequiredError,
+                ):
                     errors["base"] = "invalid_wrapped_key"
                 else:
                     if valid:
