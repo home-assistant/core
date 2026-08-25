@@ -10,10 +10,9 @@ rules:
       This is a local_push integration; entities are updated from Haus-Bus
       events, there is no polling.
   brands:
-    status: todo
+    status: done
     comment: |
-      Branding assets must be submitted to core_integrations/hausbus in the
-      home-assistant/brands repository before this rule can be marked done.
+      https://github.com/home-assistant/brands/pull/7758
   common-modules: done
   config-flow-test-coverage:
     status: done
@@ -30,9 +29,18 @@ rules:
     status: exempt
     comment: |
       This integration does not provide any conditions.
-  docs-high-level-description: todo
-  docs-installation-instructions: todo
-  docs-removal-instructions: todo
+  docs-high-level-description:
+    status: done
+    comment: |
+       https://github.com/home-assistant/home-assistant.io/pull/47601
+  docs-installation-instructions:
+    status: done
+    comment: |
+       https://github.com/home-assistant/home-assistant.io/pull/47601
+  docs-removal-instructions:
+    status: done
+    comment: |
+       https://github.com/home-assistant/home-assistant.io/pull/47601
   docs-triggers:
     status: exempt
     comment: |
