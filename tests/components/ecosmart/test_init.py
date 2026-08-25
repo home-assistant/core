@@ -1,6 +1,7 @@
 """Test the ecosmart integration setup and unload."""
 
 from dataclasses import replace
+from datetime import timedelta
 from unittest.mock import AsyncMock
 
 from aioecosmart import (
@@ -10,15 +11,17 @@ from aioecosmart import (
     EcosmartRateLimitError,
     IcpScope,
 )
+from freezegun.api import FrozenDateTimeFactory
 import pytest
 
+from homeassistant.components.ecosmart.const import SPOT_SCAN_INTERVAL
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
 
 from . import setup_integration
 from .conftest import TEST_POC, load_identity
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, async_fire_time_changed
 
 
 async def test_setup_and_unload(
@@ -131,3 +134,32 @@ async def test_first_refresh_failures(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+
+
+async def test_rate_limit_retry_after_moves_the_next_poll(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test the server's Retry-After decides when we come back, not our cadence."""
+    await setup_integration(hass, mock_config_entry)
+    mock_ecosmart_client.spot.reset_mock()
+
+    mock_ecosmart_client.spot.side_effect = EcosmartRateLimitError(
+        "slow down", retry_after=30
+    )
+    freezer.tick(SPOT_SCAN_INTERVAL)
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_ecosmart_client.spot.await_count == 1
+
+    # Thirty seconds is well short of the five-minute cadence, so a second
+    # fetch here can only mean the header was honoured.
+    mock_ecosmart_client.spot.side_effect = None
+    freezer.tick(timedelta(seconds=31))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert mock_ecosmart_client.spot.await_count == 2
