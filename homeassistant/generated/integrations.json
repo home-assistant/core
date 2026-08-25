@@ -941,6 +941,11 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
+    "bugu": {
+      "name": "Bugu",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "buienradar": {
       "name": "Buienradar",
       "integration_type": "service",
@@ -975,6 +980,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
+    },
+    "carrier": {
+      "name": "Carrier",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "casper_glow": {
       "name": "Casper Glow",
@@ -1142,6 +1152,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "comfee": {
+      "name": "Comfee",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "comfoconnect": {
       "name": "Zehnder ComfoAir Q",
@@ -3986,6 +4001,11 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "little_swan": {
+      "name": "Little Swan",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "livisi": {
       "name": "LIVISI Smart Home",
       "integration_type": "hub",
@@ -4800,6 +4820,11 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "netsu": {
+      "name": "Netsu",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "neurio_energy": {
       "name": "Neurio energy",

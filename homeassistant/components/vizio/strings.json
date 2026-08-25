@@ -15,6 +15,9 @@
         "data": {
           "pin": "[%key:common::config_flow::data::pin%]"
         },
+        "data_description": {
+          "pin": "The pairing code currently shown on your TV screen."
+        },
         "description": "Your TV should be displaying a code. Enter that code into the form and then continue to the next step to complete the pairing.",
         "title": "Complete pairing process"
       },
