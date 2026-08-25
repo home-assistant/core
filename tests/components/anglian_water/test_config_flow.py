@@ -444,13 +444,22 @@ async def test_reauth_flow(
     }
 
 
-async def test_reauth_flow_invalid_credentials(
+@pytest.mark.parametrize(
+    ("exception_type", "expected_error"),
+    [
+        (SelfAssertedError, "invalid_auth"),
+        (ConsentRequiredError, "consent_required"),
+    ],
+)
+async def test_reauth_flow_auth_exception(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_anglian_water_authenticator: AsyncMock,
     mock_anglian_water_client: AsyncMock,
+    exception_type: type[Exception],
+    expected_error: str,
 ) -> None:
-    """Test the reauth flow with invalid credentials."""
+    """Test that the reauth flow can recover from an auth exception."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -465,7 +474,7 @@ async def test_reauth_flow_invalid_credentials(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
 
-    mock_anglian_water_authenticator.send_login_request.side_effect = ValueError
+    mock_anglian_water_authenticator.send_login_request.side_effect = exception_type
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -477,7 +486,7 @@ async def test_reauth_flow_invalid_credentials(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_confirm"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": expected_error}
 
     mock_anglian_water_authenticator.send_login_request.side_effect = None
 
@@ -590,13 +599,22 @@ async def test_reauth_flow_mfa_required(
     assert result["reason"] == "reauth_successful"
 
 
-async def test_reauth_flow_mfa_required_invalid_code(
+@pytest.mark.parametrize(
+    ("exception_type", "expected_error"),
+    [
+        (MFARequiredError, "invalid_code"),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_reauth_flow_mfa_exception(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_anglian_water_authenticator: AsyncMock,
     mock_anglian_water_client: AsyncMock,
+    exception_type: type[Exception],
+    expected_error: str,
 ) -> None:
-    """Test the reauth flow with MFA required and an invalid code."""
+    """Test that the reauth flow can recover from an MFA exception."""
     mock_config_entry.add_to_hass(hass)
 
     result = await hass.config_entries.flow.async_init(
@@ -624,7 +642,7 @@ async def test_reauth_flow_mfa_required_invalid_code(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_mfa"
 
-    mock_anglian_water_authenticator.send_mfa_request.side_effect = ValueError
+    mock_anglian_water_authenticator.send_mfa_request.side_effect = exception_type
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -635,7 +653,7 @@ async def test_reauth_flow_mfa_required_invalid_code(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "reauth_mfa"
-    assert result["errors"] == {"base": "unknown"}
+    assert result["errors"] == {"base": expected_error}
 
     mock_anglian_water_authenticator.send_mfa_request.side_effect = None
 
