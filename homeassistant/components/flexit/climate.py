@@ -99,46 +99,38 @@ async def async_setup_platform(
         translation_key="deprecated_yaml_no_import",
         translation_placeholders={"domain": DOMAIN, "integration_title": "Flexit"},
     )
+    modbus_slave = config.get(CONF_SLAVE)
+    name = config.get(CONF_NAME)
     hub = get_hub(hass, config[CONF_HUB])
-    async_add_entities(
-        [
-            LegacyFlexitClimate(
-                hub, config[CONF_HUB], config[CONF_SLAVE], config[CONF_NAME]
-            )
-        ],
-        True,
-    )
+    async_add_entities([Flexit(hub, modbus_slave, name)], True)
 
 
-class LegacyFlexitClimate(ClimateEntity):
-    """Representation of a YAML-configured Flexit AC unit."""
+class Flexit(ClimateEntity):
+    """Representation of a Flexit AC unit."""
 
     _attr_fan_modes = ["Off", "Low", "Medium", "High"]
-    _attr_has_entity_name = True
     _attr_hvac_mode = HVACMode.COOL
     _attr_hvac_modes = [HVACMode.COOL]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
     _attr_temperature_unit = UnitOfTemperature.CELSIUS
-    _attr_min_temp = 10.0
-    _attr_max_temp = 30.0
 
     def __init__(
-        self, hub: ModbusHub, hub_name: str, modbus_slave: int, name: str
+        self, hub: ModbusHub, modbus_slave: int | None, name: str | None
     ) -> None:
         """Initialize the unit."""
         self._hub = hub
         self._attr_name = name
-        self._attr_unique_id = f"{hub_name}_{modbus_slave}"
         self._slave = modbus_slave
         self._attr_fan_mode = None
         self._filter_hours: int | None = None
-        self._filter_alarm: bool | None = None
+        self._filter_alarm: int | None = None
         self._heat_recovery: int | None = None
-        self._heater_enabled: bool | None = None
+        self._heater_enabled: int | None = None
         self._heating: int | None = None
         self._cooling: int | None = None
+        self._alarm = False
         self._outdoor_air_temp: float | None = None
 
     async def async_update(self) -> None:
@@ -149,57 +141,41 @@ class LegacyFlexitClimate(ClimateEntity):
         self._attr_current_temperature = await self._async_read_temp_from_register(
             CALL_TYPE_REGISTER_INPUT, 9
         )
-        fan_mode = await self._async_read_int16_from_register(
-            CALL_TYPE_REGISTER_HOLDING, 17
-        )
-        if (
-            self.fan_modes
-            and fan_mode is not None
-            and 0 <= fan_mode < len(self.fan_modes)
-        ):
-            self._attr_fan_mode = self.fan_modes[fan_mode]
-        else:
-            self._attr_fan_mode = None
-
-        self._filter_hours = await self._async_read_uint16_from_register(
+        res = await self._async_read_int16_from_register(CALL_TYPE_REGISTER_HOLDING, 17)
+        if self.fan_modes and res < len(self.fan_modes):
+            self._attr_fan_mode = self.fan_modes[res]
+        self._filter_hours = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 8
         )
+        # # Mechanical heat recovery, 0-100%
         self._heat_recovery = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 14
         )
+        # # Heater active 0-100%
         self._heating = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 15
         )
+        # # Cooling active 0-100%
         self._cooling = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 13
         )
-        filter_alarm_value = await self._async_read_int16_from_register(
+        # # Filter alarm 0/1
+        self._filter_alarm = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 27
         )
-        self._filter_alarm = (
-            None if filter_alarm_value is None else filter_alarm_value == 1
-        )
-        heater_enabled_value = await self._async_read_int16_from_register(
+        # # Heater enabled or not. Does not mean it's necessarily heating
+        self._heater_enabled = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 28
-        )
-        self._heater_enabled = (
-            None if heater_enabled_value is None else heater_enabled_value == 1
         )
         self._outdoor_air_temp = await self._async_read_temp_from_register(
             CALL_TYPE_REGISTER_INPUT, 11
         )
+
         actual_air_speed = await self._async_read_int16_from_register(
             CALL_TYPE_REGISTER_INPUT, 48
         )
 
-        if None in (
-            self._heating,
-            self._cooling,
-            self._heat_recovery,
-            actual_air_speed,
-        ):
-            self._attr_hvac_action = None
-        elif self._heating:
+        if self._heating:
             self._attr_hvac_action = HVACAction.HEATING
         elif self._cooling:
             self._attr_hvac_action = HVACAction.COOLING
@@ -227,7 +203,10 @@ class LegacyFlexitClimate(ClimateEntity):
     @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
-        target_temperature = kwargs[ATTR_TEMPERATURE]
+        if (target_temperature := kwargs.get(ATTR_TEMPERATURE)) is None:
+            _LOGGER.error("Received invalid temperature")
+            return
+
         if await self._async_write_int16_to_register(8, int(target_temperature * 10)):
             self._attr_target_temperature = target_temperature
         else:
@@ -245,44 +224,32 @@ class LegacyFlexitClimate(ClimateEntity):
 
     async def _async_read_int16_from_register(
         self, register_type: str, register: int
-    ) -> int | None:
-        """Read a signed register using the legacy Modbus hub."""
-        if (
-            value := await self._async_read_uint16_from_register(
-                register_type, register
-            )
-        ) is None:
-            return None
-        if value > 32767:
-            value -= 65536
-        return value
-
-    async def _async_read_uint16_from_register(
-        self, register_type: str, register: int
-    ) -> int | None:
-        """Read a register using the legacy Modbus hub."""
+    ) -> int:
+        """Read register using the Modbus hub slave."""
         result = await self._hub.async_pb_call(self._slave, register, 1, register_type)
         if result is None:
-            _LOGGER.error("Error reading value from Flexit Modbus adapter")
-            return None
+            _LOGGER.error("Error reading value from Flexit modbus adapter")
+            return -1
+
         return int(result.registers[0])
 
     async def _async_read_temp_from_register(
         self, register_type: str, register: int
-    ) -> float | None:
-        """Read a scaled temperature register."""
-        result = await self._async_read_int16_from_register(register_type, register)
-        if result is None:
-            return None
-        return float(result) / 10.0
+    ) -> float:
+        result = float(
+            await self._async_read_int16_from_register(register_type, register)
+        )
+        if not result:
+            return -1
+        return result / 10.0
 
     async def _async_write_int16_to_register(self, register: int, value: int) -> bool:
-        """Write a register using the legacy Modbus hub."""
-        return bool(
-            await self._hub.async_pb_call(
-                self._slave, register, value, CALL_TYPE_WRITE_REGISTER
-            )
+        result = await self._hub.async_pb_call(
+            self._slave, register, value, CALL_TYPE_WRITE_REGISTER
         )
+        if not result:
+            return False
+        return True
 
 
 class FlexitClimate(FlexitEntity, ClimateEntity):
