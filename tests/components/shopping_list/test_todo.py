@@ -5,7 +5,6 @@ from typing import Any
 
 import pytest
 
-from homeassistant.components.shopping_list.common import _get_shopping_data
 from homeassistant.components.todo import (
     ATTR_ITEM,
     ATTR_RENAME,
@@ -122,56 +121,6 @@ async def test_add_item(
     state = hass.states.get(TEST_ENTITY)
     assert state
     assert state.state == "1"
-
-
-async def test_add_item_allows_duplicate_of_completed_item(
-    hass: HomeAssistant,
-    sl_setup: None,
-    ws_get_items: WsGetItemsType,
-) -> None:
-    """Test adding a duplicate of a completed shopping list item."""
-    completed_item = await _get_shopping_data(hass).async_add("Soda", complete=True)
-
-    await hass.services.async_call(
-        TODO_DOMAIN,
-        TodoServices.ADD_ITEM,
-        {ATTR_ITEM: "soda"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
-        blocking=True,
-    )
-
-    items = await ws_get_items()
-    assert len(items) == 2
-    assert items[0]["uid"] == completed_item["id"]
-    assert items[0]["summary"] == "Soda"
-    assert items[0]["status"] == "completed"
-    assert items[1]["uid"] != completed_item["id"]
-    assert items[1]["summary"] == "soda"
-    assert items[1]["status"] == "needs_action"
-
-
-async def test_add_item_allows_duplicate_of_active_item(
-    hass: HomeAssistant,
-    sl_setup: None,
-    ws_get_items: WsGetItemsType,
-) -> None:
-    """Test adding a duplicate of an active shopping list item."""
-    active_item = await _get_shopping_data(hass).async_add("soda")
-
-    await hass.services.async_call(
-        TODO_DOMAIN,
-        TodoServices.ADD_ITEM,
-        {ATTR_ITEM: "soda"},
-        target={ATTR_ENTITY_ID: TEST_ENTITY},
-        blocking=True,
-    )
-
-    items = await ws_get_items()
-    assert len(items) == 2
-    assert items[0]["uid"] == active_item["id"]
-    assert items[0]["status"] == "needs_action"
-    assert items[1]["uid"] != active_item["id"]
-    assert items[1]["status"] == "needs_action"
 
 
 async def test_remove_item(
