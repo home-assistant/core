@@ -29,10 +29,11 @@ async def handle_upload_image(call: ServiceCall) -> None:
     hass = call.hass
     image_url = call.data["image_url"]
     device_ids = call.data.get("device_id", [])
-    dev_reg = dr.async_get(hass)
 
     for ha_device_id in device_ids:
-        device = dev_reg.async_get(ha_device_id)
+        device, config_entry = dr.async_get_device_and_config_entry_for_domain(
+            hass, ha_device_id, domain=DOMAIN
+        )
         if device is None:
             raise ServiceValidationError(f"Device {ha_device_id} not found")
 
@@ -40,15 +41,11 @@ async def handle_upload_image(call: ServiceCall) -> None:
             (iid[1] for iid in device.identifiers if iid[0] == DOMAIN), None
         )
         if device_mac:
-            for config_entry_id in device.config_entries:
-                entry = hass.config_entries.async_get_entry(config_entry_id)
-                if entry is not None and entry.domain == DOMAIN:
-                    break
-            else:
+            if config_entry is None:
                 raise ServiceValidationError(
                     f"Device {ha_device_id} is not a SwitchBot Cloud device"
                 )
-            await entry.runtime_data.api.send_command(
+            await config_entry.runtime_data.api.send_command(
                 device_id=device_mac,
                 command=ArtFrameCommands.UPLOAD.value,
                 command_type="command",
