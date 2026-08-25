@@ -210,6 +210,26 @@ async def test_dhcp_discovery_aborts_when_already_configured(
     assert result["reason"] == "already_configured"
 
 
+async def test_dhcp_discovery_aborts_when_user_flow_in_progress(
+    hass: HomeAssistant,
+) -> None:
+    """DHCP discovery does not sit beside an unfinished manual setup."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_USER},
+    )
+    assert result["type"] is FlowResultType.FORM
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_DHCP},
+        data=DHCP_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
 async def test_dhcp_discovery_invalid_auth(
     hass: HomeAssistant,
     mock_setup_entry: AsyncMock,

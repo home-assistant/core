@@ -24,8 +24,6 @@ from .const import API_URLS, CONF_API_URL, CONF_APP_ID, CONF_APP_SECRET, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
-IMOU_DHCP_DISCOVERY = "imou_dhcp_discovery"
-
 
 class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
     """Config flow for Imou integration."""
@@ -38,11 +36,7 @@ class ImouConfigFlow(ConfigFlow, domain=DOMAIN):
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:
         """Handle discovery via DHCP. MAC/IP are not stored."""
-        if self.hass.config_entries.async_has_entries(DOMAIN):
-            return self.async_abort(reason="already_configured")
-
-        await self.async_set_unique_id(IMOU_DHCP_DISCOVERY)
-        self._abort_if_unique_id_configured()
+        await self._async_handle_discovery_without_unique_id()
         return await self.async_step_discovery_confirm()
 
     async def async_step_discovery_confirm(
