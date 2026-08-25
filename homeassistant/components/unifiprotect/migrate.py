@@ -263,7 +263,7 @@ def async_remove_package_binary_sensor(
 
 
 # Release that removes the deprecated mirrors.
-SENSE_SETTING_MIRROR_BREAKS_IN = "2027.3.0"
+SENSE_SETTING_MIRROR_BREAKS_IN = "2026.11.0"
 
 # Sense settings whose read-only mirror is deprecated, keyed by the mirror's own
 # (platform, key) and pointing at the (platform, key) of the control that
@@ -290,7 +290,9 @@ def async_deprecate_sense_setting_mirrors(
     user and the ``PermRequired.NO_WRITE`` mirror only duplicates its state.
 
     The mirrors keep working until the removal, so a dashboard or automation
-    referencing one does not break without warning.
+    referencing one does not break without warning. Two releases is enough
+    here: the replacement holds the same state, so the migration is an entity
+    id swap, and the repair points at the exact entity to swap in.
 
     Runs after platform setup, unlike the other migrations in this file: the
     repair needs the replacement switch/number to already be in the registry
