@@ -645,6 +645,15 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         device_class=SensorDeviceClass.DURATION,
         native_unit_of_measurement=UnitOfTime.MINUTES,
         state_class=SensorStateClass.MEASUREMENT,
+        models=[DeviceType.EA, DeviceType.EC],
+    ),
+    MideaSensorEntityDescription(
+        key="keep_warm_time",
+        translation_key="keep_warm_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.HOURS,
+        state_class=SensorStateClass.MEASUREMENT,
+        models=[DeviceType.ED],
     ),
     MideaSensorEntityDescription(
         key="top_temperature",
@@ -771,6 +780,7 @@ SENSOR_ENTITIES: list[MideaSensorEntityDescription] = [
         translation_key="water_consumption_average",
         device_class=SensorDeviceClass.VOLUME,
         native_unit_of_measurement=UnitOfVolume.LITERS,
+        state_class=SensorStateClass.MEASUREMENT,
     ),
 ]
 
@@ -786,7 +796,7 @@ async def async_setup_entry(
     sensors: list[MideaSensor] = [
         MideaSensor(device, description)
         for description in SENSOR_ENTITIES
-        if description.key in device.attributes
+        if device.attributes.get(description.key) is not None
         and (not description.models or device.device_type in description.models)
     ]
 
