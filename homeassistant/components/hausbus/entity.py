@@ -2,6 +2,7 @@
 
 import logging
 from typing import Any
+from typing import override
 
 from pyhausbus.ABusFeature import ABusFeature
 from pyhausbus.ObjectId import ObjectId
@@ -64,6 +65,7 @@ class HausbusEntity(Entity):
         """
         LOGGER.debug("handle_event %s for %s", data, self._debug_identifier)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register for haus-bus updates once entity is added to HA."""
         self.async_on_remove(

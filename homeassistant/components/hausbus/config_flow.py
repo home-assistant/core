@@ -3,12 +3,12 @@
 import asyncio
 import logging
 from typing import Any
+from typing import override
 
 from pyhausbus.HomeServer import HomeServer
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow
-from homeassistant.data_entry_flow import FlowResult
+from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
 from .const import DOMAIN
 from .gateway import async_get_home_server
@@ -26,9 +26,10 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         self._search_task: asyncio.Task | None = None
         self.home_server: HomeServer | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Handle the initial step."""
         if user_input is not None:
             # start searching for devices
@@ -41,7 +42,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_wait_for_device(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Wait for a hausbus device to be found."""
         if not self._search_task:
             self._search_task = self.hass.async_create_task(
@@ -71,7 +72,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_search_timeout(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Inform the user that no device has been found."""
         if user_input is not None:
             return await self.async_step_wait_for_device()
@@ -80,7 +81,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_search_complete(
         self, user_input: dict[str, Any] | None = None
-    ) -> FlowResult:
+    ) -> ConfigFlowResult:
         """Create a configuration entry for the hausbus devices."""
         return self.async_create_entry(title="Haus-Bus", data={})
 
