@@ -2,8 +2,6 @@
 
 from unittest.mock import MagicMock
 
-import pytest
-
 from pyhausbus import HausBusUtils
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.data.ModuleId import ModuleId
 from pyhausbus.de.hausbus.homeassistant.proxy.controller.params.EFirmwareId import (
@@ -20,6 +18,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Status import Statu
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import (
     EDirection,
 )
+import pytest
 
 from homeassistant.components.hausbus.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
