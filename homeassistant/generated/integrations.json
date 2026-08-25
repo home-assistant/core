@@ -45,7 +45,7 @@
       "name": "Actron Air",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "adax": {
       "name": "Adax",
@@ -944,6 +944,11 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
+    "bugu": {
+      "name": "Bugu",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "buienradar": {
       "name": "Buienradar",
       "integration_type": "service",
@@ -978,6 +983,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
+    },
+    "carrier": {
+      "name": "Carrier",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "casper_glow": {
       "name": "Casper Glow",
@@ -1147,6 +1157,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "comfee": {
+      "name": "Comfee",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "comfoconnect": {
       "name": "Zehnder ComfoAir Q",
@@ -4010,6 +4025,11 @@
       "config_flow": true,
       "iot_class": "cloud_push"
     },
+    "little_swan": {
+      "name": "Little Swan",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "livisi": {
       "name": "LIVISI Smart Home",
       "integration_type": "hub",
@@ -4830,6 +4850,11 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "netsu": {
+      "name": "Netsu",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "neurio_energy": {
       "name": "Neurio energy",
@@ -7820,6 +7845,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "vandelo": {
+      "name": "Vandelo",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "vasttrafik": {
       "name": "V\u00e4sttrafik",
       "integration_type": "hub",
@@ -7991,6 +8021,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "wahin": {
+      "name": "Wahin",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "wake_on_lan": {
       "name": "Wake on LAN",
