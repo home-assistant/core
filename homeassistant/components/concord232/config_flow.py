@@ -1,5 +1,6 @@
 """Config flow for the Concord232 integration."""
 
+import asyncio
 import logging
 from typing import Any, override
 
@@ -7,9 +8,16 @@ from concord232 import client as concord232_client
 import requests
 import voluptuous as vol
 
-from homeassistant.config_entries import ConfigFlow, ConfigFlowResult, OptionsFlow
+from homeassistant.config_entries import (
+    ConfigEntry,
+    ConfigFlow,
+    ConfigFlowResult,
+    OptionsFlow,
+)
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
-from homeassistant.core import callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
+from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -17,8 +25,14 @@ from homeassistant.helpers.selector import (
 )
 
 from . import build_url
-from .const import DEFAULT_MODE, DEFAULT_PORT, DOMAIN, MODE_AUDIBLE, MODE_SILENT
-from .coordinator import Concord232ConfigEntry
+from .const import (
+    DATA_IMPORT_LOCK,
+    DEFAULT_MODE,
+    DEFAULT_PORT,
+    DOMAIN,
+    MODE_AUDIBLE,
+    MODE_SILENT,
+)
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -61,7 +75,7 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
     @callback
     @override
     def async_get_options_flow(
-        config_entry: Concord232ConfigEntry,
+        config_entry: ConfigEntry,
     ) -> Concord232OptionsFlow:
         """Create the options flow."""
         return Concord232OptionsFlow()
@@ -91,6 +105,49 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
         """Import a config entry from YAML platform configuration."""
+        # The alarm and binary sensor platforms set up concurrently and import
+        # the same server; the lock lets the first import create the entry and
+        # the second merge into it.
+        lock = self.hass.data.setdefault(DATA_IMPORT_LOCK, asyncio.Lock())
+        async with lock:
+            result = await self._async_handle_import(import_data)
+
+        if (
+            result["type"] is FlowResultType.ABORT
+            and result["reason"] == "cannot_connect"
+        ):
+            ir.async_create_issue(
+                self.hass,
+                DOMAIN,
+                "deprecated_yaml_import_issue_cannot_connect",
+                breaks_in_ha_version="2027.3.0",
+                is_fixable=False,
+                issue_domain=DOMAIN,
+                severity=ir.IssueSeverity.WARNING,
+                translation_key="deprecated_yaml_import_issue_cannot_connect",
+            )
+            return result
+
+        ir.async_create_issue(
+            self.hass,
+            HOMEASSISTANT_DOMAIN,
+            f"deprecated_yaml_{DOMAIN}",
+            breaks_in_ha_version="2027.3.0",
+            is_fixable=False,
+            issue_domain=DOMAIN,
+            severity=ir.IssueSeverity.WARNING,
+            translation_key="deprecated_yaml",
+            translation_placeholders={
+                "domain": DOMAIN,
+                "integration_title": "Concord232",
+            },
+        )
+        return result
+
+    async def _async_handle_import(
+        self, import_data: dict[str, Any]
+    ) -> ConfigFlowResult:
+        """Create or enrich the config entry for imported YAML configuration."""
         data = {
             CONF_HOST: import_data[CONF_HOST],
             CONF_PORT: import_data[CONF_PORT],
@@ -101,8 +158,7 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
         if CONF_MODE in import_data:
             options[CONF_MODE] = import_data[CONF_MODE]
 
-        # Both platforms import the same YAML server (their setups hold a shared
-        # lock, so the imports run one at a time). When the other platform's
+        # Both platforms import the same YAML server. When the other platform's
         # import created the entry first, merge the alarm-only fields (code,
         # mode) into it instead of dropping them.
         for entry in self._async_current_entries(include_ignore=False):

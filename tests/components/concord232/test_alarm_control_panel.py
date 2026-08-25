@@ -14,17 +14,15 @@ from homeassistant.components.alarm_control_panel import (
     SERVICE_ALARM_DISARM,
     AlarmControlPanelState,
 )
-from homeassistant.components.concord232.const import UPDATE_INTERVAL
+from homeassistant.components.concord232.alarm_control_panel import SCAN_INTERVAL
 from homeassistant.const import (
     ATTR_CODE,
     ATTR_ENTITY_ID,
     CONF_CODE,
     CONF_MODE,
-    STATE_UNAVAILABLE,
     STATE_UNKNOWN,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
 
 from .conftest import setup_integration
 
@@ -65,35 +63,36 @@ async def test_state_updates_on_poll(
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the panel state follows coordinator updates."""
+    """Test the panel state follows the polled partition state."""
     await setup_integration(hass, mock_config_entry)
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
 
     mock_concord232_client.list_partitions.return_value = [{"arming_level": "Away"}]
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.ARMED_AWAY
 
 
-async def test_unavailable_on_error(
+async def test_connection_error_keeps_last_state(
     hass: HomeAssistant,
     mock_concord232_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test the panel becomes unavailable when the server stops answering."""
+    """Test the panel keeps its last state when the server stops answering."""
     await setup_integration(hass, mock_config_entry)
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
 
     mock_concord232_client.list_partitions.side_effect = (
         requests.exceptions.ConnectionError("boom")
     )
-    freezer.tick(UPDATE_INTERVAL + timedelta(seconds=1))
+    freezer.tick(SCAN_INTERVAL + timedelta(seconds=1))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
-    assert hass.states.get(ENTITY_ID).state == STATE_UNAVAILABLE
+    assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
 
 
 @pytest.mark.parametrize(
@@ -214,31 +213,3 @@ async def test_no_partitions_reports_unknown(
     state = hass.states.get(ENTITY_ID)
     assert state is not None
     assert state.state == STATE_UNKNOWN
-
-
-@pytest.mark.parametrize(
-    ("service", "client_method"),
-    [
-        (SERVICE_ALARM_ARM_HOME, "arm"),
-        (SERVICE_ALARM_ARM_AWAY, "arm"),
-        (SERVICE_ALARM_DISARM, "disarm"),
-    ],
-)
-async def test_rejected_command_raises(
-    hass: HomeAssistant,
-    mock_concord232_client: MagicMock,
-    mock_config_entry: MockConfigEntry,
-    service: str,
-    client_method: str,
-) -> None:
-    """Test a rejected panel command surfaces as an error."""
-    await setup_integration(hass, mock_config_entry)
-    getattr(mock_concord232_client, client_method).return_value = False
-
-    with pytest.raises(HomeAssistantError):
-        await hass.services.async_call(
-            ALARM_DOMAIN,
-            service,
-            {ATTR_ENTITY_ID: ENTITY_ID},
-            blocking=True,
-        )

@@ -17,21 +17,12 @@ from tests.common import MockConfigEntry
 def mock_concord232_client_class() -> Generator[MagicMock]:
     """Mock the concord232 Client class.
 
-    One shared mock is patched into every import path, so constructor
-    calls from setup and the config flow are visible on the yielded
-    class mock.
+    The class is patched in the library module itself, so constructor
+    calls from the platforms and the config flow all resolve to the same
+    class mock and share one instance.
     """
     mock_client_class = create_autospec(concord232_client.Client)
-    with (
-        patch(
-            "homeassistant.components.concord232.concord232_client.Client",
-            new=mock_client_class,
-        ),
-        patch(
-            "homeassistant.components.concord232.config_flow.concord232_client.Client",
-            new=mock_client_class,
-        ),
-    ):
+    with patch("concord232.client.Client", new=mock_client_class):
         mock_instance = mock_client_class.return_value
         mock_instance.list_partitions.return_value = [{"arming_level": "Off"}]
         mock_instance.list_zones.return_value = [
