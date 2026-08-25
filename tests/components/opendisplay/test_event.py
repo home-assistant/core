@@ -2,8 +2,10 @@
 
 from unittest.mock import MagicMock
 
+from homeassistant.components.event import ButtonEventType
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.event import async_track_state_change_event
 
 from . import (
     TEST_ADDRESS,
@@ -151,13 +153,24 @@ async def test_button_down_event_fired(
     assert entity_id is not None
     state_before = hass.states.get(entity_id)
 
+    event_types: list[str] = []
+    async_track_state_change_event(
+        hass,
+        entity_id,
+        lambda event: event_types.append(
+            event.data["new_state"].attributes.get("event_type")
+        ),
+    )
+
     # Second advertisement — byte 0: pressed=True, button_id=0 → raw=0x80
     inject_bluetooth_service_info(hass, make_v1_service_info(b"\x80" + b"\x00" * 10))
     await hass.async_block_till_done()
 
+    assert event_types == ["button_down", ButtonEventType.PRESS_START]
+
     state_after = hass.states.get(entity_id)
     assert state_after is not None
-    assert state_after.attributes.get("event_type") == "button_down"
+    assert state_after.attributes.get("event_type") == ButtonEventType.PRESS_START
     assert state_before != state_after
 
 
@@ -180,13 +193,24 @@ async def test_button_up_event_fired(
     inject_bluetooth_service_info(hass, make_v1_service_info(b"\x80" + b"\x00" * 10))
     await hass.async_block_till_done()
 
+    event_types: list[str] = []
+    async_track_state_change_event(
+        hass,
+        entity_id,
+        lambda event: event_types.append(
+            event.data["new_state"].attributes.get("event_type")
+        ),
+    )
+
     # Transition to released (pressed=False, button_id=0 → raw=0x00)
     inject_bluetooth_service_info(hass, make_v1_service_info())
     await hass.async_block_till_done()
 
+    assert event_types == ["button_up", ButtonEventType.PRESS_END]
+
     state = hass.states.get(entity_id)
     assert state is not None
-    assert state.attributes.get("event_type") == "button_up"
+    assert state.attributes.get("event_type") == ButtonEventType.PRESS_END
 
 
 async def test_no_event_for_wrong_button_id(

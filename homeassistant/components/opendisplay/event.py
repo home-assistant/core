@@ -4,6 +4,7 @@ from dataclasses import dataclass
 from typing import override
 
 from homeassistant.components.event import (
+    ButtonEventType,
     EventDeviceClass,
     EventEntity,
     EventEntityDescription,
@@ -16,6 +17,11 @@ from . import OpenDisplayConfigEntry
 from .entity import OpenDisplayEntity
 
 PARALLEL_UPDATES = 0
+
+_EVENT_TYPE_MAP = {
+    "button_down": ButtonEventType.PRESS_START,
+    "button_up": ButtonEventType.PRESS_END,
+}
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -46,7 +52,8 @@ async def async_setup_entry(
                         translation_key="button",
                         translation_placeholders={"number": str(button_number)},
                         device_class=EventDeviceClass.BUTTON,
-                        event_types=["button_down", "button_up"],
+                        # Non-standard event types are deprecated; can be removed on 2027.1
+                        event_types=[*_EVENT_TYPE_MAP, *_EVENT_TYPE_MAP.values()],
                         byte_index=bi.button_data_byte_index,
                         button_id=button_id,
                     )
@@ -82,12 +89,15 @@ class OpenDisplayEventEntity(OpenDisplayEntity, EventEntity):
         """Fire events for button transitions reported by this coordinator update."""
         data = self.coordinator.data
         if data is not None and data is not self._last_processed_data:
+            self._last_processed_data = data
             for event in data.button_events:
                 if (
                     event.byte_index == self.entity_description.byte_index
                     and event.button_id == self.entity_description.button_id
-                    and event.event_type in self.event_types
+                    and event.event_type in _EVENT_TYPE_MAP
                 ):
+                    # Non-standard event types are deprecated; can be removed on 2027.1
                     self._trigger_event(event.event_type)
-            self._last_processed_data = data
-            self.async_write_ha_state()
+                    self.async_write_ha_state()
+                    self._trigger_event(_EVENT_TYPE_MAP[event.event_type])
+                    self.async_write_ha_state()
