@@ -276,12 +276,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
         removed_regions = set(self.data[CONF_REGIONS]) - set(user_input[CONF_REGIONS])
 
         for region in removed_regions:
-            if device := device_registry.async_get_device(
-                identifiers={(DOMAIN, region)}
+            if device := device_registry.async_get_device_by_identifier(
+                (DOMAIN, region), self.config_entry.entry_id
             ):
-                device_registry.async_update_device(
-                    device.id, remove_config_entry_id=self.config_entry.entry_id
-                )
+                device_registry.async_remove_device(device.id)
 
     async def remove_unused_entities(self, user_input: dict[str, Any]) -> None:
         """Remove entities which are not used anymore."""

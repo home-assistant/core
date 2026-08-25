@@ -29,13 +29,12 @@ def async_get_client_for_service_call(
 ) -> OctoprintClient:
     """Get the client related to a service call (by device ID)."""
     device_id = call.data[CONF_DEVICE_ID]
-    device_registry = dr.async_get(hass)
 
-    if device_entry := device_registry.async_get(device_id):
-        for entry_id in device_entry.config_entries:
-            if entry := hass.config_entries.async_get_entry(entry_id):
-                if entry.domain == DOMAIN and entry.state is ConfigEntryState.LOADED:
-                    return cast(OctoprintConfigEntry, entry).runtime_data.octoprint
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device_id, domain=DOMAIN
+    )
+    if config_entry is not None and config_entry.state is ConfigEntryState.LOADED:
+        return cast(OctoprintConfigEntry, config_entry).runtime_data.octoprint
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
