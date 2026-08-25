@@ -14,14 +14,14 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
 from .const import (
-    ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
     CONF_REGIONS,
+    DEFAULT_AREA_FILTER,
+    DEFAULT_HEADLINE_FILTER,
     DOMAIN,
     LOGGER,
-    NO_MATCH_REGEX,
     SCAN_INTERVAL,
 )
 
@@ -63,8 +63,10 @@ class NINADataUpdateCoordinator(
         self._nina: Nina = Nina(async_get_clientsession(hass))
 
         filters = config_entry.options.get(CONF_FILTERS, {})
-        self.headline_filter: str = filters.get(CONF_HEADLINE_FILTER, NO_MATCH_REGEX)
-        self.area_filter: str = filters.get(CONF_AREA_FILTER, ALL_MATCH_REGEX)
+        self.headline_filter: str = filters.get(
+            CONF_HEADLINE_FILTER, DEFAULT_HEADLINE_FILTER
+        )
+        self.area_filter: str = filters.get(CONF_AREA_FILTER, DEFAULT_AREA_FILTER)
 
         regions: dict[str, str] = config_entry.data[CONF_REGIONS]
         for region in regions:
