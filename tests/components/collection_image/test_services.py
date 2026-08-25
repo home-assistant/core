@@ -1,4 +1,4 @@
-"""Tests for the Collection Image integration."""
+"""Tests for the Collection Image integration services."""
 
 from pathlib import Path
 from unittest.mock import AsyncMock, patch
