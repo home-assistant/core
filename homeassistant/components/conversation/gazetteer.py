@@ -21,7 +21,8 @@ do.
 
 import asyncio
 from collections import OrderedDict
-from collections.abc import Sequence
+from collections.abc import AsyncIterator, Sequence
+from contextlib import asynccontextmanager
 from functools import partial
 from typing import Any
 
@@ -186,6 +187,61 @@ def async_targets_from_intent(
     return ()
 
 
+class _HomeLock:
+    """Many interpretations at once, or one rebuild, never both.
+
+    `set_home` swaps the tagger and the gazetteer under a matcher that other requests
+    may be reading from an executor thread. Interpreting is read-only, so any number
+    can run together; rebuilding needs the matcher to itself.
+
+    A waiting rebuild also holds off new interpretations, so a steady stream of
+    utterances cannot leave the home stale indefinitely. Rebuilds only follow registry
+    changes, so there is no matching risk the other way.
+    """
+
+    def __init__(self) -> None:
+        """Initialize with nothing held."""
+        self._condition = asyncio.Condition()
+        self._readers = 0
+        self._writing = False
+        self._writers_waiting = 0
+
+    @asynccontextmanager
+    async def read(self) -> AsyncIterator[None]:
+        """Hold off a rebuild for as long as this interpretation runs."""
+        async with self._condition:
+            await self._condition.wait_for(
+                lambda: not self._writing and not self._writers_waiting
+            )
+            self._readers += 1
+        try:
+            yield
+        finally:
+            async with self._condition:
+                self._readers -= 1
+                if not self._readers:
+                    self._condition.notify_all()
+
+    @asynccontextmanager
+    async def write(self) -> AsyncIterator[None]:
+        """Take the matcher exclusively, once the interpretations in flight finish."""
+        async with self._condition:
+            self._writers_waiting += 1
+            try:
+                await self._condition.wait_for(
+                    lambda: not self._writing and not self._readers
+                )
+            finally:
+                self._writers_waiting -= 1
+            self._writing = True
+        try:
+            yield
+        finally:
+            async with self._condition:
+                self._writing = False
+                self._condition.notify_all()
+
+
 class GazetteerFallback:
     """The matcher, kept in step with the home it resolves names against."""
 
@@ -193,7 +249,7 @@ class GazetteerFallback:
         """Initialize the fallback without loading anything yet."""
         self.hass = hass
         self._matcher: GazetteerMatcher | None = None
-        self._build_lock = asyncio.Lock()
+        self._lock = _HomeLock()
         self._stale = False
         self._previous_targets: OrderedDict[str, tuple[TargetReference, ...]] = (
             OrderedDict()
@@ -214,7 +270,13 @@ class GazetteerFallback:
         conversation_id: str,
         area: ar.AreaEntry | None,
     ) -> tuple[GazetteerMatcher, Interpretation]:
-        """Interpret text, returning it with the matcher that read it."""
+        """Interpret text, returning it with the matcher that read it.
+
+        The matcher is settled before the read lock is taken rather than under it,
+        because a rebuild needs the lock exclusively and no lock can be upgraded.
+        A rebuild that starts in between simply runs first; this then interprets
+        against its result, which is newer than expected but never half-swapped.
+        """
         matcher = await self._async_get_matcher()
         interpret = partial(
             matcher.interpret,
@@ -222,18 +284,19 @@ class GazetteerFallback:
             previous_targets=self._previous_targets.get(conversation_id, ()),
         )
 
-        try:
-            result = await self.hass.async_add_executor_job(
-                partial(
-                    interpret,
-                    context_area=area.id if area else None,
-                    context_floor=area.floor_id if area else None,
+        async with self._lock.read():
+            try:
+                result = await self.hass.async_add_executor_job(
+                    partial(
+                        interpret,
+                        context_area=area.id if area else None,
+                        context_floor=area.floor_id if area else None,
+                    )
                 )
-            )
-        except ValueError:
-            # The registries moved on from the snapshot mid-request. The sentence is
-            # still worth trying unplaced; the shapes needing a room refuse on their own.
-            result = await self.hass.async_add_executor_job(interpret)
+            except ValueError:
+                # The registries moved on from the snapshot mid-request. The sentence
+                # is still worth trying unplaced; shapes needing a room refuse anyway.
+                result = await self.hass.async_add_executor_job(interpret)
 
         return matcher, result
 
@@ -256,7 +319,11 @@ class GazetteerFallback:
         milliseconds at a few hundred entities, and a fifth of a second at a few
         thousand -- so it goes to the executor whether the matcher is new or not.
         """
-        async with self._build_lock:
+        if self._matcher is not None and not self._stale:
+            # Nothing to do, and taking the lock would shut out other interpretations.
+            return self._matcher
+
+        async with self._lock.write():
             if self._matcher is None:
                 self._matcher = await self.hass.async_add_executor_job(
                     partial(GazetteerMatcher, home=async_build_home(self.hass))
