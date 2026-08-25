@@ -8,7 +8,7 @@ from dataclasses import asdict, dataclass, field, replace
 from datetime import datetime
 import logging
 from pathlib import Path
-from typing import Any, Literal, TypedDict, cast
+from typing import Any, Literal, TypedDict, cast, Union, TypeAlias
 
 import voluptuous as vol
 
@@ -308,7 +308,7 @@ class ToolResultContent:
         }
 
 
-type Content = SystemContent | UserContent | AssistantContent | ToolResultContent
+Content: TypeAlias = Union[SystemContent, UserContent, AssistantContent, ToolResultContent]
 
 
 class AssistantContentDeltaDict(TypedDict, total=False):
@@ -525,14 +525,16 @@ class ChatLog:
                         )
                     current_native = delta_native
                 if delta_tool_calls := assistant_delta.get("tool_calls"):
+                    # If no LLM API is configured, mark all tool calls as external
+                    # to avoid trying to execute them.
+                    if self.llm_api is None:
+                        for tool_call in delta_tool_calls:
+                            tool_call.external = True
                     current_tool_calls += delta_tool_calls
 
                     # Start processing the tool calls as soon as we know about them
                     for tool_call in delta_tool_calls:
                         if not tool_call.external:
-                            if self.llm_api is None:
-                                raise ValueError("No LLM API configured")
-
                             tool_call_tasks[tool_call.id] = self.hass.async_create_task(
                                 self.llm_api.async_call_tool(tool_call),
                                 name=f"llm_tool_{tool_call.id}",
