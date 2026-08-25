@@ -5,9 +5,9 @@ from collections.abc import Callable
 from dataclasses import dataclass, field as dc_field
 from typing import Any, override
 
+from probatio import UNSUPPORTED, to_openapi
 import slugify as unicode_slug
 import voluptuous as vol
-from voluptuous_openapi import UNSUPPORTED, convert
 
 from homeassistant.const import (
     ATTR_DOMAIN,
@@ -434,10 +434,10 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         }
 
     if isinstance(schema, selector.ConditionSelector):
-        return convert(cv.CONDITIONS_SCHEMA)
+        return to_openapi(cv.CONDITIONS_SCHEMA)
 
     if isinstance(schema, selector.ConstantSelector):
-        return convert(vol.Schema(schema.config["value"]))
+        return to_openapi(vol.Schema(schema.config["value"]))
 
     result: dict[str, Any]
     if isinstance(schema, selector.ColorTempSelector):
@@ -464,7 +464,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "format": "date-time"}
 
     if isinstance(schema, selector.DurationSelector):
-        return convert(cv.time_period_dict)
+        return to_openapi(cv.time_period_dict)
 
     if isinstance(schema, selector.EntitySelector):
         if schema.config.get("multiple"):
@@ -478,10 +478,10 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "format": "RFC 5646"}
 
     if isinstance(schema, selector.LocationSelector):
-        return convert(schema.DATA_SCHEMA)
+        return to_openapi(schema.DATA_SCHEMA)
 
     if isinstance(schema, selector.MediaSelector):
-        item_schema = convert(schema.DATA_SCHEMA)
+        item_schema = to_openapi(schema.DATA_SCHEMA)
         # Media selector allows multiple when configured
         if schema.config.get("multiple"):
             return {
@@ -504,7 +504,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
             properties = {}
             required = []
             for field, field_schema in fields.items():
-                properties[field] = convert(
+                properties[field] = to_openapi(
                     selector.selector(field_schema["selector"]),
                     custom_serializer=selector_serializer,
                 )
@@ -536,7 +536,7 @@ def selector_serializer(schema: Any) -> Any:  # noqa: C901
         return {"type": "string", "enum": options}
 
     if isinstance(schema, selector.TargetSelector):
-        return convert(cv.TARGET_FIELDS)
+        return to_openapi(cv.TARGET_FIELDS)
 
     if isinstance(schema, selector.TemplateSelector):
         return {"type": "string", "format": "jinja2"}
