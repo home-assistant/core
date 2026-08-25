@@ -2,6 +2,7 @@
 
 import logging
 from typing import TYPE_CHECKING, Any
+from typing import override
 
 from pyhausbus.de.hausbus.homeassistant.proxy.Rollladen import Rollladen
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Configuration import (
@@ -76,27 +77,32 @@ class HausbusCover(HausbusEntity, CoverEntity):
         self._position: int | None = None
 
     @property
+    @override
     def current_cover_position(self) -> int | None:
         """Actual position as percent (0 = closed, 100 = open)."""
         return self._position
 
     @property
+    @override
     def is_closed(self) -> bool | None:
         """Return true if cover is closed."""
         if self._position is None:
             return None
         return self._position == 0
 
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the cover."""
         _LOGGER.debug("opening cover %s", self._debug_identifier)
         await self.hass.async_add_executor_job(self._channel.start, EDirection.TO_OPEN)
 
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the cover."""
         _LOGGER.debug("closing cover %s", self._debug_identifier)
         await self.hass.async_add_executor_job(self._channel.start, EDirection.TO_CLOSE)
 
+    @override
     async def async_stop_cover(self, **kwargs: Any) -> None:
         """Stop the cover movement."""
         _LOGGER.debug("stop cover %s", self._debug_identifier)
@@ -105,6 +111,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
         self._attr_is_closing = False
         self.async_write_ha_state()
 
+    @override
     async def async_set_cover_position(self, **kwargs: Any) -> None:
         """Move cover to the given position."""
         position = kwargs[ATTR_POSITION]
@@ -116,6 +123,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
         )
 
     @callback
+    @override
     def handle_event(self, data: Any) -> None:
         """Handle haus-bus cover events."""
         super().handle_event(data)
