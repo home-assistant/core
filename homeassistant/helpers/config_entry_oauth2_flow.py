@@ -27,9 +27,9 @@ import voluptuous as vol
 from yarl import URL
 
 from homeassistant import config_entries
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant, callback
 from homeassistant.exceptions import (
-    HomeAssistantError,
+    ConfigEntryNotReady,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
@@ -67,8 +67,19 @@ OAUTH_AUTHORIZE_URL_TIMEOUT_SEC = 30
 OAUTH_TOKEN_TIMEOUT_SEC = 30
 
 
-class ImplementationUnavailableError(HomeAssistantError):
-    """Raised when an underlying implementation is unavailable."""
+class ImplementationUnavailableError(ConfigEntryNotReady):
+    """Raised when an underlying implementation is unavailable.
+
+    Subclasses ConfigEntryNotReady so integrations can let it bubble out of
+    async_setup_entry instead of translating it themselves.
+    """
+
+    def __init__(self, *args: object) -> None:
+        """Initialize the error."""
+        super().__init__(*args)
+        self.translation_domain = HOMEASSISTANT_DOMAIN
+        self.translation_key = "oauth2_implementation_unavailable"
+        self.generate_message = True
 
 
 @callback

@@ -4,7 +4,6 @@ from aiolyric import Lyric
 
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ConfigEntryNotReady
 from homeassistant.helpers import (
     aiohttp_client,
     config_entry_oauth2_flow,
@@ -28,17 +27,11 @@ PLATFORMS = [Platform.BINARY_SENSOR, Platform.CLIMATE, Platform.SELECT, Platform
 
 async def async_setup_entry(hass: HomeAssistant, entry: LyricConfigEntry) -> bool:
     """Set up Honeywell Lyric from a config entry."""
-    try:
-        implementation = (
-            await config_entry_oauth2_flow.async_get_config_entry_implementation(
-                hass, entry
-            )
+    implementation = (
+        await config_entry_oauth2_flow.async_get_config_entry_implementation(
+            hass, entry
         )
-    except config_entry_oauth2_flow.ImplementationUnavailableError as err:
-        raise ConfigEntryNotReady(
-            translation_domain=DOMAIN,
-            translation_key="oauth2_implementation_unavailable",
-        ) from err
+    )
     if not isinstance(implementation, LyricLocalOAuth2Implementation):
         raise TypeError("Unexpected auth implementation; can't find oauth client id")
 

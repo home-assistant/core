@@ -6,7 +6,7 @@ import json
 from youtubeaio.models import YouTubeChannel, YouTubePlaylistItem, YouTubeSubscription
 from youtubeaio.types import AuthScope
 
-from homeassistant.components.youtube import DOMAIN
+from homeassistant.components.youtube.const import DOMAIN
 from homeassistant.core import HomeAssistant
 
 from tests.common import async_load_fixture
