@@ -9,11 +9,7 @@ import voluptuous as vol
 from homeassistant.const import ATTR_DEVICE_ID, CONF_PIN
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    service,
-)
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import ATTR_BONUS_TIME, DOMAIN
 from .coordinator import NintendoParentalControlsConfigEntry
@@ -60,17 +56,10 @@ def async_setup_services(
 
 def _get_nintendo_device(hass: HomeAssistant, device_id: str) -> Device:
     """Get the Nintendo device from a device ID."""
-    config_entry: NintendoParentalControlsConfigEntry | None
-    device = dr.async_get(hass).async_get(device_id)
-    if device is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="device_not_found",
-        )
-    for entry_id in device.config_entries:
-        config_entry = hass.config_entries.async_get_entry(entry_id)
-        if config_entry is not None and config_entry.domain == DOMAIN:
-            break
+    config_entry: NintendoParentalControlsConfigEntry
+    device, config_entry = service.async_get_device_and_config_entry(
+        hass, DOMAIN, device_id
+    )
     nintendo_device_id = None
     for identifier in device.identifiers:
         if identifier[0] == DOMAIN:
@@ -78,7 +67,6 @@ def _get_nintendo_device(hass: HomeAssistant, device_id: str) -> Device:
             break
     if (
         nintendo_device_id
-        and config_entry
         and nintendo_device_id in config_entry.runtime_data.api.devices
     ):
         return config_entry.runtime_data.api.devices[nintendo_device_id]

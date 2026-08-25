@@ -220,14 +220,13 @@ async def async_setup_template_platform(
     # Trigger Configuration
     if "coordinator" in discovery_info:
         if trigger_entity_cls:
-            trigger_entities = [
+            if trigger_entities := [
                 trigger_entity_cls(hass, discovery_info["coordinator"], entity_config)
                 for entity_config in discovery_info["entities"]
                 if await validate_actions_and_conditions_config(
                     hass, entity_config, script_options
                 )
-            ]
-            if trigger_entities:
+            ]:
                 async_add_entities(trigger_entities)
         else:
             raise PlatformNotReady(
