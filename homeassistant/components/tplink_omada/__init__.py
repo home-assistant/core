@@ -56,20 +56,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: OmadaConfigEntry) -> boo
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN,
             translation_key="auth_failed",
-            translation_placeholders={"error": str(ex)},
         ) from ex
     except ConnectionFailed as ex:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="cannot_connect",
-            translation_placeholders={"error": str(ex)},
         ) from ex
 
     except OmadaClientException as ex:
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
             translation_key="unexpected_error",
-            translation_placeholders={"error": str(ex)},
         ) from ex
 
     site_client = await client.get_site_client(OmadaSite("", entry.data[CONF_SITE]))

@@ -65,7 +65,6 @@ class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
             raise UpdateFailed(
                 translation_domain=DOMAIN,
                 translation_key="api_error",
-                translation_placeholders={"error": str(err)},
             ) from err
 
     async def poll_update(self) -> dict[str, _T]:
