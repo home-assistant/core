@@ -105,8 +105,11 @@ def test_run_does_not_block_forever_with_shielded_task(
     test_dir = tmpdir.mkdir("config")
     default_config = runner.RuntimeConfig(test_dir)
     tasks = []
+    shielded_inner_task: asyncio.Task | None = None
 
     async def _async_create_tasks(*_):
+        nonlocal shielded_inner_task
+
         async def async_raise(*_):
             try:
                 await asyncio.sleep(2)
@@ -119,7 +122,8 @@ def test_run_does_not_block_forever_with_shielded_task(
             except asyncio.CancelledError:
                 await asyncio.sleep(2)
 
-        tasks.append(asyncio.ensure_future(asyncio.shield(async_shielded())))
+        shielded_inner_task = asyncio.ensure_future(async_shielded())
+        tasks.append(asyncio.ensure_future(asyncio.shield(shielded_inner_task)))
         tasks.append(asyncio.ensure_future(asyncio.sleep(2)))
         tasks.append(asyncio.ensure_future(async_raise()))
         await asyncio.sleep(0)
@@ -137,6 +141,12 @@ def test_run_does_not_block_forever_with_shielded_task(
     assert (
         "Task could not be canceled and was still running after shutdown" in caplog.text
     )
+
+    # runner.run() deliberately abandons the shielded inner task after timeout.
+    # Suppress the asyncio GC warning so it doesn't fire nondeterministically
+    # during a later test's log-capture window.
+    assert shielded_inner_task is not None
+    shielded_inner_task._log_destroy_pending = False
 
 
 async def test_unhandled_exception_traceback(
