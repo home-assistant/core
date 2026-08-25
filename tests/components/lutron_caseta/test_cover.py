@@ -17,7 +17,7 @@ from homeassistant.const import ATTR_ENTITY_ID, ATTR_SUPPORTED_FEATURES, STATE_U
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
-from . import MockBridge, async_setup_integration
+from . import MockBridge, MockBridgeWithOpenCloseStopCover, async_setup_integration
 
 
 @pytest.fixture
@@ -306,11 +306,9 @@ async def test_cover_startup_with_shade_in_motion(
     mock_instance.stop_cover.assert_called_with("802")
 
 
-async def test_open_close_stop_cover_supported_features(
-    hass: HomeAssistant, entity_registry: er.EntityRegistry
-) -> None:
+async def test_open_close_stop_cover_supported_features(hass: HomeAssistant) -> None:
     """Test an OpenCloseStop zone exposes open/close/stop but not set_position."""
-    await async_setup_integration(hass, MockBridge)
+    await async_setup_integration(hass, MockBridgeWithOpenCloseStopCover)
 
     cover_entity_id = "cover.basement_bedroom_basement_bedroom_armor_screen"
     state = hass.states.get(cover_entity_id)
@@ -325,14 +323,34 @@ async def test_open_close_stop_cover_supported_features(
     assert ATTR_CURRENT_POSITION not in state.attributes
 
 
+@pytest.fixture
+async def mock_open_close_stop_bridge(hass: HomeAssistant) -> MockBridge:
+    """Set up a bridge exposing an OpenCloseStop cover with mocked methods."""
+    instance = MockBridgeWithOpenCloseStopCover()
+
+    def factory(*args: Any, **kwargs: Any) -> MockBridge:
+        """Return the mock bridge instance."""
+        return instance
+
+    instance.set_value = AsyncMock()
+    instance.raise_cover = AsyncMock()
+    instance.lower_cover = AsyncMock()
+    instance.stop_cover = AsyncMock()
+
+    await async_setup_integration(hass, factory)
+    await hass.async_block_till_done()
+
+    return instance
+
+
 async def test_open_close_stop_cover_uses_raise_lower(
-    hass: HomeAssistant, mock_bridge_with_cover_mocks: MockBridge
+    hass: HomeAssistant, mock_open_close_stop_bridge: MockBridge
 ) -> None:
     """Test an OpenCloseStop zone uses Raise/Lower rather than set_value.
 
     These zones do not accept a level, so set_value must not be used.
     """
-    mock_instance = mock_bridge_with_cover_mocks
+    mock_instance = mock_open_close_stop_bridge
     cover_entity_id = "cover.basement_bedroom_basement_bedroom_armor_screen"
 
     await hass.services.async_call(
