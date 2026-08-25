@@ -32,7 +32,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
 
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except Exception:
+    except BaseException:
         gateway.home_server.removeBusEventListener(gateway)
         gateway.home_server.removeBusDeviceListener(gateway)
         await hass.async_add_executor_job(gateway.home_server.shutdown)
