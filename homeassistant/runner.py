@@ -176,6 +176,12 @@ class RuntimeConfig:
 def create_event_loop(debug: bool = False) -> asyncio.AbstractEventLoop:
     """Create the Home Assistant event loop."""
     loop: asyncio.AbstractEventLoop = asyncio.EventLoop()
+    configure_event_loop(loop, debug)
+    return loop
+
+
+def configure_event_loop(loop: asyncio.AbstractEventLoop, debug: bool = False) -> None:
+    """Apply the Home Assistant configuration to an event loop."""
     loop.set_exception_handler(_async_loop_exception_handler)
     if debug:
         loop.set_debug(True)
@@ -191,7 +197,6 @@ def create_event_loop(debug: bool = False) -> asyncio.AbstractEventLoop:
     # overhead of the additional method call since its the most called loop
     # method and its roughly 10%+ of all the call time in base_events.py
     loop.time = monotonic  # type: ignore[method-assign]
-    return loop
 
 
 @callback

@@ -1,7 +1,6 @@
 """Set up some common test helper things."""
 
 import asyncio
-from asyncio import AbstractEventLoop
 from collections.abc import AsyncGenerator, Callable, Coroutine, Generator
 from contextlib import AsyncExitStack, asynccontextmanager, contextmanager
 import datetime
@@ -38,7 +37,6 @@ import freezegun
 import multidict
 import pytest
 import pytest_asyncio
-from pytest_asyncio.plugin import LoopFactory
 import pytest_socket
 import requests_mock
 import respx
@@ -152,22 +150,6 @@ _LOGGER = logging.getLogger(__name__)
 
 logging.basicConfig(level=logging.INFO)
 logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO)
-
-
-def pytest_asyncio_loop_factories() -> dict[str, Callable[[], AbstractEventLoop]]:
-    """Build every test loop the way Home Assistant builds its own."""
-    return {"homeassistant": runner.create_event_loop}
-
-
-@pytest.fixture(scope="session", autouse=True)
-def _asyncio_loop_factory(request: pytest.FixtureRequest) -> LoopFactory:
-    """Cover the runners pytest_asyncio_loop_factories does not reach.
-
-    pytest-asyncio only parametrizes the factory for async tests, so a
-    synchronous test pulling in an async fixture would otherwise build that
-    fixture's runner with a stock loop.
-    """
-    return getattr(request, "param", None) or runner.create_event_loop
 
 
 # Capture the real socket functions before any test patches them
@@ -398,6 +380,12 @@ def long_repr_strings() -> Generator[None]:
     finally:
         arepr.maxstring = original_maxstring
         arepr.maxother = original_maxother
+
+
+@pytest.fixture(autouse=True)
+async def configure_event_loop() -> None:
+    """Configure the loop the way Home Assistant configures its own."""
+    runner.configure_event_loop(asyncio.get_running_loop())
 
 
 @pytest.fixture(autouse=True)
