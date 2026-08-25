@@ -2988,6 +2988,10 @@ async def test_platform_state_fail_to_add(
     assert ent._platform_state is entity.EntityPlatformState.REMOVED
     assert ent.hass is None
     assert ent.platform is None
+    # The partial registration is rolled back: the reserved state id is released
+    # and no internal source data leaks.
+    assert hass.states.async_available("test.test")
+    assert "test.test" not in entity.entity_sources(hass)
 
     # Removing the registry entry of the aborted entity is a clean no-op
     entity_registry.async_remove(entry.entity_id)
