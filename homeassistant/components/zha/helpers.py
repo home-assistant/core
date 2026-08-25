@@ -1034,9 +1034,23 @@ class ZHAGatewayProxy(EventBase):
                 await asyncio.wait(remove_tasks)
 
         device_registry = dr.async_get(self.hass)
+        entity_registry = er.async_get(self.hass)
+
         reg_device = device_registry.async_get(device.device_id)
         if reg_device is not None:
+            entities_to_cleanup = [
+                entry.entity_id
+                for entry in er.async_entries_for_device(
+                    entity_registry, reg_device.id, include_disabled_entities=True
+                )
+                if entry.platform == DOMAIN
+            ]
+
             device_registry.async_remove_device(reg_device.id)
+
+            for entity_id in entities_to_cleanup:
+                if entity_registry.async_get(entity_id) is not None:
+                    entity_registry.async_remove(entity_id)
 
 
 @callback
