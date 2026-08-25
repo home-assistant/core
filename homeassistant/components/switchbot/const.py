@@ -235,7 +235,6 @@ DEFAULT_LOCK_NIGHTLATCH = False
 DEFAULT_CURTAIN_SPEED = 255
 CURTAIN_SPEED_MIN = 0
 CURTAIN_SPEED_MAX = 255
-DEFAULT_ROLLER_SHADE_QUIET_MODE = False
 
 # Config Options
 CONF_RETRY_COUNT = "retry_count"
@@ -243,7 +242,14 @@ CONF_KEY_ID = "key_id"
 CONF_ENCRYPTION_KEY = "encryption_key"
 CONF_LOCK_NIGHTLATCH = "lock_force_nightlatch"
 CONF_CURTAIN_SPEED = "curtain_speed"
-CONF_ROLLER_SHADE_QUIET_MODE = "roller_shade_quiet_mode"
+
+# Roller shade motor modes, exposed as cover speeds
+ROLLER_SHADE_SPEED_PERFORMANCE = "performance"
+ROLLER_SHADE_SPEED_QUIET = "quiet"
+ROLLER_SHADE_SPEED_TO_MODE = {
+    ROLLER_SHADE_SPEED_PERFORMANCE: 0,
+    ROLLER_SHADE_SPEED_QUIET: 1,
+}
 
 AIRPURIFIER_BASIC_MODELS = {
     SwitchbotModel.AIR_PURIFIER_JP,

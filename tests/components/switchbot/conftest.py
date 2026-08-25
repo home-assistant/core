@@ -7,10 +7,8 @@ from homeassistant.components.switchbot.const import (
     CONF_ENCRYPTION_KEY,
     CONF_KEY_ID,
     CONF_RETRY_COUNT,
-    CONF_ROLLER_SHADE_QUIET_MODE,
     DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
-    DEFAULT_ROLLER_SHADE_QUIET_MODE,
     DOMAIN,
     SupportedModels,
 )
@@ -29,11 +27,9 @@ def mock_entry_factory():
     """Fixture to create a MockConfigEntry with a customizable sensor type."""
 
     def _create_entry(sensor_type: str = "curtain") -> MockConfigEntry:
-        options: dict[str, int | bool] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
+        options: dict[str, int] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
         if sensor_type == SupportedModels.CURTAIN:
             options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
-        if sensor_type == SupportedModels.ROLLER_SHADE:
-            options[CONF_ROLLER_SHADE_QUIET_MODE] = DEFAULT_ROLLER_SHADE_QUIET_MODE
         return MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -43,7 +39,7 @@ def mock_entry_factory():
             },
             unique_id="aabbccddeeff",
             version=1,
-            minor_version=3,
+            minor_version=2,
             options=options,
         )
 
@@ -55,11 +51,9 @@ def mock_entry_encrypted_factory():
     """Create a MockConfigEntry with encryption key and sensor type."""
 
     def _create_entry(sensor_type: str = "lock") -> MockConfigEntry:
-        options: dict[str, int | bool] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
+        options: dict[str, int] = {CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT}
         if sensor_type == SupportedModels.CURTAIN:
             options[CONF_CURTAIN_SPEED] = DEFAULT_CURTAIN_SPEED
-        if sensor_type == SupportedModels.ROLLER_SHADE:
-            options[CONF_ROLLER_SHADE_QUIET_MODE] = DEFAULT_ROLLER_SHADE_QUIET_MODE
         return MockConfigEntry(
             domain=DOMAIN,
             data={
@@ -71,7 +65,7 @@ def mock_entry_encrypted_factory():
             },
             unique_id="aabbccddeeff",
             version=1,
-            minor_version=3,
+            minor_version=2,
             options=options,
         )
 

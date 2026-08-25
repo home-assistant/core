@@ -11,15 +11,18 @@ from homeassistant.components.cover import (
     ATTR_CURRENT_POSITION,
     ATTR_CURRENT_TILT_POSITION,
     ATTR_POSITION,
+    ATTR_SPEED,
     ATTR_TILT_POSITION,
     DOMAIN as COVER_DOMAIN,
+    CoverEntityCapabilityAttribute,
     CoverState,
 )
 from homeassistant.components.switchbot.const import (
     CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
-    CONF_ROLLER_SHADE_QUIET_MODE,
     DEFAULT_RETRY_COUNT,
+    ROLLER_SHADE_SPEED_PERFORMANCE,
+    ROLLER_SHADE_SPEED_QUIET,
 )
 from homeassistant.const import (
     ATTR_ENTITY_ID,
@@ -33,7 +36,7 @@ from homeassistant.const import (
     SERVICE_STOP_COVER_TILT,
 )
 from homeassistant.core import HomeAssistant, State
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 
 from . import (
     GARAGE_DOOR_OPENER_SERVICE_INFO,
@@ -45,6 +48,8 @@ from . import (
 
 from tests.common import MockConfigEntry, mock_restore_cache
 from tests.components.bluetooth import inject_bluetooth_service_info
+
+ROLLER_SHADE_ENTITY_ID = "cover.test_name"
 
 
 async def test_curtain3_setup(
@@ -585,34 +590,28 @@ async def test_roller_shade_controlling(
 
 
 @pytest.mark.parametrize(
-    ("quiet_mode", "expected_mode"),
-    [(False, 0), (True, 1)],
+    ("speed", "expected_mode"),
+    [
+        pytest.param(ROLLER_SHADE_SPEED_PERFORMANCE, 0, id="performance"),
+        pytest.param(ROLLER_SHADE_SPEED_QUIET, 1, id="quiet"),
+    ],
 )
-async def test_roller_shade_quiet_mode_controlling(
+async def test_roller_shade_speed(
     hass: HomeAssistant,
     mock_entry_factory: Callable[[str], MockConfigEntry],
-    quiet_mode: bool,
+    speed: str,
     expected_mode: int,
 ) -> None:
-    """Test Roller Shade controlling forwards the configured quiet mode."""
+    """Test the roller shade forwards the requested speed as a motor mode."""
     inject_bluetooth_service_info(hass, ROLLER_SHADE_SERVICE_INFO)
 
     entry = mock_entry_factory(sensor_type="roller_shade")
     entry.add_to_hass(hass)
 
-    hass.config_entries.async_update_entry(
-        entry,
-        options={
-            CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
-            CONF_ROLLER_SHADE_QUIET_MODE: quiet_mode,
-        },
-    )
-
-    info = {"battery": 39}
     with (
         patch(
-            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.get_basic_info",
-            new=AsyncMock(return_value=info),
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.update",
+            new=AsyncMock(return_value=True),
         ),
         patch(
             "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.open",
@@ -630,31 +629,100 @@ async def test_roller_shade_quiet_mode_controlling(
         assert await hass.config_entries.async_setup(entry.entry_id)
         await hass.async_block_till_done()
 
-        entity_id = "cover.test_name"
+        state = hass.states.get(ROLLER_SHADE_ENTITY_ID)
+        assert state.attributes[CoverEntityCapabilityAttribute.SUPPORTED_SPEEDS] == [
+            ROLLER_SHADE_SPEED_PERFORMANCE,
+            ROLLER_SHADE_SPEED_QUIET,
+        ]
 
         await hass.services.async_call(
-            COVER_DOMAIN, SERVICE_OPEN_COVER, {ATTR_ENTITY_ID: entity_id}, blocking=True
+            COVER_DOMAIN,
+            SERVICE_OPEN_COVER,
+            {ATTR_ENTITY_ID: ROLLER_SHADE_ENTITY_ID, ATTR_SPEED: speed},
+            blocking=True,
         )
-        await hass.async_block_till_done()
         mock_open.assert_awaited_once_with(expected_mode)
 
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_CLOSE_COVER,
-            {ATTR_ENTITY_ID: entity_id},
+            {ATTR_ENTITY_ID: ROLLER_SHADE_ENTITY_ID, ATTR_SPEED: speed},
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_close.assert_awaited_once_with(expected_mode)
 
         await hass.services.async_call(
             COVER_DOMAIN,
             SERVICE_SET_COVER_POSITION,
-            {ATTR_ENTITY_ID: entity_id, ATTR_POSITION: 50},
+            {
+                ATTR_ENTITY_ID: ROLLER_SHADE_ENTITY_ID,
+                ATTR_POSITION: 50,
+                ATTR_SPEED: speed,
+            },
             blocking=True,
         )
-        await hass.async_block_till_done()
         mock_set_position.assert_awaited_once_with(50, expected_mode)
+
+
+@pytest.mark.parametrize(
+    ("service", "service_data"),
+    [
+        pytest.param(SERVICE_OPEN_COVER, {}, id="open"),
+        pytest.param(SERVICE_CLOSE_COVER, {}, id="close"),
+        pytest.param(
+            SERVICE_SET_COVER_POSITION, {ATTR_POSITION: 50}, id="set_position"
+        ),
+    ],
+)
+async def test_roller_shade_invalid_speed(
+    hass: HomeAssistant,
+    mock_entry_factory: Callable[[str], MockConfigEntry],
+    service: str,
+    service_data: dict[str, int],
+) -> None:
+    """Test an unsupported speed is rejected before reaching the device."""
+    inject_bluetooth_service_info(hass, ROLLER_SHADE_SERVICE_INFO)
+
+    entry = mock_entry_factory(sensor_type="roller_shade")
+    entry.add_to_hass(hass)
+
+    with (
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.update",
+            new=AsyncMock(return_value=True),
+        ),
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.open",
+            new=AsyncMock(return_value=True),
+        ) as mock_open,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.close",
+            new=AsyncMock(return_value=True),
+        ) as mock_close,
+        patch(
+            "homeassistant.components.switchbot.cover.switchbot.SwitchbotRollerShade.set_position",
+            new=AsyncMock(return_value=True),
+        ) as mock_set_position,
+    ):
+        assert await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done()
+
+        with pytest.raises(ServiceValidationError) as exc_info:
+            await hass.services.async_call(
+                COVER_DOMAIN,
+                service,
+                {
+                    ATTR_ENTITY_ID: ROLLER_SHADE_ENTITY_ID,
+                    ATTR_SPEED: "turbo",
+                    **service_data,
+                },
+                blocking=True,
+            )
+
+        assert exc_info.value.translation_key == "not_valid_speed"
+        mock_open.assert_not_awaited()
+        mock_close.assert_not_awaited()
+        mock_set_position.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
