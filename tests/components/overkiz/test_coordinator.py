@@ -369,9 +369,7 @@ async def test_server_disconnected_relogin_transport_error(
     entry = await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
     coordinator: OverkizDataUpdateCoordinator = entry.runtime_data.coordinator
 
-    mock_client.login.side_effect = TimeoutError(
-        "Connection timed out during relogin"
-    )
+    mock_client.login.side_effect = TimeoutError("Connection timed out during relogin")
     mock_client.fetch_events.side_effect = ServerDisconnectedError(
         "Server disconnected"
     )

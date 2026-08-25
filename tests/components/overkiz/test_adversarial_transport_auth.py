@@ -268,7 +268,9 @@ async def test_adversarial_server_disconnected_relogin_bad_credentials_escalates
     """Verify ServerDisconnectedError followed by BadCredentialsError on relogin escalates cleanly."""
     await setup_overkiz_integration(fixture=TEMPERATURE_SENSOR.fixture)
 
-    mock_client.fetch_events.side_effect = ServerDisconnectedError("Server disconnected")
+    mock_client.fetch_events.side_effect = ServerDisconnectedError(
+        "Server disconnected"
+    )
     mock_client.login.side_effect = BadCredentialsError("Invalid credentials")
 
     freezer.tick(UPDATE_INTERVAL)

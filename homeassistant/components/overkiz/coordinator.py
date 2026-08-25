@@ -156,7 +156,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             ) as exception:
                 LOGGER.debug("Failed to fetch devices during resync", exc_info=True)
                 self._handle_error_reset()
-                raise UpdateFailed(f"Failed to resync devices: {exception}") from exception
+                raise UpdateFailed(
+                    f"Failed to resync devices: {exception}"
+                ) from exception
             else:
                 self._need_full_resync = False
 
@@ -187,8 +189,12 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 ClientError,
                 OverkizError,
             ) as exception:
-                LOGGER.debug("Failed to relogin after session expiration", exc_info=True)
-                raise UpdateFailed(f"Failed to re-authenticate: {exception}") from exception
+                LOGGER.debug(
+                    "Failed to relogin after session expiration", exc_info=True
+                )
+                raise UpdateFailed(
+                    f"Failed to re-authenticate: {exception}"
+                ) from exception
             else:
                 self._need_full_resync = False
                 return self.devices
@@ -237,7 +243,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
                 ClientError,
                 OverkizError,
             ) as exception:
-                LOGGER.debug("Failed to reconnect after server disconnect", exc_info=True)
+                LOGGER.debug(
+                    "Failed to reconnect after server disconnect", exc_info=True
+                )
                 raise UpdateFailed(f"Failed to reconnect: {exception}") from exception
             else:
                 self._need_full_resync = False
@@ -246,7 +254,9 @@ class OverkizDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Device]]):
             LOGGER.debug("Overkiz / transport error", exc_info=True)
             self._handle_error_reset()
             self._need_full_resync = True
-            raise UpdateFailed(f"Error fetching Overkiz data: {exception}") from exception
+            raise UpdateFailed(
+                f"Error fetching Overkiz data: {exception}"
+            ) from exception
 
         for event in events:
             LOGGER.debug(event)
