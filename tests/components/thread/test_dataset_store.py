@@ -914,6 +914,130 @@ async def test_automatically_set_preferred_dataset(
     assert await dataset_store.async_get_preferred_dataset(hass) == DATASET_1
 
 
+async def test_automatically_set_preferred_dataset_already_set(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test a preference chosen during discovery is not overwritten.
+
+    Discovery runs for up to BORDER_AGENT_DISCOVERY_TIMEOUT. Anything that
+    picks a preferred dataset in that window knows the network as it is now,
+    including a border router that has just been migrated to another network.
+    """
+    add_service_listener_called = asyncio.Event()
+    remove_service_listener_called = asyncio.Event()
+
+    async def mock_add_service_listener(type_: str, listener: Any):
+        add_service_listener_called.set()
+
+    async def mock_remove_service_listener(listener: Any):
+        remove_service_listener_called.set()
+
+    mock_async_zeroconf.async_add_service_listener = AsyncMock(
+        side_effect=mock_add_service_listener
+    )
+    mock_async_zeroconf.async_remove_service_listener = AsyncMock(
+        side_effect=mock_remove_service_listener
+    )
+    mock_async_zeroconf.async_get_service_info = AsyncMock()
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        await dataset_store.async_add_dataset(
+            hass,
+            "source",
+            DATASET_1,
+            preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        )
+
+        await add_service_listener_called.wait()
+
+        # Another network becomes the preferred one while discovery runs.
+        store = await dataset_store.async_get_store(hass)
+        store.async_add("other", DATASET_2, None, None)
+        other_id = next(
+            entry.id for entry in store.datasets.values() if entry.tlv == DATASET_2
+        )
+        store.preferred_dataset = other_id
+
+        # Discover a service matching our router
+        listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
+            mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
+        )
+        mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
+            **ROUTER_DISCOVERY_HASS
+        )
+        listener.add_service(
+            None, ROUTER_DISCOVERY_HASS["type_"], ROUTER_DISCOVERY_HASS["name"]
+        )
+
+        await remove_service_listener_called.wait()
+
+    assert store.preferred_dataset == other_id
+    assert await dataset_store.async_get_preferred_dataset(hass) == DATASET_2
+
+
+async def test_automatically_set_preferred_dataset_deleted(
+    hass: HomeAssistant, mock_async_zeroconf: MagicMock
+) -> None:
+    """Test a dataset deleted during discovery is not set as preferred.
+
+    The preferred-dataset setter raises KeyError for an unknown dataset, and
+    async_delete only refuses to delete the preferred dataset, which this one
+    is not yet.
+    """
+    add_service_listener_called = asyncio.Event()
+
+    async def mock_add_service_listener(type_: str, listener: Any):
+        add_service_listener_called.set()
+
+    mock_async_zeroconf.async_add_service_listener = AsyncMock(
+        side_effect=mock_add_service_listener
+    )
+    mock_async_zeroconf.async_remove_service_listener = AsyncMock()
+    mock_async_zeroconf.async_get_service_info = AsyncMock()
+
+    with patch(
+        "homeassistant.components.thread.dataset_store.BORDER_AGENT_DISCOVERY_TIMEOUT",
+        0.1,
+    ):
+        await dataset_store.async_add_dataset(
+            hass,
+            "source",
+            DATASET_1,
+            preferred_border_agent_id=TEST_BORDER_AGENT_ID.hex(),
+            preferred_extended_address=TEST_BORDER_AGENT_EXTENDED_ADDRESS.hex(),
+        )
+
+        await add_service_listener_called.wait()
+
+        # The dataset is deleted while discovery runs.
+        store = await dataset_store.async_get_store(hass)
+        dataset_id = next(
+            entry.id for entry in store.datasets.values() if entry.tlv == DATASET_1
+        )
+        store.async_delete(dataset_id)
+
+        # Discover a service matching our router
+        listener: discovery.ThreadRouterDiscovery.ThreadServiceListener = (
+            mock_async_zeroconf.async_add_service_listener.mock_calls[0][1][1]
+        )
+        mock_async_zeroconf.async_get_service_info.return_value = AsyncServiceInfo(
+            **ROUTER_DISCOVERY_HASS
+        )
+        listener.add_service(
+            None, ROUTER_DISCOVERY_HASS["type_"], ROUTER_DISCOVERY_HASS["name"]
+        )
+
+        # Awaiting the task directly propagates the KeyError the guard prevents.
+        await store._set_preferred_dataset_task
+
+    assert store.preferred_dataset is None
+    assert await dataset_store.async_get_preferred_dataset(hass) is None
+
+
 async def test_automatically_set_preferred_dataset_own_and_other_router(
     hass: HomeAssistant, mock_async_zeroconf: MagicMock
 ) -> None:
