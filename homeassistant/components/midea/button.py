@@ -10,8 +10,10 @@ from midealocal.devices.e1 import MideaE1Device
 
 from homeassistant.components.button import ButtonEntity, ButtonEntityDescription
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ServiceValidationError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from .const import DOMAIN
 from .entity import MideaConfigEntry, MideaEntity, midea_api_call
 
 PARALLEL_UPDATES = 0
@@ -24,20 +26,16 @@ class MideaButtonEntityDescription(ButtonEntityDescription):
     models: list[DeviceType]
     supported_models: list[str]
     press_fn: Callable[[MideaDevice], None]
-    available_fn: Callable[[MideaDevice], bool]
 
 
 def _e1_button_press(device: MideaDevice) -> None:
     """Start the dishwasher using its currently selected work mode."""
-    cast(MideaE1Device, device).start_work()
-
-
-def _e1_button_available(device: MideaDevice) -> bool:
-    """Return whether the start button is available for an E1 dishwasher."""
     if not device.get_attribute("power"):
-        return False
-    mode = device.get_attribute("mode")
-    return mode is not None and mode != "none"
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="e1_device_off",
+        )
+    cast(MideaE1Device, device).start_work()
 
 
 BUTTONS: list[MideaButtonEntityDescription] = [
@@ -47,7 +45,6 @@ BUTTONS: list[MideaButtonEntityDescription] = [
         models=[DeviceType.E1],
         supported_models=["7600024L"],
         press_fn=_e1_button_press,
-        available_fn=_e1_button_available,
     ),
 ]
 
@@ -72,12 +69,6 @@ class MideaButton(MideaEntity, ButtonEntity):
     """Represent a Midea button."""
 
     entity_description: MideaButtonEntityDescription
-
-    @property
-    @override
-    def available(self) -> bool:
-        """Return whether the device is on and the selected button function is available."""
-        return super().available and self.entity_description.available_fn(self._device)
 
     @override
     async def async_press(self) -> None:

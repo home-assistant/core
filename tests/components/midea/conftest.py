@@ -100,7 +100,7 @@ class DummyDevice:
     def start_work(self) -> None:
         """Record start_work call."""
         self.calls.append(("start_work",))
-        
+
     def turn_on(self, fan_speed: int | None = None, mode: str | None = None) -> None:
         """Record turn_on call."""
         self.calls.append(("turn_on", fan_speed, mode))

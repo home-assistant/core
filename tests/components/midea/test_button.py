@@ -13,7 +13,7 @@ from syrupy.assertion import SnapshotAssertion
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
 from homeassistant.const import ATTR_ENTITY_ID, Platform
 from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
@@ -76,31 +76,30 @@ async def test_button_press_starts_dishwasher(
     assert device.calls == [("start_work",)]
 
 
-@pytest.mark.parametrize(
-    ("power", "mode"),
-    [
-        pytest.param(False, "auto_wash", id="power_off"),
-        pytest.param(True, "none", id="none"),
-        pytest.param(True, None, id="no_mode_selected"),
-    ],
-)
-async def test_button_unavailable_without_selected_mode(
+async def test_button_press_raises_when_device_off(
     hass: HomeAssistant,
     mock_config_entry: Callable[[DummyDevice], MockConfigEntry],
-    power: bool,
-    mode: str | None,
 ) -> None:
-    """Test the button is unavailable when off or with no work mode selected."""
+    """Test pressing the button while the dishwasher is off raises a clear error."""
     device = _e1_device()
-    device.attributes[E1Attributes.power] = power
-    device.attributes[E1Attributes.mode] = mode
+    device.attributes[E1Attributes.power] = False
     config_entry = mock_config_entry(device)
     with patch("homeassistant.components.midea._PLATFORMS", [Platform.BUTTON]):
         await setup_integration(hass, config_entry, device)
 
     entity_entry = entity_entries(hass, config_entry)[f"{TEST_DEVICE_ID}_start"]
     assert (state := hass.states.get(entity_entry.entity_id)) is not None
-    assert state.state == "unavailable"
+    assert state.state != "unavailable"
+
+    device.calls.clear()
+    with pytest.raises(ServiceValidationError, match="Turn on the dishwasher"):
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: entity_entry.entity_id},
+            blocking=True,
+        )
+    assert device.calls == []
 
 
 async def test_button_unavailable_when_device_offline(
