@@ -1,4 +1,4 @@
-"""Config flow for the Ecosmart integration."""
+"""Config flow for the ecosmart integration."""
 
 import logging
 from typing import Any, override
@@ -29,7 +29,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 
 
 class EcosmartConfigFlow(ConfigFlow, domain=DOMAIN):
-    """Handle a config flow for Ecosmart."""
+    """Handle a config flow for ecosmart."""
 
     VERSION = 1
 

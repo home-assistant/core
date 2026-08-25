@@ -1,4 +1,4 @@
-"""Base entity for the Ecosmart integration."""
+"""Base entity for the ecosmart integration."""
 
 from aioecosmart import IcpScope
 

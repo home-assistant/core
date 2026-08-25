@@ -42,7 +42,7 @@
 # name: test_all_entities[sensor.0000123456ab123_forecast_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ecosmart',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ecosmart',
       'covered_hours': 34.0,
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '0000123456AB123 Forecast price',
       'points': list([
@@ -715,7 +715,7 @@
 # name: test_all_entities[sensor.0000123456ab123_spot_price-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by Ecosmart',
+      <EntityStateAttribute.ATTRIBUTION: 'attribution'>: 'Data provided by ecosmart',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: '0000123456AB123 Spot price',
       'gst_rate_percent': 15.0,
       'observed_at': '2026-08-24T12:20:00+00:00',

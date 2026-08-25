@@ -1,4 +1,4 @@
-"""The Ecosmart integration."""
+"""The ecosmart integration."""
 
 from functools import partial
 
@@ -22,7 +22,7 @@ PLATFORMS: list[Platform] = [Platform.SENSOR]
 
 
 async def async_setup_entry(hass: HomeAssistant, entry: EcosmartConfigEntry) -> bool:
-    """Set up Ecosmart from a config entry."""
+    """Set up ecosmart from a config entry."""
     client = EcosmartClient(entry.data[CONF_API_KEY], async_get_clientsession(hass))
 
     try:
@@ -37,7 +37,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcosmartConfigEntry) -> 
         ) from err
 
     LOGGER.debug(
-        "Ecosmart key %s covers %s ICP(s) with a budget of %s requests/minute",
+        "ecosmart key %s covers %s ICP(s) with a budget of %s requests/minute",
         identity.key_prefix,
         len(identity.allowed_icps),
         identity.rate_limit_per_minute,

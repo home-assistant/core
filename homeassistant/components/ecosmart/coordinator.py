@@ -1,4 +1,4 @@
-"""Data update coordinators for the Ecosmart integration."""
+"""Data update coordinators for the ecosmart integration."""
 
 import asyncio
 from collections.abc import Awaitable, Callable
@@ -89,7 +89,7 @@ class EcosmartCoordinator[_DataT](DataUpdateCoordinator[dict[str, _DataT]]):
 
 @dataclass(kw_only=True, frozen=True)
 class EcosmartRuntimeData:
-    """Everything a loaded Ecosmart config entry owns."""
+    """Everything a loaded ecosmart config entry owns."""
 
     client: EcosmartClient
     identity: Identity
