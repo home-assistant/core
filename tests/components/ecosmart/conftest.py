@@ -1,4 +1,4 @@
-"""Common fixtures for the Ecosmart tests."""
+"""Common fixtures for the ecosmart tests."""
 
 from collections.abc import Generator
 from unittest.mock import AsyncMock, patch
@@ -43,7 +43,7 @@ def mock_setup_entry() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_ecosmart_client() -> Generator[AsyncMock]:
-    """Mock the Ecosmart API client with fixture-built models."""
+    """Mock the ecosmart API client with fixture-built models."""
     with (
         patch(
             "homeassistant.components.ecosmart.EcosmartClient", autospec=True
@@ -62,7 +62,7 @@ def mock_ecosmart_client() -> Generator[AsyncMock]:
 
 @pytest.fixture
 def mock_config_entry() -> MockConfigEntry:
-    """Return a mock Ecosmart config entry."""
+    """Return a mock ecosmart config entry."""
     return MockConfigEntry(
         domain=DOMAIN,
         title="redacted",

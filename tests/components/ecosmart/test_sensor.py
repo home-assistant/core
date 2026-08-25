@@ -1,4 +1,4 @@
-"""Test the Ecosmart sensors."""
+"""Test the ecosmart sensors."""
 
 from dataclasses import replace
 from datetime import timedelta
@@ -59,7 +59,7 @@ async def test_device_is_one_service_per_icp(
     assert device is not None
     assert device.entry_type is dr.DeviceEntryType.SERVICE
     assert device.name == TEST_ICP
-    assert device.manufacturer == "Ecosmart"
+    assert device.manufacturer == "ecosmart"
     assert device.model == "BOB1101"
     assert device.configuration_url == "https://my.ecosmart.co.nz"
 

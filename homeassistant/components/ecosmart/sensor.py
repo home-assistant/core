@@ -1,4 +1,4 @@
-"""Sensor platform for the Ecosmart integration."""
+"""Sensor platform for the ecosmart integration."""
 
 from typing import Any, override
 

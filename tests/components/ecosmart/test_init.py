@@ -1,4 +1,4 @@
-"""Test the Ecosmart integration setup and unload."""
+"""Test the ecosmart integration setup and unload."""
 
 from dataclasses import replace
 from unittest.mock import AsyncMock

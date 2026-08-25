@@ -6,7 +6,7 @@
     "error": {
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
-      "no_icps": "This key has no connection points yet. Keys can be created before a switch to Ecosmart completes; try again once your property is connected.",
+      "no_icps": "This key has no connection points yet. Keys can be created before a switch to ecosmart completes; try again once your property is connected.",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
     "step": {
@@ -15,9 +15,9 @@
           "api_key": "[%key:common::config_flow::data::api_key%]"
         },
         "data_description": {
-          "api_key": "Create a key in the Ecosmart app under More > Settings > Advanced > API keys. Creating a new key disables the previous one, so if you use your key somewhere else already, that other tool will stop working."
+          "api_key": "Create a key in the ecosmart app under More > Settings > Advanced > API keys. Creating a new key disables the previous one, so if you use your key somewhere else already, that other tool will stop working."
         },
-        "description": "Enter the API key for your Ecosmart account."
+        "description": "Enter the API key for your ecosmart account."
       }
     }
   },
@@ -33,13 +33,13 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Could not reach the Ecosmart API"
+      "message": "Could not reach the ecosmart API"
     },
     "invalid_auth": {
-      "message": "The Ecosmart API key was rejected. Creating a new key in the Ecosmart app disables the previous one."
+      "message": "The ecosmart API key was rejected. Creating a new key in the ecosmart app disables the previous one."
     },
     "rate_limited": {
-      "message": "The Ecosmart API key is out of requests; the next attempt is in {retry_after} seconds"
+      "message": "The ecosmart API key is out of requests; the next attempt is in {retry_after} seconds"
     }
   }
 }

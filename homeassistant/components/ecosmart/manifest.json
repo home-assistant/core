@@ -1,6 +1,6 @@
 {
   "domain": "ecosmart",
-  "name": "Ecosmart",
+  "name": "ecosmart",
   "codeowners": ["@Daryn-L"],
   "config_flow": true,
   "documentation": "https://www.home-assistant.io/integrations/ecosmart",

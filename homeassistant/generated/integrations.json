@@ -1622,7 +1622,7 @@
       "iot_class": "cloud_push"
     },
     "ecosmart": {
-      "name": "Ecosmart",
+      "name": "ecosmart",
       "integration_type": "service",
       "config_flow": true,
       "iot_class": "cloud_polling"

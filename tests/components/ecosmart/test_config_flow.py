@@ -1,4 +1,4 @@
-"""Test the Ecosmart config flow."""
+"""Test the ecosmart config flow."""
 
 from dataclasses import replace
 from unittest.mock import AsyncMock
@@ -54,7 +54,7 @@ async def test_user_flow_unlabelled_key(
     )
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
-    assert result["title"] == "Ecosmart"
+    assert result["title"] == "ecosmart"
 
 
 @pytest.mark.parametrize(
