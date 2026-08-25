@@ -20,6 +20,14 @@
         "default": "mdi:music-clef-treble"
       }
     },
+    "select": {
+      "room_perfect_position": {
+        "default": "mdi:home-sound-out"
+      },
+      "voicing": {
+        "default": "mdi:equalizer"
+      }
+    },
     "sensor": {
       "audio_information": {
         "default": "mdi:surround-sound"
