@@ -463,26 +463,30 @@ async def test_async_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
     _assert_hass_event_loop(hass.loop)
 
 
-@pytest.mark.parametrize("debug", [False, True], ids=["no_debug", "debug"])
-def test_create_event_loop(debug: bool) -> None:
-    """Test the created loop is configured and becomes the thread's current loop."""
+def test_create_event_loop() -> None:
+    """Test created loops are configured and become the thread's current loop."""
     created: list[asyncio.AbstractEventLoop] = []
     current: list[asyncio.AbstractEventLoop] = []
 
     # In a thread of its own so the current loop of the test thread is untouched
     def _create() -> None:
-        created.append(runner.create_event_loop(debug))
+        created.append(runner.create_event_loop())
+        current.append(asyncio.get_event_loop())
+        created.append(runner.create_event_loop(debug=True))
         current.append(asyncio.get_event_loop())
 
     create_thread = threading.Thread(target=_create)
     create_thread.start()
     create_thread.join()
 
-    loop = created[0]
     try:
-        _assert_hass_event_loop(loop)
-        assert loop.get_debug() is debug
+        for loop in created:
+            _assert_hass_event_loop(loop)
+        # The other loop is only debug free when the interpreter is, so is not
+        # asserted on: CI runs with -X dev and PYTHONASYNCIODEBUG set.
+        assert created[1].get_debug()
         # asyncio.Runner relies on the loop factory to do this
-        assert current == [loop]
+        assert current == created
     finally:
-        loop.close()
+        for loop in created:
+            loop.close()
