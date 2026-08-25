@@ -667,10 +667,17 @@ async def test_supported_features(hass: HomeAssistant, client) -> None:
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
 
-    # Support volume mute, step
+    # Support volume mute, step for external_speaker & tv_speaker
+    supported = supported | SUPPORT_WEBOSTV_VOLUME
+
     client.tv_state.sound_output = "external_speaker"
     await client.mock_state_update()
-    supported = supported | SUPPORT_WEBOSTV_VOLUME
+    attrs = hass.states.get(ENTITY_ID).attributes
+
+    assert attrs[ATTR_SUPPORTED_FEATURES] == supported
+
+    client.tv_state.sound_output = "tv_speaker"
+    await client.mock_state_update()
     attrs = hass.states.get(ENTITY_ID).attributes
 
     assert attrs[ATTR_SUPPORTED_FEATURES] == supported
