@@ -3423,6 +3423,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "inventor": {
+      "name": "Inventor",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "iometer": {
       "name": "IOmeter",
       "integration_type": "device",
@@ -5133,6 +5138,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling"
     },
+    "olimpia_splendid": {
+      "name": "Olimpia Splendid",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "ollama": {
       "name": "Ollama",
       "integration_type": "service",
@@ -5671,6 +5681,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "pro_breeze": {
+      "name": "Pro Breeze",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "probe_plus": {
       "name": "Probe Plus",
       "integration_type": "device",
@@ -6189,6 +6204,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "rotenso": {
+      "name": "Rotenso",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "roth": {
       "name": "Roth",
