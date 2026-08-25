@@ -93,9 +93,6 @@
       "no_fetch": "[%key:component::nina::config::abort::no_fetch%]",
       "unknown": "[%key:common::config_flow::error::unknown%]"
     },
-    "error": {
-      "no_selection": "[%key:component::nina::config::error::no_selection%]"
-    },
     "step": {
       "init": {
         "data": {
