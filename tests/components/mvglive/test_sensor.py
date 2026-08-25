@@ -14,7 +14,7 @@ from tests.common import MockConfigEntry, snapshot_platform
 
 
 def test_platform_schema_accepts_deprecated_directions() -> None:
-    """Test that a legacy `directions` key still validates."""
+    """Test PLATFORM_SCHEMA still accepts the deprecated `directions` key."""
     PLATFORM_SCHEMA(
         {
             "platform": "mvglive",

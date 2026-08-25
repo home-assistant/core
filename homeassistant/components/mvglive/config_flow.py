@@ -67,7 +67,7 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         """Handle the initial step: search for a station and pick modes of transport."""
         errors: dict[str, str] = {}
         if user_input is not None:
-            query = user_input[CONF_STATION].strip().lower()
+            search_term = user_input[CONF_STATION].strip().lower()
             try:
                 all_stations = await MvgApi.stations_async()
             except MvgApiError:
@@ -77,7 +77,7 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                     (
                         station
                         for station in all_stations
-                        if query in station["name"].lower()
+                        if search_term in station["name"].lower()
                     ),
                     key=lambda station: station["name"],
                 )[:MAX_STATION_MATCHES]
@@ -115,20 +115,20 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 options={CONF_PRODUCTS: self._products},
             )
 
-        options = [
-            SelectOptionDict(
-                value=station["id"],
-                label=f"{station['name']} ({station['place']})"
-                if station.get("place")
-                else station["name"],
-            )
-            for station in self._matches.values()
-        ]
         schema = vol.Schema(
             {
                 vol.Required(CONF_STATION_ID): SelectSelector(
                     SelectSelectorConfig(
-                        options=options, mode=SelectSelectorMode.DROPDOWN
+                        options=[
+                            SelectOptionDict(
+                                value=station["id"],
+                                label=f"{station['name']} ({station['place']})"
+                                if station.get("place")
+                                else station["name"],
+                            )
+                            for station in self._matches.values()
+                        ],
+                        mode=SelectSelectorMode.DROPDOWN,
                     )
                 )
             }
@@ -157,20 +157,19 @@ class MvgConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if destinations == DEFAULT_DESTINATIONS and import_data.get(CONF_DIRECTIONS):
             destinations = import_data[CONF_DIRECTIONS]
 
-        options = {
-            CONF_DESTINATIONS: destinations,
-            CONF_LINES: import_data.get(CONF_LINES, DEFAULT_LINES),
-            CONF_PRODUCTS: import_data.get(CONF_PRODUCTS, DEFAULT_PRODUCTS),
-            CONF_TIMEOFFSET: import_data.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET),
-            CONF_NUMBER: import_data.get(CONF_NUMBER, DEFAULT_NUMBER),
-        }
         return self.async_create_entry(
             title=name or station["name"],
             data={
                 CONF_STATION_ID: station["id"],
                 CONF_STATION_NAME: station["name"],
             },
-            options=options,
+            options={
+                CONF_DESTINATIONS: destinations,
+                CONF_LINES: import_data.get(CONF_LINES, DEFAULT_LINES),
+                CONF_PRODUCTS: import_data.get(CONF_PRODUCTS, DEFAULT_PRODUCTS),
+                CONF_TIMEOFFSET: import_data.get(CONF_TIMEOFFSET, DEFAULT_TIMEOFFSET),
+                CONF_NUMBER: import_data.get(CONF_NUMBER, DEFAULT_NUMBER),
+            },
         )
 
     @staticmethod
