@@ -475,3 +475,19 @@ async def test_wago_connection_mode_select(
         ),
         value=False,
     )
+
+    await hass.services.async_call(
+        "select",
+        "select_option",
+        {"entity_id": entity_id, "option": "directly_connected"},
+        blocking=True,
+    )
+    assert matter_client.write_attribute.call_count == 2
+    assert matter_client.write_attribute.call_args == call(
+        node_id=matter_node.node_id,
+        attribute_path=create_attribute_path_from_attribute(
+            endpoint_id=0,
+            attribute=custom_clusters.WagoCluster.Attributes.DirectlyConnected,
+        ),
+        value=True,
+    )
