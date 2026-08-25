@@ -49,6 +49,22 @@ async def test_ok_requests(
     assert await resp.text() == "OK"
 
 
+async def test_ok_request_with_encoded_unsafe_byte_in_query_string(
+    aiohttp_client: ClientSessionGenerator,
+) -> None:
+    """Test an encoded unsafe byte remains a valid query-string value."""
+    app = web.Application()
+    app.router.add_get("/{all:.*}", mock_handler)
+
+    setup_security_filter(app)
+
+    mock_api_client = await aiohttp_client(app)
+    resp = await mock_api_client.get("/?message=hello%0Aworld")
+
+    assert resp.status == HTTPStatus.OK
+    assert await resp.text() == "OK"
+
+
 @pytest.mark.parametrize(
     ("request_path", "request_params", "fail_on_query_string"),
     [
@@ -122,6 +138,7 @@ async def test_bad_requests(
     [
         "/some\thing",
         "/new\nline/cinema",
+        "/new%0Aline/cinema",
         "/return\r/to/sender",
     ],
 )
@@ -149,6 +166,33 @@ async def test_bad_requests_with_unsafe_bytes(
     assert resp.status == HTTPStatus.BAD_REQUEST
 
     assert "Filtered a request with an unsafe byte in path:" in caplog.text
+
+
+@pytest.mark.parametrize(
+    "request_path",
+    [
+        "/?f=proc/self%0A/environ",
+        "/?f=proc/self%250A/environ",
+        "/?p=..%0A/..%0A/api",
+        "/?x=/.%0A/test",
+    ],
+)
+async def test_bad_requests_with_encoded_unsafe_bytes_in_filter_patterns(
+    request_path: str,
+    aiohttp_client: ClientSessionGenerator,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test encoded unsafe bytes cannot bypass security-filter patterns."""
+    app = web.Application()
+    app.router.add_get("/{all:.*}", mock_handler)
+
+    setup_security_filter(app)
+
+    mock_api_client = await aiohttp_client(app)
+    resp = await mock_api_client.get(request_path)
+
+    assert resp.status == HTTPStatus.BAD_REQUEST
+    assert "Filtered a request with a potential harmful query string:" in caplog.text
 
 
 @pytest.mark.parametrize("unsafe_byte", ["\t", "\r", "\n"])
