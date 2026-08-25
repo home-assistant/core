@@ -159,6 +159,12 @@ class SpecializedTurboCoordinator(
         self._snapshot = monitor.snapshot
         self.data = self._snapshot
 
+        if self._was_unavailable:
+            self.logger.info(
+                "Specialized Turbo at %s is available again", self._address
+            )
+            self._was_unavailable = False
+
     def _update_protocol_metadata(
         self,
         service_info: bluetooth.BluetoothServiceInfoBleak,
@@ -241,7 +247,7 @@ class SpecializedTurboCoordinator(
         change: bluetooth.BluetoothChange,
     ) -> None:
         """Log recovery before handling a Bluetooth advertisement."""
-        if self._was_unavailable:
+        if self._was_unavailable and self.connected:
             self.logger.info(
                 "Specialized Turbo at %s is available again", self._address
             )

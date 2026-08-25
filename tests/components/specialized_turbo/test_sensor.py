@@ -21,9 +21,11 @@ from homeassistant.util import dt as dt_util
 from . import setup_integration
 from .conftest import (
     MOCK_ADDRESS_FORMATTED,
+    MOCK_MANUFACTURER_DATA,
     TCX_SERVICE_INFO,
     MockLibrary,
     make_populated_snapshot,
+    make_service_info,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -110,8 +112,9 @@ async def test_disconnect_marks_entities_unavailable(
     mock_config_entry: MockConfigEntry,
     mock_library: MockLibrary,
     entity_registry: er.EntityRegistry,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Test a library disconnect marks entities unavailable."""
+    """Test a library disconnect and reconnect update availability."""
     mock_library.monitor.snapshot = make_populated_snapshot()
     await setup_integration(hass, mock_config_entry, TCX_SERVICE_INFO)
     battery_entity_id = _entity_id(entity_registry, "battery_charge_percent")
@@ -122,13 +125,39 @@ async def test_disconnect_marks_entities_unavailable(
     disconnect_callback = mock_library.connection_constructor.call_args.kwargs[
         "disconnect_callback"
     ]
-    mock_library.connection.is_connected = False
-    disconnect_callback(mock_library.connection)
-    await hass.async_block_till_done()
+    with caplog.at_level(logging.INFO):
+        mock_library.connection.is_connected = False
+        disconnect_callback(mock_library.connection)
+        await hass.async_block_till_done()
 
-    battery = hass.states.get(battery_entity_id)
-    assert battery is not None
-    assert battery.state == STATE_UNAVAILABLE
+        battery = hass.states.get(battery_entity_id)
+        assert battery is not None
+        assert battery.state == STATE_UNAVAILABLE
+
+        with patch(
+            "homeassistant.components.bluetooth.manager.discovery_flow.async_create_flow"
+        ):
+            inject_bluetooth_service_info(
+                hass,
+                make_service_info(
+                    manufacturer_data={
+                        **MOCK_MANUFACTURER_DATA,
+                        0xFFFF: b"\x01",
+                    }
+                ),
+            )
+        async_fire_time_changed(hass, dt_util.utcnow() + timedelta(seconds=11))
+        await hass.async_block_till_done()
+
+        battery = hass.states.get(battery_entity_id)
+        assert battery is not None
+        assert battery.state == "85"
+        assert (
+            caplog.text.count(
+                "Specialized Turbo at DC:DD:BB:4A:D6:55 is available again"
+            )
+            == 1
+        )
 
 
 async def test_stale_advertisement_marks_entities_unavailable(
