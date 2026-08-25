@@ -20,7 +20,12 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
 )
-from homeassistant.config_entries import SOURCE_IMPORT, ConfigSubentry
+from homeassistant.config_entries import (
+    SOURCE_IMPORT,
+    ConfigEntryState,
+    ConfigSubentry,
+    ConfigSubentryData,
+)
 from homeassistant.const import CONF_API_KEY
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
@@ -39,6 +44,8 @@ from .const import (
     CONF_NUMBER_OF_DEPARTURES,
     CONF_STOP_ID,
     CONF_STOP_NUMBER,
+    CONF_SUBENTRIES,
+    DATA_FAILED_IMPORT_STOPS,
     DOMAIN,
     LOGGER,
     MANUFACTURER,
@@ -81,6 +88,57 @@ def _is_stop_on_entry(entry: DeLijnConfigEntry, stop_number: str) -> bool:
     )
 
 
+def _get_failed_import_stops(hass: HomeAssistant) -> set[str]:
+    """Return the set of stop ids that failed to import, shared across YAML blocks.
+
+    This tracks failures across separate accounts (API keys) and even
+    across a YAML block whose entry doesn't exist yet, so it cannot live on
+    a single config entry's runtime_data.
+    """
+    # pylint: disable-next=home-assistant-use-runtime-data
+    return hass.data.setdefault(DOMAIN, {}).setdefault(DATA_FAILED_IMPORT_STOPS, set())
+
+
+def _build_subentry_data(stop: Stop, number_of_departures: int) -> ConfigSubentryData:
+    """Return the ConfigSubentryData for a validated stop."""
+    return ConfigSubentryData(
+        data={
+            CONF_STOP_NUMBER: stop.number,
+            CONF_NUMBER_OF_DEPARTURES: number_of_departures,
+        },
+        subentry_type=SUBENTRY_TYPE_STOP,
+        title=stop_title(stop),
+        unique_id=stop.number,
+    )
+
+
+async def _async_add_subentries_to_entry(
+    hass: HomeAssistant,
+    entry: DeLijnConfigEntry,
+    to_add: list[tuple[Stop, int]],
+) -> None:
+    """Add subentries to an existing entry with exactly one reload.
+
+    Unloading first (when currently loaded) removes the update listener
+    registered via ``entry.async_on_unload``, so the additions below don't
+    each queue their own reload; a single explicit reload applies them all.
+    """
+    if entry.state is ConfigEntryState.LOADED:
+        await hass.config_entries.async_unload(entry.entry_id)
+    for stop, number_of_departures in to_add:
+        subentry_data = _build_subentry_data(stop, number_of_departures)
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType(subentry_data["data"]),
+                subentry_type=subentry_data["subentry_type"],
+                title=subentry_data["title"],
+                unique_id=subentry_data["unique_id"],
+            ),
+        )
+    await hass.config_entries.async_reload(entry.entry_id)
+
+
 async def async_setup_platform(
     hass: HomeAssistant,
     config: ConfigType,
@@ -93,36 +151,23 @@ async def async_setup_platform(
     subentry of it. Subentries can only be created from a user-initiated
     flow, so each stop is validated here and added directly.
 
-    Adding a subentry fires the entry's update listener as a separately
-    scheduled task (not awaited here), which reloads the entry. That reload
-    rebuilds every coordinator from entry.subentries as it stands at the
-    moment it actually runs. If stops were added one at a time with an
-    ``await`` in between (e.g. the API lookup), a scheduled reload can start
-    and even finish while only some of the stops have been added, settling
-    on an incomplete set with nothing left to correct it afterwards.
-    Every stop is therefore first validated (the only part that awaits),
-    and only then are all of the resulting subentries added back-to-back
-    with no ``await`` between them, so nothing can run in between and act on
-    a partial set. A reload is triggered once at the end regardless, both to
-    apply the change promptly and as a safety net.
+    Adding a subentry to an already-loaded entry queues a reload via the
+    entry's update listener; importing several stops one at a time would
+    then queue one reload per stop, each re-fetching every stop from the
+    API. Every stop is therefore validated first (the only part that
+    awaits), and the resulting subentries are only ever added by
+    ``_async_add_subentries_to_entry``, which guarantees exactly one setup
+    of the complete final state: a brand new entry is created with all of
+    its subentries atomically via ``async_create_entry(subentries=...)``, so
+    the entry is set up once with everything already present; adding stops
+    to an entry that already exists removes its update listener by
+    unloading first, so nothing reloads until the explicit reload at the end.
     """
     api_key = config[CONF_API_KEY]
     entry = _find_entry_by_api_key(hass, api_key)
-    if entry is None:
-        entry_result = await hass.config_entries.flow.async_init(
-            DOMAIN,
-            context={"source": SOURCE_IMPORT},
-            data={CONF_API_KEY: api_key},
-        )
-        if entry_result.get("type") is FlowResultType.CREATE_ENTRY:
-            entry = entry_result["result"]
-        else:
-            # A race created the entry between our lookup and this call.
-            entry = _find_entry_by_api_key(hass, api_key)
-    assert entry is not None
 
     client = DeLijnClient(api_key, async_get_clientsession(hass))
-    any_failure = False
+    failed_stops = _get_failed_import_stops(hass)
     to_add: list[tuple[Stop, int]] = []
     pending_numbers: set[str] = set()
 
@@ -130,8 +175,11 @@ async def async_setup_platform(
         stop_id = departure[CONF_STOP_ID]
         issue_id = f"deprecated_yaml_import_issue_{stop_id}"
 
-        if _is_stop_on_entry(entry, stop_id) or stop_id in pending_numbers:
+        if (
+            entry is not None and _is_stop_on_entry(entry, stop_id)
+        ) or stop_id in pending_numbers:
             ir.async_delete_issue(hass, DOMAIN, issue_id)
+            failed_stops.discard(stop_id)
             continue
 
         try:
@@ -159,7 +207,7 @@ async def async_setup_platform(
             reason = None
 
         if reason is not None:
-            any_failure = True
+            failed_stops.add(stop_id)
             ir.async_create_issue(
                 hass,
                 DOMAIN,
@@ -178,34 +226,39 @@ async def async_setup_platform(
 
         # A successful import, or one already configured in a prior
         # restart, resolves any previously reported import failure.
+        failed_stops.discard(stop_id)
         ir.async_delete_issue(hass, DOMAIN, issue_id)
-        if _is_stop_on_entry(entry, stop.number) or stop.number in pending_numbers:
+        if (
+            entry is not None and _is_stop_on_entry(entry, stop.number)
+        ) or stop.number in pending_numbers:
             continue
 
         pending_numbers.add(stop.number)
         to_add.append((stop, departure[CONF_NUMBER_OF_DEPARTURES]))
 
-    for stop, number_of_departures in to_add:
-        hass.config_entries.async_add_subentry(
-            entry,
-            ConfigSubentry(
-                data=MappingProxyType(
-                    {
-                        CONF_STOP_NUMBER: stop.number,
-                        CONF_NUMBER_OF_DEPARTURES: number_of_departures,
-                    }
-                ),
-                subentry_type=SUBENTRY_TYPE_STOP,
-                title=stop_title(stop),
-                unique_id=stop.number,
-            ),
-        )
-
     if to_add:
-        await hass.config_entries.async_reload(entry.entry_id)
+        if entry is None:
+            result = await hass.config_entries.flow.async_init(
+                DOMAIN,
+                context={"source": SOURCE_IMPORT},
+                data={
+                    CONF_API_KEY: api_key,
+                    CONF_SUBENTRIES: [
+                        _build_subentry_data(stop, number_of_departures)
+                        for stop, number_of_departures in to_add
+                    ],
+                },
+            )
+            if result.get("type") is not FlowResultType.CREATE_ENTRY:
+                # A race created the entry between our lookup and this call.
+                entry = _find_entry_by_api_key(hass, api_key)
+                assert entry is not None
+                await _async_add_subentries_to_entry(hass, entry, to_add)
+        else:
+            await _async_add_subentries_to_entry(hass, entry, to_add)
 
     generic_issue_id = f"deprecated_yaml_{DOMAIN}"
-    if any_failure:
+    if failed_stops:
         # Don't tell the user to remove the YAML config while a stop still
         # needs it to retry; drop any stale notice from an earlier restart.
         ir.async_delete_issue(hass, HOMEASSISTANT_DOMAIN, generic_issue_id)
@@ -239,10 +292,17 @@ async def async_setup_entry(
 
 
 def _due_in_minutes(due_at: datetime | None) -> int | None:
-    """Return the number of minutes from now until due_at."""
+    """Return the number of whole minutes from now until due_at."""
     if due_at is None:
         return None
-    return round((due_at - dt_util.utcnow()).total_seconds() / 60)
+    return int((due_at - dt_util.utcnow()).total_seconds() / 60)
+
+
+def _legacy_transport_type(transport_type: str | None) -> str | None:
+    """Return a line's transport type in the uppercase form pydelijn 1.x used."""
+    if transport_type is None:
+        return None
+    return transport_type.upper()
 
 
 def _bare_hex(colour: str | None) -> str | None:
@@ -275,7 +335,7 @@ def _passage_attributes(index: int, passage: Passage) -> dict[str, Any]:
         "cancelled": passage.cancelled,
         "line_number_public": line.public_number,
         "line_desc": line.description,
-        "line_transport_type": line.transport_type,
+        "line_transport_type": _legacy_transport_type(line.transport_type),
         "line_number_colourFront": _bare_hex(line.colour_front_hex),
         "line_number_colourFrontHex": _bare_hex(line.colour_front_hex),
         "line_number_colourBack": _bare_hex(line.colour_back_hex),
@@ -343,7 +403,7 @@ class DeLijnSensor(CoordinatorEntity[DeLijnCoordinator], SensorEntity):
         return {
             "stopname": self._stopname,
             "line_number_public": first.line.public_number,
-            "line_transport_type": first.line.transport_type,
+            "line_transport_type": _legacy_transport_type(first.line.transport_type),
             "final_destination": first.destination,
             "due_at_schedule": (
                 first.due_at_schedule.isoformat() if first.due_at_schedule else None

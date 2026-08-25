@@ -44,6 +44,7 @@ from homeassistant.util import dt as dt_util
 from .const import (
     CONF_NUMBER_OF_DEPARTURES,
     CONF_STOP_NUMBER,
+    CONF_SUBENTRIES,
     DEFAULT_NUMBER_OF_DEPARTURES,
     DOMAIN,
     LOGGER,
@@ -120,7 +121,7 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match({CONF_API_KEY: api_key})
             errors = await self._async_validate_api_key(api_key)
             if not errors:
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     reconfigure_entry, data_updates={CONF_API_KEY: api_key}
                 )
 
@@ -146,9 +147,10 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
 
         if user_input is not None:
             api_key = user_input[CONF_API_KEY]
+            self._async_abort_entries_match({CONF_API_KEY: api_key})
             errors = await self._async_validate_api_key(api_key)
             if not errors:
-                return self.async_update_reload_and_abort(
+                return self.async_update_and_abort(
                     self._get_reauth_entry(), data_updates={CONF_API_KEY: api_key}
                 )
 
@@ -159,14 +161,19 @@ class DeLijnConfigFlow(ConfigFlow, domain=DOMAIN):
         )
 
     async def async_step_import(self, import_data: dict[str, Any]) -> ConfigFlowResult:
-        """Create the bare main entry (API key only) during YAML import.
+        """Create the main entry together with its stops during YAML import.
 
-        Stop subentries are added afterwards, one at a time, by the sensor
-        platform's import handler.
+        The sensor platform's import handler has already validated every
+        stop; creating them as subentries here, atomically with the entry,
+        means the entry is only ever set up once with its full final state.
         """
         api_key = import_data[CONF_API_KEY]
         self._async_abort_entries_match({CONF_API_KEY: api_key})
-        return self.async_create_entry(title="De Lijn", data={CONF_API_KEY: api_key})
+        return self.async_create_entry(
+            title="De Lijn",
+            data={CONF_API_KEY: api_key},
+            subentries=import_data[CONF_SUBENTRIES],
+        )
 
 
 class StopSubentryFlowHandler(ConfigSubentryFlow):

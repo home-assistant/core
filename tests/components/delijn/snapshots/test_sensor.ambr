@@ -48,7 +48,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Brugsepoort (Begijnhoflaan), Gent Next departure',
       'is_realtime': True,
       'line_number_public': '4',
-      'line_transport_type': 'tram',
+      'line_transport_type': 'TRAM',
       'next_passages': list([
         dict({
           'cancelled': False,
@@ -69,7 +69,7 @@
           'line_number_colourFrontBorderHex': '000000',
           'line_number_colourFrontHex': 'FFFFFF',
           'line_number_public': '4',
-          'line_transport_type': 'tram',
+          'line_transport_type': 'TRAM',
           'passage': 0,
         }),
         dict({
@@ -91,7 +91,7 @@
           'line_number_colourFrontBorderHex': '000000',
           'line_number_colourFrontHex': 'FFFFFF',
           'line_number_public': '4',
-          'line_transport_type': 'tram',
+          'line_transport_type': 'TRAM',
           'passage': 1,
         }),
       ]),

@@ -144,6 +144,55 @@ async def test_reauth_success(
     assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
 
 
+async def test_reauth_reloads_exactly_once(
+    hass: HomeAssistant,
+    load_integration: MockConfigEntry,
+    mock_delijn_client: MagicMock,
+) -> None:
+    """Test a successful reauth reloads the loaded entry exactly once.
+
+    Explicitly reloading on top of the registered update listener would
+    reload twice; asserting a single get_passages call (one per the
+    entry's single stop coordinator) after reauth proves only the
+    listener's reload ran.
+    """
+    mock_delijn_client.get_passages.reset_mock()
+
+    result = await load_integration.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-api-key"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reauth_successful"
+    assert mock_delijn_client.get_passages.call_count == 1
+
+
+async def test_reauth_duplicate_key(
+    hass: HomeAssistant,
+    mock_delijn_client: MagicMock,
+) -> None:
+    """Test reauthenticating aborts if another entry already uses the new key."""
+    entry_to_reauth = MockConfigEntry(
+        domain=DOMAIN, data={CONF_API_KEY: "test-api-key"}, title="De Lijn"
+    )
+    other_entry = MockConfigEntry(
+        domain=DOMAIN, data={CONF_API_KEY: "other-api-key"}, title="De Lijn"
+    )
+    entry_to_reauth.add_to_hass(hass)
+    other_entry.add_to_hass(hass)
+
+    result = await entry_to_reauth.start_reauth_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "other-api-key"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry_to_reauth.data[CONF_API_KEY] == "test-api-key"
+
+
 @pytest.mark.parametrize(
     ("side_effect", "expected_error"),
     [
@@ -203,6 +252,31 @@ async def test_main_reconfigure_success(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reconfigure_successful"
     assert mock_config_entry.data[CONF_API_KEY] == "new-api-key"
+
+
+async def test_main_reconfigure_reloads_exactly_once(
+    hass: HomeAssistant,
+    load_integration: MockConfigEntry,
+    mock_delijn_client: MagicMock,
+) -> None:
+    """Test a successful reconfigure reloads the loaded entry exactly once.
+
+    Explicitly reloading on top of the registered update listener would
+    reload twice; asserting a single get_passages call (one per the
+    entry's single stop coordinator) after reconfigure proves only the
+    listener's reload ran.
+    """
+    mock_delijn_client.get_passages.reset_mock()
+
+    result = await load_integration.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_API_KEY: "new-api-key"}
+    )
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert mock_delijn_client.get_passages.call_count == 1
 
 
 async def test_main_reconfigure_duplicate_key(
