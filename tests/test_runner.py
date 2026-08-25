@@ -461,3 +461,14 @@ async def test_async_test_gets_hass_event_loop(hass: HomeAssistant) -> None:
     """Test an async test runs on our loop."""
     _assert_hass_event_loop(asyncio.get_running_loop())
     _assert_hass_event_loop(hass.loop)
+
+
+@pytest.mark.parametrize("debug", [False, True], ids=["no_debug", "debug"])
+def test_create_event_loop(debug: bool) -> None:
+    """Test the created loop carries the Home Assistant customizations."""
+    loop = runner.create_event_loop(debug)
+    try:
+        _assert_hass_event_loop(loop)
+        assert loop.get_debug() is debug
+    finally:
+        loop.close()
