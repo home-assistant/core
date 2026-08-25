@@ -60,6 +60,7 @@
     },
     "event": {
       "button": {
+        "name": "Button",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -74,7 +75,24 @@
           }
         }
       },
+      "button_numbered": {
+        "name": "Button {number}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "double_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::double_press%]",
+              "hold_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::hold_press%]",
+              "long_double_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::long_double_press%]",
+              "long_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::long_press%]",
+              "long_triple_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::long_triple_press%]",
+              "press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::press%]",
+              "triple_press": "[%key:component::bthome::entity::event::button::state_attributes::event_type::state::triple_press%]"
+            }
+          }
+        }
+      },
       "command": {
+        "name": "Command",
         "state_attributes": {
           "event_type": {
             "state": {
@@ -87,12 +105,38 @@
           }
         }
       },
+      "command_numbered": {
+        "name": "Command {number}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "off": "[%key:component::bthome::entity::event::command::state_attributes::event_type::state::off%]",
+              "on": "[%key:component::bthome::entity::event::command::state_attributes::event_type::state::on%]",
+              "step_down": "[%key:component::bthome::entity::event::command::state_attributes::event_type::state::step_down%]",
+              "step_up": "[%key:component::bthome::entity::event::command::state_attributes::event_type::state::step_up%]",
+              "toggle": "[%key:component::bthome::entity::event::command::state_attributes::event_type::state::toggle%]"
+            }
+          }
+        }
+      },
       "dimmer": {
+        "name": "Dimmer",
         "state_attributes": {
           "event_type": {
             "state": {
               "rotate_left": "Rotate left",
               "rotate_right": "Rotate right"
+            }
+          }
+        }
+      },
+      "dimmer_numbered": {
+        "name": "Dimmer {number}",
+        "state_attributes": {
+          "event_type": {
+            "state": {
+              "rotate_left": "[%key:component::bthome::entity::event::dimmer::state_attributes::event_type::state::rotate_left%]",
+              "rotate_right": "[%key:component::bthome::entity::event::dimmer::state_attributes::event_type::state::rotate_right%]"
             }
           }
         }

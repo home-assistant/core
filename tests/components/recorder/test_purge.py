@@ -1661,6 +1661,58 @@ async def test_purge_entities(hass: HomeAssistant, recorder_mock: Recorder) -> N
         assert states_meta_remain.count() == 4
 
 
+async def test_purge_entities_group_entity_id(
+    hass: HomeAssistant, recorder_mock: Recorder
+) -> None:
+    """Test purge_entities purges a group.* entity without purging everything else."""
+    with session_scope(hass=hass) as session:
+        timestamp = dt_util.utcnow() - timedelta(days=2)
+        for event_id in range(1000, 1010):
+            _add_state_with_state_attributes(
+                session,
+                "group.purge_group",
+                "purgeme",
+                timestamp,
+                event_id,
+            )
+        for event_id in range(2000, 2010):
+            _add_state_with_state_attributes(
+                session,
+                "sensor.keep",
+                "keep",
+                timestamp,
+                event_id,
+            )
+        convert_pending_states_to_meta(recorder_mock, session)
+        convert_pending_events_to_event_types(recorder_mock, session)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        states = session.query(States)
+        assert states.count() == 20
+
+    await hass.services.async_call(
+        DOMAIN,
+        SERVICE_PURGE_ENTITIES,
+        {"entity_id": "group.purge_group", "domains": [], "entity_globs": []},
+    )
+    await hass.async_block_till_done()
+    await async_recorder_block_till_done(hass)
+    await async_wait_purge_done(hass)
+
+    with session_scope(hass=hass, read_only=True) as session:
+        states_meta_remain = session.query(StatesMeta).filter(
+            StatesMeta.entity_id == "group.purge_group"
+        )
+        assert states_meta_remain.count() == 0
+
+        states_sensor_kept = (
+            session.query(States)
+            .outerjoin(StatesMeta, States.metadata_id == StatesMeta.metadata_id)
+            .filter(StatesMeta.entity_id == "sensor.keep")
+        )
+        assert states_sensor_kept.count() == 10
+
+
 async def _add_test_states(hass: HomeAssistant, wait_recording_done: bool = True):
     """Add multiple states to the db for testing."""
     utcnow = dt_util.utcnow()

@@ -311,6 +311,9 @@
       "charge_state_charge_port_door_open": {
         "name": "Charge port door"
       },
+      "tonneau": {
+        "name": "Tonneau"
+      },
       "vehicle_state_ft": {
         "name": "Frunk"
       },
@@ -900,6 +903,9 @@
       "lateral_acceleration": {
         "name": "Lateral acceleration"
       },
+      "lifetime_energy_gained_regen": {
+        "name": "Lifetime energy gained regen"
+      },
       "lifetime_energy_used": {
         "name": "Lifetime energy used"
       },
@@ -920,6 +926,9 @@
       },
       "longitudinal_acceleration": {
         "name": "Longitudinal acceleration"
+      },
+      "miles_since_reset": {
+        "name": "Miles since reset"
       },
       "module_temp_max": {
         "name": "Module temperature maximum"
@@ -991,6 +1000,9 @@
           "off": "[%key:common::state::off%]",
           "start_at": "Start at"
         }
+      },
+      "self_driving_miles_since_reset": {
+        "name": "Self-driving miles since reset"
       },
       "sentry_mode": {
         "name": "Sentry mode",

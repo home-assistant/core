@@ -1,5 +1,6 @@
 """The tests for the  Template light platform."""
 
+from itertools import chain
 from typing import Any
 
 import pytest
@@ -18,8 +19,11 @@ from homeassistant.components.light import (
     ATTR_TRANSITION,
     ATTR_XY_COLOR,
     ColorMode,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
+    LightEntityStateAttribute,
 )
+from homeassistant.components.template.light import DEFAULT_NAME
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     SERVICE_TURN_OFF,
@@ -38,6 +42,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_extra_template_attributes,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -2231,3 +2236,45 @@ async def test_saving_state(
         "supported_color_modes": ["brightness"],
         "xy_color": None,
     }
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_extra_template_attributes(
+    hass: HomeAssistant, style: ConfigurationStyle
+) -> None:
+    """Test extra attributes."""
+    await assert_extra_template_attributes(
+        hass, TEST_LIGHT, style, {"state": "{{ 'on' }}", **ON_OFF_ACTIONS}
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(LightEntityCapabilityAttribute, LightEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_blocked_template_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked extra attributes."""
+    await setup_entity(
+        hass,
+        TEST_LIGHT,
+        style,
+        0,
+        {
+            "state": "{{ 'on' }}",
+            **ON_OFF_ACTIONS,
+            "attributes": {str(attribute): "{{ 'does not matter' }}"},
+        },
+    )
+    assert (
+        f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
+    )
