@@ -146,20 +146,10 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
         """Handle the initial step."""
         errors: dict[str, Any] = {}
 
-        if not self._all_region_codes_sorted:
-            nina: Nina = Nina(async_get_clientsession(self.hass))
-
-            try:
-                self._all_region_codes_sorted = swap_key_value(
-                    await nina.get_all_regional_codes()
-                )
-            except ApiError:
-                return self.async_abort(reason="no_fetch")
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                return self.async_abort(reason="unknown")
-
-            self.regions = split_regions(self._all_region_codes_sorted, self.regions)
+        if not self._all_region_codes_sorted and (
+            region_result := await self._fetch_regions()
+        ):
+            return region_result
 
         if user_input is not None and not errors:
             user_input[CONF_REGIONS] = []
@@ -201,20 +191,10 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
         reconfigure_entry = self._get_reconfigure_entry()
         errors: dict[str, Any] = {}
 
-        if not self._all_region_codes_sorted:
-            nina: Nina = Nina(async_get_clientsession(self.hass))
-
-            try:
-                self._all_region_codes_sorted = swap_key_value(
-                    await nina.get_all_regional_codes()
-                )
-            except ApiError:
-                return self.async_abort(reason="no_fetch")
-            except Exception:  # noqa: BLE001
-                LOGGER.exception("Unexpected exception")
-                return self.async_abort(reason="unknown")
-
-            self.regions = split_regions(self._all_region_codes_sorted, self.regions)
+        if not self._all_region_codes_sorted and (
+            region_result := await self._fetch_regions()
+        ):
+            return region_result
 
         if user_input is not None and not errors:
             user_input[CONF_REGIONS] = []
@@ -250,6 +230,23 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
             ),
             errors=errors,
         )
+
+    async def _fetch_regions(self) -> ConfigFlowResult | None:
+        """Fetch all regions."""
+        nina: Nina = Nina(async_get_clientsession(self.hass))
+
+        try:
+            self._all_region_codes_sorted = swap_key_value(
+                await nina.get_all_regional_codes()
+            )
+        except ApiError:
+            return self.async_abort(reason="no_fetch")
+        except Exception:  # noqa: BLE001
+            LOGGER.exception("Unexpected exception")
+            return self.async_abort(reason="unknown")
+
+        self.regions = split_regions(self._all_region_codes_sorted, self.regions)
+        return None
 
     async def _remove_unused_devices(
         self, config_entry: ConfigEntry, regions_data: dict[str, Any]
