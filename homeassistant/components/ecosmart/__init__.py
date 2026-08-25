@@ -2,7 +2,14 @@
 
 from functools import partial
 
-from aioecosmart import EcosmartAuthError, EcosmartClient, EcosmartError, Forecast, Spot
+from aioecosmart import (
+    EcosmartAuthError,
+    EcosmartClient,
+    EcosmartError,
+    EcosmartRateLimitError,
+    Forecast,
+    Spot,
+)
 
 from homeassistant.const import CONF_API_KEY, Platform
 from homeassistant.core import HomeAssistant
@@ -30,6 +37,17 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcosmartConfigEntry) -> 
     except EcosmartAuthError as err:
         raise ConfigEntryAuthFailed(
             translation_domain=DOMAIN, translation_key="invalid_auth"
+        ) from err
+    except EcosmartRateLimitError as err:
+        retry_after = err.retry_after
+        if retry_after is None:
+            # No Retry-After header: quote our own cadence rather than
+            # hammering a key that is already out of budget.
+            retry_after = int(SPOT_SCAN_INTERVAL.total_seconds())
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN,
+            translation_key="rate_limited",
+            translation_placeholders={"retry_after": str(retry_after)},
         ) from err
     except EcosmartError as err:
         raise ConfigEntryNotReady(

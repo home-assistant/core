@@ -87,11 +87,15 @@ async def test_two_pocs_are_both_fetched(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_state"),
+    ("side_effect", "expected_state", "expected_translation_key"),
     [
-        (EcosmartAuthError("nope"), ConfigEntryState.SETUP_ERROR),
-        (EcosmartConnectionError("offline"), ConfigEntryState.SETUP_RETRY),
-        (EcosmartError("weird"), ConfigEntryState.SETUP_RETRY),
+        (EcosmartAuthError("nope"), ConfigEntryState.SETUP_ERROR, "invalid_auth"),
+        (
+            EcosmartConnectionError("offline"),
+            ConfigEntryState.SETUP_RETRY,
+            "cannot_connect",
+        ),
+        (EcosmartError("weird"), ConfigEntryState.SETUP_RETRY, "cannot_connect"),
     ],
 )
 async def test_identity_failures(
@@ -100,6 +104,7 @@ async def test_identity_failures(
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
     expected_state: ConfigEntryState,
+    expected_translation_key: str,
 ) -> None:
     """Test the test-before-setup call decides how the entry fails."""
     mock_ecosmart_client.me.side_effect = side_effect
@@ -107,6 +112,37 @@ async def test_identity_failures(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+    assert mock_config_entry.error_reason_translation_key == expected_translation_key
+
+
+@pytest.mark.parametrize(
+    ("side_effect", "expected_retry_after"),
+    [
+        (EcosmartRateLimitError("slow down", retry_after=30), "30"),
+        # No Retry-After header, so the message quotes our own cadence.
+        (
+            EcosmartRateLimitError("slow down"),
+            str(int(SPOT_SCAN_INTERVAL.total_seconds())),
+        ),
+    ],
+)
+async def test_identity_rate_limit_is_reported_as_such(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    side_effect: Exception,
+    expected_retry_after: str,
+) -> None:
+    """Test a spent budget is not reported as a connection failure."""
+    mock_ecosmart_client.me.side_effect = side_effect
+
+    await setup_integration(hass, mock_config_entry)
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == "rate_limited"
+    assert mock_config_entry.error_reason_translation_placeholders == {
+        "retry_after": expected_retry_after
+    }
 
 
 @pytest.mark.parametrize(
