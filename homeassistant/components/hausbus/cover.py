@@ -137,7 +137,9 @@ class HausbusCover(HausbusEntity, CoverEntity):
         _LOGGER.debug(
             "set cover position to %s for %s", position, self._debug_identifier
         )
-        await self.hass.async_add_executor_job(self._channel.start, EDirection.TOGGLE)
+        await self.hass.async_add_executor_job(
+            self._channel.moveToPosition, 100 - position
+        )
 
     async def async_cover_set_configuration(
         self, close_time: int, open_time: int, invert_direction: bool

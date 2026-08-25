@@ -40,14 +40,10 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
 
     # Start device discovery in the background: it is a best-effort UDP
     # broadcast that may find devices at any time, not only at startup, so
-    # setup does not block on it. Cancel it on unload/reload so a still
-    # running search does not keep using a torn-down gateway.
-    discovery_task = hass.async_create_task(gateway.start_discovery())
-
-    def _cancel_discovery() -> None:
-        discovery_task.cancel()
-
-    entry.async_on_unload(_cancel_discovery)
+    # setup does not block on it. The task is stored on the gateway so
+    # async_unload_entry can cancel and await it before tearing down the
+    # HomeServer singleton.
+    gateway.discovery_task = hass.async_create_task(gateway.start_discovery())
     return True
 
 
@@ -59,6 +55,19 @@ async def async_unload_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> 
     # which raises if called twice, so deregistering unconditionally here
     # would break a retry after a failed platform unload.
     if unload_ok := await hass.config_entries.async_unload_platforms(entry, PLATFORMS):
+        # Cancel and await any in-progress discovery before shutting down the
+        # HomeServer singleton. Merely cancelling the Task is not enough:
+        # searchDevices runs in an executor thread, and cancel() only cancels
+        # the coroutine awaiting the executor job — the thread keeps running.
+        # Awaiting the cancelled task ensures the executor job finishes before
+        # shutdown() tears down BusHandler, preventing searchDevices from
+        # recreating it on a dead socket.
+        if gateway.discovery_task is not None:
+            gateway.discovery_task.cancel()
+            try:
+                await gateway.discovery_task
+            except Exception:
+                pass
         gateway.home_server.removeBusEventListener(gateway)
         gateway.home_server.removeBusDeviceListener(gateway)
         # manifest.json sets single_config_entry, so this is always the

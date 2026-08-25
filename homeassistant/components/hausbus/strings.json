@@ -11,5 +11,25 @@
         "description": "Perform auto-discovery of Haus-Bus devices."
       }
     }
+  },
+  "services": {
+    "cover_set_configuration": {
+      "name": "Set cover configuration",
+      "description": "Sets the motor travel times and direction for a Haus-Bus shutter.",
+      "fields": {
+        "close_time": {
+          "name": "Close time",
+          "description": "Time in seconds for the cover to fully close (1–255)."
+        },
+        "open_time": {
+          "name": "Open time",
+          "description": "Time in seconds for the cover to fully open (1–255)."
+        },
+        "invert_direction": {
+          "name": "Invert direction",
+          "description": "Reverse the motor direction."
+        }
+      }
+    }
   }
 }
