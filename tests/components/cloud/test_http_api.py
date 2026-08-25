@@ -1004,19 +1004,19 @@ async def test_logout_clears_auto_login(
 
 
 @pytest.mark.usefixtures("setup_cloud")
-async def test_retry_auto_login(
+async def test_attempt_auto_login_now(
     hass: HomeAssistant,
     cloud: MagicMock,
     hass_client: ClientSessionGenerator,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test asking for an immediate auto-login retry."""
+    """Test asking for an immediate auto-login attempt."""
     cloud.id_token = None
     await register_auto_login(hass_client)
     controller = cloud.register_and_auto_login.return_value
 
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 5, "type": "cloud/retry_auto_login"})
+    await client.send_json({"id": 5, "type": "cloud/attempt_auto_login_now"})
     response = await client.receive_json()
 
     assert response["success"]
@@ -1032,18 +1032,85 @@ async def test_retry_auto_login(
 
 
 @pytest.mark.usefixtures("setup_cloud")
-async def test_retry_auto_login_without_pending(
+async def test_attempt_auto_login_now_without_pending(
     hass: HomeAssistant,
     cloud: MagicMock,
     hass_ws_client: WebSocketGenerator,
 ) -> None:
-    """Test asking for a retry when no auto-login is pending."""
+    """Test asking for an attempt when no auto-login is pending."""
     client = await hass_ws_client(hass)
-    await client.send_json({"id": 5, "type": "cloud/retry_auto_login"})
+    await client.send_json({"id": 5, "type": "cloud/attempt_auto_login_now"})
     response = await client.receive_json()
 
     assert response["success"]
     assert cloud.register_and_auto_login.return_value.attempt_now.call_count == 0
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_resend_auto_login_confirm(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test resending the confirmation email for a pending auto-login."""
+    cloud.id_token = None
+    controller = cloud.register_and_auto_login.return_value
+    controller.resend = AsyncMock()
+    await register_auto_login(hass_client)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "cloud/resend_auto_login_confirm"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert controller.resend.call_count == 1
+    assert controller.cancel.call_count == 0
+
+    # The registration is still pending, the email was only sent again.
+    status = await get_cloud_status(client, 6)
+    assert status["auto_login"]["email"] == "hello@bla.com"
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_resend_auto_login_confirm_without_pending(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test resending the confirmation email with no auto-login pending."""
+    controller = cloud.register_and_auto_login.return_value
+    controller.resend = AsyncMock()
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "cloud/resend_auto_login_confirm"})
+    response = await client.receive_json()
+
+    assert response["success"]
+    assert controller.resend.call_count == 0
+
+
+@pytest.mark.usefixtures("setup_cloud")
+async def test_resend_auto_login_confirm_error(
+    hass: HomeAssistant,
+    cloud: MagicMock,
+    hass_client: ClientSessionGenerator,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a failing resend of the confirmation email."""
+    cloud.id_token = None
+    controller = cloud.register_and_auto_login.return_value
+    controller.resend = AsyncMock(side_effect=UnknownError)
+    await register_auto_login(hass_client)
+
+    client = await hass_ws_client(hass)
+    await client.send_json({"id": 5, "type": "cloud/resend_auto_login_confirm"})
+    response = await client.receive_json()
+
+    assert not response["success"]
+    # The registration stays pending, so the user can try again.
+    status = await get_cloud_status(client, 6)
+    assert status["auto_login"]["email"] == "hello@bla.com"
 
 
 @pytest.mark.usefixtures("setup_cloud")
@@ -2274,7 +2341,8 @@ async def test_support_package_requires_admin(
         {"type": "cloud/onboarding/postpone"},
         {"type": "cloud/onboarding/complete", "items": ["remote"]},
         {"type": "cloud/events"},
-        {"type": "cloud/retry_auto_login"},
+        {"type": "cloud/attempt_auto_login_now"},
+        {"type": "cloud/resend_auto_login_confirm"},
         {"type": "cloud/cancel_auto_login"},
     ],
 )

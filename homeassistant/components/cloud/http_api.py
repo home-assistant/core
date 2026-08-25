@@ -114,7 +114,8 @@ def async_setup(hass: HomeAssistant) -> None:
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_postpone)
     websocket_api.async_register_command(hass, websocket_cloud_onboarding_complete)
     websocket_api.async_register_command(hass, websocket_subscribe_events)
-    websocket_api.async_register_command(hass, websocket_retry_auto_login)
+    websocket_api.async_register_command(hass, websocket_attempt_auto_login_now)
+    websocket_api.async_register_command(hass, websocket_resend_auto_login_confirm)
     websocket_api.async_register_command(hass, websocket_cancel_auto_login)
 
     websocket_api.async_register_command(hass, google_assistant_get)
@@ -815,16 +816,34 @@ def websocket_subscribe_events(
 
 
 @websocket_api.require_admin
-@websocket_api.websocket_command({vol.Required("type"): "cloud/retry_auto_login"})
+@websocket_api.websocket_command({vol.Required("type"): "cloud/attempt_auto_login_now"})
 @callback
-def websocket_retry_auto_login(
+def websocket_attempt_auto_login_now(
     hass: HomeAssistant,
     connection: websocket_api.ActiveConnection,
     msg: dict[str, Any],
 ) -> None:
-    """Retry a pending auto-login now instead of waiting for the backoff."""
+    """Attempt a pending auto-login now instead of waiting for the backoff."""
     if (pending := hass.data[DATA_LOGIN_STATE].pending_auto_login) is not None:
         pending.controller.attempt_now()
+    connection.send_result(msg["id"])
+
+
+@websocket_api.require_admin
+@websocket_api.websocket_command(
+    {vol.Required("type"): "cloud/resend_auto_login_confirm"}
+)
+@websocket_api.async_response
+@_ws_handle_cloud_errors
+async def websocket_resend_auto_login_confirm(
+    hass: HomeAssistant,
+    connection: websocket_api.ActiveConnection,
+    msg: dict[str, Any],
+) -> None:
+    """Resend the confirmation email for a pending auto-login."""
+    if (pending := hass.data[DATA_LOGIN_STATE].pending_auto_login) is not None:
+        async with asyncio.timeout(REQUEST_TIMEOUT):
+            await pending.controller.resend()
     connection.send_result(msg["id"])
 
 
