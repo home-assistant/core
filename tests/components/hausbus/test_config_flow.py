@@ -97,6 +97,7 @@ async def test_single_instance_allowed(
     )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "single_instance_allowed"
+<<<<<<< HEAD
 
 
 async def test_abandoned_flow_does_not_shut_down_concurrent_flow(
@@ -122,3 +123,5 @@ async def test_abandoned_flow_does_not_shut_down_concurrent_flow(
     mock_home_server.is_any_device_found.return_value = True
     result1 = await _resolve_progress(hass, result1["flow_id"])
     assert result1["type"] is FlowResultType.CREATE_ENTRY
+=======
+>>>>>>> branch 'hausbus-cover-v2' of https://github.com/hausbus/hacore.git
