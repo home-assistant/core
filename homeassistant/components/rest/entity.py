@@ -57,7 +57,7 @@ async def async_get_config_rest_data_and_coordinator(
         conf = config
         coordinator = None
         rest = create_rest_data_from_config(hass, conf)
-        await rest.async_update()
+        await rest.async_update(log_errors=False)
 
     if rest.data is None:
         if rest.last_exception:
