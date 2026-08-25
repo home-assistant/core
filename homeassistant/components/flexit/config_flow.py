@@ -11,6 +11,7 @@ from homeassistant.components.modbus import async_get_temporary_unit
 from homeassistant.config_entries import ConfigEntryState, ConfigFlow, ConfigFlowResult
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.selector import (
     NumberSelector,
     NumberSelectorConfig,
@@ -69,7 +70,7 @@ async def check_connection(hass: HomeAssistant, data: dict[str, Any]) -> str | N
             hass, create_modbus_params(data), data[CONF_UNIT]
         ) as unit:
             await Flexit(unit).async_update()
-    except ModbusError:
+    except HomeAssistantError, ModbusError:
         _LOGGER.debug("Cannot connect to Flexit device", exc_info=True)
         return "cannot_connect"
     except Exception:
@@ -149,17 +150,22 @@ class FlexitConfigFlow(ConfigFlow, domain=DOMAIN):
             self._async_abort_entries_match(data)
 
             entry_was_loaded = config_entry.state is ConfigEntryState.LOADED
-            if entry_was_loaded:
-                await self.hass.config_entries.async_unload(config_entry.entry_id)
-            error = await check_connection(self.hass, data)
-            if error is not None:
-                errors["base"] = error
-                if entry_was_loaded:
-                    await self.hass.config_entries.async_setup(config_entry.entry_id)
+            if entry_was_loaded and not await self.hass.config_entries.async_unload(
+                config_entry.entry_id
+            ):
+                errors["base"] = "unknown"
             else:
-                return self.async_update_reload_and_abort(
-                    config_entry, data_updates=data
-                )
+                error = await check_connection(self.hass, data)
+                if error is not None:
+                    errors["base"] = error
+                    if entry_was_loaded:
+                        await self.hass.config_entries.async_setup(
+                            config_entry.entry_id
+                        )
+                else:
+                    return self.async_update_reload_and_abort(
+                        config_entry, data_updates=data
+                    )
 
         return self.async_show_form(
             step_id="reconfigure",

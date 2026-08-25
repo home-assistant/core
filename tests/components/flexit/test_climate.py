@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     HVACAction,
+    HVACMode,
 )
 from homeassistant.components.flexit.climate import async_setup_platform
 from homeassistant.components.flexit.const import DOMAIN
@@ -93,9 +94,12 @@ async def test_deprecated_yaml_issue(
     async_add_entities.assert_called_once()
     legacy_entity = async_add_entities.call_args.args[0][0]
     await legacy_entity.async_update()
+    assert legacy_entity.unique_id == "modbus_hub_1"
+    assert legacy_entity.has_entity_name
     assert legacy_entity.target_temperature == 21.5
     assert legacy_entity.current_temperature == -2.0
     assert legacy_entity.fan_mode == "Medium"
+    assert legacy_entity.hvac_mode is HVACMode.COOL
     assert legacy_entity.extra_state_attributes["outdoor_air_temp"] == -5.0
 
 

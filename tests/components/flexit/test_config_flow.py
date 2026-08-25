@@ -15,6 +15,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_DEVICE, CONF_HOST, CONF_PORT, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType, InvalidData
+from homeassistant.exceptions import HomeAssistantError
 
 from tests.common import MockConfigEntry
 
@@ -190,6 +191,27 @@ async def test_form_cannot_read_device(
     assert result["errors"] == {"base": "cannot_connect"}
 
 
+async def test_form_shared_link_conflict(
+    hass: HomeAssistant,
+    mock_get_temporary_modbus_unit: MagicMock,
+) -> None:
+    """Test an incompatible shared connection is a connection error."""
+    mock_get_temporary_modbus_unit.side_effect = HomeAssistantError
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "tcp"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], TCP_USER_INPUT
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "cannot_connect"}
+
+
 async def test_form_unknown_exception(
     hass: HomeAssistant,
     mock_get_temporary_modbus_unit: MagicMock,
@@ -328,6 +350,40 @@ async def test_reconfigure_loaded_entry_restored_after_error(
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "cannot_connect"}
     assert mock_serial_config_entry.state is ConfigEntryState.LOADED
+
+
+async def test_reconfigure_stops_when_unload_fails(
+    hass: HomeAssistant,
+    mock_serial_config_entry: MockConfigEntry,
+) -> None:
+    """Test reconfiguration stops when the active entry cannot unload."""
+    mock_serial_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_serial_config_entry.entry_id)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": SOURCE_RECONFIGURE,
+            "entry_id": mock_serial_config_entry.entry_id,
+        },
+    )
+
+    with (
+        patch.object(
+            hass.config_entries, "async_unload", AsyncMock(return_value=False)
+        ),
+        patch(
+            "homeassistant.components.flexit.config_flow.check_connection",
+            AsyncMock(),
+        ) as check_connection,
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {**SERIAL_USER_INPUT, "baudrate": 38400}
+        )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {"base": "unknown"}
+    check_connection.assert_not_awaited()
 
 
 async def test_reconfigure_flow_errors(

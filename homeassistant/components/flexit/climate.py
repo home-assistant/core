@@ -101,19 +101,22 @@ async def async_setup_platform(
     )
     hub = get_hub(hass, config[CONF_HUB])
     async_add_entities(
-        [LegacyFlexitClimate(hub, config[CONF_SLAVE], config[CONF_NAME])], True
+        [
+            LegacyFlexitClimate(
+                hub, config[CONF_HUB], config[CONF_SLAVE], config[CONF_NAME]
+            )
+        ],
+        True,
     )
 
 
-# Preserve the YAML entity's historical identity and naming until its removal.
-# pylint: disable=home-assistant-missing-entity-unique-id
-# pylint: disable=home-assistant-missing-has-entity-name
 class LegacyFlexitClimate(ClimateEntity):
     """Representation of a YAML-configured Flexit AC unit."""
 
     _attr_fan_modes = ["Off", "Low", "Medium", "High"]
-    _attr_hvac_mode = HVACMode.HEAT_COOL
-    _attr_hvac_modes = [HVACMode.HEAT_COOL]
+    _attr_has_entity_name = True
+    _attr_hvac_mode = HVACMode.COOL
+    _attr_hvac_modes = [HVACMode.COOL]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )
@@ -121,10 +124,13 @@ class LegacyFlexitClimate(ClimateEntity):
     _attr_min_temp = 10.0
     _attr_max_temp = 30.0
 
-    def __init__(self, hub: ModbusHub, modbus_slave: int, name: str) -> None:
+    def __init__(
+        self, hub: ModbusHub, hub_name: str, modbus_slave: int, name: str
+    ) -> None:
         """Initialize the unit."""
         self._hub = hub
         self._attr_name = name
+        self._attr_unique_id = f"{hub_name}_{modbus_slave}"
         self._slave = modbus_slave
         self._attr_fan_mode = None
         self._filter_hours: int | None = None
@@ -279,8 +285,6 @@ class LegacyFlexitClimate(ClimateEntity):
         )
 
 
-# pylint: enable=home-assistant-missing-entity-unique-id
-# pylint: enable=home-assistant-missing-has-entity-name
 class FlexitClimate(FlexitEntity, ClimateEntity):
     """Representation of a Flexit AC unit."""
 
