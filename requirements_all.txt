@@ -3082,6 +3082,9 @@ snapcast==2.3.8
 # homeassistant.components.sonos
 soco==0.31.2
 
+# homeassistant.components.sofar
+sofar-modbus==0.3.0
+
 # homeassistant.components.solaredge_local
 solaredge-local==0.2.3
 
