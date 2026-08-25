@@ -14,8 +14,6 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.data.Status import Statu
 from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import (
     EDirection,
 )
-import voluptuous as vol
-
 from homeassistant.components.cover import (
     ATTR_POSITION,
     DOMAIN as COVER_DOMAIN,
@@ -24,8 +22,6 @@ from homeassistant.components.cover import (
     CoverEntityFeature,
 )
 from homeassistant.core import HomeAssistant, callback
-from homeassistant.exceptions import HomeAssistantError
-from homeassistant.helpers import entity_platform
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -59,22 +55,6 @@ async def async_setup_entry(
 
     config_entry.async_on_unload(
         async_dispatcher_connect(hass, NEW_CHANNEL_ADDED, _handle_channel_added)
-    )
-
-    platform = entity_platform.async_get_current_platform()
-
-    platform.async_register_entity_service(
-        "cover_set_configuration",
-        {
-            vol.Required("close_time", default=30): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=255)
-            ),
-            vol.Required("open_time", default=30): vol.All(
-                vol.Coerce(int), vol.Range(min=1, max=255)
-            ),
-            vol.Optional("invert_direction", default=False): vol.Coerce(bool),
-        },
-        "async_cover_set_configuration",
     )
 
 
@@ -140,30 +120,6 @@ class HausbusCover(HausbusEntity, CoverEntity):
         await self.hass.async_add_executor_job(
             self._channel.moveToPosition, 100 - position
         )
-
-    async def async_cover_set_configuration(
-        self, close_time: int, open_time: int, invert_direction: bool
-    ) -> None:
-        """Set cover motor timing and direction."""
-        _LOGGER.debug(
-            "set configuration close_time=%s open_time=%s invert_direction=%s for %s",
-            close_time,
-            open_time,
-            invert_direction,
-            self._debug_identifier,
-        )
-        if self._configuration is None:
-            raise HomeAssistantError(
-                "Configuration not yet received from device. Please try again."
-            )
-        options = self._configuration.getOptions()
-        options.setInvertDirection(invert_direction)
-
-        def _apply() -> None:
-            self._channel.setConfiguration(close_time, open_time, options)
-            self._channel.getConfiguration()
-
-        await self.hass.async_add_executor_job(_apply)
 
     @callback
     @override

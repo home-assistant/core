@@ -63,12 +63,11 @@ async def test_user_flow_search_timeout_then_retry(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "search_timeout"
 
-    # Retrying starts a new search.
+    # Retrying completes when a device is found.
+    mock_home_server.is_any_device_found.return_value = True
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
-    assert result["type"] in (
-        FlowResultType.SHOW_PROGRESS,
-        FlowResultType.FORM,
-    )
+    result = await _resolve_progress(hass, result["flow_id"])
+    assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
 @pytest.mark.parametrize("exc", [OSError("socket error"), OSError()])

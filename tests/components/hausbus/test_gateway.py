@@ -13,7 +13,6 @@ from pyhausbus.de.hausbus.homeassistant.proxy.Rollladen import Rollladen
 from homeassistant.components.hausbus.const import DOMAIN, NEW_CHANNEL_ADDED
 from homeassistant.components.hausbus.gateway import HausbusGateway
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
@@ -47,12 +46,11 @@ def _make_gateway(hass: HomeAssistant, home_server: MagicMock) -> HausbusGateway
     return HausbusGateway(hass, entry, home_server)
 
 
-async def test_new_device_detected_registers_device_and_dispatches_channel(
+async def test_new_device_detected_dispatches_channel(
     hass: HomeAssistant,
     mock_home_server: MagicMock,
-    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """A newly discovered device is registered and its channel dispatched."""
+    """A newly discovered device dispatches its channel with the correct DeviceInfo."""
     gateway = _make_gateway(hass, mock_home_server)
 
     received: list[tuple[MagicMock, DeviceInfo]] = []
@@ -74,13 +72,11 @@ async def test_new_device_detected_registers_device_and_dispatches_channel(
     )
     await hass.async_block_till_done()
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "100")})
-    assert device is not None
-    assert device.manufacturer == "HausBus"
-    assert device.model == "ESP32 Controller"
-
     assert len(received) == 1
     assert received[0][0] is channel
+    device_info = received[0][1]
+    assert device_info["manufacturer"] == "HausBus"
+    assert device_info["model"] == "ESP32 Controller"
 
 
 async def test_new_device_detected_dedups_known_channels(
@@ -142,29 +138,3 @@ async def test_bus_data_received_dispatches_update(
     await hass.async_block_till_done()
 
     received.assert_called_once_with(data)
-
-
-async def test_register_device_is_idempotent(
-    hass: HomeAssistant,
-    mock_home_server: MagicMock,
-    device_registry: dr.DeviceRegistry,
-) -> None:
-    """Registering the same device twice does not create a duplicate entry."""
-    gateway = _make_gateway(hass, mock_home_server)
-
-    device_info = DeviceInfo(
-        identifiers={(DOMAIN, "100")},
-        manufacturer="HausBus",
-        model="ESP32 Controller",
-        name="ESP32 Controller 100",
-    )
-
-    await gateway.async_register_device(100, device_info)
-    await gateway.async_register_device(100, device_info)
-
-    devices = [
-        device
-        for device in device_registry.devices.values()
-        if (DOMAIN, "100") in device.identifiers
-    ]
-    assert len(devices) == 1

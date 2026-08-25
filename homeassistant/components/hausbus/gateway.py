@@ -15,7 +15,6 @@ from pyhausbus.IBusDataListener import IBusDataListener
 from pyhausbus.ObjectId import ObjectId
 
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 
@@ -90,10 +89,6 @@ class HausbusGateway(IBusDataListener):
             hw_version=module_id.getName(),
         )
 
-        asyncio.run_coroutine_threadsafe(
-            self.async_register_device(device_id, device_info), self.hass.loop
-        ).result(timeout=10)
-
         for channel in channels:
             object_id = channel.getObjectId()
             if object_id not in self.registered_channels:
@@ -125,34 +120,3 @@ class HausbusGateway(IBusDataListener):
             data,
         )
 
-    async def async_register_device(
-        self, device_id: int, device_info: DeviceInfo
-    ) -> None:
-        """Create a device in the hass registry."""
-        device_registry = dr.async_get(self.hass)
-
-        device = device_registry.async_get_device(
-            identifiers={(DOMAIN, str(device_id))},
-            connections=None,
-        )
-
-        if device is not None:
-            LOGGER.debug("device %s already registered", device_id)
-            return
-
-        device_entry = device_registry.async_get_or_create(
-            config_entry_id=self.config_entry.entry_id,
-            identifiers={(DOMAIN, str(device_id))},
-            manufacturer=device_info.get("manufacturer"),
-            model=device_info.get("model"),
-            name=device_info.get("name"),
-        )
-
-        LOGGER.debug(
-            "hassEntryId = %s, device_id = %s, manufacturer = %s, model = %s, name = %s",
-            device_entry.id,
-            str(device_id),
-            device_info.get("manufacturer"),
-            device_info.get("model"),
-            device_info.get("name"),
-        )
