@@ -100,7 +100,12 @@ _ENTITY_REGISTRY_UPDATE_FIELDS = [
     "name",
     "original_name",
 ]
-_DEVICE_REGISTRY_UPDATE_FIELDS = ["area_id", "name", "name_by_user"]
+_DEVICE_REGISTRY_UPDATE_FIELDS = [
+    "area_id",
+    "name",
+    "name_by_user",
+    "parent_device_id",
+]
 
 _DEFAULT_EXPOSED_ATTRIBUTES = {"device_class"}
 

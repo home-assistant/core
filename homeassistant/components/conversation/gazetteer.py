@@ -238,8 +238,16 @@ class _HomeLock:
                 await self._condition.wait_for(
                     lambda: not self._writing and not self._readers
                 )
-            finally:
+            except BaseException:
+                # Giving up while queued, most likely cancelled. Readers are held
+                # off by the count of waiting writers, so they all become free at
+                # once. `Condition.wait` wakes one of them on the way out of a
+                # cancelled wait, which is enough to avoid a stall but leaves the
+                # rest asleep until that one finishes; wake them together instead.
                 self._writers_waiting -= 1
+                self._condition.notify_all()
+                raise
+            self._writers_waiting -= 1
             self._writing = True
         try:
             yield
@@ -353,18 +361,25 @@ class GazetteerFallback:
             # this rebuilds sets it again rather than being erased on the way out.
             stale, self._stale = self._stale, False
 
-            if self._matcher is None:
-                self._matcher = await _run_uninterrupted(
-                    self.hass.async_add_executor_job(
-                        partial(GazetteerMatcher, home=async_build_home(self.hass))
+            try:
+                if self._matcher is None:
+                    self._matcher = await _run_uninterrupted(
+                        self.hass.async_add_executor_job(
+                            partial(GazetteerMatcher, home=async_build_home(self.hass))
+                        )
                     )
-                )
-            elif stale:
-                await _run_uninterrupted(
-                    self.hass.async_add_executor_job(
-                        self._matcher.set_home, async_build_home(self.hass)
+                elif stale:
+                    await _run_uninterrupted(
+                        self.hass.async_add_executor_job(
+                            self._matcher.set_home, async_build_home(self.hass)
+                        )
                     )
-                )
+            except BaseException:
+                # Whatever went wrong, the home on the matcher is not the one that
+                # was asked for. Leaving the flag clear would strand it there until
+                # something unrelated changed.
+                self._stale = True
+                raise
 
         return self._matcher
 
