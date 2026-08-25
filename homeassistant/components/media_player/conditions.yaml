@@ -37,6 +37,20 @@ is_paused: *condition_common
 is_playing: *condition_common
 is_unmuted: *condition_common
 
+is_source:
+  target: *condition_media_player_target
+  fields:
+    behavior: *condition_behavior
+    for: *condition_for
+    source:
+      context:
+        filter_target: target
+      required: true
+      selector:
+        state:
+          attribute: source
+          multiple: true
+
 is_volume:
   target: *condition_media_player_target
   fields:
