@@ -1130,6 +1130,11 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "colmo": {
+      "name": "Colmo",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "color_extractor": {
       "name": "ColorExtractor",
       "integration_type": "hub",
