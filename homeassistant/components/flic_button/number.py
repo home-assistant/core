@@ -1,6 +1,7 @@
 """Number platform for the Flic Button integration."""
 
 from dataclasses import dataclass
+import logging
 from typing import Any, override
 
 from bleak import BleakError
@@ -8,9 +9,9 @@ from pyflic_ble import FlicProtocolError, PushTwistMode
 from pyflic_ble.const import TWIST_MODE_SLOT_CHANGING
 
 from homeassistant.components.number import (
-    NumberEntity,
     NumberEntityDescription,
     NumberMode,
+    RestoreNumber,
 )
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant, callback
@@ -22,6 +23,8 @@ from .const import CONF_PUSH_TWIST_MODE, DOMAIN
 from .entity import FlicButtonEntity
 
 PARALLEL_UPDATES = 0
+
+_LOGGER = logging.getLogger(__name__)
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -78,7 +81,7 @@ async def async_setup_entry(
     )
 
 
-class FlicTwistNumberEntity(FlicButtonEntity, NumberEntity):
+class FlicTwistNumberEntity(FlicButtonEntity, RestoreNumber):
     """Representation of the rotation position of a single Flic Twist mode."""
 
     entity_description: FlicTwistNumberEntityDescription
@@ -100,8 +103,21 @@ class FlicTwistNumberEntity(FlicButtonEntity, NumberEntity):
 
     @override
     async def async_added_to_hass(self) -> None:
-        """Subscribe to rotation events when the entity is added."""
+        """Restore the last position and subscribe to rotation events."""
         await super().async_added_to_hass()
+
+        # The device takes its rotation position from the host, and the library
+        # only carries it for the lifetime of a connection, so a restart has to
+        # hand it back.
+        if (
+            last_data := await self.async_get_last_number_data()
+        ) is not None and last_data.native_value:
+            self._attr_native_value = last_data.native_value
+            if self._client.state.connected:
+                try:
+                    await self._async_send_position(last_data.native_value)
+                except HomeAssistantError as err:
+                    _LOGGER.debug("Could not restore %s: %s", self.entity_id, err)
 
         self.async_on_remove(
             self._client.register_rotate_event_callback(self._handle_rotate_event)
@@ -119,6 +135,12 @@ class FlicTwistNumberEntity(FlicButtonEntity, NumberEntity):
     @override
     async def async_set_native_value(self, value: float) -> None:
         """Set the position of this mode on the device."""
+        await self._async_send_position(value)
+        self._attr_native_value = value
+        self.async_write_ha_state()
+
+    async def _async_send_position(self, value: float) -> None:
+        """Send a rotation position to the device."""
         try:
             await self._client.async_send_update_twist_position(
                 self.entity_description.mode_index, value
@@ -129,6 +151,3 @@ class FlicTwistNumberEntity(FlicButtonEntity, NumberEntity):
                 translation_key="set_position_failed",
                 translation_placeholders={"address": self._client.address},
             ) from err
-
-        self._attr_native_value = value
-        self.async_write_ha_state()

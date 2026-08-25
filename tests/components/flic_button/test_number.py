@@ -1,5 +1,6 @@
 """Test the Flic Button number platform."""
 
+from typing import Any
 from unittest.mock import MagicMock
 
 from pyflic_ble import DeviceType, FlicProtocolError, PushTwistMode
@@ -12,14 +13,18 @@ from homeassistant.components.number import (
     DOMAIN as NUMBER_DOMAIN,
     SERVICE_SET_VALUE,
 )
-from homeassistant.const import ATTR_ENTITY_ID, Platform
-from homeassistant.core import HomeAssistant
+from homeassistant.const import ATTR_ENTITY_ID, PERCENTAGE, Platform
+from homeassistant.core import HomeAssistant, State
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry, snapshot_platform
+from tests.common import (
+    MockConfigEntry,
+    mock_restore_cache_with_extra_data,
+    snapshot_platform,
+)
 
 SLOT_1_ENTITY_ID = "number.flic_twist_t12345_slot_1"
 SLOT_3_ENTITY_ID = "number.flic_twist_t12345_slot_3"
@@ -159,3 +164,59 @@ async def test_set_value_error(
 
     assert err.value.translation_key == "set_position_failed"
     assert hass.states.get(TWIST_POSITION_ENTITY_ID).state == "0"
+
+
+def _restore(entity_id: str, value: float) -> tuple[State, dict[str, Any]]:
+    """Seed the restore cache with a stored position."""
+    return (
+        State(entity_id, str(value)),
+        {
+            "native_max_value": 100,
+            "native_min_value": 0,
+            "native_step": 1,
+            "native_unit_of_measurement": PERCENTAGE,
+            "native_value": value,
+        },
+    )
+
+
+@pytest.mark.usefixtures(
+    "mock_no_ble_device_from_address", "mock_bluetooth_register_callback"
+)
+@pytest.mark.parametrize("device_type", [DeviceType.TWIST])
+async def test_position_restored_and_sent_to_device(
+    hass: HomeAssistant,
+    mock_flic_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the last position is restored and handed back to the device."""
+    mock_restore_cache_with_extra_data(
+        hass, (_restore(TWIST_POSITION_ENTITY_ID, 40.0),)
+    )
+
+    await setup_twist(hass, mock_config_entry, PushTwistMode.DEFAULT)
+
+    assert hass.states.get(TWIST_POSITION_ENTITY_ID).state == "40.0"
+    mock_flic_client.async_send_update_twist_position.assert_awaited_once_with(0, 40.0)
+
+
+@pytest.mark.usefixtures(
+    "mock_no_ble_device_from_address", "mock_bluetooth_register_callback"
+)
+@pytest.mark.parametrize("device_type", [DeviceType.TWIST])
+async def test_restore_keeps_position_when_device_rejects_it(
+    hass: HomeAssistant,
+    mock_flic_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a failing restore write still leaves the position restored."""
+    mock_restore_cache_with_extra_data(
+        hass, (_restore(TWIST_POSITION_ENTITY_ID, 40.0),)
+    )
+    mock_flic_client.async_send_update_twist_position.side_effect = FlicProtocolError(
+        "Session not established"
+    )
+
+    await setup_twist(hass, mock_config_entry, PushTwistMode.DEFAULT)
+
+    assert hass.states.get(TWIST_POSITION_ENTITY_ID).state == "40.0"
