@@ -11,7 +11,7 @@
     },
     "step": {
       "discovery_confirm": {
-        "description": "An Imou device was found on the network. Do you want to set it up using your Imou Open Platform account?",
+        "description": "An Imou device was found on the network. Do you want to set up the Imou cloud integration with your Open Platform account?",
         "title": "Imou device discovered"
       },
       "user": {
