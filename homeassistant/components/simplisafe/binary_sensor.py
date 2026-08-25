@@ -31,6 +31,7 @@ SUPPORTED_BATTERY_SENSOR_TYPES = [
     DeviceTypes.LOCK_KEYPAD,
     DeviceTypes.MOTION,
     DeviceTypes.MOTION_V2,
+    DeviceTypes.OUTDOOR_CAMERA,
     DeviceTypes.PANIC_BUTTON,
     DeviceTypes.REMOTE,
     DeviceTypes.SIREN,

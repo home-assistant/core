@@ -41,6 +41,21 @@
       "offline": false
     }
   },
+  "abc123": {
+    "type": 17,
+    "serial": "abc123",
+    "name": "Backyard",
+    "setting": {},
+    "status": {
+      "triggered": false,
+      "malfunction": false
+    },
+    "flags": {
+      "swingerShutdown": false,
+      "lowBattery": false,
+      "offline": false
+    }
+  },
   "987": {
     "serial": "987",
     "type": 16,
