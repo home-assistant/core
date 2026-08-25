@@ -38,7 +38,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:circle-double',
+    'original_icon': None,
     'original_name': 'Device mode',
     'platform': 'watercryst',
     'previous_unique_id': None,
@@ -54,7 +54,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Device mode',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:circle-double',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'error_mode',
         'fail_safe',
@@ -108,7 +107,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Event category',
     'platform': 'watercryst',
     'previous_unique_id': None,
@@ -124,7 +123,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Event category',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:alert-circle-outline',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'error',
         'warning',
@@ -165,7 +163,7 @@
     'options': dict({
     }),
     'original_device_class': None,
-    'original_icon': 'mdi:alert-circle-outline',
+    'original_icon': None,
     'original_name': 'Event ID',
     'platform': 'watercryst',
     'previous_unique_id': None,
@@ -180,7 +178,6 @@
   StateSnapshot({
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Event ID',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:alert-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ha_device_event_id',
@@ -219,7 +216,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.DURATION: 'duration'>,
-    'original_icon': 'mdi:timer-outline',
+    'original_icon': None,
     'original_name': 'Last water tap duration',
     'platform': 'watercryst',
     'previous_unique_id': None,
@@ -235,7 +232,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'duration',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Last water tap duration',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:timer-outline',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfTime.SECONDS: 's'>,
     }),
     'context': <ANY>,
@@ -275,7 +271,7 @@
       }),
     }),
     'original_device_class': <SensorDeviceClass.VOLUME: 'volume'>,
-    'original_icon': 'mdi:cup-water',
+    'original_icon': None,
     'original_name': 'Last water tap volume',
     'platform': 'watercryst',
     'previous_unique_id': None,
@@ -291,7 +287,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'volume',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Last water tap volume',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:cup-water',
       <EntityStateAttribute.UNIT_OF_MEASUREMENT: 'unit_of_measurement'>: <UnitOfVolume.LITERS: 'L'>,
     }),
     'context': <ANY>,
@@ -340,7 +335,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
-    'original_icon': 'mdi:pipe-leak',
+    'original_icon': None,
     'original_name': 'Microleakage measurement state',
     'platform': 'watercryst',
     'previous_unique_id': None,
@@ -356,7 +351,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Microleakage measurement state',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:pipe-leak',
       <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
         'cancelled',
         'failure_pressure_drop',
@@ -403,7 +397,7 @@
     'options': dict({
     }),
     'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
-    'original_icon': 'mdi:pause-circle-outline',
+    'original_icon': None,
     'original_name': 'Pause leakage protection until',
     'platform': 'watercryst',
     'previous_unique_id': None,
@@ -419,7 +413,6 @@
     'attributes': ReadOnlyDict({
       <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'HA Device Pause leakage protection until',
-      <EntityStateAttribute.ICON: 'icon'>: 'mdi:pause-circle-outline',
     }),
     'context': <ANY>,
     'entity_id': 'sensor.ha_device_pause_leakage_protection_until',
