@@ -37,8 +37,8 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a device entry."""
     if TYPE_CHECKING:
-        # alexa_devices does not create child devices
-        assert isinstance(entry, DeviceEntry)
+        # homekit_controller does not create child devices
+        assert isinstance(device, DeviceEntry)
 
     return _async_get_diagnostics(hass, entry, device)
 

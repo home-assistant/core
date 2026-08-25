@@ -55,7 +55,7 @@ async def async_get_device_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a route."""
     if TYPE_CHECKING:
-        # miele does not create child devices
+        # nederlandse_spoorwegen does not create child devices
         assert isinstance(device, DeviceEntry)
 
     # Find the coordinator for this device
