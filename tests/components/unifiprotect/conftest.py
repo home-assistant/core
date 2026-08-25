@@ -655,19 +655,25 @@ def mock_ufp_public_only_client() -> Mock:
     pb = Mock(spec=PublicBootstrap)
     pb.nvr = nvr
     pb.arm_mode = arm_mode
+    # One map per device family forwarded in public-only mode; tests replace
+    # them, so both helpers below read the attribute at call time.
     pb.cameras = {}
+    pb.lights = {}
+    device_maps = {ModelType.CAMERA: "cameras", ModelType.LIGHT: "lights"}
 
     def _all_devices(*, include_nvr: bool = False) -> Iterator[Mock]:
         if include_nvr and pb.nvr is not None:
             yield pb.nvr
-        yield from pb.cameras.values()
+        for attr in device_maps.values():
+            yield from getattr(pb, attr).values()
+
+    def _get(model: ModelType, obj_id: str) -> Mock | None:
+        if (attr := device_maps.get(model)) is None:
+            return None
+        return getattr(pb, attr).get(obj_id)
 
     pb.all_devices = _all_devices
-    pb.get = Mock(
-        side_effect=lambda model, obj_id: (
-            pb.cameras.get(obj_id) if model is ModelType.CAMERA else None
-        )
-    )
+    pb.get = Mock(side_effect=_get)
     client.public_bootstrap = pb
     return client
 
