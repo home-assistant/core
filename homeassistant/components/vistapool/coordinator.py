@@ -49,6 +49,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self.subscription: ResilientPoolSubscription | None = None
         self._pending_optimistic: dict[str, list[tuple[Any, float]]] = {}
         self._optimistic_handles: dict[str, asyncio.TimerHandle] = {}
+        self._self_heal_handle: asyncio.TimerHandle | None = None
 
         super().__init__(
             hass,
@@ -90,6 +91,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             handle.cancel()
         self._optimistic_handles.clear()
         self._pending_optimistic.clear()
+        self._cancel_self_heal()
         if self.subscription is not None:
             await self.subscription.aclose()
             self.subscription = None
@@ -134,6 +136,7 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
 
     def _apply_remote_data(self, data: dict[str, Any]) -> None:
         """Apply a Firestore push, preserving unconfirmed optimistic writes."""
+        self._cancel_self_heal()
         self.async_set_updated_data(self._merge_optimistic(data))
 
     def _clear_optimistic(self, value_path: str) -> None:
@@ -148,7 +151,32 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         if value_path not in self._pending_optimistic:
             return
         del self._pending_optimistic[value_path]
-        self.hass.async_create_task(self.async_refresh())
+        self.hass.async_create_task(self._async_self_heal())
+
+    async def _async_self_heal(self) -> None:
+        """Fetch authoritative data after an expired write, retrying on failure.
+
+        Without a polling interval, a failed refresh with a quiet Firestore
+        document would otherwise leave the entities unavailable indefinitely.
+        A successful refresh or an incoming push cancels the retry.
+        """
+        self._cancel_self_heal()
+        await self.async_refresh()
+        if self.last_update_success:
+            return
+        self._self_heal_handle = self.hass.loop.call_later(
+            OPTIMISTIC_TTL_SECONDS, self._schedule_self_heal
+        )
+
+    def _schedule_self_heal(self) -> None:
+        """Run the self-heal retry from a loop timer."""
+        self.hass.async_create_task(self._async_self_heal())
+
+    def _cancel_self_heal(self) -> None:
+        """Drop a scheduled self-heal retry, if any."""
+        if self._self_heal_handle is not None:
+            self._self_heal_handle.cancel()
+            self._self_heal_handle = None
 
 
 def _set_path(data: dict[str, Any], value_path: str, value: Any) -> None:
