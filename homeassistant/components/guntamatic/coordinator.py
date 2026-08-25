@@ -40,5 +40,9 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
                 self.heater.parse_data
             )
         except requests.exceptions.ConnectionError as err:
-            raise UpdateFailed(f"Cannot connect to heater: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="communication_error",
+                translation_placeholders={"error": str(err)},
+            ) from err
         return data

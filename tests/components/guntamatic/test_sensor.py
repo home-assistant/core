@@ -8,10 +8,12 @@ import pytest
 import requests
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.guntamatic.const import SCAN_INTERVAL
+from homeassistant.components.guntamatic.const import DOMAIN, SCAN_INTERVAL
 from homeassistant.const import STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers.translation import async_get_translations
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
 
@@ -73,3 +75,27 @@ async def test_state_unavailable(
     await hass.async_block_till_done()
     state = hass.states.get("sensor.mock_title_boiler_temperature")
     assert state.state != STATE_UNAVAILABLE
+
+
+async def test_coordinator_error_translations(hass: HomeAssistant) -> None:
+    """Test the coordinator update failure exceptions are translated."""
+    translations = await async_get_translations(hass, "en", "exceptions", [DOMAIN])
+    assert "component.guntamatic.exceptions.communication_error.message" in translations
+
+
+async def test_coordinator_connection_error_raises_translated_failure(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_heater: MagicMock,
+) -> None:
+    """Test a connection error during updates raises a translated UpdateFailed."""
+    await setup_integration(hass, mock_config_entry)
+
+    mock_heater.parse_data.side_effect = requests.exceptions.ConnectionError("boom")
+    coordinator = mock_config_entry.runtime_data
+
+    with pytest.raises(UpdateFailed) as exc_info:
+        await coordinator._async_update_data()
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "communication_error"
