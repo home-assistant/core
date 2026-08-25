@@ -58,7 +58,6 @@ async def async_setup_entry(
     """Set up the sensor platform."""
     runtime_data = entry.runtime_data
     known_unique_ids: set[str] = set()
-    subscribed_bans: set[str] = set()
 
     @callback
     def _async_add_new_entities() -> None:
@@ -93,22 +92,11 @@ async def async_setup_entry(
             )
             async_add_entities(new_entities)
 
-    @callback
-    def _async_subscribe_new_households() -> None:
-        """Subscribe to price updates for every household not yet subscribed."""
-        for ban, household in runtime_data.households.items():
-            if ban in subscribed_bans:
-                continue
-            subscribed_bans.add(ban)
-            entry.async_on_unload(
-                household.prices.async_add_listener(_async_add_new_entities)
-            )
-        _async_add_new_entities()
-
-    _async_subscribe_new_households()
-    entry.async_on_unload(
-        runtime_data.relations.async_add_listener(_async_subscribe_new_households)
-    )
+    for household in runtime_data.households.values():
+        entry.async_on_unload(
+            household.prices.async_add_listener(_async_add_new_entities)
+        )
+    _async_add_new_entities()
 
 
 class EngieBePriceSensor(CoordinatorEntity[EngieBePricesCoordinator], SensorEntity):

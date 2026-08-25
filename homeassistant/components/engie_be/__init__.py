@@ -86,27 +86,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: EngieBeConfigEntry) -> b
 
     entry.runtime_data = EngieBeRuntimeData(relations=relations, households=households)
 
-    known_bans: set[str] = set(households)
-
-    @callback
-    def _async_add_new_households() -> None:
-        """Create a coordinator and device for every newly discovered business agreement."""
-        new_bans = set(relations.data) - known_bans
-        if not new_bans:
-            return
-        known_bans.update(new_bans)
-        for ban in new_bans:
-            household = _async_create_household(ban)
-            entry.runtime_data.households[ban] = household
-            entry.async_create_task(
-                hass,
-                household.prices.async_refresh(),
-                name=f"{household.prices.name} refresh",
-                eager_start=False,
-            )
-
-    entry.async_on_unload(relations.async_add_listener(_async_add_new_households))
-
     await hass.config_entries.async_forward_entry_setups(entry, _PLATFORMS)
 
     return True
