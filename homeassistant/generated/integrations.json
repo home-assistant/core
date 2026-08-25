@@ -7402,6 +7402,11 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "toshiba": {
+      "name": "Toshiba",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "totalconnect": {
       "name": "Total Connect",
       "integration_type": "hub",
