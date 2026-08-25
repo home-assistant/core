@@ -299,18 +299,32 @@ async def test_unexposed_entities_are_not_targets(
 
 
 @pytest.mark.usefixtures("init_components", "home")
-async def test_declines_shapes_it_cannot_answer(hass: HomeAssistant) -> None:
-    """Test a question whose wording does not say which answer it wants.
+async def test_declines_a_frame_it_cannot_answer(hass: HomeAssistant) -> None:
+    """Test a frame with no response of its own is left to hassil.
 
-    Nothing in "are the kitchen lights on" separates it from "how many kitchen lights
-    are on", and the slots are identical, so the frame names no response key and the
-    corpus writes several. hassil's error stands rather than a guess.
+    The matcher leaves the key unset when neither the wording nor the corpus settles
+    which of several answers a shape wants. Rather than tie this to whichever shapes
+    are unsettled today -- the matcher's vocabulary keeps closing them -- it takes a
+    sentence the matcher does answer and removes the key, which is the only thing the
+    rule here looks at. Acting mutely is worse than hassil's own error, so nothing is
+    said and, importantly, nothing is done.
     """
-    result = await conversation.async_converse(
-        hass, "are the kichen lights on", None, Context(), None
-    )
+    calls = async_mock_service(hass, "light", "turn_on")
+    real_interpret = GazetteerMatcher.interpret
+
+    def unanswerable(self, text, **kwargs):
+        result = real_interpret(self, text, **kwargs)
+        for frame in result.frames:
+            frame.response_key = None
+        return result
+
+    with patch.object(GazetteerMatcher, "interpret", unanswerable):
+        result = await conversation.async_converse(
+            hass, "turn on the kichen lights", None, Context(), None
+        )
 
     assert result.response.response_type is intent.IntentResponseType.ERROR
+    assert not calls
 
 
 @pytest.mark.usefixtures("init_components", "home")
@@ -320,16 +334,18 @@ async def test_declines_shapes_it_cannot_answer(hass: HomeAssistant) -> None:
         ("how many kichen lights are on", "0"),
         ("which kichen lights are on", "Not any"),
         ("are any kichen lights on", "No"),
+        ("are the kichen lights on", "No"),
     ],
-    ids=["how_many", "which", "any"],
+    ids=["how_many", "which", "any", "bare"],
 )
 async def test_wording_picks_between_identical_frames(
     hass: HomeAssistant, text: str, speech: str
 ) -> None:
     """Test the frame's own response key answers questions the slots cannot tell apart.
 
-    All three are HassGetState with the same slots. Only the words said separate them,
-    which is what the matcher records on the frame.
+    All four are HassGetState with the same slots. Only the words said separate them,
+    which is what the matcher records on the frame -- down to the bare form, which
+    names no aggregate at all and is taken to be asking whether any are on.
     """
     result = await conversation.async_converse(hass, text, None, Context(), None)
 
@@ -366,8 +382,29 @@ async def test_pronoun_follows_a_turn_hassil_answered(hass: HomeAssistant) -> No
 
 
 @pytest.mark.usefixtures("init_components", "home")
-async def test_pronoun_follows_the_area_a_turn_named(hass: HomeAssistant) -> None:
-    """Test "them" reuses the area a command scoped to, not what it resolved to."""
+async def test_pronoun_follows_the_area_a_turn_named(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test "them" reuses the area a command scoped to, not what it resolved to.
+
+    A second light in the kitchen is what tells those apart. With only one, an area
+    selector and the entity it happened to match turn off the same thing.
+    """
+    second = "light.kitchen_lamp"
+    entry = entity_registry.async_get_or_create(
+        "light", "demo", "kitchen_lamp", suggested_object_id="kitchen_lamp"
+    )
+    assert entry.entity_id == second
+    entity_registry.async_update_entity(
+        second, name="Kitchen Lamp", area_id="kitchen_id", aliases=[er.COMPUTED_NAME]
+    )
+    hass.states.async_set(
+        second, STATE_OFF, attributes={ATTR_FRIENDLY_NAME: "Kitchen Lamp"}
+    )
+    await hass.async_block_till_done()
+
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
     async_mock_service(hass, "light", "turn_on")
     turn_off = async_mock_service(hass, "light", "turn_off")
 
@@ -376,13 +413,24 @@ async def test_pronoun_follows_the_area_a_turn_named(hass: HomeAssistant) -> Non
     )
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
+    # What the turn left behind is the selector the sentence used, not its result.
+    assert agent._gazetteer._previous_targets[result.conversation_id] == (
+        TargetReference.for_area("kitchen_id", domain="light"),
+    )
+
     result = await conversation.async_converse(
         hass, "turn them off", result.conversation_id, Context(), None
     )
 
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
-    assert len(turn_off) == 1
-    assert turn_off[0].data["entity_id"] == [KITCHEN_LIGHT]
+    # One call per entity, so both lights in the area went off rather than just the
+    # one the first sentence resolved to.
+    targeted = [
+        entity_id
+        for call in turn_off
+        for entity_id in cv.ensure_list(call.data["entity_id"])
+    ]
+    assert sorted(targeted) == sorted([KITCHEN_LIGHT, second])
 
 
 @pytest.mark.usefixtures("init_components", "home")
