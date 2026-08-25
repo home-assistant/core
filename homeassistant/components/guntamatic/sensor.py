@@ -379,21 +379,13 @@ async def async_setup_entry(
         if match := HEATING_CIRCUIT_REGEX.match(description.key):
             circuit = int(match.group(1))
             identifiers = {(DOMAIN, f"{serial}_hc{circuit}")}
-            device_registry.async_get_or_create_child(
-                config_entry_id=entry.entry_id,
+            device_info: DeviceInfo | ChildDeviceInfo = ChildDeviceInfo(
                 identifiers=identifiers,
                 parent_device_id=main_device.id,
                 name=f"Heating circuit {circuit}",
             )
         else:
-            identifiers = {(DOMAIN, serial)}
-        if match:
-            device_info: DeviceInfo | ChildDeviceInfo = ChildDeviceInfo(
-                identifiers=identifiers,
-                parent_device_id=main_device.id,
-            )
-        else:
-            device_info = DeviceInfo(identifiers=identifiers)
+            device_info = DeviceInfo(identifiers={(DOMAIN, serial)})
         entities.append(GuntamaticSensor(coordinator, description, device_info))
 
     async_add_entities(entities)
