@@ -205,6 +205,7 @@ async def test_reconfigure_flow_requires_location_when_not_tracking(
 ) -> None:
     """Test omitting lat/long without tracking shows an error, and recovers."""
     mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(mock_config_entry, data={})
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
@@ -217,6 +218,12 @@ async def test_reconfigure_flow_requires_location_when_not_tracking(
 
     assert result["type"] is FlowResultType.FORM
     assert result["errors"] == {"base": "location_required"}
+    suggested_track_home = next(
+        key.description["suggested_value"]
+        for key in result["data_schema"].schema
+        if key == CONF_TRACK_HOME_LOCATION
+    )
+    assert suggested_track_home is False  # attempted submission is preserved
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],

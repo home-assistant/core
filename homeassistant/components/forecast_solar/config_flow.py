@@ -233,19 +233,16 @@ class ForecastSolarFlowHandler(ConfigFlow, domain=DOMAIN):
             if not errors:
                 return self.async_update_reload_and_abort(entry, data=location_data)
 
+        suggested_values = user_input or {
+            CONF_TRACK_HOME_LOCATION: not entry.data,
+            CONF_LATITUDE: entry.data.get(CONF_LATITUDE, self.hass.config.latitude),
+            CONF_LONGITUDE: entry.data.get(CONF_LONGITUDE, self.hass.config.longitude),
+        }
+
         return self.async_show_form(
             step_id="reconfigure",
             data_schema=self.add_suggested_values_to_schema(
-                _LOCATION_SCHEMA,
-                {
-                    CONF_TRACK_HOME_LOCATION: not entry.data,
-                    CONF_LATITUDE: entry.data.get(
-                        CONF_LATITUDE, self.hass.config.latitude
-                    ),
-                    CONF_LONGITUDE: entry.data.get(
-                        CONF_LONGITUDE, self.hass.config.longitude
-                    ),
-                },
+                _LOCATION_SCHEMA, suggested_values
             ),
             errors=errors,
         )
