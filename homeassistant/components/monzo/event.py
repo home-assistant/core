@@ -8,8 +8,15 @@ from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import ATTR_DATA, DOMAIN, EVENT_TRANSACTION_CREATED
+from .const import (
+    ATTR_DATA,
+    DEVICE_MODEL_ACCOUNT,
+    DOMAIN,
+    EVENT_TRANSACTION_CREATED,
+    NON_TRANSFER_ACCOUNT_TYPES,
+)
 from .coordinator import MonzoConfigEntry
+from .helpers import get_account_name
 from .webhook import webhook_signal
 
 PARALLEL_UPDATES = 0
@@ -43,8 +50,12 @@ class MonzoTransactionEvent(EventEntity):
             entry_type=DeviceEntryType.SERVICE,
             identifiers={(DOMAIN, self._account_id)},
             manufacturer="Monzo",
-            model=account["name"],
-            name=account["name"],
+            model=(
+                account["name"]
+                if account["type"] in NON_TRANSFER_ACCOUNT_TYPES
+                else DEVICE_MODEL_ACCOUNT
+            ),
+            name=get_account_name(account),
         )
 
     @override

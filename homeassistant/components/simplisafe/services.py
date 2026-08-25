@@ -122,7 +122,9 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
     device_registry = dr.async_get(call.hass)
 
     if (
-        alarm_control_panel_device_entry := device_registry.async_get(device_id)
+        alarm_control_panel_device_entry := device_registry.async_get(
+            device_id, include_child_devices=False
+        )
     ) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
@@ -133,11 +135,13 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
     if TYPE_CHECKING:
         assert alarm_control_panel_device_entry.via_device_id
 
-    if (
-        base_station_device_entry := device_registry.async_get(
-            alarm_control_panel_device_entry.via_device_id
+    config_entry: SimpliSafeConfigEntry | None
+    base_station_device_entry, config_entry = (
+        dr.async_get_device_and_config_entry_for_domain(
+            call.hass, alarm_control_panel_device_entry.via_device_id, domain=DOMAIN
         )
-    ) is None:
+    )
+    if base_station_device_entry is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="no_base_station",
@@ -151,21 +155,14 @@ def _async_get_system_for_service_call(call: ServiceCall) -> SystemType:
     ]
     system_id = int(system_id_str)
 
-    entry: SimpliSafeConfigEntry | None
-    for entry_id in base_station_device_entry.config_entries:
-        if (
-            (entry := call.hass.config_entries.async_get_entry(entry_id)) is None
-            or entry.domain != DOMAIN
-            or entry.state is not ConfigEntryState.LOADED
-        ):
-            continue
-        return entry.runtime_data.systems[system_id]
+    if config_entry is None or config_entry.state is not ConfigEntryState.LOADED:
+        raise ServiceValidationError(
+            translation_domain=DOMAIN,
+            translation_key="no_system_for_device",
+            translation_placeholders={"device_id": device_id},
+        )
 
-    raise ServiceValidationError(
-        translation_domain=DOMAIN,
-        translation_key="no_system_for_device",
-        translation_placeholders={"device_id": device_id},
-    )
+    return config_entry.runtime_data.systems[system_id]
 
 
 @callback
