@@ -7,6 +7,7 @@ from uiprotect.data import Camera, Sensor
 from homeassistant.components.automation import DOMAIN as AUTOMATION_DOMAIN
 from homeassistant.components.script import DOMAIN as SCRIPT_DOMAIN
 from homeassistant.components.unifiprotect.const import DOMAIN
+from homeassistant.components.unifiprotect.migrate import SENSE_SETTING_MIRROR_BREAKS_IN
 from homeassistant.const import SERVICE_RELOAD, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
@@ -407,15 +408,15 @@ async def test_migrate_package_binary_sensor_removed(
     )
 
 
-async def test_migrate_sense_setting_mirrors_removed(
+async def test_migrate_sense_setting_mirrors_kept(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
     issue_registry: ir.IssueRegistry,
     ufp: MockUFPFixture,
     sensor_all: Sensor,
 ) -> None:
-    """The unused setting mirrors are removed silently."""
-    stale = {
+    """The unused setting mirrors survive the deprecation without a repair."""
+    existing = {
         (platform, key): entity_registry.async_get_or_create(
             platform,
             DOMAIN,
@@ -434,11 +435,13 @@ async def test_migrate_sense_setting_mirrors_removed(
 
     await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
 
-    for (platform, key), entity in stale.items():
-        assert entity_registry.async_get(entity.entity_id) is None, f"{platform}.{key}"
+    for (platform, key), entity in existing.items():
+        assert entity_registry.async_get(entity.entity_id) is not None, (
+            f"{platform}.{key}"
+        )
         assert (
             issue_registry.async_get_issue(
-                DOMAIN, f"sense_setting_mirror_removed_{sensor_all.mac}_{key}"
+                DOMAIN, f"sense_setting_mirror_deprecated_{sensor_all.mac}_{key}"
             )
             is None
         )
@@ -451,7 +454,7 @@ async def test_migrate_sense_setting_mirror_in_use(
     ufp: MockUFPFixture,
     sensor_all: Sensor,
 ) -> None:
-    """Removing a used setting mirror raises an actionable repair."""
+    """Deprecating a used setting mirror raises an actionable repair."""
     mirror = entity_registry.async_get_or_create(
         Platform.BINARY_SENSOR,
         DOMAIN,
@@ -462,11 +465,12 @@ async def test_migrate_sense_setting_mirror_in_use(
 
     await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
 
-    assert entity_registry.async_get(mirror.entity_id) is None
+    assert entity_registry.async_get(mirror.entity_id) is not None
     issue = issue_registry.async_get_issue(
-        DOMAIN, f"sense_setting_mirror_removed_{sensor_all.mac}_alarm"
+        DOMAIN, f"sense_setting_mirror_deprecated_{sensor_all.mac}_alarm"
     )
     assert issue is not None
+    assert issue.breaks_in_ha_version == SENSE_SETTING_MIRROR_BREAKS_IN
     assert issue.translation_placeholders["entity_id"] == mirror.entity_id
     replacement_id = entity_registry.async_get_entity_id(
         Platform.SWITCH, DOMAIN, f"{sensor_all.mac}_alarm"
@@ -493,7 +497,7 @@ async def test_migrate_sense_setting_mirror_in_use_no_replacement(
 
     await init_entry(hass, ufp, [sensor_all], regenerate_ids=False)
 
-    assert entity_registry.async_get(mirror.entity_id) is None
+    assert entity_registry.async_get(mirror.entity_id) is not None
     assert (
         entity_registry.async_get_entity_id(
             Platform.SWITCH, DOMAIN, f"{sensor_all.mac}_alarm"
@@ -501,10 +505,10 @@ async def test_migrate_sense_setting_mirror_in_use_no_replacement(
         is None
     )
     issue = issue_registry.async_get_issue(
-        DOMAIN, f"sense_setting_mirror_removed_{sensor_all.mac}_alarm"
+        DOMAIN, f"sense_setting_mirror_deprecated_{sensor_all.mac}_alarm"
     )
     assert issue is not None
-    assert issue.translation_key == "sense_setting_mirror_removed_no_replacement"
+    assert issue.translation_key == "sense_setting_mirror_deprecated_no_replacement"
     assert issue.translation_placeholders["entity_id"] == mirror.entity_id
     assert "replacement" not in issue.translation_placeholders
 
@@ -512,15 +516,16 @@ async def test_migrate_sense_setting_mirror_in_use_no_replacement(
 async def test_migrate_sense_setting_keys_scoped_to_sensors(
     hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
+    issue_registry: ir.IssueRegistry,
     ufp: MockUFPFixture,
     doorbell: Camera,
     sensor_all: Sensor,
 ) -> None:
-    """The removed keys are shared with camera and light, so other devices survive.
+    """The deprecated keys are shared with camera and light, so scoping matters.
 
     ``motion_enabled`` and ``sensitivity`` also exist on cameras and lights, so a
-    sensor has to be present for the migration to run at all and the other
-    devices' entities still have to survive it.
+    sensor has to be present for the migration to run at all and only the
+    sensor's own mirror may be deprecated.
     """
     camera_entities = [
         entity_registry.async_get_or_create(
@@ -541,11 +546,27 @@ async def test_migrate_sense_setting_keys_scoped_to_sensors(
         config_entry=ufp.entry,
     )
 
+    # Both are used, so only the scoping decides which one gets a repair.
+    await _load_automation(hass, sensor_entity.entity_id)
+    for entity in camera_entities:
+        await _load_automation(hass, entity.entity_id)
+
     await init_entry(hass, ufp, [doorbell, sensor_all], regenerate_ids=False)
 
-    assert entity_registry.async_get(sensor_entity.entity_id) is None
+    assert (
+        issue_registry.async_get_issue(
+            DOMAIN, f"sense_setting_mirror_deprecated_{sensor_all.mac}_motion_enabled"
+        )
+        is not None
+    )
     for entity in camera_entities:
         assert entity_registry.async_get(entity.entity_id) is not None
+        assert (
+            issue_registry.async_get_issue(
+                DOMAIN, f"sense_setting_mirror_deprecated_{entity.unique_id}"
+            )
+            is None
+        )
 
 
 async def test_migrate_package_binary_sensor_removed_in_use(

@@ -195,13 +195,16 @@ def _async_repair_if_used(
     issue_id: str,
     translation_key: str,
     placeholders: dict[str, str] | None = None,
+    breaks_in: str | None = None,
 ) -> None:
-    """Raise a persistent repair before removing an entity that is still in use.
+    """Raise a repair for an entity that is going away and is still in use.
 
-    Removal cannot rewrite the user's automations/scripts, so a persistent repair
-    lists the affected ones (the caller supplies any replacement hint via
-    ``placeholders``). Disabled entities are skipped: they are not active in any
-    automation.
+    Neither a removal nor a deprecation can rewrite the user's
+    automations/scripts, so the repair lists the affected ones (the caller
+    supplies any replacement hint via ``placeholders``). Disabled entities are
+    skipped: they are not active in any automation. Pass ``breaks_in`` while the
+    entity still exists; the repair then clears itself once the last usage is
+    gone, where a removal repair has to persist.
     """
     if entity.disabled_by is not None:
         return
@@ -210,13 +213,16 @@ def _async_repair_if_used(
         | set(scripts_with_entity(hass, entity.entity_id))
     )
     if not items:
+        if breaks_in is not None:
+            ir.async_delete_issue(hass, DOMAIN, issue_id)
         return
     ir.async_create_issue(
         hass,
         DOMAIN,
         issue_id,
         is_fixable=False,
-        is_persistent=True,
+        is_persistent=breaks_in is None,
+        breaks_in_ha_version=breaks_in,
         severity=IssueSeverity.WARNING,
         translation_key=translation_key,
         translation_placeholders={
@@ -260,6 +266,9 @@ def async_remove_package_binary_sensor(
 # (platform, key) and pointing at the (platform, key) of the control that
 # replaced it. Camera and light entities reuse these key strings, so the match
 # is scoped to the sensor MACs below.
+# Release the deprecated mirrors are removed in.
+SENSE_SETTING_MIRROR_BREAKS_IN = "2027.3.0"
+
 _SENSE_SETTING_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str]] = {
     (Platform.BINARY_SENSOR, "motion_enabled"): (Platform.SWITCH, "motion"),
     (Platform.BINARY_SENSOR, "temperature"): (Platform.SWITCH, "temperature"),
@@ -271,14 +280,17 @@ _SENSE_SETTING_REPLACEMENTS: dict[tuple[str, str], tuple[Platform, str]] = {
 
 
 @callback
-def async_remove_sense_setting_mirrors(
+def async_deprecate_sense_setting_mirrors(
     hass: HomeAssistant, entry: UFPConfigEntry, bootstrap: Bootstrap
 ) -> None:
-    """Remove the read-only mirrors of the sense setting controls.
+    """Deprecate the read-only mirrors of the sense setting controls.
 
     Those controls write through the public API, which the local user's write
     permission does not gate, so the switch or number is now available to every
-    user and the ``PermRequired.NO_WRITE`` mirror has no audience left.
+    user and the ``PermRequired.NO_WRITE`` mirror only duplicates its state.
+
+    The mirrors keep working until the removal, so a dashboard or automation
+    referencing one does not break without warning.
 
     Runs after platform setup, unlike the other migrations in this file: the
     repair needs the replacement switch/number to already be in the registry
@@ -304,18 +316,19 @@ def async_remove_sense_setting_mirrors(
             _async_repair_if_used(
                 hass,
                 entity,
-                f"sense_setting_mirror_removed_{entity.unique_id}",
-                "sense_setting_mirror_removed",
+                f"sense_setting_mirror_deprecated_{entity.unique_id}",
+                "sense_setting_mirror_deprecated",
                 {"replacement": replacement_entity_id},
+                breaks_in=SENSE_SETTING_MIRROR_BREAKS_IN,
             )
         else:
             _async_repair_if_used(
                 hass,
                 entity,
-                f"sense_setting_mirror_removed_{entity.unique_id}",
-                "sense_setting_mirror_removed_no_replacement",
+                f"sense_setting_mirror_deprecated_{entity.unique_id}",
+                "sense_setting_mirror_deprecated_no_replacement",
+                breaks_in=SENSE_SETTING_MIRROR_BREAKS_IN,
             )
-        registry.async_remove(entity.entity_id)
 
 
 @callback

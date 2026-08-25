@@ -186,11 +186,20 @@
       "humidity_sensor": {
         "name": "Humidity sensor"
       },
+      "humidity_sensor_enabled": {
+        "name": "Humidity sensor enabled"
+      },
       "is_dark": {
         "name": "Is dark"
       },
       "light_sensor": {
         "name": "Light sensor"
+      },
+      "light_sensor_enabled": {
+        "name": "Light sensor enabled"
+      },
+      "motion_detection_enabled": {
+        "name": "Motion detection enabled"
       },
       "object_detected": {
         "name": "Object detected"
@@ -230,6 +239,9 @@
       },
       "temperature_sensor": {
         "name": "Temperature sensor"
+      },
+      "temperature_sensor_enabled": {
+        "name": "Temperature sensor enabled"
       },
       "tracking_person": {
         "name": "Tracking: person"
@@ -815,13 +827,13 @@
       },
       "title": "No stream is available for camera {camera}"
     },
-    "sense_setting_mirror_removed": {
-      "description": "The read-only entity `{entity_id}` has been removed; use `{replacement}` instead, which now holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "Read-only sensor setting entity removed"
+    "sense_setting_mirror_deprecated": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Read-only sensor setting entity deprecated"
     },
-    "sense_setting_mirror_removed_no_replacement": {
-      "description": "The read-only entity `{entity_id}` has been removed. The sensor does not support this setting, so there is no replacement.\n\nUpdate the following automations and scripts:\n{items}",
-      "title": "Read-only sensor setting entity removed"
+    "sense_setting_mirror_deprecated_no_replacement": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release. The sensor does not support this setting, so there is no replacement.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Read-only sensor setting entity deprecated"
     }
   },
   "options": {
