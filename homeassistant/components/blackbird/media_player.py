@@ -1,6 +1,7 @@
 """Support for interfacing with Monoprice Blackbird 4k 8x8 HDBaseT Matrix."""
 
 import logging
+from typing import override
 
 from pyblackbird import get_blackbird
 from serial import SerialException
@@ -165,6 +166,7 @@ class BlackbirdZone(MediaPlayerEntity):
         self._attr_source = self._source_id_name.get(idx)
 
     @property
+    @override
     def media_title(self):
         """Return the current source as media title."""
         return self.source
@@ -177,6 +179,7 @@ class BlackbirdZone(MediaPlayerEntity):
         _LOGGER.debug("Setting all zones source to %s", idx)
         self._blackbird.set_all_zone_source(idx)
 
+    @override
     def select_source(self, source: str) -> None:
         """Set input source."""
         if source not in self._source_name_id:
@@ -185,11 +188,13 @@ class BlackbirdZone(MediaPlayerEntity):
         _LOGGER.debug("Setting zone %d source to %s", self._zone_id, idx)
         self._blackbird.set_zone_source(self._zone_id, idx)
 
+    @override
     def turn_on(self) -> None:
         """Turn the media player on."""
         _LOGGER.debug("Turning zone %d on", self._zone_id)
         self._blackbird.set_zone_power(self._zone_id, True)
 
+    @override
     def turn_off(self) -> None:
         """Turn the media player off."""
         _LOGGER.debug("Turning zone %d off", self._zone_id)

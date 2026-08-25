@@ -3,7 +3,8 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "cannot_discover": "Could not detect a Nobø Ecohub at the discovered IP address."
+      "cannot_discover": "Could not detect a Nobø Ecohub at the discovered IP address.",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]"
     },
     "error": {
       "cannot_connect": "Failed to connect - check serial number",
@@ -23,6 +24,15 @@
           "serial": "The full 12-digit serial number printed on the back of your Nobø Ecohub."
         },
         "description": "Configure a Nobø Ecohub not discovered on your local network. If your hub is on another network, you can still connect to it by entering the complete serial number (12 digits) and its IP address."
+      },
+      "reconfigure": {
+        "data": {
+          "ip_address": "[%key:common::config_flow::data::ip%]"
+        },
+        "data_description": {
+          "ip_address": "[%key:component::nobo_hub::config::step::manual::data_description::ip_address%]"
+        },
+        "description": "Update the IP address for Nobø Ecohub with serial number {serial}."
       },
       "selected": {
         "data": {
@@ -62,7 +72,7 @@
   },
   "exceptions": {
     "cannot_connect": {
-      "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}; will retry. If the hub is on a different network from Home Assistant and has changed IP address, remove and re-add the integration."
+      "message": "Unable to connect to Nobø Ecohub with serial {serial} at {ip}; will retry. If the hub is on a different network from Home Assistant and has changed IP address, reconfigure the integration with the new IP address."
     },
     "set_global_override_failed": {
       "message": "Failed to set global override."

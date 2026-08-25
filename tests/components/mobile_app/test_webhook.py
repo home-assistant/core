@@ -1098,7 +1098,9 @@ async def test_webhook_handle_scan_tag(
     webhook_client: TestClient,
 ) -> None:
     """Test that we can scan tags."""
-    device = device_registry.async_get_device(identifiers={(DOMAIN, "mock-device-id")})
+    [device] = device_registry.async_get_devices(
+        identifiers={(DOMAIN, "mock-device-id")}
+    )
     assert device is not None
 
     events = async_capture_events(hass, EVENT_TAG_SCANNED)

@@ -2,7 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -10,12 +10,7 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import (
-    CONCENTRATION_PARTS_PER_MILLION,
-    PERCENTAGE,
-    UnitOfTemperature,
-    UnitOfTime,
-)
+from homeassistant.const import UnitOfRatio, UnitOfTemperature, UnitOfTime
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity import Entity
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -151,6 +146,7 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         self._config = config
 
     @property
+    @override
     def unique_id(self):
         """Return the unique id."""
         return (
@@ -160,11 +156,13 @@ class VenstarSensor(VenstarEntity, SensorEntity):
         )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return state of the sensor."""
         return self.entity_description.value_fn(self.coordinator, self.sensor_name)
 
     @property
+    @override
     def native_unit_of_measurement(self) -> str | None:
         """Return unit of measurement the value is expressed in."""
         return self.entity_description.uom_fn(self.coordinator)
@@ -175,7 +173,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="hum",
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda _: PERCENTAGE,
+        uom_fn=lambda _: UnitOfRatio.PERCENTAGE,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "hum"
         ),
@@ -195,7 +193,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="co2",
         device_class=SensorDeviceClass.CO2,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda _: CONCENTRATION_PARTS_PER_MILLION,
+        uom_fn=lambda _: UnitOfRatio.PARTS_PER_MILLION,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "co2"
         ),
@@ -215,7 +213,7 @@ SENSOR_ENTITIES: tuple[VenstarSensorEntityDescription, ...] = (
         key="battery",
         device_class=SensorDeviceClass.BATTERY,
         state_class=SensorStateClass.MEASUREMENT,
-        uom_fn=lambda _: PERCENTAGE,
+        uom_fn=lambda _: UnitOfRatio.PERCENTAGE,
         value_fn=lambda coordinator, sensor_name: coordinator.client.get_sensor(
             sensor_name, "battery"
         ),

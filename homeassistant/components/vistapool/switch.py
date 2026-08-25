@@ -1,17 +1,18 @@
 """Vistapool Switch entities."""
 
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from aioaquarite import AquariteError
 
 from homeassistant.components.switch import SwitchEntity, SwitchEntityDescription
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import VistapoolConfigEntry
-from .const import DOMAIN, PATH_HASHIDRO
+from .const import DOMAIN, PATH_HASHIDRO, SIGNAL_NEW_POOL
 from .coordinator import VistapoolDataUpdateCoordinator
 from .entity import VistapoolEntity
 
@@ -25,7 +26,6 @@ class VistapoolSwitchEntityDescription(SwitchEntityDescription):
     value_path: str
     extra_read_paths: tuple[str, ...] = ()
     exists_path: str | tuple[str, ...] | None = None
-    translation_placeholders: dict[str, str] | None = None
 
 
 SWITCH_DESCRIPTIONS: tuple[VistapoolSwitchEntityDescription, ...] = (
@@ -56,7 +56,37 @@ SWITCH_DESCRIPTIONS: tuple[VistapoolSwitchEntityDescription, ...] = (
         value_path="hidro.cloration_enabled",
         exists_path=PATH_HASHIDRO,
     ),
+    VistapoolSwitchEntityDescription(
+        key="heating_climate",
+        translation_key="heating_climate",
+        value_path="filtration.heating.clima",
+        exists_path="filtration.hasHeat",
+    ),
+    VistapoolSwitchEntityDescription(
+        key="smart_mode_freeze",
+        translation_key="smart_mode_freeze",
+        value_path="filtration.smart.freeze",
+        exists_path="filtration.hasSmart",
+    ),
 )
+
+
+def _build_switch_entities(
+    coordinator: VistapoolDataUpdateCoordinator,
+) -> list[SwitchEntity]:
+    """Build the switch entities for a single pool."""
+    entities: list[SwitchEntity] = []
+    for description in SWITCH_DESCRIPTIONS:
+        if description.exists_path is not None:
+            required = (
+                (description.exists_path,)
+                if isinstance(description.exists_path, str)
+                else description.exists_path
+            )
+            if not all(coordinator.get_value(path) for path in required):
+                continue
+        entities.append(VistapoolSwitch(coordinator, description))
+    return entities
 
 
 async def async_setup_entry(
@@ -64,46 +94,21 @@ async def async_setup_entry(
     entry: VistapoolConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
-    """Set up Vistapool switches for every pool on the account."""
+    """Set up Vistapool switch entities for every pool on the account."""
     entities: list[SwitchEntity] = []
-
     for coordinator in entry.runtime_data.coordinators.values():
-        for description in SWITCH_DESCRIPTIONS:
-            if description.exists_path is not None:
-                required = (
-                    (description.exists_path,)
-                    if isinstance(description.exists_path, str)
-                    else description.exists_path
-                )
-                if not all(coordinator.get_value(path) for path in required):
-                    continue
-            entities.append(VistapoolSwitch(coordinator, description))
-
-        if coordinator.get_value("filtration.hasHeat"):
-            entities.append(
-                VistapoolSwitch(
-                    coordinator,
-                    VistapoolSwitchEntityDescription(
-                        key="heating_climate",
-                        translation_key="heating_climate",
-                        value_path="filtration.heating.clima",
-                    ),
-                )
-            )
-
-        if coordinator.get_value("filtration.hasSmart"):
-            entities.append(
-                VistapoolSwitch(
-                    coordinator,
-                    VistapoolSwitchEntityDescription(
-                        key="smart_mode_freeze",
-                        translation_key="smart_mode_freeze",
-                        value_path="filtration.smart.freeze",
-                    ),
-                )
-            )
-
+        entities.extend(_build_switch_entities(coordinator))
     async_add_entities(entities)
+
+    @callback
+    def _async_add_pool(coordinator: VistapoolDataUpdateCoordinator) -> None:
+        async_add_entities(_build_switch_entities(coordinator))
+
+    entry.async_on_unload(
+        async_dispatcher_connect(
+            hass, f"{SIGNAL_NEW_POOL}_{entry.entry_id}", _async_add_pool
+        )
+    )
 
 
 class VistapoolSwitch(VistapoolEntity, SwitchEntity):
@@ -120,10 +125,9 @@ class VistapoolSwitch(VistapoolEntity, SwitchEntity):
         super().__init__(coordinator)
         self.entity_description = description
         self._attr_unique_id = self.build_unique_id(description.key)
-        if description.translation_placeholders is not None:
-            self._attr_translation_placeholders = description.translation_placeholders
 
     @property
+    @override
     def is_on(self) -> bool | None:
         """Return true if the writable path or any extra read path is truthy."""
         value = self.coordinator.get_value(self.entity_description.value_path)
@@ -136,10 +140,12 @@ class VistapoolSwitch(VistapoolEntity, SwitchEntity):
                 on = on or extra in (True, "1")
         return on
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the switch on."""
         await self._async_set_value(1)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the switch off."""
         await self._async_set_value(0)
@@ -158,3 +164,4 @@ class VistapoolSwitch(VistapoolEntity, SwitchEntity):
                 translation_key="set_failed",
                 translation_placeholders={"entity": self.entity_id},
             ) from err
+        self.coordinator.apply_optimistic(self.entity_description.value_path, value)

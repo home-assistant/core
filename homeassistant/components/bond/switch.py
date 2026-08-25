@@ -1,6 +1,6 @@
 """Support for Bond generic devices."""
 
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client_exceptions import ClientResponseError
 from bond_async import Action, DeviceType
@@ -32,13 +32,16 @@ async def async_setup_entry(
 class BondSwitch(BondEntity, SwitchEntity):
     """Representation of a Bond generic device."""
 
+    @override
     def _apply_state(self) -> None:
         self._attr_is_on = self._device.state.get("power") == 1
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         await self._bond.action(self._device_id, Action.turn_on())
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         await self._bond.action(self._device_id, Action.turn_off())

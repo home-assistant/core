@@ -1,7 +1,7 @@
 """Support for Hue sensors."""
 
 from functools import partial
-from typing import Any
+from typing import Any, override
 
 from aiohue.v2 import HueBridgeV2
 from aiohue.v2.controllers.events import EventType
@@ -148,6 +148,7 @@ class HueTemperatureSensor(HueSensorBase):
     )
 
     @property
+    @override
     def native_value(self) -> float:
         """Return the value reported by the sensor."""
         return round(self.resource.temperature.value, 1)
@@ -166,8 +167,11 @@ class HueLightLevelSensor(HueSensorBase):
     )
 
     @property
-    def native_value(self) -> int:
+    @override
+    def native_value(self) -> int | None:
         """Return the value reported by the sensor."""
+        if self.resource.light.value is None:
+            return None
         # Light level in 10000 log10 (lux) +1 measured by sensor. Logarithm
         # scale used because the human eye adjusts to light levels and small
         # changes at low lux levels are more noticeable than at high lux
@@ -175,6 +179,7 @@ class HueLightLevelSensor(HueSensorBase):
         return int(10 ** ((self.resource.light.value - 1) / 10000))
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         return {
@@ -221,11 +226,13 @@ class HueBatterySensor(HueSensorBase):
     )
 
     @property
+    @override
     def native_value(self) -> int:
         """Return the value reported by the sensor."""
         return self.resource.power_state.battery_level
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         if self.resource.power_state.battery_state is None:
@@ -253,11 +260,13 @@ class HueZigbeeConnectivitySensor(HueSensorBase):
     )
 
     @property
+    @override
     def native_value(self) -> str:
         """Return the value reported by the sensor."""
         return self.resource.status.value
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the optional state attributes."""
         return {"mac_address": self.resource.mac_address}

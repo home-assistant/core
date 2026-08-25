@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.my_pool_electrolysis_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Electrolysis boost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Electrolysis boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_pool_electrolysis_boost',
@@ -89,7 +89,7 @@
 # name: test_all_entities[switch.my_pool_electrolysis_cover-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Electrolysis cover',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Electrolysis cover',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_pool_electrolysis_cover',
@@ -139,7 +139,7 @@
 # name: test_all_entities[switch.my_pool_filtration-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Filtration',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Filtration',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_pool_filtration',
@@ -189,7 +189,7 @@
 # name: test_all_entities[switch.my_pool_relay_1-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Relay 1',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Relay 1',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_pool_relay_1',
@@ -239,7 +239,7 @@
 # name: test_all_entities[switch.my_pool_relay_2-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Relay 2',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Relay 2',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_pool_relay_2',
@@ -289,7 +289,7 @@
 # name: test_all_entities[switch.my_pool_relay_3-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Relay 3',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Relay 3',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_pool_relay_3',
@@ -339,7 +339,7 @@
 # name: test_all_entities[switch.my_pool_relay_4-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'My Pool Relay 4',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'My Pool Relay 4',
     }),
     'context': <ANY>,
     'entity_id': 'switch.my_pool_relay_4',
