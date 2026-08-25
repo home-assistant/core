@@ -58,10 +58,18 @@ def _migrate_data_api_registry_entries(
     """Migrate Data API registry entries to Tibber device IDs."""
     entity_registry = er.async_get(hass)
     entity_entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    device_registry = dr.async_get(hass)
+    legacy_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, ""), entry.entry_id
+    )
+    legacy_device_name = legacy_device.name if legacy_device else None
 
     migrations: dict[str, tuple[str, str]] = {}
     device_id_by_identifier = {home_id: home_id for home_id in home_ids}
-    for device in coordinator.data.values():
+    for device in sorted(
+        coordinator.data.values(),
+        key=lambda device: (device.name != legacy_device_name, device.id),
+    ):
         device_id_by_identifier[device.id] = device.id
         if device.external_id:
             device_id_by_identifier[device.external_id] = device.id
@@ -87,7 +95,6 @@ def _migrate_data_api_registry_entries(
                 entity_entry.entity_id, new_unique_id=new_unique_id
             )
 
-    device_registry = dr.async_get(hass)
     for registry_device in dr.async_entries_for_config_entry(
         device_registry, entry.entry_id
     ):
