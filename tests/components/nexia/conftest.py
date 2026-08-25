@@ -365,14 +365,14 @@ def mock_nexia_home() -> NonCallableMock[NexiaHome]:
     )
     zone.thermostat = thermostat4
 
-    sensor1 = create_mock_sensor(1, "Center", 0.5, temperature=77)
-    sensor2 = create_mock_sensor(2, "Upstairs", 0.5, connected=True, battery_level=93)
-    sensor3 = create_mock_sensor(3, "Downstairs", 0.0, connected=True)
+    sensor1 = create_mock_sensor(501, "Center", 0.5, temperature=77)
+    sensor2 = create_mock_sensor(502, "Upstairs", 0.5, connected=True, battery_level=93)
+    sensor3 = create_mock_sensor(503, "Downstairs", 0.0, connected=True)
     sensor3.temperature_valid = False
     zone = create_mock_zone(
         zone_id=500, name="Zone3", sensors=[sensor1, sensor2, sensor3]
     )
-    zone.get_active_sensor_ids.return_value = {1, 2}
+    zone.get_active_sensor_ids.return_value = {501, 502}
     thermostat5 = create_mock_thermostat(
         thermostat_id=2000004,
         name="Center NativeZone",

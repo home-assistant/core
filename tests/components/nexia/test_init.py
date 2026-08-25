@@ -136,11 +136,12 @@ async def test_device_via_device_links(
     )
     assert zone_device is not None
     assert zone_device.via_device_id == thermostat_device.id
-    assert zone_device.area_id == "center_nativezone"
+    assert zone_device.area_id == "zone3"
 
     sensor_device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, "2"),
+        (DOMAIN, "502"),
         config_entry.entry_id,
     )
     assert sensor_device is not None
     assert sensor_device.via_device_id == zone_device.id
+    assert sensor_device.area_id == "upstairs"
