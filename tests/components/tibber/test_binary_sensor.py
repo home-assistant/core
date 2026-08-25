@@ -73,7 +73,15 @@ async def test_binary_sensors_with_empty_external_ids(
     )
     assert legacy_device is not None
 
-    legacy_entity = entity_registry.async_get_or_create(
+    right_legacy_entity = entity_registry.async_get_or_create(
+        "binary_sensor",
+        DOMAIN,
+        "charger-right_connector.status",
+        suggested_object_id="legacy_right_connector_status",
+        config_entry=config_entry,
+        device_id=legacy_device.id,
+    )
+    left_legacy_entity = entity_registry.async_get_or_create(
         "binary_sensor",
         DOMAIN,
         "charger-left_connector.status",
@@ -107,7 +115,8 @@ async def test_binary_sensors_with_empty_external_ids(
     )
     assert left_entity_id is not None
     assert right_entity_id is not None
-    assert left_entity_id == legacy_entity.entity_id
+    assert left_entity_id == left_legacy_entity.entity_id
+    assert right_entity_id == right_legacy_entity.entity_id
 
     left_entity = entity_registry.async_get(left_entity_id)
     right_entity = entity_registry.async_get(right_entity_id)
