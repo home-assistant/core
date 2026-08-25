@@ -583,6 +583,24 @@ def will_options_be_rendered_again(current_options, new_options) -> bool:
             },
             None,
         ),
+        (
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: ["assist"],
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: [],
+            },
+            {
+                CONF_RECOMMENDED: True,
+                CONF_PROMPT: "",
+                CONF_LLM_HASS_API: [],
+            },
+            None,
+        ),
     ],
 )
 @pytest.mark.usefixtures("mock_init_component")

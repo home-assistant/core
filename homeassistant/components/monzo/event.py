@@ -16,6 +16,7 @@ from .const import (
     NON_TRANSFER_ACCOUNT_TYPES,
 )
 from .coordinator import MonzoConfigEntry
+from .helpers import get_account_name
 from .webhook import webhook_signal
 
 PARALLEL_UPDATES = 0
@@ -54,7 +55,7 @@ class MonzoTransactionEvent(EventEntity):
                 if account["type"] in NON_TRANSFER_ACCOUNT_TYPES
                 else DEVICE_MODEL_ACCOUNT
             ),
-            name=account["name"],
+            name=get_account_name(account),
         )
 
     @override
