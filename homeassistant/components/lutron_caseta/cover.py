@@ -151,6 +151,42 @@ class LutronCasetaTiltOnlyBlind(LutronCasetaUpdatableEntity, CoverEntity):
         await self._smartbridge.set_tilt(self.device_id, kwargs[ATTR_TILT_POSITION])
 
 
+class LutronCasetaOpenCloseStopCover(LutronCasetaUpdatableEntity, CoverEntity):
+    """Representation of a Lutron OpenCloseStop zone.
+
+    These zones are typically motorized screens or shades driven by relay or
+    contact-closure outputs on RA3 and HomeWorks QSX processors. They support
+    only Raise, Lower and Stop and do not report a level, so no position is
+    available and the open/closed state is unknown.
+    """
+
+    _attr_supported_features = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+    _attr_device_class = CoverDeviceClass.SHADE
+
+    @property
+    @override
+    def is_closed(self) -> bool | None:
+        """Return None because these zones do not report a position."""
+        return None
+
+    @override
+    async def async_open_cover(self, **kwargs: Any) -> None:
+        """Open the cover."""
+        await self._smartbridge.raise_cover(self.device_id)
+
+    @override
+    async def async_close_cover(self, **kwargs: Any) -> None:
+        """Close the cover."""
+        await self._smartbridge.lower_cover(self.device_id)
+
+    @override
+    async def async_stop_cover(self, **kwargs: Any) -> None:
+        """Stop the cover."""
+        await self._smartbridge.stop_cover(self.device_id)
+
+
 PYLUTRON_TYPE_TO_CLASSES = {
     "SerenaTiltOnlyWoodBlind": LutronCasetaTiltOnlyBlind,
     "Tilt": LutronCasetaTiltOnlyBlind,
@@ -163,6 +199,7 @@ PYLUTRON_TYPE_TO_CLASSES = {
     "Shade": LutronCasetaShade,
     "PalladiomWireFreeShade": LutronCasetaShade,
     "SerenaEssentialsRollerShade": LutronCasetaShade,
+    "OpenCloseStop": LutronCasetaOpenCloseStopCover,
 }
 
 
