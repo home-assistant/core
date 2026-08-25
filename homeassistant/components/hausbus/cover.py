@@ -17,6 +17,7 @@ from pyhausbus.de.hausbus.homeassistant.proxy.rollladen.params.EDirection import
 
 from homeassistant.components.cover import (
     ATTR_POSITION,
+    DOMAIN as COVER_DOMAIN,
     CoverDeviceClass,
     CoverEntity,
     CoverEntityFeature,
@@ -63,7 +64,7 @@ class HausbusCover(HausbusEntity, CoverEntity):
 
     def __init__(self, channel: Rollladen, device_info: DeviceInfo) -> None:
         """Set up cover."""
-        super().__init__(channel, device_info)
+        super().__init__(channel, COVER_DOMAIN, device_info)
 
         self._attr_device_class = CoverDeviceClass.SHUTTER
         self._attr_supported_features = (
