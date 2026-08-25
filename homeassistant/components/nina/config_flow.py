@@ -22,7 +22,6 @@ from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.typing import VolDictType
 
 from .const import (
-    ALL_MATCH_REGEX,
     CONF_AREA_FILTER,
     CONF_FILTERS,
     CONF_HEADLINE_FILTER,
@@ -30,9 +29,10 @@ from .const import (
     CONF_REGIONS,
     CONST_REGION_MAPPING,
     CONST_REGIONS,
+    DEFAULT_AREA_FILTER,
+    DEFAULT_HEADLINE_FILTER,
     DOMAIN,
     LOGGER,
-    NO_MATCH_REGEX,
     SENSOR_SUFFIXES,
 )
 
@@ -178,8 +178,8 @@ class NinaConfigFlow(ConfigFlow, domain=DOMAIN):
                     options={
                         CONF_MESSAGE_SLOTS: 5,
                         CONF_FILTERS: {
-                            CONF_HEADLINE_FILTER: NO_MATCH_REGEX,
-                            CONF_AREA_FILTER: ALL_MATCH_REGEX,
+                            CONF_HEADLINE_FILTER: DEFAULT_HEADLINE_FILTER,
+                            CONF_AREA_FILTER: DEFAULT_AREA_FILTER,
                         },
                     },
                 )
@@ -285,8 +285,10 @@ class OptionsFlowHandler(OptionsFlowWithReload):
     ) -> ConfigFlowResult:
         """Handle options flow - filters and slots only."""
         if user_input is not None:
-            if not user_input[CONF_FILTERS][CONF_HEADLINE_FILTER]:
-                user_input[CONF_FILTERS][CONF_HEADLINE_FILTER] = NO_MATCH_REGEX
+            if not user_input[CONF_FILTERS].get(CONF_AREA_FILTER, "").strip():
+                user_input[CONF_FILTERS][CONF_AREA_FILTER] = DEFAULT_AREA_FILTER
+            if not user_input[CONF_FILTERS].get(CONF_HEADLINE_FILTER, "").strip():
+                user_input[CONF_FILTERS][CONF_HEADLINE_FILTER] = DEFAULT_HEADLINE_FILTER
 
             if CONF_MESSAGE_SLOTS in user_input:
                 await self._remove_unused_entities(user_input)

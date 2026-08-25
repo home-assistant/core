@@ -47,23 +47,23 @@ async def test_sensors_without_corona_filter(
         nina_warnings,
     )
 
-    state_w1 = hass.states.get("sensor.aach_stadt_severity_1")
+    state_w1 = hass.states.get("sensor.aach_severity_1")
 
     assert state_w1.state == "minor"
 
-    state_w2 = hass.states.get("sensor.aach_stadt_severity_2")
+    state_w2 = hass.states.get("sensor.aach_severity_2")
 
     assert state_w2.state == "minor"
 
-    state_w3 = hass.states.get("sensor.aach_stadt_severity_3")
+    state_w3 = hass.states.get("sensor.aach_severity_3")
 
     assert state_w3.state == STATE_UNAVAILABLE  # Warning expired
 
-    state_w4 = hass.states.get("sensor.aach_stadt_severity_4")
+    state_w4 = hass.states.get("sensor.aach_severity_4")
 
     assert state_w4.state == STATE_UNAVAILABLE
 
-    state_w5 = hass.states.get("sensor.aach_stadt_severity_5")
+    state_w5 = hass.states.get("sensor.aach_severity_5")
 
     assert state_w5.state == STATE_UNAVAILABLE
 
@@ -84,22 +84,22 @@ async def test_sensors_with_area_filter(
         nina_warnings,
     )
 
-    state_w1 = hass.states.get("sensor.aach_stadt_severity_1")
+    state_w1 = hass.states.get("sensor.aach_severity_1")
 
     assert state_w1.state == "minor"
 
-    state_w2 = hass.states.get("sensor.aach_stadt_severity_2")
+    state_w2 = hass.states.get("sensor.aach_severity_2")
 
     assert state_w2.state == STATE_UNAVAILABLE
 
-    state_w3 = hass.states.get("sensor.aach_stadt_severity_3")
+    state_w3 = hass.states.get("sensor.aach_severity_3")
 
     assert state_w3.state == STATE_UNAVAILABLE
 
-    state_w4 = hass.states.get("sensor.aach_stadt_severity_4")
+    state_w4 = hass.states.get("sensor.aach_severity_4")
 
     assert state_w4.state == STATE_UNAVAILABLE
 
-    state_w5 = hass.states.get("sensor.aach_stadt_severity_5")
+    state_w5 = hass.states.get("sensor.aach_severity_5")
 
     assert state_w5.state == STATE_UNAVAILABLE

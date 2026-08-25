@@ -22,8 +22,11 @@ from . import setup_platform
 from tests.common import MockConfigEntry
 
 ENTRY_DATA: dict[str, Any] = {
-    CONF_MESSAGE_SLOTS: 5,
     CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+}
+
+ENTRY_OPTIONS: dict[str, Any] = {
+    CONF_MESSAGE_SLOTS: 5,
     CONF_FILTERS: {
         CONF_HEADLINE_FILTER: ".*corona.*",
         CONF_AREA_FILTER: ".*",
@@ -52,9 +55,10 @@ async def test_config_migration_from1_1(
     await setup_platform(hass, old_conf_entry, mock_nina_class, nina_warnings)
 
     assert dict(old_conf_entry.data) == ENTRY_DATA
+    assert dict(old_conf_entry.options) == ENTRY_OPTIONS
     assert old_conf_entry.state is ConfigEntryState.LOADED
     assert old_conf_entry.version == 1
-    assert old_conf_entry.minor_version == 3
+    assert old_conf_entry.minor_version == 4
 
 
 async def test_config_migration_from1_2(
@@ -79,9 +83,41 @@ async def test_config_migration_from1_2(
     await setup_platform(hass, old_conf_entry, mock_nina_class, nina_warnings)
 
     assert dict(old_conf_entry.data) == ENTRY_DATA
+    assert dict(old_conf_entry.options) == ENTRY_OPTIONS
     assert old_conf_entry.state is ConfigEntryState.LOADED
     assert old_conf_entry.version == 1
-    assert old_conf_entry.minor_version == 3
+    assert old_conf_entry.minor_version == 4
+
+
+async def test_config_migration_from1_3(
+    hass: HomeAssistant,
+    mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
+) -> None:
+    """Test the migration to a new configuration layout with split data and options."""
+
+    old_entry_data: dict[str, Any] = {
+        CONF_MESSAGE_SLOTS: 5,
+        CONF_REGIONS: {"083350000000": "Aach, Stadt"},
+        CONF_FILTERS: {
+            CONF_HEADLINE_FILTER: ".*corona.*",
+            CONF_AREA_FILTER: ".*",
+        },
+    }
+
+    old_conf_entry: MockConfigEntry = MockConfigEntry(
+        domain=DOMAIN, title="NINA", data=old_entry_data, version=1, minor_version=3
+    )
+
+    old_conf_entry.add_to_hass(hass)
+
+    await setup_platform(hass, old_conf_entry, mock_nina_class, nina_warnings)
+
+    assert dict(old_conf_entry.data) == ENTRY_DATA
+    assert dict(old_conf_entry.options) == ENTRY_OPTIONS
+    assert old_conf_entry.state is ConfigEntryState.LOADED
+    assert old_conf_entry.version == 1
+    assert old_conf_entry.minor_version == 4
 
 
 async def test_config_migration_downgrade(
