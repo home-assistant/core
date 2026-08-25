@@ -9,10 +9,12 @@ from pyanglianwater import AnglianWater
 from pyanglianwater.auth import MSOB2CAuth
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
+    ExpiredAccessTokenError,
     InvalidAccountIdError,
     MFARequiredError,
     SelfAssertedError,
     SmartMeterUnavailableError,
+    UnknownEndpointError,
 )
 import voluptuous as vol
 
@@ -127,6 +129,20 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             return "unknown"
         return None
 
+    async def _async_get_accounts(self) -> str | None:
+        """Retrieve the list of accounts associated with the authenticated user."""
+        if TYPE_CHECKING:
+            assert self.authenticator
+        try:
+            self.accounts = await get_accounts(self.authenticator)
+        except ExpiredAccessTokenError, UnknownEndpointError:
+            _LOGGER.exception("Error retrieving accounts")
+            return "cannot_connect"
+        except Exception:
+            _LOGGER.exception("Unexpected exception")
+            return "unknown"
+        return None
+
     @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
@@ -142,9 +158,12 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
                     return await self.async_step_mfa()
                 errors["base"] = validation_response
             else:
-                self.accounts = await get_accounts(self.authenticator)
-                self.user_input = user_input
-                return await self.async_step_select_account()
+                account_error = await self._async_get_accounts()
+                if account_error:
+                    errors["base"] = account_error
+                else:
+                    self.user_input = user_input
+                    return await self.async_step_select_account()
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
@@ -162,8 +181,11 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
             if error:
                 errors["base"] = error
             else:
-                self.accounts = await get_accounts(self.authenticator)
-                return await self.async_step_select_account()
+                account_error = await self._async_get_accounts()
+                if account_error:
+                    errors["base"] = account_error
+                else:
+                    return await self.async_step_select_account()
         return self.async_show_form(
             step_id="mfa", data_schema=STEP_MFA_DATA_SCHEMA, errors=errors
         )
@@ -271,9 +293,16 @@ class AnglianWaterConfigFlow(ConfigFlow, domain=DOMAIN):
         if TYPE_CHECKING:
             assert self.authenticator
         entry = self._get_reauth_entry()
-        accounts = await get_accounts(self.authenticator)
+        account_error = await self._async_get_accounts()
+        if account_error:
+            return self.async_show_form(
+                step_id="reauth_confirm",
+                data_schema=STEP_USER_DATA_SCHEMA,
+                errors={"base": account_error},
+            )
         if not any(
-            account["value"] == entry.data[CONF_ACCOUNT_NUMBER] for account in accounts
+            account["value"] == entry.data[CONF_ACCOUNT_NUMBER]
+            for account in self.accounts
         ):
             return self.async_show_form(
                 step_id="reauth_confirm",

@@ -4,10 +4,12 @@ from unittest.mock import AsyncMock
 
 from pyanglianwater.exceptions import (
     ConsentRequiredError,
+    ExpiredAccessTokenError,
     InvalidAccountIdError,
     MFARequiredError,
     SelfAssertedError,
     SmartMeterUnavailableError,
+    UnknownEndpointError,
 )
 import pytest
 
@@ -667,3 +669,51 @@ async def test_reauth_flow_mfa_exception(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "reauth_successful"
+
+
+@pytest.mark.parametrize(
+    ("exception", "expected_error"),
+    [
+        (ExpiredAccessTokenError, "cannot_connect"),
+        (
+            UnknownEndpointError(status=500, response="Service Unavailable"),
+            "cannot_connect",
+        ),
+        (ValueError, "unknown"),
+    ],
+)
+async def test_reauth_flow_account_fetch_exception(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_anglian_water_authenticator: AsyncMock,
+    mock_anglian_water_client: AsyncMock,
+    exception: Exception,
+    expected_error: str,
+) -> None:
+    """Test that reauth handles account-fetch exceptions."""
+    mock_config_entry.add_to_hass(hass)
+    original_data = dict(mock_config_entry.data)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={
+            "source": config_entries.SOURCE_REAUTH,
+            "entry_id": mock_config_entry.entry_id,
+        },
+        data=mock_config_entry.data,
+    )
+
+    mock_anglian_water_client.api.get_associated_accounts.side_effect = exception
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USERNAME: USERNAME,
+            CONF_PASSWORD: PASSWORD,
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "reauth_confirm"
+    assert result["errors"] == {"base": expected_error}
+    assert mock_config_entry.data == original_data
