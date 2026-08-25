@@ -79,7 +79,7 @@ from .const import (
     MODE_PROD,
 )
 from .helpers import FixedSizeQueueLogHandler
-from .models import auto_login_failure
+from .models import auto_login_failure_key
 from .prefs import CloudPreferences
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
@@ -400,7 +400,10 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
         async_dispatcher_send(
             hass,
             EVENT_CLOUD_EVENT,
-            {"type": "auto_login_failed"} | auto_login_failure(event.reason),
+            {
+                "type": "auto_login_failed",
+                "translation_key": auto_login_failure_key(event.reason),
+            },
         )
 
     async def _on_cloud_logout(event: CloudEvent) -> None:

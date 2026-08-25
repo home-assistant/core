@@ -71,7 +71,7 @@ from .const import (
     VOICE_STYLE_SEPERATOR,
 )
 from .google_config import CLOUD_GOOGLE
-from .models import PendingAutoLogin
+from .models import PendingAutoLogin, auto_login_failure_key
 from .repairs import async_manage_legacy_subscription_issue
 from .subscription import async_subscription_info
 
@@ -794,7 +794,10 @@ async def websocket_cloud_status(
         and connection.user.is_admin
         and (pending := hass.data[DATA_PENDING_AUTO_LOGIN])
     ):
-        data["auto_login"] = pending.as_status()
+        data["auto_login"] = {
+            "email": pending.email,
+            "failed": auto_login_failure_key(pending.failed_reason),
+        }
 
     connection.send_message(websocket_api.result_message(msg["id"], data))
 

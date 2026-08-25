@@ -1022,18 +1022,19 @@ async def test_auto_login_failure_pushed(
 
     await cloud.events.publish(LoginFailedEvent(auto=True, reason=reason))
 
-    failure = {
-        "reason": reason.value,
-        "translation_domain": DOMAIN,
-        "translation_key": translation_key,
-    }
     event = await client.receive_json()
     assert event["id"] == 5
-    assert event["event"] == {"type": "auto_login_failed"} | failure
+    assert event["event"] == {
+        "type": "auto_login_failed",
+        "translation_key": translation_key,
+    }
 
-    # The reason is kept, so a client that missed the push can still read it.
+    # The key is kept, so a client that missed the push can still read it.
     status = await get_cloud_status(client, 6)
-    assert status["auto_login"] == {"email": "hello@bla.com", "failed": failure}
+    assert status["auto_login"] == {
+        "email": "hello@bla.com",
+        "failed": translation_key,
+    }
 
 
 @pytest.mark.parametrize(
