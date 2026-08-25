@@ -31,7 +31,7 @@ Check all five. A PR fails the shortlist if any one fails.
 
 1. **Merge-gate statuses** — fetch the combined commit status. This is the cheapest and
    most informative call, and it is what actually blocks the merge button. Five contexts
-   matter: `code-owner-approval` (required for Gold and Platinum integrations),
+   matter: `code-owner-approval` (required for Platinum integrations),
    `required-labels` (red when the author checked no "Type of change" box),
    `docs-missing` (red when a user-facing change has no documentation PR), `cla-bot`, and
    `blocking-label-awaiting-frontend`.
