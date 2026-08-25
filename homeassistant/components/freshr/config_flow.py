@@ -1,7 +1,7 @@
 """Config flow for the Fresh-r integration."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 from pyfreshr import FreshrClient
@@ -42,6 +42,7 @@ class FreshrFlowHandler(ConfigFlow, domain=DOMAIN):
             return "unknown"
         return None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

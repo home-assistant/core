@@ -30,7 +30,7 @@ RT_ACTION_SERVICE_SCHEMA: Final = vol.Schema(
         ),
         vol.Required("power"): vol.All(
             vol.Coerce(int),
-            vol.Range(min=1, max=2400),
+            vol.Range(min=0, max=10800),
         ),
     }
 )
@@ -146,7 +146,7 @@ async def _execute_realtime_action(
     target_soc: int,
 ) -> None:
     """Execute async_execute_realtime_action on all coordinators concurrently."""
-    results: list[None | BaseException] = await asyncio.gather(
+    results: list[BaseException | None] = await asyncio.gather(
         *(
             coordinator.async_realtime_action(action, power, target_soc)
             for coordinator in coordinators

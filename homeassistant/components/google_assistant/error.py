@@ -1,5 +1,7 @@
 """Errors for Google Assistant."""
 
+from typing import override
+
 from .const import ERR_CHALLENGE_NEEDED
 
 
@@ -30,6 +32,7 @@ class ChallengeNeeded(SmartHomeError):
         super().__init__(ERR_CHALLENGE_NEEDED, f"Challenge needed: {challenge_type}")
         self.challenge_type = challenge_type
 
+    @override
     def to_response(self):
         """Convert to a response format."""
         return {

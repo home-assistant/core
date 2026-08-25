@@ -1,7 +1,7 @@
 """Data update coordinator for Tilt Pi."""
 
 from datetime import timedelta
-from typing import Final
+from typing import Final, override
 
 from tiltpi import TiltHydrometerData, TiltPiClient, TiltPiError
 
@@ -43,6 +43,7 @@ class TiltPiDataUpdateCoordinator(DataUpdateCoordinator[dict[str, TiltHydrometer
         )
         self.identifier = config_entry.entry_id
 
+    @override
     async def _async_update_data(self) -> dict[str, TiltHydrometerData]:
         """Fetch data from Tilt Pi and return as a dict keyed by mac_id."""
         try:

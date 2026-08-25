@@ -1,7 +1,7 @@
 """Config flow to configure ecobee."""
 
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 from pyecobee import (
     ECOBEE_API_KEY,
@@ -42,6 +42,7 @@ class EcobeeFlowHandler(ConfigFlow, domain=DOMAIN):
     _pending_username: str | None = None
     _pending_password: str | None = None
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

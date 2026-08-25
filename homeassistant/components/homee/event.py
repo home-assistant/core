@@ -1,5 +1,7 @@
 """The homee event platform."""
 
+from typing import override
+
 from pyHomee.const import AttributeType, NodeProfile
 from pyHomee.model import HomeeAttribute, HomeeNode
 
@@ -52,13 +54,14 @@ EVENT_DESCRIPTIONS: dict[AttributeType, EventEntityDescription] = {
 
 
 async def add_event_entities(
+    hass: HomeAssistant,
     config_entry: HomeeConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
     nodes: list[HomeeNode],
 ) -> None:
     """Add homee event entities."""
     async_add_entities(
-        HomeeEvent(attribute, config_entry, EVENT_DESCRIPTIONS[attribute.type])
+        HomeeEvent(hass, attribute, config_entry, EVENT_DESCRIPTIONS[attribute.type])
         for node in nodes
         for attribute in node.attributes
         if attribute.type in EVENT_DESCRIPTIONS
@@ -74,7 +77,9 @@ async def async_setup_entry(
 ) -> None:
     """Add event entities for homee."""
 
-    await setup_homee_platform(add_event_entities, async_add_entities, config_entry)
+    await setup_homee_platform(
+        hass, add_event_entities, async_add_entities, config_entry
+    )
 
 
 class HomeeEvent(HomeeEntity, EventEntity):
@@ -82,18 +87,20 @@ class HomeeEvent(HomeeEntity, EventEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         attribute: HomeeAttribute,
         entry: HomeeConfigEntry,
         description: EventEntityDescription,
     ) -> None:
         """Initialize the homee event entity."""
-        super().__init__(attribute, entry)
+        super().__init__(hass, attribute, entry)
         self.entity_description = description
         self._attr_translation_key = description.key
         if attribute.instance > 0:
             self._attr_translation_key = f"{self._attr_translation_key}_instance"
             self._attr_translation_placeholders = {"instance": str(attribute.instance)}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Add the homee event entity to home assistant."""
         await super().async_added_to_hass()

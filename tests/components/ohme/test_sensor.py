@@ -41,15 +41,15 @@ async def test_sensors_unavailable(
     """Test that sensors show as unavailable after a coordinator failure."""
     await setup_integration(hass, mock_config_entry)
 
-    state = hass.states.get("sensor.ohme_home_pro_energy")
-    assert state.state == "1.0"
+    state = hass.states.get("sensor.ohme_home_pro_status")
+    assert state.state == "charging"
 
     mock_client.async_get_charge_session.side_effect = ApiException
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.ohme_home_pro_energy")
+    state = hass.states.get("sensor.ohme_home_pro_status")
     assert state.state == STATE_UNAVAILABLE
 
     mock_client.async_get_charge_session.side_effect = None
@@ -57,5 +57,5 @@ async def test_sensors_unavailable(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    state = hass.states.get("sensor.ohme_home_pro_energy")
-    assert state.state == "1.0"
+    state = hass.states.get("sensor.ohme_home_pro_status")
+    assert state.state == "charging"

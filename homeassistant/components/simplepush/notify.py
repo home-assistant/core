@@ -1,7 +1,7 @@
 """Simplepush notification service."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from simplepush import BadRequest, UnknownError, send
 
@@ -13,9 +13,10 @@ from homeassistant.components.notify import (
 )
 from homeassistant.const import CONF_EVENT, CONF_PASSWORD
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from .const import ATTR_ATTACHMENTS, ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT
+from .const import ATTR_ATTACHMENTS, ATTR_EVENT, CONF_DEVICE_KEY, CONF_SALT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -41,6 +42,7 @@ class SimplePushNotificationService(BaseNotificationService):
         self._password: str | None = config.get(CONF_PASSWORD)
         self._salt: str | None = config.get(CONF_SALT)
 
+    @override
     def send_message(self, message: str, **kwargs: Any) -> None:
         """Send a message to a Simplepush user."""
         title = kwargs.get(ATTR_TITLE, ATTR_TITLE_DEFAULT)
@@ -96,8 +98,13 @@ class SimplePushNotificationService(BaseNotificationService):
                     event=event,
                 )
 
-        # pylint: disable-next=home-assistant-action-swallowed-exception
-        except BadRequest:
-            _LOGGER.error("Bad request. Title or message are too long")
-        except UnknownError:
-            _LOGGER.error("Failed to send the notification")
+        except BadRequest as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="title_or_message_too_long",
+            ) from err
+        except UnknownError as err:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="send_message_failed",
+            ) from err

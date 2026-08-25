@@ -2,8 +2,8 @@
 # name: test_device_info
   DeviceRegistryEntrySnapshot({
     'area_id': None,
-    'config_entries': <ANY>,
-    'config_entries_subentries': <ANY>,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
     'configuration_url': None,
     'connections': set({
     }),
@@ -24,7 +24,6 @@
     'model_id': 'echo',
     'name': 'Echo Test',
     'name_by_user': None,
-    'primary_config_entry': <ANY>,
     'serial_number': 'echo_test_serial_number',
     'sw_version': 'echo_test_software_version',
     'via_device_id': None,

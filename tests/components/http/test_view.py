@@ -149,14 +149,21 @@ async def test_requires_auth_omits_www_authenticate_without_url(
     assert "WWW-Authenticate" not in exc_info.value.headers
 
 
+@pytest.fixture(name="request_scheme")
+def mock_request_scheme() -> str:
+    """Fixture for the mock current request scheme."""
+    return "http"
+
+
 @pytest.fixture
 def mock_current_request(
-    mock_request: Mock, request_host: str, hass: HomeAssistant
+    mock_request: Mock, request_host: str, request_scheme: str, hass: HomeAssistant
 ) -> Generator[Mock]:
     """Set the current request context."""
     mock_request.get = Mock(return_value=False)
     mock_request.headers = {hdrs.HOST: request_host}
     mock_request.app = {KEY_HASS: hass}
+    mock_request.url = Mock(scheme=request_scheme or "http")
 
     token = current_request.set(mock_request)
     yield mock_request
@@ -164,36 +171,82 @@ def mock_current_request(
 
 
 @pytest.mark.parametrize(
-    ("internal_url", "external_url", "request_host", "expected_url"),
+    ("internal_url", "external_url", "request_host", "request_scheme", "expected_url"),
     [
         # Match either internal or external
-        ("https://foo.com", "https://example.com", "foo.com:18123", "https://foo.com"),
-        ("https://example.com", "https://foo.com", "foo.com:18123", "https://foo.com"),
-        # Requests have a port and match external url
-        # Note: We currently do not fully properly handle port matching for
-        # internal urls. The tests here work because of prefer_external=True. We
-        # can improve get_url so that additional cases where the internal url
-        # have the same hostname work in future:
-        # - Match request to internal url when external url has a port
-        # - Match request to external url when internal url has a port
+        (
+            "https://foo.com",
+            "https://example.com",
+            "foo.com",
+            "https",
+            "https://foo.com",
+        ),
+        (
+            "https://foo.com:18123",
+            "https://example.com",
+            "foo.com:18123",
+            "https",
+            "https://foo.com:18123",
+        ),
+        (
+            "https://example.com",
+            "https://foo.com",
+            "foo.com",
+            "https",
+            "https://foo.com",
+        ),
+        (
+            "https://example.com",
+            "https://foo.com:18123",
+            "foo.com:18123",
+            "https",
+            "https://foo.com:18123",
+        ),
+        # Tests for internal and external url with the same hostname but different port
         (
             "https://foo.com",
             "https://foo.com:18123",
             "foo.com:18123",
+            "https",
             "https://foo.com:18123",
         ),
-        ("https://foo.com:18123", "https://foo.com", "foo.com", "https://foo.com"),
+        (
+            "https://foo.com",
+            "https://foo.com:18123",
+            "foo.com",
+            "https",
+            "https://foo.com",
+        ),
+        (
+            "https://foo.com:18123",
+            "https://foo.com",
+            "foo.com:18123",
+            "https",
+            "https://foo.com:18123",
+        ),
+        (
+            "https://foo.com:18123",
+            "https://foo.com",
+            "foo.com",
+            "https",
+            "https://foo.com",
+        ),
         (
             "http://192.168.1.2:8123",
             "https://foo.com:18123",
             "192.168.1.2:8123",
+            "http",
             "http://192.168.1.2:8123",
         ),
     ],
     ids=[
         "request_host_matches_internal",
+        "request_host_matches_internal_with_port",
         "request_host_matches_external",
+        "request_host_matches_external_with_port",
         "internal_no_port_request_external",
+        "internal_no_port_request_internal",
+        "internal_port_request_internal",
         "internal_port_request_external",
         "request_internal_distinct_host",
     ],

@@ -20,7 +20,7 @@ from homeassistant.components.telegram_bot.const import (
     PARSER_PLAIN_TEXT,
     PLATFORM_BROADCAST,
     PLATFORM_WEBHOOKS,
-    SECTION_ADVANCED_SETTINGS,
+    SECTION_ADDITIONAL_SETTINGS,
     SUBENTRY_TYPE_ALLOWED_CHAT_IDS,
 )
 from homeassistant.components.telegram_bot.webhooks import TELEGRAM_WEBHOOK_URL
@@ -100,7 +100,7 @@ async def test_reconfigure_flow_broadcast(
             result["flow_id"],
             {
                 CONF_PLATFORM: PLATFORM_BROADCAST,
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_PROXY_URL: "invalid",
                 },
             },
@@ -117,7 +117,7 @@ async def test_reconfigure_flow_broadcast(
         result["flow_id"],
         {
             CONF_PLATFORM: PLATFORM_BROADCAST,
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_PROXY_URL: "https://test",
             },
         },
@@ -155,7 +155,7 @@ async def test_reconfigure_flow_webhooks(
         result["flow_id"],
         {
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_API_ENDPOINT: DEFAULT_API_ENDPOINT,
                 CONF_PROXY_URL: "https://test",
             },
@@ -271,7 +271,7 @@ async def test_reconfigure_flow_logout_failed(
             result["flow_id"],
             {
                 CONF_PLATFORM: PLATFORM_BROADCAST,
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_API_ENDPOINT: "http://mock1",
                 },
             },
@@ -289,7 +289,7 @@ async def test_reconfigure_flow_logout_failed(
             result["flow_id"],
             {
                 CONF_PLATFORM: PLATFORM_BROADCAST,
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_API_ENDPOINT: "http://mock2",
                 },
             },
@@ -327,7 +327,7 @@ async def test_create_entry(
         {
             CONF_PLATFORM: PLATFORM_WEBHOOKS,
             CONF_API_KEY: "mock api key",
-            SECTION_ADVANCED_SETTINGS: {
+            SECTION_ADDITIONAL_SETTINGS: {
                 CONF_PROXY_URL: "invalid",
             },
         },
@@ -350,7 +350,7 @@ async def test_create_entry(
             {
                 CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_API_KEY: "mock api key",
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_PROXY_URL: "https://proxy",
                 },
             },
@@ -374,7 +374,7 @@ async def test_create_entry(
             {
                 CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_API_KEY: "mock api key",
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_PROXY_URL: "https://proxy",
                 },
             },
@@ -446,7 +446,7 @@ async def test_create_webhook_entry(
             {
                 CONF_PLATFORM: PLATFORM_WEBHOOKS,
                 CONF_API_KEY: "mock api key",
-                SECTION_ADVANCED_SETTINGS: {
+                SECTION_ADDITIONAL_SETTINGS: {
                     CONF_API_ENDPOINT: api_endpoint,
                 },
             },
@@ -774,7 +774,7 @@ async def test_duplicate_entry(hass: HomeAssistant) -> None:
     data = {
         CONF_PLATFORM: PLATFORM_BROADCAST,
         CONF_API_KEY: "mock api key",
-        SECTION_ADVANCED_SETTINGS: {
+        SECTION_ADDITIONAL_SETTINGS: {
             CONF_API_ENDPOINT: "http://mock_api_endpoint",
         },
     }
