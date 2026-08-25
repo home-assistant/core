@@ -79,6 +79,7 @@ class EcosmartCoordinator[_DataT](DataUpdateCoordinator[dict[str, _DataT]]):
                 translation_domain=DOMAIN,
                 translation_key="rate_limited",
                 translation_placeholders={"retry_after": str(retry_after)},
+                retry_after=retry_after,
             ) from err
         except EcosmartError as err:
             raise UpdateFailed(
