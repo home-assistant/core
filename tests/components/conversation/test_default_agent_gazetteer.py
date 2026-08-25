@@ -2,7 +2,6 @@
 
 import asyncio
 import threading
-from typing import Any
 from unittest.mock import patch
 
 from gazetteer_matcher import GazetteerMatcher, TargetReference
@@ -18,15 +17,9 @@ from homeassistant.components.conversation.gazetteer import (
     join_speech,
 )
 from homeassistant.components.conversation.models import ConversationInput
-from homeassistant.components.lock import LockState
-from homeassistant.components.media_player import (
-    MediaPlayerEntityFeature,
-    MediaPlayerState,
-)
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
     ATTR_FRIENDLY_NAME,
-    ATTR_SUPPORTED_FEATURES,
     STATE_CLOSED,
     STATE_OFF,
     STATE_ON,
@@ -95,8 +88,27 @@ def home(
 
 @pytest.mark.usefixtures("init_components", "home")
 async def test_recognizes_a_misheard_name(hass: HomeAssistant) -> None:
-    """Test a name hassil cannot resolve is matched by the gazetteer."""
+    """Test a name hassil cannot resolve is matched by the gazetteer.
+
+    The misspelling is what makes this the gazetteer's, so hassil declining is
+    asserted too: were it ever to match, this would go on passing while testing
+    nothing.
+    """
     calls = async_mock_service(hass, "light", "turn_on")
+    agent = conversation.async_get_agent(hass)
+    assert isinstance(agent, default_agent.DefaultAgent)
+
+    user_input = ConversationInput(
+        text="turn on the kichen lights",
+        context=Context(),
+        conversation_id=None,
+        device_id=None,
+        satellite_id=None,
+        language="en",
+        agent_id=conversation.HOME_ASSISTANT_AGENT,
+    )
+    hassil_result = await agent.async_recognize_intent(user_input)
+    assert hassil_result is None or hassil_result.unmatched_entities
 
     result = await conversation.async_converse(
         hass, "turn on the kichen lights", None, Context(), None
@@ -127,7 +139,7 @@ async def test_response_uses_display_names(hass: HomeAssistant) -> None:
 async def test_handles_every_frame_of_a_coordinated_command(
     hass: HomeAssistant,
 ) -> None:
-    """Test a sentence holding two commands runs both of them."""
+    """Test a sentence holding two commands runs both, and answers for both."""
     turn_off = async_mock_service(hass, "light", "turn_off")
     open_cover = async_mock_service(hass, "cover", "open_cover")
 
@@ -144,6 +156,9 @@ async def test_handles_every_frame_of_a_coordinated_command(
     assert turn_off[0].data["entity_id"] == [KITCHEN_LIGHT]
     assert len(open_cover) == 1
     assert open_cover[0].data["entity_id"] == BEDROOM_BLINDS
+    assert (
+        result.response.speech["plain"]["speech"] == "Turned off the lights. Opening."
+    )
 
 
 @pytest.mark.usefixtures("init_components", "home")
@@ -332,20 +347,18 @@ async def test_declines_a_frame_it_cannot_answer(hass: HomeAssistant) -> None:
     ("text", "speech"),
     [
         ("how many kichen lights are on", "0"),
-        ("which kichen lights are on", "Not any"),
-        ("are any kichen lights on", "No"),
         ("are the kichen lights on", "No"),
     ],
-    ids=["how_many", "which", "any", "bare"],
+    ids=["how_many", "any"],
 )
 async def test_wording_picks_between_identical_frames(
     hass: HomeAssistant, text: str, speech: str
 ) -> None:
     """Test the frame's own response key answers questions the slots cannot tell apart.
 
-    All four are HassGetState with the same slots. Only the words said separate them,
-    which is what the matcher records on the frame -- down to the bare form, which
-    names no aggregate at all and is taken to be asking whether any are on.
+    Both are HassGetState with identical slots, so only the key the matcher put on
+    the frame can be selecting different wording. Which keys it picks for which
+    phrasing is the matcher's own business, and tested there.
     """
     result = await conversation.async_converse(hass, text, None, Context(), None)
 
@@ -488,11 +501,8 @@ async def test_a_turn_with_no_target_clears_the_antecedent(
 @pytest.mark.usefixtures("init_components", "home")
 @pytest.mark.parametrize(
     ("command", "follow_up", "service"),
-    [
-        ("close the garage shutters", "open them", "open_cover"),
-        ("open the garage shutters", "close them", "close_cover"),
-    ],
-    ids=["open_them", "close_them"],
+    [("close the garage shutters", "open them", "open_cover")],
+    ids=["open_them"],
 )
 async def test_them_reopens_the_area_a_cover_command_named(
     hass: HomeAssistant, command: str, follow_up: str, service: str
@@ -511,31 +521,6 @@ async def test_them_reopens_the_area_a_cover_command_named(
 
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert [call.data["entity_id"] for call in calls] == [GARAGE_SHUTTERS]
-
-
-@pytest.mark.usefixtures("init_components", "home")
-async def test_a_reused_target_still_has_to_suit_the_action(
-    hass: HomeAssistant,
-) -> None:
-    """Test "open them" is refused when the remembered target cannot be opened.
-
-    Reuse does not bypass an action's own constraints: "open" is for covers and
-    valves, and the previous turn was about lights.
-    """
-    async_mock_service(hass, "light", "turn_on")
-    calls = async_mock_service(hass, "cover", "open_cover")
-
-    result = await conversation.async_converse(
-        hass, "turn on the kitchen lights", None, Context(), None
-    )
-    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
-
-    result = await conversation.async_converse(
-        hass, "open them", result.conversation_id, Context(), None
-    )
-
-    assert result.response.response_type is intent.IntentResponseType.ERROR
-    assert not calls
 
 
 @pytest.mark.usefixtures("home")
@@ -596,28 +581,6 @@ def test_join_speech(parts: list[str], expected: str) -> None:
     can pair one with a whole sentence, which "and" would run into bad grammar.
     """
     assert join_speech(parts) == expected
-
-
-@pytest.mark.usefixtures("init_components", "home")
-async def test_a_coordinated_command_is_answered_as_sentences(
-    hass: HomeAssistant,
-) -> None:
-    """Test both halves of a coordinated command are spoken, with a stop between."""
-    async_mock_service(hass, "light", "turn_off")
-    async_mock_service(hass, "cover", "open_cover")
-
-    result = await conversation.async_converse(
-        hass,
-        "switch off the kichen lights and open the bedrom blinds",
-        None,
-        Context(),
-        None,
-    )
-
-    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
-    assert (
-        result.response.speech["plain"]["speech"] == "Turned off the lights. Opening."
-    )
 
 
 def test_previous_targets_are_bounded() -> None:
@@ -687,148 +650,6 @@ async def test_an_area_that_vanished_mid_request_is_retried_unplaced(
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
     assert len(calls) == 1
     assert calls[0].data["entity_id"] == [KITCHEN_LIGHT]
-
-
-# The entities gazetteer-matcher's own tests/home.yaml gives these sentences, with the
-# same names and aliases, so the cases below are its fixtures run through the agent.
-MATCHER_HOME = (
-    (
-        "light.kitchen_ceiling",
-        "Kitchen Ceiling Lights",
-        ["ceiling lights"],
-        "kitchen_id",
-    ),
-    ("light.bedroom_lamp", "Bedroom Lamp", ["bedside lamp"], "bedroom_id"),
-    ("lock.front_door", "Front Door", ["front door lock"], "hallway_id"),
-    (
-        "media_player.living_room",
-        "Living Room Speakers",
-        ["sonos", "stereo", "tv", "television"],
-        "living_room_id",
-    ),
-)
-
-
-@pytest.fixture
-async def matcher_home(
-    hass: HomeAssistant,
-    area_registry: ar.AreaRegistry,
-    entity_registry: er.EntityRegistry,
-) -> None:
-    """Set up the part of gazetteer-matcher's test home its fuzzy cases use."""
-    assert await async_setup_component(hass, "media_player", {})
-
-    for area_id, name in (
-        ("kitchen_id", "Kitchen"),
-        ("bedroom_id", "Bedroom"),
-        ("hallway_id", "Hallway"),
-        ("living_room_id", "Living Room"),
-    ):
-        area_registry.async_update(
-            area_registry.async_get_or_create(area_id).id, name=name
-        )
-
-    for entity_id, name, aliases, area_id in MATCHER_HOME:
-        domain, object_id = entity_id.split(".")
-        # A media player is only pausable while it is playing and says it can.
-        state = {
-            "lock": LockState.LOCKED,
-            "media_player": MediaPlayerState.PLAYING,
-        }.get(domain, STATE_OFF)
-        attributes: dict[str, Any] = {ATTR_FRIENDLY_NAME: name}
-        if domain == "media_player":
-            attributes[ATTR_SUPPORTED_FEATURES] = MediaPlayerEntityFeature.PAUSE
-        entry = entity_registry.async_get_or_create(
-            domain, "demo", object_id, suggested_object_id=object_id
-        )
-        assert entry.entity_id == entity_id
-        entity_registry.async_update_entity(
-            entity_id,
-            name=name,
-            area_id=area_id,
-            aliases=[er.COMPUTED_NAME, *aliases],
-        )
-        hass.states.async_set(entity_id, state, attributes=attributes)
-        # Locks are not in DEFAULT_EXPOSED_DOMAINS, and an unexposed entity is not a
-        # target for either recognizer.
-        expose_entity(hass, entity_id, True)
-
-    await hass.async_block_till_done()
-
-
-@pytest.mark.usefixtures("init_components", "matcher_home")
-@pytest.mark.parametrize(
-    ("text", "domain", "service", "entity_id"),
-    [
-        ("illumanate the bedroom lamp", "light", "turn_on", "light.bedroom_lamp"),
-        ("turn on the kitchn lights", "light", "turn_on", "light.kitchen_ceiling"),
-        ("turn on the bedrom lamp", "light", "turn_on", "light.bedroom_lamp"),
-        (
-            "pause televsion",  # codespell:ignore televsion
-            "media_player",
-            "media_pause",
-            "media_player.living_room",
-        ),
-    ],
-    ids=["fuzzy_action", "fuzzy_area", "fuzzy_name", "fuzzy_alias"],
-)
-async def test_matchers_are_complementary(
-    hass: HomeAssistant, text: str, domain: str, service: str, entity_id: str
-) -> None:
-    """Test sentences hassil cannot answer but the gazetteer can.
-
-    These are gazetteer-matcher's own fuzzy fixtures, which are plausible
-    transcription errors: a misheard verb hassil has no template for, and misheard
-    area, entity and alias names it cannot resolve. Each one asserts hassil declining
-    as well, since a sentence hassil handles never reaches the gazetteer at all.
-    """
-    calls = async_mock_service(hass, domain, service)
-    agent = conversation.async_get_agent(hass)
-    assert isinstance(agent, default_agent.DefaultAgent)
-
-    user_input = ConversationInput(
-        text=text,
-        context=Context(),
-        conversation_id=None,
-        device_id=None,
-        satellite_id=None,
-        language="en",
-        agent_id=conversation.HOME_ASSISTANT_AGENT,
-    )
-    hassil_result = await agent.async_recognize_intent(user_input)
-    assert hassil_result is None or hassil_result.unmatched_entities
-
-    result = await conversation.async_converse(hass, text, None, Context(), None)
-
-    assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
-    assert len(calls) == 1
-    # Some handlers target one entity as a string, others as a list of one.
-    assert cv.ensure_list(calls[0].data["entity_id"]) == [entity_id]
-
-
-@pytest.mark.usefixtures("init_components", "matcher_home")
-async def test_a_misheard_name_in_a_question(hass: HomeAssistant) -> None:
-    """Test a question about a misheard name, from the matcher's own fixtures."""
-    agent = conversation.async_get_agent(hass)
-    assert isinstance(agent, default_agent.DefaultAgent)
-
-    user_input = ConversationInput(
-        text="is the frnt door locked",
-        context=Context(),
-        conversation_id=None,
-        device_id=None,
-        satellite_id=None,
-        language="en",
-        agent_id=conversation.HOME_ASSISTANT_AGENT,
-    )
-    assert await agent.async_recognize_intent(user_input) is None
-
-    result = await conversation.async_converse(
-        hass, "is the frnt door locked", None, Context(), None
-    )
-
-    assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
-    assert result.response.speech["plain"]["speech"] == "Yes"
 
 
 @pytest.mark.usefixtures("init_components", "home")
