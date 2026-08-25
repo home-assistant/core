@@ -2,7 +2,8 @@
 
 from collections.abc import Callable
 from datetime import timedelta
-from unittest.mock import MagicMock
+from types import MappingProxyType
+from unittest.mock import MagicMock, patch
 
 from aiortm import AioRTMError, AuthError
 from freezegun.api import FrozenDateTimeFactory
@@ -13,7 +14,11 @@ from homeassistant.components.remember_the_milk.const import (
     DOMAIN,
     SUBENTRY_TYPE_LIST,
 )
-from homeassistant.config_entries import ConfigEntryState, ConfigSubentryDataWithId
+from homeassistant.config_entries import (
+    ConfigEntryState,
+    ConfigSubentry,
+    ConfigSubentryDataWithId,
+)
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
@@ -23,6 +28,7 @@ from .const import CREATE_ENTRY_DATA, PROFILE
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 LIST_ID = 42
+NEW_LIST_ID = 100
 SUBENTRY_ID = "test-subentry-id"
 
 CONFIG = {
@@ -503,3 +509,43 @@ async def test_coordinator_polls_when_no_entities(
     assert len(config_entry.subentries) == 1
     subentry = next(iter(config_entry.subentries.values()))
     assert subentry.data[CONF_LIST_ID] == LIST_ID
+
+
+@pytest.mark.usefixtures("client", "storage")
+async def test_update_listener_registered_before_forward(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that a subentry added during platform forwarding triggers a reload.
+
+    The update listener must be registered before async_forward_entry_setups so
+    that a subentry appearing in the reconciliation window (after todo.async_setup_entry
+    enumerated subentries but before the listener is installed) still fires a reload and
+    gets picked up.
+    """
+    original_forward = hass.config_entries.async_forward_entry_setups
+
+    async def forward_and_add(entry, platforms):
+        hass.config_entries.async_add_subentry(
+            entry,
+            ConfigSubentry(
+                data=MappingProxyType({CONF_LIST_ID: NEW_LIST_ID}),
+                subentry_type=SUBENTRY_TYPE_LIST,
+                title="Late List",
+                unique_id=str(NEW_LIST_ID),
+            ),
+        )
+        await original_forward(entry, platforms)
+
+    with (
+        patch.object(
+            hass.config_entries,
+            "async_forward_entry_setups",
+            side_effect=forward_and_add,
+        ),
+        patch.object(hass.config_entries, "async_schedule_reload") as mock_reload,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    mock_reload.assert_called_with(config_entry.entry_id)

@@ -32,6 +32,7 @@ from tests.common import MockConfigEntry
 
 SUBENTRY_ID = "test-subentry-id"
 LIST_ID = 99
+NEW_LIST_ID = 42
 
 
 @pytest.fixture
@@ -567,7 +568,7 @@ async def test_create_new_list(
     list_add_return = client.rtm.lists.add.return_value
 
     async def _add_list(*args: object, **kwargs: object) -> MagicMock:
-        rtm_list_mock(42, "Work Tasks")
+        rtm_list_mock(NEW_LIST_ID, "Work Tasks")
         return list_add_return
 
     client.rtm.lists.add.side_effect = _add_list
@@ -578,7 +579,8 @@ async def test_create_new_list(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Work Tasks"
-    assert result["data"] == {CONF_LIST_ID: 42}
+    assert result["data"] == {CONF_LIST_ID: NEW_LIST_ID}
+    assert result["unique_id"] == str(NEW_LIST_ID)
 
     client.rtm.lists.add.assert_called_once_with(
         timeline=1234,
@@ -624,10 +626,10 @@ async def test_create_error(
 
     # Clear the error and verify the flow recovers to success.
     list_add_response = MagicMock()
-    list_add_response.list.id = 42
+    list_add_response.list.id = NEW_LIST_ID
 
     async def _add_list(*args: object, **kwargs: object) -> MagicMock:
-        rtm_list_mock(42, "Failing List")
+        rtm_list_mock(NEW_LIST_ID, "Failing List")
         return list_add_response
 
     client.rtm.lists.add.side_effect = _add_list
@@ -637,7 +639,8 @@ async def test_create_error(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == "Failing List"
-    assert result["data"] == {CONF_LIST_ID: 42}
+    assert result["data"] == {CONF_LIST_ID: NEW_LIST_ID}
+    assert result["unique_id"] == str(NEW_LIST_ID)
 
 
 async def test_entry_not_loaded(

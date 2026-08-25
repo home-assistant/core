@@ -130,8 +130,8 @@ class RtmTodoCoordinator(DataUpdateCoordinator[dict[int, RtmList]]):
         # Schedule after return so self.data is set before the sync runs.
         # The update listener fired by subentry mutations reads coordinator.data,
         # and eager task start means it can run mid-callback synchronously.
-        self.hass.async_create_task(
-            self._async_sync_subentries(result), eager_start=False
+        self.config_entry.async_create_task(
+            self.hass, self._async_sync_subentries(result), eager_start=False
         )
         return result
 

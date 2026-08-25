@@ -204,8 +204,8 @@ async def async_setup_entry(
     # Keep the coordinator polling even when there are no todo entities so that
     # lists created later in RTM are discovered and synced to subentries.
     entry.async_on_unload(coordinator.async_add_listener(lambda: None))
-    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     entry.async_on_unload(entry.add_update_listener(_async_update_listener))
+    await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True
 
