@@ -28,13 +28,11 @@ from homeassistant.components.bluetooth import (
 )
 from homeassistant.components.http.auth import async_sign_path
 from homeassistant.components.media_source import async_resolve_media
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
-from homeassistant.helpers import config_validation as cv, device_registry as dr
+from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import config_validation as cv, service
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
-from homeassistant.helpers.device_registry import CONNECTION_BLUETOOTH
 from homeassistant.helpers.network import get_url
 from homeassistant.helpers.selector import MediaSelector, MediaSelectorConfig
 
@@ -84,40 +82,11 @@ SCHEMA_UPLOAD_IMAGE = vol.Schema(
 
 def _get_entry_for_device(call: ServiceCall) -> OpenDisplayConfigEntry:
     """Return the config entry for the device targeted by a service call."""
-    device_id: str = call.data[ATTR_DEVICE_ID]
-    device_registry = dr.async_get(call.hass)
-
-    if (
-        device := device_registry.async_get(device_id, include_child_devices=False)
-    ) is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    mac_address = next(
-        (conn[1] for conn in device.connections if conn[0] == CONNECTION_BLUETOOTH),
-        None,
+    config_entry: OpenDisplayConfigEntry
+    _, config_entry = service.async_get_device_and_config_entry(
+        call.hass, DOMAIN, call.data[ATTR_DEVICE_ID]
     )
-    if mac_address is None:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="invalid_device_id",
-            translation_placeholders={"device_id": device_id},
-        )
-
-    entry = call.hass.config_entries.async_entry_for_domain_unique_id(
-        DOMAIN, mac_address
-    )
-    if entry is None or entry.state is not ConfigEntryState.LOADED:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="config_entry_not_found",
-            translation_placeholders={"address": mac_address},
-        )
-
-    return entry
+    return config_entry
 
 
 def _load_image(path: str) -> PILImage.Image:
