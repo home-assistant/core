@@ -161,7 +161,11 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             self._self_heal_handle = None
         if self._self_heal_task is not None and not self._self_heal_task.done():
             return
-        self._self_heal_task = self.hass.async_create_task(self._async_self_heal())
+        self._self_heal_task = self.config_entry.async_create_task(
+            self.hass,
+            self._async_self_heal(),
+            name=f"vistapool_self_heal_{self.pool_id}",
+        )
 
     async def _async_self_heal(self) -> None:
         """Fetch authoritative data after an expired write, retrying on failure.
