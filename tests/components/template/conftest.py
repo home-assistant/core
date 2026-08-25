@@ -15,6 +15,7 @@ from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
+    MockConfigEntry,
     assert_setup_component,
     async_mock_service,
     mock_restore_cache,
@@ -290,6 +291,74 @@ async def start_ha(
 async def caplog_setup_text(caplog: pytest.LogCaptureFixture) -> str:
     """Return setup log of integration."""
     return caplog.text
+
+
+def _create_bad_action_config(action: str, config: ConfigType) -> ConfigType:
+    """Create a bad device action."""
+    return {
+        action: {
+            "type": "turn_off",
+            "device_id": "70c5f67ec2f82f9ba128fe6e99eb7dfa",
+            "entity_id": "c7e6f3753cb18937f2147bbbdccdd949",
+            "domain": "light",
+        },
+        **config,
+    }
+
+
+async def assert_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Assert invalid yaml actions on entity services do not create entities."""
+
+    await setup_entity(
+        hass,
+        platform_setup,
+        style,
+        1,
+        {
+            "default_entity_id": platform_setup.entity_id,
+            **_create_bad_action_config(action, config),
+        },
+    )
+    assert len(hass.states.async_all(platform_setup.domain)) == 0
+
+    error = f"The '{action}' actions for {platform_setup.object_id} failed to setup: Unknown device '70c5f67ec2f82f9ba128fe6e99eb7dfa'"
+    assert error in caplog.text
+
+
+async def assert_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    config: ConfigType,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Assert invalid config entry actions on entity services do not create entities."""
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": platform_setup.object_id,
+            "template_type": platform_setup.domain,
+            **_create_bad_action_config(action, config),
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(platform_setup.domain)) == 0
+
+    error = f"The '{action}' actions for {platform_setup.object_id} failed to setup: Unknown device '70c5f67ec2f82f9ba128fe6e99eb7dfa'"
+    assert error in caplog.text
 
 
 async def async_get_flow_preview_state(
