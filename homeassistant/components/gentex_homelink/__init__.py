@@ -17,7 +17,7 @@ PLATFORMS: list[Platform] = [Platform.EVENT]
 
 async def async_setup_entry(hass: HomeAssistant, entry: HomeLinkConfigEntry) -> bool:
     """Set up homelink from a config entry."""
-    auth_implementation = oauth2.SRPAuthImplementation(hass, DOMAIN)
+    auth_implementation = oauth2.HomeLinkOAuth2Implementation(hass, DOMAIN)
     try:
         await auth_implementation.async_refresh_token(entry.data["token"])
     except ClientResponseError as err:
