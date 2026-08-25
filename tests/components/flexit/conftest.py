@@ -18,7 +18,10 @@ def mock_get_modbus_unit(
     mock_modbus_unit: MockModbusUnit,
 ) -> Generator[MagicMock]:
     """Patch the shared unit helper to return the in-memory mock unit."""
-    with patch("homeassistant.components.flexit.async_get_unit", return_value=mock_modbus_unit):
+    with patch(
+        "homeassistant.components.flexit.async_get_unit",
+        return_value=mock_modbus_unit,
+    ) as get_unit:
         yield get_unit
 
 
