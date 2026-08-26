@@ -46,7 +46,7 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
             hass,
             _LOGGER,
             config_entry=config_entry,
-            name=f"{DOMAIN}_{device.service.accessor.id}",
+            name=f"{DOMAIN}_{device.accessor.serial}_{device.accessor.device_id}",
             update_interval=timedelta(seconds=DEFAULT_CACHE_DURATION * device_count),
         )
         self._device = device
