@@ -57,8 +57,6 @@ SETUP_ERRORS = [
     (OAuthExpired, ConfigEntryState.SETUP_ERROR),
     (LoginRequired, ConfigEntryState.SETUP_ERROR),
     (TeslaFleetError, ConfigEntryState.SETUP_RETRY),
-    # Transport-level failures reach us unwrapped from the library, so they must
-    # also be treated as transient rather than escaping as a fatal setup error.
     (ClientError, ConfigEntryState.SETUP_RETRY),
     (TimeoutError, ConfigEntryState.SETUP_RETRY),
 ]
