@@ -1,6 +1,5 @@
 """Fixtures for the Nord Pool integration."""
 
-import asyncio
 from collections.abc import AsyncGenerator
 from http import HTTPStatus
 import json
@@ -23,7 +22,9 @@ from tests.test_util.aiohttp import AiohttpClientMocker
 @pytest.fixture(name="mock_asyncio_sleep", autouse=True)
 async def mock_asyncio_sleep() -> AsyncGenerator[None]:
     """Mock asyncio.sleep to avoid actual sleeping during tests."""
-    with patch.object(asyncio, "sleep"):
+    with patch(
+        "pynordpool.asyncio.sleep",
+    ):
         yield
 
 
