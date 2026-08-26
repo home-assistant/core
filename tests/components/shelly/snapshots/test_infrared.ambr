@@ -1,0 +1,52 @@
+# serializer version: 1
+# name: test_infrared_emitter[infrared.test_name_infrared_emitter-entry]
+  EntityRegistryEntrySnapshot({
+    'aliases': list([
+      None,
+    ]),
+    'area_id': None,
+    'capabilities': None,
+    'config_entry_id': <ANY>,
+    'config_subentry_id': <ANY>,
+    'device_class': None,
+    'device_id': <ANY>,
+    'disabled_by': None,
+    'domain': 'infrared',
+    'entity_category': None,
+    'entity_id': 'infrared.test_name_infrared_emitter',
+    'has_entity_name': True,
+    'hidden_by': None,
+    'icon': None,
+    'id': <ANY>,
+    'labels': set({
+    }),
+    'name': None,
+    'object_id_base': 'Infrared emitter',
+    'options': dict({
+    }),
+    'original_device_class': <InfraredDeviceClass.EMITTER: 'emitter'>,
+    'original_icon': None,
+    'original_name': 'Infrared emitter',
+    'platform': 'shelly',
+    'previous_unique_id': None,
+    'suggested_object_id': None,
+    'supported_features': 0,
+    'translation_key': 'infrared_emitter',
+    'unique_id': '123456789ABC-ir-infrared_emitter',
+    'unit_of_measurement': None,
+  })
+# ---
+# name: test_infrared_emitter[infrared.test_name_infrared_emitter-state]
+  StateSnapshot({
+    'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'emitter',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Test name Infrared emitter',
+    }),
+    'context': <ANY>,
+    'entity_id': 'infrared.test_name_infrared_emitter',
+    'last_changed': <ANY>,
+    'last_reported': <ANY>,
+    'last_updated': <ANY>,
+    'state': 'unknown',
+  })
+# ---
