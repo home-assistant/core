@@ -29,7 +29,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN
+from .const import CONF_TOKEN_RESPONSE, DOMAIN
 from .helpers import PlaystationNetwork, PlaystationNetworkData
 
 _LOGGER = logging.getLogger(__name__)
@@ -79,7 +79,7 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
     async def _async_update_data(self) -> _DataT:
         """Get the latest data from the PSN."""
         try:
-            return await self.update_data()
+            data = await self.update_data()
         except PSNAWPAuthenticationError as error:
             raise ConfigEntryAuthFailed(
                 translation_domain=DOMAIN,
@@ -90,6 +90,21 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from error
+
+        if (
+            token_response := self.psn.token_response
+        ) is not None and token_response != self.config_entry.data.get(
+            CONF_TOKEN_RESPONSE
+        ):
+            self.hass.config_entries.async_update_entry(
+                self.config_entry,
+                data={
+                    **self.config_entry.data,
+                    CONF_TOKEN_RESPONSE: token_response,
+                },
+            )
+
+        return data
 
 
 class PlaystationNetworkUserDataCoordinator(

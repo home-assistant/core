@@ -4,6 +4,7 @@ from collections.abc import Generator
 from datetime import UTC, datetime
 from unittest.mock import AsyncMock, MagicMock, patch
 
+from psnawp_api.core.authenticator import TokenResponse
 from psnawp_api.models import User
 from psnawp_api.models.group.group import Group
 from psnawp_api.models.trophies import (
@@ -22,6 +23,17 @@ from tests.common import MockConfigEntry
 NPSSO_TOKEN: str = "npsso-token"
 NPSSO_TOKEN_INVALID_JSON: str = "{'npsso': 'npsso-token'"
 PSN_ID: str = "my-psn-id"
+TOKEN_RESPONSE: TokenResponse = {
+    "access_token": "access-token",
+    "access_token_expires_at": 4102444800.0,
+    "expires_in": 3600,
+    "id_token": "id-token",
+    "refresh_token": "refresh-token",
+    "refresh_token_expires_at": 4107628800.0,
+    "refresh_token_expires_in": 5184000,
+    "scope": "psn:mobile.v2.core psn:clientapp",
+    "token_type": "bearer",
+}
 
 
 @pytest.fixture(name="config_entry")
@@ -98,6 +110,8 @@ def mock_psnawpapi(mock_user: MagicMock) -> Generator[MagicMock]:
         autospec=True,
     ) as mock_client:
         client = mock_client.return_value
+        client.authenticator = MagicMock()
+        client.authenticator.token_response = TOKEN_RESPONSE.copy()
 
         client.user.return_value = mock_user
         client.me.return_value.get_account_devices.return_value = [

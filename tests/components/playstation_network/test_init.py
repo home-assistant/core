@@ -1,7 +1,7 @@
 """Tests for PlayStation Network."""
 
 from datetime import timedelta
-from unittest.mock import MagicMock
+from unittest.mock import AsyncMock, MagicMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from psnawp_api.core import (
@@ -13,14 +13,75 @@ from psnawp_api.core import (
 )
 import pytest
 
-from homeassistant.components.playstation_network.const import DOMAIN
+from homeassistant.components.playstation_network.const import (
+    CONF_NPSSO,
+    CONF_TOKEN_RESPONSE,
+    DOMAIN,
+)
 from homeassistant.components.playstation_network.coordinator import (
     PlaystationNetworkRuntimeData,
 )
 from homeassistant.config_entries import SOURCE_REAUTH, ConfigEntryState
 from homeassistant.core import HomeAssistant
 
+from .conftest import NPSSO_TOKEN, PSN_ID, TOKEN_RESPONSE
+
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+
+async def test_persists_token_response_for_existing_entry(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
+) -> None:
+    """Test a token response is persisted for an existing config entry."""
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data == {
+        CONF_NPSSO: NPSSO_TOKEN,
+        CONF_TOKEN_RESPONSE: TOKEN_RESPONSE,
+    }
+
+
+async def test_restores_and_persists_token_response(
+    hass: HomeAssistant,
+    mock_psnawpapi: MagicMock,
+) -> None:
+    """Test stored tokens are restored and refreshed tokens are persisted."""
+    stored_token_response = TOKEN_RESPONSE | {"access_token": "stored-access-token"}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="test-user",
+        data={
+            CONF_NPSSO: NPSSO_TOKEN,
+            CONF_TOKEN_RESPONSE: stored_token_response,
+        },
+        unique_id=PSN_ID,
+    )
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_psnawpapi.authenticator.token_response == stored_token_response
+
+    refreshed_token_response = TOKEN_RESPONSE | {
+        "access_token": "refreshed-access-token",
+        "refresh_token": "refreshed-refresh-token",
+    }
+    mock_psnawpapi.authenticator.token_response = refreshed_token_response
+
+    with patch.object(
+        hass.config_entries, "async_reload", new=AsyncMock()
+    ) as async_reload:
+        await config_entry.runtime_data.user_data.async_request_refresh()
+        await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_TOKEN_RESPONSE] == refreshed_token_response
+    async_reload.assert_not_awaited()
 
 
 @pytest.mark.parametrize(
