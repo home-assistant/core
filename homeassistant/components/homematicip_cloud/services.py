@@ -5,14 +5,14 @@ from pathlib import Path
 
 from homematicip.async_home import AsyncHome
 from homematicip.base.helpers import handle_config
-from homematicip.device import SwitchMeasuring
+from homematicip.device import Device, SwitchMeasuring
 from homematicip.group import HeatingGroup
 import voluptuous as vol
 
-from homeassistant.const import ATTR_ENTITY_ID, ATTR_TEMPERATURE
+from homeassistant.const import ATTR_DEVICE_ID, ATTR_ENTITY_ID, ATTR_TEMPERATURE
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.config_validation import comp_entity_ids
 from homeassistant.helpers.service import (
     async_register_admin_service,
@@ -21,6 +21,7 @@ from homeassistant.helpers.service import (
 
 from .const import DOMAIN
 from .hap import HomematicIPConfigEntry
+from .helpers import get_door_opener_authorization_channel
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -32,6 +33,7 @@ ATTR_CONFIG_OUTPUT_PATH = "config_output_path"
 ATTR_DURATION = "duration"
 ATTR_ENDTIME = "endtime"
 ATTR_COOLING = "cooling"
+ATTR_PIN = "pin"
 
 DEFAULT_CONFIG_FILE_PREFIX = "hmip-config"
 
@@ -41,6 +43,7 @@ SERVICE_ACTIVATE_VACATION = "activate_vacation"
 SERVICE_DEACTIVATE_ECO_MODE = "deactivate_eco_mode"
 SERVICE_DEACTIVATE_VACATION = "deactivate_vacation"
 SERVICE_DUMP_HAP_CONFIG = "dump_hap_config"
+SERVICE_PULL_LATCH = "pull_latch"
 SERVICE_RESET_ENERGY_COUNTER = "reset_energy_counter"
 SERVICE_SET_ACTIVE_CLIMATE_PROFILE = "set_active_climate_profile"
 SERVICE_SET_HOME_COOLING_MODE = "set_home_cooling_mode"
@@ -52,6 +55,7 @@ HMIPC_SERVICES = [
     SERVICE_DEACTIVATE_ECO_MODE,
     SERVICE_DEACTIVATE_VACATION,
     SERVICE_DUMP_HAP_CONFIG,
+    SERVICE_PULL_LATCH,
     SERVICE_RESET_ENERGY_COUNTER,
     SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
     SERVICE_SET_HOME_COOLING_MODE,
@@ -117,6 +121,13 @@ SCHEMA_SET_HOME_COOLING_MODE = vol.Schema(
     }
 )
 
+SCHEMA_PULL_LATCH = vol.Schema(
+    {
+        vol.Required(ATTR_DEVICE_ID): vol.All(cv.ensure_list, [cv.string]),
+        vol.Optional(ATTR_PIN): cv.string,
+    }
+)
+
 
 @callback
 def async_setup_services(hass: HomeAssistant) -> None:
@@ -139,6 +150,8 @@ def async_setup_services(hass: HomeAssistant) -> None:
             await _async_deactivate_vacation(service)
         elif service_name == SERVICE_DUMP_HAP_CONFIG:
             await _async_dump_hap_config(service)
+        elif service_name == SERVICE_PULL_LATCH:
+            await _async_pull_latch(service)
         elif service_name == SERVICE_RESET_ENERGY_COUNTER:
             await _async_reset_energy_counter(service)
         elif service_name == SERVICE_SET_ACTIVE_CLIMATE_PROFILE:
@@ -186,6 +199,13 @@ def async_setup_services(hass: HomeAssistant) -> None:
         service=SERVICE_SET_ACTIVE_CLIMATE_PROFILE,
         service_func=async_call_hmipc_service,
         schema=SCHEMA_SET_ACTIVE_CLIMATE_PROFILE,
+    )
+
+    hass.services.async_register(
+        domain=DOMAIN,
+        service=SERVICE_PULL_LATCH,
+        service_func=async_call_hmipc_service,
+        schema=SCHEMA_PULL_LATCH,
     )
 
     async_register_admin_service(
@@ -347,6 +367,45 @@ async def _async_set_home_cooling_mode(service: ServiceCall):
         entry: HomematicIPConfigEntry
         for entry in service.hass.config_entries.async_loaded_entries(DOMAIN):
             await entry.runtime_data.home.set_cooling_async(cooling)
+
+
+async def _async_pull_latch(service: ServiceCall) -> None:
+    """Service to pull the latch of a door opener."""
+    pin = service.data.get(ATTR_PIN)
+    device_registry = dr.async_get(service.hass)
+
+    for device_id in service.data[ATTR_DEVICE_ID]:
+        device = _get_device(service.hass, device_registry, device_id)
+        channel = get_door_opener_authorization_channel(device)
+        if channel is None:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="pull_latch_not_supported",
+                translation_placeholders={"device_name": device.label},
+            )
+        await channel.async_pull_latch(pin)
+
+
+def _get_device(
+    hass: HomeAssistant, device_registry: dr.DeviceRegistry, device_id: str
+) -> Device:
+    """Return the HmIP device for a device registry entry."""
+    if device_entry := device_registry.async_get(device_id):
+        hmip_id = next(
+            (ident[1] for ident in device_entry.identifiers if ident[0] == DOMAIN),
+            None,
+        )
+        entry: HomematicIPConfigEntry
+        for entry in hass.config_entries.async_loaded_entries(DOMAIN):
+            for device in entry.runtime_data.home.devices:
+                if str(device.id) == hmip_id:
+                    return device
+
+    raise ServiceValidationError(
+        translation_domain=DOMAIN,
+        translation_key="device_not_found",
+        translation_placeholders={"device_id": device_id},
+    )
 
 
 def _get_home(hass: HomeAssistant, hapid: str) -> AsyncHome | None:

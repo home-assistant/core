@@ -111,11 +111,12 @@ set_home_cooling_mode:
         text:
 
 pull_latch:
-  target:
-    entity:
-      integration: homematicip_cloud
-      domain: button
   fields:
+    device_id:
+      required: true
+      selector:
+        device:
+          integration: homematicip_cloud
     pin:
       example: "1234"
       selector:
