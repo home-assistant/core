@@ -15,6 +15,7 @@ from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import OmadaConfigEntry
+from .const import DOMAIN
 from .coordinator import OmadaFirmwareUpdateCoordinator
 from .entity import OmadaDeviceEntity
 
@@ -85,11 +86,14 @@ class OmadaDeviceUpdate(
                 self.coordinator.data[self._mac].device
             )
         except RequestFailed as ex:
-            raise HomeAssistantError("Firmware update request rejected") from ex
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="firmware_update_rejected",
+            ) from ex
         except OmadaClientException as ex:
             raise HomeAssistantError(
-                "Unable to send Firmware update request."
-                " Check the controller is online."
+                translation_domain=DOMAIN,
+                translation_key="firmware_update_failed",
             ) from ex
         finally:
             await self.coordinator.async_request_refresh()

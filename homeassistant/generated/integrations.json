@@ -45,7 +45,7 @@
       "name": "Actron Air",
       "integration_type": "hub",
       "config_flow": true,
-      "iot_class": "cloud_polling"
+      "iot_class": "cloud_push"
     },
     "adax": {
       "name": "Adax",
@@ -734,6 +734,17 @@
         "zigbee"
       ]
     },
+    "besen": {
+      "name": "Besen",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_push"
+    },
+    "beverly": {
+      "name": "Beverly",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "bge": {
       "name": "Baltimore Gas and Electric (BGE)",
       "integration_type": "virtual",
@@ -935,6 +946,11 @@
       "integration_type": "virtual",
       "supported_by": "netatmo"
     },
+    "bugu": {
+      "name": "Bugu",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "buienradar": {
       "name": "Buienradar",
       "integration_type": "service",
@@ -969,6 +985,11 @@
       "config_flow": true,
       "iot_class": "cloud_polling",
       "single_config_entry": true
+    },
+    "carrier": {
+      "name": "Carrier",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "casper_glow": {
       "name": "Casper Glow",
@@ -1114,6 +1135,11 @@
       "config_flow": true,
       "iot_class": "calculated"
     },
+    "colmo": {
+      "name": "Colmo",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "color_extractor": {
       "name": "ColorExtractor",
       "integration_type": "hub",
@@ -1136,6 +1162,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_polling"
+    },
+    "comfee": {
+      "name": "Comfee",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "comfoconnect": {
       "name": "Zehnder ComfoAir Q",
@@ -2139,8 +2170,8 @@
       "name": "Flexit",
       "integrations": {
         "flexit": {
-          "integration_type": "hub",
-          "config_flow": false,
+          "integration_type": "device",
+          "config_flow": true,
           "iot_class": "local_polling",
           "name": "Flexit"
         },
@@ -3380,6 +3411,11 @@
       "config_flow": false,
       "iot_class": "cloud_polling"
     },
+    "inventor": {
+      "name": "Inventor",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "iometer": {
       "name": "IOmeter",
       "integration_type": "device",
@@ -3979,6 +4015,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "cloud_push"
+    },
+    "little_swan": {
+      "name": "Little Swan",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "livisi": {
       "name": "LIVISI Smart Home",
@@ -4795,6 +4836,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "netsu": {
+      "name": "Netsu",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "neurio_energy": {
       "name": "Neurio energy",
       "integration_type": "hub",
@@ -5069,6 +5115,11 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "cloud_polling"
+    },
+    "olimpia_splendid": {
+      "name": "Olimpia Splendid",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "ollama": {
       "name": "Ollama",
@@ -5607,6 +5658,11 @@
       "config_flow": true,
       "iot_class": "local_push"
     },
+    "pro_breeze": {
+      "name": "Pro Breeze",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "probe_plus": {
       "name": "Probe Plus",
       "integration_type": "device",
@@ -6122,6 +6178,11 @@
       "integration_type": "hub",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "rotenso": {
+      "name": "Rotenso",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "roth": {
       "name": "Roth",
@@ -6727,6 +6788,12 @@
       "integration_type": "device",
       "config_flow": true,
       "iot_class": "local_push"
+    },
+    "sofar": {
+      "name": "Sofar",
+      "integration_type": "device",
+      "config_flow": true,
+      "iot_class": "local_polling"
     },
     "solaredge": {
       "name": "SolarEdge",
@@ -7419,6 +7486,11 @@
       "config_flow": false,
       "iot_class": "local_push"
     },
+    "toshiba_lifestyle": {
+      "name": "Toshiba Lifestyle",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "totalconnect": {
       "name": "Total Connect",
       "integration_type": "hub",
@@ -7773,6 +7845,11 @@
       "config_flow": true,
       "iot_class": "local_polling"
     },
+    "vandelo": {
+      "name": "Vandelo",
+      "integration_type": "virtual",
+      "supported_by": "midea"
+    },
     "vasttrafik": {
       "name": "V\u00e4sttrafik",
       "integration_type": "hub",
@@ -7942,6 +8019,11 @@
       "integration_type": "hub",
       "config_flow": false,
       "iot_class": "local_push"
+    },
+    "wahin": {
+      "name": "Wahin",
+      "integration_type": "virtual",
+      "supported_by": "midea"
     },
     "wake_on_lan": {
       "name": "Wake on LAN",
