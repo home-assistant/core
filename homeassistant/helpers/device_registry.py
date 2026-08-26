@@ -299,16 +299,17 @@ class DeviceInfo(_DeviceInfoMapping):
     translation_placeholders: Mapping[str, str] | UndefinedType | None = UNDEFINED
     via_device_id: str | UndefinedType = UNDEFINED
 
-    # Deprecated fields, accepted until the versions listed in
-    # _DEPRECATED_DEVICE_INFO_PARAMETERS. They are hidden from type checkers, as
-    # they were dropped from the typed device info when they were deprecated,
-    # but integrations still set them and async_get_or_create still reports them.
-    created_at: str | UndefinedType = UNDEFINED
-    default_manufacturer: str | UndefinedType = UNDEFINED
-    default_model: str | UndefinedType = UNDEFINED
-    default_name: str | UndefinedType = UNDEFINED
-    modified_at: str | UndefinedType = UNDEFINED
-    via_device: tuple[str, str] | UndefinedType = UNDEFINED
+    if not TYPE_CHECKING:
+        # Deprecated fields, accepted until the versions listed in
+        # _DEPRECATED_DEVICE_INFO_PARAMETERS. They are hidden from type checkers, as
+        # they were dropped from the typed device info when they were deprecated,
+        # but integrations still set them and async_get_or_create still reports them.
+        created_at: str | UndefinedType = UNDEFINED
+        default_manufacturer: str | UndefinedType = UNDEFINED
+        default_model: str | UndefinedType = UNDEFINED
+        default_name: str | UndefinedType = UNDEFINED
+        modified_at: str | UndefinedType = UNDEFINED
+        via_device: tuple[str, str] | UndefinedType = UNDEFINED
 
 
 @_device_info_fields
