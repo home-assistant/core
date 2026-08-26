@@ -315,6 +315,12 @@ async def _get_known_clients_without(
             yield OmadaWirelessClient(client)
 
 
+async def _get_no_known_clients() -> AsyncGenerator[OmadaWirelessClient]:
+    """Yield no known clients."""
+    for client in ():
+        yield client
+
+
 async def _get_devices_without(
     hass: HomeAssistant, excluded_mac: str
 ) -> list[OmadaListDevice]:
@@ -445,14 +451,14 @@ async def test_cleanup_recreates_device_when_reappears(
     )
 
 
-async def test_cleanup_skips_on_empty_data(
+async def test_cleanup_devices_skipped_on_empty_data(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test cleanup does not remove entries when the controller reports no data."""
+    """Test device cleanup skips entries when the controller reports no devices."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -478,7 +484,7 @@ async def test_cleanup_skips_on_empty_data(
 
     site_client = mock_omada_client.get_site_client.return_value
     site_client.get_devices = AsyncMock(return_value=[])
-    site_client.get_known_clients = AsyncMock(return_value=[])
+    site_client.get_known_clients.return_value = _get_no_known_clients()
 
     await controller.devices_coordinator.async_refresh()
     await controller.known_clients_coordinator.async_refresh()
@@ -487,7 +493,7 @@ async def test_cleanup_skips_on_empty_data(
     await async_cleanup_client_trackers(hass, controller)
 
     assert device_registry.async_get(orphan.id) is not None
-    assert entity_registry.async_get(tracker.entity_id) is not None
+    assert entity_registry.async_get(tracker.entity_id) is None
 
 
 async def test_unload_cancels_cleanup_and_interval(

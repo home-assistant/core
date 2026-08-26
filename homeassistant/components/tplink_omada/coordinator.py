@@ -272,9 +272,6 @@ async def async_cleanup_client_trackers(
         return
 
     known_clients = controller.known_clients_coordinator.data or {}
-    if not known_clients:
-        return
-
     entity_registry = er.async_get(hass)
     entry_id = controller.known_clients_coordinator.config_entry.entry_id
     known_macs = {dr.format_mac(mac) for mac in known_clients}
@@ -304,6 +301,8 @@ async def async_cleanup_devices(
 
     devices = controller.devices_coordinator.data
     if not devices:
+        # A successful but empty response is likely a transient controller glitch;
+        # removing device entries here would permanently lose user customizations.
         return
 
     device_registry = dr.async_get(hass)
