@@ -488,11 +488,7 @@ async def test_coordinator_sync_multiple_lists_single_reload(
     make_rtm_list_mock: Callable[..., MagicMock],
     freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test that discovering multiple new lists in one poll schedules a single reload.
-
-    Before this fix, async_schedule_reload was called once per subentry mutation
-    because the update listener fired eagerly on each async_add_subentry call.
-    """
+    """Test that discovering multiple new lists in one poll schedules a single reload."""
     # Empty list response during setup so no subentries are added and no reload fires.
     await hass.config_entries.async_setup(config_entry.entry_id)
     await hass.async_block_till_done()
