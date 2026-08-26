@@ -20,11 +20,20 @@ from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import MOCK_HW_VERSION, MOCK_SERIAL, MOCK_SW_VERSION, MOCK_USER_INPUT
+from . import (
+    MOCK_HW_VERSION,
+    MOCK_HYBRID_MODEL,
+    MOCK_HYBRID_SERIAL,
+    MOCK_SERIAL,
+    MOCK_SW_VERSION,
+    MOCK_USER_INPUT,
+    seed_hybrid_inverter,
+)
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
 PV_POWER_REGISTER = 0x0586
+BATTERY_3_VOLTAGE_REGISTER = 0x0612
 SOLAR_GENERATION_REGISTER = 0x0684
 
 
@@ -336,3 +345,139 @@ async def test_link_dying_during_the_retry_marks_sensors_unavailable(
     )
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_pv_strings_become_their_own_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test every PV string the inverter serves gets a device of its own."""
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), init_integration.entry_id
+    )
+    assert inverter is not None
+
+    strings = [
+        device
+        for device in dr.async_entries_for_config_entry(
+            device_registry, init_integration.entry_id
+        )
+        if device.via_device_id == inverter.id
+    ]
+
+    # Two MPPTs on this model, so strings 3 to 10 are not served at all.
+    assert {device.name for device in strings} == {"PV string 1", "PV string 2"}
+
+
+async def test_pv_aggregate_stays_on_the_inverter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a total living in a per-string component is not moved off."""
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), init_integration.entry_id
+    )
+    assert inverter is not None
+
+    # pv_power_total sits in the pv_1_2 component but measures all strings.
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_total"
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).device_id == inverter.id
+
+
+async def test_only_wired_battery_packs_become_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test packs are counted by what answers, not by the register map."""
+    connection = MockModbusConnection()
+    seed_hybrid_inverter(connection.for_unit(1))
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_USER_INPUT,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
+    )
+    assert inverter is not None
+    battery_names = {
+        device.name
+        for device in dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+        if device.via_device_id == inverter.id and device.name.startswith("Battery")
+    }
+
+    # The seed wires packs 1 and 3; the map allows 8, so the rest must not.
+    assert battery_names == {"Battery 1", "Battery 3"}
+    assert (
+        entity_registry.async_get_entity_id(
+            SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_voltage_2"
+        )
+        is None
+    )
+
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_HYBRID_SERIAL), entry.entry_id
+    )
+    assert inverter is not None
+    # A combined total is the inverter's, not any one pack's.
+    total_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_HYBRID_SERIAL}_battery_capacity_total"
+    )
+    assert total_id is not None
+    assert entity_registry.async_get(total_id).device_id == inverter.id
+
+
+async def test_battery_pack_appears_once_its_block_answers(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test a pack whose block failed at setup is added when it recovers."""
+    connection = MockModbusConnection()
+    unit = connection.for_unit(1)
+    seed_hybrid_inverter(unit)
+    # Inside the battery_3_8 block, so pack 3 cannot be seen at setup.
+    unit.fail_read(BATTERY_3_VOLTAGE_REGISTER, ModbusError("block busy"))
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_USER_INPUT,
+        title=MOCK_HYBRID_MODEL,
+    )
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    unique_id = f"{MOCK_HYBRID_SERIAL}_battery_voltage_3"
+    assert entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id) is None
+
+    unit.fail_read(BATTERY_3_VOLTAGE_REGISTER, None)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    # No reload: the coordinator's own listener notices the pack answering.
+    entity_id = entity_registry.async_get_entity_id(SENSOR_DOMAIN, DOMAIN, unique_id)
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "51.5"
