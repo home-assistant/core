@@ -10,8 +10,8 @@
         "state_attributes": {
           "fan_mode": {
             "state": {
-              "full": "mdi:fan-alert",
-              "silent": "mdi:fan-clock"
+              "full": "mdi:fan-chevron-up",
+              "silent": "mdi:fan-chevron-down"
             }
           }
         }
