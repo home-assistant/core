@@ -5,6 +5,7 @@ from homeassistant.components.aws_s3.const import (
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
     CONF_SECRET_ACCESS_KEY,
+    CONF_USE_DEFAULT_CREDENTIALS,
 )
 from homeassistant.const import CONF_PREFIX
 
@@ -19,5 +20,17 @@ CONFIG_ENTRY_DATA = {
 # What users submit to the flow (can include empty prefix)
 USER_INPUT = {
     **CONFIG_ENTRY_DATA,
+    CONF_PREFIX: "",
+}
+
+# Credentials are resolved by Boto3, so no keys are stored
+CONFIG_ENTRY_DATA_DEFAULT_CREDENTIALS = {
+    CONF_USE_DEFAULT_CREDENTIALS: True,
+    CONF_ENDPOINT_URL: "https://s3.eu-south-1.amazonaws.com",
+    CONF_BUCKET: "test",
+}
+
+USER_INPUT_DEFAULT_CREDENTIALS = {
+    **CONFIG_ENTRY_DATA_DEFAULT_CREDENTIALS,
     CONF_PREFIX: "",
 }
