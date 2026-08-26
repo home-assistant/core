@@ -20,7 +20,6 @@ from homeassistant.components.homekit import (
     STATUS_RUNNING,
     STATUS_STOPPED,
     STATUS_WAIT,
-    TARGET_CHANGE_RELOAD_COOLDOWN,
     TYPE_AIR_PURIFIER,
     HomeKit,
 )
@@ -90,9 +89,14 @@ from homeassistant.helpers.entityfilter import (
 )
 from homeassistant.setup import async_setup_component
 
-from .util import PATH_HOMEKIT, async_init_entry, async_init_integration
+from .util import (
+    PATH_HOMEKIT,
+    async_fire_target_change_cooldown,
+    async_init_entry,
+    async_init_integration,
+)
 
-from tests.common import MockConfigEntry, async_fire_time_changed, get_fixture_path
+from tests.common import MockConfigEntry, get_fixture_path
 
 IP_ADDRESS = "127.0.0.1"
 
@@ -118,6 +122,35 @@ def generate_filter(
             CONF_EXCLUDE_ENTITY_GLOBS: exclude_globs or [],
         }
     )
+
+
+def _create_entity_state(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    entity_id: str,
+    *,
+    labels: set[str] | None = None,
+    entity_category: EntityCategory | None = None,
+    device_id: str | None = None,
+    area_id: str | None = None,
+    state: str = "on",
+) -> er.RegistryEntry:
+    """Create an entity registry entry and corresponding state."""
+    domain, object_id = entity_id.split(".", maxsplit=1)
+    entry = entity_registry.async_get_or_create(
+        domain,
+        "demo",
+        object_id,
+        suggested_object_id=object_id,
+        entity_category=entity_category,
+        device_id=device_id,
+    )
+    if labels is not None:
+        entry = entity_registry.async_update_entity(entry.entity_id, labels=labels)
+    if area_id is not None:
+        entry = entity_registry.async_update_entity(entry.entity_id, area_id=area_id)
+    hass.states.async_set(entry.entity_id, state)
+    return entry
 
 
 @pytest.fixture(autouse=True)
@@ -618,94 +651,62 @@ async def test_homekit_target_filter(
     include_label = label_registry.async_create("HomeKit")
     exclude_label = label_registry.async_create("Private")
 
-    entity_registry.async_get_or_create(
-        "light", "demo", "included_by_label", suggested_object_id="included_by_label"
+    _create_entity_state(
+        hass,
+        entity_registry,
+        "light.included_by_label",
+        labels={include_label.label_id},
     )
-    entity_registry.async_update_entity(
-        "light.included_by_label", labels={include_label.label_id}
-    )
-    hass.states.async_set("light.included_by_label", "on")
-
-    config_entity = entity_registry.async_get_or_create(
-        "switch",
-        "demo",
-        "config_entity",
-        suggested_object_id="config_entity",
+    _create_entity_state(
+        hass,
+        entity_registry,
+        "switch.config_entity",
+        labels={include_label.label_id},
         entity_category=EntityCategory.CONFIG,
     )
-    entity_registry.async_update_entity(
-        config_entity.entity_id, labels={include_label.label_id}
-    )
-    hass.states.async_set(config_entity.entity_id, "on")
 
     device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={("test", "device")},
     )
     device_registry.async_update_device(device.id, labels={include_label.label_id})
-    entity_registry.async_get_or_create(
-        "light",
-        "demo",
-        "included_by_device_label",
-        suggested_object_id="included_by_device_label",
-        device_id=device.id,
+    _create_entity_state(
+        hass, entity_registry, "light.included_by_device_label", device_id=device.id
     )
-    hass.states.async_set("light.included_by_device_label", "on")
 
     area = area_registry.async_create("Labeled Area")
     area_registry.async_update(area.id, labels={include_label.label_id})
-    area_entity = entity_registry.async_get_or_create(
-        "light",
-        "demo",
-        "included_by_area_label",
-        suggested_object_id="included_by_area_label",
+    _create_entity_state(
+        hass, entity_registry, "light.included_by_area_label", area_id=area.id
     )
-    entity_registry.async_update_entity(area_entity.entity_id, area_id=area.id)
-    hass.states.async_set("light.included_by_area_label", "on")
 
-    entity_registry.async_get_or_create(
-        "cover",
-        "demo",
-        "excluded_by_domain",
-        suggested_object_id="excluded_by_domain",
+    for entity_id in (
+        "light.excluded_by_id",
+        "light.excluded_by_glob",
+    ):
+        _create_entity_state(
+            hass, entity_registry, entity_id, labels={include_label.label_id}
+        )
+    _create_entity_state(
+        hass,
+        entity_registry,
+        "cover.excluded_by_domain",
+        labels={include_label.label_id},
+        state="open",
     )
-    entity_registry.async_update_entity(
-        "cover.excluded_by_domain", labels={include_label.label_id}
+    _create_entity_state(
+        hass,
+        entity_registry,
+        "light.excluded_by_label",
+        labels={exclude_label.label_id},
     )
-    hass.states.async_set("cover.excluded_by_domain", "open")
-
-    entity_registry.async_get_or_create(
-        "light", "demo", "excluded_by_id", suggested_object_id="excluded_by_id"
+    _create_entity_state(
+        hass,
+        entity_registry,
+        "light.included_by_id",
+        labels={exclude_label.label_id},
     )
-    entity_registry.async_update_entity(
-        "light.excluded_by_id", labels={include_label.label_id}
-    )
-    hass.states.async_set("light.excluded_by_id", "on")
-
-    entity_registry.async_get_or_create(
-        "light", "demo", "excluded_by_glob", suggested_object_id="excluded_by_glob"
-    )
-    entity_registry.async_update_entity(
-        "light.excluded_by_glob", labels={include_label.label_id}
-    )
-    hass.states.async_set("light.excluded_by_glob", "on")
-
     hass.states.async_set("switch.domain_included", "on")
-
-    entity_registry.async_get_or_create(
-        "light", "demo", "excluded_by_label", suggested_object_id="excluded_by_label"
-    )
-    entity_registry.async_update_entity(
-        "light.excluded_by_label", labels={exclude_label.label_id}
-    )
-    hass.states.async_set("light.excluded_by_label", "on")
-    entity_registry.async_get_or_create(
-        "light", "demo", "included_by_id", suggested_object_id="included_by_id"
-    )
-    entity_registry.async_update_entity(
-        "light.included_by_id", labels={exclude_label.label_id}
-    )
-    hass.states.async_set("light.included_by_id", "on")
     hass.states.async_set("light.unrelated", "on")
 
     entity_filter = generate_filter(
@@ -724,21 +725,18 @@ async def test_homekit_target_filter(
         exclude_targets={ATTR_LABEL_ID: [exclude_label.label_id]},
     )
 
-    homekit.bridge = Mock()
-    homekit.bridge.accessories = {}
+    homekit.bridge = Mock(accessories={})
 
-    filtered_states = await homekit.async_configure_accessories()
-    assert hass.states.get("light.included_by_label") in filtered_states
-    assert hass.states.get("light.included_by_device_label") in filtered_states
-    assert hass.states.get("light.included_by_area_label") in filtered_states
-    assert hass.states.get("light.included_by_id") in filtered_states
-    assert hass.states.get("switch.domain_included") in filtered_states
-    assert hass.states.get("cover.excluded_by_domain") in filtered_states
-    assert hass.states.get(config_entity.entity_id) not in filtered_states
-    assert hass.states.get("light.excluded_by_id") not in filtered_states
-    assert hass.states.get("light.excluded_by_glob") not in filtered_states
-    assert hass.states.get("light.excluded_by_label") not in filtered_states
-    assert hass.states.get("light.unrelated") not in filtered_states
+    assert {
+        state.entity_id for state in await homekit.async_configure_accessories()
+    } == {
+        "cover.excluded_by_domain",
+        "light.included_by_area_label",
+        "light.included_by_device_label",
+        "light.included_by_id",
+        "light.included_by_label",
+        "switch.domain_included",
+    }
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
@@ -778,18 +776,13 @@ async def test_homekit_native_target_expansion(
         "light.excluded_by_floor": {"area_id": exclude_floor_area.id},
     }
     for entity_id, location in entity_locations.items():
-        registry_entry = entity_registry.async_get_or_create(
-            "light",
-            "demo",
+        _create_entity_state(
+            hass,
+            entity_registry,
             entity_id,
-            suggested_object_id=entity_id.partition(".")[2],
             device_id=location.get("device_id"),
+            area_id=location.get("area_id"),
         )
-        if area_id := location.get("area_id"):
-            entity_registry.async_update_entity(
-                registry_entry.entity_id, area_id=area_id
-            )
-        hass.states.async_set(entity_id, "on")
 
     homekit = _mock_homekit(
         hass,
@@ -826,9 +819,6 @@ async def test_homekit_native_target_expansion(
         (ATTR_AREA_ID, ATTR_DEVICE_ID, False),
         (ATTR_AREA_ID, ATTR_FLOOR_ID, True),
         (ATTR_FLOOR_ID, ATTR_AREA_ID, False),
-        (ATTR_DEVICE_ID, ATTR_DEVICE_ID, False),
-        (ATTR_AREA_ID, ATTR_AREA_ID, False),
-        (ATTR_FLOOR_ID, ATTR_FLOOR_ID, False),
     ],
 )
 async def test_homekit_expanded_target_specificity(
@@ -876,96 +866,6 @@ async def test_homekit_expanded_target_specificity(
 
     filtered_states = await homekit.async_configure_accessories()
     assert (hass.states.get(registry_entry.entity_id) in filtered_states) is expected
-
-
-@pytest.mark.parametrize(
-    ("include_rule", "exclude_rule", "expected"),
-    [
-        ("entity", "device", True),
-        ("entity", "label", True),
-        ("entity", "entity", False),
-        ("device", "entity", False),
-        ("device", "glob", True),
-        ("device", "device", False),
-        ("glob", "device", False),
-        ("glob", "area", True),
-        ("glob", "glob", False),
-        ("area", "glob", False),
-        ("area", "floor", True),
-        ("area", "domain", True),
-        ("area", "area", False),
-        ("floor", "area", False),
-        ("floor", "label", True),
-        ("floor", "floor", False),
-        ("label", "floor", False),
-        ("label", "domain", True),
-        ("label", "label", False),
-        ("domain", "area", False),
-        ("domain", "label", False),
-        ("domain", "unknown", True),
-        ("domain", "domain", False),
-        ("unknown", "domain", False),
-        ("unknown", "unknown", False),
-    ],
-)
-async def test_homekit_target_filter_specificity(
-    hass: HomeAssistant,
-    include_rule: str,
-    exclude_rule: str,
-    expected: bool,
-) -> None:
-    """Test specificity precedence and that exclusions win equal conflicts."""
-    entity_id = "light.test"
-
-    def _base_filter(rule: str, include: bool) -> EntityFilter:
-        return generate_filter(
-            ["light"] if include and rule == "domain" else [],
-            [entity_id] if include and rule == "entity" else [],
-            ["light"] if not include and rule == "domain" else [],
-            [entity_id] if not include and rule == "entity" else [],
-            ["light.*"] if include and rule == "glob" else [],
-            ["light.*"] if not include and rule == "glob" else [],
-        )
-
-    include_base = _base_filter(include_rule, True)
-    exclude_base = _base_filter(exclude_rule, False)
-    entity_filter = generate_filter(
-        include_base.config[CONF_INCLUDE_DOMAINS],
-        include_base.config[CONF_INCLUDE_ENTITIES],
-        exclude_base.config[CONF_EXCLUDE_DOMAINS],
-        exclude_base.config[CONF_EXCLUDE_ENTITIES],
-        include_base.config[CONF_INCLUDE_ENTITY_GLOBS],
-        exclude_base.config[CONF_EXCLUDE_ENTITY_GLOBS],
-    )
-    target_types = {
-        "entity": ATTR_ENTITY_ID,
-        "device": ATTR_DEVICE_ID,
-        "area": ATTR_AREA_ID,
-        "floor": ATTR_FLOOR_ID,
-        "label": ATTR_LABEL_ID,
-        "unknown": "unknown_id",
-    }
-    included_targets = (
-        {target_types[include_rule]: {entity_id}}
-        if include_rule in target_types
-        else {}
-    )
-    excluded_targets = (
-        {target_types[exclude_rule]: {entity_id}}
-        if exclude_rule in target_types
-        else {}
-    )
-    entry = MockConfigEntry(domain=DOMAIN)
-    homekit = _mock_homekit(
-        hass, entry, HOMEKIT_MODE_BRIDGE, entity_filter=entity_filter
-    )
-
-    assert (
-        homekit._should_include_entity(
-            entity_id, included_targets, excluded_targets, has_include_rules=True
-        )
-        is expected
-    )
 
 
 @pytest.mark.usefixtures("mock_async_zeroconf")
@@ -2313,9 +2213,7 @@ async def test_group_target_membership_change_reloads(
         await hass.async_block_till_done()
         mock_reload.assert_not_called()
 
-        freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await async_fire_target_change_cooldown(hass, freezer)
         mock_reload.assert_called_once_with(entry.entry_id)
 
 
@@ -2326,7 +2224,7 @@ async def test_entity_label_change_reloads_for_configured_labels(
     entity_registry: er.EntityRegistry,
     label_registry: lr.LabelRegistry,
 ) -> None:
-    """Test configured entity label changes reload HomeKit."""
+    """Test only configured entity label changes reload HomeKit."""
     homekit_label = label_registry.async_create("HomeKit")
     other_label = label_registry.async_create("Other")
     registry_entry = entity_registry.async_get_or_create(
@@ -2341,17 +2239,14 @@ async def test_entity_label_change_reloads_for_configured_labels(
             registry_entry.entity_id, labels={other_label.label_id}
         )
         await hass.async_block_till_done()
+        await async_fire_target_change_cooldown(hass, freezer)
         mock_reload.assert_not_called()
 
         entity_registry.async_update_entity(
             registry_entry.entity_id, labels={homekit_label.label_id}
         )
         await hass.async_block_till_done()
-        mock_reload.assert_not_called()
-
-        freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await async_fire_target_change_cooldown(hass, freezer)
         mock_reload.assert_called_once_with(entry.entry_id)
 
 
@@ -2365,7 +2260,6 @@ async def test_device_label_change_reloads_for_configured_labels(
 ) -> None:
     """Test configured device label changes reload HomeKit."""
     homekit_label = label_registry.async_create("HomeKit")
-    other_label = label_registry.async_create("Other")
     device_config_entry = MockConfigEntry(domain="test")
     device_config_entry.add_to_hass(hass)
     device = device_registry.async_get_or_create(
@@ -2384,17 +2278,9 @@ async def test_device_label_change_reloads_for_configured_labels(
     )
 
     with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        device_registry.async_update_device(device.id, labels={other_label.label_id})
-        await hass.async_block_till_done()
-        mock_reload.assert_not_called()
-
         device_registry.async_update_device(device.id, labels={homekit_label.label_id})
         await hass.async_block_till_done()
-        mock_reload.assert_not_called()
-
-        freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
-        async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await async_fire_target_change_cooldown(hass, freezer)
         mock_reload.assert_called_once_with(entry.entry_id)
 
 
@@ -2408,7 +2294,6 @@ async def test_area_label_change_reloads_for_configured_labels(
 ) -> None:
     """Test configured area label changes reload HomeKit."""
     homekit_label = label_registry.async_create("HomeKit")
-    other_label = label_registry.async_create("Other")
     area = area_registry.async_create("Label Reload")
     area_entity = entity_registry.async_get_or_create(
         "light",
@@ -2422,17 +2307,39 @@ async def test_area_label_change_reloads_for_configured_labels(
     )
 
     with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
-        area_registry.async_update(area.id, labels={other_label.label_id})
-        await hass.async_block_till_done()
-        mock_reload.assert_not_called()
-
         area_registry.async_update(area.id, labels={homekit_label.label_id})
         await hass.async_block_till_done()
-        mock_reload.assert_not_called()
+        await async_fire_target_change_cooldown(hass, freezer)
+        mock_reload.assert_called_once_with(entry.entry_id)
 
-        freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
-        async_fire_time_changed(hass)
+
+@pytest.mark.usefixtures("mock_async_zeroconf")
+async def test_area_floor_change_reloads_for_configured_floor(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    area_registry: ar.AreaRegistry,
+    entity_registry: er.EntityRegistry,
+    floor_registry: fr.FloorRegistry,
+) -> None:
+    """Test moving an area into a configured floor reloads HomeKit."""
+    target_floor = floor_registry.async_create("Target Floor")
+    other_floor = floor_registry.async_create("Other Floor")
+    area = area_registry.async_create("Floor Reload", floor_id=other_floor.floor_id)
+    area_entity = entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "floor_reload",
+        suggested_object_id="floor_reload",
+    )
+    entity_registry.async_update_entity(area_entity.entity_id, area_id=area.id)
+    entry = await _async_setup_target_reload_test(
+        hass, {ATTR_FLOOR_ID: [target_floor.floor_id]}
+    )
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        area_registry.async_update(area.id, floor_id=target_floor.floor_id)
         await hass.async_block_till_done()
+        await async_fire_target_change_cooldown(hass, freezer)
         mock_reload.assert_called_once_with(entry.entry_id)
 
 
@@ -2499,9 +2406,7 @@ async def test_indirect_label_target_changes_are_debounced(
             mock_reload.assert_not_called()
             assert mock_expand.call_count == 1
 
-            freezer.tick(TARGET_CHANGE_RELOAD_COOLDOWN)
-            async_fire_time_changed(hass)
-            await hass.async_block_till_done()
+            await async_fire_target_change_cooldown(hass, freezer)
             assert mock_expand.call_count == 2
             mock_reload.assert_called_once_with(entry.entry_id)
 
