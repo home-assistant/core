@@ -3,6 +3,7 @@
   "name": "Fronius",
   "codeowners": ["@farmio"],
   "config_flow": true,
+  "dependencies": ["modbus"],
   "dhcp": [
     {
       "macaddress": "0003AC*"
@@ -11,7 +12,7 @@
   "documentation": "https://www.home-assistant.io/integrations/fronius",
   "integration_type": "hub",
   "iot_class": "local_polling",
-  "loggers": ["pyfronius"],
+  "loggers": ["fronius_modbus", "modbus_connection", "pyfronius"],
   "quality_scale": "platinum",
-  "requirements": ["PyFronius==0.8.2"]
+  "requirements": ["PyFronius==0.8.2", "fronius-modbus==0.2.0"]
 }
