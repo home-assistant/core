@@ -640,9 +640,6 @@
       "reactive_power_pcc_total": {
         "name": "Reactive power PCC total"
       },
-      "rtc": {
-        "name": "System time"
-      },
       "serial_number": {
         "name": "Serial number"
       },
