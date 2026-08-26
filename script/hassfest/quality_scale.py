@@ -1577,7 +1577,6 @@ INTEGRATIONS_WITHOUT_SCALE = [
     "nyt_games",
     "nfandroidtv",
     "nibe_heatpump",
-    "nice_go",
     "nightscout",
     "niko_home_control",
     "nilu",
