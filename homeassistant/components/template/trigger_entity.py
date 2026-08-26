@@ -58,7 +58,6 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     @override
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
-        await super().async_added_to_hass()
 
         if condition_config := self._config.get(CONF_CONDITIONS):
             self._cond_func = await condition.async_conditions_from_config(
@@ -67,6 +66,8 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
                 _LOGGER,
                 f"template {self.domain} entity",
             )
+
+        await super().async_added_to_hass()
 
         if self.coordinator.data is not None:
             # The trigger already produced data; rendering it must win over
