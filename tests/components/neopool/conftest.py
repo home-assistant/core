@@ -216,6 +216,15 @@ def mock_neopool_client() -> Generator[MagicMock]:
         mock_client = mock_client_cls.return_value
         mock_client.async_read_all = AsyncMock(return_value=dict(MOCK_POOL_DATA))
         mock_client.read_all_timers = AsyncMock(side_effect=_read_all_timers)
+        mock_client.connection_stats = {
+            "host": MOCK_HOST,
+            "port": MOCK_PORT,
+            "unit_id": DEFAULT_UNIT_ID,
+            "connected": True,
+            "total_operations": 10,
+            "successful_operations": 10,
+            "success_rate_percent": 100.0,
+        }
         mock_client.async_set_relay_state = AsyncMock(return_value={})
         mock_client.async_set_manual_filtration = AsyncMock(return_value={})
         mock_client.async_set_binary_flag = AsyncMock(return_value={})
