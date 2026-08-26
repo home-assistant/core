@@ -413,6 +413,7 @@ async def test_cleanup_recreates_device_when_reappears(
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
 ) -> None:
     """Test a device removed by cleanup is re-registered when it returns."""
     mock_config_entry.add_to_hass(hass)
@@ -420,8 +421,13 @@ async def test_cleanup_recreates_device_when_reappears(
     await hass.async_block_till_done(wait_background_tasks=True)
 
     removed_mac = "54-AF-97-00-00-01"
+    update_unique_id = f"{removed_mac}_firmware"
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, removed_mac), mock_config_entry.entry_id
+    )
+    assert (
+        entity_registry.async_get_entity_id("update", DOMAIN, update_unique_id)
+        is not None
     )
 
     site_client = mock_omada_client.get_site_client.return_value
@@ -438,6 +444,9 @@ async def test_cleanup_recreates_device_when_reappears(
         )
         is None
     )
+    assert (
+        entity_registry.async_get_entity_id("update", DOMAIN, update_unique_id) is None
+    )
 
     # Switch returns to the controller — the next interval run re-registers it
     devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
@@ -449,16 +458,25 @@ async def test_cleanup_recreates_device_when_reappears(
     assert device_registry.async_get_device_by_identifier(
         (DOMAIN, removed_mac), mock_config_entry.entry_id
     )
+    assert (
+        entity_registry.async_get_entity_id("update", DOMAIN, update_unique_id)
+        is not None
+    )
 
 
-async def test_cleanup_devices_skipped_on_empty_data(
+@pytest.mark.parametrize(
+    ("empty_sweeps", "orphan_removed"),
+    [(1, False), (2, False), (3, True)],
+)
+async def test_cleanup_devices_requires_confirmed_empty_list(
     hass: HomeAssistant,
     mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
-    entity_registry: er.EntityRegistry,
+    empty_sweeps: int,
+    orphan_removed: bool,
 ) -> None:
-    """Test device cleanup skips entries when the controller reports no devices."""
+    """Test device cleanup removes entries only after repeated empty responses."""
     mock_config_entry.add_to_hass(hass)
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done(wait_background_tasks=True)
@@ -474,6 +492,76 @@ async def test_cleanup_devices_skipped_on_empty_data(
         model="Test",
         name="Orphan",
     )
+
+    site_client = mock_omada_client.get_site_client.return_value
+    site_client.get_devices = AsyncMock(return_value=[])
+    await controller.devices_coordinator.async_refresh()
+
+    for _ in range(empty_sweeps):
+        await async_cleanup_devices(hass, controller)
+
+    assert (device_registry.async_get(orphan.id) is None) is orphan_removed
+
+
+async def test_cleanup_devices_empty_count_resets_on_data(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test the empty sweep counter resets when devices are reported again."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    controller = hass.config_entries.async_get_entry(
+        mock_config_entry.entry_id
+    ).runtime_data
+
+    switch_mac = "54-AF-97-00-00-01"
+    site_client = mock_omada_client.get_site_client.return_value
+
+    site_client.get_devices = AsyncMock(return_value=[])
+    await controller.devices_coordinator.async_refresh()
+    await async_cleanup_devices(hass, controller)
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, switch_mac), mock_config_entry.entry_id
+    )
+
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    site_client.get_devices = AsyncMock(
+        return_value=[OmadaListDevice(d) for d in devices_data]
+    )
+    await controller.devices_coordinator.async_refresh()
+    await async_cleanup_devices(hass, controller)
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, switch_mac), mock_config_entry.entry_id
+    )
+
+    site_client.get_devices = AsyncMock(return_value=[])
+    await controller.devices_coordinator.async_refresh()
+    await async_cleanup_devices(hass, controller)
+    await async_cleanup_devices(hass, controller)
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, switch_mac), mock_config_entry.entry_id
+    )
+
+
+async def test_cleanup_trackers_on_empty_known_clients(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test tracker cleanup removes integration-disabled trackers on an empty known list."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    controller = hass.config_entries.async_get_entry(
+        mock_config_entry.entry_id
+    ).runtime_data
+
     tracker = entity_registry.async_get_or_create(
         domain="device_tracker",
         platform=DOMAIN,
@@ -483,16 +571,11 @@ async def test_cleanup_devices_skipped_on_empty_data(
     )
 
     site_client = mock_omada_client.get_site_client.return_value
-    site_client.get_devices = AsyncMock(return_value=[])
     site_client.get_known_clients.return_value = _get_no_known_clients()
-
-    await controller.devices_coordinator.async_refresh()
     await controller.known_clients_coordinator.async_refresh()
 
-    await async_cleanup_devices(hass, controller)
     await async_cleanup_client_trackers(hass, controller)
 
-    assert device_registry.async_get(orphan.id) is not None
     assert entity_registry.async_get(tracker.entity_id) is None
 
 

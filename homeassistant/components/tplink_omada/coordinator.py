@@ -34,6 +34,10 @@ POLL_CLIENTS = 300
 POLL_DEVICES = 300
 POLL_UPGRADE = 60
 
+# Number of consecutive empty device-list sweeps required before removing
+# device entries, to tolerate transient empty responses from the controller.
+EMPTY_DEVICE_LIMIT = 3
+
 
 class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
     """Coordinator for synchronizing bulk Omada data."""
@@ -301,9 +305,14 @@ async def async_cleanup_devices(
 
     devices = controller.devices_coordinator.data
     if not devices:
-        # A successful but empty response is likely a transient controller glitch;
-        # removing device entries here would permanently lose user customizations.
-        return
+        # A successful but empty response is likely a transient controller glitch.
+        # Only clean after several consecutive empty sweeps, since removal
+        # permanently loses user customizations on the device entries.
+        if controller.consecutive_empty_device_lists < EMPTY_DEVICE_LIMIT - 1:
+            controller.consecutive_empty_device_lists += 1
+            return
+    else:
+        controller.consecutive_empty_device_lists = 0
 
     device_registry = dr.async_get(hass)
     entry_id = controller.devices_coordinator.config_entry.entry_id

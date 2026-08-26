@@ -48,6 +48,7 @@ class OmadaSiteController:
             hass, config_entry, omada_client
         )
         self._device_entity_registrations: list[set[str]] = []
+        self.consecutive_empty_device_lists = 0
 
     async def initialize_first_refresh(self) -> None:
         """Initialize the all coordinators, and perform first refresh."""

@@ -29,14 +29,15 @@ async def async_setup_entry(
     """Set up switches."""
     controller = config_entry.runtime_data
 
-    devices = controller.devices_coordinator.data
-
     coordinator = OmadaFirmwareUpdateCoordinator(
         hass, config_entry, controller.omada_client, controller.devices_coordinator
     )
 
-    async_add_entities(
-        OmadaDeviceUpdate(coordinator, device) for device in devices.values()
+    async def _async_register_device(device: OmadaListDevice) -> None:
+        async_add_entities([OmadaDeviceUpdate(coordinator, device)])
+
+    await controller.async_register_device_entities(
+        lambda device: True, _async_register_device
     )
     await coordinator.async_request_refresh()
 
