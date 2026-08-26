@@ -1,8 +1,8 @@
 """Flume test fixtures."""
 
 from collections.abc import Generator
-import datetime
 from http import HTTPStatus
+import time
 from unittest.mock import patch
 
 import jwt
@@ -28,7 +28,7 @@ DEVICE_LIST_URL = (
     "https://api.flumetech.com/users/test-user-id/devices?user=true&location=true"
 )
 BRIDGE_DEVICE = {
-    "id": "1234",
+    "id": "5678",
     "type": 1,  # Bridge
     "location": {
         "name": "Bridge Location",
@@ -97,14 +97,16 @@ def config_entry_fixture(hass: HomeAssistant) -> MockConfigEntry:
     return config_entry
 
 
+TOKEN_SIGNING_KEY = "flume-test-token-signing-key-0123"
+
+
 def encode_access_token() -> str:
     """Encode the payload of the access token."""
-    expiration_time = datetime.datetime.now() + datetime.timedelta(hours=12)  # pylint: disable=home-assistant-enforce-naive-now
     payload = {
         "user_id": USER_ID,
-        "exp": int(expiration_time.timestamp()),
+        "exp": int(time.time() + 12 * 3600),
     }
-    return jwt.encode(payload, key="secret")
+    return jwt.encode(payload, key=TOKEN_SIGNING_KEY)
 
 
 @pytest.fixture(name="access_token")

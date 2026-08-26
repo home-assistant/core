@@ -1,6 +1,7 @@
 """Home Assistant Yellow firmware update entity."""
 
 import logging
+from typing import override
 
 from aiohasupervisor import SupervisorError
 from universal_silabs_flasher.flasher import YellowFlasher
@@ -208,6 +209,7 @@ class FirmwareUpdateEntity(BaseFirmwareUpdateEntity):
             )
 
     @callback
+    @override
     def _firmware_info_callback(self, firmware_info: FirmwareInfo) -> None:
         """Handle updated firmware info being pushed by an integration."""
         self.hass.config_entries.async_update_entry(

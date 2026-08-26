@@ -3,7 +3,7 @@
 from collections.abc import AsyncGenerator, Mapping
 from dataclasses import dataclass
 from functools import partial
-from typing import Any, final
+from typing import Any, final, override
 
 from propcache.api import cached_property
 
@@ -63,6 +63,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
 
     @property
     @final
+    @override
     def state(self) -> str | None:
         """Return the state of the entity."""
         if self.__last_tts_loaded is None:
@@ -101,6 +102,7 @@ class TextToSpeechEntity(RestoreEntity, cached_properties=CACHED_PROPERTIES_WITH
         """Return a list of supported voices for a language."""
         return None
 
+    @override
     async def async_internal_added_to_hass(self) -> None:
         """Call when the entity is added to hass."""
         await super().async_internal_added_to_hass()

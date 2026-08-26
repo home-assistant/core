@@ -285,8 +285,8 @@ async def test_options_remove_sensor(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "remove_sensor"
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, str(TEST_SENSOR_INDEX1))}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, str(TEST_SENSOR_INDEX1)), config_entry.entry_id
     )
     assert device_entry is not None
     result = await hass.config_entries.options.async_configure(

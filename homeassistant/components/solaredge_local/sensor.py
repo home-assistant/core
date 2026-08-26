@@ -5,7 +5,7 @@ import dataclasses
 from datetime import timedelta
 import logging
 import statistics
-from typing import Any
+from typing import Any, override
 
 from requests.exceptions import ConnectTimeout, HTTPError
 from solaredge_local import SolarEdge
@@ -288,6 +288,7 @@ class SolarEdgeSensor(SensorEntity):
         self._attr_name = f"{platform_name} ({description.name})"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any] | None:
         """Return the state attributes."""
         if extra_attr := self.entity_description.extra_attribute:

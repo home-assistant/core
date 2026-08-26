@@ -1,6 +1,16 @@
 """Provides the constants needed for the component."""
 
-DOMAIN = "select"
+from enum import StrEnum
+from typing import Final
+
+DOMAIN: Final = "select"
+
+
+class SelectEntityCapabilityAttribute(StrEnum):
+    """Capability attributes for select entities."""
+
+    OPTIONS = "options"
+
 
 ATTR_CYCLE = "cycle"
 ATTR_OPTIONS = "options"

@@ -1,6 +1,6 @@
 """Support for Modern Forms Fan Fans."""
 
-from typing import Any
+from typing import Any, override
 
 from aiomodernforms.const import FAN_POWER_OFF, FAN_POWER_ON
 import voluptuous as vol
@@ -21,11 +21,15 @@ from .const import (
     CLEAR_TIMER,
     OPT_ON,
     OPT_SPEED,
+    OPT_WIND,
     SERVICE_CLEAR_FAN_SLEEP_TIMER,
     SERVICE_SET_FAN_SLEEP_TIMER,
 )
 from .coordinator import ModernFormsConfigEntry, ModernFormsDataUpdateCoordinator
 from .entity import ModernFormsDeviceEntity
+
+PRESET_MODE_NORMAL = "normal"
+PRESET_MODE_BREEZE = "breeze"
 
 
 async def async_setup_entry(
@@ -82,8 +86,14 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
             coordinator=coordinator,
         )
         self._attr_unique_id = f"{self.coordinator.data.info.mac_address}"
+        if self.coordinator.data.has_wind():
+            self._attr_supported_features = (
+                self._attr_supported_features | FanEntityFeature.PRESET_MODE
+            )
+            self._attr_preset_modes = [PRESET_MODE_NORMAL, PRESET_MODE_BREEZE]
 
     @property
+    @override
     def percentage(self) -> int | None:
         """Return the current speed percentage."""
         percentage = 0
@@ -94,26 +104,49 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         return percentage
 
     @property
+    @override
     def current_direction(self) -> str:
         """Return the current direction of the fan."""
         return self.coordinator.data.state.fan_direction
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(self.SPEED_RANGE)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the state of the fan."""
         return bool(self.coordinator.data.state.fan_on)
 
+    @property
+    @override
+    def preset_mode(self) -> str | None:
+        """Return the current preset mode."""
+        if not self.coordinator.data.has_wind():
+            return None
+        return (
+            PRESET_MODE_BREEZE
+            if self.coordinator.data.state.wind
+            else PRESET_MODE_NORMAL
+        )
+
     @modernforms_exception_handler
+    @override
     async def async_set_direction(self, direction: str) -> None:
         """Set the direction of the fan."""
         await self.coordinator.modern_forms.fan(direction=direction)
 
     @modernforms_exception_handler
+    @override
+    async def async_set_preset_mode(self, preset_mode: str) -> None:
+        """Set the preset mode of the fan."""
+        await self.coordinator.modern_forms.fan(wind=preset_mode == PRESET_MODE_BREEZE)
+
+    @modernforms_exception_handler
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the speed percentage of the fan."""
         if percentage > 0:
@@ -122,6 +155,7 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
             await self.async_turn_off()
 
     @modernforms_exception_handler
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -129,15 +163,19 @@ class ModernFormsFanEntity(FanEntity, ModernFormsDeviceEntity):
         **kwargs: Any,
     ) -> None:
         """Turn on the fan."""
-        data = {OPT_ON: FAN_POWER_ON}
+        data: dict[str, Any] = {OPT_ON: FAN_POWER_ON}
 
         if percentage:
             data[OPT_SPEED] = round(
                 percentage_to_ranged_value(self.SPEED_RANGE, percentage)
             )
+        if preset_mode is not None:
+            data[OPT_WIND] = preset_mode == PRESET_MODE_BREEZE
+
         await self.coordinator.modern_forms.fan(**data)
 
     @modernforms_exception_handler
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self.coordinator.modern_forms.fan(on=FAN_POWER_OFF)

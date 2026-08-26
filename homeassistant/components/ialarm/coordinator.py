@@ -2,6 +2,7 @@
 
 import asyncio
 import logging
+from typing import override
 
 from pyialarm import IAlarm
 
@@ -53,6 +54,7 @@ class IAlarmDataUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.state = IALARM_TO_HASS.get(status)
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from iAlarm."""
         try:

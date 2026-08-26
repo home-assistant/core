@@ -58,7 +58,7 @@
   },
   "services": {
     "get_cheapest_duration": {
-      "description": "Retrieve electricity price data and find the cheapest consecutive time window for a given duration.",
+      "description": "Retrieves electricity price data and finds the cheapest consecutive time window for a given duration.",
       "fields": {
         "duration": {
           "description": "Duration in hours for which to find the cheapest time window.",
@@ -69,7 +69,21 @@
           "name": "Time range"
         }
       },
-      "name": "Get cheapest duration"
+      "name": "Get cheapest time window"
+    },
+    "get_prices": {
+      "description": "Returns raw 15-minute electricity price slots for the next N hours. Slots beyond the API horizon are omitted.",
+      "fields": {
+        "config_entry_id": {
+          "description": "The Green Planet Energy integration instance to use.",
+          "name": "Config entry"
+        },
+        "hours": {
+          "description": "How many hours of price data to return, starting from the current 15-minute slot. Minimum 0.25, maximum 24.",
+          "name": "Hours"
+        }
+      },
+      "name": "Get energy prices"
     }
   }
 }

@@ -5,7 +5,7 @@ from copy import deepcopy
 from enum import StrEnum
 from functools import cache
 import importlib
-from typing import Any, Literal, Required, TypedDict, cast
+from typing import Any, Literal, Required, TypedDict, cast, override
 from uuid import UUID
 
 import voluptuous as vol
@@ -67,6 +67,7 @@ class Selector[_T: Mapping[str, Any]]:
         """Instantiate a selector."""
         self.config = self.CONFIG_SCHEMA(config)
 
+    @override
     def __eq__(self, other: object) -> bool:
         """Check equality."""
         if not isinstance(other, Selector):
@@ -242,6 +243,26 @@ class DeviceFilterSelectorConfig(TypedDict, total=False):
     manufacturer: str
     model: str
     model_id: str
+
+
+ENTITY_WITH_DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA = (
+    ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA.extend(
+        {
+            # Filter on properties of the device the entity belongs to
+            vol.Optional("device"): DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA,
+        }
+    )
+)
+
+
+class EntityWithDeviceFilterSelectorConfig(EntityFilterSelectorConfig, total=False):
+    """Class to represent an entity selector filter config.
+
+    Adds device filtering on top of the shared entity filter, only used by
+    the entity selector.
+    """
+
+    device: DeviceFilterSelectorConfig
 
 
 class ActionSelectorConfig(BaseSelectorConfig):
@@ -581,6 +602,7 @@ class ChooseSelector(Selector[ChooseSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
+    @override
     def serialize(self) -> dict[str, dict[str, ChooseSelectorConfig]]:
         """Serialize ChooseSelectorConfig for voluptuous_serialize."""
         _config = deepcopy(self.config)
@@ -983,7 +1005,10 @@ class EntitySelectorConfig(
     include_entities: list[str]
     multiple: bool
     reorder: bool
-    filter: EntityFilterSelectorConfig | list[EntityFilterSelectorConfig]
+    filter: (
+        EntityWithDeviceFilterSelectorConfig
+        | list[EntityWithDeviceFilterSelectorConfig]
+    )
 
 
 @SELECTORS.register("entity")
@@ -1002,7 +1027,7 @@ class EntitySelector(Selector[EntitySelectorConfig]):
                 vol.Optional("reorder", default=False): cv.boolean,
                 vol.Optional("filter"): vol.All(
                     cv.ensure_list,
-                    [ENTITY_FILTER_SELECTOR_CONFIG_SCHEMA],
+                    [ENTITY_WITH_DEVICE_FILTER_SELECTOR_CONFIG_SCHEMA],
                 ),
             }
         ),
@@ -1676,6 +1701,7 @@ class ObjectSelector(Selector[ObjectSelectorConfig]):
         """Instantiate a selector."""
         super().__init__(config)
 
+    @override
     def serialize(self) -> dict[str, dict[str, ObjectSelectorConfig]]:
         """Serialize ObjectSelector for voluptuous_serialize."""
         _config = deepcopy(self.config)

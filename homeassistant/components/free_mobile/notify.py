@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 from freesms import FreeClient
 import voluptuous as vol
@@ -39,6 +39,7 @@ class FreeSMSNotificationService(BaseNotificationService):
         """Initialize the service."""
         self.free_client = FreeClient(username, access_token)
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to the Free Mobile user cell."""
         resp = self.free_client.send_sms(message)

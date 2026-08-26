@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from pytrydan import Trydan, TrydanData
 
@@ -114,10 +114,12 @@ class V2CSettingsNumberEntity(V2CBaseEntity, NumberEntity):
         self._attr_unique_id = f"{entry_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Return the state of the setting entity."""
         return self.entity_description.value_fn(self.data)
 
+    @override
     async def async_set_native_value(self, value: float) -> None:
         """Update the setting."""
         await self.entity_description.update_fn(self.coordinator.evse, int(value))

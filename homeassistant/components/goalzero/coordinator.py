@@ -1,6 +1,7 @@
 """Data update coordinator for the Goal zero integration."""
 
 from datetime import timedelta
+from typing import override
 
 from goalzero import Yeti, exceptions
 
@@ -31,6 +32,7 @@ class GoalZeroDataUpdateCoordinator(DataUpdateCoordinator[None]):
         )
         self.api = api
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch data from API endpoint."""
         try:

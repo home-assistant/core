@@ -1,7 +1,7 @@
 """Button platform for Indevolt integration."""
 
 from dataclasses import dataclass
-from typing import Final
+from typing import Final, override
 
 from indevolt_api import IndevoltRealtimeAction
 
@@ -64,6 +64,7 @@ class IndevoltButtonEntity(IndevoltEntity, ButtonEntity):
         self.entity_description = description
         self._attr_unique_id = f"{self.serial_number}_{description.key}"
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         await self.coordinator.async_realtime_action(IndevoltRealtimeAction.STOP)
