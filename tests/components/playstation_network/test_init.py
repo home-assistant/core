@@ -300,6 +300,35 @@ async def test_coordinator_update_data_failed(
     assert config_entry.state is ConfigEntryState.SETUP_RETRY
 
 
+async def test_persists_refreshed_token_when_coordinator_update_fails(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a refreshed token is persisted when the data update fails."""
+    config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    refreshed_token_response = TOKEN_RESPONSE | {
+        "access_token": "refreshed-access-token",
+        "refresh_token": "refreshed-refresh-token",
+    }
+
+    def refresh_token_then_fail() -> None:
+        mock_psnawpapi.authenticator.token_response = refreshed_token_response
+        raise PSNAWPServerError("error msg")
+
+    mock_psnawpapi.user.return_value.get_presence.side_effect = refresh_token_then_fail
+
+    freezer.tick(timedelta(seconds=30))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    assert config_entry.data[CONF_TOKEN_RESPONSE] == refreshed_token_response
+
+
 async def test_coordinator_update_auth_failed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
