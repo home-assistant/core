@@ -40,7 +40,7 @@ async def async_setup_entry(
             for entity in er.async_entries_for_config_entry(
                 entity_registry, config_entry.entry_id
             )
-            if entity.domain == DEVICE_TRACKER_DOMAIN
+            if entity.domain == DEVICE_TRACKER_DOMAIN and entity.unique_id is not None
         }
         return [
             OmadaClientScannerEntity(

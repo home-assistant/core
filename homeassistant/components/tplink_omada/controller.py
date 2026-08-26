@@ -112,6 +112,7 @@ class OmadaSiteController:
 
     def async_mark_device_removed(self, mac: str) -> None:
         """Allow entities for a removed device to be re-registered if it reappears."""
+        mac = dr.format_mac(mac)
         for processed in self._device_entity_registrations:
             processed.discard(mac)
 
