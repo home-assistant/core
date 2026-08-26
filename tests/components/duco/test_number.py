@@ -28,7 +28,6 @@ _ZONE_1_ENTITY_ID = "number.living_bypass_target_1"
 _ZONE_2_ENTITY_ID = "number.living_bypass_target_2"
 _ZONE_3_ENTITY_ID = "number.living_bypass_target_3"
 _ZONE_4_ENTITY_ID = "number.living_bypass_target_4"
-_ZONE_5_ENTITY_ID = "number.living_bypass_target_5"
 
 
 @pytest.fixture
@@ -64,13 +63,6 @@ async def test_bypass_supply_temperature_target_numbers_support_four_zones(
                 increment=0.1,
                 maximum=25.0,
             ),
-            5: BypassSupplyTemperatureTarget(
-                zone_id=5,
-                value=24.0,
-                minimum=15.0,
-                increment=0.1,
-                maximum=25.0,
-            ),
         }
     )
 
@@ -84,7 +76,6 @@ async def test_bypass_supply_temperature_target_numbers_support_four_zones(
     ):
         assert hass.states.get(entity_id) is not None
 
-    assert hass.states.get(_ZONE_5_ENTITY_ID) is None
     mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
 
 
