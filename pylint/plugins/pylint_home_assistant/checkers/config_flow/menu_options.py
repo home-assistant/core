@@ -25,14 +25,21 @@ _STEP_PREFIX = "async_step_"
 
 
 def _safe_infer(node: nodes.NodeNG) -> nodes.NodeNG | None:
-    """Infer a single value for *node*, returning None on failure/ambiguity."""
+    """Infer a single unambiguous value for *node*, else None.
+
+    A name assigned in several branches infers to more than one value; we
+    reject that (rather than trusting the first) so the checker only acts on
+    an unambiguous inference. ``pylint``'s ``safe_infer`` only rejects results
+    of *differing type*, so it would accept two different string lists here --
+    hence the explicit single-result check.
+    """
     try:
-        inferred = next(node.infer())
-    except astroid.InferenceError, StopIteration:
+        inferred = list(node.infer())
+    except astroid.InferenceError:
         return None
-    if inferred is astroid.Uninferable:
+    if len(inferred) != 1 or inferred[0] is astroid.Uninferable:
         return None
-    return inferred
+    return inferred[0]
 
 
 def _const_str_elements(elements: list[nodes.NodeNG]) -> set[str] | None:
@@ -79,25 +86,41 @@ def _enclosing_class(node: nodes.NodeNG) -> nodes.ClassDef | None:
 
 
 def _bases_resolved(klass: nodes.ClassDef) -> bool:
-    """Return True if every base of *klass* resolves to a class.
+    """Return True if every base in *klass*'s full ancestry resolves to a class.
 
     When a base cannot be resolved its methods are invisible, so a step could
     be defined there without us seeing it -- in that case we must not flag.
+    The whole chain is walked, not just the direct bases: a resolvable base
+    with an unresolvable ancestor hides methods just the same.
     """
-    for base in klass.bases:
-        target = base.value if isinstance(base, nodes.Subscript) else base
-        if not isinstance(_safe_infer(target), nodes.ClassDef):
-            return False
+    seen: set[str] = set()
+    stack: list[nodes.ClassDef] = [klass]
+    while stack:
+        current = stack.pop()
+        if current.qname() in seen:
+            continue
+        seen.add(current.qname())
+        for base in current.bases:
+            target = base.value if isinstance(base, nodes.Subscript) else base
+            inferred = _safe_infer(target)
+            if not isinstance(inferred, nodes.ClassDef):
+                return False
+            stack.append(inferred)
     return True
 
 
-def _step_method_names(klass: nodes.ClassDef) -> set[str]:
-    """Collect ``async_step_*`` method names on *klass* and its ancestors."""
+def _step_handler_names(klass: nodes.ClassDef) -> set[str]:
+    """Collect ``async_step_*`` handler names on *klass* and its ancestors.
+
+    The class namespace is used rather than only method definitions, so that
+    aliases (e.g. ``async_step_user = async_step_location``) -- a valid and
+    used pattern -- are recognised as handlers too.
+    """
     names: set[str] = set()
     for current in (klass, *extended_ancestors(klass)):
-        for method in current.mymethods():
-            if method.name.startswith(_STEP_PREFIX):
-                names.add(method.name)
+        for name in current.locals:
+            if name.startswith(_STEP_PREFIX):
+                names.add(name)
     return names
 
 
@@ -144,9 +167,9 @@ class HassConfigFlowMenuOptionsChecker(BaseChecker):
         if klass is None or not _bases_resolved(klass):
             return
 
-        step_methods = _step_method_names(klass)
+        step_handlers = _step_handler_names(klass)
         for step_id in sorted(step_ids):
-            if f"{_STEP_PREFIX}{step_id}" not in step_methods:
+            if f"{_STEP_PREFIX}{step_id}" not in step_handlers:
                 self.add_message(
                     "home-assistant-config-flow-menu-missing-step",
                     node=menu_options,
