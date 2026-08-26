@@ -8,6 +8,20 @@
         "default": "mdi:power-standby"
       }
     },
+    "number": {
+      "battery_charge_power_limit": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "battery_discharge_power_limit": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "battery_minimum_reserve": {
+        "default": "mdi:battery-lock"
+      },
+      "power_limit": {
+        "default": "mdi:speedometer-slow"
+      }
+    },
     "sensor": {
       "cash_factor": {
         "default": "mdi:cash-plus"
