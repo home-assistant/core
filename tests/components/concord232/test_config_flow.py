@@ -188,7 +188,7 @@ async def test_yaml_platform_import_cannot_connect_issue(
 
     assert not hass.config_entries.async_entries(DOMAIN)
     assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_localhost_5007"
     )
 
 
@@ -376,7 +376,7 @@ async def test_import_recovery_clears_cannot_connect_issue(
     )
     assert result["reason"] == "cannot_connect"
     assert issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_localhost_5007"
     )
 
     mock_concord232_client.list_partitions.side_effect = None
@@ -387,7 +387,7 @@ async def test_import_recovery_clears_cannot_connect_issue(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert not issue_registry.async_get_issue(
-        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_localhost_5007"
     )
     assert issue_registry.async_get_issue(
         HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
@@ -449,3 +449,70 @@ async def test_stale_yaml_does_not_overwrite_later_changes(
     assert result["reason"] == "already_configured"
     assert entry.options == {CONF_CODE: "5678", CONF_MODE: "audible"}
     assert entry.title == "My Alarm"
+
+
+async def test_failed_import_issue_is_scoped_per_server(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test one server importing does not clear another server's failure."""
+    mock_concord232_client.list_partitions.side_effect = (
+        requests.exceptions.ConnectionError("boom")
+    )
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: "deadhost", CONF_PORT: 5007},
+    )
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_deadhost_5007"
+    )
+
+    mock_concord232_client.list_partitions.side_effect = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: "localhost", CONF_PORT: 5007},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect_deadhost_5007"
+    )
+
+
+async def test_cleared_code_survives_reimport(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+) -> None:
+    """Test clearing the code in options is not undone by stale YAML."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        title="localhost",
+        data={CONF_HOST: "localhost", CONF_PORT: 5007},
+        options={CONF_CODE: "5678", CONF_MODE: "audible"},
+    )
+    entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_MODE: "audible"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert entry.options[CONF_CODE] == ""
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: "localhost",
+            CONF_PORT: 5007,
+            CONF_CODE: "5678",
+            CONF_MODE: "audible",
+        },
+    )
+    assert result["reason"] == "already_configured"
+    assert entry.options[CONF_CODE] == ""

@@ -115,6 +115,11 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
         async with lock:
             result = await self._async_handle_import(import_data)
 
+        # Scoped per server: several YAML endpoints can import independently
+        issue_id = (
+            "deprecated_yaml_import_issue_cannot_connect"
+            f"_{import_data[CONF_HOST]}_{import_data[CONF_PORT]}"
+        )
         if (
             result["type"] is FlowResultType.ABORT
             and result["reason"] == "cannot_connect"
@@ -122,19 +127,21 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
             ir.async_create_issue(
                 self.hass,
                 DOMAIN,
-                "deprecated_yaml_import_issue_cannot_connect",
+                issue_id,
                 breaks_in_ha_version="2027.3.0",
                 is_fixable=False,
                 issue_domain=DOMAIN,
                 severity=ir.IssueSeverity.WARNING,
                 translation_key="deprecated_yaml_import_issue_cannot_connect",
+                translation_placeholders={
+                    "host": str(import_data[CONF_HOST]),
+                    "port": str(import_data[CONF_PORT]),
+                },
             )
             return result
 
-        # The import now works; drop the failure issue a previous attempt left
-        ir.async_delete_issue(
-            self.hass, DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
-        )
+        # This server imports now; drop the failure issue a previous attempt left
+        ir.async_delete_issue(self.hass, DOMAIN, issue_id)
         ir.async_create_issue(
             self.hass,
             HOMEASSISTANT_DOMAIN,
@@ -214,8 +221,10 @@ class Concord232OptionsFlow(OptionsFlow):
         """Manage the options."""
         if user_input is not None:
             # Keep the YAML-imported zone settings, which this form does not
-            # expose; an omitted code still clears the stored code.
+            # expose. A cleared code is stored as an explicit empty string so
+            # a later YAML import does not treat it as a gap to fill.
             options = {**user_input}
+            options.setdefault(CONF_CODE, "")
             for key in (CONF_EXCLUDE_ZONES, CONF_ZONE_TYPES):
                 if key in self.config_entry.options:
                     options[key] = self.config_entry.options[key]
