@@ -64,7 +64,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'database_version',
-    'unique_id': 'None_database_version',
+    'unique_id': '01KXX1E2EMMSCDQ2K4A0C7JA9T_database_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -114,7 +114,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'netsnmp_version',
-    'unique_id': 'None_netsnmp_version',
+    'unique_id': '01KXX1E2EMMSCDQ2K4A0C7JA9T_netsnmp_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -164,7 +164,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'php_version',
-    'unique_id': 'None_php_version',
+    'unique_id': '01KXX1E2EMMSCDQ2K4A0C7JA9T_php_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -214,7 +214,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'python_version',
-    'unique_id': 'None_python_version',
+    'unique_id': '01KXX1E2EMMSCDQ2K4A0C7JA9T_python_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -264,7 +264,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'rrdtool_version',
-    'unique_id': 'None_rrdtool_version',
+    'unique_id': '01KXX1E2EMMSCDQ2K4A0C7JA9T_rrdtool_version',
     'unit_of_measurement': None,
   })
 # ---
@@ -316,7 +316,7 @@
     'suggested_object_id': None,
     'supported_features': 0,
     'translation_key': 'device_count',
-    'unique_id': 'None_device_count',
+    'unique_id': '01KXX1E2EMMSCDQ2K4A0C7JA9T_device_count',
     'unit_of_measurement': None,
   })
 # ---
