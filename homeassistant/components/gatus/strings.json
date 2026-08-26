@@ -29,6 +29,28 @@
       }
     }
   },
+  "entity": {
+    "sensor": {
+      "certificate_expiration": {
+        "name": "Certificate expiration"
+      },
+      "last_event": {
+        "name": "Last event",
+        "state": {
+          "healthy": "Healthy",
+          "resolved": "Resolved",
+          "start": "Started",
+          "unhealthy": "Unhealthy"
+        }
+      },
+      "response_time": {
+        "name": "Response time"
+      },
+      "status_code": {
+        "name": "Status code"
+      }
+    }
+  },
   "exceptions": {
     "update_failed": {
       "message": "Error communicating with Gatus API"

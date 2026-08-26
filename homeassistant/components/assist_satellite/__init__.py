@@ -131,6 +131,8 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
                 f"Invalid Assist satellite entity id: {satellite_entity_id}"
             )
 
+        satellite_entity.async_set_context(call.context)
+
         ask_question_args = {
             "question": call.data.get("question"),
             "question_media_id": call.data.get("question_media_id"),

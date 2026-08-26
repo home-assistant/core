@@ -4,7 +4,8 @@ from typing import override
 
 from aiomusiccast.capabilities import Capability
 
-from homeassistant.const import ATTR_CONNECTIONS, ATTR_VIA_DEVICE
+from homeassistant.const import ATTR_CONNECTIONS
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
@@ -71,7 +72,11 @@ class MusicCastDeviceEntity(MusicCastEntity):
                 for mac in self.coordinator.data.mac_addresses.values()
             }
         else:
-            device_info[ATTR_VIA_DEVICE] = (DOMAIN, self.coordinator.data.device_id)
+            device_info["via_device_id"] = dr.async_get_device_id_by_identifier(
+                self.coordinator.hass,
+                (DOMAIN, self.coordinator.data.device_id),
+                config_entry_id=self.coordinator.config_entry.entry_id,
+            )
 
         return device_info
 

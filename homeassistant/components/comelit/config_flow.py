@@ -20,7 +20,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import config_validation as cv
 
-from .const import _LOGGER, CONF_VEDO_PIN, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN
+from .const import CONF_VEDO_PIN, DEFAULT_PORT, DEVICE_TYPE_LIST, DOMAIN, LOGGER
 from .utils import async_client_session
 
 DEFAULT_HOST = "192.168.1.252"
@@ -118,7 +118,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
         except InvalidVedoAuth:
             errors["base"] = "invalid_vedo_auth"
         except Exception:  # noqa: BLE001
-            _LOGGER.exception("Unexpected exception")
+            LOGGER.exception("Unexpected exception")
             errors["base"] = "unknown"
         else:
             return self.async_create_entry(title=info["title"], data=user_input)
@@ -161,7 +161,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidPin:
                 errors["base"] = "invalid_pin"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 return self.async_update_reload_and_abort(
@@ -214,7 +214,7 @@ class ComelitConfigFlow(ConfigFlow, domain=DOMAIN):
             except InvalidVedoAuth:
                 errors["base"] = "invalid_vedo_auth"
             except Exception:  # noqa: BLE001
-                _LOGGER.exception("Unexpected exception")
+                LOGGER.exception("Unexpected exception")
                 errors["base"] = "unknown"
             else:
                 data_updates = {
