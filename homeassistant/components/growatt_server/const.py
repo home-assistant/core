@@ -5,7 +5,6 @@ from datetime import timedelta
 from homeassistant.const import Platform
 
 DEVICE_SCAN_INTERVAL = timedelta(hours=1)
-LOGIN_FAILED_RETRY_INTERVAL = timedelta(hours=4)
 
 CONF_PLANT_ID = "plant_id"
 

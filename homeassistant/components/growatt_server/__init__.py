@@ -45,7 +45,6 @@ from homeassistant.helpers import config_validation as cv, device_registry as dr
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_track_time_interval
 from homeassistant.helpers.typing import ConfigType
-from homeassistant.util import dt as dt_util
 
 from .const import (
     AUTH_API_TOKEN,
@@ -165,7 +164,7 @@ async def async_migrate_entry(
                 try:
                     # Create API instance and login
                     api, login_response = await _create_api_and_login(
-                        hass, config_entry, username, password, url
+                        hass, username, password, url
                     )
 
                     # Resolve DEFAULT_PLANT_ID to actual plant_id
@@ -215,40 +214,19 @@ async def async_migrate_entry(
 
 
 async def _create_api_and_login(
-    hass: HomeAssistant,
-    config_entry: GrowattConfigEntry,
-    username: str,
-    password: str,
-    url: str,
+    hass: HomeAssistant, username: str, password: str, url: str
 ) -> tuple[growattServer.GrowattApi, dict]:
     """Create API instance and perform login.
 
     Returns both the API instance (with authenticated session) and the login
     response (containing user_id needed for subsequent API calls).
-
-    Raises ConfigEntryNotReady with 4-hour retry scheduling on 507 errors.
     """
     api = growattServer.GrowattApi(add_random_user_id=True, agent_identifier=username)
     api.server_url = url
 
-    try:
-        login_response = await hass.async_add_executor_job(
-            _login_classic_api, api, username, password, config_entry
-        )
-    except ConfigEntryNotReady as err:
-        # Check if this is a 507 error (login failed)
-        if "507" in str(err):
-            # Suppress warning after first occurrence
-            last_error_key = f"{DOMAIN}_last_507_error_{config_entry.entry_id}"
-            hass_data = hass.data.setdefault(DOMAIN, {})
-            last_error_time = hass_data.get(last_error_key)
-
-            if last_error_time is None:
-                _LOGGER.warning(
-                    "Growatt login failed (HTTP 507), will retry in 4 hours"
-                )
-            hass_data[last_error_key] = dt_util.naive_now()
-        raise
+    login_response = await hass.async_add_executor_job(
+        _login_classic_api, api, username, password
+    )
 
     return api, login_response
 
@@ -257,7 +235,6 @@ def _login_classic_api(
     api: growattServer.GrowattApi,
     username: str,
     password: str,
-    config_entry: GrowattConfigEntry,
 ) -> dict:
     """Log in to Classic API and return user info."""
     try:
@@ -390,7 +367,7 @@ async def async_setup_entry(
             # No cached API (normal setup or migration didn't run)
             # Create new API instance and login
             api, _ = await _create_api_and_login(
-                hass, config_entry, username, password, url
+                hass, username, password, url
             )
 
         # Get plant_id and devices using the authenticated session
