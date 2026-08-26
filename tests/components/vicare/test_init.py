@@ -789,8 +789,10 @@ async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
     client.loadViaGateway.assert_called_with(True)
     assert call(DEFAULT_CACHE_DURATION * 2) in client.setCacheDuration.call_args_list
 
-    # First refresh fetches once per gateway representative, not once per device:
-    # gwA fetches via devices[0], the sibling devices[1] never fetches.
-    assert client.devices[0].service.fetch_all_features.call_count == 1
-    assert client.devices[1].service.fetch_all_features.call_count == 0
-    assert client.devices[2].service.fetch_all_features.call_count == 1
+    # One refresh per gateway, and the two devices behind gwA share that one
+    # service, so the second device is served without a fetch of its own.
+    assert client.devices[0].service is client.devices[1].service
+    assert client.services["gwA"].fetch_all_features.call_count == 1
+    assert client.services["gwB"].fetch_all_features.call_count == 1
+    assert hass.states.get("sensor.model0_temperature").state == "17.5"
+    assert hass.states.get("sensor.model1_temperature").state == "16.9"
