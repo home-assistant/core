@@ -685,6 +685,9 @@
       "child_lock": {
         "name": "Child lock"
       },
+      "display": {
+        "name": "Display"
+      },
       "evse_charging_switch": {
         "name": "Enable charging"
       },
