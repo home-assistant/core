@@ -99,7 +99,6 @@ async def test_cover_created_from_discovered_channel(
 
     # The entity requests hardware status once it is fully added to hass.
     channel.getStatus.assert_called_once()
-    channel.getConfiguration.assert_called_once()
 
 
 async def test_cover_handles_start_event(

@@ -114,13 +114,18 @@ async def test_abandoned_flow_does_not_shut_down_concurrent_flow(
     """Test that aborting one flow doesn't shut down a concurrently running flow."""
     mock_home_server.is_any_device_found.return_value = False
 
-    # Start two flows concurrently.
+    # Start two flows and advance both past the user form into wait_for_device
+    # (SHOW_PROGRESS) so both have acquired the HomeServer before one is aborted.
     result1 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
     result2 = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
     )
+    result1 = await hass.config_entries.flow.async_configure(result1["flow_id"], {})
+    result2 = await hass.config_entries.flow.async_configure(result2["flow_id"], {})
+    assert result1["type"] is FlowResultType.SHOW_PROGRESS
+    assert result2["type"] is FlowResultType.SHOW_PROGRESS
 
     # Abort the second flow; the first flow's HomeServer must not be torn down.
     hass.config_entries.flow.async_abort(result2["flow_id"])

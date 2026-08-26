@@ -33,11 +33,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: HausbusConfigEntry) -> b
 
     try:
         await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
-    except Exception:
+    except BaseException:
         gateway.home_server.removeBusEventListener(gateway)
         gateway.home_server.removeBusDeviceListener(gateway)
         await async_release_home_server(hass, gateway.home_server)
         raise
+
+    # Flush channels discovered while the platform was still setting up.
+    await gateway.async_flush_pending_channels()
 
     # Start device discovery in the background: it is a best-effort UDP
     # broadcast that may find devices at any time, not only at startup, so

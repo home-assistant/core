@@ -62,6 +62,9 @@ async def test_new_device_detected_dispatches_channel(
 
     channel = _make_channel(device_id=100, instance_id=1)
 
+    # Simulate platform setup completing before discovery.
+    await gateway.async_flush_pending_channels()
+
     await hass.async_add_executor_job(
         gateway.newDeviceDetected,
         100,
@@ -79,11 +82,50 @@ async def test_new_device_detected_dispatches_channel(
     assert device_info["model"] == "ESP32 Controller"
 
 
+async def test_new_device_detected_before_platform_ready_is_flushed_after(
+    hass: HomeAssistant,
+    mock_home_server: MagicMock,
+) -> None:
+    """Channels discovered before platform setup is complete are delivered after flush."""
+    gateway = _make_gateway(hass, mock_home_server)
+
+    received: list[tuple[MagicMock, DeviceInfo]] = []
+    async_dispatcher_connect(
+        hass,
+        NEW_CHANNEL_ADDED,
+        lambda channel, device_info: received.append((channel, device_info)),
+    )
+
+    channel = _make_channel(device_id=100, instance_id=1)
+
+    # Simulate discovery firing before async_forward_entry_setups completes.
+    await hass.async_add_executor_job(
+        gateway.newDeviceDetected,
+        100,
+        "ESP32 Controller",
+        _make_module_id(),
+        MagicMock(),
+        [channel],
+    )
+    await hass.async_block_till_done()
+
+    # Channel was buffered, not dispatched yet.
+    assert len(received) == 0
+
+    # Platform setup completes; buffered channels are flushed.
+    await gateway.async_flush_pending_channels()
+    await hass.async_block_till_done()
+
+    assert len(received) == 1
+    assert received[0][0] is channel
+
+
 async def test_new_device_detected_dedups_known_channels(
     hass: HomeAssistant, mock_home_server: MagicMock
 ) -> None:
     """The same channel is only ever dispatched once, even if seen again."""
     gateway = _make_gateway(hass, mock_home_server)
+    await gateway.async_flush_pending_channels()
 
     dispatch_mock = MagicMock()
     async_dispatcher_connect(hass, NEW_CHANNEL_ADDED, dispatch_mock)

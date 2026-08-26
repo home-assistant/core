@@ -91,9 +91,16 @@ class HausbusGateway(IBusDataListener):
         self.home_server.addBusEventListener(self)
         self.home_server.addBusDeviceListener(self)
 
-        # to prevent duplicate channels but to allow to add channels even if it was registered before
+        # Prevents duplicate channels from being dispatched more than once.
         self.registered_channels: set[int] = set()
         self.discovery_task: asyncio.Task[None] | None = None
+
+        # Channels discovered before the cover platform has finished setup
+        # cannot be consumed by its NEW_CHANNEL_ADDED listener yet. They are
+        # buffered here and flushed by async_flush_pending_channels() once
+        # async_forward_entry_setups() returns.
+        self._platform_ready: bool = False
+        self._pending_channels: list[tuple[ABusFeature, DeviceInfo]] = []
 
     @classmethod
     async def async_create(
@@ -142,13 +149,28 @@ class HausbusGateway(IBusDataListener):
             object_id = channel.getObjectId()
             if object_id not in self.registered_channels:
                 self.registered_channels.add(object_id)
-                self.hass.loop.call_soon_threadsafe(
-                    async_dispatcher_send,
-                    self.hass,
-                    NEW_CHANNEL_ADDED,
-                    channel,
-                    device_info,
-                )
+                if self._platform_ready:
+                    self.hass.loop.call_soon_threadsafe(
+                        async_dispatcher_send,
+                        self.hass,
+                        NEW_CHANNEL_ADDED,
+                        channel,
+                        device_info,
+                    )
+                else:
+                    self._pending_channels.append((channel, device_info))
+
+    async def async_flush_pending_channels(self) -> None:
+        """Mark platform as ready and dispatch channels buffered before setup.
+
+        Call this once async_forward_entry_setups() has returned so that any
+        channels discovered during platform setup are delivered to the now-
+        registered NEW_CHANNEL_ADDED listeners.
+        """
+        self._platform_ready = True
+        for channel, device_info in self._pending_channels:
+            async_dispatcher_send(self.hass, NEW_CHANNEL_ADDED, channel, device_info)
+        self._pending_channels.clear()
 
     def busDataReceived(self, busDataMessage: BusDataMessage) -> None:
         """Handle Haus-Bus messages."""
