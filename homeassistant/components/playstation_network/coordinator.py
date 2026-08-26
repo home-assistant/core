@@ -130,6 +130,7 @@ class PlaystationNetworkUserDataCoordinator(
     @override
     async def _async_setup(self) -> None:
         """Set up the coordinator."""
+        persisted_token_response = self.psn.persisted_token_response
 
         try:
             await self.psn.async_setup()
@@ -139,10 +140,13 @@ class PlaystationNetworkUserDataCoordinator(
                 translation_key="not_ready",
             ) from error
         except (PSNAWPServerError, PSNAWPClientError) as error:
+            self._persist_token_response(persisted_token_response)
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from error
+
+        self._persist_token_response(persisted_token_response)
 
     @override
     async def update_data(self) -> PlaystationNetworkData:

@@ -329,6 +329,41 @@ async def test_persists_refreshed_token_when_coordinator_update_fails(
     assert config_entry.data[CONF_TOKEN_RESPONSE] == refreshed_token_response
 
 
+async def test_persists_refreshed_token_when_setup_fails(
+    hass: HomeAssistant,
+    mock_psnawpapi: MagicMock,
+) -> None:
+    """Test a refreshed token is persisted when setup fails."""
+    stored_token_response = TOKEN_RESPONSE | {"access_token": "stored-access-token"}
+    config_entry = MockConfigEntry(
+        domain=DOMAIN,
+        title="test-user",
+        data={
+            CONF_NPSSO: NPSSO_TOKEN,
+            CONF_TOKEN_RESPONSE: stored_token_response,
+        },
+        unique_id=PSN_ID,
+    )
+    refreshed_token_response = TOKEN_RESPONSE | {
+        "access_token": "refreshed-access-token",
+        "refresh_token": "refreshed-refresh-token",
+    }
+
+    def refresh_token_then_fail() -> None:
+        mock_psnawpapi.authenticator.token_response = refreshed_token_response
+        raise PSNAWPServerError("error msg")
+
+    mock_psnawpapi.me.return_value.get_shareable_profile_link.side_effect = (
+        refresh_token_then_fail
+    )
+    config_entry.add_to_hass(hass)
+
+    assert not await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert config_entry.data[CONF_TOKEN_RESPONSE] == refreshed_token_response
+
+
 async def test_coordinator_update_auth_failed(
     hass: HomeAssistant,
     config_entry: MockConfigEntry,
