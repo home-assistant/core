@@ -83,6 +83,8 @@ class DummyDevice:
 
     def set_attribute(self, attr: str, value: Any) -> None:
         """Record set attribute call."""
+        self.attributes[attr] = value
+        self.notify_update({attr: value})
         self.calls.append(("set_attribute", attr, value))
 
     def set_target_temperature(self, **kwargs: Any) -> None:
