@@ -4,6 +4,8 @@ from itertools import chain
 import logging
 from typing import TypedDict
 
+from uiprotect.data import Bootstrap
+
 from homeassistant.components.automation import automations_with_entity
 from homeassistant.components.script import scripts_with_entity
 from homeassistant.const import Platform
