@@ -73,7 +73,10 @@ class DiscoveryFlowHandler[_R: Awaitable[bool] | bool](config_entries.ConfigFlow
                     has_devices = await cast("asyncio.Future[bool]", discovery_result)
 
             if not has_devices:
-                return self.async_abort(reason="no_devices_found")
+                return self.async_abort(
+                    reason="no_devices_found",
+                    translation_domain=HOMEASSISTANT_DOMAIN,
+                )
 
             # Cancel the discovered one.
             for flow in in_progress:

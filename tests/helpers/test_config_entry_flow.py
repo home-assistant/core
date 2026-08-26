@@ -90,6 +90,7 @@ async def test_user_no_devices_found(
 
     assert result["type"] == data_entry_flow.FlowResultType.ABORT
     assert result["reason"] == "no_devices_found"
+    assert result["translation_domain"] == HOMEASSISTANT_DOMAIN
 
 
 async def test_user_has_confirmation(
