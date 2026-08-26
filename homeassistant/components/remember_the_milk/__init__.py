@@ -215,26 +215,27 @@ async def _async_update_listener(
 ) -> None:
     """Delete removed lists on the server and reload when subentries change."""
     data = entry.runtime_data
-    # Skip server deletion during a coordinator-driven sync: subentries are
-    # mutated one at a time and removed_list_ids would be incomplete mid-sync,
-    # causing valid server lists to be wrongly deleted.
-    if not data.coordinator.syncing_subentries:
-        current_list_ids = {
-            subentry.data[CONF_LIST_ID]
-            for subentry in entry.subentries.values()
-            if subentry.subentry_type == SUBENTRY_TYPE_LIST
-        }
-        removed_list_ids = set(data.coordinator.data or {}) - current_list_ids
-        if removed_list_ids:
-            try:
-                timeline_response = await data.client.rtm.timelines.create()
-                for list_id in removed_list_ids:
-                    await data.client.rtm.lists.delete(
-                        timeline=timeline_response.timeline,
-                        list_id=list_id,
-                    )
-            except AioRTMError as err:
-                LOGGER.warning("Failed to delete list on Remember The Milk: %s", err)
+    # Coordinator-driven syncs mutate subentries one at a time and schedule a
+    # single reload themselves; skip here to avoid one reload per mutation and
+    # to avoid deleting server lists from an incomplete mid-sync subentry set.
+    if data.coordinator.syncing_subentries:
+        return
+    current_list_ids = {
+        subentry.data[CONF_LIST_ID]
+        for subentry in entry.subentries.values()
+        if subentry.subentry_type == SUBENTRY_TYPE_LIST
+    }
+    removed_list_ids = set(data.coordinator.data or {}) - current_list_ids
+    if removed_list_ids:
+        try:
+            timeline_response = await data.client.rtm.timelines.create()
+            for list_id in removed_list_ids:
+                await data.client.rtm.lists.delete(
+                    timeline=timeline_response.timeline,
+                    list_id=list_id,
+                )
+        except AioRTMError as err:
+            LOGGER.warning("Failed to delete list on Remember The Milk: %s", err)
     hass.config_entries.async_schedule_reload(entry.entry_id)
 
 

@@ -143,6 +143,7 @@ class RtmTodoCoordinator(DataUpdateCoordinator[dict[int, RtmList]]):
             for subentry in entry.get_subentries_of_type(SUBENTRY_TYPE_LIST)
         }
         self.syncing_subentries = True
+        changed = False
         try:
             for list_id, rtm_list in lists.items():
                 subentry = existing.get(list_id)
@@ -156,14 +157,19 @@ class RtmTodoCoordinator(DataUpdateCoordinator[dict[int, RtmList]]):
                             unique_id=str(list_id),
                         ),
                     )
+                    changed = True
                 elif subentry.title != rtm_list.name:
                     self.hass.config_entries.async_update_subentry(
                         entry, subentry, title=rtm_list.name
                     )
+                    changed = True
             for list_id, subentry in existing.items():
                 if list_id not in lists:
                     self.hass.config_entries.async_remove_subentry(
                         entry, subentry.subentry_id
                     )
+                    changed = True
         finally:
             self.syncing_subentries = False
+        if changed:
+            self.hass.config_entries.async_schedule_reload(entry.entry_id)

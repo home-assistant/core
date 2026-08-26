@@ -480,6 +480,65 @@ async def test_coordinator_sync_multiple_new_lists_no_deletion(
     client.rtm.lists.delete.assert_not_called()
 
 
+@pytest.mark.usefixtures("storage")
+async def test_coordinator_sync_multiple_lists_single_reload(
+    hass: HomeAssistant,
+    client: MagicMock,
+    config_entry: MockConfigEntry,
+    make_rtm_list_mock: Callable[..., MagicMock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that discovering multiple new lists in one poll schedules a single reload.
+
+    Before this fix, async_schedule_reload was called once per subentry mutation
+    because the update listener fired eagerly on each async_add_subentry call.
+    """
+    # Empty list response during setup so no subentries are added and no reload fires.
+    await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry.state is ConfigEntryState.LOADED
+    assert len(config_entry.subentries) == 0
+
+    # Three new lists appear simultaneously on the next poll.
+    lists_response = MagicMock()
+    lists_response.lists = [
+        make_rtm_list_mock(LIST_ID, "Shopping"),
+        make_rtm_list_mock(LIST_ID + 1, "Work"),
+        make_rtm_list_mock(LIST_ID + 2, "Personal"),
+    ]
+    client.rtm.lists.get_list.return_value = lists_response
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        freezer.tick(timedelta(minutes=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_reload.assert_called_once_with(config_entry.entry_id)
+
+
+@pytest.mark.usefixtures("storage")
+async def test_coordinator_sync_no_changes_no_reload(
+    hass: HomeAssistant,
+    config_entry_with_subentry: MockConfigEntry,
+    rtm_list_mock: Callable[[int, str], MagicMock],
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test that a coordinator poll with unchanged subentries schedules no reload."""
+    rtm_list_mock(LIST_ID, "Shopping")
+
+    await hass.config_entries.async_setup(config_entry_with_subentry.entry_id)
+    await hass.async_block_till_done()
+    assert config_entry_with_subentry.state is ConfigEntryState.LOADED
+    assert len(config_entry_with_subentry.subentries) == 1
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        freezer.tick(timedelta(minutes=10))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done(wait_background_tasks=True)
+
+    mock_reload.assert_not_called()
+
+
 @pytest.mark.usefixtures("client", "storage")
 async def test_coordinator_polls_when_no_entities(
     hass: HomeAssistant,
