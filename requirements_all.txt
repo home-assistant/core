@@ -375,7 +375,7 @@ aioopenexchangerates==0.6.8
 aiooui==0.1.9
 
 # homeassistant.components.papouch
-aiopapouch==0.1.7
+aiopapouch==0.1.9
 
 # homeassistant.components.pegel_online
 aiopegelonline==0.1.1

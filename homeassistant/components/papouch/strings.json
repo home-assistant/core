@@ -40,7 +40,7 @@
         "name": "{name} CO2"
       },
       "counter_custom": {
-        "name": "Input {name} count"
+        "name": "Counter {name}"
       },
       "dew_point": {
         "name": "Dew Point"
@@ -57,7 +57,7 @@
       "rain_custom": {
         "name": "{name} rainfall"
       },
-      "rsii_custom": {
+      "rssi_custom": {
         "name": "{name} signal strength"
       },
       "temperature_custom": {
