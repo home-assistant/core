@@ -556,6 +556,30 @@ async def test_backwash_absent_without_filtvalve(
     assert matches == []
 
 
+async def test_manual_filtration_absent_without_filt_gpio(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    mock_config_entry: MockConfigEntry,
+    mock_neopool_client: MagicMock,
+) -> None:
+    """No manual filtration switch is registered when no filtration relay exists."""
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_FILT_GPIO": 0,
+    }
+    await setup_integration(hass, mock_config_entry)
+
+    matches = [
+        e
+        for e in er.async_entries_for_config_entry(
+            entity_registry, mock_config_entry.entry_id
+        )
+        if e.domain == SWITCH_DOMAIN
+        and e.unique_id.endswith("_mbf_par_filt_manual_state")
+    ]
+    assert matches == []
+
+
 @pytest.mark.usefixtures("mock_neopool_client")
 async def test_aux_and_cover_absent_when_options_off(
     hass: HomeAssistant,

@@ -181,6 +181,9 @@ SWITCH_DESCRIPTIONS: dict[str, NeoPoolSwitchEntityDescription] = {
         translation_key="filt_manual_state",
         write_fn=_write_manual_filtration,
         is_on_fn=_make_is_on_from_key("Filtration Pump"),
+        supported_fn=lambda data: is_valid_relay_gpio(
+            data.get("MBF_PAR_FILT_GPIO", 0) or 0
+        ),
     ),
     "BACKWASH": NeoPoolSwitchEntityDescription(
         key="BACKWASH",
