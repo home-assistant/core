@@ -1162,13 +1162,10 @@ async def test_subentry_add_flow_keeps_device_on_parent(
     assert isinstance(entry.runtime_data.vehicles[0].api, VehicleRouter)
 
     # The pairing reuses the vehicle's existing device, never a duplicate.
-    bound_devices = [
-        device
-        for device in device_registry.devices.values()
-        if (DOMAIN, VIN) in device.identifiers
-    ]
-    assert len(bound_devices) == 1
-    bound_device = bound_devices[0]
+    bound_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, VIN), entry.entry_id
+    )
+    assert bound_device is not None
     # The same device ID is kept and it stays on the parent entry, not the
     # subentry, so removing the pairing never deletes the cloud vehicle.
     assert bound_device.id == existing_device.id

@@ -101,7 +101,11 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
 
 from tests.common import MockConfigEntry, MockUser
-from tests.typing import ClientSessionGenerator, WebSocketGenerator
+from tests.typing import (
+    ClientSessionGenerator,
+    MockHAClientWebSocket,
+    WebSocketGenerator,
+)
 
 CONTROLLER_PATCH_PREFIX = "zwave_js_server.model.controller.Controller"
 
@@ -5149,7 +5153,7 @@ async def test_subscribe_node_statistics(
     assert msg["event"] == {
         "source": "node",
         "event": "statistics updated",
-        "nodeId": multisensor_6.node_id,
+        "node_id": multisensor_6.node_id,
         "commands_tx": 0,
         "commands_rx": 0,
         "commands_dropped_tx": 0,
@@ -5262,6 +5266,147 @@ async def test_subscribe_node_statistics(
 
     assert not msg["success"]
     assert msg["error"]["code"] == ERR_NOT_LOADED
+
+
+def _stats_updated_event(node_id: int, repeater_node_id: int) -> Event:
+    """Return a statistics updated event with a route through the repeater."""
+    return Event(
+        "statistics updated",
+        {
+            "source": "node",
+            "event": "statistics updated",
+            "nodeId": node_id,
+            "statistics": {
+                "commandsTX": 1,
+                "commandsRX": 2,
+                "commandsDroppedTX": 3,
+                "commandsDroppedRX": 4,
+                "timeoutResponse": 5,
+                "lwr": {
+                    "protocolDataRate": 1,
+                    "rssi": 1,
+                    "repeaters": [repeater_node_id],
+                    "repeaterRSSI": [1],
+                },
+            },
+        },
+    )
+
+
+async def _subscribe_node_statistics(
+    ws_client: MockHAClientWebSocket, device_id: str
+) -> None:
+    """Subscribe to node statistics and consume the initial state event."""
+    await ws_client.send_json_auto_id(
+        {
+            TYPE: "zwave_js/subscribe_node_statistics",
+            DEVICE_ID: device_id,
+        }
+    )
+    msg = await ws_client.receive_json()
+    assert msg["success"]
+    msg = await ws_client.receive_json()
+    assert msg["event"]["event"] == "statistics updated"
+
+
+async def test_node_statistics_route_with_removed_node(
+    hass: HomeAssistant,
+    multisensor_6: Node,
+    wallmote_central_scene: Node,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a route referencing a node that was removed from the network.
+
+    Resolving the repeater in the controller's node collection raises
+    KeyError, which must null the route instead of breaking the subscription.
+    """
+    ws_client = await hass_ws_client(hass)
+    device = get_device(hass, multisensor_6)
+    wallmote_device = get_device(hass, wallmote_central_scene)
+    await _subscribe_node_statistics(ws_client, device.id)
+
+    event = _stats_updated_event(multisensor_6.node_id, 999)
+    event.data["statistics"]["nlwr"] = {
+        "protocolDataRate": 2,
+        "rssi": 2,
+        "repeaters": [wallmote_central_scene.node_id],
+        "repeaterRSSI": [2],
+    }
+    client.driver.controller.receive_event(event)
+    msg = await ws_client.receive_json()
+
+    assert msg["event"]["commands_tx"] == 1
+    assert msg["event"]["lwr"] is None
+    assert msg["event"]["nlwr"] == {
+        "protocol_data_rate": 2,
+        "rssi": 2,
+        "repeaters": [wallmote_device.id],
+        "repeater_rssi": [2],
+        "route_failed_between": None,
+    }
+
+
+async def test_node_statistics_route_with_removed_device(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    multisensor_6: Node,
+    wallmote_central_scene: Node,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a route referencing a node without a device registry entry.
+
+    Converting the repeater to a device ID raises ValueError, which must null
+    the route instead of breaking the subscription.
+    """
+    ws_client = await hass_ws_client(hass)
+    device = get_device(hass, multisensor_6)
+    wallmote_device = get_device(hass, wallmote_central_scene)
+    await _subscribe_node_statistics(ws_client, device.id)
+
+    device_registry.async_remove_device(wallmote_device.id)
+    await hass.async_block_till_done()
+
+    client.driver.controller.receive_event(
+        _stats_updated_event(multisensor_6.node_id, wallmote_central_scene.node_id)
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["event"]["commands_tx"] == 1
+    assert msg["event"]["lwr"] is None
+
+
+async def test_node_statistics_route_with_unloaded_entry(
+    hass: HomeAssistant,
+    multisensor_6: Node,
+    wallmote_central_scene: Node,
+    integration: MockConfigEntry,
+    client: MagicMock,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test a route received after the config entry was unloaded.
+
+    async_get_config_entry_from_node raises StopIteration when no loaded
+    config entry owns the node, which must null the route instead of
+    breaking the subscription.
+    """
+    ws_client = await hass_ws_client(hass)
+    device = get_device(hass, multisensor_6)
+    await _subscribe_node_statistics(ws_client, device.id)
+
+    await hass.config_entries.async_unload(integration.entry_id)
+    await hass.async_block_till_done()
+
+    client.driver.controller.receive_event(
+        _stats_updated_event(multisensor_6.node_id, wallmote_central_scene.node_id)
+    )
+    msg = await ws_client.receive_json()
+
+    assert msg["event"]["commands_tx"] == 1
+    assert msg["event"]["lwr"] is None
 
 
 async def test_hard_reset_controller(

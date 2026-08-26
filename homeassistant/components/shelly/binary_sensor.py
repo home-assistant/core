@@ -397,6 +397,17 @@ RPC_SENSORS: Final = {
         ),
         supported=lambda status: status.get("slots") is not None,
     ),
+    "camera_motion": RpcBinarySensorDescription(
+        key="camera",
+        sub_key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+    ),
+    "motion": RpcBinarySensorDescription(
+        key="motion",
+        sub_key="motion",
+        device_class=BinarySensorDeviceClass.MOTION,
+        removal_condition=lambda config, _, key: not config[key].get("enable", True),
+    ),
 }
 
 

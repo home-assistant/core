@@ -139,6 +139,9 @@
       "hibernate": {
         "name": "Suspend"
       },
+      "pause": {
+        "name": "Pause"
+      },
       "reset": {
         "name": "Reset"
       },

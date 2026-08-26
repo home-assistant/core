@@ -44,7 +44,7 @@ async def test_entity_id_to_device_device_id(
         device_id=device.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get(entity.entity_id) is not None
 
     device_id = async_entity_id_to_device_id(
         hass,
@@ -130,7 +130,7 @@ async def test_device_info_to_link(
         device_id=device.id,
     )
     await hass.async_block_till_done()
-    assert entity_registry.async_get("sensor.test_source") is not None
+    assert entity_registry.async_get(source_entity.entity_id) is not None
 
     # No link device_info is returned, even for an existing entity and device
     with patch("homeassistant.helpers.device.report_usage") as report_usage:

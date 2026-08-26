@@ -9,7 +9,13 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.const import (
+    ATTR_DEVICE_CLASS,
+    ATTR_UNIT_OF_MEASUREMENT,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -75,6 +81,20 @@ async def test_unclassified_readouts_are_disabled(
     )
     assert conductivity is not None
     assert conductivity.disabled_by is None
+
+
+@pytest.mark.usefixtures("mock_hortos_client")
+async def test_ph_has_a_device_class_but_no_unit(
+    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+) -> None:
+    """Test pH gets its device class rather than a unit, since pH is dimensionless."""
+    await setup_integration(hass, mock_config_entry)
+
+    state = hass.states.get("sensor.valve_group_003_ph")
+    assert state is not None
+    assert state.state == "6.2"
+    assert state.attributes[ATTR_DEVICE_CLASS] == SensorDeviceClass.PH
+    assert ATTR_UNIT_OF_MEASUREMENT not in state.attributes
 
 
 @pytest.mark.usefixtures("mock_hortos_client")
@@ -157,6 +177,29 @@ async def test_disappearing_readout_becomes_unknown(
 
     assert (
         hass.states.get("sensor.weerstation_outside_temperature").state == STATE_UNKNOWN
+    )
+
+
+async def test_disappearing_device_becomes_unavailable(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hortos_client: AsyncMock,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test an entity whose controller drops out of a good poll is unavailable."""
+    await setup_integration(hass, mock_config_entry)
+    assert (
+        hass.states.get("sensor.weerstation_outside_temperature").state == "18.203125"
+    )
+
+    mock_hortos_client.get_devices.return_value = []
+    freezer.tick(timedelta(minutes=2))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert (
+        hass.states.get("sensor.weerstation_outside_temperature").state
+        == STATE_UNAVAILABLE
     )
 
 
