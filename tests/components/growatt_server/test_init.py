@@ -317,16 +317,13 @@ async def test_classic_api_coordinator_login_failed_retries(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Integration should remain loaded (ConfigEntryNotReady is transient)
     assert mock_config_entry_classic.state is ConfigEntryState.LOADED
-    # Should NOT trigger a reauth flow
     flows = hass.config_entries.flow.async_progress()
     assert not any(
         flow["context"]["source"] == "reauth"
         and flow["context"]["entry_id"] == mock_config_entry_classic.entry_id
         for flow in flows
     )
-    # Entities should be unavailable but not logged out
     assert hass.states.get("sensor.tlx123456_output_power").state == STATE_UNAVAILABLE
 
     # Verify recovery on the next normal scan interval
@@ -338,8 +335,8 @@ async def test_classic_api_coordinator_login_failed_retries(
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    # Entry should recover after service becomes available again
     assert mock_config_entry_classic.state is ConfigEntryState.LOADED
+    assert hass.states.get("sensor.tlx123456_output_power").state != STATE_UNAVAILABLE
 
 
 async def test_classic_api_login_service_unavailable(
