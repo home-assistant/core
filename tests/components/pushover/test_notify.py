@@ -1,5 +1,6 @@
 """Test the pushover notify platform."""
 
+from pathlib import Path
 from unittest.mock import MagicMock, patch
 
 from pushover_complete import BadAPIRequestError
@@ -132,6 +133,38 @@ async def test_send_message_attachment_error(
     assert exc_info.value.translation_domain == DOMAIN
     assert exc_info.value.translation_key == translation_key
     mock_send_message.assert_not_called()
+
+
+@pytest.mark.usefixtures("mock_pushover")
+async def test_send_message_with_attachment(
+    hass: HomeAssistant,
+    mock_send_message: MagicMock,
+    tmp_path: Path,
+) -> None:
+    """Test that a readable attachment is sent as an open file."""
+    attachment = tmp_path / "attachment.jpg"
+    attachment.write_bytes(b"image data")
+
+    entry = MockConfigEntry(domain=DOMAIN, data=MOCK_CONFIG)
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(hass.config, "is_allowed_path", return_value=True):
+        await hass.services.async_call(
+            "notify",
+            "pushover",
+            {
+                "message": "Hello",
+                "data": {"attachment": str(attachment)},
+            },
+            blocking=True,
+        )
+
+    image = mock_send_message.call_args.kwargs["image"]
+    assert image.name == str(attachment)
+    image.close()
 
 
 async def test_cancel_by_tag(
