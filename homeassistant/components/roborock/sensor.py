@@ -30,12 +30,20 @@ from homeassistant.components.sensor import (
     SensorEntityDescription,
     SensorStateClass,
 )
-from homeassistant.const import PERCENTAGE, EntityCategory, UnitOfArea, UnitOfTime
+from homeassistant.const import (
+    PERCENTAGE,
+    EntityCategory,
+    Platform,
+    UnitOfArea,
+    UnitOfTime,
+)
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import entity_registry as er
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DOMAIN
 from .coordinator import (
     RoborockB01Q7UpdateCoordinator,
     RoborockB01Q10UpdateCoordinator,
@@ -139,7 +147,9 @@ SENSOR_DESCRIPTIONS = [
         value_fn=lambda data: data.consumable.cleaning_brush_time_left,
         entity_category=EntityCategory.DIAGNOSTIC,
         is_dock_entity=True,
-        support_fn=lambda api: api.wash_towel_mode is not None,
+        support_fn=lambda api: (
+            api.device_features.dock_features.is_cleaning_brush_supported
+        ),
     ),
     RoborockSensorDescription(
         native_unit_of_measurement=UnitOfTime.HOURS,
@@ -541,6 +551,7 @@ async def async_setup_entry(
 ) -> None:
     """Set up the Roborock vacuum sensors."""
     coordinators = config_entry.runtime_data
+    entity_registry = er.async_get(hass)
 
     @callback
     def async_add_coordinator_entities(
@@ -549,11 +560,18 @@ async def async_setup_entry(
         """Add entities for a specific coordinator."""
         entities: list[RoborockEntity] = []
         if isinstance(coordinator, RoborockDataUpdateCoordinator):
-            entities.extend(
-                RoborockSensorEntity(coordinator, description)
-                for description in SENSOR_DESCRIPTIONS
-                if description.support_fn(coordinator.properties_api)
-            )
+            for description in SENSOR_DESCRIPTIONS:
+                unique_id = f"{description.key}_{coordinator.duid_slug}"
+                if description.support_fn(coordinator.properties_api):
+                    entities.append(
+                        RoborockSensorEntity(unique_id, coordinator, description)
+                    )
+                elif entity_id := entity_registry.async_get_entity_id(
+                    Platform.SENSOR,
+                    DOMAIN,
+                    unique_id,
+                ):
+                    entity_registry.async_remove(entity_id)
             entities.append(RoborockCurrentRoom(coordinator))
         elif isinstance(coordinator, RoborockWetDryVacUpdateCoordinator):
             entities.extend(
@@ -598,13 +616,14 @@ class RoborockSensorEntity(RoborockCoordinatedEntityV1, SensorEntity):
 
     def __init__(
         self,
+        unique_id: str,
         coordinator: RoborockDataUpdateCoordinator,
         description: RoborockSensorDescription,
     ) -> None:
         """Initialize the entity."""
         self.entity_description = description
         super().__init__(
-            f"{description.key}_{coordinator.duid_slug}",
+            unique_id,
             coordinator,
             is_dock_entity=description.is_dock_entity,
         )
