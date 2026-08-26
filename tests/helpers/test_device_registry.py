@@ -4631,6 +4631,31 @@ async def test_async_get_or_create_deprecated_parameters(
         ("via_device", ("some_domain", "via_id")),
     ],
 )
+def test_device_info_deprecated_parameters(parameter: str, value: Any) -> None:
+    """Test a device info can carry deprecated parameters.
+
+    They were dropped from the typed device info when they were deprecated, but an
+    integration can still set them until they are removed. Passing them on to
+    async_get_or_create is covered by its own deprecation tests.
+    """
+    assert dict(dr.DeviceInfo(**{parameter: value})) == {parameter: value}
+
+    device_info = dr.DeviceInfo()
+    device_info[parameter] = value
+    assert dict(device_info) == {parameter: value}
+
+
+@pytest.mark.parametrize(
+    ("parameter", "value"),
+    [
+        ("created_at", "2024-01-01T00:00:00+00:00"),
+        ("default_manufacturer", "manufacturer"),
+        ("default_model", "model"),
+        ("default_name", "name"),
+        ("modified_at", "2024-01-01T00:00:00+00:00"),
+        ("via_device", ("some_domain", "via_id")),
+    ],
+)
 @pytest.mark.usefixtures("mock_integration_frame")
 async def test_async_get_or_create_deprecated_parameter_reported_before_mutation(
     hass: HomeAssistant,
