@@ -48,6 +48,12 @@ GARAGE_DOOR = "cover.garage_door"
 GARAGE_SHUTTERS = "cover.garage_shutters"
 
 
+def _outdated(agent: default_agent.DefaultAgent) -> bool:
+    """Return whether the gazetteer wants a newer home than it has built."""
+    fallback = agent._gazetteer
+    return fallback._built_home != fallback._wanted_home
+
+
 @pytest.fixture
 def home(
     hass: HomeAssistant,
@@ -463,24 +469,20 @@ async def test_a_turn_with_no_target_clears_the_antecedent(
 
 
 @pytest.mark.usefixtures("init_components", "home")
-@pytest.mark.parametrize(
-    ("command", "follow_up", "service"),
-    [("close the garage shutters", "open them", "open_cover")],
-    ids=["open_them"],
-)
 async def test_them_reopens_the_area_a_cover_command_named(
-    hass: HomeAssistant, command: str, follow_up: str, service: str
+    hass: HomeAssistant,
 ) -> None:
     """Test "open them" after an area command acts on that area again."""
-    async_mock_service(hass, "cover", "open_cover")
     async_mock_service(hass, "cover", "close_cover")
-    calls = async_mock_service(hass, "cover", service)
+    calls = async_mock_service(hass, "cover", "open_cover")
 
-    result = await conversation.async_converse(hass, command, None, Context(), None)
+    result = await conversation.async_converse(
+        hass, "close the garage shutters", None, Context(), None
+    )
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
 
     result = await conversation.async_converse(
-        hass, follow_up, result.conversation_id, Context(), None
+        hass, "open them", result.conversation_id, Context(), None
     )
 
     assert result.response.response_type is intent.IntentResponseType.ACTION_DONE
@@ -681,7 +683,7 @@ async def test_a_change_during_a_rebuild_is_not_lost(
         return real_build(previous, home)
 
     area_registry.async_update("kitchen_id", name="Scullery")
-    assert agent._gazetteer._stale
+    assert _outdated(agent)
 
     with patch.object(gazetteer, "_build_matcher", build):
         pending = hass.async_create_task(
@@ -697,7 +699,7 @@ async def test_a_change_during_a_rebuild_is_not_lost(
         async with asyncio.timeout(5):
             await pending
 
-    assert agent._gazetteer._stale, "the change made during the rebuild was erased"
+    assert _outdated(agent), "the change made during the rebuild was counted as built"
 
 
 async def test_an_antecedent_needs_a_session_to_belong_to(
@@ -725,7 +727,7 @@ async def test_a_rebuild_that_fails_leaves_the_home_out_of_date(
     )
 
     area_registry.async_update("kitchen_id", name="Scullery")
-    assert agent._gazetteer._stale
+    assert _outdated(agent)
 
     with (
         patch(
@@ -739,7 +741,7 @@ async def test_a_rebuild_that_fails_leaves_the_home_out_of_date(
         )
 
     # The matcher still holds the old home, so it has to still count as stale.
-    assert agent._gazetteer._stale
+    assert _outdated(agent)
 
     result = await conversation.async_converse(
         hass, "turn on the scullary lights", None, Context(), None

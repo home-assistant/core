@@ -494,7 +494,7 @@ class DefaultAgent(ConversationEntity):
             response.async_set_speech(response_text)
 
             # An automation ran, and nothing in it is a target
-            self._gazetteer.async_remember(chat_log.conversation_id)
+            self._gazetteer.async_forget(chat_log.conversation_id)
 
         if response is None:
             # Match intents
@@ -592,7 +592,6 @@ class DefaultAgent(ConversationEntity):
         )
 
         if intent_response.response_type is not intent.IntentResponseType.ERROR:
-            # hassil answers most sentences, so a later "open it" refers to this
             self._gazetteer.async_remember(
                 chat_log.conversation_id,
                 async_targets_from_intent(slots, intent_response),
@@ -626,7 +625,6 @@ class DefaultAgent(ConversationEntity):
             external=True,
         )
 
-        # Breaks ties toward the speaker's own room, not a constraint
         if satellite_area is not None:
             slots = slots | {"preferred_area_id": {"value": satellite_area.id}}
 
@@ -791,7 +789,10 @@ class DefaultAgent(ConversationEntity):
         for frame in frames:
             intent_response = await self._async_execute_intent(
                 frame.intent,
-                self._gazetteer.async_intent_slots(matcher, frame),
+                {
+                    slot: {"value": value, "text": matcher.display_name(slot, value)}
+                    for slot, value in frame.slots.items()
+                },
                 {
                     slot: matcher.display_name(slot, value)
                     for slot, value in frame.slots.items()

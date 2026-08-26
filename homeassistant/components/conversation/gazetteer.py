@@ -20,7 +20,6 @@ from gazetteer_matcher import (
     AreaSpec,
     EntitySpec,
     FloorSpec,
-    FrameCandidate,
     GazetteerMatcher,
     Home,
     Interpretation,
@@ -177,13 +176,14 @@ class GazetteerFallback:
         self.hass = hass
         self._matcher: GazetteerMatcher | None = None
         self._build_lock = asyncio.Lock()
-        self._stale = False
+        self._wanted_home = 0
+        self._built_home = 0
         self._previous_targets: dict[str, tuple[TargetReference, ...]] = {}
 
     @callback
     def async_invalidate(self) -> None:
         """Note that a registry or exposure change has outdated the home."""
-        self._stale = True
+        self._wanted_home += 1
 
     def supports(self, language: str) -> bool:
         """Return whether the matcher has a vocabulary for this language."""
@@ -244,35 +244,22 @@ class GazetteerFallback:
 
     async def _async_get_matcher(self) -> GazetteerMatcher:
         """Return the matcher, rebuilt from the registries if the home has changed."""
-        if self._matcher is not None and not self._stale:
+        if self._matcher is not None and self._built_home == self._wanted_home:
             return self._matcher
 
         async with self._build_lock:
-            if self._matcher is not None and not self._stale:
+            if self._matcher is not None and self._built_home == self._wanted_home:
                 return self._matcher
 
-            # Cleared before the home is read, so a registry change arriving while
-            # this rebuilds sets it again rather than being erased on the way out.
-            previous, self._stale = self._matcher, False
-            try:
-                self._matcher = await self.hass.async_add_executor_job(
-                    _build_matcher, previous, async_build_home(self.hass)
-                )
-            except BaseException:
-                self._stale = True
-                raise
+            # Noted before the home is read, so a change arriving during the build
+            # leaves the result behind rather than counting as current.
+            building = self._wanted_home
+            self._matcher = await self.hass.async_add_executor_job(
+                _build_matcher, self._matcher, async_build_home(self.hass)
+            )
+            self._built_home = building
 
         return self._matcher
-
-    @callback
-    def async_intent_slots(
-        self, matcher: GazetteerMatcher, frame: FrameCandidate
-    ) -> dict[str, Any]:
-        """Return a frame's slots in the form intent handlers take."""
-        return {
-            slot: {"value": value, "text": matcher.display_name(slot, value)}
-            for slot, value in frame.slots.items()
-        }
 
 
 def _build_matcher(previous: GazetteerMatcher | None, home: Home) -> GazetteerMatcher:
