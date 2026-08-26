@@ -1,8 +1,5 @@
 """Shared schemas for config entry and YAML config items."""
 
-import logging
-from typing import Any
-
 import voluptuous as vol
 
 from homeassistant.const import (
@@ -15,7 +12,6 @@ from homeassistant.const import (
     CONF_VARIABLES,
 )
 from homeassistant.helpers import config_validation as cv, selector
-from homeassistant.helpers.template import Template
 
 from .const import (
     CONF_ATTRIBUTES,
@@ -42,33 +38,6 @@ TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA = vol.Schema(
 TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA = {
     vol.Optional(CONF_OPTIMISTIC): cv.boolean,
 }
-
-
-def log_validation_error(
-    result: Any,
-    template: Template,
-    attribute: str,
-    entity_id: str | None,
-    exception: vol.Invalid,
-):
-    """Log template entity validation error."""
-    logging.getLogger(
-        f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}"
-        if entity_id
-        else __package__
-    ).error(
-        (
-            "Error validating template result '%s' "
-            "from template '%s' "
-            "for attribute '%s' in entity %s "
-            "validation message '%s'"
-        ),
-        result,
-        template,
-        attribute,
-        entity_id,
-        exception.msg,
-    )
 
 
 def make_template_entity_common_schema(

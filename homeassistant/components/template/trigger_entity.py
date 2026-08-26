@@ -24,8 +24,7 @@ from homeassistant.helpers.update_coordinator import CoordinatorEntity
 from .const import CONF_ATTRIBUTES
 from .coordinator import TriggerUpdateCoordinator
 from .entity import AbstractTemplateEntity
-from .schemas import log_validation_error
-from .validators import check_conditions, validate_attributes
+from .validators import check_conditions, log_validation_error, validate_attributes
 
 _LOGGER = logging.getLogger(__name__)
 

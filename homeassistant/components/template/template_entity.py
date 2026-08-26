@@ -45,7 +45,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import CONF_ATTRIBUTES, CONF_AVAILABILITY, CONF_PICTURE
 from .entity import AbstractTemplateEntity
-from .schemas import log_validation_error, validate_attributes
+from .validators import log_validation_error, validate_attributes
 
 _LOGGER = logging.getLogger(__name__)
 

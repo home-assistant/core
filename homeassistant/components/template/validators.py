@@ -12,6 +12,7 @@ from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.condition import ConditionsChecker
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.template import Template
 from homeassistant.helpers.trace import trace_get
 from homeassistant.helpers.typing import TemplateVarsType
 
@@ -69,6 +70,33 @@ def validate_attributes(
         return obj
 
     return validate
+
+
+def log_validation_error(
+    result: Any,
+    template: Template,
+    attribute: str,
+    entity_id: str | None,
+    exception: vol.Invalid,
+):
+    """Log template entity validation error."""
+    logging.getLogger(
+        f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}"
+        if entity_id
+        else __package__
+    ).error(
+        (
+            "Error validating template result '%s' "
+            "from template '%s' "
+            "for attribute '%s' in entity %s "
+            "validation message '%s'"
+        ),
+        result,
+        template,
+        attribute,
+        entity_id,
+        exception.msg,
+    )
 
 
 def log_validation_result_error(
