@@ -43,6 +43,8 @@ from .conftest import (
     TemplatePlatformSetup,
     assert_action,
     assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -2236,6 +2238,78 @@ async def test_saving_state(
         "supported_color_modes": ["brightness"],
         "xy_color": None,
     }
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        (
+            "set_effect",
+            {
+                "effect_list": "{{ ['Disco', 'Police'] }}",
+                "effect": "{{ None }}",
+                **ON_OFF_ACTIONS,
+            },
+        ),
+        ("set_hs", ON_OFF_ACTIONS),
+        ("set_level", ON_OFF_ACTIONS),
+        ("set_rgb", ON_OFF_ACTIONS),
+        ("set_rgbw", ON_OFF_ACTIONS),
+        ("set_rgbww", ON_OFF_ACTIONS),
+        ("set_temperature", ON_OFF_ACTIONS),
+        ("set_xy", ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_LIGHT, style, config, action, caplog
+    )
+
+
+@pytest.mark.parametrize(
+    ("action", "config"),
+    [
+        ("turn_on", {"turn_off": []}),
+        ("turn_off", {"turn_on": []}),
+        (
+            "set_effect",
+            {
+                "effect_list": "{{ ['Disco', 'Police'] }}",
+                "effect": "{{ None }}",
+                **ON_OFF_ACTIONS,
+            },
+        ),
+        ("set_hs", ON_OFF_ACTIONS),
+        ("set_level", ON_OFF_ACTIONS),
+        ("set_rgb", ON_OFF_ACTIONS),
+        ("set_rgbw", ON_OFF_ACTIONS),
+        ("set_rgbww", ON_OFF_ACTIONS),
+        ("set_temperature", ON_OFF_ACTIONS),
+        ("set_xy", ON_OFF_ACTIONS),
+    ],
+)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_LIGHT, config, action, caplog
+    )
 
 
 @pytest.mark.parametrize(

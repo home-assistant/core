@@ -6,7 +6,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components import template, update
-from homeassistant.components.template.update import DEFAULT_NAME
+from homeassistant.components.template.update import DEFAULT_NAME, SCRIPT_FIELDS
 from homeassistant.const import (
     ATTR_ENTITY_PICTURE,
     ATTR_ICON,
@@ -26,6 +26,8 @@ from .conftest import (
     TemplatePlatformSetup,
     assert_action,
     assert_extra_template_attributes,
+    assert_invalid_config_entry_actions_do_not_create_entities,
+    assert_invalid_yaml_actions_do_not_create_entities,
     async_get_flow_preview_state,
     make_test_action,
     make_test_trigger,
@@ -982,6 +984,34 @@ async def test_flow_preview(
     assert state["state"] == STATE_ON
     assert state["attributes"]["installed_version"] == "1.0"
     assert state["attributes"]["latest_version"] == "2.0"
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+@pytest.mark.parametrize("action", SCRIPT_FIELDS)
+async def test_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid yaml actions do not create entities."""
+    await assert_invalid_yaml_actions_do_not_create_entities(
+        hass, TEST_UPDATE, style, TEST_UPDATE_CONFIG, action, caplog
+    )
+
+
+@pytest.mark.parametrize("action", SCRIPT_FIELDS)
+async def test_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid config entry actions do not create entities."""
+    await assert_invalid_config_entry_actions_do_not_create_entities(
+        hass, TEST_UPDATE, TEST_UPDATE_CONFIG, action, caplog
+    )
 
 
 @pytest.mark.parametrize(

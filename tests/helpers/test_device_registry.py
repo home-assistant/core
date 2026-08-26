@@ -10593,6 +10593,35 @@ async def test_child_device_update(
 
 
 @pytest.mark.usefixtures("hass")
+async def test_update_device_wrong_kind_of_device_id_raises(
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test the split update API points at the correct method for the other kind."""
+    parent, child_device = _create_parent_and_child(
+        device_registry, mock_config_entry.entry_id
+    )
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Device {child_device.id} is a child device; "
+        "use async_update_child_device",
+    ):
+        device_registry.async_update_device(child_device.id, name_by_user="Nope")
+
+    with pytest.raises(
+        HomeAssistantError,
+        match=f"Device {parent.id} is a main device; use async_update_device",
+    ):
+        device_registry.async_update_child_device(parent.id, name_by_user="Nope")
+
+    with pytest.raises(KeyError):
+        device_registry.async_update_device("unknown-device-id")
+    with pytest.raises(KeyError):
+        device_registry.async_update_child_device("unknown-child-id")
+
+
+@pytest.mark.usefixtures("hass")
 async def test_update_main_device_rejects_disabled_by_device(
     device_registry: dr.DeviceRegistry,
     mock_config_entry: MockConfigEntry,

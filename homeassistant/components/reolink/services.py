@@ -5,15 +5,10 @@ from reolink_aio.enums import ChimeToneEnum
 import voluptuous as vol
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
-from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import ATTR_DEVICE_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
 from homeassistant.exceptions import ServiceValidationError
-from homeassistant.helpers import (
-    config_validation as cv,
-    device_registry as dr,
-    service,
-)
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import DOMAIN, SUPPORT_PTZ_SPEED
 from .host import ReolinkHost
@@ -30,19 +25,9 @@ async def _async_play_chime(service_call: ServiceCall) -> None:
     service_data = service_call.data
 
     for device_id in service_data[ATTR_DEVICE_ID]:
-        device, config_entry = dr.async_get_device_and_config_entry_for_domain(
-            service_call.hass, device_id, domain=DOMAIN
+        device, config_entry = service.async_get_device_and_config_entry(
+            service_call.hass, DOMAIN, device_id
         )
-        if (
-            config_entry is None
-            or device is None
-            or config_entry.state is not ConfigEntryState.LOADED
-        ):
-            raise ServiceValidationError(
-                translation_domain=DOMAIN,
-                translation_key="service_entry_ex",
-                translation_placeholders={"service_name": "play_chime"},
-            )
         host: ReolinkHost = config_entry.runtime_data.host
         (_device_uid, chime_id, is_chime) = get_device_uid_and_ch(device, host)
         chime: Chime | None = host.api.chime(chime_id)
