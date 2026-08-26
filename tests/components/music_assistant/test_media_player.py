@@ -1,7 +1,5 @@
 """Test Music Assistant media player entities."""
 
-from pathlib import Path
-from typing import Any
 from unittest.mock import MagicMock, call
 
 from music_assistant_models.constants import PLAYER_CONTROL_NONE
@@ -52,6 +50,7 @@ from homeassistant.components.music_assistant.const import (
     ATTR_PRE_ANNOUNCE_URL,
     ATTR_RADIO_MODE,
     ATTR_SOURCE_PLAYER,
+    ATTR_TTS_ENTITY_ID,
     ATTR_URL,
     ATTR_USE_PRE_ANNOUNCE,
     ATTR_USERNAME,
@@ -107,6 +106,7 @@ MOCK_TRACK = Track(
     name="Test Track",
     provider_mappings={},
 )
+MOCK_TTS_ENTITY_ID = "tts.test"
 
 
 class MockTTSConfigFlow(ConfigFlow):
@@ -1021,10 +1021,10 @@ async def test_media_player_play_announcement_action(
     )
 
 
+@pytest.mark.usefixtures("mock_tts_cache_dir")
 async def test_media_player_play_announcement_action_with_message(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
-    mock_tts_cache_dir: Path,
 ) -> None:
     """Test media_player play_announcement action with a spoken message."""
     await async_process_ha_core_config(
@@ -1043,6 +1043,7 @@ async def test_media_player_play_announcement_action_with_message(
         {
             ATTR_ENTITY_ID: entity_id,
             ATTR_MESSAGE: "Dinner is ready!",
+            ATTR_TTS_ENTITY_ID: MOCK_TTS_ENTITY_ID,
             ATTR_USE_PRE_ANNOUNCE: True,
             ATTR_ANNOUNCE_VOLUME: 50,
         },
@@ -1054,7 +1055,7 @@ async def test_media_player_play_announcement_action_with_message(
     stream = hass.data[DATA_TTS_MANAGER].token_to_stream[
         announcement_url.rsplit("/", 1)[-1]
     ]
-    assert stream.engine == "tts.test"
+    assert stream.engine == MOCK_TTS_ENTITY_ID
     assert music_assistant_client.send_command.call_args == call(
         "players/cmd/play_announcement",
         player_id=mass_player_id,
@@ -1072,16 +1073,27 @@ async def test_media_player_play_announcement_action_with_message(
         {
             ATTR_URL: "http://blah.com/announcement.mp3",
             ATTR_MESSAGE: "Dinner is ready!",
+            ATTR_TTS_ENTITY_ID: MOCK_TTS_ENTITY_ID,
+        },
+        {ATTR_MESSAGE: "Dinner is ready!"},
+        {
+            ATTR_URL: "http://blah.com/announcement.mp3",
+            ATTR_TTS_ENTITY_ID: MOCK_TTS_ENTITY_ID,
         },
     ],
-    ids=["neither", "both"],
+    ids=[
+        "neither url nor message",
+        "both url and message",
+        "message without tts entity",
+        "tts entity without message",
+    ],
 )
 async def test_media_player_play_announcement_action_invalid_input(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
-    announcement_data: dict[str, Any],
+    announcement_data: dict[str, str],
 ) -> None:
-    """Test play_announcement action requires exactly one of message and url."""
+    """Test play_announcement action requires either a url or a message with an entity."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
     with pytest.raises(vol.Invalid):
         await hass.services.async_call(
@@ -1096,22 +1108,24 @@ async def test_media_player_play_announcement_action_invalid_input(
     assert music_assistant_client.send_command.call_count == 0
 
 
-async def test_media_player_play_announcement_action_without_tts(
+async def test_media_player_play_announcement_action_unavailable_tts_entity(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
 ) -> None:
-    """Test play_announcement action reports a message it cannot speak."""
+    """Test play_announcement action reports a text-to-speech entity that is gone."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
-    with pytest.raises(ServiceValidationError):
+    with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_PLAY_ANNOUNCEMENT,
             {
                 ATTR_ENTITY_ID: "media_player.test_player_1",
                 ATTR_MESSAGE: "Dinner is ready!",
+                ATTR_TTS_ENTITY_ID: MOCK_TTS_ENTITY_ID,
             },
             blocking=True,
         )
+    assert exc_info.value.translation_key == "tts_entity_not_available"
     assert music_assistant_client.send_command.call_count == 0
 
 
