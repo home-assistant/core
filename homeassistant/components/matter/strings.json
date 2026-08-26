@@ -682,7 +682,7 @@
       }
     },
     "switch": {
-      "alpstuga_air_quality_config": {
+      "display": {
         "name": "Display"
       },
       "child_lock": {

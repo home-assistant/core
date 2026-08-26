@@ -228,7 +228,7 @@ DISCOVERY_SCHEMAS = [
         entity_description=MatterSwitchEntityDescription(
             key="MatterSwitch",
             entity_category=EntityCategory.CONFIG,
-            translation_key="alpstuga_air_quality_config",
+            translation_key="display",
         ),
         entity_class=MatterSwitch,
         required_attributes=(clusters.OnOff.Attributes.OnOff,),
