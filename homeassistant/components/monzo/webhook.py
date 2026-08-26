@@ -74,6 +74,19 @@ class MonzoWebhookManager:
         self._webhook_url: str | None = None
         self._known_account_ids: set[str] = set()
 
+    @property
+    def diagnostics_data(self) -> dict[str, bool | int]:
+        """Return privacy-safe webhook diagnostics."""
+        return {
+            "active": self._active,
+            "has_registered_webhook_url": self._webhook_url is not None,
+            "known_account_count": len(self._known_account_ids),
+            "retry_scheduled": self._retry_cancel is not None,
+            "retrying": self._retrying,
+            "uses_cloudhook": self._webhook_url is not None
+            and self._webhook_url == self.entry.data.get(CONF_CLOUDHOOK_URL),
+        }
+
     async def async_setup(self) -> None:
         """Set up the local webhook and remote subscriptions."""
         webhook.async_register(
