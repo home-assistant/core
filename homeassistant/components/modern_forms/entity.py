@@ -9,6 +9,21 @@ from .const import DOMAIN
 from .coordinator import ModernFormsDataUpdateCoordinator
 
 
+def strip_device_name_prefix(device_name: str, name: str) -> str:
+    """Strip a leading device-name prefix from a vendor-set fixture name.
+
+    Fixtures are commonly named "<device name> <role>" in the Modern Forms
+    app (e.g. "Master Bedroom Uplight"), which would otherwise duplicate
+    once HA's has_entity_name prepends the device name to build the
+    friendly name.
+    """
+    if device_name and name.lower().startswith(device_name.lower()):
+        stripped = name[len(device_name) :].lstrip(" -_")
+        if stripped:
+            return stripped
+    return name
+
+
 class ModernFormsDeviceEntity(CoordinatorEntity[ModernFormsDataUpdateCoordinator]):
     """Defines a Modern Forms device entity."""
 
