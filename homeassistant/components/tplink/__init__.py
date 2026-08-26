@@ -50,6 +50,7 @@ from .const import (
     CONF_CREDENTIALS_HASH,
     CONF_DEVICE_CONFIG,
     CONF_LIVE_VIEW,
+    CONF_USE_STREAM_FOR_STILLS,
     CONF_USES_HTTP,
     CONNECT_TIMEOUT,
     DISCOVERY_TIMEOUT,
@@ -240,8 +241,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
             camera_creds_dict[CONF_USERNAME], camera_creds_dict[CONF_PASSWORD]
         )
     live_view = entry.data.get(CONF_LIVE_VIEW)
+    use_stream_for_stills = entry.options.get(CONF_USE_STREAM_FOR_STILLS, False)
 
-    entry.runtime_data = TPLinkData(parent_coordinator, camera_creds, live_view)
+    entry.runtime_data = TPLinkData(
+        parent_coordinator, camera_creds, live_view, use_stream_for_stills
+    )
 
     # Register the parent device before forwarding platforms so child device
     # entities can resolve their via_device_id from it.

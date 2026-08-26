@@ -115,8 +115,13 @@ class TPLinkCameraEntity(CoordinatedTPLinkModuleEntity, Camera):
         self._camera_credentials = (
             coordinator.config_entry.runtime_data.camera_credentials
         )
+        stills_resolution = (
+            StreamResolution.HD
+            if coordinator.config_entry.runtime_data.use_stream_for_stills
+            else StreamResolution.SD
+        )
         self._video_url = self._camera_module.stream_rtsp_url(
-            self._camera_credentials, stream_resolution=StreamResolution.SD
+            self._camera_credentials, stream_resolution=stills_resolution
         )
         self._image: bytes | None = None
         self._image_lock = asyncio.Lock()

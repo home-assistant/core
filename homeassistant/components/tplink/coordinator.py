@@ -28,6 +28,7 @@ class TPLinkData:
     parent_coordinator: TPLinkDataUpdateCoordinator
     camera_credentials: Credentials | None
     live_view: bool | None
+    use_stream_for_stills: bool
 
 
 type TPLinkConfigEntry = ConfigEntry[TPLinkData]
