@@ -47,11 +47,15 @@ def log_validation_error(
     result: Any,
     template: Template,
     attribute: str,
-    entity_id: str,
+    entity_id: str | None,
     exception: vol.Invalid,
 ):
     """Log template entity validation error."""
-    logging.getLogger(f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}").error(
+    logging.getLogger(
+        f"{__package__}.{entity_id.split('.', maxsplit=1)[0]}"
+        if entity_id
+        else __package__
+    ).error(
         (
             "Error validating template result '%s' "
             "from template '%s' "
