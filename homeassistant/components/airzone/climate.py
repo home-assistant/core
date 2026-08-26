@@ -13,6 +13,7 @@ from aioairzone.const import (
     AZD_ACTION,
     AZD_COOL_TEMP_SET,
     AZD_DOUBLE_SET_POINT,
+    AZD_HEAT_TEMP_MIN,
     AZD_HEAT_TEMP_SET,
     AZD_HUMIDITY,
     AZD_MASTER,
@@ -274,7 +275,17 @@ class AirzoneClimate(AirzoneZoneEntity, ClimateEntity):
         else:
             self._attr_hvac_mode = HVACMode.OFF
         self._attr_max_temp = self.get_airzone_value(AZD_TEMP_MAX)
-        self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
+        if self.get_airzone_value(AZD_DOUBLE_SET_POINT):
+            # In double-setpoint mode the device reports minTemp using the cooling
+            # floor (coolmintemp), which is higher than the heating floor
+            # (heatmintemp).  Use the heating minimum so the heat setpoint is not
+            # artificially clamped.  Fall back to AZD_TEMP_MIN if heatmintemp is
+            # absent.  See HA issues #135149 and #140238.
+            self._attr_min_temp = self.get_airzone_value(
+                AZD_HEAT_TEMP_MIN
+            ) or self.get_airzone_value(AZD_TEMP_MIN)
+        else:
+            self._attr_min_temp = self.get_airzone_value(AZD_TEMP_MIN)
         if self.supported_features & ClimateEntityFeature.FAN_MODE:
             self._attr_fan_mode = self._speeds.get(self.get_airzone_value(AZD_SPEED))
         if (
