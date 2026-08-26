@@ -139,7 +139,9 @@ async def async_cloudhook_generate_url(
 ) -> str:
     """Generate the full URL for a webhook_id."""
     if CONF_CLOUDHOOK_URL not in entry.data:
-        webhook_url = await cloud.async_create_cloudhook(
+        # Get or create: the cloud can still hold a hook this entry lost track of,
+        # and creating a second one for the same id is refused outright
+        webhook_url = await cloud.async_get_or_create_cloudhook(
             hass, entry.data[CONF_WEBHOOK_ID]
         )
         data = {**entry.data, CONF_CLOUDHOOK_URL: webhook_url}
@@ -182,14 +184,20 @@ async def async_register_webhook(
 
     Return whether the registration is settled, which a caller that retries needs
     to know. A URL that cannot work is settled without having been registered:
-    trying again cannot help until the configuration changes.
+    trying again cannot help until the configuration changes. A URL that cannot be
+    built yet is the opposite - unsettled, so that the caller tries again.
     """
     if CONF_WEBHOOK_ID not in entry.data:
         data = {**entry.data, CONF_WEBHOOK_ID: secrets.token_hex()}
         hass.config_entries.async_update_entry(entry, data=data)
 
     if cloud.async_active_subscription(hass):
-        webhook_url = await async_cloudhook_generate_url(hass, entry)
+        try:
+            webhook_url = await async_cloudhook_generate_url(hass, entry)
+        except cloud.CloudNotAvailable:
+            # The cloud can drop out between the caller's check and this call
+            _LOGGER.debug("No cloudhook to register yet")
+            return False
     else:
         webhook_url = webhook_generate_url(hass, entry.data[CONF_WEBHOOK_ID])
 

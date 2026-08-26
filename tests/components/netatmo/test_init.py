@@ -344,7 +344,7 @@ async def test_setup_with_cloud(
         patch.object(cloud, "async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value="https://hooks.nabu.casa/ABCD",
         ) as fake_create_cloudhook,
         patch(
@@ -414,7 +414,7 @@ async def test_setup_with_cloudhook(hass: HomeAssistant) -> None:
         patch("homeassistant.components.cloud.async_is_connected", return_value=True),
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value="https://hooks.nabu.casa/ABCD",
         ) as fake_create_cloudhook,
         patch(
@@ -1469,7 +1469,7 @@ def _cloud_subscribed(hass: HomeAssistant) -> Iterator[None]:
         patch.object(cloud, "async_active_subscription", return_value=True),
         patch.object(cloud, "async_is_connected", return_value=True),
         patch(
-            "homeassistant.components.cloud.async_create_cloudhook",
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
             return_value="https://hooks.nabu.casa/ABCD",
         ),
     ):
@@ -2244,3 +2244,49 @@ async def test_a_child_device_walks_up_to_its_home(
     client = await hass_ws_client(hass)
     response = await client.remove_device(child_device.id)
     assert response["success"] is expected_success
+
+
+async def test_a_cloudhook_the_cloud_refuses_is_retried(
+    hass: HomeAssistant, config_entry: MockConfigEntry, freezer: FrozenDateTimeFactory
+) -> None:
+    """Test that losing the cloud while building the URL still arms a retry."""
+    with (
+        _patched_retry_delays(),
+        patch("homeassistant.components.cloud.async_is_logged_in", return_value=True),
+        patch.object(cloud, "async_is_connected", return_value=True),
+        patch.object(cloud, "async_active_subscription", return_value=True),
+        patch(
+            "homeassistant.components.cloud.async_get_or_create_cloudhook",
+            side_effect=[
+                cloud.CloudNotConnected,
+                "https://hooks.nabu.casa/ABCD",
+            ],
+        ) as mock_cloudhook,
+        patch(
+            "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
+        ) as mock_auth,
+        patch("homeassistant.components.netatmo.coordinator.PLATFORMS", []),
+        patch(
+            "homeassistant.components.netatmo.async_get_config_entry_implementation",
+        ),
+    ):
+        mock_auth.return_value.async_post_api_request.side_effect = partial(
+            fake_post_request, hass
+        )
+        mock_auth.return_value.async_addwebhook.side_effect = AsyncMock()
+        mock_auth.return_value.async_dropwebhook.side_effect = AsyncMock()
+
+        # The cloud dropped out between the connection check and the cloudhook
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        mock_auth.return_value.async_addwebhook.assert_not_called()
+
+        freezer.tick(timedelta(seconds=TEST_RETRY_DELAY))
+        async_fire_time_changed(hass)
+        await hass.async_block_till_done()
+
+    assert mock_cloudhook.call_count == 2
+    mock_auth.return_value.async_addwebhook.assert_called_once_with(
+        "https://hooks.nabu.casa/ABCD"
+    )
