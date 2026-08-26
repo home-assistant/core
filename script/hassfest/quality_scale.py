@@ -629,7 +629,6 @@ INTEGRATIONS_WITHOUT_QUALITY_SCALE_FILE = [
     "nextcloud",
     "nfandroidtv",
     "nibe_heatpump",
-    "nice_go",
     "nightscout",
     "nilu",
     "nissan_leaf",
