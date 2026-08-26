@@ -1081,7 +1081,7 @@ fritzconnection[qr]==1.15.1
 fronius-modbus==0.2.0
 
 # homeassistant.components.fumis
-fumis==0.4.0
+fumis==0.4.1
 
 # homeassistant.components.fyta
 fyta_cli==0.7.3
