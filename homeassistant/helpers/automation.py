@@ -215,9 +215,12 @@ async def async_call_platform_validator(
     conf: ConfigType,
     issue_reporter: ValidationIssueReporter | None,
 ) -> ConfigType:
-    """Call a platform config validator, forwarding the reporter if opted in.
+    """Call a platform config validator, making the ``issue_reporter`` opt-in.
 
-    The validator may be a coroutine function or a plain function.
+    This helper exists solely so ``issue_reporter`` can be an optional parameter of
+    platform validators: the reporter is forwarded only to validators that declare it,
+    leaving legacy two-argument validators (including those in custom integrations)
+    called unchanged. The validator may be a coroutine function or a plain function.
     """
     if issue_reporter is not None and _validator_accepts_issue_reporter(validator):
         result = validator(hass, conf, issue_reporter=issue_reporter)
@@ -245,11 +248,13 @@ def async_create_validation_issue(
     """
     from .issue_registry import IssueSeverity, async_create_issue  # noqa: PLC0415
 
-    issue_id = f"{finding.finding_type}_{owner_key}_{finding.issue_key}"
+    issue_id = f"{issue_domain}_{finding.finding_type}_{owner_key}_{finding.issue_key}"
     placeholders = {"name": name, "entity_id": entity_id, **finding.placeholders}
-    translation_key = finding.finding_type
     if edit_url is not None:
+        translation_key = finding.finding_type
         placeholders["edit"] = edit_url
+    else:
+        translation_key = f"{finding.finding_type}_no_edit"
     async_create_issue(
         hass,
         HOMEASSISTANT_DOMAIN,

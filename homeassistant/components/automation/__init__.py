@@ -381,6 +381,12 @@ class BaseAutomationEntity(ToggleEntity, ABC):
     ) -> ScriptRunResult | None:
         """Trigger automation."""
 
+    @callback
+    def async_refresh_validation_findings(
+        self, findings: list[ValidationFinding]
+    ) -> None:
+        """Refresh repair issues when kept across a reload with unchanged config."""
+
 
 class UnavailableAutomationEntity(BaseAutomationEntity):
     """A non-functional automation entity with its state set to unavailable.
@@ -666,6 +672,14 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
         if enable_automation:
             await self._async_enable()
 
+        self._async_create_validation_issues()
+
+    @callback
+    def _async_create_validation_issues(self) -> None:
+        """Materialize repair issues for this automation's validation findings."""
+        edit_url = (
+            f"/config/automation/edit/{self.unique_id}" if self.unique_id else None
+        )
         for finding in self._validation_findings:
             self._validation_issue_ids.add(
                 async_create_validation_issue(
@@ -675,9 +689,22 @@ class AutomationEntity(BaseAutomationEntity, RestoreEntity):
                     owner_key=self.unique_id or self.entity_id,
                     name=self._attr_name or self.entity_id,
                     entity_id=self.entity_id,
-                    edit_url=f"/config/automation/edit/{self.unique_id}",
+                    edit_url=edit_url,
                 )
             )
+
+    @override
+    @callback
+    def async_refresh_validation_findings(
+        self, findings: list[ValidationFinding]
+    ) -> None:
+        """Re-materialize repair issues when kept across a reload."""
+        if findings == self._validation_findings:
+            return
+        async_clear_validation_issues(self.hass, self._validation_issue_ids)
+        self._validation_issue_ids = set()
+        self._validation_findings = findings
+        self._async_create_validation_issues()
 
     @override
     async def async_turn_on(self, **kwargs: Any) -> None:
@@ -1148,15 +1175,15 @@ async def _async_process_config(
     def find_matches(
         automations: list[BaseAutomationEntity],
         automation_configs: list[AutomationEntityConfig],
-    ) -> tuple[set[int], set[int]]:
+    ) -> list[tuple[int, int]]:
         """Find matches between automation entities and configurations.
 
         An automation or configuration is only allowed to match at most once to handle
         the case of multiple automations with identical configuration.
 
-        Returns a tuple of sets of indices: ({automation_matches}, {config_matches})
+        Returns a list of matched (automation_idx, config_idx) index pairs.
         """
-        automation_matches: set[int] = set()
+        matches: list[tuple[int, int]] = []
         config_matches: set[int] = set()
         automation_configs_with_id: dict[str, tuple[int, AutomationEntityConfig]] = {}
         automation_configs_without_id: list[tuple[int, AutomationEntityConfig]] = []
@@ -1178,8 +1205,7 @@ async def _async_process_config(
                     automation.unique_id
                 )
                 if automation_matches_config(automation, automation_config):
-                    automation_matches.add(automation_idx)
-                    config_matches.add(config_idx)
+                    matches.append((automation_idx, config_idx))
                 continue
 
             for config_idx, automation_config in automation_configs_without_id:
@@ -1187,18 +1213,27 @@ async def _async_process_config(
                     # Only allow an automation config to match at most once
                     continue
                 if automation_matches_config(automation, automation_config):
-                    automation_matches.add(automation_idx)
+                    matches.append((automation_idx, config_idx))
                     config_matches.add(config_idx)
                     # Only allow an automation to match at most once
                     break
 
-        return automation_matches, config_matches
+        return matches
 
     automation_configs = await _prepare_automation_config(hass, config, None)
     automations: list[BaseAutomationEntity] = list(component.entities)
 
     # Find automations and configurations which have matches
-    automation_matches, config_matches = find_matches(automations, automation_configs)
+    matches = find_matches(automations, automation_configs)
+    automation_matches = {automation_idx for automation_idx, _ in matches}
+    config_matches = {config_idx for _, config_idx in matches}
+
+    # A matched automation is kept as-is, but its registry-dependent findings may have
+    # changed even when the config text is unchanged, so refresh its repair issues.
+    for automation_idx, config_idx in matches:
+        automations[automation_idx].async_refresh_validation_findings(
+            automation_configs[config_idx].validation_findings
+        )
 
     # Remove automations which have changed config or no longer exist
     tasks = [
@@ -1245,6 +1280,11 @@ async def _async_process_single_config(
     automation_config = automation_configs[0] if automation_configs else None
 
     if _automation_matches_config(automation, automation_config):
+        # Kept as-is, but refresh registry-dependent findings that may have changed
+        # even though the config text is unchanged.
+        cast(BaseAutomationEntity, automation).async_refresh_validation_findings(
+            cast(AutomationEntityConfig, automation_config).validation_findings
+        )
         return
 
     if automation:

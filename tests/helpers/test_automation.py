@@ -420,7 +420,10 @@ def test_create_and_clear_validation_issue_with_edit(
         entity_id="automation.test",
         edit_url="/config/automation/edit/1234",
     )
-    assert issue_id == f"event_trigger_composite_device_id_1234_{_SAMPLE_DEVICE_ID}"
+    assert (
+        issue_id
+        == f"automation_event_trigger_composite_device_id_1234_{_SAMPLE_DEVICE_ID}"
+    )
 
     # Filed under the homeassistant domain (where the translations live), attributed to
     # the owning integration via issue_domain.

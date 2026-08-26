@@ -6329,15 +6329,20 @@ async def test_validate_trigger_reports_composite_device(hass: HomeAssistant) ->
 
 
 @pytest.mark.usefixtures("split_devices")
-async def test_validate_trigger_no_reporter_no_registry_lookup(
+async def test_validate_trigger_without_reporter(
     hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
-    """Without a reporter the validator does not report (and skips the registry)."""
-    # No reporter passed - should validate fine and report nothing.
-    validated = await trigger.async_validate_trigger_config(
-        hass, [_event_trigger(COMPOSITE_ID)]
-    )
+    """Without a reporter the validator still validates and logs a warning."""
+    with caplog.at_level(logging.WARNING):
+        validated = await trigger.async_validate_trigger_config(
+            hass, [_event_trigger(COMPOSITE_ID)]
+        )
     assert validated[0][CONF_EVENT_DATA][CONF_DEVICE_ID] == COMPOSITE_ID
+    assert any(
+        "was split into one device per integration" in message
+        for message in caplog.messages
+    )
 
 
 async def test_validate_trigger_ignores_live_unknown_and_non_event(
