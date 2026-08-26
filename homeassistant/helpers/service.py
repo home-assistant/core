@@ -35,9 +35,11 @@ from homeassistant.core import (
     ServiceCall,
     ServiceResponse,
     SupportsResponse,
+    async_set_service_config_entry,
     callback,
 )
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
     HomeAssistantError,
     ServiceNotSupported,
     ServiceValidationError,
@@ -768,6 +770,15 @@ async def _resolve_entity_service_call_entities(
     return entities
 
 
+@callback
+def _async_start_reauth_for_entity(hass: HomeAssistant, entity: Entity) -> None:
+    """Start a reauth flow for the config entry owning an entity."""
+    if (platform := entity.platform) is not None and (
+        entry := platform.config_entry
+    ) is not None:
+        entry.async_start_reauth_if_available(hass)
+
+
 async def _async_handle_entity_calls(
     entity_calls: list[tuple[Entity, Coroutine[Any, Any, ServiceResponse]]],
     *,
@@ -779,7 +790,13 @@ async def _async_handle_entity_calls(
         entity: Entity, coro: Coroutine[Any, Any, ServiceResponse]
     ) -> ServiceResponse:
         entity.async_set_context(context)
-        return await coro
+        try:
+            return await coro
+        except ConfigEntryAuthFailed:
+            # Handled per entity, since only the first exception raised by a
+            # multi entity call is re-raised to the caller.
+            _async_start_reauth_for_entity(entity.hass, entity)
+            raise
 
     if len(entity_calls) == 1:
         # Single entity case avoids creating task
@@ -954,7 +971,12 @@ async def batched_entity_service_call(
         context=call.context,
         return_response=return_response,
     )
-    result = await func(entities, call)
+    try:
+        result = await func(entities, call)
+    except ConfigEntryAuthFailed:
+        for entity in entities:
+            _async_start_reauth_for_entity(hass, entity)
+        raise
 
     return result if return_response else None
 
@@ -1375,6 +1397,7 @@ def async_get_config_entry(
                 "entry_title": config_entry.title,
             },
         )
+    async_set_service_config_entry(config_entry)
     return config_entry
 
 
@@ -1413,6 +1436,7 @@ def _async_get_single_loaded_config_entry(
                 "entry_title": config_entry.title,
             },
         )
+    async_set_service_config_entry(config_entry)
     return config_entry
 
 
@@ -1452,4 +1476,5 @@ def async_get_device_and_config_entry(
                 "entry_title": config_entry.title,
             },
         )
+    async_set_service_config_entry(config_entry)
     return device, config_entry

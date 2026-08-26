@@ -2,6 +2,7 @@
 
 import array
 import asyncio
+from collections.abc import Generator, Mapping
 from datetime import datetime, timedelta
 import functools
 import gc
@@ -18,7 +19,7 @@ import pytest
 from pytest_unordered import unordered
 import voluptuous as vol
 
-from homeassistant import core as ha
+from homeassistant import config_entries, core as ha
 from homeassistant.const import (
     ATTR_FRIENDLY_NAME,
     EVENT_CALL_SERVICE,
@@ -48,6 +49,7 @@ from homeassistant.core import (
     get_release_channel,
 )
 from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
     HomeAssistantError,
     InvalidEntityFormatError,
     InvalidStateError,
@@ -55,12 +57,21 @@ from homeassistant.exceptions import (
     ServiceNotFound,
     ServiceValidationError,
 )
+from homeassistant.helpers import service
 from homeassistant.helpers.json import json_dumps
 from homeassistant.util import dt as dt_util
 from homeassistant.util.async_ import create_eager_task
 from homeassistant.util.read_only_dict import ReadOnlyDict
 
-from .common import async_capture_events, async_mock_service
+from .common import (
+    MockConfigEntry,
+    MockModule,
+    async_capture_events,
+    async_mock_service,
+    mock_config_flow,
+    mock_integration,
+    mock_platform,
+)
 
 PST = dt_util.get_time_zone("America/Los_Angeles")
 
@@ -3615,3 +3626,148 @@ async def test_async_set_updates_last_reported(hass: HomeAssistant) -> None:
         assert state.last_reported_timestamp != last_reported_timestamp
         last_reported = state.last_reported
         last_reported_timestamp = state.last_reported_timestamp
+
+
+@pytest.fixture
+def reauth_config_entry(hass: HomeAssistant) -> Generator[MockConfigEntry]:
+    """Set up a loaded entry of an integration which implements a reauth flow."""
+
+    class MockFlow(config_entries.ConfigFlow):
+        """Config flow implementing reauth."""
+
+        async def async_step_reauth(
+            self, entry_data: Mapping[str, Any]
+        ) -> config_entries.ConfigFlowResult:
+            """Handle reauth."""
+            return await self.async_step_reauth_confirm()
+
+        async def async_step_reauth_confirm(
+            self, user_input: dict[str, Any] | None = None
+        ) -> config_entries.ConfigFlowResult:
+            """Confirm reauth."""
+            return self.async_show_form(step_id="reauth_confirm")
+
+    entry = MockConfigEntry(domain="test_reauth", title="Entry 1")
+    entry.add_to_hass(hass)
+    entry.mock_state(hass, config_entries.ConfigEntryState.LOADED)
+
+    mock_integration(hass, MockModule("test_reauth"))
+    mock_platform(hass, "test_reauth.config_flow", None)
+    with mock_config_flow("test_reauth", MockFlow):
+        yield entry
+
+
+@pytest.mark.parametrize("blocking", [True, False])
+async def test_serviceregistry_starts_reauth_on_auth_failed(
+    hass: HomeAssistant, reauth_config_entry: MockConfigEntry, blocking: bool
+) -> None:
+    """Test a service handler raising ConfigEntryAuthFailed starts a reauth flow."""
+
+    async def handler(call: ServiceCall) -> None:
+        """Resolve the config entry, then fail to authenticate."""
+        service.async_get_config_entry(hass, "test_reauth", None)
+        raise ConfigEntryAuthFailed
+
+    hass.services.async_register("test_reauth", "do_something", handler)
+
+    if blocking:
+        with pytest.raises(ConfigEntryAuthFailed):
+            await hass.services.async_call("test_reauth", "do_something", blocking=True)
+    else:
+        await hass.services.async_call("test_reauth", "do_something", blocking=False)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler("test_reauth")
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == reauth_config_entry.entry_id
+    assert flows[0]["context"]["source"] == config_entries.SOURCE_REAUTH
+
+
+@pytest.mark.usefixtures("reauth_config_entry")
+async def test_serviceregistry_no_reauth_without_resolved_entry(
+    hass: HomeAssistant,
+) -> None:
+    """Test no reauth flow is started if the handler never resolved an entry."""
+
+    async def handler(call: ServiceCall) -> None:
+        """Fail to authenticate without resolving a config entry."""
+        raise ConfigEntryAuthFailed
+
+    hass.services.async_register("test_reauth", "do_something", handler)
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await hass.services.async_call("test_reauth", "do_something", blocking=True)
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.flow.async_progress_by_handler("test_reauth")
+
+
+async def test_serviceregistry_reauth_config_entry_does_not_leak(
+    hass: HomeAssistant, reauth_config_entry: MockConfigEntry
+) -> None:
+    """Test the resolved entry of an inner call does not leak to an outer call."""
+
+    async def inner(call: ServiceCall) -> None:
+        """Resolve the config entry and succeed."""
+        service.async_get_config_entry(hass, "test_reauth", None)
+
+    async def outer(call: ServiceCall) -> None:
+        """Call the inner action, then fail without resolving an entry."""
+        await hass.services.async_call("test_reauth", "inner", blocking=True)
+        raise ConfigEntryAuthFailed
+
+    hass.services.async_register("test_reauth", "inner", inner)
+    hass.services.async_register("test_reauth", "outer", outer)
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await hass.services.async_call("test_reauth", "outer", blocking=True)
+    await hass.async_block_till_done()
+
+    assert not hass.config_entries.flow.async_progress_by_handler("test_reauth")
+
+
+async def test_serviceregistry_starts_reauth_from_admin_service(
+    hass: HomeAssistant, reauth_config_entry: MockConfigEntry
+) -> None:
+    """Test an admin action starts a reauth flow.
+
+    Admin actions run the handler in a task of its own, which only gets a copy
+    of the context the entry is recorded in.
+    """
+
+    async def handler(call: ServiceCall) -> None:
+        """Resolve the config entry, then fail to authenticate."""
+        service.async_get_config_entry(hass, "test_reauth", None)
+        raise ConfigEntryAuthFailed
+
+    service.async_register_admin_service(hass, "test_reauth", "do_something", handler)
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await hass.services.async_call("test_reauth", "do_something", blocking=True)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler("test_reauth")
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == reauth_config_entry.entry_id
+
+
+async def test_serviceregistry_starts_reauth_from_callback_handler(
+    hass: HomeAssistant, reauth_config_entry: MockConfigEntry
+) -> None:
+    """Test a callback service handler also starts a reauth flow."""
+
+    @ha.callback
+    def handler(call: ServiceCall) -> None:
+        """Resolve the config entry, then fail to authenticate."""
+        service.async_get_config_entry(hass, "test_reauth", None)
+        raise ConfigEntryAuthFailed
+
+    hass.services.async_register("test_reauth", "do_something", handler)
+
+    with pytest.raises(ConfigEntryAuthFailed):
+        await hass.services.async_call("test_reauth", "do_something", blocking=True)
+    await hass.async_block_till_done()
+
+    flows = hass.config_entries.flow.async_progress_by_handler("test_reauth")
+    assert len(flows) == 1
+    assert flows[0]["context"]["entry_id"] == reauth_config_entry.entry_id
