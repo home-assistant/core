@@ -1,27 +1,18 @@
 """Gazetteer intent matching for the default conversation agent.
 
-hassil recognizes a sentence by template, so a phrasing it has no template for does not
-match, and neither does one whose entity name was misheard. `gazetteer-matcher` reaches
-the same intents a different way: it tags lexical spans against a gazetteer of the home,
-builds candidate frames from them, and validates those frames against the
-slot-combination catalog in `home-assistant-intents`. That covers wordings and near-miss
-names hassil cannot, which is why it is worth running behind hassil.
+hassil recognizes a sentence by template, so a phrasing it has no template for does
+not match, and neither does one whose entity name was misheard. gazetteer-matcher
+reaches the same intents by tagging spans against a gazetteer of the home, which
+covers wordings and near-miss names hassil cannot.
 
-Only behind hassil, and only when the default agent is answering on its own. With an LLM
-configured and "prefer local intents" set, hassil is a fast path in front of that LLM,
-and a sentence it declines is one the LLM is meant to get -- a second local recognizer
-there would take work away from the better answer. That fast path is
-`DefaultAgent.async_handle_intents`, which does not come through here.
-
-The matcher itself is stateless, and this module owns the three things it therefore
-cannot: the home it resolves names against, which response to speak once a command has
-been handled, and what the previous turn targeted so "turn them back on" knows what to
-do.
+It runs behind hassil, and only when the default agent is answering on its own.
+With "prefer local intents" set, hassil is a fast path in front of an LLM and a
+sentence it declines is one the LLM is meant to get, so that path
+(`DefaultAgent.async_handle_intents`) does not come through here.
 """
 
 import asyncio
-from collections.abc import AsyncIterator, Sequence
-from contextlib import asynccontextmanager
+from collections.abc import Sequence
 from functools import partial
 from typing import Any
 
@@ -51,22 +42,31 @@ from homeassistant.util import language as language_util
 from .const import DOMAIN
 
 LANGUAGE = "en"
-"""The matcher ships an English vocabulary and nothing else."""
+
+_SENTENCE_END = (".", "!", "?")
+
+# Widest selector first: "turn them off" after "turn on the kitchen lights" means
+# the kitchen lights, not the one entity that happened to match.
+_TARGET_SCOPES = (
+    (intent.IntentResponseTargetType.FLOOR, TargetReference.for_floor),
+    (intent.IntentResponseTargetType.AREA, TargetReference.for_area),
+    (intent.IntentResponseTargetType.ENTITY, TargetReference.for_entity),
+)
 
 
 @callback
 def async_refusal(interpretation: Interpretation) -> str | None:
-    """Return wording for a refusal that says more than "I didn't understand"."""
+    """Return the matcher's wording for a refusal that named a target."""
     if not interpretation.refusal_target:
         return None
     return interpretation.response
 
 
-_SENTENCE_END = (".", "!", "?")
-
-
 def join_speech(parts: Sequence[str]) -> str:
-    """Join what the frames of one coordinated command said into one answer."""
+    """Join the answers of one coordinated command into one thing to speak."""
+    # Each response stands alone and starts capitalized, and a coordinated command
+    # can pair an acknowledgement with a whole sentence, so they are run together
+    # as sentences rather than joined into one.
     sentences = [
         part if part.endswith(_SENTENCE_END) else f"{part}."
         for part in (part.strip() for part in parts)
@@ -99,7 +99,9 @@ def async_build_home(hass: HomeAssistant) -> Home:
             continue
 
         entry = entity_registry.async_get(state.entity_id)
-        names = _names(hass, state, entry)
+        if not (names := _names(hass, state, entry)):
+            continue
+
         spec: EntitySpec = {
             "name": names[0],
             "aliases": names[1:],
@@ -121,13 +123,10 @@ def async_build_home(hass: HomeAssistant) -> Home:
 def _names(
     hass: HomeAssistant, state: State, entry: er.RegistryEntry | None
 ) -> list[str]:
-    """Every name an entity answers to, the displayed one first."""
+    """Return the names an entity answers to, without duplicates."""
     seen: set[str] = set()
     names: list[str] = []
-    for name in (
-        state.name,
-        *intent.async_get_entity_aliases(hass, entry, state=state),
-    ):
+    for name in intent.async_get_entity_aliases(hass, entry, state=state):
         name = " ".join(name.split())
         if name and name.casefold() not in seen:
             seen.add(name.casefold())
@@ -135,31 +134,23 @@ def _names(
     return names
 
 
-_TARGET_SCOPES = (
-    (intent.IntentResponseTargetType.FLOOR, TargetReference.for_floor),
-    (intent.IntentResponseTargetType.AREA, TargetReference.for_area),
-    (intent.IntentResponseTargetType.ENTITY, TargetReference.for_entity),
-)
-"""Target kinds a pronoun can refer back to, widest selector first.
-
-"turn them off" after "turn on the kitchen lights" means the kitchen lights, not the
-one entity that happened to match, so the area the sentence named wins over what it
-resolved to.
-"""
-
-
 @callback
 def async_targets_from_intent(
     slots: dict[str, Any], intent_response: intent.IntentResponse
 ) -> tuple[TargetReference, ...]:
-    """Return what a sentence hassil recognized selected, for a later "it"/"them"."""
+    """Return what a sentence hassil recognized selected, for a later "it"/"them".
+
+    The matcher resolves a follow-up pronoun only against targets it is handed, and
+    hassil answers most sentences without reaching it, so the turn that named the
+    thing has to be recorded from there too.
+    """
     resolved: dict[str, list[str]] = {}
     for target in intent_response.success_results:
         if target.id:
             resolved.setdefault(target.type, []).append(target.id)
 
-    # Carried alongside the selector, as the matcher's own targets carry them: "turn
-    # them off" should mean the lights it was just told about, not the whole area.
+    # Carried alongside the selector: "turn them off" should mean the lights it was
+    # just told about, not everything in the area.
     values = {
         slot: slots[slot]["value"]
         for slot in ("domain", "device_class")
@@ -171,90 +162,11 @@ def async_targets_from_intent(
         if not ids:
             continue
         if len(ids) > 1:
-            # Several rooms, or several entities named at once: nothing a pronoun
-            # picks out, and the matcher only reuses a single selector.
+            # Nothing a pronoun picks out, and the matcher reuses one selector.
             return ()
         return (build(ids[0], **values),)
 
     return ()
-
-
-async def _run_uninterrupted[_T](future: asyncio.Future[_T]) -> _T:
-    """Await an executor job without returning before its thread stops.
-
-    Cancelling an await on `run_in_executor` does not interrupt the worker, so a
-    cancelled request would leave the lock around the call while the thread was
-    still inside the matcher -- which is the overlap the lock exists to prevent.
-    The caller is still cancelled; it just does not get to run ahead of the work.
-    """
-    try:
-        return await asyncio.shield(future)
-    except asyncio.CancelledError:
-        await asyncio.wait([future])
-        raise
-
-
-class _HomeLock:
-    """Many interpretations at once, or one rebuild, never both.
-
-    `set_home` swaps the tagger and the gazetteer under a matcher that other requests
-    may be reading from an executor thread. Interpreting is read-only, so any number
-    can run together; rebuilding needs the matcher to itself.
-
-    A waiting rebuild also holds off new interpretations, so a steady stream of
-    utterances cannot leave the home stale indefinitely. Rebuilds only follow registry
-    changes, so there is no matching risk the other way.
-    """
-
-    def __init__(self) -> None:
-        """Initialize with nothing held."""
-        self._condition = asyncio.Condition()
-        self._readers = 0
-        self._writing = False
-        self._writers_waiting = 0
-
-    @asynccontextmanager
-    async def read(self) -> AsyncIterator[None]:
-        """Hold off a rebuild for as long as this interpretation runs."""
-        async with self._condition:
-            await self._condition.wait_for(
-                lambda: not self._writing and not self._writers_waiting
-            )
-            self._readers += 1
-        try:
-            yield
-        finally:
-            async with self._condition:
-                self._readers -= 1
-                if not self._readers:
-                    self._condition.notify_all()
-
-    @asynccontextmanager
-    async def write(self) -> AsyncIterator[None]:
-        """Take the matcher exclusively, once the interpretations in flight finish."""
-        async with self._condition:
-            self._writers_waiting += 1
-            try:
-                await self._condition.wait_for(
-                    lambda: not self._writing and not self._readers
-                )
-            except BaseException:
-                # Giving up while queued, most likely cancelled. Readers are held
-                # off by the count of waiting writers, so they all become free at
-                # once. `Condition.wait` wakes one of them on the way out of a
-                # cancelled wait, which is enough to avoid a stall but leaves the
-                # rest asleep until that one finishes; wake them together instead.
-                self._writers_waiting -= 1
-                self._condition.notify_all()
-                raise
-            self._writers_waiting -= 1
-            self._writing = True
-        try:
-            yield
-        finally:
-            async with self._condition:
-                self._writing = False
-                self._condition.notify_all()
 
 
 class GazetteerFallback:
@@ -264,7 +176,7 @@ class GazetteerFallback:
         """Initialize the fallback without loading anything yet."""
         self.hass = hass
         self._matcher: GazetteerMatcher | None = None
-        self._lock = _HomeLock()
+        self._build_lock = asyncio.Lock()
         self._stale = False
         self._previous_targets: dict[str, tuple[TargetReference, ...]] = {}
 
@@ -285,10 +197,9 @@ class GazetteerFallback:
     ) -> tuple[GazetteerMatcher, Interpretation]:
         """Interpret text, returning it with the matcher that read it.
 
-        The matcher is settled before the read lock is taken rather than under it,
-        because a rebuild needs the lock exclusively and no lock can be upgraded.
-        A rebuild that starts in between simply runs first; this then interprets
-        against its result, which is newer than expected but never half-swapped.
+        The matcher comes back because answering needs it too, to name what the
+        frames resolved. A rebuild replaces the matcher rather than changing it, so
+        the one handed back keeps describing what was acted on.
         """
         matcher = await self._async_get_matcher()
         interpret = partial(
@@ -297,23 +208,14 @@ class GazetteerFallback:
             previous_targets=self._previous_targets.get(conversation_id, ()),
         )
 
-        async with self._lock.read():
-            try:
-                result = await _run_uninterrupted(
-                    self.hass.async_add_executor_job(
-                        partial(
-                            interpret,
-                            context_area=area.id if area else None,
-                            context_floor=area.floor_id if area else None,
-                        )
-                    )
-                )
-            except ValueError:
-                # The registries moved on from the snapshot mid-request. The sentence
-                # is still worth trying unplaced; shapes needing a room refuse anyway.
-                result = await _run_uninterrupted(
-                    self.hass.async_add_executor_job(interpret)
-                )
+        try:
+            result = await self.hass.async_add_executor_job(
+                partial(interpret, context_area=area.id if area else None)
+            )
+        except ValueError:
+            # The registries moved on from the snapshot mid-request. The sentence is
+            # still worth trying unplaced; shapes needing a room refuse anyway.
+            result = await self.hass.async_add_executor_job(interpret)
 
         return matcher, result
 
@@ -323,11 +225,8 @@ class GazetteerFallback:
     ) -> None:
         """Make this turn the one a pronoun refers back to (it/them).
 
-        What a conversation was about lasts exactly as long as the conversation: the
-        entry is dropped when its chat session is cleaned up. Bounding the number of
-        conversations instead would let a house busy enough to hold several at once
-        take the antecedent away from whoever spoke least recently, however lately
-        they spoke.
+        The entry is dropped when its chat session is cleaned up, so what a
+        conversation was about lasts exactly as long as the conversation.
         """
         if conversation_id not in self._previous_targets:
             session = chat_session.current_session.get()
@@ -344,40 +243,22 @@ class GazetteerFallback:
         self._previous_targets.pop(conversation_id, None)
 
     async def _async_get_matcher(self) -> GazetteerMatcher:
-        """Return the matcher, over a home built or refreshed from the registries.
-
-        Reading the registries has to happen here, since that is where they are safe
-        to touch, but it is only assembling a dictionary. Building the tagger around
-        that dictionary is the expensive half and grows with the home -- tens of
-        milliseconds at a few hundred entities, and a fifth of a second at a few
-        thousand -- so it goes to the executor whether the matcher is new or not.
-        """
+        """Return the matcher, rebuilt from the registries if the home has changed."""
         if self._matcher is not None and not self._stale:
-            # Nothing to do, and taking the lock would shut out other interpretations.
             return self._matcher
 
-        async with self._lock.write():
+        async with self._build_lock:
+            if self._matcher is not None and not self._stale:
+                return self._matcher
+
             # Cleared before the home is read, so a registry change arriving while
             # this rebuilds sets it again rather than being erased on the way out.
-            stale, self._stale = self._stale, False
-
+            previous, self._stale = self._matcher, False
             try:
-                if self._matcher is None:
-                    self._matcher = await _run_uninterrupted(
-                        self.hass.async_add_executor_job(
-                            partial(GazetteerMatcher, home=async_build_home(self.hass))
-                        )
-                    )
-                elif stale:
-                    await _run_uninterrupted(
-                        self.hass.async_add_executor_job(
-                            self._matcher.set_home, async_build_home(self.hass)
-                        )
-                    )
-            except BaseException:
-                # Whatever went wrong, the home on the matcher is not the one that
-                # was asked for. Leaving the flag clear would strand it there until
-                # something unrelated changed.
+                self._matcher = await self.hass.async_add_executor_job(
+                    _build_matcher, previous, async_build_home(self.hass)
+                )
+            except Exception:
                 self._stale = True
                 raise
 
@@ -392,3 +273,21 @@ class GazetteerFallback:
             slot: {"value": value, "text": matcher.display_name(slot, value)}
             for slot, value in frame.slots.items()
         }
+
+
+def _build_matcher(previous: GazetteerMatcher | None, home: Home) -> GazetteerMatcher:
+    """Build a matcher over a home, reusing the data files of the last one.
+
+    A new matcher rather than a change to the old one, so a request already reading
+    from that one is unaffected and no locking is needed around either.
+    """
+    if previous is None:
+        return GazetteerMatcher(home=home)
+
+    config = previous.config
+    return GazetteerMatcher(
+        home=home,
+        vocabulary=config.vocabulary,
+        intents=config.intents,
+        responses=config.responses,
+    )

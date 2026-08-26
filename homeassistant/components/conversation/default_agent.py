@@ -89,10 +89,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 _DEFAULT_ERROR_TEXT = "Sorry, I couldn't understand that"
-# `area_id` is here for the gazetteer, which binds each entity to the area it is
-# in; hassil keeps areas in a list of their own and does not need it. Rebuilding
-# is lazy, so the cost of the wider net is one extra rebuild on the next sentence
-# after somebody moves an entity or a device.
+# `area_id` is for the gazetteer, which binds each entity to an area
 _ENTITY_REGISTRY_UPDATE_FIELDS = [
     "aliases",
     "area_id",
@@ -310,11 +307,6 @@ class DefaultAgent(ConversationEntity):
         self, event_data: er.EventEntityRegistryUpdatedData
     ) -> bool:
         """Filter entity registry changed events."""
-        if event_data["action"] == "remove":
-            # An entry can go while its state lingers, and the gazetteer reads the
-            # names and area an entity answers to from that entry.
-            return True
-
         return event_data["action"] == "update" and any(
             field in event_data["changes"] for field in _ENTITY_REGISTRY_UPDATE_FIELDS
         )
@@ -324,9 +316,6 @@ class DefaultAgent(ConversationEntity):
         self, event_data: dr.EventDeviceRegistryUpdatedData
     ) -> bool:
         """Filter device registry changed events."""
-        if event_data["action"] == "remove":
-            return True
-
         return event_data["action"] == "update" and any(
             field in event_data["changes"] for field in _DEVICE_REGISTRY_UPDATE_FIELDS
         )
@@ -504,8 +493,7 @@ class DefaultAgent(ConversationEntity):
             )
             response.async_set_speech(response_text)
 
-            # An automation ran, and nothing in it is a target. Saying "turn it off"
-            # after that should find nothing rather than the turn before it.
+            # An automation ran, and nothing in it is a target
             self._gazetteer.async_remember(chat_log.conversation_id)
 
         if response is None:
@@ -513,9 +501,7 @@ class DefaultAgent(ConversationEntity):
             intent_result = await self.async_recognize_intent(user_input)
 
             if intent_result is None or intent_result.unmatched_entities:
-                # hassil has no template for this sentence, or could not resolve a name
-                # in it. Nothing is configured behind this agent, so try the gazetteer
-                # matcher before giving up.
+                # Nothing is configured behind this agent, so try the gazetteer
                 response = await self._async_gazetteer_fallback(
                     intent_result, user_input, chat_log
                 )
@@ -592,10 +578,6 @@ class DefaultAgent(ConversationEntity):
             for entity in result.entities_list
         }
 
-        satellite_area, device_id = self._get_satellite_area_and_device(
-            user_input.satellite_id, user_input.device_id
-        )
-
         intent_response = await self._async_execute_intent(
             result.intent.name,
             slots,
@@ -607,14 +589,10 @@ class DefaultAgent(ConversationEntity):
             user_input,
             chat_log,
             lang_intents,
-            language,
-            satellite_area,
-            device_id,
         )
 
         if intent_response.response_type is not intent.IntentResponseType.ERROR:
-            # hassil answers most sentences, so this is where a later "open it" gets
-            # something to refer to.
+            # hassil answers most sentences, so a later "open it" refers to this
             self._gazetteer.async_remember(
                 chat_log.conversation_id,
                 async_targets_from_intent(slots, intent_response),
@@ -631,11 +609,12 @@ class DefaultAgent(ConversationEntity):
         user_input: ConversationInput,
         chat_log: ChatLog,
         lang_intents: LanguageIntents,
-        language: str,
-        satellite_area: ar.AreaEntry | None,
-        device_id: str | None,
     ) -> intent.IntentResponse:
         """Handle one recognized intent and give it something to say."""
+        language = user_input.language or self.hass.config.language
+        satellite_area, device_id = self._get_satellite_area_and_device(
+            user_input.satellite_id, user_input.device_id
+        )
         tool_args = {name: value["value"] for name, value in slots.items()}
         async_conversation_trace_append(
             ConversationTraceEventType.TOOL_CALL,
@@ -647,8 +626,7 @@ class DefaultAgent(ConversationEntity):
             external=True,
         )
 
-        # Not a slot any sentence fills, and not a constraint: it breaks ties toward the
-        # speaker's own room when a name matches twice or an intent needs one target.
+        # Breaks ties toward the speaker's own room, not a constraint
         if satellite_area is not None:
             slots = slots | {"preferred_area_id": {"value": satellite_area.id}}
 
@@ -739,11 +717,7 @@ class DefaultAgent(ConversationEntity):
         user_input: ConversationInput,
         chat_log: ChatLog,
     ) -> intent.IntentResponse | None:
-        """Try to recognize a sentence hassil could not, or return None to give up.
-
-        See [gazetteer.py](gazetteer.py) for why this runs here and not on the
-        "prefer local intents" path.
-        """
+        """Try to recognize a sentence hassil could not, or return None to give up."""
         language = user_input.language or self.hass.config.language
         if not self._gazetteer.supports(language):
             return None
@@ -780,10 +754,8 @@ class DefaultAgent(ConversationEntity):
                 refusal,
             )
 
-        # Only take over a sentence we can also answer. The matcher leaves the key
-        # unset where the corpus answers a shape more than one way and the wording
-        # does not say which was meant; acting on that mutely is worse than leaving
-        # the sentence to hassil's own error.
+        # Only take over a sentence we can also answer, since acting on one
+        # mutely is worse than leaving it to hassil's own error
         for frame in interpretation.frames:
             if frame.response_key is None:
                 _LOGGER.debug(
@@ -814,17 +786,7 @@ class DefaultAgent(ConversationEntity):
         lang_intents: LanguageIntents,
         language: str,
     ) -> intent.IntentResponse:
-        """Handle every frame the matcher recognized, in order.
-
-        A coordinated sentence is several commands -- "turn off the kitchen lights and
-        open the bedroom blinds" -- and the matcher returns one frame each. The first
-        one to fail is answered with its error, since a partly executed command is
-        better explained than reported as a success.
-        """
-        satellite_area, device_id = self._get_satellite_area_and_device(
-            user_input.satellite_id, user_input.device_id
-        )
-
+        """Handle every frame the matcher recognized, stopping at the first error."""
         responses: list[intent.IntentResponse] = []
         for frame in frames:
             intent_response = await self._async_execute_intent(
@@ -838,9 +800,6 @@ class DefaultAgent(ConversationEntity):
                 user_input,
                 chat_log,
                 lang_intents,
-                language,
-                satellite_area,
-                device_id,
             )
             if intent_response.response_type is intent.IntentResponseType.ERROR:
                 return intent_response
@@ -1698,12 +1657,8 @@ def _merge_intent_responses(
 ) -> intent.IntentResponse:
     """Combine what each frame of one coordinated command did into one response.
 
-    Every frame ran, so every frame's targets belong in the result: an assist
-    pipeline reads them to decide whether everything it acted on was in the
-    satellite's own area, and would otherwise see only the last command's.
-
-    A command that asked something as well as doing something is reported as a
-    query, since the answer is the part a caller has to relay.
+    Every frame ran, so every frame's targets belong in the result: a pipeline reads
+    them to decide whether it acted only within the satellite's own area.
     """
     merged = intent.IntentResponse(language=language, intent=responses[0].intent)
     merged.response_type = (

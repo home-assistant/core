@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import threading
+import time
 from typing import Any
 from unittest.mock import patch
 
@@ -10,11 +11,11 @@ from gazetteer_matcher import GazetteerMatcher, TargetReference
 import pytest
 
 from homeassistant.components import conversation
-from homeassistant.components.conversation import default_agent
+from homeassistant.components.conversation import default_agent, gazetteer
 from homeassistant.components.conversation.chat_log import async_get_chat_log
 from homeassistant.components.conversation.gazetteer import (
     GazetteerFallback,
-    _HomeLock,
+    async_build_home,
     join_speech,
 )
 from homeassistant.components.conversation.models import ConversationInput
@@ -90,12 +91,7 @@ def home(
 
 @pytest.mark.usefixtures("init_components", "home")
 async def test_recognizes_a_misheard_name(hass: HomeAssistant) -> None:
-    """Test a name hassil cannot resolve is matched by the gazetteer.
-
-    The misspelling is what makes this the gazetteer's, so hassil declining is
-    asserted too: were it ever to match, this would go on passing while testing
-    nothing.
-    """
+    """Test a name hassil cannot resolve is matched by the gazetteer."""
     calls = async_mock_service(hass, "light", "turn_on")
     agent = conversation.async_get_agent(hass)
     assert isinstance(agent, default_agent.DefaultAgent)
@@ -123,11 +119,7 @@ async def test_recognizes_a_misheard_name(hass: HomeAssistant) -> None:
 
 @pytest.mark.usefixtures("init_components", "home")
 async def test_response_uses_display_names(hass: HomeAssistant) -> None:
-    """Test the spoken response names the target instead of reading out its id.
-
-    The slots go to the intent handler as registry ids, so the ``HassGetState``
-    template would otherwise answer "Cover.bedroom_blinds is off".
-    """
+    """Test the spoken response names the target instead of reading out its id."""
     result = await conversation.async_converse(
         hass, "what is the state of the bedrom blinds", None, Context(), None
     )
@@ -192,11 +184,7 @@ async def test_refusal_that_explains_nothing_keeps_the_default_error(
 
 @pytest.mark.usefixtures("init_components", "home")
 async def test_not_used_when_prefer_local_intents(hass: HomeAssistant) -> None:
-    """Test the gazetteer does not answer in front of a configured LLM.
-
-    ``async_handle_intents`` is the "prefer local intents" fast path. A sentence it
-    declines is one the LLM behind it is meant to get.
-    """
+    """Test the gazetteer does not answer on the prefer-local-intents path."""
     calls = async_mock_service(hass, "light", "turn_on")
     agent = conversation.async_get_agent(hass)
     assert isinstance(agent, default_agent.DefaultAgent)
@@ -317,15 +305,7 @@ async def test_unexposed_entities_are_not_targets(
 
 @pytest.mark.usefixtures("init_components", "home")
 async def test_declines_a_frame_it_cannot_answer(hass: HomeAssistant) -> None:
-    """Test a frame with no response of its own is left to hassil.
-
-    The matcher leaves the key unset when neither the wording nor the corpus settles
-    which of several answers a shape wants. Rather than tie this to whichever shapes
-    are unsettled today -- the matcher's vocabulary keeps closing them -- it takes a
-    sentence the matcher does answer and removes the key, which is the only thing the
-    rule here looks at. Acting mutely is worse than hassil's own error, so nothing is
-    said and, importantly, nothing is done.
-    """
+    """Test a frame the matcher cannot answer is left to hassil."""
     calls = async_mock_service(hass, "light", "turn_on")
     real_interpret = GazetteerMatcher.interpret
 
@@ -356,12 +336,7 @@ async def test_declines_a_frame_it_cannot_answer(hass: HomeAssistant) -> None:
 async def test_wording_picks_between_identical_frames(
     hass: HomeAssistant, text: str, speech: str
 ) -> None:
-    """Test the frame's own response key answers questions the slots cannot tell apart.
-
-    Both are HassGetState with identical slots, so only the key the matcher put on
-    the frame can be selecting different wording. Which keys it picks for which
-    phrasing is the matcher's own business, and tested there.
-    """
+    """Test the frame's own response key tells identical frames apart."""
     result = await conversation.async_converse(hass, text, None, Context(), None)
 
     assert result.response.response_type is intent.IntentResponseType.QUERY_ANSWER
@@ -370,12 +345,7 @@ async def test_wording_picks_between_identical_frames(
 
 @pytest.mark.usefixtures("init_components", "home")
 async def test_pronoun_follows_a_turn_hassil_answered(hass: HomeAssistant) -> None:
-    """Test "open it" refers to what the previous hassil turn was about.
-
-    The matcher resolves a pronoun only against targets it is handed, and hassil
-    answers most sentences without ever reaching it, so the turn that named the thing
-    has to be recorded from there too.
-    """
+    """Test "open it" refers to what the previous hassil turn was about."""
     calls = async_mock_service(hass, "cover", "open_cover")
     agent = conversation.async_get_agent(hass)
     assert isinstance(agent, default_agent.DefaultAgent)
@@ -400,11 +370,7 @@ async def test_pronoun_follows_a_turn_hassil_answered(hass: HomeAssistant) -> No
 async def test_pronoun_follows_the_area_a_turn_named(
     hass: HomeAssistant, entity_registry: er.EntityRegistry
 ) -> None:
-    """Test "them" reuses the area a command scoped to, not what it resolved to.
-
-    A second light in the kitchen is what tells those apart. With only one, an area
-    selector and the entity it happened to match turn off the same thing.
-    """
+    """Test "them" reuses the area a command scoped to, not what it resolved to."""
     second = "light.kitchen_lamp"
     entry = entity_registry.async_get_or_create(
         "light", "demo", "kitchen_lamp", suggested_object_id="kitchen_lamp"
@@ -475,11 +441,7 @@ async def test_a_failed_turn_leaves_the_antecedent_alone(hass: HomeAssistant) ->
 async def test_a_turn_with_no_target_clears_the_antecedent(
     hass: HomeAssistant,
 ) -> None:
-    """Test a pronoun means the turn just given, or none at all.
-
-    "What time is it" succeeds and targets nothing, so it replaces the garage door
-    rather than letting "it" reach back past it.
-    """
+    """Test a successful turn that targeted nothing clears the antecedent."""
     calls = async_mock_service(hass, "cover", "open_cover")
 
     result = await conversation.async_converse(
@@ -529,12 +491,7 @@ async def test_them_reopens_the_area_a_cover_command_named(
 async def test_a_custom_sentence_still_leaves_an_antecedent(
     hass: HomeAssistant,
 ) -> None:
-    """Test a phrasing only hassil knows is still something "it" can refer to.
-
-    The matcher validates against the packaged intent catalog, so it can never
-    recognize a user's own sentence. Reading the target off the handled intent
-    instead of re-running the matcher over the utterance is what keeps this working.
-    """
+    """Test a phrasing only hassil knows is still something "it" can refer to."""
     assert await async_setup_component(hass, "homeassistant", {})
     assert await async_setup_component(
         hass,
@@ -577,11 +534,7 @@ async def test_a_custom_sentence_still_leaves_an_antecedent(
     ids=["two_acknowledgements", "mixed_with_a_query", "already_punctuated", "empties"],
 )
 def test_join_speech(parts: list[str], expected: str) -> None:
-    """Test the frames of one command are spoken as sentences, not one clause.
-
-    "and" would read better for two short acknowledgements, but a coordinated command
-    can pair one with a whole sentence, which "and" would run into bad grammar.
-    """
+    """Test the frames of one command are spoken as sentences, not one clause."""
     assert join_speech(parts) == expected
 
 
@@ -589,11 +542,7 @@ def test_join_speech(parts: list[str], expected: str) -> None:
 async def test_an_antecedent_lasts_as_long_as_its_conversation(
     hass: HomeAssistant,
 ) -> None:
-    """Test what a conversation was about is dropped when the conversation ends.
-
-    Bounding the number of conversations instead would take the antecedent from
-    whoever spoke least recently, however lately they spoke.
-    """
+    """Test what a conversation was about is dropped when the conversation ends."""
     agent = conversation.async_get_agent(hass)
     assert isinstance(agent, default_agent.DefaultAgent)
     async_mock_service(hass, "light", "turn_on")
@@ -626,12 +575,7 @@ async def test_an_area_that_vanished_mid_request_is_retried_unplaced(
     area_registry: ar.AreaRegistry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test a sentence still gets its chance when the speaker's room went away.
-
-    The home is a snapshot, so an area deleted between building it and interpreting
-    makes the matcher reject the context outright. The sentence is still worth trying
-    without a room; only the shapes that need one refuse.
-    """
+    """Test a sentence is retried unplaced when the speaker's area has gone."""
     calls = async_mock_service(hass, "light", "turn_on")
     agent = conversation.async_get_agent(hass)
     assert isinstance(agent, default_agent.DefaultAgent)
@@ -675,11 +619,7 @@ async def test_an_area_that_vanished_mid_request_is_retried_unplaced(
 async def test_the_home_is_built_off_the_event_loop(
     hass: HomeAssistant, area_registry: ar.AreaRegistry
 ) -> None:
-    """Test neither building nor refreshing the matcher blocks the event loop.
-
-    Assembling the tagger around a home grows with the size of that home, into
-    hundreds of milliseconds for a large one, which is far too long to hold the loop.
-    """
+    """Test building the matcher does not block the event loop."""
     off_loop: list[bool] = []
 
     def record() -> None:
@@ -692,20 +632,12 @@ async def test_the_home_is_built_off_the_event_loop(
             off_loop.append(False)
 
     real_init = GazetteerMatcher.__init__
-    real_set_home = GazetteerMatcher.set_home
 
     def init(self, **kwargs):
         record()
         real_init(self, **kwargs)
 
-    def set_home(self, home):
-        record()
-        real_set_home(self, home)
-
-    with (
-        patch.object(GazetteerMatcher, "__init__", init),
-        patch.object(GazetteerMatcher, "set_home", set_home),
-    ):
+    with patch.object(GazetteerMatcher, "__init__", init):
         # The first sentence builds the matcher.
         await conversation.async_converse(
             hass, "turn on the kichen lights", None, Context(), None
@@ -720,236 +652,6 @@ async def test_the_home_is_built_off_the_event_loop(
         )
 
     assert off_loop == [True, True]
-
-
-async def test_home_lock_lets_interpretations_run_together() -> None:
-    """Test the read side does not serialize what it does not need to."""
-    lock = _HomeLock()
-    both_inside = asyncio.Event()
-
-    async def reader() -> None:
-        async with lock.read():
-            held.append(1)
-            if len(held) == 2:
-                both_inside.set()
-            await both_inside.wait()
-
-    held: list[int] = []
-    async with asyncio.timeout(5):
-        await asyncio.gather(reader(), reader())
-
-    assert held == [1, 1]
-
-
-async def test_home_lock_keeps_a_rebuild_out_while_interpreting() -> None:
-    """Test a rebuild waits for the interpretations already in flight."""
-    lock = _HomeLock()
-    events: list[str] = []
-    reading = asyncio.Event()
-    release = asyncio.Event()
-
-    async def reader() -> None:
-        async with lock.read():
-            events.append("read enter")
-            reading.set()
-            await release.wait()
-            events.append("read exit")
-
-    async def writer() -> None:
-        await reading.wait()
-        async with lock.write():
-            events.append("write enter")
-
-    async def finish() -> None:
-        await reading.wait()
-        # Give the writer every chance to barge in before letting the reader go.
-        await asyncio.sleep(0)
-        release.set()
-
-    async with asyncio.timeout(5):
-        await asyncio.gather(reader(), writer(), finish())
-
-    assert events == ["read enter", "read exit", "write enter"]
-
-
-async def test_home_lock_holds_off_interpretations_while_rebuilding() -> None:
-    """Test an interpretation waits for a rebuild rather than reading a half-swap."""
-    lock = _HomeLock()
-    events: list[str] = []
-    writing = asyncio.Event()
-    release = asyncio.Event()
-
-    async def writer() -> None:
-        async with lock.write():
-            events.append("write enter")
-            writing.set()
-            await release.wait()
-            events.append("write exit")
-
-    async def reader() -> None:
-        await writing.wait()
-        async with lock.read():
-            events.append("read enter")
-
-    async def finish() -> None:
-        await writing.wait()
-        await asyncio.sleep(0)
-        release.set()
-
-    async with asyncio.timeout(5):
-        await asyncio.gather(writer(), reader(), finish())
-
-    assert events == ["write enter", "write exit", "read enter"]
-
-
-@pytest.mark.usefixtures("init_components", "home")
-async def test_a_rebuild_waits_for_an_interpretation_in_flight(
-    hass: HomeAssistant, area_registry: ar.AreaRegistry
-) -> None:
-    """Test the agent takes the lock, not just that the lock works.
-
-    Both halves run in executor threads, so without the lock a rebuild could swap the
-    tagger out from under a sentence being read. Holding one sentence inside the
-    matcher is the only way to have something for a rebuild to collide with.
-    """
-    agent = conversation.async_get_agent(hass)
-    assert isinstance(agent, default_agent.DefaultAgent)
-    async_mock_service(hass, "light", "turn_on")
-
-    # Build the matcher up front, so the sentences below only read from it.
-    await conversation.async_converse(
-        hass, "turn on the kichen lights", None, Context(), None
-    )
-
-    spans: list[str] = []
-    inside = threading.Event()
-    release = threading.Event()
-    real_interpret = GazetteerMatcher.interpret
-    real_set_home = GazetteerMatcher.set_home
-
-    def interpret(self, text, **kwargs):
-        """Hold the first sentence inside the matcher until released."""
-        spans.append("interpret enter")
-        if not inside.is_set():
-            inside.set()
-            release.wait(timeout=10)
-        try:
-            return real_interpret(self, text, **kwargs)
-        finally:
-            spans.append("interpret exit")
-
-    def set_home(self, home):
-        spans.append("rebuild enter")
-        try:
-            real_set_home(self, home)
-        finally:
-            spans.append("rebuild exit")
-
-    with (
-        patch.object(GazetteerMatcher, "interpret", interpret),
-        patch.object(GazetteerMatcher, "set_home", set_home),
-    ):
-        held = hass.async_create_task(
-            conversation.async_converse(
-                hass, "turn on the kichen lights", None, Context(), None
-            )
-        )
-        await hass.async_add_executor_job(inside.wait, 10)
-
-        # That sentence is now inside the matcher. Outdate the home and ask for
-        # another, which cannot be answered without rebuilding first. Nothing here
-        # may wait on the held task, which is the point of holding it.
-        area_registry.async_update("kitchen_id", name="Scullery")
-        assert agent._gazetteer._stale
-        waiting = hass.async_create_task(
-            conversation.async_converse(
-                hass, "turn on the scullary lights", None, Context(), None
-            )
-        )
-        await asyncio.sleep(0.25)
-
-        assert "rebuild enter" not in spans, "rebuilt while a sentence was being read"
-
-        release.set()
-        async with asyncio.timeout(10):
-            await asyncio.gather(held, waiting)
-
-    assert spans.index("interpret exit") < spans.index("rebuild enter")
-    assert spans[-2:] == ["interpret enter", "interpret exit"]
-
-
-@pytest.mark.usefixtures("init_components", "home")
-async def test_a_cancelled_sentence_still_holds_off_a_rebuild(
-    hass: HomeAssistant, area_registry: ar.AreaRegistry
-) -> None:
-    """Test cancelling a request does not hand the matcher to a rebuild.
-
-    An executor job cannot be interrupted, so a cancelled await would drop the read
-    lock while the worker thread was still inside the matcher -- the exact overlap
-    the lock exists to prevent.
-    """
-    agent = conversation.async_get_agent(hass)
-    assert isinstance(agent, default_agent.DefaultAgent)
-    async_mock_service(hass, "light", "turn_on")
-
-    await conversation.async_converse(
-        hass, "turn on the kichen lights", None, Context(), None
-    )
-
-    spans: list[str] = []
-    inside = threading.Event()
-    release = threading.Event()
-    real_interpret = GazetteerMatcher.interpret
-    real_set_home = GazetteerMatcher.set_home
-
-    def interpret(self, text, **kwargs):
-        spans.append("interpret enter")
-        if not inside.is_set():
-            inside.set()
-            release.wait(timeout=10)
-        try:
-            return real_interpret(self, text, **kwargs)
-        finally:
-            spans.append("interpret exit")
-
-    def set_home(self, home):
-        spans.append("rebuild enter")
-        try:
-            real_set_home(self, home)
-        finally:
-            spans.append("rebuild exit")
-
-    with (
-        patch.object(GazetteerMatcher, "interpret", interpret),
-        patch.object(GazetteerMatcher, "set_home", set_home),
-    ):
-        cancelled = hass.async_create_task(
-            conversation.async_converse(
-                hass, "turn on the kichen lights", None, Context(), None
-            )
-        )
-        await hass.async_add_executor_job(inside.wait, 10)
-
-        # Give up on that sentence while its thread is still inside the matcher.
-        cancelled.cancel()
-        await asyncio.sleep(0)
-
-        area_registry.async_update("kitchen_id", name="Scullery")
-        assert agent._gazetteer._stale
-        waiting = hass.async_create_task(
-            conversation.async_converse(
-                hass, "turn on the scullary lights", None, Context(), None
-            )
-        )
-        await asyncio.sleep(0.25)
-
-        assert "rebuild enter" not in spans, "rebuilt while a cancelled thread was in"
-
-        release.set()
-        async with asyncio.timeout(10):
-            await asyncio.gather(cancelled, waiting, return_exceptions=True)
-
-    assert spans.index("interpret exit") < spans.index("rebuild enter")
 
 
 @pytest.mark.usefixtures("init_components", "home")
@@ -1001,65 +703,12 @@ async def test_a_change_during_a_rebuild_is_not_lost(
 async def test_an_antecedent_needs_a_session_to_belong_to(
     hass: HomeAssistant,
 ) -> None:
-    """Test nothing is kept for a turn with no session to end it.
-
-    Every turn the agent answers has one. Keeping an entry without one would mean
-    keeping it for the life of the process, so it is not kept at all.
-    """
+    """Test nothing is kept for a turn with no session to end it."""
     fallback = GazetteerFallback(hass)
 
     fallback.async_remember("orphan", (TargetReference.for_entity(KITCHEN_LIGHT),))
 
     assert not fallback._previous_targets
-
-
-async def test_home_lock_releases_every_reader_when_a_rebuild_gives_up() -> None:
-    """Test a queued rebuild that is cancelled frees all the sentences it held off.
-
-    They were all waiting on the same thing -- that no rebuild is queued -- so they
-    all become free together. `Condition.wait` wakes one of them on its way out of a
-    cancelled wait, which avoids a stall but would leave the rest waiting on the
-    first to finish for no reason.
-    """
-    lock = _HomeLock()
-    reading = asyncio.Event()
-    queued = asyncio.Event()
-    entered: list[str] = []
-
-    async def holder() -> None:
-        async with lock.read():
-            entered.append("holder")
-            reading.set()
-            await asyncio.sleep(0.4)
-
-    async def rebuild() -> None:
-        await reading.wait()
-        async with lock.write():
-            entered.append("rebuild")
-
-    async def latecomer(number: int) -> None:
-        await queued.wait()
-        async with lock.read():
-            entered.append(f"reader{number}")
-            await asyncio.sleep(0.3)
-
-    held = asyncio.create_task(holder())
-    writer = asyncio.create_task(rebuild())
-    await reading.wait()
-    await asyncio.sleep(0)
-    assert lock._writers_waiting == 1
-
-    latecomers = [asyncio.create_task(latecomer(number)) for number in (1, 2, 3)]
-    queued.set()
-    # Long enough for all three to reach the condition and sleep on it.
-    await asyncio.sleep(0.05)
-    assert entered == ["holder"], "the queued rebuild should be holding them off"
-
-    writer.cancel()
-    await asyncio.sleep(0.05)
-
-    assert entered == ["holder", "reader1", "reader2", "reader3"]
-    await asyncio.gather(held, writer, *latecomers, return_exceptions=True)
 
 
 @pytest.mark.usefixtures("init_components", "home")
@@ -1079,8 +728,9 @@ async def test_a_rebuild_that_fails_leaves_the_home_out_of_date(
     assert agent._gazetteer._stale
 
     with (
-        patch.object(
-            GazetteerMatcher, "set_home", side_effect=RuntimeError("no can do")
+        patch(
+            "homeassistant.components.conversation.gazetteer._build_matcher",
+            side_effect=RuntimeError("no can do"),
         ),
         pytest.raises(RuntimeError),
     ):
@@ -1104,12 +754,12 @@ async def test_a_rebuild_that_fails_leaves_the_home_out_of_date(
         ("entity", {"action": "update", "changes": {"area_id": None}}, True),
         ("entity", {"action": "update", "changes": {"name": None}}, True),
         ("entity", {"action": "update", "changes": {"icon": None}}, False),
-        ("entity", {"action": "remove"}, True),
+        ("entity", {"action": "remove"}, False),
         ("entity", {"action": "create"}, False),
         ("device", {"action": "update", "changes": {"area_id": None}}, True),
         ("device", {"action": "update", "changes": {"parent_device_id": None}}, True),
         ("device", {"action": "update", "changes": {"sw_version": None}}, False),
-        ("device", {"action": "remove"}, True),
+        ("device", {"action": "remove"}, False),
     ],
     ids=[
         "entity_moved",
@@ -1126,13 +776,7 @@ async def test_a_rebuild_that_fails_leaves_the_home_out_of_date(
 async def test_what_outdates_the_home(
     hass: HomeAssistant, registry: str, event: dict[str, Any], outdated: bool
 ) -> None:
-    """Test the registry events that change what an entity is called or where.
-
-    An entity takes its names and its area from its own entry, from its device, or
-    from that device's parent once it becomes a child, and an entry can go while
-    the state it describes lingers. A newly created entry arrives with the state
-    that goes with it, which is watched separately.
-    """
+    """Test the registry events that change what an entity is called or where."""
     agent = conversation.async_get_agent(hass)
     assert isinstance(agent, default_agent.DefaultAgent)
 
@@ -1142,3 +786,48 @@ async def test_what_outdates_the_home(
     }[registry]
 
     assert matches(event) is outdated
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_an_entity_with_no_aliases_is_not_a_target(
+    hass: HomeAssistant, entity_registry: er.EntityRegistry
+) -> None:
+    """Test an entity nobody has given a name to is not something to act on."""
+    entry = entity_registry.async_get_or_create(
+        "light", "demo", "nameless", suggested_object_id="nameless"
+    )
+    entity_registry.async_update_entity(entry.entity_id, aliases=[])
+    hass.states.async_set(entry.entity_id, STATE_OFF)
+    await hass.async_block_till_done()
+
+    assert entry.entity_id not in async_build_home(hass)["entities"]
+
+
+@pytest.mark.usefixtures("init_components", "home")
+async def test_the_home_is_built_once_for_concurrent_sentences(
+    hass: HomeAssistant,
+) -> None:
+    """Test sentences arriving together do not each build a matcher."""
+    async_mock_service(hass, "light", "turn_on")
+
+    builds = 0
+    real_build = gazetteer._build_matcher
+
+    def build(previous, home):
+        nonlocal builds
+        builds += 1
+        # Slow enough that the other sentences reach the lock while this holds it.
+        time.sleep(0.1)
+        return real_build(previous, home)
+
+    with patch.object(gazetteer, "_build_matcher", build):
+        await asyncio.gather(
+            *(
+                conversation.async_converse(
+                    hass, "turn on the kichen lights", None, Context(), None
+                )
+                for _ in range(4)
+            )
+        )
+
+    assert builds == 1
