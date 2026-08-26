@@ -1,4 +1,4 @@
-"""One entity per served row; each is available independently."""
+"""Support for Sofar sensors."""
 
 from dataclasses import dataclass
 from datetime import date
@@ -57,7 +57,7 @@ async def async_setup_entry(
 
 
 class SofarSensor(SofarEntity, SensorEntity):
-    """A read-only value off one of the device's components."""
+    """Defines a Sofar sensor."""
 
     entity_description: SofarSensorDescription
 
@@ -73,7 +73,7 @@ class SofarSensor(SofarEntity, SensorEntity):
 
 
 class SofarTotalSensor(SofarEntity, RestoreSensor):
-    """A long-term stat, restored on startup so it's never unknown at boot."""
+    """Defines a Sofar cumulative total sensor."""
 
     entity_description: SofarSensorDescription
 
@@ -110,7 +110,7 @@ class SofarTotalSensor(SofarEntity, RestoreSensor):
 
 @dataclass(frozen=True, kw_only=True)
 class SofarSensorDescription(SensorEntityDescription, SofarEntityDescription):
-    """A SensorEntityDescription bound to which Component the value comes from."""
+    """Describe a Sofar sensor."""
 
 
 SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
@@ -1862,12 +1862,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         component="eps",
         translation_key="passive_eps_wait_time",
         entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
-        key="battery_active_control",
-        component="battery_active_control",
-        translation_key="battery_active_control",
         entity_registry_enabled_default=False,
     ),
     SofarSensorDescription(

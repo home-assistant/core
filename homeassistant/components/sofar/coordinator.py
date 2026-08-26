@@ -1,4 +1,4 @@
-"""Runs one of SofarInverter's update methods on its own interval."""
+"""Data update coordinator for Sofar devices."""
 
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
@@ -22,7 +22,7 @@ _LOGGER = logging.getLogger(__name__)
 
 
 class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
-    """Runs one of SofarInverter's update methods on its own interval."""
+    """Class to manage fetching Sofar data."""
 
     config_entry: SofarConfigEntry
     device: SofarInverter
@@ -49,7 +49,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
     @cached_property
     def device_info(self) -> DeviceInfo:
-        """The one physical inverter every entity on this config entry belongs to."""
+        """Return device information."""
         serial = self.device.serial_number
         assert serial is not None
         return DeviceInfo(
@@ -108,7 +108,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
             prev = self._consecutive_failures.get(name, 0)
             self._consecutive_failures[name] = prev + 1
             if prev == 0:
-                _LOGGER.info(
+                _LOGGER.warning(
                     "%s: %s failed to refresh and is keeping its previous values: %s",
                     self.name,
                     name,
@@ -123,7 +123,7 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
 
 @dataclass
 class SofarRuntimeData:
-    """Both coordinators, tiered by how often their components change."""
+    """Class to hold runtime data."""
 
     readings: SofarDataUpdateCoordinator
     settings: SofarDataUpdateCoordinator

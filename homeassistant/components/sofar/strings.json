@@ -163,9 +163,6 @@
       "bat_config_voltage_float": {
         "name": "Battery config lead acid float voltage"
       },
-      "battery_active_control": {
-        "name": "Battery active control"
-      },
       "battery_charge_cycle_1": {
         "name": "Battery charge cycle 1"
       },

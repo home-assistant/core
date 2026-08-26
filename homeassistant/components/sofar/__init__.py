@@ -1,4 +1,4 @@
-"""Owns both coordinators; modbus hands out the unit, sofar-modbus reads."""
+"""Integrate Sofar devices into Home Assistant."""
 
 from datetime import timedelta
 

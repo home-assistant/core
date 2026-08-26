@@ -101,7 +101,7 @@ async def test_sensor_entities_created_and_state(
             MOCK_HYBRID_SERIAL,
             MOCK_HYBRID_MODEL,
             seed_hybrid_inverter,
-            190,
+            189,
             40,
             id="hybrid",
         ),
