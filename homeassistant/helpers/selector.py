@@ -1873,7 +1873,7 @@ class SelectSelector(Selector[SelectSelectorConfig]):
 class DeviceClassSelectorConfig(BaseSelectorConfig, total=False):
     """Class to represent a device class selector config."""
 
-    domain: Platform
+    domain: Required[Platform]
     multiple: bool
 
 
@@ -1947,7 +1947,7 @@ class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
         ]
 
     def __init__(self, config: DeviceClassSelectorConfig) -> None:
-        """Instantiate a sensor device class selector."""
+        """Instantiate a device class selector."""
 
         config = self.CONFIG_SCHEMA(config)
         super().__init__(cast(SelectSelectorConfig, config))
@@ -1955,7 +1955,7 @@ class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
     def __call__(self, data: Any) -> Any:
         """Validate the passed selection."""
         valid_options = self._device_class_options(self.config["domain"])
-        options_schema: vol.In | vol.Any = vol.In(valid_options)
+        options_schema = vol.In(valid_options)
 
         if not self.config["multiple"]:
             return options_schema(vol.Schema(str)(data))
