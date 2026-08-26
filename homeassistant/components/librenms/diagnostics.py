@@ -26,6 +26,7 @@ TO_REDACT_DATA = {
     "overwrite_ip",
     "serial",
     "sys_contact",
+    "sys_descr",
     "sys_name",
 }
 
@@ -35,7 +36,6 @@ async def async_get_config_entry_diagnostics(
 ) -> dict[str, Any]:
     """Return diagnostics for a config entry."""
     coordinator = entry.runtime_data
-
     return {
         "entry": async_redact_data(entry.as_dict(), TO_REDACT_ENTRY),
         "data": async_redact_data(asdict(coordinator.data), TO_REDACT_DATA),
