@@ -291,3 +291,29 @@ async def test_import_alongside_other_server_creates_second_entry(
     )
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert len(hass.config_entries.async_entries(DOMAIN)) == 2
+
+
+async def test_import_does_not_overwrite_user_entry_options(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test stale YAML never overwrites options on a user-configured entry."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry, options={CONF_CODE: "5678", CONF_MODE: "audible"}
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: "localhost",
+            CONF_PORT: 5007,
+            CONF_CODE: "1234",
+            CONF_MODE: "silent",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert mock_config_entry.options == {CONF_CODE: "5678", CONF_MODE: "audible"}

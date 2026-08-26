@@ -9,6 +9,7 @@ import requests
 import voluptuous as vol
 
 from homeassistant.config_entries import (
+    SOURCE_IMPORT,
     ConfigEntry,
     ConfigFlow,
     ConfigFlowResult,
@@ -160,14 +161,15 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Both platforms import the same YAML server. When the other platform's
         # import created the entry first, merge the alarm-only fields (code,
-        # mode) into it instead of dropping them.
+        # mode) into it instead of dropping them. Never touch a user-configured
+        # entry: stale YAML must not overwrite options chosen in the UI.
         for entry in self._async_current_entries(include_ignore=False):
             if (
                 entry.data.get(CONF_HOST) != data[CONF_HOST]
                 or entry.data.get(CONF_PORT) != data[CONF_PORT]
             ):
                 continue
-            if options:
+            if options and entry.source == SOURCE_IMPORT:
                 self.hass.config_entries.async_update_entry(
                     entry, options={**entry.options, **options}
                 )
