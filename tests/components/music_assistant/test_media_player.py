@@ -1035,11 +1035,14 @@ async def test_media_player_play_announcement_action_with_message(
     assert stream.engine == MOCK_TTS_ENTITY_ID
     assert music_assistant_client.send_command.call_args == call(
         "players/cmd/play_announcement",
+        require_schema=None,
         player_id=mass_player_id,
         url=announcement_url,
         pre_announce=True,
         volume_level=50,
         pre_announce_url=None,
+        message=None,
+        tts_engine=None,
     )
 
 
