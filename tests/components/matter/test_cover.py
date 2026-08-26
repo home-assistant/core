@@ -9,7 +9,11 @@ from matter_server.client.models.node import MatterNode
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.cover import CoverEntityFeature, CoverState
+from homeassistant.components.cover import (
+    CoverDeviceClass,
+    CoverEntityFeature,
+    CoverState,
+)
 from homeassistant.components.matter.cover import STATE_WRITE_DEBOUNCE_COOLDOWN
 from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
@@ -28,9 +32,14 @@ async def trigger_subscription_callback_debounced(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     client: MagicMock,
+    *,
+    node_id: int | None = None,
+    attribute_path: str | None = None,
 ) -> None:
     """Trigger subscription callbacks and wait for the debounced state write."""
-    await trigger_subscription_callback(hass, client)
+    await trigger_subscription_callback(
+        hass, client, node_id=node_id, attribute_path=attribute_path
+    )
     freezer.tick(STATE_WRITE_DEBOUNCE_COOLDOWN)
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -510,3 +519,422 @@ async def test_cover_full_features(
     state = hass.states.get(entity_id)
     assert state
     assert state.state == "unknown"
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_garage_door"])
+async def test_closure_cover_garage_door(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a single-endpoint Closure (garage door, no ClosurePanel children)."""
+    cover_states = hass.states.async_all(Platform.COVER)
+    assert len(cover_states) == 1
+    entity_id = cover_states[0].entity_id
+
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.OPEN
+    assert state.attributes["device_class"] == CoverDeviceClass.GARAGE
+
+    supported_mask = (
+        CoverEntityFeature.OPEN | CoverEntityFeature.CLOSE | CoverEntityFeature.STOP
+    )
+    assert state.attributes["supported_features"] & supported_mask == supported_mask
+    # no ClosurePanel children on this fixture: no fine position control
+    assert (
+        state.attributes["supported_features"]
+        & (CoverEntityFeature.SET_POSITION | CoverEntityFeature.SET_TILT_POSITION)
+        == 0
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        # this fixture doesn't support MotionLatching: no `latch` kwarg
+        command=clusters.ClosureControl.Commands.MoveTo(
+            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed
+        ),
+        timed_request_timeout_ms=1000,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ClosureControl.Commands.MoveTo(
+            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen
+        ),
+        timed_request_timeout_ms=1000,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    await hass.services.async_call(
+        "cover",
+        "stop_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ClosureControl.Commands.Stop(),
+        timed_request_timeout_ms=1000,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.MainState.attribute_id,
+        clusters.ClosureControl.Enums.MainStateEnum.kMoving.value,
+    )
+    set_node_attribute(
+        matter_node,
+        1,
+        clusters.ClosureControl.id,
+        clusters.ClosureControl.Attributes.OverallTargetState.attribute_id,
+        {0: clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed.value},
+    )
+    await trigger_subscription_callback_debounced(hass, freezer, matter_client)
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.state == CoverState.CLOSING
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_venetian_blinds"])
+async def test_closure_cover_venetian_blinds(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+    freezer: FrozenDateTimeFactory,
+) -> None:
+    """Test a multi-panel Closure: Lift + Tilt ClosurePanel child endpoints."""
+    cover_states = hass.states.async_all(Platform.COVER)
+    assert len(cover_states) == 1
+    entity_id = cover_states[0].entity_id
+
+    state = hass.states.get(entity_id)
+    assert state
+    # BLIND because of the "Covering.Venetian" semantic tag on the parent endpoint
+    assert state.attributes["device_class"] == CoverDeviceClass.BLIND
+    assert state.state == CoverState.CLOSED
+
+    supported_mask = (
+        CoverEntityFeature.OPEN
+        | CoverEntityFeature.CLOSE
+        | CoverEntityFeature.STOP
+        | CoverEntityFeature.SET_POSITION
+        | CoverEntityFeature.SET_TILT_POSITION
+    )
+    assert state.attributes["supported_features"] & supported_mask == supported_mask
+
+    # both panels' initial CurrentState.position is 10000 (percent100ths, closed)
+    assert state.attributes["current_position"] == 0
+    assert state.attributes["current_tilt_position"] == 0
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        # this fixture supports MotionLatching: MoveTo always specifies `latch`
+        command=clusters.ClosureControl.Commands.MoveTo(
+            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed,
+            latch=False,
+        ),
+        timed_request_timeout_ms=1000,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    await hass.services.async_call(
+        "cover",
+        "open_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        command=clusters.ClosureControl.Commands.MoveTo(
+            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyOpen,
+            latch=False,
+        ),
+        timed_request_timeout_ms=1000,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # Lift position is commanded on endpoint 2, the child ClosurePanel tagged "Lift"
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        # this panel supports MotionLatching: SetTarget always specifies `latch`,
+        # unlatching it as part of the move (a latched panel rejects SetTarget
+        # with InvalidInState otherwise)
+        command=clusters.ClosureDimension.Commands.SetTarget(
+            position=7000, latch=False
+        ),
+        timed_request_timeout_ms=1000,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # Tilt position is commanded on endpoint 3, the child ClosurePanel tagged "Tilt"
+    await hass.services.async_call(
+        "cover",
+        "set_cover_tilt_position",
+        {"entity_id": entity_id, "tilt_position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=3,
+        command=clusters.ClosureDimension.Commands.SetTarget(
+            position=7000, latch=False
+        ),
+        timed_request_timeout_ms=1000,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # a panel that doesn't support MotionLatching gets no `latch` kwarg at all
+    set_node_attribute(
+        matter_node,
+        2,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.FeatureMap.attribute_id,
+        95 & ~clusters.ClosureDimension.Bitmaps.Feature.kMotionLatching,
+    )
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.ClosureDimension.Commands.SetTarget(position=7000),
+        timed_request_timeout_ms=1000,
+    )
+    matter_client.send_device_command.reset_mock()
+
+    # attribute updates on the child panels (not the parent) update position/tilt
+    set_node_attribute(
+        matter_node,
+        2,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
+        {0: 7000, 1: True, 2: 0},
+    )
+    # target the endpoint 2 subscription specifically: a broadcast (no
+    # filter) would still pass even if async_added_to_hass never
+    # subscribed to this child endpoint at all.
+    await trigger_subscription_callback_debounced(
+        hass,
+        freezer,
+        matter_client,
+        node_id=matter_node.node_id,
+        attribute_path=f"2/{clusters.ClosureDimension.id}/"
+        f"{clusters.ClosureDimension.Attributes.CurrentState.attribute_id}",
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["current_position"] == 30
+    assert state.attributes["current_tilt_position"] == 0
+
+    set_node_attribute(
+        matter_node,
+        3,
+        clusters.ClosureDimension.id,
+        clusters.ClosureDimension.Attributes.CurrentState.attribute_id,
+        {0: 2000, 1: True, 2: 0},
+    )
+    await trigger_subscription_callback_debounced(
+        hass,
+        freezer,
+        matter_client,
+        node_id=matter_node.node_id,
+        attribute_path=f"3/{clusters.ClosureDimension.id}/"
+        f"{clusters.ClosureDimension.Attributes.CurrentState.attribute_id}",
+    )
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["current_position"] == 30
+    assert state.attributes["current_tilt_position"] == 80
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window"])
+async def test_closure_cover_rotate_panel(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A Rotate panel (e.g. a roof window) drives position, same as a Lift panel.
+
+    Rotate is a continuous 0-100% opening amount just like Lift, only
+    achieved by a different physical motion (ClosureWindow.Roof here).
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    # WINDOW because of the "Closure.Window" tag on the parent endpoint
+    assert state.attributes["device_class"] == CoverDeviceClass.WINDOW
+    assert state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.ClosureDimension.Commands.SetTarget(
+            position=7000, latch=False
+        ),
+        timed_request_timeout_ms=1000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_shutter"])
+async def test_closure_cover_shutter(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A single Lift-only panel (roller shutter) exposes position, not tilt."""
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == CoverDeviceClass.SHUTTER
+    assert state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
+    assert not (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_position",
+        {"entity_id": entity_id, "position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.ClosureDimension.Commands.SetTarget(
+            position=7000, latch=False
+        ),
+        timed_request_timeout_ms=1000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_tilt_only"])
+async def test_closure_cover_tilt_only(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A single Tilt-only panel (no Lift/Sliding/Rotate) exposes tilt, not position."""
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == CoverDeviceClass.WINDOW
+    assert "current_position" not in state.attributes
+    assert not (
+        state.attributes["supported_features"] & CoverEntityFeature.SET_POSITION
+    )
+    assert state.attributes["supported_features"] & CoverEntityFeature.SET_TILT_POSITION
+
+    await hass.services.async_call(
+        "cover",
+        "set_cover_tilt_position",
+        {"entity_id": entity_id, "tilt_position": 30},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=2,
+        command=clusters.ClosureDimension.Commands.SetTarget(
+            position=7000, latch=False
+        ),
+        timed_request_timeout_ms=1000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_gate"])
+async def test_closure_cover_gate(
+    hass: HomeAssistant,
+    matter_client: MagicMock,
+    matter_node: MatterNode,
+) -> None:
+    """A single-endpoint Closure with no ClosurePanel children (a sliding gate)."""
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == CoverDeviceClass.GATE
+    assert (
+        state.attributes["supported_features"]
+        & (CoverEntityFeature.SET_POSITION | CoverEntityFeature.SET_TILT_POSITION)
+        == 0
+    )
+
+    await hass.services.async_call(
+        "cover",
+        "close_cover",
+        {"entity_id": entity_id},
+        blocking=True,
+    )
+    assert matter_client.send_device_command.call_args == call(
+        node_id=matter_node.node_id,
+        endpoint_id=1,
+        # this fixture supports MotionLatching (FeatureMap includes it)
+        command=clusters.ClosureControl.Commands.MoveTo(
+            position=clusters.ClosureControl.Enums.TargetPositionEnum.kMoveToFullyClosed,
+            latch=False,
+        ),
+        timed_request_timeout_ms=1000,
+    )
+
+
+@pytest.mark.parametrize("node_fixture", ["mock_closure_roof_window"])
+@pytest.mark.usefixtures("matter_node")
+async def test_closure_cover_roof_window_real_device(
+    hass: HomeAssistant,
+) -> None:
+    """A real Matterbridge roof window capture: OpenedForVentilation, not Fully*.
+
+    OverallCurrentState can be an intermediate position (here
+    OpenedForVentilation) rather than strictly FullyOpen/FullyClosed;
+    is_closed should just fall through to False, not raise.
+    """
+    entity_id = hass.states.async_all(Platform.COVER)[0].entity_id
+    state = hass.states.get(entity_id)
+    assert state
+    assert state.attributes["device_class"] == CoverDeviceClass.WINDOW
+    assert state.state == CoverState.OPEN
+    # raw percent100ths 4999 -> HA position (100 - floor(4999/100))
+    assert state.attributes["current_position"] == 51
