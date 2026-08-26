@@ -135,6 +135,44 @@ async def test_reloads_after_friend_subentry_change(
     async_reload.assert_awaited_once_with(config_entry.entry_id)
 
 
+async def test_does_not_persist_tokens_from_client_replaced_by_reauth(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
+) -> None:
+    """Test an old runtime client cannot overwrite reauthenticated tokens."""
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    stale_token_response = TOKEN_RESPONSE | {
+        "access_token": "stale-access-token",
+        "refresh_token": "stale-refresh-token",
+    }
+    reauthenticated_token_response = TOKEN_RESPONSE | {
+        "access_token": "reauthenticated-access-token",
+        "refresh_token": "reauthenticated-refresh-token",
+    }
+    mock_psnawpapi.authenticator.token_response = stale_token_response
+
+    with patch.object(hass.config_entries, "async_reload", new=AsyncMock()):
+        hass.config_entries.async_update_entry(
+            config_entry,
+            data={
+                CONF_NPSSO: "reauthenticated-npsso",
+                CONF_TOKEN_RESPONSE: reauthenticated_token_response,
+            },
+        )
+        await config_entry.runtime_data.user_data.async_request_refresh()
+        await hass.async_block_till_done()
+
+    assert config_entry.data == {
+        CONF_NPSSO: "reauthenticated-npsso",
+        CONF_TOKEN_RESPONSE: reauthenticated_token_response,
+    }
+
+
 @pytest.mark.parametrize(
     "exception", [PSNAWPNotFoundError, PSNAWPServerError, PSNAWPClientError]
 )

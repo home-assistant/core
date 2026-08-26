@@ -29,7 +29,7 @@ from homeassistant.exceptions import (
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import CONF_TOKEN_RESPONSE, DOMAIN
+from .const import CONF_NPSSO, CONF_TOKEN_RESPONSE, DOMAIN
 from .helpers import PlaystationNetwork, PlaystationNetworkData
 
 _LOGGER = logging.getLogger(__name__)
@@ -92,9 +92,9 @@ class PlayStationNetworkBaseCoordinator[_DataT](DataUpdateCoordinator[_DataT]):
             ) from error
 
         if (
-            token_response := self.psn.token_response
-        ) is not None and token_response != self.config_entry.data.get(
-            CONF_TOKEN_RESPONSE
+            self.config_entry.data[CONF_NPSSO] == self.psn.npsso
+            and (token_response := self.psn.token_response) is not None
+            and token_response != self.config_entry.data.get(CONF_TOKEN_RESPONSE)
         ):
             self.hass.config_entries.async_update_entry(
                 self.config_entry,
