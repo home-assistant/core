@@ -1,7 +1,7 @@
 """Support for Sofar sensors."""
 
 from dataclasses import dataclass
-from datetime import date
+from datetime import date, datetime, timedelta
 from enum import IntEnum
 from typing import cast, override
 
@@ -27,11 +27,18 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
+from homeassistant.util.variance import ignore_variance
 
-from .coordinator import SofarConfigEntry
+# Aliased: a module-level SCAN_INTERVAL would set the platform's poll.
+from .const import SCAN_INTERVAL as _POLL_INTERVAL
+from .coordinator import SofarConfigEntry, SofarRuntimeData
 from .entity import SofarEntity, SofarEntityDescription
 
 PARALLEL_UPDATES = 0
+
+# Two polls of slack, so jitter does not republish a steady countdown.
+_COUNTDOWN_VARIANCE = timedelta(seconds=_POLL_INTERVAL * 2)
 
 
 async def async_setup_entry(
@@ -44,16 +51,25 @@ async def async_setup_entry(
     served = runtime_data.served_components
 
     entities: list[SensorEntity] = [
-        (
-            SofarTotalSensor
-            if description.state_class
-            in (SensorStateClass.TOTAL, SensorStateClass.TOTAL_INCREASING)
-            else SofarSensor
-        )(runtime_data, description)
+        _sensor_class(description)(runtime_data, description)
         for description in SENSOR_DESCRIPTIONS
         if description.component in served
     ]
     async_add_entities(entities)
+
+
+def _sensor_class(
+    description: SofarSensorDescription,
+) -> type[SofarSensor | SofarTotalSensor]:
+    """Pick the entity class a description's semantics ask for."""
+    if description.device_class is SensorDeviceClass.TIMESTAMP:
+        return SofarCountdownSensor
+    if description.state_class in (
+        SensorStateClass.TOTAL,
+        SensorStateClass.TOTAL_INCREASING,
+    ):
+        return SofarTotalSensor
+    return SofarSensor
 
 
 class SofarSensor(SofarEntity, SensorEntity):
@@ -70,6 +86,31 @@ class SofarSensor(SofarEntity, SensorEntity):
         if isinstance(value, IntEnum):
             return value.name.lower()
         return cast(str | int | float | date | None, value)
+
+
+class SofarCountdownSensor(SofarSensor):
+    """Defines a Sofar countdown, published as the moment it runs out."""
+
+    def __init__(
+        self,
+        runtime_data: SofarRuntimeData,
+        entity_description: SofarSensorDescription,
+    ) -> None:
+        """Initialize the entity."""
+        super().__init__(runtime_data, entity_description)
+        self._deadline = ignore_variance(
+            lambda seconds: dt_util.utcnow() + timedelta(seconds=seconds),
+            _COUNTDOWN_VARIANCE,
+        )
+
+    @property
+    @override
+    def native_value(self) -> datetime | None:
+        component = getattr(self.coordinator.device, self.entity_description.component)
+        seconds = getattr(component, self.entity_description.key)
+        if not isinstance(seconds, int) or seconds <= 0:
+            return None
+        return self._deadline(seconds)
 
 
 class SofarTotalSensor(SofarEntity, RestoreSensor):
@@ -168,9 +209,8 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
     SofarSensorDescription(
         key="waiting_time",
         component="state",
-        translation_key="waiting_time",
-        device_class=SensorDeviceClass.DURATION,
-        native_unit_of_measurement=UnitOfTime.SECONDS,
+        translation_key="waiting_ends",
+        device_class=SensorDeviceClass.TIMESTAMP,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SofarSensorDescription(

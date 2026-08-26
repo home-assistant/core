@@ -700,8 +700,8 @@
       "voltage_phase_l2n": {
         "name": "Voltage phase L2N"
       },
-      "waiting_time": {
-        "name": "Waiting time"
+      "waiting_ends": {
+        "name": "Waiting ends"
       }
     }
   },
