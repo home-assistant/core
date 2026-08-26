@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -75,12 +75,13 @@ UPDATE_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=UpdateEntityStateAttribute, device_class=True
+)
+
 UPDATE_YAML_SCHEMA = UPDATE_COMMON_SCHEMA.extend(
     make_template_entity_common_schema(
-        UPDATE_DOMAIN,
-        DEFAULT_NAME,
-        UpdateEntityStateAttribute,
-        block_device_class=True,
+        UPDATE_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -143,6 +144,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _restore_state_properties = ("_attr_installed_version", "_attr_latest_version")
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -158,38 +160,38 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
         self.setup_template(
             CONF_INSTALLED_VERSION,
             "_attr_installed_version",
-            template_validators.string(self, CONF_INSTALLED_VERSION),
+            tcv.string(self, CONF_INSTALLED_VERSION),
         )
         self.setup_template(
             CONF_LATEST_VERSION,
             "_attr_latest_version",
-            template_validators.string(self, CONF_LATEST_VERSION),
+            tcv.string(self, CONF_LATEST_VERSION),
         )
         self.setup_template(
             CONF_IN_PROGRESS,
             "_attr_in_progress",
-            template_validators.boolean(self, CONF_IN_PROGRESS),
+            tcv.boolean(self, CONF_IN_PROGRESS),
             self._update_in_progress,
         )
         self.setup_template(
             CONF_RELEASE_SUMMARY,
             "_attr_release_summary",
-            template_validators.string(self, CONF_RELEASE_SUMMARY),
+            tcv.string(self, CONF_RELEASE_SUMMARY),
         )
         self.setup_template(
             CONF_RELEASE_URL,
             "_attr_release_url",
-            template_validators.url(self, CONF_RELEASE_URL),
+            tcv.url(self, CONF_RELEASE_URL),
         )
         self.setup_template(
             CONF_TITLE,
             "_attr_title",
-            template_validators.string(self, CONF_TITLE),
+            tcv.string(self, CONF_TITLE),
         )
         self.setup_template(
             CONF_UPDATE_PERCENTAGE,
             "_attr_update_percentage",
-            template_validators.number(self, CONF_UPDATE_PERCENTAGE, 0.0, 100.0),
+            tcv.number(self, CONF_UPDATE_PERCENTAGE, 0.0, 100.0),
             self._update_update_percentage,
         )
 
@@ -217,7 +219,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
     @callback
     def _update_in_progress(self, result: bool | None) -> None:
         if result is None:
-            template_validators.log_validation_result_error(
+            tcv.log_validation_result_error(
                 self, CONF_IN_PROGRESS, result, "expected a boolean"
             )
         self._attr_in_progress = result or False

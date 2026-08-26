@@ -91,20 +91,27 @@ class FlumeDeviceConnectionUpdateCoordinator(DataUpdateCoordinator[None]):
 
         self.flume_devices = flume_devices
         self.connected: dict[str, bool] = {}
+        self.battery_level: dict[str, str] = {}
 
-    def _update_connectivity(self) -> None:
-        """Update device connectivity.."""
-        self.connected = {
-            device["id"]: device["connected"]
-            for device in self.flume_devices.get_devices()
+    def _update_device_status(self) -> None:
+        """Update device connectivity and battery level."""
+        devices = self.flume_devices.get_devices()
+        self.connected = {device["id"]: device["connected"] for device in devices}
+        # Only sensors report a battery level; bridges omit the key entirely.
+        self.battery_level = {
+            device["id"]: battery_level
+            for device in devices
+            if (battery_level := device.get("battery_level")) is not None
         }
-        LOGGER.debug("Connectivity %s", self.connected)
+        LOGGER.debug(
+            "Connectivity %s battery level %s", self.connected, self.battery_level
+        )
 
     @override
     async def _async_update_data(self) -> None:
         """Update the device list."""
         try:
-            await self.hass.async_add_executor_job(self._update_connectivity)
+            await self.hass.async_add_executor_job(self._update_device_status)
         except Exception as ex:
             raise UpdateFailed(f"Error communicating with flume API: {ex}") from ex
 
@@ -132,7 +139,7 @@ class FlumeNotificationDataUpdateCoordinator(DataUpdateCoordinator[None]):
     def _update_lists(self) -> None:
         """Query flume for notification list."""
         # Get notifications (read or unread).
-        # The related binary sensors (leak detected, high flow, low battery)
+        # The related binary sensors (leak detected, high flow)
         # will be active until the notification is deleted in the Flume app.
         self.notifications = pyflume.FlumeNotificationList(
             self.auth, read=None

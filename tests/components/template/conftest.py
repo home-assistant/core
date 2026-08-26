@@ -3,20 +3,25 @@
 from dataclasses import dataclass
 from enum import Enum, StrEnum
 from itertools import chain
+from unittest.mock import AsyncMock, Mock
 
 import pytest
+import voluptuous as vol
 
 from homeassistant.components import template
+from homeassistant.components.device_automation import toggle_entity
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant, ServiceCall, State
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
 
 from tests.common import (
+    MockConfigEntry,
     assert_setup_component,
     async_mock_service,
+    mock_platform,
     mock_restore_cache,
     mock_restore_cache_with_extra_data,
 )
@@ -67,6 +72,85 @@ def make_test_action(action: str, extra_data: ConfigType | None = None) -> Confi
             "data": {"caller": "{{ this.entity_id }}", "action": action, **data},
         }
     }
+
+
+def make_mock_device_actions(
+    actions: list[str],
+    platform_setup: TemplatePlatformSetup,
+    device_entry: dr.DeviceEntry,
+    entity_entry: er.RegistryEntry,
+) -> ConfigType:
+    """Make actions for device testing."""
+    return {
+        action: [
+            {
+                "action": "test.automation",
+                "data": {
+                    "action": "fake_action",
+                    "caller": platform_setup.entity_id,
+                },
+            },
+            {
+                "domain": "fake_integration",
+                "type": "turn_on",
+                "device_id": device_entry.id,
+                "entity_id": entity_entry.id,
+                "metadata": {"secondary": False},
+            },
+        ]
+        for action in actions
+    }
+
+
+async def setup_mock_devices(
+    hass: HomeAssistant,
+    domain: str,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> tuple[TemplatePlatformSetup, dr.DeviceEntry, er.RegistryEntry]:
+    """Setup mock devices for testing."""
+    FAKE_DOMAIN = "fake_integration"
+
+    hass.config.components.add(FAKE_DOMAIN)
+
+    async def _async_get_actions(
+        hass: HomeAssistant, device_id: str
+    ) -> list[dict[str, str]]:
+        """List device actions."""
+        return await toggle_entity.async_get_actions(hass, device_id, FAKE_DOMAIN)
+
+    mock_platform(
+        hass,
+        f"{FAKE_DOMAIN}.device_action",
+        Mock(
+            ACTION_SCHEMA=toggle_entity.ACTION_SCHEMA.extend(
+                {vol.Required("domain"): FAKE_DOMAIN}
+            ),
+            async_get_actions=_async_get_actions,
+            async_call_action_from_config=AsyncMock(),
+            spec=[
+                "ACTION_SCHEMA",
+                "async_get_actions",
+                "async_call_action_from_config",
+            ],
+        ),
+    )
+    config_entry = MockConfigEntry(domain="test", data={})
+    config_entry.add_to_hass(hass)
+
+    device_entry = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        connections={(dr.CONNECTION_NETWORK_MAC, "12:34:56:AB:CD:EF")},
+    )
+    entity_entry = entity_registry.async_get_or_create(
+        "fake_integration", "test", "5678", device_id=device_entry.id
+    )
+    await hass.async_block_till_done()
+
+    platform_setup = TemplatePlatformSetup(
+        domain, "test_entity", make_test_trigger("sensor.trigger")
+    )
+    return (platform_setup, device_entry, entity_entry)
 
 
 def assert_action(
@@ -292,6 +376,74 @@ async def caplog_setup_text(caplog: pytest.LogCaptureFixture) -> str:
     return caplog.text
 
 
+def _create_bad_action_config(action: str, config: ConfigType) -> ConfigType:
+    """Create a bad device action."""
+    return {
+        action: {
+            "type": "turn_off",
+            "device_id": "70c5f67ec2f82f9ba128fe6e99eb7dfa",
+            "entity_id": "c7e6f3753cb18937f2147bbbdccdd949",
+            "domain": "light",
+        },
+        **config,
+    }
+
+
+async def assert_invalid_yaml_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Assert invalid yaml actions on entity services do not create entities."""
+
+    await setup_entity(
+        hass,
+        platform_setup,
+        style,
+        1,
+        {
+            "default_entity_id": platform_setup.entity_id,
+            **_create_bad_action_config(action, config),
+        },
+    )
+    assert len(hass.states.async_all(platform_setup.domain)) == 0
+
+    error = f"The '{action}' actions for {platform_setup.object_id} failed to setup: Unknown device '70c5f67ec2f82f9ba128fe6e99eb7dfa'"
+    assert error in caplog.text
+
+
+async def assert_invalid_config_entry_actions_do_not_create_entities(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    config: ConfigType,
+    action: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Assert invalid config entry actions on entity services do not create entities."""
+
+    template_config_entry = MockConfigEntry(
+        data={},
+        domain=template.DOMAIN,
+        options={
+            "name": platform_setup.object_id,
+            "template_type": platform_setup.domain,
+            **_create_bad_action_config(action, config),
+        },
+        title="My template",
+    )
+    template_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(template_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(platform_setup.domain)) == 0
+
+    error = f"The '{action}' actions for {platform_setup.object_id} failed to setup: Unknown device '70c5f67ec2f82f9ba128fe6e99eb7dfa'"
+    assert error in caplog.text
+
+
 async def async_get_flow_preview_state(
     hass: HomeAssistant,
     hass_ws_client: WebSocketGenerator,
@@ -493,3 +645,82 @@ async def assert_extra_template_attributes(
         assert (
             attr not in state.attributes and style == ConfigurationStyle.MODERN
         ) or state.attributes[attr] == value
+
+
+async def assert_attributes_template(
+    hass: HomeAssistant,
+    platform_setup: TemplatePlatformSetup,
+    style: ConfigurationStyle,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test extra attributes template."""
+
+    await setup_entity(
+        hass,
+        platform_setup,
+        style,
+        1,
+        {
+            **config,
+            "attributes": "{{ state_attr('sensor.test_extra_attributes', 'attributes') or {} }}",
+        },
+    )
+
+    await async_trigger(
+        hass,
+        _TEST_EXTRA_ATTRIBUTES_ENTITY_ID,
+        "anything",
+        {
+            "attributes": {"beer": "empty", "happiness": "low"},
+        },
+    )
+
+    state = hass.states.get(platform_setup.entity_id)
+    assert state.attributes["beer"] == "empty"
+    assert "level" not in state.attributes
+    assert state.attributes["happiness"] == "low"
+
+    await async_trigger(
+        hass,
+        _TEST_EXTRA_ATTRIBUTES_ENTITY_ID,
+        "anything",
+        {
+            "attributes": {"beer": "full", "level": 100, "happiness": "high"},
+        },
+    )
+
+    state = hass.states.get(platform_setup.entity_id)
+    assert state.attributes["beer"] == "full"
+    assert state.attributes["level"] == 100
+    assert state.attributes["happiness"] == "high"
+
+    await async_trigger(
+        hass,
+        _TEST_EXTRA_ATTRIBUTES_ENTITY_ID,
+        "anything",
+        {
+            "attributes": {"run": True},
+        },
+    )
+    state = hass.states.get(platform_setup.entity_id)
+    assert state.attributes["run"] is True
+    assert "beer" not in state.attributes
+    assert "level" not in state.attributes
+    assert "happiness" not in state.attributes
+
+    error = "Error validating template result"
+    assert error not in caplog.text
+
+    await async_trigger(
+        hass,
+        _TEST_EXTRA_ATTRIBUTES_ENTITY_ID,
+        "anything",
+        {
+            "attributes": ["not a dict"],
+        },
+    )
+
+    assert error in caplog.text
+    state = hass.states.get(platform_setup.entity_id)
+    assert "run" not in state.attributes
