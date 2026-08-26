@@ -59,10 +59,11 @@ def validate_attributes(
     """Validate entity attributes."""
 
     def validate(obj: dict):
+        obj = {cv.string(key): value for key, value in obj.items()}
         if blocked_attributes is None:
             return obj
 
-        if blocked := (blocked_attributes.blocked(obj)):
+        if blocked := blocked_attributes.blocked(obj):
             raise vol.Invalid(
                 f"Unsupported attribute(s) found for {breadcrumb}: {', '.join(blocked)}"
             )
