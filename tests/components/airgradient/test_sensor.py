@@ -1,5 +1,6 @@
 """Tests for the AirGradient sensor platform."""
 
+from dataclasses import replace
 from datetime import timedelta
 from unittest.mock import AsyncMock, patch
 
@@ -114,8 +115,9 @@ async def test_v1_measurements_can_appear_later(
         await setup_integration(hass, mock_config_entry)
 
     assert hass.states.get("sensor.airgradient_battery_percentage") is None
-    mock_v1_airgradient_client.get_current_measures.return_value = (
-        await async_load_measures_fixture(hass, "measures_v1_full.json", ApiVersion.V1)
+    mock_v1_airgradient_client.get_current_measures.return_value = replace(
+        await async_load_measures_fixture(hass, "measures_v1_full.json", ApiVersion.V1),
+        raw_pm02=2.5,
     )
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)

@@ -315,6 +315,34 @@ async def test_zeroconf_flow_config_source_error(
 
 
 @pytest.mark.parametrize(
+    ("exception", "reason"),
+    [
+        pytest.param(AirGradientParseError, "invalid_version", id="parse-error"),
+        pytest.param(
+            AirGradientConnectionError, "cannot_connect", id="connection-error"
+        ),
+    ],
+)
+async def test_zeroconf_flow_client_errors(
+    hass: HomeAssistant,
+    mock_airgradient_client: AsyncMock,
+    exception: type[AirGradientError],
+    reason: str,
+) -> None:
+    """Test errors while reading a discovered device."""
+    mock_airgradient_client.get_current_measures.side_effect = exception
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_ZEROCONF},
+        data=ZEROCONF_DISCOVERY,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == reason
+
+
+@pytest.mark.parametrize(
     "firmware_version",
     [
         pytest.param("3.0.8", id="old"),
