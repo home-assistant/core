@@ -58,6 +58,9 @@ class PlaystationNetwork:
         """Initialize the class with the npsso token."""
         rate = Rate(300, Duration.MINUTE * 15)
         self.psn = PSNAWP(npsso, rate_limit=rate)
+        self._persisted_token_response = (
+            token_response.copy() if token_response is not None else None
+        )
         if token_response is not None:
             self.psn.authenticator.token_response = token_response.copy()
         self.client: Client
@@ -75,6 +78,17 @@ class PlaystationNetwork:
         if (token_response := self.psn.authenticator.token_response) is None:
             return None
         return token_response.copy()
+
+    @property
+    def persisted_token_response(self) -> TokenResponse | None:
+        """Return the token response generation owned by this runtime client."""
+        if self._persisted_token_response is None:
+            return None
+        return self._persisted_token_response.copy()
+
+    def set_persisted_token_response(self, token_response: TokenResponse) -> None:
+        """Record the token response generation persisted by this runtime client."""
+        self._persisted_token_response = token_response.copy()
 
     def _setup(self) -> None:
         """Setup PSN."""
