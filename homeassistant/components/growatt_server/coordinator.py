@@ -593,15 +593,16 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="mix_settings_read_failed",
-                translation_placeholders={"error": str(err)},
             ) from err
         # Unlike its siblings, this endpoint returns the raw envelope, so unwrap obj here.
         settings = (response.get("obj") or {}).get("mixBean")
         if not settings:
+            _LOGGER.debug(
+                "No mixBean in settings response for %s: %r", self.device_id, response
+            )
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="mix_settings_empty",
-                translation_placeholders={"response": str(response)},
             )
         return settings
 
@@ -698,10 +699,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     translation_placeholders={"error": str(err)},
                 ) from err
             if result.get("success") is not True:
+                _LOGGER.debug("Write rejected for %s: %r", self.device_id, result)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_error",
-                    translation_placeholders={"error": str(result)},
+                    translation_key="mix_write_rejected",
                 )
 
         if self.data:
@@ -785,10 +786,10 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                     translation_placeholders={"error": str(err)},
                 ) from err
             if result.get("success") is not True:
+                _LOGGER.debug("Write rejected for %s: %r", self.device_id, result)
                 raise HomeAssistantError(
                     translation_domain=DOMAIN,
-                    translation_key="api_error",
-                    translation_placeholders={"error": str(result)},
+                    translation_key="mix_write_rejected",
                 )
 
         if self.data:

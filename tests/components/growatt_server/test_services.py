@@ -1452,7 +1452,7 @@ async def test_write_ac_charge_times_classic_auth_api_error(
 
     mock_growatt_classic_api.update_mix_inverter_setting.return_value = response
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "write_ac_charge_times",
@@ -1464,6 +1464,10 @@ async def test_write_ac_charge_times_classic_auth_api_error(
             },
             blocking=True,
         )
+
+    # The raw response must not leak into the translated message.
+    assert excinfo.value.translation_key == "mix_write_rejected"
+    assert not excinfo.value.translation_placeholders
 
 
 @pytest.mark.parametrize(
@@ -1729,7 +1733,7 @@ async def test_read_ac_charge_times_classic_auth_transport_error(
         "connection reset"
     )
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "read_ac_charge_times",
@@ -1737,6 +1741,10 @@ async def test_read_ac_charge_times_classic_auth_transport_error(
             blocking=True,
             return_response=True,
         )
+
+    # The raw exception text must not leak into the translated message.
+    assert excinfo.value.translation_key == "mix_settings_read_failed"
+    assert not excinfo.value.translation_placeholders
 
 
 async def test_read_ac_charge_times_classic_auth_empty_settings(
@@ -1762,7 +1770,7 @@ async def test_read_ac_charge_times_classic_auth_empty_settings(
 
     mock_growatt_classic_api.get_mix_inverter_settings.return_value = {"success": False}
 
-    with pytest.raises(HomeAssistantError):
+    with pytest.raises(HomeAssistantError) as excinfo:
         await hass.services.async_call(
             DOMAIN,
             "read_ac_charge_times",
@@ -1770,6 +1778,10 @@ async def test_read_ac_charge_times_classic_auth_empty_settings(
             blocking=True,
             return_response=True,
         )
+
+    # The raw response must not leak into the translated message.
+    assert excinfo.value.translation_key == "mix_settings_empty"
+    assert not excinfo.value.translation_placeholders
 
 
 async def test_read_ac_charge_times_classic_auth(
