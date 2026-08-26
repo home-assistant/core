@@ -23,6 +23,7 @@
       "connection_error": "Unable to connect to the ESPHome device. Make sure the device’s YAML configuration includes an `api` section.",
       "invalid_auth": "[%key:common::config_flow::error::invalid_auth%]",
       "invalid_psk": "The encryption key is invalid. Make sure it matches the value in the device’s YAML configuration under `api -> encryption -> key`.",
+      "provisioning_closed": "The ESPHome device closed its setup window and no longer accepts new connections. Power the device off and on again, then retry.",
       "requires_encryption_key": "The ESPHome device requires an encryption key. Enter the key defined in the device’s YAML configuration under `api -> encryption -> key`.",
       "resolve_error": "Unable to resolve the address of the ESPHome device. If this issue continues, consider setting a static IP address."
     },
@@ -209,12 +210,23 @@
       "init": {
         "data": {
           "allow_service_calls": "Allow the device to perform Home Assistant actions.",
+          "bluetooth_scanning_mode": "Bluetooth scanning mode",
           "subscribe_logs": "Subscribe to logs from the device."
         },
         "data_description": {
           "allow_service_calls": "When enabled, ESPHome devices can perform Home Assistant actions or send events. Only enable this if you trust the device.",
+          "bluetooth_scanning_mode": "Auto is recommended for most setups. It saves battery on your Bluetooth devices while still catching new devices and updates quickly.",
           "subscribe_logs": "When enabled, the device will send logs to Home Assistant and you can view them in the logs panel."
         }
+      }
+    }
+  },
+  "selector": {
+    "bluetooth_scanning_mode": {
+      "options": {
+        "active": "Active (uses more device battery, fastest updates)",
+        "auto": "Auto (recommended, saves device battery)",
+        "passive": "Passive (lowest device battery use, some details may be missing)"
       }
     }
   }

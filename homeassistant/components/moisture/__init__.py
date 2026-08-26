@@ -1,6 +1,4 @@
-"""Integration for moisture triggers."""
-
-from __future__ import annotations
+"""Integration for moisture triggers and conditions."""
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv

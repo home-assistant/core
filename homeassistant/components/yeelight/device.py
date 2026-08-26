@@ -1,7 +1,5 @@
 """Support for Xiaomi Yeelight WiFi color bulb."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -14,7 +12,6 @@ from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 
 from .const import (
-    ACTIVE_COLOR_FLOWING,
     ACTIVE_MODE_NIGHTLIGHT,
     DATA_UPDATED,
     STATE_CHANGE_TIME,
@@ -145,17 +142,8 @@ class YeelightDevice:
         return False
 
     @property
-    def is_color_flow_enabled(self) -> bool:
-        """Return true / false if color flow is currently running."""
-        return self._color_flow and int(self._color_flow) == ACTIVE_COLOR_FLOWING
-
-    @property
     def _active_mode(self):
         return self.bulb.last_properties.get("active_mode")
-
-    @property
-    def _color_flow(self):
-        return self.bulb.last_properties.get("flowing")
 
     @property
     def _nightlight_brightness(self):

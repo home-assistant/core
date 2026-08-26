@@ -1,7 +1,5 @@
 """The sql component."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any
 
@@ -33,7 +31,7 @@ from homeassistant.helpers.trigger_template_entity import (
 from homeassistant.helpers.typing import ConfigType
 
 from .const import (
-    CONF_ADVANCED_OPTIONS,
+    CONF_ADDITIONAL_OPTIONS,
     CONF_COLUMN_NAME,
     CONF_QUERY,
     DOMAIN,
@@ -110,10 +108,6 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
     """Migrate old entry."""
     _LOGGER.debug("Migrating from version %s.%s", entry.version, entry.minor_version)
 
-    if entry.version > 1:
-        # This means the user has downgraded from a future version
-        return False
-
     if entry.version == 1:
         old_options = {**entry.options}
         new_data = {}
@@ -126,7 +120,7 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
         new_options[CONF_COLUMN_NAME] = old_options.get(CONF_COLUMN_NAME)
         new_options[CONF_QUERY] = old_options.get(CONF_QUERY)
-        new_options[CONF_ADVANCED_OPTIONS] = {}
+        new_options[CONF_ADDITIONAL_OPTIONS] = {}
 
         for key in (
             CONF_VALUE_TEMPLATE,
@@ -135,11 +129,18 @@ async def async_migrate_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
             CONF_STATE_CLASS,
         ):
             if (value := old_options.get(key)) is not None:
-                new_options[CONF_ADVANCED_OPTIONS][key] = value
+                new_options[CONF_ADDITIONAL_OPTIONS][key] = value
 
         hass.config_entries.async_update_entry(
             entry, data=new_data, options=new_options, version=2
         )
+
+    if entry.version == 2:
+        new_options = {**entry.options}
+        # The "advanced_options" section was renamed to "additional_options"
+        if (additional := new_options.pop("advanced_options", None)) is not None:
+            new_options[CONF_ADDITIONAL_OPTIONS] = additional
+        hass.config_entries.async_update_entry(entry, options=new_options, version=3)
 
     _LOGGER.debug(
         "Migration to version %s.%s successful",

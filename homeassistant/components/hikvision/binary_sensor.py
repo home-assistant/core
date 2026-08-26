@@ -1,10 +1,9 @@
 """Support for Hikvision event stream events represented as binary sensors."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
+from pyhik.constants import SENSOR_MAP
 import voluptuous as vol
 
 from homeassistant.components.binary_sensor import (
@@ -45,118 +44,119 @@ DEFAULT_DELAY = 0
 DEFAULT_IGNORED = False
 
 
-# Entity descriptions for known Hikvision event types
-# The key matches the sensor_type from pyhik (the friendly name from SENSOR_MAP)
+# Keyed by the friendly names pyhik emits in `current_event_states`. Going
+# through SENSOR_MAP keeps each description attached to the right event if
+# pyhik renames a label.
 BINARY_SENSOR_DESCRIPTIONS: dict[str, BinarySensorEntityDescription] = {
-    "Motion": BinarySensorEntityDescription(
+    SENSOR_MAP["vmd"]: BinarySensorEntityDescription(
         key="motion",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Line Crossing": BinarySensorEntityDescription(
+    SENSOR_MAP["linedetection"]: BinarySensorEntityDescription(
         key="line_crossing",
         translation_key="line_crossing",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Field Detection": BinarySensorEntityDescription(
+    SENSOR_MAP["fielddetection"]: BinarySensorEntityDescription(
         key="field_detection",
         translation_key="field_detection",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Tamper Detection": BinarySensorEntityDescription(
+    SENSOR_MAP["tamperdetection"]: BinarySensorEntityDescription(
         key="tamper_detection",
         device_class=BinarySensorDeviceClass.TAMPER,
     ),
-    "Shelter Alarm": BinarySensorEntityDescription(
-        key="shelter_alarm",
-        translation_key="shelter_alarm",
-    ),
-    "Disk Full": BinarySensorEntityDescription(
+    SENSOR_MAP["diskfull"]: BinarySensorEntityDescription(
         key="disk_full",
         translation_key="disk_full",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "Disk Error": BinarySensorEntityDescription(
+    SENSOR_MAP["diskerror"]: BinarySensorEntityDescription(
         key="disk_error",
         translation_key="disk_error",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "Net Interface Broken": BinarySensorEntityDescription(
+    SENSOR_MAP["nicbroken"]: BinarySensorEntityDescription(
         key="net_interface_broken",
         translation_key="net_interface_broken",
         device_class=BinarySensorDeviceClass.CONNECTIVITY,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "IP Conflict": BinarySensorEntityDescription(
+    SENSOR_MAP["ipconflict"]: BinarySensorEntityDescription(
         key="ip_conflict",
         translation_key="ip_conflict",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "Illegal Access": BinarySensorEntityDescription(
+    SENSOR_MAP["illaccess"]: BinarySensorEntityDescription(
         key="illegal_access",
         translation_key="illegal_access",
         device_class=BinarySensorDeviceClass.SAFETY,
     ),
-    "Video Mismatch": BinarySensorEntityDescription(
+    SENSOR_MAP["videomismatch"]: BinarySensorEntityDescription(
         key="video_mismatch",
         translation_key="video_mismatch",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "Bad Video": BinarySensorEntityDescription(
+    SENSOR_MAP["badvideo"]: BinarySensorEntityDescription(
         key="bad_video",
         translation_key="bad_video",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "PIR Alarm": BinarySensorEntityDescription(
+    SENSOR_MAP["pir"]: BinarySensorEntityDescription(
         key="pir_alarm",
         translation_key="pir_alarm",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Face Detection": BinarySensorEntityDescription(
+    SENSOR_MAP["facedetection"]: BinarySensorEntityDescription(
         key="face_detection",
         translation_key="face_detection",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Scene Change Detection": BinarySensorEntityDescription(
+    SENSOR_MAP["scenechangedetection"]: BinarySensorEntityDescription(
         key="scene_change_detection",
         translation_key="scene_change_detection",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "I/O": BinarySensorEntityDescription(
+    SENSOR_MAP["io"]: BinarySensorEntityDescription(
         key="io",
         translation_key="io",
     ),
-    "Unattended Baggage": BinarySensorEntityDescription(
+    SENSOR_MAP["unattendedbaggage"]: BinarySensorEntityDescription(
         key="unattended_baggage",
         translation_key="unattended_baggage",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Attended Baggage": BinarySensorEntityDescription(
+    SENSOR_MAP["attendedbaggage"]: BinarySensorEntityDescription(
         key="attended_baggage",
         translation_key="attended_baggage",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Recording Failure": BinarySensorEntityDescription(
+    SENSOR_MAP["recordingfailure"]: BinarySensorEntityDescription(
         key="recording_failure",
         translation_key="recording_failure",
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    "Exiting Region": BinarySensorEntityDescription(
+    SENSOR_MAP["regionexiting"]: BinarySensorEntityDescription(
         key="exiting_region",
         translation_key="exiting_region",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
-    "Entering Region": BinarySensorEntityDescription(
+    SENSOR_MAP["regionentrance"]: BinarySensorEntityDescription(
         key="entering_region",
         translation_key="entering_region",
         device_class=BinarySensorDeviceClass.MOTION,
     ),
 }
+
+# pyhik uses videoloss as a connection watchdog, not a user-facing event, so a
+# leaked entry gets no entity and no unknown-sensor warning.
+IGNORED_SENSOR_TYPES: frozenset[str] = frozenset({SENSOR_MAP["videoloss"]})
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -249,26 +249,41 @@ async def async_setup_entry(
         )
         return
 
-    # Log warnings for unknown sensor types and skip them
     for sensor_type in sensors:
-        if sensor_type not in BINARY_SENSOR_DESCRIPTIONS:
+        if (
+            sensor_type not in BINARY_SENSOR_DESCRIPTIONS
+            and sensor_type not in IGNORED_SENSOR_TYPES
+        ):
             _LOGGER.warning(
                 "Unknown Hikvision sensor type '%s', please report this at "
                 "https://github.com/home-assistant/core/issues",
                 sensor_type,
             )
 
-    async_add_entities(
-        HikvisionBinarySensor(
-            entry=entry,
-            description=BINARY_SENSOR_DESCRIPTIONS[sensor_type],
-            sensor_type=sensor_type,
-            channel=channel_info[1],
-        )
-        for sensor_type, channel_list in sensors.items()
-        if sensor_type in BINARY_SENSOR_DESCRIPTIONS
-        for channel_info in channel_list
-    )
+    entities: list[HikvisionBinarySensor] = []
+    for sensor_type, channel_list in sensors.items():
+        if sensor_type not in BINARY_SENSOR_DESCRIPTIONS:
+            continue
+        # pyhik can report the same channel more than once for a sensor type
+        # (e.g. when a channel has several notification methods enabled), so
+        # deduplicate on the channel to avoid colliding unique IDs.
+        seen_channels: set[int] = set()
+        for channel_info in channel_list:
+            channel = channel_info[1]
+            if channel in seen_channels:
+                continue
+            seen_channels.add(channel)
+            entities.append(
+                HikvisionBinarySensor(
+                    hass=hass,
+                    entry=entry,
+                    description=BINARY_SENSOR_DESCRIPTIONS[sensor_type],
+                    sensor_type=sensor_type,
+                    channel=channel,
+                )
+            )
+
+    async_add_entities(entities)
 
 
 class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
@@ -278,13 +293,14 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
         entry: HikvisionConfigEntry,
         description: BinarySensorEntityDescription,
         sensor_type: str,
         channel: int,
     ) -> None:
         """Initialize the binary sensor."""
-        super().__init__(entry, channel)
+        super().__init__(hass, entry, channel)
         self.entity_description = description
         self._sensor_type = sensor_type
 
@@ -299,16 +315,19 @@ class HikvisionBinarySensor(HikvisionEntity, BinarySensorEntity):
         return self._camera.fetch_attributes(self._sensor_type, self._channel)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if sensor is on."""
         return self._get_sensor_attributes()[0]
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the state attributes."""
         attrs = self._get_sensor_attributes()
         return {ATTR_LAST_TRIP_TIME: attrs[3]}
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callback when entity is added."""
         await super().async_added_to_hass()

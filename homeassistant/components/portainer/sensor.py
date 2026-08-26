@@ -1,9 +1,13 @@
 """Sensor platform for Portainer integration."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
+from datetime import datetime
+from itertools import chain
+from typing import TYPE_CHECKING, override
+
+from pyportainer import StackType
+from pyportainer.models.docker import DockerContainerState, DockerSystemDF
 
 from homeassistant.components.sensor import (
     EntityCategory,
@@ -13,21 +17,24 @@ from homeassistant.components.sensor import (
     SensorStateClass,
     StateType,
 )
-from homeassistant.const import PERCENTAGE, UnitOfInformation
+from homeassistant.const import UnitOfInformation, UnitOfRatio
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
+from homeassistant.util import dt as dt_util
 
-from .const import StackType
 from .coordinator import (
     PortainerConfigEntry,
     PortainerContainerData,
     PortainerStackData,
+    PortainerVolumeData,
 )
 from .entity import (
     PortainerContainerEntity,
     PortainerCoordinatorData,
+    PortainerDockerSystemDiskSpaceEndpointEntity,
     PortainerEndpointEntity,
     PortainerStackEntity,
+    PortainerVolumeEntity,
 )
 
 PARALLEL_UPDATES = 0
@@ -37,7 +44,8 @@ PARALLEL_UPDATES = 0
 class PortainerContainerSensorEntityDescription(SensorEntityDescription):
     """Class to hold Portainer container sensor description."""
 
-    value_fn: Callable[[PortainerContainerData], StateType]
+    value_fn: Callable[[PortainerContainerData], StateType | datetime]
+    supported_fn: Callable[[PortainerContainerData], bool] = lambda _: True
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -54,6 +62,20 @@ class PortainerStackSensorEntityDescription(SensorEntityDescription):
     value_fn: Callable[[PortainerStackData], StateType]
 
 
+@dataclass(frozen=True, kw_only=True)
+class PortainerDockerSystemDiskSpaceSensorEntityDescription(SensorEntityDescription):
+    """Class to hold Portainer docker system disk space sensor description."""
+
+    value_fn: Callable[[DockerSystemDF], StateType]
+
+
+@dataclass(frozen=True, kw_only=True)
+class PortainerVolumeSensorEntityDescription(SensorEntityDescription):
+    """Class to hold Portainer volume sensor description."""
+
+    value_fn: Callable[[PortainerVolumeData], StateType]
+
+
 CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
     PortainerContainerSensorEntityDescription(
         key="image",
@@ -61,11 +83,60 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
         value_fn=lambda data: data.container.image,
     ),
     PortainerContainerSensorEntityDescription(
+        key="image_version",
+        translation_key="image_version",
+        supported_fn=lambda data: bool(
+            data.container.labels
+            and data.container.labels.get("org.opencontainers.image.version")
+        ),
+        value_fn=lambda data: (
+            data.container.labels.get("org.opencontainers.image.version")
+            if data.container.labels
+            else None
+        ),
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="image_created",
+        translation_key="image_created",
+        supported_fn=lambda data: bool(
+            data.container.labels
+            and data.container.labels.get("org.opencontainers.image.created")
+        ),
+        value_fn=lambda data: (
+            parsed
+            if data.container.labels
+            and (
+                created := data.container.labels.get("org.opencontainers.image.created")
+            )
+            and (parsed := dt_util.parse_datetime(created)) is not None
+            and parsed.tzinfo is not None
+            else None
+        ),
+        device_class=SensorDeviceClass.TIMESTAMP,
+        entity_category=EntityCategory.DIAGNOSTIC,
+    ),
+    PortainerContainerSensorEntityDescription(
         key="container_state",
         translation_key="container_state",
         value_fn=lambda data: data.container.state,
         device_class=SensorDeviceClass.ENUM,
-        options=["running", "exited", "paused", "restarting", "created", "dead"],
+        options=[state.value for state in DockerContainerState],
+    ),
+    PortainerContainerSensorEntityDescription(
+        key="container_health_state",
+        translation_key="container_health_state",
+        value_fn=lambda data: (
+            health.status
+            if (state := data.container_inspect.state) and (health := state.health)
+            else None
+        ),
+        supported_fn=lambda data: (
+            (state := data.container_inspect.state) is not None
+            and state.health is not None
+        ),
+        device_class=SensorDeviceClass.ENUM,
+        options=["healthy", "unhealthy", "starting"],
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerContainerSensorEntityDescription(
         key="memory_limit",
@@ -103,7 +174,7 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
             and data.stats.memory_stats.usage > 0
             else 0.0
         ),
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
@@ -132,12 +203,13 @@ CONTAINER_SENSORS: tuple[PortainerContainerSensorEntityDescription, ...] = (
             and data.stats.cpu_stats.online_cpus > 0
             else 0.0
         ),
-        native_unit_of_measurement=PERCENTAGE,
+        native_unit_of_measurement=UnitOfRatio.PERCENTAGE,
         entity_category=EntityCategory.DIAGNOSTIC,
         suggested_display_precision=2,
         state_class=SensorStateClass.MEASUREMENT,
     ),
 )
+
 ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
     PortainerEndpointSensorEntityDescription(
         key="api_version",
@@ -235,50 +307,55 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         entity_registry_enabled_default=False,
         state_class=SensorStateClass.MEASUREMENT,
     ),
-    PortainerEndpointSensorEntityDescription(
+)
+
+DOCKER_SYSTEM_DISK_SPACE_SENSORS: tuple[
+    PortainerDockerSystemDiskSpaceSensorEntityDescription, ...
+] = (
+    PortainerDockerSystemDiskSpaceSensorEntityDescription(
         key="container_disk_usage_reclaimable",
         translation_key="container_disk_usage_reclaimable",
-        value_fn=lambda data: data.docker_system_df.container_disk_usage.reclaimable,
+        value_fn=lambda data: data.container_disk_usage.reclaimable,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PortainerEndpointSensorEntityDescription(
+    PortainerDockerSystemDiskSpaceSensorEntityDescription(
         key="container_disk_usage_total_size",
         translation_key="container_disk_usage_total_size",
-        value_fn=lambda data: data.docker_system_df.container_disk_usage.total_size,
+        value_fn=lambda data: data.container_disk_usage.total_size,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PortainerEndpointSensorEntityDescription(
+    PortainerDockerSystemDiskSpaceSensorEntityDescription(
         key="image_disk_usage_reclaimable",
         translation_key="image_disk_usage_reclaimable",
-        value_fn=lambda data: data.docker_system_df.image_disk_usage.reclaimable,
+        value_fn=lambda data: data.image_disk_usage.reclaimable,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PortainerEndpointSensorEntityDescription(
+    PortainerDockerSystemDiskSpaceSensorEntityDescription(
         key="image_disk_usage_total_size",
         translation_key="image_disk_usage_total_size",
-        value_fn=lambda data: data.docker_system_df.image_disk_usage.total_size,
+        value_fn=lambda data: data.image_disk_usage.total_size,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
         suggested_unit_of_measurement=UnitOfInformation.MEBIBYTES,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
-    PortainerEndpointSensorEntityDescription(
+    PortainerDockerSystemDiskSpaceSensorEntityDescription(
         key="volume_disk_usage_total",
         translation_key="volume_disk_usage_total_size",
-        value_fn=lambda data: data.docker_system_df.volume_disk_usage.total_size,
+        value_fn=lambda data: data.volume_disk_usage.total_size,
         device_class=SensorDeviceClass.DATA_SIZE,
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=UnitOfInformation.BYTES,
@@ -286,22 +363,15 @@ ENDPOINT_SENSORS: tuple[PortainerEndpointSensorEntityDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
-
 STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
     PortainerStackSensorEntityDescription(
         key="stack_type",
         translation_key="stack_type",
-        value_fn=lambda data: (
-            "swarm"
-            if data.stack.type == StackType.SWARM
-            else "compose"
-            if data.stack.type == StackType.COMPOSE
-            else "kubernetes"
-            if data.stack.type == StackType.KUBERNETES
-            else None
-        ),
+        value_fn=lambda data: {
+            stack.value: stack.name.lower() for stack in StackType
+        }.get(data.stack.type),
         device_class=SensorDeviceClass.ENUM,
-        options=["swarm", "compose", "kubernetes"],
+        options=[stack.name.lower() for stack in StackType],
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     PortainerStackSensorEntityDescription(
@@ -310,6 +380,25 @@ STACK_SENSORS: tuple[PortainerStackSensorEntityDescription, ...] = (
         value_fn=lambda data: data.container_count,
         entity_category=EntityCategory.DIAGNOSTIC,
         state_class=SensorStateClass.MEASUREMENT,
+    ),
+)
+VOLUME_SENSORS: tuple[PortainerVolumeSensorEntityDescription, ...] = (
+    PortainerVolumeSensorEntityDescription(
+        key="volume_driver",
+        translation_key="volume_driver",
+        value_fn=lambda data: data.volume.driver,
+    ),
+    PortainerVolumeSensorEntityDescription(
+        key="volume_size",
+        translation_key="volume_size",
+        value_fn=lambda data: (
+            data.volume.usage_data.size if data.volume.usage_data else None
+        ),
+        device_class=SensorDeviceClass.DATA_SIZE,
+        state_class=SensorStateClass.MEASUREMENT,
+        native_unit_of_measurement=UnitOfInformation.BYTES,
+        suggested_unit_of_measurement=UnitOfInformation.GIBIBYTES,
+        entity_category=EntityCategory.DIAGNOSTIC,
     ),
 )
 
@@ -321,18 +410,29 @@ async def async_setup_entry(
 ) -> None:
     """Set up Portainer sensors based on a config entry."""
     coordinator = entry.runtime_data
+    ds_coordinator = coordinator.docker_disk_space
+    if TYPE_CHECKING:
+        assert ds_coordinator is not None
 
     def _async_add_new_endpoints(endpoints: list[PortainerCoordinatorData]) -> None:
-        """Add new endpoint sensor."""
+        """Add new endpoint sensors."""
         async_add_entities(
-            PortainerEndpointSensor(
-                coordinator,
-                entity_description,
-                endpoint,
+            chain(
+                (
+                    PortainerEndpointSensor(coordinator, entity_description, endpoint)
+                    for entity_description in ENDPOINT_SENSORS
+                    for endpoint in endpoints
+                ),
+                (
+                    PortainerDockerSystemDiskSpaceSensor(
+                        ds_coordinator,
+                        entity_description,
+                        endpoint,
+                    )
+                    for entity_description in DOCKER_SYSTEM_DISK_SPACE_SENSORS
+                    for endpoint in endpoints
+                ),
             )
-            for entity_description in ENDPOINT_SENSORS
-            for endpoint in endpoints
-            if entity_description.value_fn(endpoint)
         )
 
     def _async_add_new_containers(
@@ -348,6 +448,7 @@ async def async_setup_entry(
             )
             for (endpoint, container) in containers
             for entity_description in CONTAINER_SENSORS
+            if entity_description.supported_fn(container)
         )
 
     def _async_add_new_stacks(
@@ -365,9 +466,25 @@ async def async_setup_entry(
             for entity_description in STACK_SENSORS
         )
 
+    def _async_add_new_volumes(
+        volumes: list[tuple[PortainerCoordinatorData, PortainerVolumeData]],
+    ) -> None:
+        """Add new volume sensors."""
+        async_add_entities(
+            PortainerVolumeSensor(
+                coordinator,
+                entity_description,
+                volume.volume,
+                endpoint,
+            )
+            for (endpoint, volume) in volumes
+            for entity_description in VOLUME_SENSORS
+        )
+
     coordinator.new_endpoints_callbacks.append(_async_add_new_endpoints)
     coordinator.new_containers_callbacks.append(_async_add_new_containers)
     coordinator.new_stacks_callbacks.append(_async_add_new_stacks)
+    coordinator.new_volumes_callbacks.append(_async_add_new_volumes)
 
     _async_add_new_endpoints(
         [
@@ -390,6 +507,13 @@ async def async_setup_entry(
             for stack in endpoint.stacks.values()
         ]
     )
+    _async_add_new_volumes(
+        [
+            (endpoint, volume)
+            for endpoint in coordinator.data.values()
+            for volume in endpoint.volumes.values()
+        ]
+    )
 
 
 class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
@@ -398,7 +522,8 @@ class PortainerContainerSensor(PortainerContainerEntity, SensorEntity):
     entity_description: PortainerContainerSensorEntityDescription
 
     @property
-    def native_value(self) -> StateType:
+    @override
+    def native_value(self) -> StateType | datetime:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.container_data)
 
@@ -409,6 +534,22 @@ class PortainerEndpointSensor(PortainerEndpointEntity, SensorEntity):
     entity_description: PortainerEndpointSensorEntityDescription
 
     @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        endpoint_data = self.coordinator.data[self._device_info.endpoint.id]
+        return self.entity_description.value_fn(endpoint_data)
+
+
+class PortainerDockerSystemDiskSpaceSensor(
+    PortainerDockerSystemDiskSpaceEndpointEntity, SensorEntity
+):
+    """Representation of a Portainer docker system disk space sensor."""
+
+    entity_description: PortainerDockerSystemDiskSpaceSensorEntityDescription
+
+    @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         endpoint_data = self.coordinator.data[self._device_info.endpoint.id]
@@ -421,6 +562,19 @@ class PortainerStackSensor(PortainerStackEntity, SensorEntity):
     entity_description: PortainerStackSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.stack_data)
+
+
+class PortainerVolumeSensor(PortainerVolumeEntity, SensorEntity):
+    """Representation of a Portainer volume sensor."""
+
+    entity_description: PortainerVolumeSensorEntityDescription
+
+    @property
+    @override
+    def native_value(self) -> StateType:
+        """Return the state of the sensor."""
+        return self.entity_description.value_fn(self.volume_data)

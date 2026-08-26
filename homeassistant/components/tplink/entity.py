@@ -1,12 +1,10 @@
 """Common code for tplink."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass, replace
 import logging
-from typing import Any, Concatenate
+from typing import Any, Concatenate, override
 
 from kasa import (
     AuthenticationError,
@@ -235,10 +233,16 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         # are treated as one device.
         if (
             parent is not None
-            and parent != registry_device
+            and parent.device_id != registry_device.device_id
             and parent.device_type is not Device.Type.WallSwitch
         ):
-            self._attr_device_info["via_device"] = (DOMAIN, parent.device_id)
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    self.coordinator.hass,
+                    (DOMAIN, parent.device_id),
+                    config_entry_id=self.coordinator.config_entry.entry_id,
+                )
+            )
         else:
             self._attr_device_info["connections"] = {
                 (dr.CONNECTION_NETWORK_MAC, device.mac)
@@ -250,6 +254,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
         """Return unique ID for the entity."""
         raise NotImplementedError
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call update attributes after the device is added to the platform."""
         await super().async_added_to_hass()
@@ -274,7 +279,7 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             if self._attr_available:
                 _LOGGER.warning(
                     "Unable to read data for %s %s: %s",
-                    self._device,
+                    self._device.host,
                     self.entity_id,
                     ex,
                 )
@@ -283,12 +288,14 @@ class CoordinatedTPLinkEntity(CoordinatorEntity[TPLinkDataUpdateCoordinator], AB
             self._attr_available = available
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         self._async_call_update_attrs()
         super()._handle_coordinator_update()
 
     @property
+    @override
     def available(self) -> bool:
         """Return if entity is available."""
         return self.coordinator.last_update_success and self._attr_available
@@ -318,6 +325,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
         # values like unit_of_measurement and suggested_display_precision
         self._async_call_update_attrs()
 
+    @override
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         return self._get_feature_unique_id(self._device, self.entity_description)
@@ -378,7 +386,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
             # HA logic is to name entities based on the following logic:
             # _attr_name > translation.name > description.name
             # > device_class (if base platform supports).
-            name: str | None | UndefinedType = UNDEFINED
+            name: str | UndefinedType | None = UNDEFINED
 
             # The state feature gets the device name or the child device
             # name if it's a child device
@@ -435,7 +443,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
                 parent=parent,
             )
             for feat in device.features.values()
-            if feat.type == feature_type
+            if feat.type is feature_type
             and feat.id not in EXCLUDED_FEATURES
             and (
                 feat.category is not Feature.Category.Primary
@@ -477,7 +485,7 @@ class CoordinatedTPLinkFeatureEntity(CoordinatedTPLinkEntity, ABC):
     ) -> list[_E]:
         """Create entities for device and its children.
 
-        This is a helper that calls *_entities_for_device* for the device and its children.
+        Calls *_entities_for_device* for the device and its children.
         """
         entities: list[_E] = []
         # Add parent entities before children so via_device id works.
@@ -563,6 +571,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
             else:
                 self._attr_name = get_device_name(device)
 
+    @override
     def _get_unique_id(self) -> str:
         """Return unique ID for the entity."""
         desc = self.entity_description
@@ -622,7 +631,7 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
     ) -> list[_E]:
         """Create entities for device and its children.
 
-        This is a helper that calls *_entities_for_device* for the device and its children.
+        Calls *_entities_for_device* for the device and its children.
         """
         entities: list[_E] = []
 
@@ -639,7 +648,6 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
                     platform_domain=platform_domain,
                 )
             )
-            has_parent_entities = bool(entities)
 
         children = _get_new_children(
             device, coordinator, known_child_device_ids, entity_class.__name__
@@ -675,16 +683,6 @@ class CoordinatedTPLinkModuleEntity(CoordinatedTPLinkEntity, ABC):
             )
             entities.extend(child_entities)
 
-        if first_check and entities and not has_parent_entities:
-            # Get or create the parent device for via_device.
-            # This is a timing factor in case this platform is loaded before
-            # other platforms that will have entities on the parent. Eventually
-            # those other platforms will update the parent with full DeviceInfo
-            device_registry = dr.async_get(hass)
-            device_registry.async_get_or_create(
-                config_entry_id=coordinator.config_entry.entry_id,
-                identifiers={(DOMAIN, device.device_id)},
-            )
         return entities
 
 

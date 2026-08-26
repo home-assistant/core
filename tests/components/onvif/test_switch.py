@@ -89,7 +89,7 @@ async def test_autofocus_switch(
 
 
 async def test_auto_focus_switch_no_imaging(hass: HomeAssistant) -> None:
-    """Test the autofocus switch does not get created if the camera does not support imaging."""
+    """Test autofocus switch not created without imaging support."""
     _config, _camera, device = await setup_onvif_integration(
         hass, capabilities=Capabilities(imaging=False, ptz=True)
     )
@@ -151,7 +151,7 @@ async def test_infrared_switch(
 
 
 async def test_infrared_switch_no_imaging(hass: HomeAssistant) -> None:
-    """Test the infrared switch does not get created if the camera does not support imaging."""
+    """Test infrared switch not created without imaging support."""
     _config, _camera, device = await setup_onvif_integration(
         hass, capabilities=Capabilities(imaging=False, ptz=False)
     )

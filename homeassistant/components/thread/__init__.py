@@ -1,7 +1,5 @@
 """The Thread integration."""
 
-from __future__ import annotations
-
 from homeassistant.config_entries import SOURCE_IMPORT, ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv
@@ -9,6 +7,7 @@ from homeassistant.helpers.typing import ConfigType
 
 from .const import DOMAIN
 from .dataset_store import (
+    DatasetAddResult,
     DatasetEntry,
     async_add_dataset,
     async_get_dataset,
@@ -18,6 +17,7 @@ from .websocket_api import async_setup as async_setup_ws_api
 
 __all__ = [
     "DOMAIN",
+    "DatasetAddResult",
     "DatasetEntry",
     "async_add_dataset",
     "async_get_dataset",
@@ -36,7 +36,6 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
             )
         )
     async_setup_ws_api(hass)
-    hass.data[DOMAIN] = {}
     return True
 
 

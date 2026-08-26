@@ -1,7 +1,5 @@
 """Fixtures for Jellyfin integration tests."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from unittest.mock import AsyncMock, MagicMock, create_autospec, patch
 

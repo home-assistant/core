@@ -5,6 +5,7 @@ from collections.abc import Generator
 import itertools as it
 from pathlib import Path
 import tempfile
+import time
 from unittest.mock import Mock, patch
 import wave
 
@@ -675,6 +676,11 @@ async def test_pipeline_saved_audio_empty_queue(
         )
 
         def proc_wrapper(run_recording_dir, queue):
+            # Wait for the WAV file name to be queued. Forcing the timeout before
+            # it arrives makes the thread exit without ever creating the file.
+            while queue.empty():
+                time.sleep(0.01)
+
             _pipeline_debug_recording_thread_proc(
                 run_recording_dir, queue, message_timeout=0
             )
@@ -707,7 +713,7 @@ async def test_pipeline_from_audio_stream_with_cloud_auth_fail(
     init_components,
     snapshot: SnapshotAssertion,
 ) -> None:
-    """Test creating a pipeline from an audio stream but the cloud authentication fails."""
+    """Test pipeline from audio stream when cloud authentication fails."""
 
     events: list[assist_pipeline.PipelineEvent] = []
 

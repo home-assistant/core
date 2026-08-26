@@ -1,10 +1,8 @@
 """Support for Nexia switches."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import functools as ft
-from typing import Any
+from typing import Any, override
 
 from nexia.const import OPERATION_MODE_OFF
 from nexia.roomiq import NexiaRoomIQHarmonizer
@@ -39,7 +37,7 @@ async def async_setup_entry(
     coordinator = config_entry.runtime_data
     nexia_home = coordinator.nexia_home
     entities: list[SwitchEntity] = []
-    room_iq_zones: dict[int, NexiaRoomIQHarmonizer] = {}
+    room_iq_zones: dict[str | int, NexiaRoomIQHarmonizer] = {}
     for thermostat_id in nexia_home.get_thermostat_ids():
         thermostat: NexiaThermostat = nexia_home.get_thermostat_by_id(thermostat_id)
         if thermostat.has_emergency_heat():
@@ -71,13 +69,15 @@ class NexiaHoldSwitch(NexiaThermostatZoneEntity, SwitchEntity):
     ) -> None:
         """Initialize the hold mode switch."""
         zone_id = zone.zone_id
-        super().__init__(coordinator, zone, zone_id)
+        super().__init__(coordinator, zone, zone_id)  # type: ignore[arg-type] # until fix issue #139773
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the zone is in hold mode."""
         return self._zone.is_in_permanent_hold()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable permanent hold."""
         if self._zone.get_current_mode() == OPERATION_MODE_OFF:
@@ -86,6 +86,7 @@ class NexiaHoldSwitch(NexiaThermostatZoneEntity, SwitchEntity):
             await self._zone.set_permanent_hold()
         self._signal_zone_update()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable permanent hold."""
         await self._zone.call_return_to_schedule()
@@ -102,7 +103,7 @@ class NexiaRoomIQSwitch(NexiaThermostatZoneEntity, SwitchEntity):
         coordinator: NexiaDataUpdateCoordinator,
         zone: NexiaThermostatZone,
         sensor: NexiaSensor,
-        room_iq_zones: dict[int, NexiaRoomIQHarmonizer],
+        room_iq_zones: dict[str | int, NexiaRoomIQHarmonizer],
     ) -> None:
         """Initialize the RoomIQ sensor switch."""
         super().__init__(coordinator, zone, f"{sensor.id}_room_iq_sensor")
@@ -117,6 +118,7 @@ class NexiaRoomIQSwitch(NexiaThermostatZoneEntity, SwitchEntity):
             room_iq_zones[zone.zone_id] = self._harmonizer
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the sensor is part of the zone average temperature."""
         if self._harmonizer.request_pending():
@@ -124,11 +126,13 @@ class NexiaRoomIQSwitch(NexiaThermostatZoneEntity, SwitchEntity):
 
         return self._zone.get_sensor_by_id(self._sensor_id).weight > 0.0
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Include this sensor."""
         self._harmonizer.trigger_add_sensor(self._sensor_id)
         self._signal_zone_update()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Remove this sensor."""
         self._harmonizer.trigger_remove_sensor(self._sensor_id)
@@ -151,15 +155,18 @@ class NexiaEmergencyHeatSwitch(NexiaThermostatEntity, SwitchEntity):
         )
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return if the zone is in hold mode."""
         return self._thermostat.is_emergency_heat_active()
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Enable permanent hold."""
         await self._thermostat.set_emergency_heat(True)
         self._signal_thermostat_update()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Disable permanent hold."""
         await self._thermostat.set_emergency_heat(False)

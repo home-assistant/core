@@ -1,6 +1,6 @@
 """Support for KWB Easyfire."""
 
-from __future__ import annotations
+from typing import override
 
 from pykwb import kwb
 import voluptuous as vol
@@ -96,16 +96,19 @@ class KWBSensor(SensorEntity):
         self._name = self._sensor.name
 
     @property
+    @override
     def name(self):
         """Return the name."""
         return f"{self._client_name} {self._name}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return if sensor is available."""
         return self._sensor.available
 
     @property
+    @override
     def native_value(self):
         """Return the state of value."""
         if self._sensor.value is not None and self._sensor.available:
@@ -113,6 +116,7 @@ class KWBSensor(SensorEntity):
         return None
 
     @property
+    @override
     def native_unit_of_measurement(self):
         """Return the unit of measurement of this entity, if any."""
         return self._sensor.unit_of_measurement

@@ -1,7 +1,5 @@
 """Jinja2 extension for regular expression functions."""
 
-from __future__ import annotations
-
 from functools import lru_cache
 import re
 from typing import TYPE_CHECKING, Any

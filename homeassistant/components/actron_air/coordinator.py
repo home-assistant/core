@@ -1,30 +1,39 @@
 """Coordinator for Actron Air integration."""
 
-from __future__ import annotations
-
 from dataclasses import dataclass
 from datetime import timedelta
+from typing import override
 
 from actron_neo_api import (
-    ActronAirACSystem,
     ActronAirAPI,
     ActronAirAPIError,
     ActronAirAuthError,
+    ActronAirPeripheral,
     ActronAirStatus,
 )
+from actron_neo_api.models.system import ActronAirSystemInfo
+from actron_neo_api.rt import RealtimeConnectionEvent, RealtimeConnectionState
 
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.core import HomeAssistant
+from homeassistant.core import HomeAssistant, callback
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
-from homeassistant.util import dt as dt_util
 
-from .const import _LOGGER, DOMAIN
+from .const import DOMAIN, LOGGER
 
-SCAN_INTERVAL = timedelta(seconds=30)
-STALE_DEVICE_TIMEOUT = timedelta(minutes=5)
+POLL_INTERVAL = timedelta(seconds=30)
+PUSH_POLL_INTERVAL = timedelta(minutes=5)
 ERROR_NO_SYSTEMS_FOUND = "no_systems_found"
 ERROR_UNKNOWN = "unknown_error"
+
+# States in which the transport is not delivering updates. CONNECTING is excluded
+# because the transport reports it before every connection attempt, including the
+# first one, which has no missed updates to recover.
+OUTAGE_STATES = (
+    RealtimeConnectionState.RECONNECTING,
+    RealtimeConnectionState.DISCONNECTED,
+    RealtimeConnectionState.ERROR,
+)
 
 
 @dataclass
@@ -38,30 +47,74 @@ class ActronAirRuntimeData:
 type ActronAirConfigEntry = ConfigEntry[ActronAirRuntimeData]
 
 
-class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
+class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirStatus]):
     """System coordinator for Actron Air integration."""
+
+    config_entry: ActronAirConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
         entry: ActronAirConfigEntry,
         api: ActronAirAPI,
-        system: ActronAirACSystem,
+        system: ActronAirSystemInfo,
+        *,
+        push_enabled: bool,
     ) -> None:
         """Initialize the coordinator."""
         super().__init__(
             hass,
-            _LOGGER,
+            LOGGER,
             name="Actron Air Status",
-            update_interval=SCAN_INTERVAL,
+            update_interval=PUSH_POLL_INTERVAL if push_enabled else POLL_INTERVAL,
             config_entry=entry,
         )
         self.system = system
-        self.serial_number = system["serial"]
+        self.serial_number = system.serial
         self.api = api
+        self.push_enabled = push_enabled
         self.status = self.api.state_manager.get_status(self.serial_number)
-        self.last_seen = dt_util.utcnow()
+        self.peripherals: dict[str, ActronAirPeripheral] = {}
+        self._missed_updates = False
 
+    @override
+    async def _async_setup(self) -> None:
+        """Subscribe to realtime updates for this system."""
+        if not self.push_enabled:
+            return
+
+        self.config_entry.async_on_unload(
+            self.api.subscribe_system_updates(
+                self.serial_number, self._handle_push_update
+            )
+        )
+        self.config_entry.async_on_unload(
+            self.api.subscribe_connection_state(self._handle_connection_event)
+        )
+
+    @callback
+    def _handle_push_update(self, status: ActronAirStatus) -> None:
+        """Handle a realtime status update for this system."""
+        self.status = status
+        self.peripherals = {
+            peripheral.serial_number: peripheral for peripheral in status.peripherals
+        }
+        self.async_set_updated_data(status)
+
+    async def _handle_connection_event(self, event: RealtimeConnectionEvent) -> None:
+        """Resync after the realtime transport recovers from an outage.
+
+        The outage is latched rather than read from `event.previous_state`: the
+        transport reports CONNECTING between RECONNECTING and CONNECTED, so every
+        CONNECTED event looks alike regardless of what preceded the attempt.
+        """
+        if event.state in OUTAGE_STATES:
+            self._missed_updates = True
+        elif event.state is RealtimeConnectionState.CONNECTED and self._missed_updates:
+            self._missed_updates = False
+            await self.async_request_refresh()
+
+    @override
     async def _async_update_data(self) -> ActronAirStatus:
         """Fetch updates and merge incremental changes into the full state."""
         try:
@@ -78,10 +131,15 @@ class ActronAirSystemCoordinator(DataUpdateCoordinator[ActronAirACSystem]):
                 translation_placeholders={"error": repr(err)},
             ) from err
 
-        self.status = self.api.state_manager.get_status(self.serial_number)
-        self.last_seen = dt_util.utcnow()
+        status = self.api.state_manager.get_status(self.serial_number)
+        if status is None:
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="update_error",
+                translation_placeholders={"error": "Status not available"},
+            )
+        self.status = status
+        self.peripherals = {
+            peripheral.serial_number: peripheral for peripheral in status.peripherals
+        }
         return self.status
-
-    def is_device_stale(self) -> bool:
-        """Check if a device is stale (not seen for a while)."""
-        return (dt_util.utcnow() - self.last_seen) > STALE_DEVICE_TIMEOUT

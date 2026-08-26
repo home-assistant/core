@@ -1,9 +1,7 @@
 """Telegram platform for notify component."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -79,6 +77,7 @@ class TelegramNotificationService(BaseNotificationService):
         self._chat_id = chat_id
         self.hass = hass
 
+    @override
     def send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send a message to a user."""
         service_data = {ATTR_CHAT_ID: kwargs.get(ATTR_TARGET, self._chat_id)}

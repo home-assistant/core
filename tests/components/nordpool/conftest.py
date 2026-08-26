@@ -1,26 +1,45 @@
 """Fixtures for the Nord Pool integration."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncGenerator
+from http import HTTPStatus
 import json
 from typing import Any
 
 from pynordpool import API, NordPoolClient
 import pytest
 
-from homeassistant.components.nordpool.const import DOMAIN
+from homeassistant.components.nordpool.const import DOMAIN, PLATFORMS
 from homeassistant.config_entries import SOURCE_USER
+from homeassistant.const import Platform
 from homeassistant.core import HomeAssistant
 
 from . import ENTRY_CONFIG
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_fixture, patch
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 
+@pytest.fixture(name="mock_asyncio_sleep", autouse=True)
+async def mock_asyncio_sleep() -> AsyncGenerator[None]:
+    """Mock asyncio.sleep to avoid actual sleeping during tests."""
+    with patch(
+        "pynordpool.asyncio.sleep",
+    ):
+        yield
+
+
+@pytest.fixture(name="load_platforms")
+async def patch_platform_constant() -> list[Platform]:
+    """Return list of platforms to load."""
+    return PLATFORMS
+
+
 @pytest.fixture
-async def load_int(hass: HomeAssistant, get_client: NordPoolClient) -> MockConfigEntry:
+async def load_int(
+    hass: HomeAssistant,
+    get_client: NordPoolClient,
+    load_platforms: list[Platform],
+) -> MockConfigEntry:
     """Set up the Nord Pool integration in Home Assistant."""
     config_entry = MockConfigEntry(
         domain=DOMAIN,
@@ -30,8 +49,9 @@ async def load_int(hass: HomeAssistant, get_client: NordPoolClient) -> MockConfi
 
     config_entry.add_to_hass(hass)
 
-    await hass.config_entries.async_setup(config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.nordpool.PLATFORMS", load_platforms):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
 
     return config_entry
 
@@ -69,6 +89,17 @@ async def get_data_from_library(
         "GET",
         url=API + "/DayAheadPrices",
         params={
+            "date": "2025-10-01",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "EUR",
+        },
+        json=load_json[0],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
             "date": "2025-09-30",
             "market": "DayAhead",
             "deliveryArea": "SE3,SE4",
@@ -86,6 +117,28 @@ async def get_data_from_library(
             "currency": "SEK",
         },
         json=load_json[2],
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-03",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        status=HTTPStatus.NO_CONTENT,
+    )
+    aioclient_mock.request(
+        "GET",
+        url=API + "/DayAheadPrices",
+        params={
+            "date": "2025-10-04",
+            "market": "DayAhead",
+            "deliveryArea": "SE3,SE4",
+            "currency": "SEK",
+        },
+        status=HTTPStatus.NO_CONTENT,
     )
     client = NordPoolClient(aioclient_mock.create_session(hass.loop))
     yield client

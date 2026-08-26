@@ -3,8 +3,6 @@
 DEVELOPMENT OF THE ALERT INTEGRATION IS FROZEN.
 """
 
-from __future__ import annotations
-
 import voluptuous as vol
 
 from homeassistant.const import (

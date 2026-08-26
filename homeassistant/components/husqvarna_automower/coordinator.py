@@ -1,7 +1,5 @@
 """Data UpdateCoordinator for the Husqvarna Automower integration."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Callable
 from datetime import datetime, timedelta
@@ -70,6 +68,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self._on_data_update()
         super().async_update_listeners()
 
+    @override
     async def _async_setup(self) -> None:
         """Initialize websocket connection and callbacks."""
         await self.api.connect()
@@ -87,6 +86,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
         self.api.register_ws_ready_callback(start_watchdog)
 
+    @override
     async def _async_update_data(self) -> MowerDictionary:
         """Poll data from the API."""
         try:
@@ -145,6 +145,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
         self.async_set_updated_data(ws_data)
 
     @callback
+    @override
     def async_set_updated_data(self, data: MowerDictionary) -> None:
         """Override DataUpdateCoordinator to preserve fixed polling interval.
 
@@ -184,10 +185,8 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             )
 
     def _should_poll(self) -> bool:
-        """Return True if at least one mower is connected and at least one is not OFF."""
-        return any(mower.metadata.connected for mower in self.data.values()) and any(
-            mower.mower.state != MowerStates.OFF for mower in self.data.values()
-        )
+        """Return True if at least one mower is not OFF."""
+        return any(mower.mower.state != MowerStates.OFF for mower in self.data.values())
 
     async def _pong_watchdog(self) -> None:
         """Watchdog to check for pong messages."""
@@ -219,8 +218,8 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
 
         registered_devices: set[str] = {
             str(mower_id)
-            for device in device_registry.devices.get_devices_for_config_entry_id(
-                self.config_entry.entry_id
+            for device in dr.async_entries_for_config_entry(
+                device_registry, self.config_entry.entry_id
             )
             for domain, mower_id in device.identifiers
             if domain == DOMAIN
@@ -231,12 +230,11 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             _LOGGER.debug("Removing orphaned devices: %s", orphaned_devices)
             device_registry = dr.async_get(self.hass)
             for mower_id in orphaned_devices:
-                dev = device_registry.async_get_device(identifiers={(DOMAIN, mower_id)})
+                dev = device_registry.async_get_device_by_identifier(
+                    (DOMAIN, mower_id), self.config_entry.entry_id
+                )
                 if dev is not None:
-                    device_registry.async_update_device(
-                        device_id=dev.id,
-                        remove_config_entry_id=self.config_entry.entry_id,
-                    )
+                    device_registry.async_remove_device(dev.id)
 
         new_devices = current_devices - registered_devices
         if new_devices:
@@ -251,6 +249,7 @@ class AutomowerDataUpdateCoordinator(DataUpdateCoordinator[MowerDictionary]):
             for mower_id, mower_data in self.data.items()
             if mower_data.capabilities.stay_out_zones
             and mower_data.stay_out_zones is not None
+            and mower_data.stay_out_zones.zones is not None
         }
 
         entity_registry = er.async_get(self.hass)

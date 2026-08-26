@@ -1,6 +1,6 @@
 """Doorsensor Support for the Nuki Lock."""
 
-from __future__ import annotations
+from typing import override
 
 from pynuki.constants import STATE_DOORSENSOR_OPENED
 from pynuki.device import NukiDevice
@@ -9,23 +9,21 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import EntityCategory
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from . import NukiEntryData
-from .const import DOMAIN
+from .coordinator import NukiConfigEntry
 from .entity import NukiEntity
 
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: NukiConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nuki binary sensors."""
-    entry_data: NukiEntryData = hass.data[DOMAIN][entry.entry_id]
+    entry_data = entry.runtime_data
 
     entities: list[NukiEntity] = []
 
@@ -50,11 +48,13 @@ class NukiDoorsensorEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     _attr_device_class = BinarySensorDeviceClass.DOOR
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_doorsensor"
 
     @property
+    @override
     def available(self) -> bool:
         """Return true if door sensor is present and activated."""
         return super().available and self._nuki_device.is_door_sensor_activated
@@ -70,6 +70,7 @@ class NukiDoorsensorEntity(NukiEntity[NukiDevice], BinarySensorEntity):
         return self._nuki_device.door_sensor_state_name
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the door is open."""
         return self.door_sensor_state == STATE_DOORSENSOR_OPENED
@@ -82,11 +83,13 @@ class NukiRingactionEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     _attr_translation_key = "ring_action"
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_ringaction"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the value of the ring action state."""
         return self._nuki_device.ring_action_state
@@ -100,11 +103,13 @@ class NukiBatteryCriticalEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     _attr_entity_category = EntityCategory.DIAGNOSTIC
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_battery_critical"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the value of the battery critical."""
         return self._nuki_device.battery_critical
@@ -119,11 +124,13 @@ class NukiBatteryChargingEntity(NukiEntity[NukiDevice], BinarySensorEntity):
     _attr_entity_registry_enabled_default = False
 
     @property
+    @override
     def unique_id(self) -> str:
         """Return a unique ID."""
         return f"{self._nuki_device.nuki_id}_battery_charging"
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return the value of the battery charging."""
         return self._nuki_device.battery_charging

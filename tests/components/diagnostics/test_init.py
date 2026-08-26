@@ -4,10 +4,11 @@ from datetime import datetime
 from http import HTTPStatus
 from unittest.mock import AsyncMock, Mock, patch
 
+import attr
 from freezegun import freeze_time
 import pytest
 
-from homeassistant.components.diagnostics import DOMAIN
+from homeassistant.components.diagnostics import _DIAGNOSTICS_DATA, DOMAIN
 from homeassistant.components.websocket_api import TYPE_RESULT
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, issue_registry as ir
@@ -331,6 +332,22 @@ async def test_download_diagnostics(
     }
 
 
+async def test_download_diagnostics_requires_admin(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    hass_read_only_access_token: str,
+) -> None:
+    """Test diagnostics download is restricted to admin users."""
+    config_entry = MockConfigEntry(domain="fake_integration")
+    config_entry.add_to_hass(hass)
+
+    client = await hass_client(hass_read_only_access_token)
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{config_entry.entry_id}"
+    )
+    assert response.status == HTTPStatus.UNAUTHORIZED
+
+
 async def test_failure_scenarios(
     hass: HomeAssistant, hass_client: ClientSessionGenerator
 ) -> None:
@@ -368,3 +385,94 @@ async def test_failure_scenarios(
         f"/api/diagnostics/config_entry/{config_entry.entry_id}/device/fake_id"
     )
     assert response.status == HTTPStatus.NOT_FOUND
+
+
+@pytest.mark.parametrize(
+    "device_key",
+    [
+        pytest.param("parent", id="main_device"),
+        pytest.param("child", id="child_device"),
+    ],
+)
+async def test_download_diagnostics_device_not_owned_by_config_entry(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+    device_key: str,
+) -> None:
+    """Test requesting device diagnostics via a config entry that doesn't own it.
+
+    A device (main or child) belonging to another config entry must be rejected
+    with a not-found response, never handed to the URL entry's integration.
+    """
+    owner_entry = MockConfigEntry(domain="fake_integration")
+    owner_entry.add_to_hass(hass)
+    other_entry = MockConfigEntry(domain="fake_integration")
+    other_entry.add_to_hass(hass)
+
+    parent = device_registry.async_get_or_create(
+        config_entry_id=owner_entry.entry_id,
+        identifiers={("test", "strip")},
+        name="Power strip",
+    )
+    child = device_registry.async_get_or_create_child(
+        config_entry_id=owner_entry.entry_id,
+        identifiers={("test", "strip_outlet_1")},
+        parent_device_id=parent.id,
+        name="Outlet 1",
+    )
+    devices = {"parent": parent, "child": child}
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{other_entry.entry_id}"
+        f"/device/{devices[device_key].id}"
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
+
+
+async def test_download_diagnostics_composite_device_rejected(
+    hass: HomeAssistant,
+    hass_client: ClientSessionGenerator,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test requesting device diagnostics for a pre-migration composite device.
+
+    A composite device id spans multiple config entries and has no single owner,
+    so it must be rejected with a not-found response and never handed to the
+    integration's device diagnostics handler.
+    """
+    entry_1 = MockConfigEntry(domain="fake_integration")
+    entry_1.add_to_hass(hass)
+    entry_2 = MockConfigEntry(domain="fake_integration")
+    entry_2.add_to_hass(hass)
+    device_1 = device_registry.async_get_or_create(
+        config_entry_id=entry_1.entry_id, identifiers={("test", "1")}
+    )
+    device_2 = device_registry.async_get_or_create(
+        config_entry_id=entry_2.entry_id, identifiers={("test", "2")}
+    )
+    composite_id = "composite00000000000000000000ab"
+    # Simulate a migration split: both devices carry the pre-migration composite id
+    device_registry._devices[device_1.id] = attr.evolve(
+        device_1, composite_device_id=composite_id
+    )
+    device_registry._devices[device_2.id] = attr.evolve(
+        device_2, composite_device_id=composite_id
+    )
+    # Check the device is a composite device id, which is not supported for diagnostics
+    assert device_registry.async_get(composite_id) is not None
+    assert (
+        device_registry.async_get(composite_id, include_composite_devices=False) is None
+    )
+
+    handler = (
+        hass.data[_DIAGNOSTICS_DATA].platforms["fake_integration"].device_diagnostics
+    )
+
+    client = await hass_client()
+    response = await client.get(
+        f"/api/diagnostics/config_entry/{entry_1.entry_id}/device/{composite_id}"
+    )
+    assert response.status == HTTPStatus.NOT_FOUND
+    handler.assert_not_called()

@@ -45,6 +45,12 @@
         'alarm_water_too_hot': dict({
           'value': False,
         }),
+        'circulation_pump_status': dict({
+          'value': False,
+        }),
+        'flow_delay_status': dict({
+          'value': False,
+        }),
         'flow_rate_alarm': dict({
           'value': False,
         }),
@@ -52,6 +58,9 @@
           'value': False,
         }),
         'ph_level_alarm': dict({
+          'value': False,
+        }),
+        'power_on_delay_status': dict({
           'value': False,
         }),
         'pump_alarm': dict({
@@ -197,10 +206,6 @@
         }),
       }),
       'sensor': dict({
-        'circulation_pump_status': dict({
-          'unit': None,
-          'value': 'disabled',
-        }),
         'cl': dict({
           'unit': 'ppm',
           'value': 1.2,
@@ -212,10 +217,6 @@
         'device_config': dict({
           'unit': None,
           'value': 'ph_orp',
-        }),
-        'flow_delay_status': dict({
-          'unit': None,
-          'value': 'disabled',
         }),
         'flow_rate': dict({
           'unit': 'L/s',
@@ -280,10 +281,6 @@
         'ph_type_dosing': dict({
           'unit': None,
           'value': 'alcalyne',
-        }),
-        'power_on_delay_status': dict({
-          'unit': None,
-          'value': 'disabled',
         }),
         'temperature': dict({
           'unit': '°C',

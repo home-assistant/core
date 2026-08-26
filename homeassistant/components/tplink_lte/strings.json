@@ -1,0 +1,8 @@
+{
+  "issues": {
+    "integration_removed": {
+      "description": "The TP-Link LTE integration has been removed from Home Assistant.\n\nThe integration has not been working since Home Assistant 2023.6.0, has no maintainer, and its underlying library depends on a package with a [critical security vulnerability]({ghsa_url}).\n\nTo resolve this issue, remove the `tplink_lte` configuration from your `configuration.yaml` file and restart Home Assistant.",
+      "title": "The TP-Link LTE integration has been removed"
+    }
+  }
+}

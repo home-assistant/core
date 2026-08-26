@@ -1,10 +1,8 @@
 """Platform for Ohme selects."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any, Final
+from typing import Any, Final, override
 
 from ohme import ApiException, ChargerMode, OhmeApiClient
 
@@ -70,6 +68,7 @@ class OhmeSelect(OhmeEntity, SelectEntity):
 
     entity_description: OhmeSelectDescription
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Handle the selection of an option."""
         try:
@@ -81,6 +80,7 @@ class OhmeSelect(OhmeEntity, SelectEntity):
         await self.coordinator.async_request_refresh()
 
     @property
+    @override
     def options(self) -> list[str]:
         """Return a set of selectable options."""
         if self.entity_description.options_fn:
@@ -89,6 +89,7 @@ class OhmeSelect(OhmeEntity, SelectEntity):
         return self.entity_description.options
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the current selected option."""
         return self.entity_description.current_option_fn(self.coordinator.client)

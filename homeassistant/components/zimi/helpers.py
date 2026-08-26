@@ -1,7 +1,5 @@
 """The zcc integration helpers."""
 
-from __future__ import annotations
-
 import logging
 
 from zcc import ControlPoint, ControlPointDescription

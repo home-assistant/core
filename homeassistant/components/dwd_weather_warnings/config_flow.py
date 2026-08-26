@@ -1,8 +1,6 @@
 """Config flow for the dwd_weather_warnings integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from dwdwfsapi import DwdWeatherWarningsAPI
 import voluptuous as vol
@@ -12,7 +10,7 @@ from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.selector import EntitySelector, EntitySelectorConfig
 
 from .const import CONF_REGION_DEVICE_TRACKER, CONF_REGION_IDENTIFIER, DOMAIN
-from .exceptions import EntityNotFoundError
+from .exceptions import CoordinatesNotFoundError, EntityNotFoundError
 from .util import get_position_data
 
 EXCLUSIVE_OPTIONS = (CONF_REGION_IDENTIFIER, CONF_REGION_DEVICE_TRACKER)
@@ -23,6 +21,7 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -62,7 +61,7 @@ class DwdWeatherWarningsConfigFlow(ConfigFlow, domain=DOMAIN):
                         position = get_position_data(self.hass, entity_entry.id)
                     except EntityNotFoundError:
                         errors["base"] = "entity_not_found"
-                    except AttributeError:
+                    except CoordinatesNotFoundError:
                         errors["base"] = "attribute_not_found"
                     else:
                         # Validate position using the API

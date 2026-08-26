@@ -1,12 +1,10 @@
 """Common code for TCP component."""
 
-from __future__ import annotations
-
 import logging
 import select
 import socket
 import ssl
-from typing import Final
+from typing import Final, override
 
 from homeassistant.const import (
     CONF_HOST,
@@ -62,6 +60,7 @@ class TcpEntity(Entity):
         self.update()
 
     @property
+    @override
     def name(self) -> str:
         """Return the name of this sensor."""
         return self._config[CONF_NAME]

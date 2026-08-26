@@ -1,9 +1,8 @@
 """Platform for button integration."""
 
-from __future__ import annotations
-
 from collections.abc import Awaitable, Callable
 from dataclasses import dataclass
+from typing import override
 
 from devolo_plc_api.device import Device
 from devolo_plc_api.exceptions.device import DevicePasswordProtected, DeviceUnavailable
@@ -109,6 +108,7 @@ class DevoloButtonEntity(DevoloEntity, ButtonEntity):
         self.entity_description = description
         super().__init__(entry)
 
+    @override
     async def async_press(self) -> None:
         """Handle the button press."""
         try:

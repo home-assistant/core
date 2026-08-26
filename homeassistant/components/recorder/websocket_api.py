@@ -1,7 +1,5 @@
 """The Recorder websocket API."""
 
-from __future__ import annotations
-
 import asyncio
 from datetime import datetime as dt
 import logging
@@ -30,6 +28,7 @@ from homeassistant.util.unit_conversion import (
     ElectricPotentialConverter,
     EnergyConverter,
     EnergyDistanceConverter,
+    FrequencyConverter,
     InformationConverter,
     MassConverter,
     MassVolumeConcentrationConverter,
@@ -38,6 +37,7 @@ from homeassistant.util.unit_conversion import (
     OzoneConcentrationConverter,
     PowerConverter,
     PressureConverter,
+    RadiationConcentrationConverter,
     ReactiveEnergyConverter,
     ReactivePowerConverter,
     SpeedConverter,
@@ -90,6 +90,7 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("electric_current"): vol.In(ElectricCurrentConverter.VALID_UNITS),
         vol.Optional("energy"): vol.In(EnergyConverter.VALID_UNITS),
         vol.Optional("energy_distance"): vol.In(EnergyDistanceConverter.VALID_UNITS),
+        vol.Optional("frequency"): vol.In(FrequencyConverter.VALID_UNITS),
         vol.Optional("information"): vol.In(InformationConverter.VALID_UNITS),
         vol.Optional("mass"): vol.In(MassConverter.VALID_UNITS),
         vol.Optional("nitrogen_dioxide"): vol.In(
@@ -101,6 +102,9 @@ UNIT_SCHEMA = vol.Schema(
         vol.Optional("ozone"): vol.In(OzoneConcentrationConverter.VALID_UNITS),
         vol.Optional("power"): vol.In(PowerConverter.VALID_UNITS),
         vol.Optional("pressure"): vol.In(PressureConverter.VALID_UNITS),
+        vol.Optional("radiation_concentration"): vol.In(
+            RadiationConcentrationConverter.VALID_UNITS
+        ),
         vol.Optional("reactive_energy"): vol.In(ReactiveEnergyConverter.VALID_UNITS),
         vol.Optional("reactive_power"): vol.In(ReactivePowerConverter.VALID_UNITS),
         vol.Optional("speed"): vol.In(SpeedConverter.VALID_UNITS),
@@ -499,7 +503,7 @@ async def ws_change_statistics_unit(
         vol.Required("type"): "recorder/adjust_sum_statistics",
         vol.Required("statistic_id"): str,
         vol.Required("start_time"): str,
-        vol.Required("adjustment"): vol.Any(float, int),
+        vol.Required("adjustment"): vol.Any(int, float),
         vol.Required("adjustment_unit_of_measurement"): vol.Any(str, None),
     }
 )
@@ -579,12 +583,12 @@ async def ws_adjust_sum_statistics(
         vol.Required("stats"): [
             {
                 vol.Required("start"): cv.datetime,
-                vol.Optional("mean"): vol.Any(float, int),
-                vol.Optional("min"): vol.Any(float, int),
-                vol.Optional("max"): vol.Any(float, int),
+                vol.Optional("mean"): vol.Any(int, float),
+                vol.Optional("min"): vol.Any(int, float),
+                vol.Optional("max"): vol.Any(int, float),
                 vol.Optional("last_reset"): vol.Any(cv.datetime, None),
-                vol.Optional("state"): vol.Any(float, int),
-                vol.Optional("sum"): vol.Any(float, int),
+                vol.Optional("state"): vol.Any(int, float),
+                vol.Optional("sum"): vol.Any(int, float),
             }
         ],
     }

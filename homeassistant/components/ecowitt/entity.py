@@ -1,8 +1,7 @@
 """The Ecowitt Weather Station Entity."""
 
-from __future__ import annotations
-
 import time
+from typing import override
 
 from aioecowitt import EcoWittSensor
 
@@ -24,14 +23,14 @@ class EcowittEntity(Entity):
 
         self._attr_unique_id = f"{sensor.station.key}-{sensor.key}"
         self._attr_device_info = DeviceInfo(
-            identifiers={
-                (DOMAIN, sensor.station.key),
-            },
+            identifiers={(DOMAIN, sensor.station.key)},
             name=sensor.station.model,
             model=sensor.station.model,
+            manufacturer="Ecowitt",
             sw_version=sensor.station.version,
         )
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Install listener for updates later."""
 
@@ -43,6 +42,7 @@ class EcowittEntity(Entity):
         self.async_on_remove(lambda: self.ecowitt.update_cb.remove(_update_state))
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the state is based on actual reading from device."""
         return (self.ecowitt.last_update_m + 5 * 60) > time.monotonic()

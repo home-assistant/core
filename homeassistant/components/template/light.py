@@ -1,11 +1,10 @@
 """Support for Template lights."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 import contextlib
+from dataclasses import dataclass
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, Self, override
 
 import voluptuous as vol
 
@@ -18,27 +17,26 @@ from homeassistant.components.light import (
     ATTR_RGBW_COLOR,
     ATTR_RGBWW_COLOR,
     ATTR_TRANSITION,
+    ATTR_XY_COLOR,
     DEFAULT_MAX_KELVIN,
     DEFAULT_MIN_KELVIN,
     DOMAIN as LIGHT_DOMAIN,
     ENTITY_ID_FORMAT,
-    PLATFORM_SCHEMA as LIGHT_PLATFORM_SCHEMA,
     ColorMode,
     LightEntity,
+    LightEntityCapabilityAttribute,
     LightEntityFeature,
+    LightEntityStateAttribute,
     filter_supported_color_modes,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     CONF_EFFECT,
-    CONF_ENTITY_ID,
-    CONF_FRIENDLY_NAME,
-    CONF_LIGHTS,
+    CONF_HS,
     CONF_NAME,
     CONF_RGB,
     CONF_STATE,
-    CONF_UNIQUE_ID,
-    CONF_VALUE_TEMPLATE,
+    CONF_XY,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv
@@ -46,10 +44,11 @@ from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
 )
+from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import color as color_util
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -59,9 +58,8 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -70,62 +68,28 @@ _LOGGER = logging.getLogger(__name__)
 
 # Legacy
 ATTR_COLOR_TEMP = "color_temp"
-CONF_COLOR_ACTION = "set_color"
-CONF_COLOR_TEMPLATE = "color_template"
 
-CONF_HS = "hs"
 CONF_HS_ACTION = "set_hs"
-CONF_HS_TEMPLATE = "hs_template"
 CONF_RGB_ACTION = "set_rgb"
-CONF_RGB_TEMPLATE = "rgb_template"
 CONF_RGBW = "rgbw"
 CONF_RGBW_ACTION = "set_rgbw"
-CONF_RGBW_TEMPLATE = "rgbw_template"
 CONF_RGBWW = "rgbww"
 CONF_RGBWW_ACTION = "set_rgbww"
-CONF_RGBWW_TEMPLATE = "rgbww_template"
 CONF_EFFECT_ACTION = "set_effect"
 CONF_EFFECT_LIST = "effect_list"
-CONF_EFFECT_LIST_TEMPLATE = "effect_list_template"
-CONF_EFFECT_TEMPLATE = "effect_template"
 CONF_LEVEL = "level"
 CONF_LEVEL_ACTION = "set_level"
-CONF_LEVEL_TEMPLATE = "level_template"
 CONF_MAX_MIREDS = "max_mireds"
-CONF_MAX_MIREDS_TEMPLATE = "max_mireds_template"
 CONF_MIN_MIREDS = "min_mireds"
-CONF_MIN_MIREDS_TEMPLATE = "min_mireds_template"
 CONF_OFF_ACTION = "turn_off"
 CONF_ON_ACTION = "turn_on"
 CONF_SUPPORTS_TRANSITION = "supports_transition"
-CONF_SUPPORTS_TRANSITION_TEMPLATE = "supports_transition_template"
 CONF_TEMPERATURE_ACTION = "set_temperature"
 CONF_TEMPERATURE = "temperature"
-CONF_TEMPERATURE_TEMPLATE = "temperature_template"
-CONF_WHITE_VALUE_ACTION = "set_white_value"
-CONF_WHITE_VALUE = "white_value"
-CONF_WHITE_VALUE_TEMPLATE = "white_value_template"
+CONF_XY_ACTION = "set_xy"
 
 DEFAULT_MIN_MIREDS = 153
 DEFAULT_MAX_MIREDS = 500
-
-LEGACY_FIELDS = {
-    CONF_COLOR_ACTION: CONF_HS_ACTION,
-    CONF_COLOR_TEMPLATE: CONF_HS,
-    CONF_EFFECT_LIST_TEMPLATE: CONF_EFFECT_LIST,
-    CONF_EFFECT_TEMPLATE: CONF_EFFECT,
-    CONF_HS_TEMPLATE: CONF_HS,
-    CONF_LEVEL_TEMPLATE: CONF_LEVEL,
-    CONF_MAX_MIREDS_TEMPLATE: CONF_MAX_MIREDS,
-    CONF_MIN_MIREDS_TEMPLATE: CONF_MIN_MIREDS,
-    CONF_RGB_TEMPLATE: CONF_RGB,
-    CONF_RGBW_TEMPLATE: CONF_RGBW,
-    CONF_RGBWW_TEMPLATE: CONF_RGBWW,
-    CONF_SUPPORTS_TRANSITION_TEMPLATE: CONF_SUPPORTS_TRANSITION,
-    CONF_TEMPERATURE_TEMPLATE: CONF_TEMPERATURE,
-    CONF_VALUE_TEMPLATE: CONF_STATE,
-    CONF_WHITE_VALUE_TEMPLATE: CONF_WHITE_VALUE,
-}
 
 DEFAULT_NAME = "Template Light"
 
@@ -139,6 +103,7 @@ SCRIPT_FIELDS = (
     CONF_RGBW_ACTION,
     CONF_RGBWW_ACTION,
     CONF_TEMPERATURE_ACTION,
+    CONF_XY_ACTION,
 )
 
 LIGHT_COMMON_SCHEMA = vol.Schema(
@@ -164,54 +129,21 @@ LIGHT_COMMON_SCHEMA = vol.Schema(
         vol.Optional(CONF_SUPPORTS_TRANSITION): cv.template,
         vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_TEMPERATURE): cv.template,
+        vol.Optional(CONF_XY): cv.template,
+        vol.Optional(CONF_XY_ACTION): cv.SCRIPT_SCHEMA,
     }
+)
+
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(LightEntityCapabilityAttribute, LightEntityStateAttribute),
 )
 
 LIGHT_YAML_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
-).extend(make_template_entity_common_modern_schema(LIGHT_DOMAIN, DEFAULT_NAME).schema)
-
-LIGHT_LEGACY_YAML_SCHEMA = vol.All(
-    cv.deprecated(CONF_ENTITY_ID),
-    vol.Schema(
-        {
-            vol.Exclusive(CONF_COLOR_ACTION, "hs_legacy_action"): cv.SCRIPT_SCHEMA,
-            vol.Exclusive(CONF_COLOR_TEMPLATE, "hs_legacy_template"): cv.template,
-            vol.Exclusive(CONF_HS_ACTION, "hs_legacy_action"): cv.SCRIPT_SCHEMA,
-            vol.Exclusive(CONF_HS_TEMPLATE, "hs_legacy_template"): cv.template,
-            vol.Optional(CONF_RGB_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_RGB_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGBW_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_RGBW_TEMPLATE): cv.template,
-            vol.Optional(CONF_RGBWW_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_RGBWW_TEMPLATE): cv.template,
-            vol.Inclusive(CONF_EFFECT_ACTION, "effect"): cv.SCRIPT_SCHEMA,
-            vol.Inclusive(CONF_EFFECT_LIST_TEMPLATE, "effect"): cv.template,
-            vol.Inclusive(CONF_EFFECT_TEMPLATE, "effect"): cv.template,
-            vol.Optional(CONF_ENTITY_ID): cv.entity_ids,
-            vol.Optional(CONF_FRIENDLY_NAME): cv.string,
-            vol.Optional(CONF_LEVEL_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_LEVEL_TEMPLATE): cv.template,
-            vol.Optional(CONF_MAX_MIREDS_TEMPLATE): cv.template,
-            vol.Optional(CONF_MIN_MIREDS_TEMPLATE): cv.template,
-            vol.Required(CONF_OFF_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Required(CONF_ON_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_SUPPORTS_TRANSITION_TEMPLATE): cv.template,
-            vol.Optional(CONF_TEMPERATURE_ACTION): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_TEMPERATURE_TEMPLATE): cv.template,
-            vol.Optional(CONF_UNIQUE_ID): cv.string,
-            vol.Optional(CONF_VALUE_TEMPLATE): cv.template,
-        }
-    ).extend(TEMPLATE_ENTITY_COMMON_SCHEMA_LEGACY.schema),
-)
-
-PLATFORM_SCHEMA = vol.All(
-    # CONF_WHITE_VALUE_* is deprecated, support will be removed in release 2022.9
-    cv.removed(CONF_WHITE_VALUE_ACTION),
-    cv.removed(CONF_WHITE_VALUE_TEMPLATE),
-    LIGHT_PLATFORM_SCHEMA.extend(
-        {vol.Required(CONF_LIGHTS): cv.schema_with_slug_keys(LIGHT_LEGACY_YAML_SCHEMA)}
-    ),
+).extend(
+    make_template_entity_common_schema(
+        LIGHT_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+    ).schema
 )
 
 LIGHT_CONFIG_ENTRY_SCHEMA = LIGHT_COMMON_SCHEMA.extend(
@@ -234,8 +166,6 @@ async def async_setup_platform(
         TriggerLightEntity,
         async_add_entities,
         discovery_info,
-        LEGACY_FIELDS,
-        legacy_key=CONF_LIGHTS,
         script_options=SCRIPT_FIELDS,
     )
 
@@ -278,11 +208,22 @@ def _string_to_list(result: str) -> list[float]:
     return [float(v) for v in result.split(",")]
 
 
-def hs_color_list(entity: AbstractTemplateLight) -> Callable[[Any], list[int] | None]:
-    """Convert the result to a list of numbers that represent hue and saturation."""
+def two_color_list(
+    entity: AbstractTemplateLight,
+    option: str,
+    option_one: str,
+    min_1: int,
+    max_1: int,
+    option_two: str,
+    min_2: int,
+    max_2: int,
+) -> Callable[[Any], list[int | float] | None]:
+    """Convert the result to a list of 2 numbers that represent a color."""
 
-    def convert(result: Any) -> list[int] | None:
-        if template_validators.check_result_for_none(result):
+    option_range = f"({min_1}-{max_1}, {min_2}-{max_2})"
+
+    def convert(result: Any) -> list[int | float] | None:
+        if tcv.check_result_for_none(result):
             return None
 
         if isinstance(result, str):
@@ -294,26 +235,26 @@ def hs_color_list(entity: AbstractTemplateLight) -> Callable[[Any], list[int] | 
             and len(result) == 2
             and all(isinstance(value, (int, float)) for value in result)
         ):
-            hue, saturation = result
-            if not (0 <= hue <= 360) or not (0 <= saturation <= 100):
-                template_validators.log_validation_result_error(
+            one, two = result
+            if not (min_1 <= one <= max_1) or not (min_2 <= two <= max_2):
+                tcv.log_validation_result_error(
                     entity,
-                    CONF_HS,
+                    option,
                     result,
                     (
-                        "expected a hue value between 0 and 360 and "
-                        "a saturation value between 0 and 100: (0-360, 0-100)"
+                        f"expected {option_one} value between {min_1} and {max_1} and "
+                        f"{option_two} value between {min_2} and {max_2}: {option_range}"
                     ),
                 )
                 return None
 
             return list(result)
 
-        template_validators.log_validation_result_error(
+        tcv.log_validation_result_error(
             entity,
-            CONF_HS,
+            option,
             result,
-            "expected a list of numbers: (0-360, 0-100)",
+            f"expected a list of numbers: {option_range}",
         )
         return None
 
@@ -328,7 +269,7 @@ def rgb_color_list(
     message = f"expected a list of {length} numbers between 0 and 255: {example}"
 
     def convert(result: Any) -> list[int] | None:
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         if isinstance(result, str):
@@ -344,15 +285,91 @@ def rgb_color_list(
             if all(0 <= value <= 255 for value in result):
                 return list(result)
 
-        template_validators.log_validation_result_error(
-            entity, attribute, result, message
-        )
+        tcv.log_validation_result_error(entity, attribute, result, message)
         return None
 
     return convert
 
 
-class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
+@dataclass(kw_only=True)
+class LightExtraStoredData(ExtraStoredData):
+    """Object to hold extra stored data."""
+
+    is_on: bool | None
+    brightness: int | None
+    color_mode: ColorMode | None
+    color_temp_kelvin: int | None
+    effect_list: list[str] | None
+    effect: str | None
+    hs_color: tuple[float, float] | None
+    max_color_temp_kelvin: int
+    min_color_temp_kelvin: int
+    rgb_color: tuple[int, int, int] | None
+    rgbw_color: tuple[int, int, int, int] | None
+    rgbww_color: tuple[int, int, int, int, int] | None
+    supported_color_modes: set[ColorMode] | None
+    xy_color: tuple[float, float] | None
+
+    @override
+    def as_dict(self) -> dict[str, Any]:
+        """Return a dict representation of the extra data."""
+        return {
+            "is_on": self.is_on,
+            "brightness": self.brightness,
+            "color_mode": self.color_mode.value if self.color_mode else None,
+            "color_temp_kelvin": self.color_temp_kelvin,
+            "effect_list": self.effect_list,
+            "effect": self.effect,
+            "hs_color": self.hs_color,
+            "max_color_temp_kelvin": self.max_color_temp_kelvin,
+            "min_color_temp_kelvin": self.min_color_temp_kelvin,
+            "rgb_color": self.rgb_color,
+            "rgbw_color": self.rgbw_color,
+            "rgbww_color": self.rgbww_color,
+            "supported_color_modes": (
+                [mode.value for mode in self.supported_color_modes]
+                if self.supported_color_modes
+                else None
+            ),
+            "xy_color": self.xy_color,
+        }
+
+    @classmethod
+    def from_dict(cls, restored: dict[str, Any]) -> Self | None:
+        """Initialize a stored state from a dict."""
+
+        try:
+            color_mode: ColorMode | None = None
+            if _color_mode := restored["color_mode"]:
+                color_mode = ColorMode(_color_mode)
+
+            supported_color_modes: set[ColorMode] | None = None
+            if _supported_color_modes := restored["supported_color_modes"]:
+                supported_color_modes = {
+                    ColorMode(item) for item in _supported_color_modes
+                }
+
+            return cls(
+                is_on=restored["is_on"],
+                brightness=restored["brightness"],
+                color_mode=color_mode,
+                color_temp_kelvin=restored["color_temp_kelvin"],
+                effect_list=restored["effect_list"],
+                effect=restored["effect"],
+                hs_color=restored["hs_color"],
+                max_color_temp_kelvin=restored["max_color_temp_kelvin"],
+                min_color_temp_kelvin=restored["min_color_temp_kelvin"],
+                rgb_color=restored["rgb_color"],
+                rgbw_color=restored["rgbw_color"],
+                rgbww_color=restored["rgbww_color"],
+                supported_color_modes=supported_color_modes,
+                xy_color=restored["xy_color"],
+            )
+        except KeyError, ValueError:
+            return None
+
+
+class AbstractTemplateLight(AbstractTemplateEntity, LightEntity, RestoreEntity):
     """Representation of a template lights features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
@@ -360,22 +377,26 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     _attr_max_color_temp_kelvin = DEFAULT_MAX_KELVIN
     _attr_min_color_temp_kelvin = DEFAULT_MIN_KELVIN
     _state_option = CONF_STATE
+    _restore_state_extra_data = LightExtraStoredData
+    _restore_state_properties = ("_attr_is_on",)
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(  # pylint: disable=super-init-not-called
         self, name: str, config: dict[str, Any]
     ) -> None:
         """Initialize the features."""
 
         # Setup state and brightness
-        self.setup_state_template(
-            "_attr_is_on", template_validators.boolean(self, CONF_STATE)
-        )
+        self.setup_state_template("_attr_is_on", tcv.boolean(self, CONF_STATE))
         self.setup_template(
             CONF_LEVEL,
             "_attr_brightness",
-            template_validators.number(self, CONF_LEVEL, 0, 255, int),
+            tcv.number(self, CONF_LEVEL, 0, 255, int),
         )
 
         # Setup Color temperature
@@ -390,7 +411,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self.setup_template(
             CONF_HS,
             "_attr_hs_color",
-            hs_color_list(self),
+            two_color_list(self, CONF_HS, "a hue", 0, 360, "a saturation", 0, 100),
             self._update_color("_attr_hs_color", ColorMode.HS),
             render_complex=True,
         )
@@ -409,19 +430,26 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
                 render_complex=True,
             )
 
+        # Setup XY Color
+        self.setup_template(
+            CONF_XY,
+            "_attr_xy_color",
+            two_color_list(self, CONF_XY, "an x", 0, 1, "a y", 0, 1),
+            self._update_color("_attr_xy_color", ColorMode.XY),
+            render_complex=True,
+        )
+
         # Setup Effect templates
         self.setup_template(
             CONF_EFFECT_LIST,
             "_attr_effect_list",
-            template_validators.list_of_strings(
-                self, CONF_EFFECT_LIST, none_on_empty=True
-            ),
+            tcv.list_of_strings(self, CONF_EFFECT_LIST, none_on_empty=True),
             render_complex=True,
         )
         self.setup_template(
             CONF_EFFECT,
             "_attr_effect",
-            template_validators.item_in_list(
+            tcv.item_in_list(
                 self, "_attr_effect", "_attr_effect_list", CONF_EFFECT_LIST
             ),
         )
@@ -430,13 +458,13 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self.setup_template(
             CONF_MAX_MIREDS,
             "_attr_max_color_temp_kelvin",
-            template_validators.number(self, CONF_MAX_MIREDS),
+            tcv.number(self, CONF_MAX_MIREDS),
             self._update_max_mireds,
         )
         self.setup_template(
             CONF_MIN_MIREDS,
             "_attr_min_color_temp_kelvin",
-            template_validators.number(self, CONF_MIN_MIREDS),
+            tcv.number(self, CONF_MIN_MIREDS),
             self._update_min_mireds,
         )
 
@@ -444,7 +472,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self.setup_template(
             CONF_SUPPORTS_TRANSITION,
             "_supports_transition_template",
-            template_validators.boolean(self, CONF_SUPPORTS_TRANSITION),
+            tcv.boolean(self, CONF_SUPPORTS_TRANSITION),
             self._update_supports_transition,
         )
 
@@ -462,6 +490,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
             (CONF_RGB_ACTION, ColorMode.RGB),
             (CONF_RGBW_ACTION, ColorMode.RGBW),
             (CONF_RGBWW_ACTION, ColorMode.RGBWW),
+            (CONF_XY_ACTION, ColorMode.XY),
         ):
             if (action_config := config.get(action_id)) is not None:
                 self.add_script(action_id, action_config, name, DOMAIN)
@@ -480,6 +509,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         if self._supports_transition is True:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         optimistic_set = self.set_optimistic_attributes(**kwargs)
@@ -493,6 +523,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         if optimistic_set:
             self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the light off."""
         off_script = self._action_scripts[CONF_OFF_ACTION]
@@ -573,6 +604,15 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
             )
             optimistic_set = True
 
+        if CONF_XY not in self._templates and ATTR_XY_COLOR in kwargs:
+            self._set_optimistic_color(
+                "xy color",
+                "_attr_xy_color",
+                kwargs[ATTR_XY_COLOR],
+                ColorMode.XY,
+            )
+            optimistic_set = True
+
         if optimistic_set and not self._attr_assumed_state:
             # If we are optmistically setting color or level but the state template
             # has not rendered, optimisically set the state to 'on'.
@@ -598,6 +638,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
             (CONF_RGB, "_attr_rgb_color"),
             (CONF_RGBW, "_attr_rgbw_color"),
             (CONF_RGBWW, "_attr_rgbww_color"),
+            (CONF_XY, "_attr_xy_color"),
         ):
             if attribute == attr:
                 continue
@@ -610,7 +651,9 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         common_params = {}
 
         if ATTR_BRIGHTNESS in kwargs:
-            common_params["brightness"] = kwargs[ATTR_BRIGHTNESS]
+            brightness = kwargs[ATTR_BRIGHTNESS]
+            common_params["brightness"] = brightness
+            common_params["brightness_pct"] = round(brightness / 255 * 100)
 
         if ATTR_TRANSITION in kwargs and self._supports_transition is True:
             common_params["transition"] = kwargs[ATTR_TRANSITION]
@@ -709,6 +752,17 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
             return (script, common_params)
 
         if (
+            ATTR_XY_COLOR in kwargs
+            and (script := CONF_XY_ACTION) in self._action_scripts
+        ):
+            xy_value = kwargs[ATTR_XY_COLOR]
+            common_params["xy"] = xy_value
+            common_params["x"] = float(xy_value[0])
+            common_params["y"] = float(xy_value[1])
+
+            return (script, common_params)
+
+        if (
             ATTR_BRIGHTNESS in kwargs
             and (script := CONF_LEVEL_ACTION) in self._action_scripts
         ):
@@ -734,7 +788,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
     @callback
     def _validate_temperature(self, result: Any) -> int | None:
         """Validate the temperature from the template."""
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         if (min_kelvin := self._attr_min_color_temp_kelvin) is not None:
@@ -750,7 +804,7 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         if isinstance(result, (int, float)) and min_mireds <= result <= max_mireds:
             return color_util.color_temperature_mired_to_kelvin(result)
 
-        template_validators.log_validation_result_error(
+        tcv.log_validation_result_error(
             self,
             CONF_TEMPERATURE,
             result,
@@ -804,6 +858,45 @@ class AbstractTemplateLight(AbstractTemplateEntity, LightEntity):
         self._supports_transition = bool(render)
         if self._supports_transition:
             self._attr_supported_features |= LightEntityFeature.TRANSITION
+
+    @property
+    @override
+    def extra_restore_state_data(self) -> LightExtraStoredData:
+        """Return weather specific state data to be restored."""
+        return LightExtraStoredData(
+            is_on=self._attr_is_on,
+            brightness=self._attr_brightness,
+            color_mode=self._attr_color_mode,
+            color_temp_kelvin=self._attr_color_temp_kelvin,
+            effect_list=self._attr_effect_list,
+            effect=self._attr_effect,
+            hs_color=self._attr_hs_color,
+            max_color_temp_kelvin=self._attr_max_color_temp_kelvin,
+            min_color_temp_kelvin=self._attr_min_color_temp_kelvin,
+            rgb_color=self._attr_rgb_color,
+            rgbw_color=self._attr_rgbw_color,
+            rgbww_color=self._attr_rgbww_color,
+            supported_color_modes=self._attr_supported_color_modes,
+            xy_color=self._attr_xy_color,
+        )
+
+    @override
+    def restore_extra_data(self, extra_data: LightExtraStoredData) -> None:
+        """Restore the extra data."""
+        self._attr_is_on = extra_data.is_on
+        self._attr_brightness = extra_data.brightness
+        self._attr_color_mode = extra_data.color_mode
+        self._attr_color_temp_kelvin = extra_data.color_temp_kelvin
+        self._attr_effect_list = extra_data.effect_list
+        self._attr_effect = extra_data.effect
+        self._attr_hs_color = extra_data.hs_color
+        self._attr_max_color_temp_kelvin = extra_data.max_color_temp_kelvin
+        self._attr_min_color_temp_kelvin = extra_data.min_color_temp_kelvin
+        self._attr_rgb_color = extra_data.rgb_color
+        self._attr_rgbw_color = extra_data.rgbw_color
+        self._attr_rgbww_color = extra_data.rgbww_color
+        self._attr_supported_color_modes = extra_data.supported_color_modes
+        self._attr_xy_color = extra_data.xy_color
 
 
 class StateLightEntity(TemplateEntity, AbstractTemplateLight):

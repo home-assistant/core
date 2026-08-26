@@ -1,9 +1,7 @@
 """Binary sensors for the Seko PoolDose integration."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, cast
+from typing import TYPE_CHECKING, cast, override
 
 from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
@@ -158,6 +156,24 @@ BINARY_SENSOR_DESCRIPTIONS: tuple[BinarySensorEntityDescription, ...] = (
         device_class=BinarySensorDeviceClass.PROBLEM,
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
+    BinarySensorEntityDescription(
+        key="circulation_pump_status",
+        translation_key="circulation_pump_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    BinarySensorEntityDescription(
+        key="power_on_delay_status",
+        translation_key="power_on_delay_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
+    BinarySensorEntityDescription(
+        key="flow_delay_status",
+        translation_key="flow_delay_status",
+        entity_category=EntityCategory.DIAGNOSTIC,
+        entity_registry_enabled_default=False,
+    ),
 )
 
 
@@ -191,6 +207,7 @@ class PooldoseBinarySensor(PooldoseEntity, BinarySensorEntity):
     """Binary sensor entity for the Seko PoolDose Python API."""
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return true if the binary sensor is on."""
         data = cast(dict, self.get_data())

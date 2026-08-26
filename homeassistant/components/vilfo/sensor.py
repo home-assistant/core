@@ -1,18 +1,19 @@
 """Support for Vilfo Router sensors."""
 
 from dataclasses import dataclass
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorEntity,
     SensorEntityDescription,
 )
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.device_registry import DeviceInfo
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import VilfoConfigEntry
 from .const import (
     ATTR_API_DATA_FIELD_BOOT_TIME,
     ATTR_API_DATA_FIELD_LOAD,
@@ -50,11 +51,11 @@ SENSOR_TYPES: tuple[VilfoSensorEntityDescription, ...] = (
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: VilfoConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Add Vilfo Router entities from a config_entry."""
-    vilfo = hass.data[DOMAIN][config_entry.entry_id]
+    vilfo = config_entry.runtime_data
 
     entities = [VilfoRouterSensor(vilfo, description) for description in SENSOR_TYPES]
 
@@ -72,15 +73,24 @@ class VilfoRouterSensor(SensorEntity):
         self.entity_description = description
         self.api = api
         self._attr_device_info = DeviceInfo(
+            # This identifier is a non-standard 3-tuple kept as-is to avoid
+            # migrating existing devices; only the connection is added here.
             identifiers={(DOMAIN, api.host, api.mac_address)},  # type: ignore[arg-type]
             name=ROUTER_DEFAULT_NAME,
             manufacturer=ROUTER_MANUFACTURER,
             model=ROUTER_DEFAULT_MODEL,
             sw_version=api.firmware_version,
         )
+        # The router does not always report a MAC address (e.g. when set up by
+        # host), so only attach the connection when one is available.
+        if api.mac_address:
+            self._attr_device_info["connections"] = {
+                (CONNECTION_NETWORK_MAC, api.mac_address)
+            }
         self._attr_unique_id = f"{api.unique_id}_{description.key}"
 
     @property
+    @override
     def available(self) -> bool:
         """Return whether the sensor is available or not."""
         return self.api.available

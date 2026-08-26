@@ -1,15 +1,15 @@
 """Pushbullet platform for sensor component."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.sensor import SensorEntity, SensorEntityDescription
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_NAME, MAX_LENGTH_STATE_STATE
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.device_registry import DeviceEntryType, DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import PushbulletConfigEntry
 from .api import PushBulletNotificationProvider
 from .const import DATA_UPDATED, DOMAIN
 
@@ -69,12 +69,12 @@ SENSOR_KEYS: list[str] = [desc.key for desc in SENSOR_TYPES]
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    entry: ConfigEntry,
+    entry: PushbulletConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Pushbullet sensors from config entry."""
 
-    pb_provider: PushBulletNotificationProvider = hass.data[DOMAIN][entry.entry_id]
+    pb_provider = entry.runtime_data
 
     entities = [
         PushBulletNotificationSensor(entry.data[CONF_NAME], pb_provider, description)
@@ -117,7 +117,8 @@ class PushBulletNotificationSensor(SensorEntity):
         """
         try:
             value = self.pb_provider.data[self.entity_description.key]
-            # Truncate state value to MAX_LENGTH_STATE_STATE while preserving full content in attributes
+            # Truncate state value to MAX_LENGTH_STATE_STATE
+            # while preserving full content in attributes
             if isinstance(value, str) and len(value) > MAX_LENGTH_STATE_STATE:
                 self._attr_native_value = value[: MAX_LENGTH_STATE_STATE - 3] + "..."
             else:
@@ -127,6 +128,7 @@ class PushBulletNotificationSensor(SensorEntity):
             pass
         self.async_write_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(

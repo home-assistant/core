@@ -3,6 +3,7 @@
 from typing import Any
 
 import voluptuous as vol
+from zwave_js_server.const import CommandClass
 
 from homeassistant.helpers import config_validation as cv
 
@@ -16,6 +17,10 @@ BITMASK_SCHEMA = vol.All(
         msg="Must provide an integer (e.g. 255) or a bitmask in hex form (e.g. 0xff)",
     ),
     lambda value: int(value, 16),
+)
+
+COMMAND_CLASS_SCHEMA = vol.All(
+    vol.Coerce(int), vol.In([cc.value for cc in CommandClass])
 )
 
 
@@ -34,8 +39,8 @@ def boolean(value: Any) -> bool:
 
 VALUE_SCHEMA = vol.Any(
     boolean,
-    float,
     int,
+    float,
     vol.Coerce(int),
     vol.Coerce(float),
     BITMASK_SCHEMA,

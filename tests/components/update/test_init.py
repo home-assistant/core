@@ -42,17 +42,20 @@ from homeassistant.const import (
     EntityCategory,
     Platform,
 )
-from homeassistant.core import HomeAssistant, State, callback
-from homeassistant.exceptions import HomeAssistantError
+from homeassistant.core import Context, HomeAssistant, State, callback
+from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.event import async_track_state_change_event
 from homeassistant.setup import async_setup_component
+
+from .common import MockUpdateEntity
 
 from tests.common import (
     MockConfigEntry,
     MockEntityPlatform,
     MockModule,
     MockPlatform,
+    MockUser,
     mock_config_flow,
     mock_integration,
     mock_platform,
@@ -64,13 +67,9 @@ from tests.typing import WebSocketGenerator
 TEST_DOMAIN = "test"
 
 
-class MockUpdateEntity(UpdateEntity):
-    """Mock UpdateEntity to use in tests."""
-
-
 async def test_update(hass: HomeAssistant) -> None:
     """Test getting data from the mocked update entity."""
-    update = MockUpdateEntity()
+    update = UpdateEntity()
     update.hass = hass
     update.platform = MockEntityPlatform(hass)
 
@@ -325,7 +324,8 @@ async def test_entity_with_auto_update(
     # Should not be able to clear a skipped the update
     with pytest.raises(
         HomeAssistantError,
-        match="Clearing skipped update is not supported for update.update_with_auto_update",
+        match="Clearing skipped update is not supported"
+        " for update.update_with_auto_update",
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -386,6 +386,56 @@ async def test_entity_with_updates_available(
     assert state.attributes[ATTR_LATEST_VERSION] == "1.0.1"
     assert state.attributes[ATTR_SKIPPED_VERSION] is None
     assert "Installed latest update" in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("service", "state_after_admin_call"),
+    [
+        pytest.param(SERVICE_INSTALL, STATE_OFF, id="install"),
+        pytest.param(SERVICE_SKIP, STATE_OFF, id="skip"),
+        pytest.param("clear_skipped", STATE_ON, id="clear_skipped"),
+    ],
+)
+async def test_services_require_admin(
+    hass: HomeAssistant,
+    hass_admin_user: MockUser,
+    hass_read_only_user: MockUser,
+    mock_update_entities: list[MockUpdateEntity],
+    service: str,
+    state_after_admin_call: str,
+) -> None:
+    """Test the update services require an admin user."""
+    # Grant control of all entities, so the call is only rejected for not being admin
+    hass_read_only_user.mock_policy({"entities": {"all": {"control": True}}})
+    setup_test_component_platform(hass, DOMAIN, mock_update_entities)
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            service,
+            {ATTR_ENTITY_ID: "update.update_available"},
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+
+    state = hass.states.get("update.update_available")
+    assert state
+    assert state.state == STATE_ON
+
+    await hass.services.async_call(
+        DOMAIN,
+        service,
+        {ATTR_ENTITY_ID: "update.update_available"},
+        blocking=True,
+        context=Context(user_id=hass_admin_user.id),
+    )
+
+    state = hass.states.get("update.update_available")
+    assert state
+    assert state.state == state_after_admin_call
 
 
 async def test_entity_with_unknown_version(
@@ -795,6 +845,41 @@ async def test_release_notes_entity_does_not_support_release_notes(
     result = await client.receive_json()
     assert result["error"]["code"] == "not_supported"
     assert result["error"]["message"] == "Entity does not support release notes"
+
+
+async def test_release_notes_entity_unavailable(
+    hass: HomeAssistant,
+    mock_update_entities: list[MockUpdateEntity],
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test getting the release notes for entity that is unavailable."""
+    entity = MockUpdateEntity(
+        name="Update unavailable",
+        unique_id="unavailable",
+        installed_version="1.0.0",
+        latest_version="1.0.1",
+        available=False,
+        supported_features=UpdateEntityFeature.RELEASE_NOTES,
+    )
+
+    setup_test_component_platform(hass, DOMAIN, [entity])
+
+    assert await async_setup_component(hass, DOMAIN, {DOMAIN: {CONF_PLATFORM: "test"}})
+    await hass.async_block_till_done()
+
+    client = await hass_ws_client(hass)
+    await hass.async_block_till_done()
+
+    await client.send_json(
+        {
+            "id": 1,
+            "type": "update/release_notes",
+            "entity_id": "update.update_unavailable",
+        }
+    )
+    result = await client.receive_json()
+    assert result["error"]["code"] == "home_assistant_error"
+    assert result["error"]["message"] == "Entity is not available"
 
 
 class MockFlow(ConfigFlow):

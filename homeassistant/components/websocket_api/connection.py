@@ -1,18 +1,18 @@
 """Connection session."""
 
-from __future__ import annotations
-
 from collections.abc import Callable, Hashable
 from contextvars import ContextVar
-from typing import TYPE_CHECKING, Any, Literal
+from typing import TYPE_CHECKING, Any, Literal, override
 
 from aiohttp import web
 import voluptuous as vol
+from voluptuous.humanize import humanize_error
 
 from homeassistant.auth.models import RefreshToken, User
 from homeassistant.core import Context, HomeAssistant, callback
 from homeassistant.exceptions import HomeAssistantError, Unauthorized
 from homeassistant.helpers.http import current_request
+from homeassistant.helpers.redact import async_redact_data
 from homeassistant.util.json import JsonValueType
 
 from . import const, messages
@@ -32,6 +32,15 @@ current_connection = ContextVar["ActiveConnection | None"](
     "current_connection", default=None
 )
 
+REDACT_KEYS = {
+    "access_token",
+    "password",
+    "api_password",
+    "refresh_token",
+    "token",
+    "auth_token",
+}
+
 type MessageHandler = Callable[[HomeAssistant, ActiveConnection, dict[str, Any]], None]
 type BinaryHandler = Callable[[HomeAssistant, ActiveConnection, bytes], None]
 
@@ -47,6 +56,7 @@ class ActiveConnection:
         "last_id",
         "logger",
         "refresh_token_id",
+        "remote",
         "send_message",
         "subscriptions",
         "supported_features",
@@ -60,6 +70,7 @@ class ActiveConnection:
         send_message: Callable[[bytes | str | dict[str, Any]], None],
         user: User,
         refresh_token: RefreshToken | None,
+        remote: str | None,
     ) -> None:
         """Initialize an active connection."""
         self.logger = logger
@@ -67,6 +78,7 @@ class ActiveConnection:
         self.send_message = send_message
         self.user = user
         self.refresh_token_id = refresh_token.id if refresh_token else None
+        self.remote = remote
         self.subscriptions: dict[Hashable, Callable[[], Any]] = {}
         self.last_id = 0
         self.can_coalesce = False
@@ -77,6 +89,7 @@ class ActiveConnection:
         self.binary_handlers: list[BinaryHandler | None] = []
         current_connection.set(self)
 
+    @override
     def __repr__(self) -> str:
         """Return the representation."""
         return f"<ActiveConnection {self.get_description(None)}>"
@@ -198,6 +211,7 @@ class ActiveConnection:
                 or type(type_) is not str
             )
         ):
+            msg = async_redact_data(msg, REDACT_KEYS)
             self.logger.error("Received invalid command: %s", msg)
             id_ = msg.get("id") if isinstance(msg, dict) else 0
             self.send_message(
@@ -261,6 +275,7 @@ class ActiveConnection:
         self, msg: bytes | str | dict[str, Any] | Callable[[], str]
     ) -> None:
         """Send a message when the connection is closed."""
+        msg = async_redact_data(msg, REDACT_KEYS)
         self.logger.debug("Tried to send message %s on closed connection", msg)
 
     @callback
@@ -274,12 +289,14 @@ class ActiveConnection:
         translation_key: str | None = None
         translation_placeholders: dict[str, Any] | None = None
 
+        msg = async_redact_data(msg, REDACT_KEYS)
+
         if isinstance(err, Unauthorized):
             code = const.ERR_UNAUTHORIZED
             err_message = "Unauthorized"
         elif isinstance(err, vol.Invalid):
             code = const.ERR_INVALID_FORMAT
-            err_message = vol.humanize.humanize_error(msg, err)
+            err_message = humanize_error(msg, err)
         elif isinstance(err, TimeoutError):
             code = const.ERR_TIMEOUT
             err_message = "Timeout"

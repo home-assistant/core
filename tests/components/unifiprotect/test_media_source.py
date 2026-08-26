@@ -1,7 +1,9 @@
 """Tests for unifiprotect.media_source."""
 
+from collections.abc import Callable, Coroutine
 from datetime import datetime, timedelta
 from ipaddress import IPv4Address
+from typing import Any
 from unittest.mock import AsyncMock, Mock, patch
 
 import pytest
@@ -213,6 +215,7 @@ async def test_browse_media_root_multiple_consoles(
     bootstrap2.nvr.name = "UnifiProtect2"
 
     api2 = Mock()
+    api2.is_public_only = False
     bootstrap2.nvr._api = api2
     bootstrap2._api = api2
 
@@ -280,6 +283,7 @@ async def test_browse_media_root_multiple_consoles_only_one_media(
     bootstrap2.nvr.name = "UnifiProtect2"
 
     api2 = Mock()
+    api2.is_public_only = False
     bootstrap2.nvr._api = api2
     bootstrap2._api = api2
 
@@ -655,8 +659,8 @@ async def test_browse_media_recent_truncated(
     browse = await source.async_browse_media(media_item)
 
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > Motion Events > Last 24 Hours (1 TRUNCATED)"
+        browse.title == f"UnifiProtect > {doorbell.name} > Motion Events"
+        " > Last 24 Hours (1 TRUNCATED)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
@@ -898,7 +902,10 @@ async def test_browse_media_browse_day(
     event._api = ufp.api
     ufp.api.get_events_raw = AsyncMock(return_value=[event.unifi_dict()])
 
-    base_id = f"test_id:browse:{doorbell.id}:motion:range:{fixed_now.year}:{fixed_now.month}:1"
+    base_id = (
+        f"test_id:browse:{doorbell.id}:motion:range"
+        f":{fixed_now.year}:{fixed_now.month}:1"
+    )
     source = await async_get_media_source(hass)
     media_item = MediaSourceItem(hass, DOMAIN, base_id, None)
 
@@ -906,8 +913,8 @@ async def test_browse_media_browse_day(
 
     start = fixed_now.replace(day=1)
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > Motion Events > {fixed_now.strftime('%B %Y')} > {start.strftime('%x')} (1)"
+        browse.title == f"UnifiProtect > {doorbell.name} > Motion Events"
+        f" > {fixed_now.strftime('%B %Y')} > {start.strftime('%x')} (1)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
@@ -949,8 +956,8 @@ async def test_browse_media_browse_whole_month(
     browse = await source.async_browse_media(media_item)
 
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
+        browse.title == f"UnifiProtect > {doorbell.name} > All Events"
+        f" > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
@@ -1036,8 +1043,8 @@ async def test_browse_media_browse_whole_month_december(
     browse = await source.async_browse_media(media_item)
 
     assert (
-        browse.title
-        == f"UnifiProtect > {doorbell.name} > All Events > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
+        browse.title == f"UnifiProtect > {doorbell.name} > All Events"
+        f" > {fixed_now.strftime('%B %Y')} > Whole Month (1)"
     )
     assert browse.identifier == base_id
     assert len(browse.children) == 1
@@ -1105,3 +1112,18 @@ async def test_build_days_whole_month_date_calculation(
     # Verify the identifier format is correct
     assert result.identifier.endswith(f"range:{year}:{month}:all")
     assert "Whole Month" in result.title
+
+
+async def test_public_only_entry_skipped(
+    hass: HomeAssistant,
+    setup_public_only: Callable[[], Coroutine[Any, Any, None]],
+) -> None:
+    """A public-only entry must not break the media source map.
+
+    It iterates every loaded entry and reads the private bootstrap; a
+    public-only entry has none and must be skipped, not raise.
+    """
+    await setup_public_only()
+
+    source = await async_get_media_source(hass)
+    assert source.data_sources == {}

@@ -1,15 +1,39 @@
 """Location helpers for Home Assistant."""
 
-from __future__ import annotations
-
 from collections.abc import Iterable
 import logging
+from typing import NamedTuple
 
-from homeassistant.const import ATTR_LATITUDE, ATTR_LONGITUDE
+from homeassistant.const import EntityStateAttribute
 from homeassistant.core import HomeAssistant, State
 from homeassistant.util import location as location_util
 
 _LOGGER = logging.getLogger(__name__)
+
+
+class Coordinates(NamedTuple):
+    """A latitude/longitude coordinate pair."""
+
+    latitude: float
+    longitude: float
+
+
+def get_state_coordinates(state: State) -> Coordinates | None:
+    """Return the state's location, or None.
+
+    Returns None if the state does not contain a valid location.
+
+    Async friendly.
+    """
+    if isinstance(
+        latitude := state.attributes.get(EntityStateAttribute.LATITUDE),
+        (float, int),
+    ) and isinstance(
+        longitude := state.attributes.get(EntityStateAttribute.LONGITUDE),
+        (float, int),
+    ):
+        return Coordinates(latitude, longitude)
+    return None
 
 
 def has_location(state: State) -> bool:
@@ -17,11 +41,7 @@ def has_location(state: State) -> bool:
 
     Async friendly.
     """
-    return (
-        isinstance(state, State)
-        and isinstance(state.attributes.get(ATTR_LATITUDE), (float, int))
-        and isinstance(state.attributes.get(ATTR_LONGITUDE), (float, int))
-    )
+    return isinstance(state, State) and get_state_coordinates(state) is not None
 
 
 def closest(latitude: float, longitude: float, states: Iterable[State]) -> State | None:
@@ -38,8 +58,8 @@ def closest(latitude: float, longitude: float, states: Iterable[State]) -> State
         with_location,
         key=lambda state: (
             location_util.distance(
-                state.attributes.get(ATTR_LATITUDE),
-                state.attributes.get(ATTR_LONGITUDE),
+                state.attributes.get(EntityStateAttribute.LATITUDE),
+                state.attributes.get(EntityStateAttribute.LONGITUDE),
                 latitude,
                 longitude,
             )
@@ -74,13 +94,13 @@ def find_coordinates(
 
     # Check if entity_state is a zone
     zone_entity = hass.states.get(f"zone.{entity_state.state}")
-    if has_location(zone_entity):  # type: ignore[arg-type]
+    if zone_entity and has_location(zone_entity):
         _LOGGER.debug(
             "%s is in %s, getting zone location",
             name,
-            zone_entity.entity_id,  # type: ignore[union-attr]
+            zone_entity.entity_id,
         )
-        return _get_location_from_attributes(zone_entity)  # type: ignore[arg-type]
+        return _get_location_from_attributes(zone_entity)
 
     # Check if entity_state is a friendly name of a zone
     if (zone_coords := resolve_zone(hass, entity_state.state)) is not None:
@@ -126,4 +146,7 @@ def resolve_zone(hass: HomeAssistant, zone_name: str) -> str | None:
 def _get_location_from_attributes(entity_state: State) -> str:
     """Get the lat/long string from an entities attributes."""
     attr = entity_state.attributes
-    return f"{attr.get(ATTR_LATITUDE)},{attr.get(ATTR_LONGITUDE)}"
+    return (
+        f"{attr.get(EntityStateAttribute.LATITUDE)},"
+        f"{attr.get(EntityStateAttribute.LONGITUDE)}"
+    )

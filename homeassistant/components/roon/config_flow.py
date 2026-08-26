@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from roonapi import RoonApi, RoonDiscovery
 import voluptuous as vol
@@ -76,7 +76,9 @@ class RoonHub:
             apis = [RoonApi(ROON_APPINFO, None, host, port, blocking_init=False)]
 
         while secs <= TIMEOUT:
-            # Roon can discover multiple devices - not all of which are proper servers, so try and authenticate with them all.
+            # Roon can discover multiple devices - not all of
+            # which are proper servers, so try and
+            # authenticate with them all.
             # The user will only enable one - so look for a valid token
             auth_api = [api for api in apis if api.token is not None]
 
@@ -129,6 +131,7 @@ class RoonConfigFlow(ConfigFlow, domain=DOMAIN):
         self._port = None
         self._servers: list[tuple[str, int]] = []
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

@@ -18,6 +18,7 @@ from homeassistant.components.blueprint import (
 )
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN
 from homeassistant.components.cover import DOMAIN as COVER_DOMAIN
+from homeassistant.components.device_tracker import DOMAIN as DEVICE_TRACKER_DOMAIN
 from homeassistant.components.event import DOMAIN as EVENT_DOMAIN
 from homeassistant.components.fan import DOMAIN as FAN_DOMAIN
 from homeassistant.components.image import DOMAIN as IMAGE_DOMAIN
@@ -43,6 +44,7 @@ from homeassistant.const import (
     CONF_TRIGGERS,
     CONF_UNIQUE_ID,
     CONF_VARIABLES,
+    Platform,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv, issue_registry as ir
@@ -59,6 +61,7 @@ from . import (
     binary_sensor as binary_sensor_platform,
     button as button_platform,
     cover as cover_platform,
+    device_tracker as device_tracker_platform,
     event as event_platform,
     fan as fan_platform,
     image as image_platform,
@@ -73,15 +76,60 @@ from . import (
     weather as weather_platform,
 )
 from .const import CONF_DEFAULT_ENTITY_ID, DOMAIN, PLATFORMS, TemplateConfig
-from .helpers import (
-    async_get_blueprints,
-    create_legacy_template_issue,
-    rewrite_legacy_to_modern_configs,
-)
+from .helpers import async_get_blueprints
 
 _LOGGER = logging.getLogger(__name__)
 
 PACKAGE_MERGE_HINT = "list"
+
+
+_DEFAULT_NAME = "Template Entity"
+_DEFAULT_NAMES = {
+    Platform.ALARM_CONTROL_PANEL: alarm_control_panel_platform.DEFAULT_NAME,
+    Platform.BINARY_SENSOR: binary_sensor_platform.DEFAULT_NAME,
+    Platform.BUTTON: button_platform.DEFAULT_NAME,
+    Platform.COVER: cover_platform.DEFAULT_NAME,
+    Platform.DEVICE_TRACKER: device_tracker_platform.DEFAULT_NAME,
+    Platform.EVENT: event_platform.DEFAULT_NAME,
+    Platform.FAN: fan_platform.DEFAULT_NAME,
+    Platform.IMAGE: image_platform.DEFAULT_NAME,
+    Platform.LIGHT: light_platform.DEFAULT_NAME,
+    Platform.LOCK: lock_platform.DEFAULT_NAME,
+    Platform.NUMBER: number_platform.DEFAULT_NAME,
+    Platform.SELECT: select_platform.DEFAULT_NAME,
+    Platform.SENSOR: sensor_platform.DEFAULT_NAME,
+    Platform.SWITCH: switch_platform.DEFAULT_NAME,
+    Platform.UPDATE: update_platform.DEFAULT_NAME,
+    Platform.VACUUM: vacuum_platform.DEFAULT_NAME,
+    Platform.WEATHER: weather_platform.DEFAULT_NAME,
+}
+
+
+def _identify_entity_config_requires_trigger(
+    platform: Platform, option: str, entity_config: ConfigType
+) -> None:
+    """Raise vol.Invalid if an entity sets an option that requires a trigger."""
+    if option not in entity_config:
+        return
+
+    _default_name = _DEFAULT_NAMES.get(platform, _DEFAULT_NAME)
+    identifier = f"{CONF_NAME}: {_default_name}"
+    if (
+        (name := entity_config.get(CONF_NAME))
+        and isinstance(name, Template)
+        and name.template != _default_name
+    ):
+        identifier = f"{CONF_NAME}: {name.template}"
+    elif default_entity_id := entity_config.get(CONF_DEFAULT_ENTITY_ID):
+        identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
+    elif unique_id := entity_config.get(CONF_UNIQUE_ID):
+        identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
+
+    raise vol.Invalid(
+        f"The {option} option for template {platform.replace('_', ' ')}: {identifier} "
+        f"requires a trigger, remove the {option} option or rewrite "
+        "configuration to use a trigger"
+    )
 
 
 def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
@@ -89,26 +137,28 @@ def validate_binary_sensor_auto_off_has_trigger(obj: dict) -> dict:
     if CONF_TRIGGERS not in obj and BINARY_SENSOR_DOMAIN in obj:
         binary_sensors: list[ConfigType] = obj[BINARY_SENSOR_DOMAIN]
         for binary_sensor in binary_sensors:
-            if binary_sensor_platform.CONF_AUTO_OFF not in binary_sensor:
+            _identify_entity_config_requires_trigger(
+                Platform.BINARY_SENSOR,
+                binary_sensor_platform.CONF_AUTO_OFF,
+                binary_sensor,
+            )
+
+    return obj
+
+
+def validate_entity_config_with_conditions_has_trigger(obj: dict) -> dict:
+    """Validate entity condition requires trigger."""
+    if CONF_TRIGGERS not in obj:
+        for platform in PLATFORMS:
+            if platform not in obj:
                 continue
 
-            identifier = f"{CONF_NAME}: {binary_sensor_platform.DEFAULT_NAME}"
-            if (
-                (name := binary_sensor.get(CONF_NAME))
-                and isinstance(name, Template)
-                and name.template != binary_sensor_platform.DEFAULT_NAME
-            ):
-                identifier = f"{CONF_NAME}: {name.template}"
-            elif default_entity_id := binary_sensor.get(CONF_DEFAULT_ENTITY_ID):
-                identifier = f"{CONF_DEFAULT_ENTITY_ID}: {default_entity_id}"
-            elif unique_id := binary_sensor.get(CONF_UNIQUE_ID):
-                identifier = f"{CONF_UNIQUE_ID}: {unique_id}"
-
-            raise vol.Invalid(
-                f"The auto_off option for template binary sensor: {identifier} "
-                "requires a trigger, remove the auto_off option or rewrite "
-                "configuration to use a trigger"
-            )
+            for entity_config in obj[platform]:
+                _identify_entity_config_requires_trigger(
+                    platform,
+                    CONF_CONDITIONS,
+                    entity_config,
+                )
 
     return obj
 
@@ -123,7 +173,10 @@ def ensure_domains_do_not_have_trigger_or_action(*keys: str) -> Callable[[dict],
             invalid = {CONF_TRIGGERS, CONF_ACTIONS}
             if found_invalid := invalid.intersection(set(obj.keys())):
                 raise vol.Invalid(
-                    f"Unsupported option(s) found for domain {found_domains.pop()}, please remove ({', '.join(found_invalid)}) from your configuration",
+                    f"Unsupported option(s) found for domain"
+                    f" {found_domains.pop()}, please remove"
+                    f" ({', '.join(found_invalid)})"
+                    " from your configuration",
                 )
 
         return obj
@@ -158,7 +211,8 @@ def validate_trigger_format(
         [CONF_SENSORS, CONF_BINARY_SENSORS, *PLATFORMS]
     ):
         _LOGGER.warning(
-            "Invalid template configuration found, trigger option is missing matching domain"
+            "Invalid template configuration found,"
+            " trigger option is missing matching domain"
         )
         create_trigger_format_issue(hass, raw_config, CONF_TRIGGERS)
 
@@ -182,13 +236,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
     vol.Schema(
         {
             vol.Optional(CONF_ACTIONS): cv.SCRIPT_SCHEMA,
-            vol.Optional(CONF_BINARY_SENSORS): cv.schema_with_slug_keys(
-                binary_sensor_platform.BINARY_SENSOR_LEGACY_YAML_SCHEMA
-            ),
             vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
-            vol.Optional(CONF_SENSORS): cv.schema_with_slug_keys(
-                sensor_platform.SENSOR_LEGACY_YAML_SCHEMA
-            ),
             vol.Optional(CONF_TRIGGERS): cv.TRIGGER_SCHEMA,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
@@ -204,6 +252,9 @@ CONFIG_SECTION_SCHEMA = vol.All(
             ),
             vol.Optional(COVER_DOMAIN): vol.All(
                 cv.ensure_list, [cover_platform.COVER_YAML_SCHEMA]
+            ),
+            vol.Optional(DEVICE_TRACKER_DOMAIN): vol.All(
+                cv.ensure_list, [device_tracker_platform.TRACKER_YAML_SCHEMA]
             ),
             vol.Optional(EVENT_DOMAIN): vol.All(
                 cv.ensure_list, [event_platform.EVENT_YAML_SCHEMA]
@@ -253,6 +304,7 @@ CONFIG_SECTION_SCHEMA = vol.All(
         BUTTON_DOMAIN,
     ),
     validate_binary_sensor_auto_off_has_trigger,
+    validate_entity_config_with_conditions_has_trigger,
 )
 
 TEMPLATE_BLUEPRINT_SCHEMA = vol.All(
@@ -290,29 +342,46 @@ async def _async_resolve_template_config(
         config = blueprint_inputs.async_substitute()
 
         platforms = [platform for platform in PLATFORMS if platform in config]
+        platform_config: list[ConfigType] | ConfigType
         if len(platforms) > 1:
             raise vol.Invalid("more than one platform defined per blueprint")
         if len(platforms) == 1:
             platform = platforms.pop()
             for prop in (CONF_NAME, CONF_UNIQUE_ID):
                 if prop in config:
-                    config[platform][prop] = config.pop(prop)
+                    platform_config = config[platform]
+                    if isinstance(platform_config, dict):
+                        platform_config[prop] = config.pop(prop)
+                        continue
+
+                    if len(platform_config) > 1:
+                        raise vol.Invalid(
+                            f"more than one {platform} entity defined in blueprint"
+                        )
+                    platform_config[0][prop] = config.pop(prop)
+
             # State based template entities remove CONF_VARIABLES because they pass
             # blueprint inputs to the template entities. Trigger based template entities
             # retain CONF_VARIABLES because the variables are always executed between
             # the trigger and action.
             if CONF_TRIGGERS not in config and CONF_VARIABLES in config:
-                _merge_section_variables(config[platform], config.pop(CONF_VARIABLES))
+                section_variables = config.pop(CONF_VARIABLES)
+                platform_config = config[platform]
+                if isinstance(platform_config, dict):
+                    platform_config = [platform_config]
+                for entity_config in platform_config:
+                    _merge_section_variables(entity_config, section_variables)
 
         raw_config = dict(config)
 
     # Trigger based template entities retain CONF_VARIABLES because the variables are
     # always executed between the trigger and action.
     elif CONF_TRIGGERS not in config and CONF_VARIABLES in config:
-        # State based template entities have 2 layers of variables.  Variables at the section level
-        # and variables at the entity level should be merged together at the entity level.
+        # State based template entities have 2 layers of
+        # variables. Variables at the section level and
+        # variables at the entity level should be merged
+        # together at the entity level.
         section_variables = config.pop(CONF_VARIABLES)
-        platform_config: list[ConfigType] | ConfigType
         platforms = [platform for platform in PLATFORMS if platform in config]
         for platform in platforms:
             platform_config = config[platform]
@@ -376,42 +445,6 @@ async def async_validate_config(hass: HomeAssistant, config: ConfigType) -> Conf
             async_log_schema_error(err, DOMAIN, cfg, hass)
             async_notify_setup_error(hass, DOMAIN)
             continue
-
-        legacy_warn_printed = False
-
-        for old_key, new_key, legacy_fields in (
-            (
-                CONF_SENSORS,
-                SENSOR_DOMAIN,
-                sensor_platform.LEGACY_FIELDS,
-            ),
-            (
-                CONF_BINARY_SENSORS,
-                BINARY_SENSOR_DOMAIN,
-                binary_sensor_platform.LEGACY_FIELDS,
-            ),
-        ):
-            if old_key not in template_config:
-                continue
-
-            if not legacy_warn_printed:
-                legacy_warn_printed = True
-                _LOGGER.warning(
-                    "The entity definition format under template: differs from the"
-                    " platform "
-                    "configuration format. See "
-                    "https://www.home-assistant.io/integrations/template#configuration-for-trigger-based-template-sensors"
-                )
-
-            definitions = (
-                list(template_config[new_key]) if new_key in template_config else []
-            )
-            for definition in rewrite_legacy_to_modern_configs(
-                hass, new_key, template_config[old_key], legacy_fields
-            ):
-                create_legacy_template_issue(hass, definition, new_key)
-                definitions.append(definition)
-            template_config = TemplateConfig({**template_config, new_key: definitions})
 
         config_sections.append(template_config)
 

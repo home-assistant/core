@@ -1,7 +1,5 @@
 """The SimpleFIN integration."""
 
-from __future__ import annotations
-
 from simplefin4py import SimpleFin
 
 from homeassistant.const import Platform

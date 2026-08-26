@@ -1,9 +1,7 @@
 """Config flow for Wallbox integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from wallbox import Wallbox
@@ -61,6 +59,7 @@ class WallboxConfigFlow(ConfigFlow, domain=COMPONENT_DOMAIN):
         """Perform reauth upon an API authentication error."""
         return await self.async_step_user()
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

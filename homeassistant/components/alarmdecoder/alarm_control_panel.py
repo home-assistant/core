@@ -1,6 +1,6 @@
 """Support for AlarmDecoder-based alarm control panels (Honeywell/DSC)."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.alarm_control_panel import (
     AlarmControlPanelEntity,
@@ -62,6 +62,7 @@ class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):
         self._attr_code_arm_required = code_arm_required
         self._alt_night_mode = alt_night_mode
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks."""
         self.async_on_remove(
@@ -97,11 +98,13 @@ class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):
         }
         self.schedule_update_ha_state()
 
+    @override
     def alarm_disarm(self, code: str | None = None) -> None:
         """Send disarm command."""
         if code:
             self._client.send(f"{code!s}1")
 
+    @override
     def alarm_arm_away(self, code: str | None = None) -> None:
         """Send arm away command."""
         self._client.arm_away(
@@ -110,6 +113,7 @@ class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):
             auto_bypass=self._auto_bypass,
         )
 
+    @override
     def alarm_arm_home(self, code: str | None = None) -> None:
         """Send arm home command."""
         self._client.arm_home(
@@ -118,6 +122,7 @@ class AlarmDecoderAlarmPanel(AlarmDecoderEntity, AlarmControlPanelEntity):
             auto_bypass=self._auto_bypass,
         )
 
+    @override
     def alarm_arm_night(self, code: str | None = None) -> None:
         """Send arm night command."""
         self._client.arm_night(

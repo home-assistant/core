@@ -1,10 +1,8 @@
 """Config flow for the Namecheap DynamicDNS integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientError
 import voluptuous as vol
@@ -21,7 +19,6 @@ from homeassistant.helpers.selector import (
 
 from .const import DOMAIN
 from .helpers import AuthFailed, update_namecheapdns
-from .issue import deprecate_yaml_issue
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -52,6 +49,7 @@ STEP_RECONFIGURE_DATA_SCHEMA = vol.Schema(
 class NamecheapDnsConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Namecheap DynamicDNS."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -86,20 +84,6 @@ class NamecheapDnsConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
             description_placeholders={"account_panel": "https://ap.www.namecheap.com/"},
         )
-
-    async def async_step_import(self, import_info: dict[str, Any]) -> ConfigFlowResult:
-        """Import config from yaml."""
-
-        self._async_abort_entries_match(
-            {CONF_HOST: import_info[CONF_HOST], CONF_DOMAIN: import_info[CONF_DOMAIN]}
-        )
-        result = await self.async_step_user(import_info)
-        if errors := result.get("errors"):
-            deprecate_yaml_issue(self.hass, import_success=False)
-            return self.async_abort(reason=errors["base"])
-
-        deprecate_yaml_issue(self.hass, import_success=True)
-        return result
 
     async def async_step_reauth(
         self, entry_data: Mapping[str, Any]

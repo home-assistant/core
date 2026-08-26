@@ -36,11 +36,9 @@ def mock_discovered_service_info() -> Generator[AsyncMock]:
         yield mock_discovered_service_info
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_form(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_verify: AsyncMock,
-    mock_discovered_service_info: AsyncMock,
+    hass: HomeAssistant, mock_verify: AsyncMock, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test we get the form."""
     result = await hass.config_entries.flow.async_init(
@@ -65,11 +63,8 @@ async def test_form(
     }
 
 
-async def test_bluetooth_discovery(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_verify: AsyncMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_bluetooth_discovery(hass: HomeAssistant, mock_verify: AsyncMock) -> None:
     """Test we can discover a device."""
 
     result = await hass.config_entries.flow.async_init(
@@ -167,9 +162,9 @@ async def test_already_configured_bluetooth_discovery(
         (AcaiaError, "unknown"),
     ],
 )
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_recoverable_config_flow_errors(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_verify: AsyncMock,
     mock_discovered_service_info: AsyncMock,
     exception: Exception,
@@ -203,11 +198,9 @@ async def test_recoverable_config_flow_errors(
     assert result3["type"] is FlowResultType.CREATE_ENTRY
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_unsupported_device(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_verify: AsyncMock,
-    mock_discovered_service_info: AsyncMock,
+    hass: HomeAssistant, mock_verify: AsyncMock, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test flow aborts on unsupported device."""
     mock_verify.side_effect = AcaiaUnknownDevice
@@ -227,10 +220,9 @@ async def test_unsupported_device(
     assert result2["reason"] == "unsupported_device"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_no_bluetooth_devices(
-    hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
-    mock_discovered_service_info: AsyncMock,
+    hass: HomeAssistant, mock_discovered_service_info: AsyncMock
 ) -> None:
     """Test flow aborts on unsupported device."""
     mock_discovered_service_info.return_value = []

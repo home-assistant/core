@@ -1,11 +1,10 @@
 """Data update coordinator for Subaru."""
 
-from __future__ import annotations
-
+from dataclasses import dataclass
 from datetime import timedelta
 import logging
 import time
-from typing import Any
+from typing import Any, override
 
 from subarulink import Controller as SubaruAPI, SubaruException
 
@@ -23,16 +22,27 @@ from .const import (
 
 _LOGGER = logging.getLogger(__name__)
 
+type SubaruConfigEntry = ConfigEntry[SubaruRuntimeData]
+
+
+@dataclass
+class SubaruRuntimeData:
+    """Runtime data for Subaru."""
+
+    controller: SubaruAPI
+    coordinator: SubaruDataUpdateCoordinator
+    vehicles: dict[str, dict[str, Any]]
+
 
 class SubaruDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Subaru data."""
 
-    config_entry: ConfigEntry
+    config_entry: SubaruConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: SubaruConfigEntry,
         *,
         controller: SubaruAPI,
         vehicle_info: dict[str, dict[str, Any]],
@@ -48,6 +58,7 @@ class SubaruDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         self._controller = controller
         self._vehicle_info = vehicle_info
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Subaru API."""
         try:
@@ -73,7 +84,8 @@ async def _refresh_subaru_data(
     for vehicle in vehicle_info.values():
         vin = vehicle[VEHICLE_VIN]
 
-        # Optionally send an "update" remote command to vehicle (throttled with update_interval)
+        # Optionally send an "update" remote command to
+        # vehicle (throttled with update_interval)
         if config_entry.options.get(CONF_UPDATE_ENABLED, False):
             await _update_subaru(vehicle, controller)
 

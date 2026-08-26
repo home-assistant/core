@@ -1,9 +1,6 @@
 """Support for Huum wifi-enabled sauna."""
 
-from __future__ import annotations
-
-import logging
-from typing import Any
+from typing import Any, override
 
 from huum.const import SaunaStatus
 from huum.exceptions import SafetyException
@@ -18,11 +15,9 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .const import CONFIG_DEFAULT_MAX_TEMP, CONFIG_DEFAULT_MIN_TEMP
+from .const import CONFIG_DEFAULT_MAX_TEMP, CONFIG_DEFAULT_MIN_TEMP, DOMAIN
 from .coordinator import HuumConfigEntry, HuumDataUpdateCoordinator
 from .entity import HuumBaseEntity
-
-_LOGGER = logging.getLogger(__name__)
 
 PARALLEL_UPDATES = 1
 
@@ -56,6 +51,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         self._attr_unique_id = coordinator.config_entry.entry_id
 
     @property
+    @override
     def min_temp(self) -> int:
         """Return configured minimal temperature."""
         sauna_config = self.coordinator.data.sauna_config
@@ -64,6 +60,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         return sauna_config.min_temp or CONFIG_DEFAULT_MIN_TEMP
 
     @property
+    @override
     def max_temp(self) -> int:
         """Return configured maximum temperature."""
         sauna_config = self.coordinator.data.sauna_config
@@ -72,6 +69,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         return sauna_config.max_temp or CONFIG_DEFAULT_MAX_TEMP
 
     @property
+    @override
     def hvac_mode(self) -> HVACMode:
         """Return hvac operation ie. heat, cool mode."""
         if self.coordinator.data.status == SaunaStatus.ONLINE_HEATING:
@@ -79,15 +77,18 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         return HVACMode.OFF
 
     @property
+    @override
     def current_temperature(self) -> int | None:
         """Return the current temperature."""
         return self.coordinator.data.temperature
 
     @property
+    @override
     def target_temperature(self) -> int:
         """Return the temperature we try to reach."""
         return self.coordinator.data.target_temperature or int(self.min_temp)
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set hvac mode."""
         if hvac_mode == HVACMode.HEAT:
@@ -99,6 +100,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
             await self.coordinator.huum.turn_off()
         await self.coordinator.async_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         temperature = kwargs.get(ATTR_TEMPERATURE)
@@ -113,5 +115,7 @@ class HuumDevice(HuumBaseEntity, ClimateEntity):
         try:
             await self.coordinator.huum.turn_on(temperature)
         except (ValueError, SafetyException) as err:
-            _LOGGER.error(str(err))
-            raise HomeAssistantError(f"Unable to turn on sauna: {err}") from err
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="unable_to_turn_on",
+            ) from err

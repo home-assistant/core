@@ -1,11 +1,9 @@
 """Group platform for notify component."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Mapping
 from copy import deepcopy
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -23,11 +21,11 @@ from homeassistant.components.notify import (
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
     ATTR_ENTITY_ID,
-    ATTR_SUPPORTED_FEATURES,
     CONF_ACTION,
     CONF_ENTITIES,
     CONF_SERVICE,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
 )
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers import config_validation as cv, entity_registry as er
@@ -103,6 +101,7 @@ class GroupNotifyPlatform(BaseNotificationService):
         self.hass = hass
         self.entities = entities
 
+    @override
     async def async_send_message(self, message: str = "", **kwargs: Any) -> None:
         """Send message to all entities in the group."""
         payload: dict[str, Any] = {ATTR_MESSAGE: message}
@@ -173,6 +172,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         self._attr_extra_state_attributes = {ATTR_ENTITY_ID: entity_ids}
         self._attr_unique_id = unique_id
 
+    @override
     async def async_send_message(self, message: str, title: str | None = None) -> None:
         """Send a message to all members of the group."""
 
@@ -197,6 +197,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
         )
 
     @callback
+    @override
     def async_update_group_state(self) -> None:
         """Query all members and determine the notify group state."""
         # Set group as unavailable if all members are unavailable or missing
@@ -212,7 +213,7 @@ class NotifyGroup(GroupEntity, NotifyEntity):
             state = self.hass.states.get(entity_id)
             if (
                 state is None
-                or not state.attributes.get(ATTR_SUPPORTED_FEATURES, 0)
+                or not state.attributes.get(EntityStateAttribute.SUPPORTED_FEATURES, 0)
                 & NotifyEntityFeature.TITLE
             ):
                 self._attr_supported_features &= ~NotifyEntityFeature.TITLE

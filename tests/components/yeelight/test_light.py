@@ -57,6 +57,7 @@ from homeassistant.components.yeelight.const import (
     DEFAULT_SAVE_ON_CHANGE,
     DEFAULT_TRANSITION,
     DOMAIN,
+    UPDATE_REQUEST_PROPERTIES,
     YEELIGHT_HSV_TRANSACTION,
     YEELIGHT_RGB_TRANSITION,
     YEELIGHT_SLEEP_TRANSACTION,
@@ -454,15 +455,16 @@ async def test_services(hass: HomeAssistant, caplog: pytest.LogCaptureFixture) -
 
     # set_music_mode failure enable
     mocked_bulb.async_start_music = MagicMock(side_effect=AssertionError)
-    assert "Unable to turn on music mode, consider disabling it" not in caplog.text
-    await hass.services.async_call(
-        DOMAIN,
-        SERVICE_SET_MUSIC_MODE,
-        {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
-        blocking=True,
-    )
+    with pytest.raises(HomeAssistantError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SET_MUSIC_MODE,
+            {ATTR_ENTITY_ID: ENTITY_LIGHT, ATTR_MODE_MUSIC: "true"},
+            blocking=True,
+        )
     assert mocked_bulb.async_start_music.mock_calls == [call()]
-    assert "Unable to turn on music mode, consider disabling it" in caplog.text
+    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_key == "set_music_mode_failed"
 
     # set_music_mode disable
     await _async_test_service(
@@ -577,7 +579,7 @@ async def test_update_errors(
 
 
 async def test_state_already_set_avoid_ratelimit(hass: HomeAssistant) -> None:
-    """Ensure we suppress state changes that will increase the rate limit when there is no change."""
+    """Ensure we suppress no-op state changes to avoid rate limit."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
     properties.pop("active_mode")
@@ -1216,7 +1218,7 @@ async def test_effects(hass: HomeAssistant) -> None:
 
 
 async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant) -> None:
-    """Test that main light on ambilights with the nightlight disabled shows the correct brightness."""
+    """Test ambilight main light brightness with nightlight off."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
     capabilities = {**CAPABILITIES}
@@ -1250,8 +1252,89 @@ async def test_ambilight_with_nightlight_disabled(hass: HomeAssistant) -> None:
     assert state.attributes[ATTR_BRIGHTNESS] == 128
 
 
+async def test_ambilight_effect(hass: HomeAssistant) -> None:
+    """Test an effect on the ambilight is tracked separately from the main light."""
+    mocked_bulb = _mocked_bulb()
+    capabilities = {**CAPABILITIES, "model": "ceiling10"}
+    mocked_bulb.last_properties = {
+        **PROPERTIES,
+        "flowing": "0",
+        "bg_flowing": "0",
+    }
+    mocked_bulb.bulb_type = BulbType.WhiteTempMood
+
+    config_entry = MockConfigEntry(domain=DOMAIN, data=CONFIG_ENTRY_DATA)
+    config_entry.add_to_hass(hass)
+    with (
+        _patch_discovery(capabilities=capabilities),
+        _patch_discovery_interval(),
+        patch(f"{MODULE}.AsyncBulb", return_value=mocked_bulb),
+    ):
+        assert await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    main_light_entity_id = "light.yeelight_ceiling10_0x15243f"
+    ambilight_entity_id = f"{main_light_entity_id}_ambilight"
+    mocked_bulb.async_get_properties.reset_mock()
+
+    async def _async_get_properties(properties: list[str]) -> None:
+        assert properties == UPDATE_REQUEST_PROPERTIES
+        assert mocked_bulb.async_start_flow.await_count > 0
+        mocked_bulb.last_properties["bg_flowing"] = "1"
+
+    mocked_bulb.async_get_properties.side_effect = _async_get_properties
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_EFFECT: EFFECT_DISCO},
+        blocking=True,
+    )
+
+    mocked_bulb.async_start_flow.assert_awaited_once_with(
+        ANY, light_type=LightType.Ambient
+    )
+    mocked_bulb.async_get_properties.assert_awaited_once_with(UPDATE_REQUEST_PROPERTIES)
+
+    assert hass.states.get(main_light_entity_id).attributes.get(ATTR_EFFECT) is None
+    ambilight_state = hass.states.get(ambilight_entity_id)
+    assert ambilight_state.attributes[ATTR_EFFECT] == EFFECT_DISCO
+    assert ambilight_state.attributes["flowing"] is True
+
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_EFFECT: EFFECT_WHATSAPP},
+        blocking=True,
+    )
+
+    assert mocked_bulb.async_get_properties.await_count == 2
+    assert (
+        hass.states.get(ambilight_entity_id).attributes[ATTR_EFFECT] == EFFECT_WHATSAPP
+    )
+
+    async def _async_get_stopped_properties(properties: list[str]) -> None:
+        assert properties == UPDATE_REQUEST_PROPERTIES
+        assert mocked_bulb.async_stop_flow.await_count > 0
+        mocked_bulb.last_properties["bg_flowing"] = "0"
+
+    mocked_bulb.async_get_properties.side_effect = _async_get_stopped_properties
+    await hass.services.async_call(
+        "light",
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: ambilight_entity_id, ATTR_EFFECT: EFFECT_STOP},
+        blocking=True,
+    )
+
+    mocked_bulb.async_stop_flow.assert_awaited_once_with(light_type=LightType.Ambient)
+    assert mocked_bulb.async_get_properties.await_count == 3
+    ambilight_state = hass.states.get(ambilight_entity_id)
+    assert ambilight_state.attributes.get(ATTR_EFFECT) is None
+    assert ambilight_state.attributes["flowing"] is False
+
+
 async def test_state_fails_to_update_triggers_update(hass: HomeAssistant) -> None:
-    """Ensure we call async_get_properties if the turn on/off fails to update the state."""
+    """Ensure async_get_properties is called on failed state update."""
     mocked_bulb = _mocked_bulb()
     properties = {**PROPERTIES}
     properties.pop("active_mode")

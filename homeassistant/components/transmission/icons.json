@@ -1,11 +1,8 @@
 {
   "entity": {
-    "binary_sensor": {
-      "port_forwarding": {
-        "default": "mdi:shield-check",
-        "state": {
-          "off": "mdi:shield-off"
-        }
+    "event": {
+      "torrent": {
+        "default": "mdi:folder-file-outline"
       }
     },
     "sensor": {
@@ -14,6 +11,9 @@
       },
       "completed_torrents": {
         "default": "mdi:counter"
+      },
+      "download_dir_free_space": {
+        "default": "mdi:harddisk"
       },
       "download_speed": {
         "default": "mdi:cloud-download"

@@ -1,10 +1,9 @@
 """Support for EnergyZero sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime, timedelta
+from typing import override
 
 from homeassistant.components.sensor import (
     DOMAIN as SENSOR_DOMAIN,
@@ -48,6 +47,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         service_type="today_gas",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
+        suggested_display_precision=3,
         value_fn=lambda data: data.gas_today.current_price if data.gas_today else None,
     ),
     EnergyZeroSensorEntityDescription(
@@ -55,6 +55,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="next_hour_price",
         service_type="today_gas",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfVolume.CUBIC_METERS}",
+        suggested_display_precision=3,
         value_fn=lambda data: get_gas_price(data, 1),
     ),
     EnergyZeroSensorEntityDescription(
@@ -63,6 +64,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         service_type="today_energy",
         state_class=SensorStateClass.MEASUREMENT,
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=3,
         value_fn=lambda data: data.energy_today.current_price,
     ),
     EnergyZeroSensorEntityDescription(
@@ -70,6 +72,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="next_hour_price",
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=3,
         value_fn=lambda data: data.energy_today.price_at_time(
             data.energy_today.utcnow() + timedelta(hours=1)
         ),
@@ -79,6 +82,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="average_price",
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=3,
         value_fn=lambda data: data.energy_today.average_price,
     ),
     EnergyZeroSensorEntityDescription(
@@ -86,6 +90,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="max_price",
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=3,
         value_fn=lambda data: data.energy_today.extreme_prices[1],
     ),
     EnergyZeroSensorEntityDescription(
@@ -93,6 +98,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="min_price",
         service_type="today_energy",
         native_unit_of_measurement=f"{CURRENCY_EURO}/{UnitOfEnergy.KILO_WATT_HOUR}",
+        suggested_display_precision=3,
         value_fn=lambda data: data.energy_today.extreme_prices[0],
     ),
     EnergyZeroSensorEntityDescription(
@@ -100,14 +106,16 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="highest_price_time",
         service_type="today_energy",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.energy_today.highest_price_time,
+        value_fn=lambda data: (
+            data.energy_today.highest_price_time_range.start_including
+        ),
     ),
     EnergyZeroSensorEntityDescription(
         key="lowest_price_time",
         translation_key="lowest_price_time",
         service_type="today_energy",
         device_class=SensorDeviceClass.TIMESTAMP,
-        value_fn=lambda data: data.energy_today.lowest_price_time,
+        value_fn=lambda data: data.energy_today.lowest_price_time_range.start_including,
     ),
     EnergyZeroSensorEntityDescription(
         key="percentage_of_max",
@@ -121,7 +129,7 @@ SENSORS: tuple[EnergyZeroSensorEntityDescription, ...] = (
         translation_key="hours_priced_equal_or_lower",
         service_type="today_energy",
         native_unit_of_measurement=UnitOfTime.HOURS,
-        value_fn=lambda data: data.energy_today.hours_priced_equal_or_lower,
+        value_fn=lambda data: data.energy_today.time_ranges_priced_equal_or_lower,
     ),
 )
 
@@ -181,7 +189,10 @@ class EnergyZeroSensorEntity(
         self.entity_id = (
             f"{SENSOR_DOMAIN}.{DOMAIN}_{description.service_type}_{description.key}"
         )
-        self._attr_unique_id = f"{coordinator.config_entry.entry_id}_{description.service_type}_{description.key}"
+        self._attr_unique_id = (
+            f"{coordinator.config_entry.entry_id}"
+            f"_{description.service_type}_{description.key}"
+        )
         self._attr_device_info = DeviceInfo(
             entry_type=DeviceEntryType.SERVICE,
             identifiers={
@@ -195,6 +206,7 @@ class EnergyZeroSensorEntity(
         )
 
     @property
+    @override
     def native_value(self) -> float | datetime | None:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

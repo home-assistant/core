@@ -1,20 +1,100 @@
 """Test Template config."""
 
-from __future__ import annotations
-
 import pytest
 import voluptuous as vol
 
-from homeassistant.components.template import DOMAIN
+from homeassistant.components.template import DOMAIN, PLATFORMS
 from homeassistant.components.template.config import (
     CONFIG_SECTION_SCHEMA,
     async_validate_config_section,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import (
+    device_registry as dr,
+    entity_registry as er,
+    issue_registry as ir,
+)
+from homeassistant.helpers.discovery import Platform
 from homeassistant.helpers.script_variables import ScriptVariables
 from homeassistant.helpers.template import Template
+from homeassistant.helpers.typing import ConfigType
 from homeassistant.setup import async_setup_component
+
+from .conftest import (
+    ConfigurationStyle,
+    TemplatePlatformSetup,
+    assert_action,
+    async_trigger,
+    make_mock_device_actions,
+    make_test_trigger,
+    setup_entity,
+    setup_mock_devices,
+)
+
+from tests.common import assert_platform_setup_creates_issue, assert_setup_component
+
+
+@pytest.mark.parametrize(
+    "platform_domain",
+    [platform for platform in PLATFORMS if platform != Platform.DEVICE_TRACKER],
+)
+async def test_platform_config_creates_issue(
+    hass: HomeAssistant,
+    platform_domain: str,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    await assert_platform_setup_creates_issue(
+        hass,
+        platform_domain,
+        DOMAIN,
+        issue_registry,
+        caplog,
+    )
+
+
+async def test_platform_device_tracker_creates_issue(
+    hass: HomeAssistant,
+    issue_registry: ir.IssueRegistry,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test invalid platform config creates issue and logs a warning."""
+    caplog.clear()
+    integration_domain = DOMAIN
+    platform_domain = Platform.DEVICE_TRACKER
+    with assert_setup_component(1, platform_domain):
+        assert await async_setup_component(
+            hass,
+            platform_domain,
+            {platform_domain: {"platform": integration_domain}},
+        )
+    await hass.async_block_till_done()
+    await hass.async_start()
+    await hass.async_block_till_done()
+
+    assert len(hass.states.async_all(platform_domain)) == 0
+    assert (
+        f"The {integration_domain} platform for the {platform_domain} integration does not support platform"
+        " setup, please remove it from your config" in caplog.text
+    )
+
+    issue = issue_registry.async_get_issue(
+        "homeassistant",
+        f"platform_integration_no_support_{platform_domain}_{integration_domain}",
+    )
+
+    assert issue
+    assert issue.issue_domain == integration_domain
+    assert issue.learn_more_url is None
+    assert issue.translation_key == "platform_setup_not_supported"
+    assert issue.severity == ir.IssueSeverity.ERROR
+    assert issue.translation_placeholders == {
+        "platform_domain": platform_domain,
+        "integration_domain": integration_domain,
+        "platform_key": f"platform: {integration_domain}",
+        "yaml_example": f"```yaml\n{platform_domain}:\n  - platform: {integration_domain}\n```",
+    }
 
 
 @pytest.mark.parametrize(
@@ -133,7 +213,8 @@ async def test_invalid_default_entity_id(
                     "auto_off": "00:00:01",
                 },
             },
-            "The auto_off option for template binary sensor: name: Template Binary Sensor",
+            "The auto_off option for template binary sensor:"
+            " name: Template Binary Sensor",
         ),
         (
             {
@@ -174,7 +255,8 @@ async def test_invalid_default_entity_id(
                     "auto_off": "00:00:01",
                 },
             },
-            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+            "The auto_off option for template binary sensor:"
+            " default_entity_id: binary_sensor.test_entity_id",
         ),
         (
             {
@@ -197,7 +279,8 @@ async def test_invalid_default_entity_id(
                     "auto_off": "00:00:01",
                 },
             },
-            "The auto_off option for template binary sensor: default_entity_id: binary_sensor.test_entity_id",
+            "The auto_off option for template binary sensor:"
+            " default_entity_id: binary_sensor.test_entity_id",
         ),
     ],
 )
@@ -209,11 +292,520 @@ async def test_invalid_binary_sensor_schema_with_auto_off(
 ) -> None:
     """Test invalid config schemas create issue and log warning."""
 
-    await async_setup_component(hass, "template", {"template": [config]})
+    await async_setup_component(hass, DOMAIN, {"template": [config]})
 
     assert (
         expected_error is None and "ERROR" not in caplog.text
     ) or expected_error in caplog.text
+
+
+# Button is omitted because it does not support triggers
+TRIGGER_PLATFORM_CONFIGURATIONS = [
+    (
+        Platform.ALARM_CONTROL_PANEL,
+        {
+            "state": "{{ 'disarmed' }}",
+        },
+    ),
+    (
+        Platform.BINARY_SENSOR,
+        {
+            "state": "{{ 'on' }}",
+        },
+    ),
+    (
+        Platform.COVER,
+        {
+            "state": "{{ 'open' }}",
+            "open_cover": [],
+            "close_cover": [],
+        },
+    ),
+    (
+        Platform.DEVICE_TRACKER,
+        {
+            "in_zones": "{{ ['zone.home'] }}",
+        },
+    ),
+    (
+        Platform.EVENT,
+        {
+            "event_type": "{{ 'single' }}",
+            "event_types": "{{ ['single'] }}",
+        },
+    ),
+    (
+        Platform.FAN,
+        {
+            "state": "{{ 'on' }}",
+            "turn_on": [],
+            "turn_off": [],
+        },
+    ),
+    (
+        Platform.IMAGE,
+        {
+            "url": "{{ 'http://www.test.com' }}",
+        },
+    ),
+    (
+        Platform.LIGHT,
+        {
+            "state": "{{ 'on' }}",
+            "turn_on": [],
+            "turn_off": [],
+        },
+    ),
+    (
+        Platform.LOCK,
+        {
+            "state": "{{ 'on' }}",
+            "lock": [],
+            "unlock": [],
+        },
+    ),
+    (
+        Platform.NUMBER,
+        {
+            "state": "{{ 4 }}",
+            "min": "0",
+            "max": "100",
+            "step": "0.1",
+            "unit_of_measurement": "cm",
+            "set_value": [],
+        },
+    ),
+    (
+        Platform.SELECT,
+        {
+            "state": "{{ 'on' }}",
+            "options": "{{ ['off', 'on', 'auto'] }}",
+            "select_option": [],
+        },
+    ),
+    (
+        Platform.SENSOR,
+        {
+            "state": "{{ 'yes' }}",
+        },
+    ),
+    (
+        Platform.SWITCH,
+        {
+            "state": "{{ 'on' }}",
+            "turn_on": [],
+            "turn_off": [],
+        },
+    ),
+    (
+        Platform.UPDATE,
+        {
+            "installed_version": "{{ '1.0' }}",
+            "latest_version": "{{ '2.0' }}",
+        },
+    ),
+    (
+        Platform.VACUUM,
+        {
+            "state": "{{ 'docked' }}",
+            "start": [],
+        },
+    ),
+    (
+        Platform.WEATHER,
+        {
+            "condition": "{{ 'cloudy' }}",
+            "temperature": "{{ 20 }}",
+            "humidity": "{{ 50 }}",
+        },
+    ),
+]
+
+
+@pytest.mark.parametrize(("platform", "config"), TRIGGER_PLATFORM_CONFIGURATIONS)
+async def test_trigger_schema_with_conditions(
+    hass: HomeAssistant,
+    platform: Platform,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test conditions schema with valid and invalid configurations."""
+
+    await setup_entity(
+        hass,
+        TemplatePlatformSetup(
+            platform, "test_entity", make_test_trigger("sensor.test_state")
+        ),
+        ConfigurationStyle.TRIGGER,
+        1,
+        {
+            "conditions": {
+                "condition": "template",
+                "value_template": "{{ 1 == 1 }}",
+            },
+            **config,
+        },
+    )
+
+    assert "ERROR" not in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("platform", "config"),
+    [
+        (
+            Platform.BUTTON,
+            {
+                "press": [],
+            },
+        ),
+    ],
+)
+async def test_invalid_trigger_schema_with_conditions(
+    hass: HomeAssistant,
+    platform: Platform,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test conditions schema with valid and invalid configurations."""
+
+    await setup_entity(
+        hass,
+        TemplatePlatformSetup(
+            platform, "test_entity", make_test_trigger("sensor.test_state")
+        ),
+        ConfigurationStyle.TRIGGER,
+        0,
+        {
+            "conditions": {
+                "condition": "template",
+                "value_template": "{{ 1 == 1 }}",
+            },
+            **config,
+        },
+    )
+
+    error = (
+        "Invalid config for 'template': Unsupported option(s) found for domain button"
+    )
+    assert error in caplog.text
+
+
+@pytest.mark.parametrize(
+    ("platform", "config"),
+    [
+        (
+            Platform.ALARM_CONTROL_PANEL,
+            {
+                "state": "{{ 'disarmed' }}",
+            },
+        ),
+        (
+            Platform.BINARY_SENSOR,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
+        (
+            Platform.COVER,
+            {
+                "state": "{{ 'open' }}",
+                "open_cover": [],
+                "close_cover": [],
+            },
+        ),
+        (
+            Platform.DEVICE_TRACKER,
+            {
+                "in_zones": "{{ ['zone.home'] }}",
+            },
+        ),
+        (
+            Platform.EVENT,
+            {
+                "event_type": "{{ 'single' }}",
+                "event_types": "{{ ['single'] }}",
+            },
+        ),
+        (
+            Platform.FAN,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.IMAGE,
+            {
+                "url": "{{ 'http://www.test.com' }}",
+            },
+        ),
+        (
+            Platform.LIGHT,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.LOCK,
+            {
+                "state": "{{ 'on' }}",
+                "lock": [],
+                "unlock": [],
+            },
+        ),
+        (
+            Platform.NUMBER,
+            {
+                "state": "{{ 4 }}",
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
+                "set_value": [],
+            },
+        ),
+        (
+            Platform.SELECT,
+            {
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+                "select_option": [],
+            },
+        ),
+        (
+            Platform.SENSOR,
+            {
+                "state": "{{ 'yes' }}",
+            },
+        ),
+        (
+            Platform.SWITCH,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.UPDATE,
+            {
+                "installed_version": "{{ '1.0' }}",
+                "latest_version": "{{ '2.0' }}",
+            },
+        ),
+        (
+            Platform.VACUUM,
+            {
+                "state": "{{ 'docked' }}",
+                "start": [],
+            },
+        ),
+        (
+            Platform.WEATHER,
+            {
+                "condition": "{{ 'cloudy' }}",
+                "temperature": "{{ 20 }}",
+                "humidity": "{{ 50 }}",
+            },
+        ),
+    ],
+)
+async def test_trigger_schema_with_invalid_condition(
+    hass: HomeAssistant,
+    platform: Platform,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test conditions schema with valid and invalid configurations."""
+
+    await setup_entity(
+        hass,
+        TemplatePlatformSetup(
+            platform, "test_entity", make_test_trigger("sensor.test_state")
+        ),
+        ConfigurationStyle.TRIGGER,
+        1,
+        {
+            "conditions": {
+                "condition": "device",
+                "type": "is_off",
+                "device_id": "70c5f67ec2f82f9ba128fe6e99eb7dfa",
+                "entity_id": "c7e6f3753cb18937f2147bbbdccdd949",
+                "domain": "light",
+            },
+            **config,
+        },
+    )
+
+    assert len(hass.states.async_entity_ids(platform)) == 0
+    assert (
+        "The condition for test_entity failed to setup: Unknown device '70c5f67ec2f82f9ba128fe6e99eb7dfa'"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(
+    ("platform", "config"),
+    [
+        (
+            Platform.ALARM_CONTROL_PANEL,
+            {
+                "state": "{{ 'disarmed' }}",
+            },
+        ),
+        (
+            Platform.BINARY_SENSOR,
+            {
+                "state": "{{ 'on' }}",
+            },
+        ),
+        (
+            Platform.BUTTON,
+            {
+                "press": [],
+            },
+        ),
+        (
+            Platform.COVER,
+            {
+                "state": "{{ 'open' }}",
+                "open_cover": [],
+                "close_cover": [],
+            },
+        ),
+        (
+            Platform.DEVICE_TRACKER,
+            {
+                "in_zones": "{{ ['zone.home'] }}",
+            },
+        ),
+        (
+            Platform.EVENT,
+            {
+                "event_type": "{{ 'single' }}",
+                "event_types": "{{ ['single'] }}",
+            },
+        ),
+        (
+            Platform.FAN,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.IMAGE,
+            {
+                "url": "{{ 'http://www.test.com' }}",
+            },
+        ),
+        (
+            Platform.LIGHT,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.LOCK,
+            {
+                "state": "{{ 'on' }}",
+                "lock": [],
+                "unlock": [],
+            },
+        ),
+        (
+            Platform.NUMBER,
+            {
+                "state": "{{ 4 }}",
+                "min": "0",
+                "max": "100",
+                "step": "0.1",
+                "unit_of_measurement": "cm",
+                "set_value": [],
+            },
+        ),
+        (
+            Platform.SELECT,
+            {
+                "state": "{{ 'on' }}",
+                "options": "{{ ['off', 'on', 'auto'] }}",
+                "select_option": [],
+            },
+        ),
+        (
+            Platform.SENSOR,
+            {
+                "state": "{{ 'yes' }}",
+            },
+        ),
+        (
+            Platform.SWITCH,
+            {
+                "state": "{{ 'on' }}",
+                "turn_on": [],
+                "turn_off": [],
+            },
+        ),
+        (
+            Platform.UPDATE,
+            {
+                "installed_version": "{{ '1.0' }}",
+                "latest_version": "{{ '2.0' }}",
+            },
+        ),
+        (
+            Platform.VACUUM,
+            {
+                "state": "{{ 'docked' }}",
+                "start": [],
+            },
+        ),
+        (
+            Platform.WEATHER,
+            {
+                "condition": "{{ 'cloudy' }}",
+                "temperature": "{{ 20 }}",
+                "humidity": "{{ 50 }}",
+            },
+        ),
+    ],
+)
+async def test_invalid_schema_with_conditions(
+    hass: HomeAssistant,
+    platform: Platform,
+    config: ConfigType,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test conditions schema with valid and invalid configurations."""
+
+    await setup_entity(
+        hass,
+        TemplatePlatformSetup(
+            platform, "test_entity", make_test_trigger("sensor.test_state")
+        ),
+        ConfigurationStyle.MODERN,
+        0,
+        {
+            "conditions": {
+                "condition": "template",
+                "value_template": "{{ 1 == 1 }}",
+            },
+            **config,
+        },
+    )
+
+    error = (
+        f"The conditions option for template {platform.replace('_', ' ')}: name: test_entity requires a trigger,"
+        " remove the conditions option or rewrite configuration to use a trigger"
+    )
+    assert error in caplog.text
 
 
 @pytest.mark.parametrize(
@@ -319,6 +911,152 @@ async def test_combined_state_variables(
 
 
 @pytest.mark.parametrize(
+    ("config", "expected_error"),
+    [
+        pytest.param(
+            {
+                "triggers": [
+                    {"trigger": "event", "event_type": "valid"},
+                    {"trigger": "not_a_platform"},
+                ],
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Invalid trigger 'not_a_platform' specified '', got"
+            " {'triggers': [{'trigger': 'event', 'event_type': 'valid'},"
+            " {'trigger': 'not_a_platform'}],"
+            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            id="trigger",
+        ),
+        pytest.param(
+            {
+                "triggers": {"trigger": "event", "event_type": "valid"},
+                "conditions": [
+                    {
+                        "condition": "state",
+                        "entity_id": "sensor.foo",
+                        "state": "on",
+                    },
+                    {
+                        "condition": "state",
+                        "entity_id": "abcdabcdabcdabcdabcdabcdabcdabcd",
+                        "state": "on",
+                    },
+                ],
+                "binary_sensor": {"name": "test", "state": "{{ true }}"},
+            },
+            "Invalid config for 'template':"
+            " Unknown entity registry entry abcdabcdabcdabcdabcdabcdabcdabcd"
+            " '', got"
+            " {'triggers': {'trigger': 'event', 'event_type': 'valid'},"
+            " 'conditions': [{'condition': 'state', 'entity_id': 'sensor.foo',"
+            " 'state': 'on'}, {'condition': 'state',"
+            " 'entity_id': 'abcdabcdabcdabcdabcdabcdabcdabcd', 'state': 'on'}],"
+            " 'binary_sensor': {'name': 'test', 'state': '{{ true }}'}}",
+            id="condition",
+        ),
+    ],
+)
+async def test_setup_component_bad_config_logs_error(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+    config: dict,
+    expected_error: str,
+) -> None:
+    """Test setting up template with a bad config logs a useful error message."""
+    await async_setup_component(hass, "template", {"template": [config]})
+    assert expected_error in caplog.text
+
+
+@pytest.mark.parametrize(("platform", "config"), TRIGGER_PLATFORM_CONFIGURATIONS)
+@pytest.mark.parametrize(
+    ("extra_section_config", "breadcrumb"),
+    [
+        ({}, "template section"),
+        ({"unique_id": "foo"}, "template section with unique_id: foo"),
+    ],
+)
+async def test_trigger_schema_with_invalid_actions(
+    hass: HomeAssistant,
+    platform: Platform,
+    config: ConfigType,
+    extra_section_config: ConfigType,
+    breadcrumb: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test trigger schema with invalid actions."""
+
+    await setup_entity(
+        hass,
+        TemplatePlatformSetup(
+            platform,
+            "test_entity",
+            {
+                **extra_section_config,
+                "trigger": [
+                    {"trigger": "state", "entity_id": ["sensor.test_state"]},
+                ],
+                "action": [
+                    {
+                        "type": "turn_off",
+                        "device_id": "70c5f67ec2f82f9ba128fe6e99eb7dfa",
+                        "entity_id": "c7e6f3753cb18937f2147bbbdccdd949",
+                        "domain": "light",
+                    },
+                ],
+            },
+        ),
+        ConfigurationStyle.TRIGGER,
+        1,
+        config,
+    )
+
+    assert len(hass.states.async_entity_ids(platform)) == 0
+    assert (
+        f"The 'actions' for {breadcrumb} failed to setup: Unknown device '70c5f67ec2f82f9ba128fe6e99eb7dfa'"
+        in caplog.text
+    )
+
+
+@pytest.mark.parametrize(("platform", "config"), TRIGGER_PLATFORM_CONFIGURATIONS)
+async def test_trigger_schema_with_valid_actions(
+    hass: HomeAssistant,
+    platform: Platform,
+    config: ConfigType,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    calls: list,
+) -> None:
+    """Test trigger schema with valid actions configurations."""
+
+    platform_setup, device_entry, entity_entry = await setup_mock_devices(
+        hass, platform, device_registry, entity_registry
+    )
+
+    await setup_entity(
+        hass,
+        TemplatePlatformSetup(
+            platform,
+            "test_entity",
+            {
+                "trigger": [
+                    {"trigger": "state", "entity_id": ["sensor.test_state"]},
+                ],
+                **make_mock_device_actions(
+                    ["actions"], platform_setup, device_entry, entity_entry
+                ),
+            },
+        ),
+        ConfigurationStyle.TRIGGER,
+        1,
+        config,
+    )
+
+    await async_trigger(hass, "sensor.test_state", "anything")
+    assert_action(platform_setup, calls, 1, "fake_action")
+
+
+@pytest.mark.parametrize(
     ("config", "expected_root", "expected_entity"),
     [
         (
@@ -378,7 +1116,7 @@ async def test_combined_trigger_variables(
 async def test_state_init_attribute_variables(
     hass: HomeAssistant,
 ) -> None:
-    """Test a state based template entity initializes icon, name, and picture with variables."""
+    """Test state based template entity initializes attributes with variables."""
     source = "switch.foo"
     entity_id = "sensor.foo"
 
@@ -398,7 +1136,9 @@ async def test_state_init_attribute_variables(
                     },
                     "name": "{{ state_attr(switch, 'friendly_name') }}",
                     "icon": "{{ on_icon if is_state(switch, 'on') else off_icon }}",
-                    "picture": "{{ on_picture if is_state(switch, 'on') else off_picture }}",
+                    "picture": (
+                        "{{ on_picture if is_state(switch, 'on') else off_picture }}"
+                    ),
                     "state": "{{ is_state(switch, 'on') }}",
                 },
             }
@@ -438,7 +1178,8 @@ async def test_state_init_attribute_variables(
             {
                 "trigger": {"trigger": "event", "event_type": "my_event"},
             },
-            "Invalid template configuration found, trigger option is missing matching domain",
+            "Invalid template configuration found, trigger option is"
+            " missing matching domain",
         ),
         (
             {
@@ -466,7 +1207,7 @@ async def test_invalid_schema_raises_issue(
 ) -> None:
     """Test invalid config schemas create issue and log warning."""
 
-    await async_setup_component(hass, "template", {"template": [config]})
+    await async_setup_component(hass, DOMAIN, {"template": [config]})
 
     assert expected_warning in caplog.text
 
@@ -483,7 +1224,7 @@ async def test_multiple_configuration_keys(
     """Test multiple configurations keys create entities."""
     await async_setup_component(
         hass,
-        "template",
+        DOMAIN,
         {
             "template": [{"binary_sensor": [{"name": "Foo", "state": "{{ True }}"}]}],
             "template mytemplates": [
@@ -522,10 +1263,24 @@ async def test_multiple_configuration_keys(
                                 "action": "cover.stop_cover",
                             },
                             "default_entity_id": "cover.shades_reversed",
-                            "icon": "{% set s = states('cover.shades_curtain') %}\n{% if s == 'open' %}\n   mdi:curtains-closed\n{% else %}\n   mdi:curtains\n{% endif %}",
+                            "icon": (
+                                "{% set s = states('cover.shades_curtain') %}\n"
+                                "{% if s == 'open' %}\n"
+                                "   mdi:curtains-closed\n"
+                                "{% else %}\n"
+                                "   mdi:curtains\n"
+                                "{% endif %}"
+                            ),
                             "name": "Shades Reversed",
                             "unique_id": "c0223bcb-32c6-430e-a2c1-3545f8031796",
-                            "state": "{% set s = states('cover.shades_curtain') %}\n{% if s == 'open' %}\n  closed\n{% elif s == 'closed' %}\n  open\n{% elif s == 'opening' %}\n  closing\n{% elif s == 'closing' %}\n  opening\n{% else %}\n  unknown\n{% endif %}",
+                            "state": (
+                                "{% set s = states('cover.shades_curtain') %}\n"
+                                "{% if s == 'open' %}\n  closed\n"
+                                "{% elif s == 'closed' %}\n  open\n"
+                                "{% elif s == 'opening' %}\n  closing\n"
+                                "{% elif s == 'closing' %}\n  opening\n"
+                                "{% else %}\n  unknown\n{% endif %}"
+                            ),
                         }
                     ]
                 },

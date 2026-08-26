@@ -5,6 +5,7 @@ from typing import Any
 
 import voluptuous as vol
 
+from homeassistant.components.media_source import local_source
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import ATTR_ENTITY_ID, CONF_DESCRIPTION, CONF_SELECTOR
 from homeassistant.core import (
@@ -34,6 +35,7 @@ from .const import (
 )
 from .entity import AITaskEntity
 from .http import async_setup as async_setup_http
+from .media_source import async_get_media_source
 from .task import (
     GenDataTask,
     GenDataTaskResult,
@@ -88,6 +90,9 @@ async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     hass.data[DATA_PREFERENCES] = AITaskPreferences(hass)
     await hass.data[DATA_PREFERENCES].async_load()
     async_setup_http(hass)
+    if hass.config.media_dirs:
+        source = await async_get_media_source(hass)
+        hass.http.register_view(local_source.LocalMediaView(hass, source))
     hass.services.async_register(
         DOMAIN,
         SERVICE_GENERATE_DATA,
@@ -141,13 +146,15 @@ async def async_unload_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
 
 async def async_service_generate_data(call: ServiceCall) -> ServiceResponse:
     """Run the data task service."""
-    result = await async_generate_data(hass=call.hass, **call.data)
+    result = await async_generate_data(
+        hass=call.hass, context=call.context, **call.data
+    )
     return result.as_dict()
 
 
 async def async_service_generate_image(call: ServiceCall) -> ServiceResponse:
     """Run the image task service."""
-    return await async_generate_image(hass=call.hass, **call.data)
+    return await async_generate_image(hass=call.hass, context=call.context, **call.data)
 
 
 class AITaskPreferences:
@@ -176,8 +183,8 @@ class AITaskPreferences:
     def async_set_preferences(
         self,
         *,
-        gen_data_entity_id: str | None | UndefinedType = UNDEFINED,
-        gen_image_entity_id: str | None | UndefinedType = UNDEFINED,
+        gen_data_entity_id: str | UndefinedType | None = UNDEFINED,
+        gen_image_entity_id: str | UndefinedType | None = UNDEFINED,
     ) -> None:
         """Set the preferences."""
         changed = False

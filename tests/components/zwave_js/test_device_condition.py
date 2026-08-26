@@ -1,12 +1,10 @@
 """The tests for Z-Wave JS device conditions."""
 
-from __future__ import annotations
-
 from unittest.mock import patch
 
+from probatio import to_field_list
 import pytest
 import voluptuous as vol
-import voluptuous_serialize
 from zwave_js_server.const import CommandClass
 from zwave_js_server.event import Event
 
@@ -36,8 +34,8 @@ async def test_get_conditions(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected onditions from a zwave_js."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
     config_value = list(lock_schlage_be469.get_configuration_values().values())[0]
@@ -76,8 +74,9 @@ async def test_get_conditions(
         assert condition in conditions
 
     # Test that we don't return actions for a controller node
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, client.driver.controller.nodes[1])}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, client.driver.controller.nodes[1]),
+        integration.entry_id,
     )
     assert device
     assert (
@@ -97,8 +96,8 @@ async def test_node_status_state(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for node_status conditions."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -262,8 +261,8 @@ async def test_config_parameter_state(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for config_parameter conditions."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -382,8 +381,8 @@ async def test_value_state(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test for value conditions."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -433,8 +432,8 @@ async def test_get_condition_capabilities_node_status(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we don't get capabilities from a node_status condition."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -448,7 +447,7 @@ async def test_get_condition_capabilities_node_status(
         },
     )
     assert capabilities and "extra_fields" in capabilities
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -473,8 +472,8 @@ async def test_get_condition_capabilities_value(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test we get the expected capabilities from a value condition."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, lock_schlage_be469)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, lock_schlage_be469), integration.entry_id
     )
     assert device
 
@@ -490,18 +489,18 @@ async def test_get_condition_capabilities_value(
     assert capabilities and "extra_fields" in capabilities
 
     cc_options = [
-        (133, "Association"),
-        (128, "Battery"),
-        (98, "Door Lock"),
-        (122, "Firmware Update Meta Data"),
-        (114, "Manufacturer Specific"),
-        (113, "Notification"),
-        (152, "Security"),
-        (99, "User Code"),
-        (134, "Version"),
+        ("133", "Association"),
+        ("128", "Battery"),
+        ("98", "Door Lock"),
+        ("122", "Firmware Update Meta Data"),
+        ("114", "Manufacturer Specific"),
+        ("113", "Notification"),
+        ("152", "Security"),
+        ("99", "User Code"),
+        ("134", "Version"),
     ]
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -526,8 +525,9 @@ async def test_get_condition_capabilities_config_parameter(
 ) -> None:
     """Test we get the expected capabilities from a config_parameter condition."""
     node = climate_radio_thermostat_ct100_plus
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, climate_radio_thermostat_ct100_plus)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, climate_radio_thermostat_ct100_plus),
+        integration.entry_id,
     )
     assert device
 
@@ -545,18 +545,18 @@ async def test_get_condition_capabilities_config_parameter(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
             "name": "value",
             "required": True,
             "options": [
-                (0, "Disabled"),
-                (1, "0.5° F"),
-                (2, "1.0° F"),
-                (3, "1.5° F"),
-                (4, "2.0° F"),
+                ("0", "Disabled"),
+                ("1", "0.5° F"),
+                ("2", "1.0° F"),
+                ("3", "1.5° F"),
+                ("4", "2.0° F"),
             ],
             "type": "select",
         }
@@ -576,7 +576,7 @@ async def test_get_condition_capabilities_config_parameter(
     )
     assert capabilities and "extra_fields" in capabilities
 
-    assert voluptuous_serialize.convert(
+    assert to_field_list(
         capabilities["extra_fields"], custom_serializer=cv.custom_serializer
     ) == [
         {
@@ -611,8 +611,8 @@ async def test_failure_scenarios(
     device_registry: dr.DeviceRegistry,
 ) -> None:
     """Test failure scenarios."""
-    device = device_registry.async_get_device(
-        identifiers={get_device_id(client.driver, hank_binary_switch)}
+    device = device_registry.async_get_device_by_identifier(
+        get_device_id(client.driver, hank_binary_switch), integration.entry_id
     )
     assert device
 
@@ -694,3 +694,23 @@ async def test_get_value_from_config_failure(
                 "endpoint": 10,
             },
         )
+
+
+def test_condition_schema_coerces_string_command_class() -> None:
+    """Test that VALUE condition schema accepts both int and string command_class."""
+    for command_class_value in (
+        CommandClass.DOOR_LOCK.value,
+        str(CommandClass.DOOR_LOCK.value),
+    ):
+        config = device_condition.CONDITION_SCHEMA(
+            {
+                "condition": "device",
+                "domain": DOMAIN,
+                "device_id": "device123",
+                "type": "value",
+                "command_class": command_class_value,
+                "property": "latchStatus",
+                "value": "open",
+            }
+        )
+        assert config["command_class"] == CommandClass.DOOR_LOCK.value

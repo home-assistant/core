@@ -1,7 +1,5 @@
 """Tests for Alexa Devices diagnostics platform."""
 
-from __future__ import annotations
-
 from unittest.mock import AsyncMock
 
 from syrupy.assertion import SnapshotAssertion
@@ -54,8 +52,10 @@ async def test_device_diagnostics(
     """Test Amazon device diagnostics."""
     await setup_integration(hass, mock_config_entry)
 
-    device = device_registry.async_get_device(identifiers={(DOMAIN, TEST_DEVICE_1_SN)})
-    assert device, repr(device_registry.devices)
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, TEST_DEVICE_1_SN), mock_config_entry.entry_id
+    )
+    assert device, repr(device_registry._devices)
 
     assert await get_diagnostics_for_device(
         hass, hass_client, mock_config_entry, device

@@ -5,7 +5,7 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from pyprosegur.installation import Camera
 import pytest
 
-from homeassistant.components.prosegur import DOMAIN
+from homeassistant.components.prosegur.const import DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 

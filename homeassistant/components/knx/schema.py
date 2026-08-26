@@ -1,7 +1,5 @@
 """Voluptuous schemas for the KNX integration."""
 
-from __future__ import annotations
-
 from abc import ABC
 from collections import OrderedDict
 from datetime import timedelta
@@ -34,23 +32,28 @@ from homeassistant.components.switch import (
 )
 from homeassistant.components.text import TextMode
 from homeassistant.const import (
+    CONF_DEVICE,
     CONF_DEVICE_CLASS,
     CONF_ENTITY_CATEGORY,
     CONF_ENTITY_ID,
     CONF_EVENT,
+    CONF_ID,
     CONF_MODE,
     CONF_NAME,
     CONF_PAYLOAD,
     CONF_TYPE,
+    CONF_UNIQUE_ID,
     CONF_UNIT_OF_MEASUREMENT,
     CONF_VALUE_TEMPLATE,
     Platform,
 )
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity import ENTITY_CATEGORIES_SCHEMA
+from homeassistant.util import slugify
 
 from .const import (
     CONF_CONTEXT_TIMEOUT,
+    CONF_DEFAULT_ENTITY_ID,
     CONF_IGNORE_INTERNAL_STATE,
     CONF_INVERT,
     CONF_KNX_EXPOSE,
@@ -59,7 +62,9 @@ from .const import (
     CONF_RESPOND_TO_READ,
     CONF_STATE_ADDRESS,
     CONF_SYNC_STATE,
+    CONF_VALUE,
     KNX_ADDRESS,
+    UI_DEVICE_ID_PREFIX,
     ClimateConf,
     ColorTempModes,
     CoverConf,
@@ -67,6 +72,7 @@ from .const import (
     FanZeroMode,
     NumberConf,
     SceneConf,
+    SelectConf,
 )
 from .dpt import get_supported_dpts
 from .validation import (
@@ -77,6 +83,7 @@ from .validation import (
     numeric_type_validator,
     sensor_type_validator,
     string_type_validator,
+    sync_state_no_false_validator,
     sync_state_validator,
     validate_number_attributes,
     validate_sensor_attributes,
@@ -100,9 +107,12 @@ def _max_payload_value(payload_length: int) -> int:
 
 
 def button_payload_sub_validator(entity_config: OrderedDict) -> OrderedDict:
-    """Validate a button entity payload configuration."""
+    """Validate a button entity payload configuration.
+
+    Returns raw payload and length from value and type (DPT), if given.
+    """
     if _type := entity_config.get(CONF_TYPE):
-        _payload = entity_config[ButtonSchema.CONF_VALUE]
+        _payload = entity_config[CONF_VALUE]
         if (transcoder := DPTBase.parse_transcoder(_type)) is None:
             raise vol.Invalid(f"'type: {_type}' is not a valid sensor type.")
         entity_config[CONF_PAYLOAD_LENGTH] = transcoder.payload_length
@@ -132,8 +142,8 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
     payloads_seen = set()
     payload_length = entity_config[CONF_PAYLOAD_LENGTH]
 
-    for opt in entity_config[SelectSchema.CONF_OPTIONS]:
-        option = opt[SelectSchema.CONF_OPTION]
+    for opt in entity_config[SelectConf.OPTIONS]:
+        option = opt[SelectConf.OPTION]
         payload = opt[CONF_PAYLOAD]
         if payload > (max_payload := _max_payload_value(payload_length)):
             raise vol.Invalid(
@@ -150,8 +160,10 @@ def select_options_sub_validator(entity_config: OrderedDict) -> OrderedDict:
 
 
 def _sensor_attribute_sub_validator(config: dict) -> dict:
-    """Validate that state_class is compatible with device_class and unit_of_measurement."""
-    transcoder: type[DPTBase] = DPTBase.parse_transcoder(config[CONF_TYPE])  # type: ignore[assignment]  # already checked in sensor_type_validator
+    """Validate state_class, device_class and unit compatibility."""
+    transcoder: type[DPTBase] = DPTBase.parse_transcoder(  # type: ignore[assignment]
+        config[CONF_TYPE]
+    )
     dpt_metadata = get_supported_dpts()[transcoder.dpt_number_str()]
     return validate_sensor_attributes(dpt_metadata, config)
 
@@ -183,6 +195,22 @@ class EventSchema:
 #############
 
 
+def _unique_id_duplicate_validator(entities: list[dict]) -> list[dict]:
+    """Validate that user-defined unique_ids are unique within a platform.
+
+    The same unique_id on different platforms is allowed - the entity registry
+    scopes uniqueness per (entity domain, integration).
+    """
+    seen: set[str] = set()
+    for entity in entities:
+        if (unique_id := entity.get(CONF_UNIQUE_ID)) is None:
+            continue
+        if unique_id in seen:
+            raise vol.Invalid(f"duplicate 'unique_id' not allowed: {unique_id}")
+        seen.add(unique_id)
+    return entities
+
+
 class KNXPlatformSchema(ABC):
     """Voluptuous schema for KNX platform entity configuration."""
 
@@ -194,17 +222,46 @@ class KNXPlatformSchema(ABC):
         """Return a schema node for the platform."""
         return {
             vol.Optional(str(cls.PLATFORM)): vol.All(
-                cv.ensure_list, [cls.ENTITY_SCHEMA]
+                cv.ensure_list, [cls.ENTITY_SCHEMA], _unique_id_duplicate_validator
             )
         }
 
 
-COMMON_ENTITY_SCHEMA = vol.Schema(
-    {
-        vol.Optional(CONF_NAME, default=""): cv.string,
-        vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
-    }
-)
+def _device_id(value: str) -> str:
+    """Normalize a YAML device id.
+
+    A value matching the identifier of a device created in the UI (see
+    `UI_DEVICE_ID_PREFIX`) is passed through verbatim, so it keeps linking to
+    that device. Any other value is slugified so ids that only differ in
+    case or whitespace resolve to the same device instead of silently
+    creating a separate one.
+    """
+    value = value.strip()
+    if value.startswith(UI_DEVICE_ID_PREFIX):
+        return value
+    return slugify(value)
+
+
+def _entity_base_schema(platform: Platform) -> vol.Schema:
+    """Return a base schema for KNX entities."""
+    return vol.Schema(
+        {
+            vol.Optional(CONF_NAME, default=""): cv.string,
+            vol.Optional(CONF_DEVICE): vol.Schema(
+                {
+                    vol.Required(CONF_ID): vol.All(
+                        cv.string, _device_id, vol.Length(min=1)
+                    ),
+                    vol.Optional(CONF_NAME): cv.string,
+                }
+            ),
+            vol.Optional(CONF_DEFAULT_ENTITY_ID): vol.All(
+                cv.entity_id, cv.entity_domain(platform)
+            ),
+            vol.Optional(CONF_ENTITY_CATEGORY): ENTITY_CATEGORIES_SCHEMA,
+            vol.Optional(CONF_UNIQUE_ID): vol.All(cv.string, vol.Length(min=1)),
+        }
+    )
 
 
 class BinarySensorSchema(KNXPlatformSchema):
@@ -213,7 +270,7 @@ class BinarySensorSchema(KNXPlatformSchema):
     PLATFORM = Platform.BINARY_SENSOR
 
     ENTITY_SCHEMA = vol.All(
-        COMMON_ENTITY_SCHEMA.extend(
+        _entity_base_schema(PLATFORM).extend(
             {
                 vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
                 vol.Optional(CONF_IGNORE_INTERNAL_STATE, default=False): cv.boolean,
@@ -234,15 +291,13 @@ class ButtonSchema(KNXPlatformSchema):
 
     PLATFORM = Platform.BUTTON
 
-    CONF_VALUE = "value"
-
     payload_or_value_msg = f"Please use only one of `{CONF_PAYLOAD}` or `{CONF_VALUE}`"
     length_or_type_msg = (
         f"Please use only one of `{CONF_PAYLOAD_LENGTH}` or `{CONF_TYPE}`"
     )
 
     ENTITY_SCHEMA = vol.All(
-        COMMON_ENTITY_SCHEMA.extend(
+        _entity_base_schema(PLATFORM).extend(
             {
                 vol.Required(KNX_ADDRESS): ga_validator,
                 vol.Exclusive(
@@ -332,7 +387,7 @@ class ClimateSchema(KNXPlatformSchema):
     DEFAULT_FAN_SPEED_MODE = "percent"
 
     ENTITY_SCHEMA = vol.All(
-        COMMON_ENTITY_SCHEMA.extend(
+        _entity_base_schema(PLATFORM).extend(
             {
                 vol.Optional(
                     ClimateConf.SETPOINT_SHIFT_MAX, default=DEFAULT_SETPOINT_SHIFT_MAX
@@ -413,6 +468,9 @@ class ClimateSchema(KNXPlatformSchema):
                 vol.Optional(CONF_SWING_HORIZONTAL_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_SWING_HORIZONTAL_STATE_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_HUMIDITY_STATE_ADDRESS): ga_list_validator,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
     )
@@ -434,7 +492,7 @@ class CoverSchema(KNXPlatformSchema):
     DEFAULT_TRAVEL_TIME = 25
 
     ENTITY_SCHEMA = vol.All(
-        COMMON_ENTITY_SCHEMA.extend(
+        _entity_base_schema(PLATFORM).extend(
             {
                 vol.Optional(CONF_MOVE_LONG_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_MOVE_SHORT_ADDRESS): ga_list_validator,
@@ -453,6 +511,9 @@ class CoverSchema(KNXPlatformSchema):
                 vol.Optional(CoverConf.INVERT_POSITION, default=False): cv.boolean,
                 vol.Optional(CoverConf.INVERT_ANGLE, default=False): cv.boolean,
                 vol.Optional(CONF_DEVICE_CLASS): COVER_DEVICE_CLASSES_SCHEMA,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         vol.Any(
@@ -477,7 +538,7 @@ class DateSchema(KNXPlatformSchema):
 
     PLATFORM = Platform.DATE
 
-    ENTITY_SCHEMA = COMMON_ENTITY_SCHEMA.extend(
+    ENTITY_SCHEMA = _entity_base_schema(PLATFORM).extend(
         {
             vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
@@ -492,7 +553,7 @@ class DateTimeSchema(KNXPlatformSchema):
 
     PLATFORM = Platform.DATETIME
 
-    ENTITY_SCHEMA = COMMON_ENTITY_SCHEMA.extend(
+    ENTITY_SCHEMA = _entity_base_schema(PLATFORM).extend(
         {
             vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
@@ -511,6 +572,7 @@ class ExposeSchema(KNXPlatformSchema):
     CONF_KNX_EXPOSE_ATTRIBUTE = "attribute"
     CONF_KNX_EXPOSE_BINARY = "binary"
     CONF_KNX_EXPOSE_COOLDOWN = "cooldown"
+    CONF_KNX_EXPOSE_SEND_ON_INIT = "send_on_init"
     CONF_KNX_EXPOSE_PERIODIC_SEND = "periodic_send"
     CONF_KNX_EXPOSE_DEFAULT = "default"
     CONF_TIME = "time"
@@ -531,6 +593,7 @@ class ExposeSchema(KNXPlatformSchema):
             vol.Optional(
                 CONF_KNX_EXPOSE_COOLDOWN, default=timedelta(0)
             ): cv.positive_time_period,
+            vol.Optional(CONF_KNX_EXPOSE_SEND_ON_INIT, default=False): cv.boolean,
             vol.Optional(
                 CONF_KNX_EXPOSE_PERIODIC_SEND, default=timedelta(0)
             ): cv.positive_time_period,
@@ -560,7 +623,7 @@ class FanSchema(KNXPlatformSchema):
     CONF_SWITCH_STATE_ADDRESS = "switch_state_address"
 
     ENTITY_SCHEMA = vol.All(
-        COMMON_ENTITY_SCHEMA.extend(
+        _entity_base_schema(PLATFORM).extend(
             {
                 vol.Optional(KNX_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
@@ -644,7 +707,7 @@ class LightSchema(KNXPlatformSchema):
     )
 
     ENTITY_SCHEMA = vol.All(
-        COMMON_ENTITY_SCHEMA.extend(
+        _entity_base_schema(PLATFORM).extend(
             {
                 vol.Optional(KNX_ADDRESS): ga_list_validator,
                 vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
@@ -695,6 +758,9 @@ class LightSchema(KNXPlatformSchema):
                 vol.Optional(CONF_MAX_KELVIN, default=DEFAULT_MAX_KELVIN): vol.All(
                     vol.Coerce(int), vol.Range(min=1)
                 ),
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         vol.Any(
@@ -740,7 +806,7 @@ class NotifySchema(KNXPlatformSchema):
 
     PLATFORM = Platform.NOTIFY
 
-    ENTITY_SCHEMA = COMMON_ENTITY_SCHEMA.extend(
+    ENTITY_SCHEMA = _entity_base_schema(PLATFORM).extend(
         {
             vol.Optional(CONF_TYPE, default="latin_1"): string_type_validator,
             vol.Required(KNX_ADDRESS): ga_validator,
@@ -754,7 +820,7 @@ class NumberSchema(KNXPlatformSchema):
     PLATFORM = Platform.NUMBER
 
     ENTITY_SCHEMA = vol.All(
-        COMMON_ENTITY_SCHEMA.extend(
+        _entity_base_schema(PLATFORM).extend(
             {
                 vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
                 vol.Optional(CONF_MODE, default=NumberMode.AUTO): vol.Coerce(
@@ -768,6 +834,9 @@ class NumberSchema(KNXPlatformSchema):
                 vol.Optional(NumberConf.STEP): cv.positive_float,
                 vol.Optional(CONF_DEVICE_CLASS): NUMBER_DEVICE_CLASSES_SCHEMA,
                 vol.Optional(CONF_UNIT_OF_MEASUREMENT): cv.string,
+                vol.Optional(
+                    CONF_SYNC_STATE, default=True
+                ): sync_state_no_false_validator,
             }
         ),
         _number_limit_sub_validator,
@@ -781,7 +850,7 @@ class SceneSchema(KNXPlatformSchema):
 
     CONF_SCENE_NUMBER = "scene_number"
 
-    ENTITY_SCHEMA = COMMON_ENTITY_SCHEMA.extend(
+    ENTITY_SCHEMA = _entity_base_schema(PLATFORM).extend(
         {
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Required(SceneConf.SCENE_NUMBER): vol.All(
@@ -796,20 +865,17 @@ class SelectSchema(KNXPlatformSchema):
 
     PLATFORM = Platform.SELECT
 
-    CONF_OPTION = "option"
-    CONF_OPTIONS = "options"
-
     ENTITY_SCHEMA = vol.All(
-        COMMON_ENTITY_SCHEMA.extend(
+        _entity_base_schema(PLATFORM).extend(
             {
                 vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
                 vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
                 vol.Required(CONF_PAYLOAD_LENGTH): vol.All(
                     vol.Coerce(int), vol.Range(min=0, max=14)
                 ),
-                vol.Required(CONF_OPTIONS): [
+                vol.Required(SelectConf.OPTIONS): [
                     {
-                        vol.Required(CONF_OPTION): vol.Coerce(str),
+                        vol.Required(SelectConf.OPTION): vol.Coerce(str),
                         vol.Required(CONF_PAYLOAD): cv.positive_int,
                     }
                 ],
@@ -831,7 +897,7 @@ class SensorSchema(KNXPlatformSchema):
     CONF_SYNC_STATE = CONF_SYNC_STATE
 
     ENTITY_SCHEMA = vol.All(
-        COMMON_ENTITY_SCHEMA.extend(
+        _entity_base_schema(PLATFORM).extend(
             {
                 vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
                 vol.Optional(CONF_ALWAYS_CALLBACK, default=False): cv.boolean,
@@ -854,13 +920,14 @@ class SwitchSchema(KNXPlatformSchema):
     CONF_INVERT = CONF_INVERT
     CONF_STATE_ADDRESS = CONF_STATE_ADDRESS
 
-    ENTITY_SCHEMA = COMMON_ENTITY_SCHEMA.extend(
+    ENTITY_SCHEMA = _entity_base_schema(PLATFORM).extend(
         {
             vol.Optional(CONF_INVERT, default=False): cv.boolean,
             vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
             vol.Optional(CONF_DEVICE_CLASS): SWITCH_DEVICE_CLASSES_SCHEMA,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_no_false_validator,
         }
     )
 
@@ -870,13 +937,14 @@ class TextSchema(KNXPlatformSchema):
 
     PLATFORM = Platform.TEXT
 
-    ENTITY_SCHEMA = COMMON_ENTITY_SCHEMA.extend(
+    ENTITY_SCHEMA = _entity_base_schema(PLATFORM).extend(
         {
             vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Optional(CONF_TYPE, default="latin_1"): string_type_validator,
             vol.Optional(CONF_MODE, default=TextMode.TEXT): vol.Coerce(TextMode),
             vol.Required(KNX_ADDRESS): ga_list_validator,
             vol.Optional(CONF_STATE_ADDRESS): ga_list_validator,
+            vol.Optional(CONF_SYNC_STATE, default=True): sync_state_no_false_validator,
         }
     )
 
@@ -886,7 +954,7 @@ class TimeSchema(KNXPlatformSchema):
 
     PLATFORM = Platform.TIME
 
-    ENTITY_SCHEMA = COMMON_ENTITY_SCHEMA.extend(
+    ENTITY_SCHEMA = _entity_base_schema(PLATFORM).extend(
         {
             vol.Optional(CONF_RESPOND_TO_READ, default=False): cv.boolean,
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
@@ -916,7 +984,7 @@ class WeatherSchema(KNXPlatformSchema):
     CONF_KNX_AIR_PRESSURE_ADDRESS = "address_air_pressure"
     CONF_KNX_HUMIDITY_ADDRESS = "address_humidity"
 
-    ENTITY_SCHEMA = COMMON_ENTITY_SCHEMA.extend(
+    ENTITY_SCHEMA = _entity_base_schema(PLATFORM).extend(
         {
             vol.Optional(CONF_SYNC_STATE, default=True): sync_state_validator,
             vol.Required(CONF_KNX_TEMPERATURE_ADDRESS): ga_list_validator,

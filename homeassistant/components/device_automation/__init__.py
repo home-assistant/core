@@ -1,7 +1,5 @@
 """Helpers for device automations."""
 
-from __future__ import annotations
-
 import asyncio
 from collections.abc import Awaitable, Callable, Coroutine, Iterable, Mapping
 from dataclasses import dataclass
@@ -11,8 +9,8 @@ import logging
 from types import ModuleType
 from typing import TYPE_CHECKING, Any, Literal, overload
 
+from probatio import to_field_list
 import voluptuous as vol
-import voluptuous_serialize
 
 from homeassistant.components import websocket_api
 from homeassistant.components.websocket_api import ActiveConnection
@@ -164,7 +162,8 @@ async def async_get_device_automation_platform(
 ) -> DeviceAutomationPlatformType:
     """Load device automation platform for integration.
 
-    Throws InvalidDeviceAutomationConfig if the integration is not found or does not support device automation.
+    Throws InvalidDeviceAutomationConfig if the integration is not found
+    or does not support device automation.
     """
     platform_name = automation_type.value.section
     try:
@@ -241,7 +240,7 @@ async def async_get_device_automations(
     entity_registry = er.async_get(hass)
     domain_devices: dict[str, set[str]] = {}
     device_entities_domains: dict[str, set[str]] = {}
-    match_device_ids = set(device_ids or device_registry.devices)
+    match_device_ids = set(device_ids or device_registry._devices)  # noqa: SLF001
     combined_results: dict[str, list[dict[str, Any]]] = {}
 
     for device_id in match_device_ids:
@@ -319,7 +318,7 @@ async def _async_get_device_automation_capabilities(
     if (extra_fields := capabilities.get("extra_fields")) is None:
         capabilities["extra_fields"] = []
     else:
-        capabilities["extra_fields"] = voluptuous_serialize.convert(
+        capabilities["extra_fields"] = to_field_list(
             extra_fields, custom_serializer=cv.custom_serializer
         )
 

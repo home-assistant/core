@@ -5,11 +5,12 @@ from datetime import timedelta
 import pytest
 
 from homeassistant.components import configurator
-from homeassistant.const import ATTR_FRIENDLY_NAME
-from homeassistant.core import HomeAssistant
+from homeassistant.const import EntityStateAttribute
+from homeassistant.core import Context, HomeAssistant
+from homeassistant.exceptions import Unauthorized
 from homeassistant.util import dt as dt_util
 
-from tests.common import async_fire_time_changed
+from tests.common import MockUser, async_fire_time_changed
 
 
 @pytest.mark.parametrize(
@@ -39,7 +40,7 @@ async def test_request_least_info(hass: HomeAssistant) -> None:
 async def test_request_all_info(hass: HomeAssistant) -> None:
     """Test request config with all possible info."""
     exp_attr = {
-        ATTR_FRIENDLY_NAME: "Test Request",
+        EntityStateAttribute.FRIENDLY_NAME: "Test Request",
         configurator.ATTR_DESCRIPTION: """config description
 
 [link name](link url)
@@ -47,7 +48,7 @@ async def test_request_all_info(hass: HomeAssistant) -> None:
 ![Description image](config image url)""",
         configurator.ATTR_SUBMIT_CAPTION: "config submit caption",
         configurator.ATTR_FIELDS: [],
-        configurator.ATTR_ENTITY_PICTURE: "config entity picture",
+        EntityStateAttribute.ENTITY_PICTURE: "config entity picture",
         configurator.ATTR_CONFIGURE_ID: configurator.async_request_config(
             hass,
             name="Test Request",
@@ -130,3 +131,22 @@ async def test_request_done_fail_silently_on_bad_request_id(
 ) -> None:
     """Test that request_done fails silently with a bad request id."""
     configurator.async_request_done(hass, 2016)
+
+
+@pytest.mark.parametrize(
+    "ignore_missing_translations", ["component.configurator.services.configure."]
+)
+async def test_configure_service_requires_admin(
+    hass: HomeAssistant, hass_read_only_user: MockUser
+) -> None:
+    """Test the configure service requires admin."""
+    request_id = configurator.async_request_config(hass, "Test Request", lambda _: None)
+
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            configurator.DOMAIN,
+            configurator.SERVICE_CONFIGURE,
+            {configurator.ATTR_CONFIGURE_ID: request_id},
+            context=Context(user_id=hass_read_only_user.id),
+            blocking=True,
+        )

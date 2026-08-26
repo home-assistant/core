@@ -4,7 +4,8 @@
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "oauth2_error": "Failed to start authentication flow",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "wrong_account": "You must reauthenticate with the same Actron Air account that was originally configured."
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "wrong_account": "You must authenticate with the same Actron Air account that was originally configured."
     },
     "error": {
       "oauth2_error": "Failed to start authentication flow. Please try again later."
@@ -22,6 +23,10 @@
         "description": "Your Actron Air authentication has expired. Select continue to reauthenticate with your Actron Air account. You will be prompted to log in again to restore the connection.",
         "title": "Authentication expired"
       },
+      "reconfigure_confirm": {
+        "description": "Reconfigure your Actron Air account. You will be prompted to log in again. Note: you must use the same account that was originally configured.",
+        "title": "Reconfigure Actron Air"
+      },
       "timeout": {
         "data": {},
         "description": "The authentication process timed out. Please try again.",
@@ -33,6 +38,50 @@
     }
   },
   "entity": {
+    "binary_sensor": {
+      "clean_filter": {
+        "name": "Clean filter"
+      },
+      "defrost_mode": {
+        "name": "Defrost mode"
+      }
+    },
+    "cover": {
+      "damper": {
+        "name": "Damper"
+      }
+    },
+    "sensor": {
+      "compressor_capacity": {
+        "name": "Compressor capacity"
+      },
+      "compressor_chasing_temperature": {
+        "name": "Compressor chasing temperature"
+      },
+      "compressor_live_temperature": {
+        "name": "Compressor live temperature"
+      },
+      "compressor_mode": {
+        "name": "Compressor mode",
+        "state": {
+          "cool": "Cool",
+          "heat": "Heat",
+          "off": "[%key:common::state::off%]"
+        }
+      },
+      "compressor_power": {
+        "name": "Compressor power"
+      },
+      "compressor_speed": {
+        "name": "Compressor speed"
+      },
+      "fan_speed": {
+        "name": "Fan speed"
+      },
+      "outdoor_temperature": {
+        "name": "Outdoor temperature"
+      }
+    },
     "switch": {
       "away_mode": {
         "name": "Away mode"
@@ -54,6 +103,12 @@
     },
     "auth_error": {
       "message": "Authentication failed, please reauthenticate"
+    },
+    "setup_connection_error": {
+      "message": "Failed to connect to the Actron Air API"
+    },
+    "temperature_missing": {
+      "message": "Provide a temperature value when adjusting the climate entity."
     },
     "update_error": {
       "message": "An error occurred while retrieving data from the Actron Air API: {error}"

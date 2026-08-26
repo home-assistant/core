@@ -3,7 +3,11 @@ rules:
   action-setup:
     status: exempt
     comment: This integration does not have custom service actions.
-  appropriate-polling: done
+  appropriate-polling:
+    status: done
+    comment: |
+      Primarily uses push, but polls with a long interval for availability and missed
+      updates. Falls back to short interval polling when push is unavailable.
   brands: done
   common-modules: done
   config-flow-test-coverage: done
@@ -12,12 +16,18 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not have custom service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
-    comment: This integration does not subscribe to external events.
+    comment: Push subscriptions are owned by the coordinator, not by individual entities.
   entity-unique-id: done
   has-entity-name: done
   runtime-data: done
@@ -41,10 +51,10 @@ rules:
 
   # Gold
   devices: done
-  diagnostics: todo
+  diagnostics: done
   discovery-update-info:
     status: exempt
-    comment: This integration uses DHCP discovery, however is cloud polling. Therefore there is no information to update.
+    comment: This integration uses DHCP discovery, however all communication goes via the cloud. Therefore there is no information to update.
   discovery: done
   docs-data-update: done
   docs-examples: done
@@ -54,19 +64,13 @@ rules:
   docs-troubleshooting: done
   docs-use-cases: done
   dynamic-devices: todo
-  entity-category:
-    status: exempt
-    comment: This integration does not use entity categories.
-  entity-device-class:
-    status: exempt
-    comment: This integration does not use entity device classes.
-  entity-disabled-by-default:
-    status: exempt
-    comment: Not required for this integration at this stage.
-  entity-translations: todo
-  exception-translations: todo
-  icon-translations: todo
-  reconfiguration-flow: todo
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
   repair-issues:
     status: exempt
     comment: This integration does not have any known issues that require repair.
@@ -74,5 +78,5 @@ rules:
 
   # Platinum
   async-dependency: done
-  inject-websession: todo
-  strict-typing: todo
+  inject-websession: done
+  strict-typing: done

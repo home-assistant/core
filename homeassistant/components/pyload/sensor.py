@@ -1,10 +1,9 @@
 """Support for monitoring pyLoad."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from enum import StrEnum
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -110,6 +109,7 @@ class PyLoadSensor(BasePyLoadEntity, SensorEntity):
     entity_description: PyLoadSensorEntityDescription
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the state of the sensor."""
         return self.entity_description.value_fn(self.coordinator.data)

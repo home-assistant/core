@@ -4,10 +4,9 @@ from collections.abc import Callable, Coroutine
 from unittest.mock import call, patch
 
 import pytest
+from zhaquirks.builder import NumberDeviceClass, QuirkBuilder
 from zigpy.device import Device
 from zigpy.profiles import zha
-from zigpy.quirks.v2 import QuirkBuilder
-from zigpy.quirks.v2.homeassistant.number import NumberDeviceClass
 from zigpy.typing import UNDEFINED
 from zigpy.zcl.clusters import general
 import zigpy.zcl.foundation as zcl_f
@@ -193,7 +192,7 @@ async def test_number_quirks_v2_metadata(
     await gateway.async_device_initialized(zigpy_device)
     await hass.async_block_till_done(wait_background_tasks=True)
 
-    entity_id = "number.test_manf_test_number_model"
+    entity_id = "number.test_manf_test_number_model_temperature"
     hass_state = hass.states.get(entity_id)
     assert hass_state is not None
 

@@ -7,7 +7,7 @@ from unittest.mock import patch
 import pytest
 from voluptuous.error import MultipleInvalid
 
-from homeassistant.components import fan, mqtt
+from homeassistant.components import fan
 from homeassistant.components.fan import (
     ATTR_DIRECTION,
     ATTR_OSCILLATING,
@@ -16,6 +16,7 @@ from homeassistant.components.fan import (
     ATTR_PRESET_MODES,
     NotValidPresetModeError,
 )
+from homeassistant.components.mqtt.const import DOMAIN
 from homeassistant.components.mqtt.fan import (
     CONF_DIRECTION_COMMAND_TOPIC,
     CONF_DIRECTION_STATE_TOPIC,
@@ -72,7 +73,7 @@ from tests.components.fan import common
 from tests.typing import MqttMockHAClientGenerator, MqttMockPahoClient
 
 DEFAULT_CONFIG = {
-    mqtt.DOMAIN: {
+    DOMAIN: {
         fan.DOMAIN: {
             "name": "test",
             "state_topic": "state-topic",
@@ -82,7 +83,7 @@ DEFAULT_CONFIG = {
 }
 
 
-@pytest.mark.parametrize("hass_config", [{mqtt.DOMAIN: {fan.DOMAIN: {"name": "test"}}}])
+@pytest.mark.parametrize("hass_config", [{DOMAIN: {fan.DOMAIN: {"name": "test"}}}])
 @pytest.mark.usefixtures("hass")
 async def test_fail_setup_if_no_command_topic(
     caplog: pytest.LogCaptureFixture, mqtt_mock_entry: MqttMockHAClientGenerator
@@ -96,7 +97,7 @@ async def test_fail_setup_if_no_command_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -232,7 +233,7 @@ async def test_controlling_state_via_topic(
         help_custom_config(
             fan.DOMAIN,
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "command_topic": "command-topic",
                         "percentage_command_topic": "percentage-command-topic",
@@ -295,7 +296,7 @@ async def test_controlling_state_via_topic_with_different_speed_range(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -354,7 +355,7 @@ async def test_controlling_state_via_topic_no_percentage_topics(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -472,7 +473,7 @@ async def test_controlling_state_via_topic_and_json_message(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "state_topic": "shared-state-topic",
@@ -587,7 +588,7 @@ async def test_controlling_state_via_topic_and_json_message_shared_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -621,7 +622,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_turn_on(hass, "fan.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "StAtE_On", 0, False
+        "command-topic", "StAtE_On", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -630,7 +631,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_turn_off(hass, "fan.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "StAtE_OfF", 0, False
+        "command-topic", "StAtE_OfF", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -639,7 +640,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_set_direction(hass, "fan.test", "forward")
     mqtt_mock.async_publish.assert_called_once_with(
-        "direction-command-topic", "forward", 0, False
+        "direction-command-topic", "forward", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -648,7 +649,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_set_direction(hass, "fan.test", "reverse")
     mqtt_mock.async_publish.assert_called_once_with(
-        "direction-command-topic", "reverse", 0, False
+        "direction-command-topic", "reverse", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -657,7 +658,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_oscillate(hass, "fan.test", True)
     mqtt_mock.async_publish.assert_called_once_with(
-        "oscillation-command-topic", "OsC_On", 0, False
+        "oscillation-command-topic", "OsC_On", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -666,7 +667,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_oscillate(hass, "fan.test", False)
     mqtt_mock.async_publish.assert_called_once_with(
-        "oscillation-command-topic", "OsC_OfF", 0, False
+        "oscillation-command-topic", "OsC_OfF", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -680,7 +681,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_set_percentage(hass, "fan.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic", "100", 0, False
+        "percentage-command-topic", "100", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -689,7 +690,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_set_percentage(hass, "fan.test", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic", "0", 0, False
+        "percentage-command-topic", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -702,7 +703,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "whoosh", 0, False
+        "preset-mode-command-topic", "whoosh", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -711,7 +712,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_set_preset_mode(hass, "fan.test", "breeze")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "breeze", 0, False
+        "preset-mode-command-topic", "breeze", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -720,7 +721,7 @@ async def test_sending_mqtt_commands_and_optimistic(
 
     await common.async_set_preset_mode(hass, "fan.test", "silent")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "silent", 0, False
+        "preset-mode-command-topic", "silent", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -734,7 +735,7 @@ async def test_sending_mqtt_commands_and_optimistic(
         help_custom_config(
             fan.DOMAIN,
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test1",
                         "command_topic": "command-topic",
@@ -775,7 +776,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
 
     await common.async_set_percentage(hass, "fan.test1", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic1", "0", 0, False
+        "percentage-command-topic1", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test1")
@@ -783,7 +784,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
 
     await common.async_set_percentage(hass, "fan.test1", 33)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic1", "1", 0, False
+        "percentage-command-topic1", "1", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test1")
@@ -791,7 +792,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
 
     await common.async_set_percentage(hass, "fan.test1", 66)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic1", "2", 0, False
+        "percentage-command-topic1", "2", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test1")
@@ -799,7 +800,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
 
     await common.async_set_percentage(hass, "fan.test1", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic1", "3", 0, False
+        "percentage-command-topic1", "3", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test1")
@@ -807,7 +808,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
 
     await common.async_set_percentage(hass, "fan.test2", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic2", "0", 0, False
+        "percentage-command-topic2", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test2")
@@ -815,7 +816,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
 
     await common.async_set_percentage(hass, "fan.test2", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic2", "200", 0, False
+        "percentage-command-topic2", "200", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test2")
@@ -823,7 +824,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
 
     await common.async_set_percentage(hass, "fan.test3", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic3", "80", 0, False
+        "percentage-command-topic3", "80", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test3")
@@ -831,7 +832,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
 
     await common.async_set_percentage(hass, "fan.test3", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic3", "1023", 0, False
+        "percentage-command-topic3", "1023", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test3")
@@ -842,7 +843,7 @@ async def test_sending_mqtt_commands_with_alternate_speed_range(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -869,14 +870,18 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "ON", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -890,7 +895,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
 
     await common.async_set_percentage(hass, "fan.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic", "100", 0, False
+        "percentage-command-topic", "100", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -899,7 +904,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
 
     await common.async_set_percentage(hass, "fan.test", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic", "0", 0, False
+        "percentage-command-topic", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -916,7 +921,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "whoosh", 0, False
+        "preset-mode-command-topic", "whoosh", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -925,7 +930,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
 
     await common.async_set_preset_mode(hass, "fan.test", "breeze")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "breeze", 0, False
+        "preset-mode-command-topic", "breeze", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -934,7 +939,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
 
     await common.async_set_preset_mode(hass, "fan.test", "silent")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "silent", 0, False
+        "preset-mode-command-topic", "silent", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -943,15 +948,21 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
 
     await common.async_turn_on(hass, "fan.test", percentage=25)
     assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
-    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "25", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "command-topic", "ON", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "percentage-command-topic", "25", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_any_call("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "command-topic", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -959,9 +970,11 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
 
     await common.async_turn_on(hass, "fan.test", preset_mode="whoosh")
     assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
     mqtt_mock.async_publish.assert_any_call(
-        "preset-mode-command-topic", "whoosh", 0, False
+        "command-topic", "ON", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "whoosh", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -977,7 +990,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_legacy(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -1012,7 +1025,7 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_turn_on(hass, "fan.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "state: ON", 0, False
+        "command-topic", "state: ON", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1021,7 +1034,7 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_turn_off(hass, "fan.test")
     mqtt_mock.async_publish.assert_called_once_with(
-        "command-topic", "state: OFF", 0, False
+        "command-topic", "state: OFF", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1030,7 +1043,11 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_set_direction(hass, "fan.test", "forward")
     mqtt_mock.async_publish.assert_called_once_with(
-        "direction-command-topic", "direction: forward", 0, False
+        "direction-command-topic",
+        "direction: forward",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1039,7 +1056,11 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_set_direction(hass, "fan.test", "reverse")
     mqtt_mock.async_publish.assert_called_once_with(
-        "direction-command-topic", "direction: reverse", 0, False
+        "direction-command-topic",
+        "direction: reverse",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1054,7 +1075,11 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_set_percentage(hass, "fan.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic", "percentage: 100", 0, False
+        "percentage-command-topic",
+        "percentage: 100",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1063,7 +1088,11 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_set_percentage(hass, "fan.test", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic", "percentage: 0", 0, False
+        "percentage-command-topic",
+        "percentage: 0",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1080,7 +1109,11 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "preset_mode: whoosh", 0, False
+        "preset-mode-command-topic",
+        "preset_mode: whoosh",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1089,7 +1122,11 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_set_preset_mode(hass, "fan.test", "breeze")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "preset_mode: breeze", 0, False
+        "preset-mode-command-topic",
+        "preset_mode: breeze",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1098,7 +1135,11 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_set_preset_mode(hass, "fan.test", "silent")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "preset_mode: silent", 0, False
+        "preset-mode-command-topic",
+        "preset_mode: silent",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1107,9 +1148,15 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_turn_on(hass, "fan.test", percentage=25)
     assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "state: ON", 0, False)
     mqtt_mock.async_publish.assert_any_call(
-        "percentage-command-topic", "percentage: 25", 0, False
+        "command-topic", "state: ON", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "percentage-command-topic",
+        "percentage: 25",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1117,7 +1164,9 @@ async def test_sending_mqtt_command_templates_(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_any_call("command-topic", "state: OFF", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "command-topic", "state: OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -1125,9 +1174,15 @@ async def test_sending_mqtt_command_templates_(
 
     await common.async_turn_on(hass, "fan.test", preset_mode="whoosh")
     assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "state: ON", 0, False)
     mqtt_mock.async_publish.assert_any_call(
-        "preset-mode-command-topic", "preset_mode: whoosh", 0, False
+        "command-topic", "state: ON", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic",
+        "preset_mode: whoosh",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1143,7 +1198,7 @@ async def test_sending_mqtt_command_templates_(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -1176,7 +1231,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "whoosh", 0, False
+        "preset-mode-command-topic", "whoosh", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1185,7 +1240,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
 
     await common.async_set_preset_mode(hass, "fan.test", "breeze")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "breeze", 0, False
+        "preset-mode-command-topic", "breeze", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1194,7 +1249,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
 
     await common.async_set_preset_mode(hass, "fan.test", "silent")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "silent", 0, False
+        "preset-mode-command-topic", "silent", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1206,7 +1261,7 @@ async def test_sending_mqtt_commands_and_optimistic_no_percentage_topic(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "state_topic": "state-topic",
@@ -1241,14 +1296,18 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_on(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "ON", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "ON", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -1256,15 +1315,21 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_turn_on(hass, "fan.test", percentage=25)
     assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
-    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "25", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "command-topic", "ON", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "percentage-command-topic", "25", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_any_call("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "command-topic", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -1278,9 +1343,11 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_turn_on(hass, "fan.test", preset_mode="whoosh")
     assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
     mqtt_mock.async_publish.assert_any_call(
-        "preset-mode-command-topic", "whoosh", 0, False
+        "command-topic", "ON", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "whoosh", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1288,7 +1355,9 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_any_call("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "command-topic", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -1296,9 +1365,11 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_turn_on(hass, "fan.test", preset_mode="silent")
     assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
     mqtt_mock.async_publish.assert_any_call(
-        "preset-mode-command-topic", "silent", 0, False
+        "command-topic", "ON", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "silent", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1306,7 +1377,9 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -1314,9 +1387,11 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_turn_on(hass, "fan.test", preset_mode="silent")
     assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
     mqtt_mock.async_publish.assert_any_call(
-        "preset-mode-command-topic", "silent", 0, False
+        "command-topic", "ON", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "preset-mode-command-topic", "silent", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1324,7 +1399,9 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_called_once_with("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_called_once_with(
+        "command-topic", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -1332,7 +1409,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_set_direction(hass, "fan.test", "forward")
     mqtt_mock.async_publish.assert_called_once_with(
-        "direction-command-topic", "forward", 0, False
+        "direction-command-topic", "forward", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1341,7 +1418,11 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_oscillate(hass, "fan.test", True)
     mqtt_mock.async_publish.assert_called_once_with(
-        "oscillation-command-topic", "oscillate_on", 0, False
+        "oscillation-command-topic",
+        "oscillate_on",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1350,15 +1431,21 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_turn_on(hass, "fan.test", percentage=50)
     assert mqtt_mock.async_publish.call_count == 2
-    mqtt_mock.async_publish.assert_any_call("command-topic", "ON", 0, False)
-    mqtt_mock.async_publish.assert_any_call("percentage-command-topic", "50", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "command-topic", "ON", 0, False, message_expiry_interval=None
+    )
+    mqtt_mock.async_publish.assert_any_call(
+        "percentage-command-topic", "50", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_ON
     assert state.attributes.get(ATTR_ASSUMED_STATE)
 
     await common.async_turn_off(hass, "fan.test")
-    mqtt_mock.async_publish.assert_any_call("command-topic", "OFF", 0, False)
+    mqtt_mock.async_publish.assert_any_call(
+        "command-topic", "OFF", 0, False, message_expiry_interval=None
+    )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
     assert state.state == STATE_OFF
@@ -1366,7 +1453,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_set_direction(hass, "fan.test", "reverse")
     mqtt_mock.async_publish.assert_called_once_with(
-        "direction-command-topic", "reverse", 0, False
+        "direction-command-topic", "reverse", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1375,7 +1462,11 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_oscillate(hass, "fan.test", False)
     mqtt_mock.async_publish.assert_called_once_with(
-        "oscillation-command-topic", "oscillate_off", 0, False
+        "oscillation-command-topic",
+        "oscillate_off",
+        0,
+        False,
+        message_expiry_interval=None,
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1384,7 +1475,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_set_percentage(hass, "fan.test", 33)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic", "33", 0, False
+        "percentage-command-topic", "33", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1393,7 +1484,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_set_percentage(hass, "fan.test", 50)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic", "50", 0, False
+        "percentage-command-topic", "50", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1402,7 +1493,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_set_percentage(hass, "fan.test", 100)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic", "100", 0, False
+        "percentage-command-topic", "100", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1411,7 +1502,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_set_percentage(hass, "fan.test", 0)
     mqtt_mock.async_publish.assert_called_once_with(
-        "percentage-command-topic", "0", 0, False
+        "percentage-command-topic", "0", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1431,7 +1522,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_set_preset_mode(hass, "fan.test", "whoosh")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "whoosh", 0, False
+        "preset-mode-command-topic", "whoosh", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1440,7 +1531,7 @@ async def test_sending_mqtt_commands_and_explicit_optimistic(
 
     await common.async_set_preset_mode(hass, "fan.test", "silent")
     mqtt_mock.async_publish.assert_called_once_with(
-        "preset-mode-command-topic", "silent", 0, False
+        "preset-mode-command-topic", "silent", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
     state = hass.states.get("fan.test")
@@ -1486,7 +1577,7 @@ async def test_encoding_subscribable_topics(
     attribute_value: Any,
 ) -> None:
     """Test handling of incoming encoded payload."""
-    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[mqtt.DOMAIN][fan.DOMAIN])
+    config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG[DOMAIN][fan.DOMAIN])
     config[ATTR_PRESET_MODES] = ["eco", "auto"]
     config[CONF_PRESET_MODE_COMMAND_TOPIC] = "fan/some_preset_mode_command_topic"
     config[CONF_PERCENTAGE_COMMAND_TOPIC] = "fan/some_percentage_command_topic"
@@ -1508,7 +1599,7 @@ async def test_encoding_subscribable_topics(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: {
                     "name": "test",
                     "command_topic": "command-topic",
@@ -1582,7 +1673,7 @@ async def test_attributes(
         (
             "test1",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test1",
                         "command_topic": "command-topic",
@@ -1596,7 +1687,7 @@ async def test_attributes(
         (
             "test2",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test2",
                         "command_topic": "command-topic",
@@ -1613,7 +1704,7 @@ async def test_attributes(
         (
             "test3",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test3",
                         "command_topic": "command-topic",
@@ -1630,7 +1721,7 @@ async def test_attributes(
         (
             "test4",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test4",
                         "command_topic": "command-topic",
@@ -1645,7 +1736,7 @@ async def test_attributes(
         (
             "test5",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test5",
                         "command_topic": "command-topic",
@@ -1663,7 +1754,7 @@ async def test_attributes(
         (
             "test6",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test6",
                         "command_topic": "command-topic",
@@ -1681,7 +1772,7 @@ async def test_attributes(
         (
             "test7",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test7",
                         "command_topic": "command-topic",
@@ -1698,7 +1789,7 @@ async def test_attributes(
         (
             "test8",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test8",
                         "command_topic": "command-topic",
@@ -1717,7 +1808,7 @@ async def test_attributes(
         (
             "test9",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test9",
                         "command_topic": "command-topic",
@@ -1735,7 +1826,7 @@ async def test_attributes(
         (
             "test10",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test10",
                         "command_topic": "command-topic",
@@ -1753,7 +1844,7 @@ async def test_attributes(
         (
             "test11",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test11",
                         "command_topic": "command-topic",
@@ -1773,7 +1864,7 @@ async def test_attributes(
         (
             "test12",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test12",
                         "command_topic": "command-topic",
@@ -1792,7 +1883,7 @@ async def test_attributes(
         (
             "test13",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test13",
                         "command_topic": "command-topic",
@@ -1809,7 +1900,7 @@ async def test_attributes(
         (
             "test14",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test14",
                         "command_topic": "command-topic",
@@ -1826,7 +1917,7 @@ async def test_attributes(
         (
             "test15",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test15",
                         "command_topic": "command-topic",
@@ -1842,7 +1933,7 @@ async def test_attributes(
         (
             "test16",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test16",
                         "command_topic": "command-topic",
@@ -1861,7 +1952,7 @@ async def test_attributes(
         (
             "test17",
             {
-                mqtt.DOMAIN: {
+                DOMAIN: {
                     fan.DOMAIN: {
                         "name": "test17",
                         "command_topic": "command-topic",
@@ -2006,7 +2097,7 @@ async def test_discovery_update_attr(
     "hass_config",
     [
         {
-            mqtt.DOMAIN: {
+            DOMAIN: {
                 fan.DOMAIN: [
                     {
                         "name": "Test 1",
@@ -2203,7 +2294,7 @@ async def test_publishing_with_custom_encoding(
     domain = fan.DOMAIN
     config: dict[str, Any] = copy.deepcopy(DEFAULT_CONFIG)
     if topic == "preset_mode_command_topic":
-        config[mqtt.DOMAIN][domain]["preset_modes"] = ["auto", "eco"]
+        config[DOMAIN][domain]["preset_modes"] = ["auto", "eco"]
 
     await help_test_publishing_with_custom_encoding(
         hass,
@@ -2340,6 +2431,6 @@ async def test_value_template_fails(
     await mqtt_mock_entry()
     async_fire_mqtt_message(hass, "test-topic", '{"some_var": null }')
     assert (
-        "TypeError: unsupported operand type(s) for *: 'NoneType' and 'int' rendering template"
-        in caplog.text
+        "TypeError: unsupported operand type(s) for *:"
+        " 'NoneType' and 'int' rendering template" in caplog.text
     )

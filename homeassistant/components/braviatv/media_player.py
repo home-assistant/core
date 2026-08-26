@@ -1,9 +1,7 @@
 """Media player support for Bravia TV integration."""
 
-from __future__ import annotations
-
 from datetime import datetime
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.media_player import (
     BrowseError,
@@ -60,6 +58,7 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
     )
 
     @property
+    @override
     def state(self) -> MediaPlayerState:
         """Return the state of the device."""
         if self.coordinator.is_on:
@@ -67,84 +66,102 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
         return MediaPlayerState.OFF
 
     @property
+    @override
     def source(self) -> str | None:
         """Return the current input source."""
         return self.coordinator.source
 
     @property
+    @override
     def source_list(self) -> list[str]:
         """List of available input sources."""
         return self.coordinator.source_list
 
     @property
+    @override
     def volume_level(self) -> float | None:
         """Volume level of the media player (0..1)."""
         return self.coordinator.volume_level
 
     @property
+    @override
     def is_volume_muted(self) -> bool:
         """Boolean if volume is currently muted."""
         return self.coordinator.volume_muted
 
     @property
+    @override
     def media_title(self) -> str | None:
         """Title of current playing media."""
         return self.coordinator.media_title
 
     @property
+    @override
     def media_channel(self) -> str | None:
         """Channel currently playing."""
         return self.coordinator.media_channel
 
     @property
+    @override
     def media_content_id(self) -> str | None:
         """Content ID of current playing media."""
         return self.coordinator.media_content_id
 
     @property
+    @override
     def media_content_type(self) -> MediaType | None:
         """Content type of current playing media."""
         return self.coordinator.media_content_type
 
     @property
+    @override
     def media_duration(self) -> int | None:
         """Duration of current playing media in seconds."""
         return self.coordinator.media_duration
 
     @property
+    @override
     def media_position(self) -> int | None:
         """Position of current playing media in seconds."""
         return self.coordinator.media_position
 
     @property
+    @override
     def media_position_updated_at(self) -> datetime | None:
         """When was the position of the current playing media valid."""
         return self.coordinator.media_position_updated_at
 
+    @override
     async def async_turn_on(self) -> None:
         """Turn the device on."""
         await self.coordinator.async_turn_on()
 
+    @override
     async def async_turn_off(self) -> None:
         """Turn the device off."""
         await self.coordinator.async_turn_off()
 
+    @override
     async def async_set_volume_level(self, volume: float) -> None:
         """Set volume level, range 0..1."""
         await self.coordinator.async_set_volume_level(volume)
 
+    @override
     async def async_volume_up(self) -> None:
         """Send volume up command."""
         await self.coordinator.async_volume_up()
 
+    @override
     async def async_volume_down(self) -> None:
         """Send volume down command."""
         await self.coordinator.async_volume_down()
 
+    @override
     async def async_mute_volume(self, mute: bool) -> None:
         """Send mute command."""
         await self.coordinator.async_volume_mute(mute)
 
+    @override
     async def async_browse_media(
         self,
         media_content_type: MediaType | str | None = None,
@@ -240,6 +257,7 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
             children=children,
         )
 
+    @override
     async def async_get_browse_image(
         self,
         media_content_type: MediaType | str,
@@ -256,36 +274,44 @@ class BraviaTVMediaPlayer(BraviaTVEntity, MediaPlayerEntity):
                 return (content, content_type)
         return None, None
 
+    @override
     async def async_play_media(
         self, media_type: MediaType | str, media_id: str, **kwargs: Any
     ) -> None:
         """Play a piece of media."""
         await self.coordinator.async_play_media(media_type, media_id, **kwargs)
 
+    @override
     async def async_select_source(self, source: str) -> None:
         """Set the input source."""
         await self.coordinator.async_select_source(source)
 
+    @override
     async def async_media_play(self) -> None:
         """Send play command."""
         await self.coordinator.async_media_play()
 
+    @override
     async def async_media_pause(self) -> None:
         """Send pause command."""
         await self.coordinator.async_media_pause()
 
+    @override
     async def async_media_play_pause(self) -> None:
         """Send pause command that toggle play/pause."""
         await self.coordinator.async_media_pause()
 
+    @override
     async def async_media_stop(self) -> None:
         """Send media stop command to media player."""
         await self.coordinator.async_media_stop()
 
+    @override
     async def async_media_next_track(self) -> None:
         """Send next track command."""
         await self.coordinator.async_media_next_track()
 
+    @override
     async def async_media_previous_track(self) -> None:
         """Send previous track command."""
         await self.coordinator.async_media_previous_track()

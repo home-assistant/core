@@ -1,9 +1,7 @@
 """Support for image which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -11,6 +9,7 @@ from homeassistant.components.image import (
     DOMAIN as IMAGE_DOMAIN,
     ENTITY_ID_FORMAT,
     ImageEntity,
+    ImageEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_URL, CONF_VERIFY_SSL
@@ -23,13 +22,13 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import CONF_PICTURE
 from .entity import AbstractTemplateEntity
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_attributes_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -40,14 +39,18 @@ DEFAULT_NAME = "Template Image"
 
 GET_IMAGE_TIMEOUT = 10
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=ImageEntityStateAttribute
+)
+
 IMAGE_YAML_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_URL): cv.template,
         vol.Optional(CONF_VERIFY_SSL, default=True): bool,
     }
 ).extend(
-    make_template_entity_common_modern_attributes_schema(
-        IMAGE_DOMAIN, DEFAULT_NAME
+    make_template_entity_common_schema(
+        IMAGE_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -98,9 +101,13 @@ class AbstractTemplateImage(AbstractTemplateEntity, ImageEntity):
 
     _entity_id_format = ENTITY_ID_FORMAT
     _attr_image_url: str | None = None
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, hass: HomeAssistant, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
         ImageEntity.__init__(self, hass, config[CONF_VERIFY_SSL])
@@ -134,6 +141,7 @@ class StateImageEntity(TemplateEntity, AbstractTemplateImage):
         AbstractTemplateImage.__init__(self, hass, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if self._has_picture_template:
@@ -158,6 +166,7 @@ class TriggerImageEntity(TriggerEntity, AbstractTemplateImage):
         AbstractTemplateImage.__init__(self, hass, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if self._has_picture_template:

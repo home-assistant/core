@@ -4,8 +4,21 @@
     'device_config': dict({
       'binary_inputs': list([
       ]),
+      'buzzers': list([
+      ]),
       'data_buses': list([
       ]),
+      'data_extended': dict({
+        'custom_string_1': '**REDACTED**',
+        'custom_string_2': '**REDACTED**',
+        'custom_string_3': '**REDACTED**',
+        'device_id': '**REDACTED**',
+        'device_location': '**REDACTED**',
+        'friendly_name': '**REDACTED**',
+        'manufacturer_name': '53656565642053747564696f0000000000000000000000000000000000000000',
+        'model_name': '5849414f20454e3034284e524635323834302900000000000000000000000000',
+        'serial_number': '**REDACTED**',
+      }),
       'displays': list([
         dict({
           'active_height_mm': 29,
@@ -31,6 +44,8 @@
           'transmission_modes': 1,
         }),
       ]),
+      'flash_configs': list([
+      ]),
       'leds': list([
       ]),
       'loaded': False,
@@ -38,23 +53,42 @@
         'board_revision': 0,
         'board_type': 1,
         'manufacturer_id': 1,
-        'reserved': '000000000000000000000000000000000000',
+        'reserved': '000000000000',
+        'simple_config_configured_at': 0,
+        'simple_config_display_index': 0,
+        'simple_config_driver_index': 0,
+        'simple_config_power_index': 0,
       }),
       'minor_version': 0,
+      'nfc_configs': list([
+      ]),
       'power': dict({
         'battery_capacity_mah': '000000',
         'battery_sense_enable_pin': 255,
         'battery_sense_flags': 0,
         'battery_sense_pin': 255,
         'capacity_estimator': 0,
+        'charge_enable_pin': 255,
+        'charge_state_pin': 255,
+        'charger_flags': 0,
         'deep_sleep_current_ua': 0,
         'deep_sleep_time_seconds': 0,
+        'min_wake_time_seconds': 0,
         'power_mode': 0,
-        'reserved': '000000000000000000000000',
+        'reserved': '00000000',
+        'screen_timeout_seconds': 0,
         'sleep_flags': 0,
         'sleep_timeout_ms': 0,
         'tx_power': 0,
         'voltage_scaling_factor': 0,
+      }),
+      'security_config': dict({
+        'encryption_enabled': 1,
+        'encryption_key': '**REDACTED**',
+        'flags': 0,
+        'reserved': '00000000000000000000000000000000000000000000000000000000000000000000000000000000000000',
+        'reset_pin': 255,
+        'session_timeout_seconds': 0,
       }),
       'sensors': list([
       ]),
@@ -63,14 +97,19 @@
         'device_flags': 0,
         'ic_type': 0,
         'pwr_pin': 255,
+        'pwr_pin_2': 255,
+        'pwr_pin_3': 255,
         'reserved': '0000000000000000000000000000000000',
       }),
+      'touch_controllers': list([
+      ]),
       'version': 0,
       'wifi_config': None,
     }),
     'firmware': dict({
       'major': 1,
       'minor': 2,
+      'patch': 3,
       'sha': 'abc123',
     }),
     'is_flex': True,

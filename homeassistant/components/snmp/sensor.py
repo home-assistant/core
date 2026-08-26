@@ -1,10 +1,9 @@
 """Support for displaying collected data over SNMP."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
 from struct import unpack
+from typing import override
 
 from pyasn1.codec.ber import decoder
 from pysnmp.error import PySnmpError
@@ -159,15 +158,6 @@ async def async_setup_platform(
         auth_data = CommunityData(community, mpModel=SNMP_VERSIONS[version])
 
     request_args = await async_create_request_cmd_args(hass, auth_data, target, baseoid)
-    get_result = await get_cmd(*request_args)
-    errindication, _, _, _ = get_result
-
-    if errindication and not accept_errors:
-        _LOGGER.error(
-            "Please check the details in the configuration file: %s",
-            errindication,
-        )
-        return
 
     name = config.get(CONF_NAME, Template(DEFAULT_NAME, hass))
     trigger_entity_config = {CONF_NAME: name}
@@ -200,6 +190,7 @@ class SnmpSensor(ManualTriggerSensorEntity):
         self._state = None
         self._value_template = value_template
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Handle adding to Home Assistant."""
         await super().async_added_to_hass()

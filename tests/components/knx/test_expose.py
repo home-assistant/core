@@ -1,12 +1,16 @@
 """Test KNX expose."""
 
 from datetime import timedelta
+from typing import Any
 
 from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.knx.const import CONF_KNX_EXPOSE, DOMAIN, KNX_ADDRESS
 from homeassistant.components.knx.schema import ExposeSchema
+from homeassistant.components.knx.storage.config_store import (
+    STORAGE_KEY as KNX_CONFIG_STORAGE_KEY,
+)
 from homeassistant.const import (
     CONF_ATTRIBUTE,
     CONF_ENTITY_ID,
@@ -18,6 +22,7 @@ from homeassistant.core import HomeAssistant
 from .conftest import KNXTestKit
 
 from tests.common import async_fire_time_changed
+from tests.typing import WebSocketGenerator
 
 
 async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -33,20 +38,110 @@ async def test_binary_expose(hass: HomeAssistant, knx: KNXTestKit) -> None:
         },
     )
 
-    # Change state to on
+    # First known state initializes the expose without sending.
     hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
-    await knx.assert_write("1/1/8", True)
+    await knx.assert_no_telegram()
 
-    # Change attribute; keep state
+    # Change attribute; keep state.
     hass.states.async_set(entity_id, "on", {"brightness": 180})
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
 
-    # Change attribute and state
+    # Change state.
     hass.states.async_set(entity_id, "off", {"brightness": 0})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", False)
+
+
+async def test_binary_expose_does_not_send_initial_state(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test only the initial state is not exposed to KNX."""
+    entity_id = "binary_sensor.fake"
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "binary",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+            }
+        },
+    )
+
+    # The first known value initializes the exposure without sending.
+    hass.states.async_set(entity_id, "on", {})
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
+    # The initialized value is available for GroupValueRead responses.
+    await knx.receive_read("1/1/8")
+    await knx.assert_response("1/1/8", True)
+
+    # A subsequent state change is exposed normally.
+    hass.states.async_set(entity_id, "off", {})
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", False)
+
+
+async def test_binary_expose_send_on_init(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test the initial expose value is sent when configured."""
+    entity_id = "binary_sensor.fake"
+
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "binary",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_SEND_ON_INIT: True,
+            }
+        },
+    )
+
+    # First known value is sent when send_on_init is enabled.
+    hass.states.async_set(entity_id, "on", {})
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", True)
+
+    # An unchanged exposed value is still skipped afterwards.
+    hass.states.async_set(entity_id, "on", {"other": 1})
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+
+    # Subsequent value changes are sent normally.
+    hass.states.async_set(entity_id, "off", {})
+    await hass.async_block_till_done()
+    await knx.assert_write("1/1/8", False)
+
+
+async def test_binary_expose_send_on_init_existing_state(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test an existing entity value is sent when configured."""
+    entity_id = "binary_sensor.fake"
+
+    hass.states.async_set(entity_id, "on", {})
+    await hass.async_block_till_done()
+
+    await knx.setup_integration(
+        {
+            CONF_KNX_EXPOSE: {
+                CONF_TYPE: "binary",
+                KNX_ADDRESS: "1/1/8",
+                CONF_ENTITY_ID: entity_id,
+                ExposeSchema.CONF_KNX_EXPOSE_SEND_ON_INIT: True,
+            }
+        },
+    )
+    await hass.async_block_till_done()
+
+    await knx.assert_write("1/1/8", True)
 
 
 async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
@@ -73,10 +168,10 @@ async def test_expose_attribute(hass: HomeAssistant, knx: KNXTestKit) -> None:
     await hass.async_block_till_done()
     await knx.assert_telegram_count(0)
 
-    # Change attribute; keep state
+    # First known attribute value initializes the expose without sending.
     hass.states.async_set(entity_id, "on", {attribute: 1})
     await hass.async_block_till_done()
-    await knx.assert_write("1/1/8", (1,))
+    await knx.assert_no_telegram()
 
     # Change attribute below resolution of DPT; expect no telegram
     hass.states.async_set(entity_id, "on", {attribute: 1.2})
@@ -143,7 +238,7 @@ async def test_expose_attribute_with_default(
     # Change state to "on"; no attribute -> default
     hass.states.async_set(entity_id, "on", {})
     await hass.async_block_till_done()
-    await knx.assert_write("1/1/8", (0,))
+    await knx.assert_no_telegram()
 
     # Change attribute; keep state
     hass.states.async_set(entity_id, "on", {attribute: 1})
@@ -226,6 +321,10 @@ async def test_expose_cooldown(
     """Test an expose with cooldown."""
     cooldown_time = 2
     entity_id = "fake.entity"
+
+    hass.states.async_set(entity_id, "0", {})
+    await hass.async_block_till_done()
+
     await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: {
@@ -236,10 +335,12 @@ async def test_expose_cooldown(
             }
         },
     )
+
     # Change state to 1
     hass.states.async_set(entity_id, "1", {})
     await hass.async_block_till_done()
     await knx.assert_write("1/1/8", (1,))
+
     # Change state to 2 - skip because of cooldown
     hass.states.async_set(entity_id, "2", {})
     await hass.async_block_till_done()
@@ -249,6 +350,7 @@ async def test_expose_cooldown(
     hass.states.async_set(entity_id, "3", {})
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
+
     # Wait for cooldown to pass
     freezer.tick(timedelta(seconds=cooldown_time))
     async_fire_time_changed(hass)
@@ -257,9 +359,11 @@ async def test_expose_cooldown(
 
 
 async def test_expose_periodic_send(
-    hass: HomeAssistant, knx: KNXTestKit, freezer: FrozenDateTimeFactory
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """Test an expose with periodic send."""
+    """Test an initialized expose with periodic send."""
     entity_id = "fake.entity"
     await knx.setup_integration(
         {
@@ -271,11 +375,13 @@ async def test_expose_periodic_send(
             }
         },
     )
-    # Initialize state
+
+    # Initial value is adopted without sending.
     hass.states.async_set(entity_id, "15", {})
     await hass.async_block_till_done()
-    await knx.assert_write("1/1/8", (15,))
-    # Wait for time to pass
+    await knx.assert_no_telegram()
+
+    # The initialized value is still picked up by periodic_send.
     freezer.tick(timedelta(seconds=60))
     async_fire_time_changed(hass)
     await hass.async_block_till_done()
@@ -290,6 +396,10 @@ async def test_expose_value_template(
     attribute = "brightness"
     binary_address = "1/1/1"
     percent_address = "2/2/2"
+
+    hass.states.async_set(entity_id, "off", {attribute: 255})
+    await hass.async_block_till_done()
+
     await knx.setup_integration(
         {
             CONF_KNX_EXPOSE: [
@@ -373,9 +483,187 @@ async def test_expose_conversion_exception(
     await hass.async_block_till_done()
     await knx.assert_no_telegram()
     assert (
-        f'Could not expose fake.entity fake_attribute value "{invalid_attribute}" to KNX:'
-        in caplog.text
+        "Could not expose fake.entity fake_attribute"
+        f' value "{invalid_attribute}" to KNX:' in caplog.text
     )
+
+
+async def test_ui_expose_create_and_update(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test expose create and update."""
+    ENTITY_ID = "light.test"
+    GROUP_ADDRESS_1 = "1/1/1"
+    GROUP_ADDRESS_2 = "2/2/2"
+
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+
+    hass.states.async_set(ENTITY_ID, "off", {"brightness": 30})
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "knx/update_expose",
+            "entity_id": ENTITY_ID,
+            "data": {
+                "options": [
+                    {
+                        "ga": {
+                            "write": GROUP_ADDRESS_1,
+                            "dpt": "1.001",
+                        }
+                    }
+                ],
+            },
+        }
+    )
+    res = await ws_client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True, res["result"]
+
+    assert ENTITY_ID in hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["expose"]
+
+    hass.states.async_set(ENTITY_ID, "on", {"brightness": 30})
+    await hass.async_block_till_done()
+    await knx.assert_write(GROUP_ADDRESS_1, True)
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "knx/update_expose",
+            "entity_id": ENTITY_ID,
+            "data": {
+                "options": [
+                    {"ga": {"write": GROUP_ADDRESS_1, "dpt": "1.001"}},
+                    {
+                        "ga": {"write": GROUP_ADDRESS_2, "dpt": "5.001"},
+                        "attribute": "brightness",
+                    },
+                ],
+                "notes": "This is a note",
+            },
+        }
+    )
+    res = await ws_client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True, res["result"]
+
+    hass.states.async_set(ENTITY_ID, "on", {"brightness": 50})
+    await hass.async_block_till_done()
+    await knx.assert_write(GROUP_ADDRESS_2, (128,))
+
+    hass.states.async_set(ENTITY_ID, "off", {"brightness": 50})
+    await hass.async_block_till_done()
+    await knx.assert_write(GROUP_ADDRESS_1, False)
+
+
+async def test_ui_expose_send_on_init(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test send_on_init for an expose configured from the UI."""
+    entity_id = "binary_sensor.fake"
+    group_address = "1/1/1"
+
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+
+    hass.states.async_set(entity_id, "on", {})
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "knx/update_expose",
+            "entity_id": entity_id,
+            "data": {
+                "options": [
+                    {
+                        "ga": {
+                            "write": group_address,
+                            "dpt": "1.001",
+                        },
+                        "send_on_init": True,
+                    }
+                ],
+            },
+        }
+    )
+    res = await ws_client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True, res["result"]
+
+    await hass.async_block_till_done()
+    await knx.assert_write(group_address, True)
+
+    stored_options = hass_storage[KNX_CONFIG_STORAGE_KEY]["data"]["expose"][entity_id][
+        "options"
+    ]
+    assert stored_options[0]["send_on_init"] is True
+
+
+async def test_ui_expose_with_options(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    freezer: FrozenDateTimeFactory,
+    hass_ws_client: WebSocketGenerator,
+    hass_storage: dict[str, Any],
+) -> None:
+    """Test expose create with options from UI."""
+    ENTITY_ID = "light.test"
+    GROUP_ADDRESS_1 = "1/1/1"
+
+    await knx.setup_integration()
+    ws_client = await hass_ws_client(hass)
+
+    hass.states.async_set(ENTITY_ID, "on", {"brightness": 100})
+    await hass.async_block_till_done()
+
+    await ws_client.send_json_auto_id(
+        {
+            "type": "knx/update_expose",
+            "entity_id": ENTITY_ID,
+            "data": {
+                "options": [
+                    {
+                        "ga": {"write": GROUP_ADDRESS_1, "dpt": "5.010"},
+                        "attribute": "brightness",
+                        "cooldown": 2.5,
+                        "default": 0,
+                        "periodic_send": 60.0,
+                        "respond_to_read": False,
+                        "value_template": "{{ 50 if value >= 50 else 1 }}",
+                    }
+                ],
+            },
+        }
+    )
+    res = await ws_client.receive_json()
+    assert res["success"], res
+    assert res["result"]["success"] is True, res["result"]
+
+    # Change attribute to 1 - because of value template
+    hass.states.async_set(ENTITY_ID, "on", {"brightness": 10})
+    await hass.async_block_till_done()
+    await knx.assert_write(GROUP_ADDRESS_1, (1,))
+    # Change attribute to 50 - skip because of cooldown
+    hass.states.async_set(ENTITY_ID, "on", {"brightness": 100})
+    await hass.async_block_till_done()
+    await knx.assert_no_telegram()
+    # Wait for cooldown to pass
+    freezer.tick(timedelta(seconds=2.5))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await knx.assert_write(GROUP_ADDRESS_1, (50,))
+    # Wait for periodictime to pass
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+    await knx.assert_write(GROUP_ADDRESS_1, (50,))
 
 
 @pytest.mark.freeze_time("2022-1-7 9:13:14")  # UTC -> +1h = Vienna in winter (9 -> 0xA)

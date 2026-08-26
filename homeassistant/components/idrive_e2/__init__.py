@@ -1,11 +1,10 @@
 """The IDrive e2 integration."""
 
-from __future__ import annotations
-
 import logging
 from typing import Any, cast
 
 from aiobotocore.client import AioBaseClient as S3Client
+from aiobotocore.config import AioConfig
 from aiobotocore.session import AioSession
 from aiohttp import ClientError as AiohttpClientError
 from botocore.exceptions import ClientError, ConnectionError
@@ -52,6 +51,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: IDriveE2ConfigEntry) -> 
             endpoint_url=entry.data[CONF_ENDPOINT_URL],
             aws_secret_access_key=entry.data[CONF_SECRET_ACCESS_KEY],
             aws_access_key_id=entry.data[CONF_ACCESS_KEY_ID],
+            config=AioConfig(warm_up_loader_caches=True),
         ).__aenter__()
         await cast(Any, client).head_bucket(Bucket=entry.data[CONF_BUCKET])
     except ClientError as err:

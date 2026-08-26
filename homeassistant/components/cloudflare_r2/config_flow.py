@@ -1,8 +1,6 @@
 """Config flow for the Cloudflare R2 integration."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 from urllib.parse import urlparse
 
 from aiobotocore.session import AioSession
@@ -15,6 +13,7 @@ from botocore.exceptions import (
 import voluptuous as vol
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
+from homeassistant.const import CONF_PREFIX
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.selector import (
     TextSelector,
@@ -27,7 +26,6 @@ from .const import (
     CONF_ACCESS_KEY_ID,
     CONF_BUCKET,
     CONF_ENDPOINT_URL,
-    CONF_PREFIX,
     CONF_SECRET_ACCESS_KEY,
     DEFAULT_ENDPOINT_URL,
     DESCRIPTION_R2_AUTH_DOCS_URL,
@@ -52,6 +50,7 @@ STEP_USER_DATA_SCHEMA = vol.Schema(
 class R2ConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for Cloudflare R2."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

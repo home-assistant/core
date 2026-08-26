@@ -1,8 +1,6 @@
 """Support for lights."""
 
-from __future__ import annotations
-
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
@@ -46,6 +44,7 @@ class Light(CoordinatorEntity[FjaraskupanCoordinator], LightEntity):
         self._attr_unique_id = coordinator.device.address
         self._attr_device_info = device_info
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn the light on."""
         async with self.coordinator.async_connect_and_update() as device:
@@ -54,6 +53,7 @@ class Light(CoordinatorEntity[FjaraskupanCoordinator], LightEntity):
             else:
                 await device.send_dim(100)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the entity off."""
         if self.is_on:
@@ -61,6 +61,7 @@ class Light(CoordinatorEntity[FjaraskupanCoordinator], LightEntity):
                 await device.send_dim(0)
 
     @property
+    @override
     def is_on(self) -> bool:
         """Return True if entity is on."""
         if data := self.coordinator.data:
@@ -68,6 +69,7 @@ class Light(CoordinatorEntity[FjaraskupanCoordinator], LightEntity):
         return False
 
     @property
+    @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 0..255."""
         if data := self.coordinator.data:

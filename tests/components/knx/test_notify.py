@@ -3,9 +3,10 @@
 from homeassistant.components import notify
 from homeassistant.components.knx.const import KNX_ADDRESS
 from homeassistant.components.knx.schema import NotifySchema
-from homeassistant.const import CONF_NAME, CONF_TYPE
+from homeassistant.const import CONF_NAME, CONF_TYPE, Platform
 from homeassistant.core import HomeAssistant
 
+from . import KnxEntityGenerator
 from .conftest import KNXTestKit
 
 
@@ -37,7 +38,9 @@ async def test_notify_simple(hass: HomeAssistant, knx: KNXTestKit) -> None:
         notify.SERVICE_SEND_MESSAGE,
         {
             "entity_id": "notify.test",
-            notify.ATTR_MESSAGE: "I love KNX, but this text is too long for KNX, poor KNX",
+            notify.ATTR_MESSAGE: (
+                "I love KNX, but this text is too long for KNX, poor KNX"
+            ),
         },
     )
     await knx.assert_write(
@@ -93,4 +96,49 @@ async def test_notify_multiple_sends_with_different_encodings(
     await knx.assert_write(
         "1/0/1",
         (71, 228, 110, 115, 101, 102, 252, 223, 99, 104, 101, 110, 0, 0),
+    )
+
+
+async def test_notify_ui_create(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+    create_ui_entity: KnxEntityGenerator,
+) -> None:
+    """Test creating a notify entity from the UI."""
+    await knx.setup_integration()
+    await create_ui_entity(
+        platform=Platform.NOTIFY,
+        entity_data={"name": "test"},
+        knx_data={"ga_send": {"write": "1/0/0", "dpt": "16.000"}},
+    )
+    await hass.services.async_call(
+        notify.DOMAIN,
+        notify.SERVICE_SEND_MESSAGE,
+        {"entity_id": "notify.test", notify.ATTR_MESSAGE: "Home Assistant"},
+        blocking=True,
+    )
+    await knx.assert_write(
+        "1/0/0",
+        (72, 111, 109, 101, 32, 65, 115, 115, 105, 115, 116, 97, 110, 116),
+    )
+
+
+async def test_notify_ui_load(
+    hass: HomeAssistant,
+    knx: KNXTestKit,
+) -> None:
+    """Test loading a notify entity from storage."""
+    await knx.setup_integration(config_store_fixture="config_store_notify.json")
+
+    assert hass.states.get("notify.test")
+
+    await hass.services.async_call(
+        notify.DOMAIN,
+        notify.SERVICE_SEND_MESSAGE,
+        {"entity_id": "notify.test", notify.ATTR_MESSAGE: "Home Assistant"},
+        blocking=True,
+    )
+    await knx.assert_write(
+        "1/0/0",
+        (72, 111, 109, 101, 32, 65, 115, 115, 105, 115, 116, 97, 110, 116),
     )

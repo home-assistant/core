@@ -605,7 +605,10 @@ async def test_getting_existing_headers(
         {
             "ST": "mock-st",
             "LOCATION": "http://1.1.1.1",
-            "USN": "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3",
+            "USN": (
+                "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+                "::urn:mdx-netflix-com:service:target:3"
+            ),
             "SERVER": "mock-server",
             "EXT": "",
             "_source": "search",
@@ -621,8 +624,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_st.ssdp_server == "mock-server"
     assert discovery_info_by_st.ssdp_st == "mock-st"
     assert (
-        discovery_info_by_st.ssdp_usn
-        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+        discovery_info_by_st.ssdp_usn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+        "::urn:mdx-netflix-com:service:target:3"
     )
     assert discovery_info_by_st.ssdp_udn == ANY
     assert discovery_info_by_st.ssdp_headers["_timestamp"] == ANY
@@ -640,8 +643,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_udn.ssdp_server == "mock-server"
     assert discovery_info_by_udn.ssdp_st == "mock-st"
     assert (
-        discovery_info_by_udn.ssdp_usn
-        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+        discovery_info_by_udn.ssdp_usn == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+        "::urn:mdx-netflix-com:service:target:3"
     )
     assert discovery_info_by_udn.ssdp_udn == ANY
     assert discovery_info_by_udn.ssdp_headers["_timestamp"] == ANY
@@ -659,7 +662,8 @@ async def test_getting_existing_headers(
     assert discovery_info_by_udn_st.ssdp_st == "mock-st"
     assert (
         discovery_info_by_udn_st.ssdp_usn
-        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL::urn:mdx-netflix-com:service:target:3"
+        == "uuid:TIVRTLSR7ANF-D6E-1557809135086-RETAIL"
+        "::urn:mdx-netflix-com:service:target:3"
     )
     assert discovery_info_by_udn_st.ssdp_udn == ANY
     assert discovery_info_by_udn_st.ssdp_headers["_timestamp"] == ANY
@@ -758,6 +762,11 @@ async def test_bind_failure_skips_adapter(
     async def _async_start(self):
         if self.source == ("2001:db8::", 0, 0, 1):
             raise OSError
+
+    # The UPnP server needs a presentation URL, which is derived from the
+    # instance URL. In production http is set up before ssdp; set an internal
+    # URL here so get_url() succeeds without relying on http being set up.
+    hass.config.internal_url = "http://10.10.10.10:8123"
 
     SsdpListener.async_start = _async_start
     UpnpServer.async_start = _async_start

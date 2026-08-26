@@ -1,13 +1,14 @@
 """Test the Portainer initial specific behavior."""
 
-from unittest.mock import AsyncMock
+from typing import Any, cast
+from unittest.mock import AsyncMock, MagicMock
 
 from pyportainer.exceptions import (
     PortainerAuthenticationError,
     PortainerConnectionError,
     PortainerTimeoutError,
 )
-from pyportainer.models.docker import DockerContainer
+from pyportainer.models.docker import DockerContainer, EndpointStatus
 from pyportainer.models.portainer import Endpoint
 from pyportainer.models.stacks import Stack
 import pytest
@@ -21,6 +22,9 @@ from homeassistant.const import (
     CONF_HOST,
     CONF_URL,
     CONF_VERIFY_SSL,
+    EVENT_HOMEASSISTANT_STARTED,
+    EVENT_HOMEASSISTANT_STOP,
+    STATE_UNAVAILABLE,
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr, entity_registry as er
@@ -49,9 +53,9 @@ async def test_setup_exceptions(
     expected_state: ConfigEntryState,
 ) -> None:
     """Test the _async_setup."""
-    mock_portainer_client.get_endpoints.side_effect = exception
+    mock_portainer_client.portainer_system_status.side_effect = exception
     await setup_integration(hass, mock_config_entry)
-    assert mock_config_entry.state == expected_state
+    assert mock_config_entry.state is expected_state
 
 
 async def test_migrations(
@@ -110,9 +114,7 @@ async def test_remove_config_entry_device(
     )
 
     ws_client = await hass_ws_client(hass)
-    response = await ws_client.remove_device(
-        device_entry.id, mock_config_entry.entry_id
-    )
+    response = await ws_client.remove_device(device_entry.id)
     assert response["success"] == expected_result
 
 
@@ -146,7 +148,7 @@ async def test_migration_v3_to_v5(
     container_device = device_registry.async_get_or_create(
         config_entry_id=entry.entry_id,
         identifiers={(DOMAIN, original_container_identifier)},
-        via_device=(DOMAIN, f"{entry.entry_id}_endpoint_1"),
+        via_device_id=endpoint_device.id,
         name="Test Container",
     )
 
@@ -179,11 +181,51 @@ async def test_migration_v3_to_v5(
     assert entity_after.unique_id == f"{entry.entry_id}_1_adguard_container"
 
 
+async def test_unload_entry(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test async_unload_entry."""
+    await setup_integration(hass, mock_config_entry)
+    assert mock_config_entry.state == ConfigEntryState.LOADED
+
+    assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state == ConfigEntryState.NOT_LOADED
+    mock_portainer_watcher.stop.assert_called_once()
+
+
+async def test_watcher_start_stop(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_watcher: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test that watcher starts and stops on HA events."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STARTED)
+    await hass.async_block_till_done()
+    mock_portainer_watcher.start.assert_called_once()
+
+    mock_portainer_watcher.stop.reset_mock()
+
+    hass.bus.async_fire(EVENT_HOMEASSISTANT_STOP)
+    await hass.async_block_till_done()
+
+    mock_portainer_watcher.stop.assert_called_once()
+
+
 async def test_migration_v4_to_v5(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
 ) -> None:
-    """Test migration from v4 config entry updates unique_id to Portainer instance ID."""
+    """Test v4 config entry migration updates unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_TEST_CONFIG,
@@ -215,7 +257,7 @@ async def test_migration_v4_to_v5_exceptions(
     mock_portainer_client: AsyncMock,
     exception: type[Exception],
 ) -> None:
-    """Test migration from v4 config entry updates unique_id to Portainer instance ID."""
+    """Test v4 config entry migration updates unique_id."""
     entry = MockConfigEntry(
         domain=DOMAIN,
         data=MOCK_TEST_CONFIG,
@@ -231,7 +273,7 @@ async def test_migration_v4_to_v5_exceptions(
     await hass.config_entries.async_setup(entry.entry_id)
     await hass.async_block_till_done()
 
-    assert entry.state == ConfigEntryState.MIGRATION_ERROR
+    assert entry.state is ConfigEntryState.MIGRATION_ERROR
 
 
 async def test_device_registry(
@@ -247,7 +289,8 @@ async def test_device_registry(
     device_entries = dr.async_entries_for_config_entry(
         device_registry, mock_config_entry.entry_id
     )
-    assert device_entries == snapshot
+    # Sort by identifier to ensure consistent order in snapshot
+    assert sorted(device_entries, key=lambda x: list(x.identifiers)[0][1]) == snapshot
 
 
 async def test_container_stack_device_links(
@@ -259,46 +302,61 @@ async def test_container_stack_device_links(
     """Test that stack-linked containers are nested under the correct stack device."""
     await setup_integration(hass, mock_config_entry)
 
-    endpoint_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1")}
+    endpoint_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1"), mock_config_entry.entry_id
     )
     assert endpoint_device is not None
 
-    dashy_stack_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_stack_2")}
+    dashy_stack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_2"), mock_config_entry.entry_id
     )
     assert dashy_stack_device is not None
     assert dashy_stack_device.via_device_id == endpoint_device.id
 
-    webstack_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_stack_1")}
+    webstack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_1"), mock_config_entry.entry_id
     )
     assert webstack_device is not None
     assert webstack_device.via_device_id == endpoint_device.id
 
-    swarm_container_device = device_registry.async_get_device(
-        identifiers={
-            (
-                DOMAIN,
-                f"{mock_config_entry.entry_id}_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05",
-            )
-        }
+    swarm_container_device = device_registry.async_get_device_by_identifier(
+        (
+            DOMAIN,
+            f"{mock_config_entry.entry_id}_1_dashy_dashy.1.qgza68hnz4n1qvyz3iohynx05",
+        ),
+        mock_config_entry.entry_id,
     )
     assert swarm_container_device is not None
     assert swarm_container_device.via_device_id == dashy_stack_device.id
 
-    compose_container_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_serene_banach")}
+    compose_container_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_serene_banach"),
+        mock_config_entry.entry_id,
     )
     assert compose_container_device is not None
     assert compose_container_device.via_device_id == webstack_device.id
 
-    standalone_container_device = device_registry.async_get_device(
-        identifiers={(DOMAIN, f"{mock_config_entry.entry_id}_1_focused_einstein")}
+    standalone_container_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_focused_einstein"),
+        mock_config_entry.entry_id,
     )
 
     assert standalone_container_device is not None
     assert standalone_container_device.via_device_id == endpoint_device.id
+
+
+async def test_docker_system_df_refresh_runs_on_ha_start(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test docker system df coordinator refreshes DF data on HA start."""
+    await setup_integration(hass, mock_config_entry)
+
+    assert (
+        state := hass.states.get("sensor.my_environment_image_disk_usage_total_size")
+    )
+    assert state.state != STATE_UNAVAILABLE
 
 
 async def test_new_endpoint_callback(
@@ -306,8 +364,9 @@ async def test_new_endpoint_callback(
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
 ) -> None:
-    """Test that a new endpoint appearing in a subsequent refresh fires the callback and creates entities."""
+    """Test new endpoint creates entities after refresh."""
     mock_portainer_client.get_endpoints.return_value = []
     await setup_integration(hass, mock_config_entry)
     entities = er.async_entries_for_config_entry(
@@ -317,10 +376,11 @@ async def test_new_endpoint_callback(
 
     mock_portainer_client.get_endpoints.return_value = [
         Endpoint.from_dict(endpoint)
-        for endpoint in await async_load_json_array_fixture(
-            hass, "endpoints.json", DOMAIN
+        for endpoint in cast(
+            list[dict[str, Any]],
+            await async_load_json_array_fixture(hass, "endpoints.json", DOMAIN),
         )
-        if endpoint["Status"] == 1
+        if endpoint["Status"] == EndpointStatus.UP
     ]
 
     coordinator = mock_config_entry.runtime_data
@@ -332,6 +392,40 @@ async def test_new_endpoint_callback(
     )
     assert len(entities) > 0
 
+    # The endpoint and its stacks are discovered together on this refresh, so
+    # the stack device must resolve the freshly-created endpoint device as its
+    # via device instead of racing its creation.
+    endpoint_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1"), mock_config_entry.entry_id
+    )
+    assert endpoint_device is not None
+
+    stack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_2"),
+        mock_config_entry.entry_id,
+    )
+    assert stack_device is not None
+    assert stack_device.via_device_id == endpoint_device.id
+
+
+async def test_removed_endpoint_stops_event_listener(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_portainer_event_listeners: dict[int, MagicMock],
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a removed endpoint's Docker event listener is stopped and dropped."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data
+    assert 1 in coordinator._event_listeners
+
+    mock_portainer_client.get_endpoints.return_value = []
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    mock_portainer_event_listeners[1].stop.assert_called_once()
+    assert 1 not in coordinator._event_listeners
+
 
 async def test_new_container_callback(
     hass: HomeAssistant,
@@ -339,7 +433,7 @@ async def test_new_container_callback(
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that a new container appearing in a subsequent refresh fires the callback and creates entities."""
+    """Test new container creates entities after refresh."""
     mock_portainer_client.get_containers.return_value = []
     await setup_integration(hass, mock_config_entry)
     entities = er.async_entries_for_config_entry(
@@ -348,8 +442,9 @@ async def test_new_container_callback(
 
     mock_portainer_client.get_containers.return_value = [
         DockerContainer.from_dict(container)
-        for container in await async_load_json_array_fixture(
-            hass, "containers.json", DOMAIN
+        for container in cast(
+            list[dict[str, Any]],
+            await async_load_json_array_fixture(hass, "containers.json", DOMAIN),
         )
         if "/focused_einstein" in container["Names"]
     ]
@@ -363,13 +458,28 @@ async def test_new_container_callback(
     ) > len(entities)
 
 
+async def test_swarm_stacks_fetched_by_swarm_id(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test Swarm manager calls get_stacks with both IDs."""
+    await setup_integration(hass, mock_config_entry)
+
+    calls = mock_portainer_client.get_stacks.call_args_list
+    # Expect exactly two calls: one by endpoint_id, one by swarm_id
+    assert len(calls) == 2
+    assert calls[0].kwargs == {"endpoint_id": 1}
+    assert calls[1].kwargs == {"endpoint_id": 1, "swarm_id": "swarm-cluster-id"}
+
+
 async def test_new_stack_callback(
     hass: HomeAssistant,
     mock_portainer_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
 ) -> None:
-    """Test that a new stack appearing in a subsequent refresh fires the callback and creates entities."""
+    """Test new stack creates entities after refresh."""
     mock_portainer_client.get_stacks.return_value = []
     await setup_integration(hass, mock_config_entry)
     entities = er.async_entries_for_config_entry(
@@ -378,7 +488,10 @@ async def test_new_stack_callback(
 
     mock_portainer_client.get_stacks.return_value = [
         Stack.from_dict(stack)
-        for stack in await async_load_json_array_fixture(hass, "stacks.json", DOMAIN)
+        for stack in cast(
+            list[dict[str, Any]],
+            await async_load_json_array_fixture(hass, "stacks.json", DOMAIN),
+        )
         if stack["Name"] == "webstack"
     ]
 
@@ -389,3 +502,77 @@ async def test_new_stack_callback(
     assert len(
         er.async_entries_for_config_entry(entity_registry, mock_config_entry.entry_id)
     ) > len(entities)
+
+
+async def test_stack_recreated_with_new_id(
+    hass: HomeAssistant,
+    mock_portainer_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a stack recreated with the same name but a new ID re-registers its device.
+
+    The stack device identifier and a container's via device are keyed by the stack
+    ID, so a stack recreated with a new ID must be detected as new and its device
+    registered before a container in it resolves the stack as its via device. Tracking
+    only the name would skip registration and the via device lookup would then raise,
+    aborting the refresh.
+    """
+    await setup_integration(hass, mock_config_entry)
+
+    endpoint_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1"), mock_config_entry.entry_id
+    )
+    assert endpoint_device is not None
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_1"),
+            mock_config_entry.entry_id,
+        )
+        is not None
+    )
+
+    stacks = cast(
+        list[dict[str, Any]],
+        await async_load_json_array_fixture(hass, "stacks.json", DOMAIN),
+    )
+    for stack in stacks:
+        if stack["Name"] == "webstack":
+            stack["Id"] = 99
+    mock_portainer_client.get_stacks.return_value = [
+        Stack.from_dict(stack) for stack in stacks
+    ]
+
+    containers = cast(
+        list[dict[str, Any]],
+        await async_load_json_array_fixture(hass, "containers.json", DOMAIN),
+    )
+    new_container = {
+        **next(c for c in containers if c["Names"] == ["/serene_banach"]),
+        "Names": ["/brave_newton"],
+        "Id": "cc97facfb3b3ed4cd362c1e88fc89a53908ad05fb3a4103bca3f9b28292d14bf",
+    }
+    mock_portainer_client.get_containers.return_value = [
+        DockerContainer.from_dict(container)
+        for container in (*containers, new_container)
+    ]
+
+    coordinator = mock_config_entry.runtime_data
+    await coordinator.async_refresh()
+    await hass.async_block_till_done()
+
+    assert coordinator.last_update_success
+
+    new_stack_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_stack_99"),
+        mock_config_entry.entry_id,
+    )
+    assert new_stack_device is not None
+    assert new_stack_device.via_device_id == endpoint_device.id
+
+    new_container_device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, f"{mock_config_entry.entry_id}_1_brave_newton"),
+        mock_config_entry.entry_id,
+    )
+    assert new_container_device is not None
+    assert new_container_device.via_device_id == new_stack_device.id

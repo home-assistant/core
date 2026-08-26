@@ -111,28 +111,28 @@ async def test_mqtt_state_by_calling_service(
     # Turn relay ON
     await call_service(hass, "switch.test_relay_0", SERVICE_TURN_ON)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/relay/0/set", "ON", 0, False
+        "pglab/test/relay/0/set", "ON", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn relay OFF
     await call_service(hass, "switch.test_relay_0", SERVICE_TURN_OFF)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/relay/0/set", "OFF", 0, False
+        "pglab/test/relay/0/set", "OFF", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn relay ON
     await call_service(hass, "switch.test_relay_3", SERVICE_TURN_ON)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/relay/3/set", "ON", 0, False
+        "pglab/test/relay/3/set", "ON", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 
     # Turn relay OFF
     await call_service(hass, "switch.test_relay_3", SERVICE_TURN_OFF)
     mqtt_mock.async_publish.assert_called_once_with(
-        "pglab/test/relay/3/set", "OFF", 0, False
+        "pglab/test/relay/3/set", "OFF", 0, False, message_expiry_interval=None
     )
     mqtt_mock.async_publish.reset_mock()
 

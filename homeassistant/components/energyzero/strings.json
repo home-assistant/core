@@ -41,14 +41,14 @@
     }
   },
   "exceptions": {
-    "invalid_config_entry": {
-      "message": "Invalid config entry provided. Got {config_entry}"
-    },
     "invalid_date": {
       "message": "Invalid date provided. Got {date}"
     },
-    "unloaded_config_entry": {
-      "message": "Invalid config entry provided. {config_entry} is not loaded."
+    "invalid_range": {
+      "message": "Invalid date range provided. End {end} must be after start {start}."
+    },
+    "no_data": {
+      "message": "No price data available for {date}."
     }
   },
   "services": {

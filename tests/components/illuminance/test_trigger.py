@@ -5,7 +5,6 @@ from typing import Any
 import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
-from homeassistant.components.number import NumberDeviceClass
 from homeassistant.components.sensor import SensorDeviceClass
 from homeassistant.const import (
     ATTR_DEVICE_CLASS,
@@ -14,14 +13,14 @@ from homeassistant.const import (
     STATE_OFF,
     STATE_ON,
 )
-from homeassistant.core import HomeAssistant, ServiceCall
+from homeassistant.core import HomeAssistant
 
 from tests.components.common import (
     TriggerStateDescription,
-    assert_trigger_behavior_any,
+    assert_trigger_behavior_all,
+    assert_trigger_behavior_each,
     assert_trigger_behavior_first,
-    assert_trigger_behavior_last,
-    assert_trigger_gated_by_labs_flag,
+    assert_trigger_options_supported,
     parametrize_numerical_state_value_changed_trigger_states,
     parametrize_numerical_state_value_crossed_threshold_trigger_states,
     parametrize_target_entities,
@@ -37,37 +36,44 @@ async def target_binary_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
 
 
 @pytest.fixture
-async def target_numbers(hass: HomeAssistant) -> dict[str, list[str]]:
-    """Create multiple number entities associated with different targets."""
-    return await target_entities(hass, "number")
-
-
-@pytest.fixture
 async def target_sensors(hass: HomeAssistant) -> dict[str, list[str]]:
     """Create multiple sensor entities associated with different targets."""
     return await target_entities(hass, "sensor")
 
 
+_CHANGED_THRESHOLD = {"threshold": {"type": "any"}}
+_CROSSED_THRESHOLD = {"threshold": {"type": "above", "value": {"number": 50}}}
+
+
 @pytest.mark.parametrize(
-    "trigger_key",
+    ("trigger_key", "base_options", "supports_behavior", "supports_duration"),
     [
-        "illuminance.detected",
-        "illuminance.cleared",
-        "illuminance.changed",
-        "illuminance.crossed_threshold",
+        ("illuminance.detected", {}, True, True),
+        ("illuminance.cleared", {}, True, True),
+        ("illuminance.changed", _CHANGED_THRESHOLD, False, False),
+        ("illuminance.crossed_threshold", _CROSSED_THRESHOLD, True, True),
     ],
 )
-async def test_illuminance_triggers_gated_by_labs_flag(
-    hass: HomeAssistant, caplog: pytest.LogCaptureFixture, trigger_key: str
+async def test_illuminance_trigger_options_validation(
+    hass: HomeAssistant,
+    trigger_key: str,
+    base_options: dict[str, Any] | None,
+    supports_behavior: bool,
+    supports_duration: bool,
 ) -> None:
-    """Test the illuminance triggers are gated by the labs flag."""
-    await assert_trigger_gated_by_labs_flag(hass, caplog, trigger_key)
+    """Test that illuminance triggers support the expected options."""
+    await assert_trigger_options_supported(
+        hass,
+        trigger_key,
+        base_options,
+        supports_behavior=supports_behavior,
+        supports_duration=supports_duration,
+    )
 
 
 # --- Binary sensor detected/cleared tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -95,9 +101,8 @@ async def test_illuminance_triggers_gated_by_labs_flag(
         ),
     ],
 )
-async def test_illuminance_trigger_binary_sensor_behavior_any(
+async def test_illuminance_trigger_binary_sensor_behavior_each(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -106,10 +111,9 @@ async def test_illuminance_trigger_binary_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance trigger fires for binary_sensor entities with device_class light."""
-    await assert_trigger_behavior_any(
+    """Test trigger fires for binary_sensor with device_class light."""
+    await assert_trigger_behavior_each(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -120,7 +124,6 @@ async def test_illuminance_trigger_binary_sensor_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -150,7 +153,6 @@ async def test_illuminance_trigger_binary_sensor_behavior_any(
 )
 async def test_illuminance_trigger_binary_sensor_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -162,7 +164,6 @@ async def test_illuminance_trigger_binary_sensor_behavior_first(
     """Test illuminance trigger fires on the first binary_sensor state change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -173,7 +174,6 @@ async def test_illuminance_trigger_binary_sensor_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("binary_sensor"),
@@ -201,9 +201,8 @@ async def test_illuminance_trigger_binary_sensor_behavior_first(
         ),
     ],
 )
-async def test_illuminance_trigger_binary_sensor_behavior_last(
+async def test_illuminance_trigger_binary_sensor_behavior_all(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_binary_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -212,10 +211,9 @@ async def test_illuminance_trigger_binary_sensor_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance trigger fires when the last binary_sensor changes state."""
-    await assert_trigger_behavior_last(
+    """Test illuminance trigger fires when all binary_sensors have changed state."""
+    await assert_trigger_behavior_all(
         hass,
-        service_calls=service_calls,
         target_entities=target_binary_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -229,7 +227,6 @@ async def test_illuminance_trigger_binary_sensor_behavior_last(
 # --- Sensor changed/crossed_threshold tests ---
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -249,9 +246,8 @@ async def test_illuminance_trigger_binary_sensor_behavior_last(
         ),
     ],
 )
-async def test_illuminance_trigger_sensor_behavior_any(
+async def test_illuminance_trigger_sensor_behavior_each(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -260,10 +256,9 @@ async def test_illuminance_trigger_sensor_behavior_any(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance trigger fires for sensor entities with device_class illuminance."""
-    await assert_trigger_behavior_any(
+    """Test trigger fires for sensor with device_class illuminance."""
+    await assert_trigger_behavior_each(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -274,7 +269,6 @@ async def test_illuminance_trigger_sensor_behavior_any(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -291,7 +285,6 @@ async def test_illuminance_trigger_sensor_behavior_any(
 )
 async def test_illuminance_trigger_sensor_crossed_threshold_behavior_first(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -300,10 +293,9 @@ async def test_illuminance_trigger_sensor_crossed_threshold_behavior_first(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance crossed_threshold trigger fires on the first sensor state change."""
+    """Test crossed_threshold trigger fires on first sensor change."""
     await assert_trigger_behavior_first(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
@@ -314,7 +306,6 @@ async def test_illuminance_trigger_sensor_crossed_threshold_behavior_first(
     )
 
 
-@pytest.mark.usefixtures("enable_labs_preview_features")
 @pytest.mark.parametrize(
     ("trigger_target_config", "entity_id", "entities_in_target"),
     parametrize_target_entities("sensor"),
@@ -329,9 +320,8 @@ async def test_illuminance_trigger_sensor_crossed_threshold_behavior_first(
         ),
     ],
 )
-async def test_illuminance_trigger_sensor_crossed_threshold_behavior_last(
+async def test_illuminance_trigger_sensor_crossed_threshold_behavior_all(
     hass: HomeAssistant,
-    service_calls: list[ServiceCall],
     target_sensors: dict[str, list[str]],
     trigger_target_config: dict,
     entity_id: str,
@@ -340,139 +330,10 @@ async def test_illuminance_trigger_sensor_crossed_threshold_behavior_last(
     trigger_options: dict[str, Any],
     states: list[TriggerStateDescription],
 ) -> None:
-    """Test illuminance crossed_threshold trigger fires when the last sensor changes state."""
-    await assert_trigger_behavior_last(
+    """Test crossed_threshold trigger fires when all sensors have changed."""
+    await assert_trigger_behavior_all(
         hass,
-        service_calls=service_calls,
         target_entities=target_sensors,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-# --- Number changed/crossed_threshold tests ---
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_numerical_state_value_changed_trigger_states(
-            "illuminance.changed",
-            device_class=NumberDeviceClass.ILLUMINANCE,
-            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
-        ),
-        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "illuminance.crossed_threshold",
-            device_class=NumberDeviceClass.ILLUMINANCE,
-            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
-        ),
-    ],
-)
-async def test_illuminance_trigger_number_behavior_any(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_numbers: dict[str, list[str]],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test illuminance trigger fires for number entities with device_class illuminance."""
-    await assert_trigger_behavior_any(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_numbers,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "illuminance.crossed_threshold",
-            device_class=NumberDeviceClass.ILLUMINANCE,
-            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
-        ),
-    ],
-)
-async def test_illuminance_trigger_number_crossed_threshold_behavior_first(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_numbers: dict[str, list[str]],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test illuminance crossed_threshold trigger fires on the first number state change."""
-    await assert_trigger_behavior_first(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_numbers,
-        trigger_target_config=trigger_target_config,
-        entity_id=entity_id,
-        entities_in_target=entities_in_target,
-        trigger=trigger,
-        trigger_options=trigger_options,
-        states=states,
-    )
-
-
-@pytest.mark.usefixtures("enable_labs_preview_features")
-@pytest.mark.parametrize(
-    ("trigger_target_config", "entity_id", "entities_in_target"),
-    parametrize_target_entities("number"),
-)
-@pytest.mark.parametrize(
-    ("trigger", "trigger_options", "states"),
-    [
-        *parametrize_numerical_state_value_crossed_threshold_trigger_states(
-            "illuminance.crossed_threshold",
-            device_class=NumberDeviceClass.ILLUMINANCE,
-            unit_attributes={ATTR_UNIT_OF_MEASUREMENT: LIGHT_LUX},
-        ),
-    ],
-)
-async def test_illuminance_trigger_number_crossed_threshold_behavior_last(
-    hass: HomeAssistant,
-    service_calls: list[ServiceCall],
-    target_numbers: dict[str, list[str]],
-    trigger_target_config: dict,
-    entity_id: str,
-    entities_in_target: int,
-    trigger: str,
-    trigger_options: dict[str, Any],
-    states: list[TriggerStateDescription],
-) -> None:
-    """Test illuminance crossed_threshold trigger fires when the last number changes state."""
-    await assert_trigger_behavior_last(
-        hass,
-        service_calls=service_calls,
-        target_entities=target_numbers,
         trigger_target_config=trigger_target_config,
         entity_id=entity_id,
         entities_in_target=entities_in_target,

@@ -1,19 +1,21 @@
 """Event parser and human readable log generator."""
 
-from __future__ import annotations
-
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Collection, Mapping
 from typing import Any
 
-from homeassistant.components.sensor import ATTR_STATE_CLASS, NON_NUMERIC_DEVICE_CLASSES
+from homeassistant.components.sensor import (
+    NON_NUMERIC_DEVICE_CLASSES,
+    SensorEntityCapabilityAttribute,
+)
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
     ATTR_DEVICE_ID,
     ATTR_DOMAIN,
     ATTR_ENTITY_ID,
-    ATTR_UNIT_OF_MEASUREMENT,
+    ATTR_SERVICE_DATA,
+    EVENT_CALL_SERVICE,
     EVENT_LOGBOOK_ENTRY,
     EVENT_STATE_CHANGED,
+    EntityStateAttribute,
 )
 from homeassistant.core import (
     CALLBACK_TYPE,
@@ -73,12 +75,12 @@ def _async_config_entries_for_ids(
 
 def async_determine_event_types(
     hass: HomeAssistant, entity_ids: list[str] | None, device_ids: list[str] | None
-) -> tuple[EventType[Any] | str, ...]:
+) -> set[EventType[Any] | str]:
     """Reduce the event types based on the entity ids and device ids."""
     logbook_config: LogbookConfig = hass.data[DOMAIN]
     external_events = logbook_config.external_events
     if not entity_ids and not device_ids:
-        return (*BUILT_IN_EVENTS, *external_events)
+        return {*BUILT_IN_EVENTS, *external_events}
 
     interested_domains: set[str] = set()
     for entry_id in _async_config_entries_for_ids(hass, entity_ids, device_ids):
@@ -91,23 +93,35 @@ def async_determine_event_types(
     # to add them since we have historically included
     # them when matching only on entities
     #
-    intrested_event_types: set[EventType[Any] | str] = {
+    interested_event_types: set[EventType[Any] | str] = {
         external_event
         for external_event, domain_call in external_events.items()
         if domain_call[0] in interested_domains
     } | AUTOMATION_EVENTS
     if entity_ids:
         # We also allow entity_ids to be recorded via manual logbook entries.
-        intrested_event_types.add(EVENT_LOGBOOK_ENTRY)
+        interested_event_types.add(EVENT_LOGBOOK_ENTRY)
 
-    return tuple(intrested_event_types)
+    return interested_event_types
 
 
 @callback
-def extract_attr(source: Mapping[str, Any], attr: str) -> list[str]:
-    """Extract an attribute as a list or string."""
+def extract_attr(
+    event_type: EventType[Any] | str, source: Mapping[str, Any], attr: str
+) -> list[str]:
+    """Extract an attribute as a list or string.
+
+    For EVENT_CALL_SERVICE events, the entity_id is inside service_data,
+    not at the top level. Check service_data as a fallback.
+    """
     if (value := source.get(attr)) is None:
-        return []
+        # Early return to avoid unnecessary dict lookups for non-service events
+        if event_type != EVENT_CALL_SERVICE:
+            return []
+        if service_data := source.get(ATTR_SERVICE_DATA):
+            value = service_data.get(attr)
+        if value is None:
+            return []
     if isinstance(value, list):
         return value
     return str(value).split(",")
@@ -135,7 +149,7 @@ def event_forwarder_filtered(
         def _forward_events_filtered_by_entities_filter(event: Event) -> None:
             assert entities_filter is not None
             event_data = event.data
-            entity_ids = extract_attr(event_data, ATTR_ENTITY_ID)
+            entity_ids = extract_attr(event.event_type, event_data, ATTR_ENTITY_ID)
             if entity_ids and not any(
                 entities_filter(entity_id) for entity_id in entity_ids
             ):
@@ -157,9 +171,12 @@ def event_forwarder_filtered(
     @callback
     def _forward_events_filtered_by_device_entity_ids(event: Event) -> None:
         event_data = event.data
+        event_type = event.event_type
         if entity_ids_set.intersection(
-            extract_attr(event_data, ATTR_ENTITY_ID)
-        ) or device_ids_set.intersection(extract_attr(event_data, ATTR_DEVICE_ID)):
+            extract_attr(event_type, event_data, ATTR_ENTITY_ID)
+        ) or device_ids_set.intersection(
+            extract_attr(event_type, event_data, ATTR_DEVICE_ID)
+        ):
             target(event)
 
     return _forward_events_filtered_by_device_entity_ids
@@ -170,7 +187,7 @@ def async_subscribe_events(
     hass: HomeAssistant,
     subscriptions: list[CALLBACK_TYPE],
     target: Callable[[Event[Any]], None],
-    event_types: tuple[EventType[Any] | str, ...],
+    event_types: Collection[EventType[Any] | str],
     entities_filter: Callable[[str], bool] | None,
     entity_ids: list[str] | None,
     device_ids: list[str] | None,
@@ -239,7 +256,7 @@ def is_sensor_continuous(
     will filter out any sensors with a unit_of_measurement.
 
     If the state still exists in the state machine, this function still
-    checks for ATTR_UNIT_OF_MEASUREMENT since the live mode is not filtered
+    checks for EntityStateAttribute.UNIT_OF_MEASUREMENT since the live mode is not filtered
     by the SQL query.
     """
     # If it is in the state machine we can quick check if it
@@ -247,9 +264,11 @@ def is_sensor_continuous(
     # it does
     if (state := hass.states.get(entity_id)) and (attributes := state.attributes):
         return (
-            ATTR_UNIT_OF_MEASUREMENT in attributes
-            or ATTR_STATE_CLASS in attributes
-            or _device_class_is_numeric(attributes.get(ATTR_DEVICE_CLASS))
+            EntityStateAttribute.UNIT_OF_MEASUREMENT in attributes
+            or SensorEntityCapabilityAttribute.STATE_CLASS in attributes
+            or _device_class_is_numeric(
+                attributes.get(EntityStateAttribute.DEVICE_CLASS)
+            )
         )
     # If its not in the state machine, we need to check
     # the entity registry to see if its a sensor
@@ -261,7 +280,10 @@ def is_sensor_continuous(
     return bool(
         (entry := ent_reg.async_get(entity_id))
         and (
-            (entry.capabilities and entry.capabilities.get(ATTR_STATE_CLASS))
+            (
+                entry.capabilities
+                and entry.capabilities.get(SensorEntityCapabilityAttribute.STATE_CLASS)
+            )
             or _device_class_is_numeric(entry.device_class)
         )
     )
@@ -280,9 +302,11 @@ def _is_state_filtered(new_state: State, old_state: State) -> bool:
         or (
             new_state.domain == SENSOR_DOMAIN
             and (
-                ATTR_UNIT_OF_MEASUREMENT in new_state.attributes
-                or ATTR_STATE_CLASS in new_state.attributes
-                or _device_class_is_numeric(new_state.attributes.get(ATTR_DEVICE_CLASS))
+                EntityStateAttribute.UNIT_OF_MEASUREMENT in new_state.attributes
+                or SensorEntityCapabilityAttribute.STATE_CLASS in new_state.attributes
+                or _device_class_is_numeric(
+                    new_state.attributes.get(EntityStateAttribute.DEVICE_CLASS)
+                )
             )
         )
     )

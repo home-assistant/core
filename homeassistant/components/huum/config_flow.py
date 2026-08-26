@@ -1,10 +1,8 @@
 """Config flow for huum integration."""
 
-from __future__ import annotations
-
 from collections.abc import Mapping
 import logging
-from typing import Any
+from typing import Any, override
 
 from huum.exceptions import Forbidden, NotAuthenticated
 from huum.huum import Huum
@@ -31,6 +29,7 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -57,6 +56,43 @@ class HuumConfigFlow(ConfigFlow, domain=DOMAIN):
 
         return self.async_show_form(
             step_id="user", data_schema=STEP_USER_DATA_SCHEMA, errors=errors
+        )
+
+    async def async_step_reconfigure(
+        self, user_input: dict[str, Any] | None = None
+    ) -> ConfigFlowResult:
+        """Handle reconfiguration of the integration."""
+        errors: dict[str, str] = {}
+        reconfigure_entry = self._get_reconfigure_entry()
+
+        if user_input is not None:
+            self._async_abort_entries_match({CONF_USERNAME: user_input[CONF_USERNAME]})
+            try:
+                huum = Huum(
+                    user_input[CONF_USERNAME],
+                    user_input[CONF_PASSWORD],
+                    session=async_get_clientsession(self.hass),
+                )
+                await huum.status()
+            except Forbidden, NotAuthenticated:
+                errors["base"] = "invalid_auth"
+            except Exception:
+                _LOGGER.exception("Unknown error")
+                errors["base"] = "unknown"
+            else:
+                return self.async_update_reload_and_abort(
+                    reconfigure_entry,
+                    title=user_input[CONF_USERNAME],
+                    data_updates=user_input,
+                )
+
+        return self.async_show_form(
+            step_id="reconfigure",
+            data_schema=self.add_suggested_values_to_schema(
+                STEP_USER_DATA_SCHEMA,
+                {CONF_USERNAME: reconfigure_entry.data[CONF_USERNAME]},
+            ),
+            errors=errors,
         )
 
     async def async_step_reauth(

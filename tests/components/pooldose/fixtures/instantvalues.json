@@ -2,7 +2,7 @@
   "sensor": {
     "temperature": {
       "value": 25,
-      "unit": "°C"
+      "unit": "\u00b0C"
     },
     "ph": {
       "value": 6.8,
@@ -84,24 +84,12 @@
       "value": 123.45,
       "unit": "m3"
     },
-    "circulation_pump_status": {
-      "value": "disabled",
-      "unit": null
-    },
     "device_config": {
       "value": "ph_orp",
       "unit": null
     },
     "temperature_unit": {
       "value": "celsius",
-      "unit": null
-    },
-    "power_on_delay_status": {
-      "value": "disabled",
-      "unit": null
-    },
-    "flow_delay_status": {
-      "value": "disabled",
       "unit": null
     }
   },
@@ -171,6 +159,15 @@
     },
     "alarm_system_standby": {
       "value": true
+    },
+    "circulation_pump_status": {
+      "value": false
+    },
+    "flow_delay_status": {
+      "value": false
+    },
+    "power_on_delay_status": {
+      "value": false
     }
   },
   "number": {

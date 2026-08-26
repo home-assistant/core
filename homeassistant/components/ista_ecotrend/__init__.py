@@ -1,7 +1,5 @@
 """The ista Ecotrend integration."""
 
-from __future__ import annotations
-
 import logging
 
 from pyecotrend_ista import PyEcotrendIsta
@@ -23,7 +21,6 @@ async def async_setup_entry(hass: HomeAssistant, entry: IstaConfigEntry) -> bool
     ista = PyEcotrendIsta(
         entry.data[CONF_EMAIL],
         entry.data[CONF_PASSWORD],
-        _LOGGER,
     )
 
     coordinator = IstaCoordinator(hass, entry, ista)

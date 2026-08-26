@@ -306,7 +306,7 @@ async def test_climate_change_thermostat_temperature_range(
 async def test_climate_change_thermostat_temperature_range_iphone(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
-    """Test that we can set all three set points at once (iPhone heat_cool mode support)."""
+    """Test setting all three set points at once (iPhone heat_cool)."""
     helper = await setup_test_component(hass, get_next_aid(), create_thermostat_service)
 
     await hass.services.async_call(
@@ -439,7 +439,7 @@ async def test_climate_check_min_max_values_per_mode_sspa_device(
 async def test_climate_set_thermostat_temp_on_sspa_device(
     hass: HomeAssistant, get_next_aid: Callable[[], int]
 ) -> None:
-    """Test setting temperature in different modes on device with single set point in auto."""
+    """Test setting temperature on device with single set point in auto."""
     helper = await setup_test_component(
         hass, get_next_aid(), create_thermostat_single_set_point_auto
     )
@@ -687,7 +687,9 @@ async def test_hvac_mode_vs_hvac_action(
         ServicesTypes.THERMOSTAT,
         {
             CharacteristicsTypes.FAN_STATE_CURRENT: CurrentFanStateValues.ACTIVE,
-            CharacteristicsTypes.HEATING_COOLING_CURRENT: HeatingCoolingCurrentValues.IDLE,
+            CharacteristicsTypes.HEATING_COOLING_CURRENT: (
+                HeatingCoolingCurrentValues.IDLE
+            ),
             CharacteristicsTypes.HEATING_COOLING_TARGET: HeatingCoolingTargetValues.OFF,
             CharacteristicsTypes.FAN_STATE_CURRENT: CurrentFanStateValues.ACTIVE,
         },
@@ -811,7 +813,9 @@ async def test_heater_cooler_change_thermostat_state(
     helper.async_assert_service_values(
         ServicesTypes.HEATER_COOLER,
         {
-            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.HEAT,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                TargetHeaterCoolerStateValues.HEAT
+            ),
         },
     )
 
@@ -824,7 +828,9 @@ async def test_heater_cooler_change_thermostat_state(
     helper.async_assert_service_values(
         ServicesTypes.HEATER_COOLER,
         {
-            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.COOL,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                TargetHeaterCoolerStateValues.COOL
+            ),
         },
     )
 
@@ -837,7 +843,9 @@ async def test_heater_cooler_change_thermostat_state(
     helper.async_assert_service_values(
         ServicesTypes.HEATER_COOLER,
         {
-            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.AUTOMATIC,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                TargetHeaterCoolerStateValues.AUTOMATIC
+            ),
         },
     )
 
@@ -889,7 +897,9 @@ async def test_can_turn_on_after_off(
         ServicesTypes.HEATER_COOLER,
         {
             CharacteristicsTypes.ACTIVE: ActivationStateValues.ACTIVE,
-            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.HEAT,
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                TargetHeaterCoolerStateValues.HEAT
+            ),
         },
     )
 
@@ -1060,8 +1070,12 @@ async def test_heater_cooler_read_thermostat_state(
         {
             CharacteristicsTypes.TEMPERATURE_CURRENT: 19,
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 21,
-            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: CurrentHeaterCoolerStateValues.HEATING,
-            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.HEAT,
+            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: (
+                CurrentHeaterCoolerStateValues.HEATING
+            ),
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                TargetHeaterCoolerStateValues.HEAT
+            ),
             CharacteristicsTypes.SWING_MODE: SwingModeValues.DISABLED,
         },
     )
@@ -1078,8 +1092,12 @@ async def test_heater_cooler_read_thermostat_state(
         {
             CharacteristicsTypes.TEMPERATURE_CURRENT: 21,
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 19,
-            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: CurrentHeaterCoolerStateValues.COOLING,
-            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.COOL,
+            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: (
+                CurrentHeaterCoolerStateValues.COOLING
+            ),
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                TargetHeaterCoolerStateValues.COOL
+            ),
             CharacteristicsTypes.SWING_MODE: SwingModeValues.DISABLED,
         },
     )
@@ -1094,8 +1112,12 @@ async def test_heater_cooler_read_thermostat_state(
         {
             CharacteristicsTypes.TEMPERATURE_CURRENT: 21,
             CharacteristicsTypes.TEMPERATURE_COOLING_THRESHOLD: 21,
-            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: CurrentHeaterCoolerStateValues.COOLING,
-            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.AUTOMATIC,
+            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: (
+                CurrentHeaterCoolerStateValues.COOLING
+            ),
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                TargetHeaterCoolerStateValues.AUTOMATIC
+            ),
             CharacteristicsTypes.SWING_MODE: SwingModeValues.DISABLED,
         },
     )
@@ -1119,8 +1141,12 @@ async def test_heater_cooler_hvac_mode_vs_hvac_action(
         {
             CharacteristicsTypes.TEMPERATURE_CURRENT: 22,
             CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: 21,
-            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: CurrentHeaterCoolerStateValues.IDLE,
-            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.HEAT,
+            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: (
+                CurrentHeaterCoolerStateValues.IDLE
+            ),
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                TargetHeaterCoolerStateValues.HEAT
+            ),
             CharacteristicsTypes.SWING_MODE: SwingModeValues.DISABLED,
         },
     )
@@ -1136,8 +1162,12 @@ async def test_heater_cooler_hvac_mode_vs_hvac_action(
         {
             CharacteristicsTypes.TEMPERATURE_CURRENT: 19,
             CharacteristicsTypes.TEMPERATURE_HEATING_THRESHOLD: 21,
-            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: CurrentHeaterCoolerStateValues.HEATING,
-            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.HEAT,
+            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: (
+                CurrentHeaterCoolerStateValues.HEATING
+            ),
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                TargetHeaterCoolerStateValues.HEAT
+            ),
             CharacteristicsTypes.SWING_MODE: SwingModeValues.DISABLED,
         },
     )
@@ -1190,13 +1220,18 @@ async def test_heater_cooler_turn_off(
         hass, get_next_aid(), create_heater_cooler_service
     )
 
-    # Simulate that the device is turned off but CURRENT_HEATER_COOLER_STATE still returns HEATING/COOLING
+    # Simulate that the device is turned off but CURRENT_HEATER_COOLER_STATE still
+    # returns HEATING/COOLING
     await helper.async_update(
         ServicesTypes.HEATER_COOLER,
         {
             CharacteristicsTypes.ACTIVE: ActivationStateValues.INACTIVE,
-            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: CurrentHeaterCoolerStateValues.HEATING,
-            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: TargetHeaterCoolerStateValues.HEAT,
+            CharacteristicsTypes.CURRENT_HEATER_COOLER_STATE: (
+                CurrentHeaterCoolerStateValues.HEATING
+            ),
+            CharacteristicsTypes.TARGET_HEATER_COOLER_STATE: (
+                TargetHeaterCoolerStateValues.HEAT
+            ),
         },
     )
 

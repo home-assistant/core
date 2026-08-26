@@ -9,16 +9,19 @@
     "is_heating": {
       "condition": "mdi:fire"
     },
+    "is_hvac_mode": {
+      "condition": "mdi:thermostat"
+    },
     "is_off": {
       "condition": "mdi:power-off"
     },
     "is_on": {
       "condition": "mdi:power-on"
     },
-    "target_humidity": {
+    "is_target_humidity": {
       "condition": "mdi:water-percent"
     },
-    "target_temperature": {
+    "is_target_temperature": {
       "condition": "mdi:thermometer"
     }
   },

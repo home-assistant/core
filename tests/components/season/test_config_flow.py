@@ -1,6 +1,6 @@
 """Tests for the Season config flow."""
 
-from unittest.mock import MagicMock
+import pytest
 
 from homeassistant.components.season.const import DOMAIN, TYPE_ASTRONOMICAL
 from homeassistant.config_entries import SOURCE_USER
@@ -11,10 +11,8 @@ from homeassistant.data_entry_flow import FlowResultType
 from tests.common import MockConfigEntry
 
 
-async def test_full_user_flow(
-    hass: HomeAssistant,
-    mock_setup_entry: MagicMock,
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_full_user_flow(hass: HomeAssistant) -> None:
     """Test the full user configuration flow."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

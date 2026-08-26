@@ -47,9 +47,10 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
-      'type': 'disabled',
+      'budget_tokens': 1024,
+      'display': 'summarized',
+      'type': 'enabled',
     }),
   })
 # ---
@@ -81,7 +82,6 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
       'type': 'disabled',
     }),
@@ -93,6 +93,7 @@
       dict({
         'description': 'Use this tool to reply to the user',
         'input_schema': dict({
+          'additionalProperties': False,
           'properties': dict({
             'characters': dict({
               'items': dict({
@@ -155,6 +156,7 @@
     ]),
     'thinking': dict({
       'budget_tokens': 1500,
+      'display': 'summarized',
       'type': 'enabled',
     }),
     'tool_choice': dict({
@@ -164,6 +166,7 @@
       dict({
         'description': 'Use this tool to reply to the user',
         'input_schema': dict({
+          'additionalProperties': False,
           'properties': dict({
             'characters': dict({
               'items': dict({
@@ -230,6 +233,7 @@
     ]),
     'thinking': dict({
       'budget_tokens': 1500,
+      'display': 'summarized',
       'type': 'enabled',
     }),
     'tool_choice': dict({
@@ -239,6 +243,7 @@
       dict({
         'description': 'Use this tool to reply to the user',
         'input_schema': dict({
+          'additionalProperties': False,
           'properties': dict({
             'characters': dict({
               'items': dict({
@@ -285,7 +290,6 @@
         'type': 'text',
       }),
     ]),
-    'temperature': 1.0,
     'thinking': dict({
       'type': 'disabled',
     }),
@@ -294,13 +298,14 @@
     }),
     'tools': list([
       dict({
-        'max_uses': None,
+        'max_uses': 5,
         'name': 'web_search',
         'type': 'web_search_20250305',
       }),
       dict({
         'description': 'Use this tool to reply to the user',
         'input_schema': dict({
+          'additionalProperties': False,
           'properties': dict({
             'characters': dict({
               'items': dict({

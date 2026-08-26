@@ -1,29 +1,21 @@
 """Support for updates which integrates with other components."""
 
-from __future__ import annotations
-
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 import voluptuous as vol
 
 from homeassistant.components.update import (
-    ATTR_INSTALLED_VERSION,
-    ATTR_LATEST_VERSION,
     DEVICE_CLASSES_SCHEMA,
     DOMAIN as UPDATE_DOMAIN,
     ENTITY_ID_FORMAT,
     UpdateEntity,
     UpdateEntityFeature,
+    UpdateEntityStateAttribute,
 )
 from homeassistant.config_entries import ConfigEntry
-from homeassistant.const import (
-    CONF_DEVICE_CLASS,
-    CONF_NAME,
-    STATE_UNAVAILABLE,
-    STATE_UNKNOWN,
-)
-from homeassistant.core import HomeAssistant, callback
+from homeassistant.const import CONF_DEVICE_CLASS, CONF_NAME
+from homeassistant.core import HomeAssistant, State, callback
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
@@ -32,7 +24,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.trigger_template_entity import CONF_PICTURE
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -42,7 +34,7 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 from .trigger_entity import TriggerEntity
@@ -83,8 +75,14 @@ UPDATE_COMMON_SCHEMA = vol.Schema(
     }
 )
 
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=UpdateEntityStateAttribute, device_class=True
+)
+
 UPDATE_YAML_SCHEMA = UPDATE_COMMON_SCHEMA.extend(
-    make_template_entity_common_modern_schema(UPDATE_DOMAIN, DEFAULT_NAME).schema
+    make_template_entity_common_schema(
+        UPDATE_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
+    ).schema
 )
 
 UPDATE_CONFIG_ENTRY_SCHEMA = UPDATE_COMMON_SCHEMA.extend(
@@ -145,9 +143,14 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
     """Representation of a template update features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
+    _restore_state_properties = ("_attr_installed_version", "_attr_latest_version")
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
-    # The super init is not called because TemplateEntity and TriggerEntity will call AbstractTemplateEntity.__init__.
-    # This ensures that the __init__ on AbstractTemplateEntity is not called twice.
+    # The super init is not called because TemplateEntity
+    # and TriggerEntity will call
+    # AbstractTemplateEntity.__init__. This ensures that
+    # the __init__ on AbstractTemplateEntity is not
+    # called twice.
     def __init__(self, name: str, config: dict[str, Any]) -> None:  # pylint: disable=super-init-not-called
         """Initialize the features."""
 
@@ -157,38 +160,38 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
         self.setup_template(
             CONF_INSTALLED_VERSION,
             "_attr_installed_version",
-            template_validators.string(self, CONF_INSTALLED_VERSION),
+            tcv.string(self, CONF_INSTALLED_VERSION),
         )
         self.setup_template(
             CONF_LATEST_VERSION,
             "_attr_latest_version",
-            template_validators.string(self, CONF_LATEST_VERSION),
+            tcv.string(self, CONF_LATEST_VERSION),
         )
         self.setup_template(
             CONF_IN_PROGRESS,
             "_attr_in_progress",
-            template_validators.boolean(self, CONF_IN_PROGRESS),
+            tcv.boolean(self, CONF_IN_PROGRESS),
             self._update_in_progress,
         )
         self.setup_template(
             CONF_RELEASE_SUMMARY,
             "_attr_release_summary",
-            template_validators.string(self, CONF_RELEASE_SUMMARY),
+            tcv.string(self, CONF_RELEASE_SUMMARY),
         )
         self.setup_template(
             CONF_RELEASE_URL,
             "_attr_release_url",
-            template_validators.url(self, CONF_RELEASE_URL),
+            tcv.url(self, CONF_RELEASE_URL),
         )
         self.setup_template(
             CONF_TITLE,
             "_attr_title",
-            template_validators.string(self, CONF_TITLE),
+            tcv.string(self, CONF_TITLE),
         )
         self.setup_template(
             CONF_UPDATE_PERCENTAGE,
             "_attr_update_percentage",
-            template_validators.number(self, CONF_UPDATE_PERCENTAGE, 0.0, 100.0),
+            tcv.number(self, CONF_UPDATE_PERCENTAGE, 0.0, 100.0),
             self._update_update_percentage,
         )
 
@@ -216,7 +219,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
     @callback
     def _update_in_progress(self, result: bool | None) -> None:
         if result is None:
-            template_validators.log_validation_result_error(
+            tcv.log_validation_result_error(
                 self, CONF_IN_PROGRESS, result, "expected a boolean"
             )
         self._attr_in_progress = result or False
@@ -233,6 +236,7 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             self._attr_in_progress = True
         self._attr_update_percentage = result
 
+    @override
     async def async_install(
         self, version: str | None, backup: bool, **kwargs: Any
     ) -> None:
@@ -242,6 +246,17 @@ class AbstractTemplateUpdate(AbstractTemplateEntity, UpdateEntity):
             run_variables={ATTR_SPECIFIC_VERSION: version, ATTR_BACKUP: backup},
             context=self._context,
         )
+
+    @override
+    def restore_last_state_state(self, last_state: State) -> bool:
+        """Restore the state from the last state."""
+        self._attr_installed_version = last_state.attributes[
+            UpdateEntityStateAttribute.INSTALLED_VERSION
+        ]
+        self._attr_latest_version = last_state.attributes[
+            UpdateEntityStateAttribute.LATEST_VERSION
+        ]
+        return True
 
 
 class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
@@ -263,13 +278,17 @@ class StateUpdateEntity(TemplateEntity, AbstractTemplateUpdate):
         AbstractTemplateUpdate.__init__(self, name, config)
 
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return the entity picture to use in the frontend."""
         # This is needed to override the base update entity functionality
         if self._attr_entity_picture is None:
-            # The default picture for update entities would use `self.platform.platform_name` in
-            # place of `template`.  This does not work when creating an entity preview because
-            # the platform does not exist for that entity, therefore this is hardcoded as `template`.
+            # The default picture for update entities would
+            # use `self.platform.platform_name` in place of
+            # `template`. This does not work when creating
+            # an entity preview because the platform does
+            # not exist for that entity, therefore this is
+            # hardcoded as `template`.
             return "/api/brands/integration/template/icon.png"
         return self._attr_entity_picture
 
@@ -294,20 +313,8 @@ class TriggerUpdateEntity(TriggerEntity, AbstractTemplateUpdate):
         if CONF_PICTURE in config:
             self._parse_result.add(CONF_PICTURE)
 
-    async def async_added_to_hass(self) -> None:
-        """Restore last state."""
-        await super().async_added_to_hass()
-        if (
-            (last_state := await self.async_get_last_state()) is not None
-            and last_state.state not in (STATE_UNKNOWN, STATE_UNAVAILABLE)
-            and self._attr_installed_version is None
-            and self._attr_latest_version is None
-        ):
-            self._attr_installed_version = last_state.attributes[ATTR_INSTALLED_VERSION]
-            self._attr_latest_version = last_state.attributes[ATTR_LATEST_VERSION]
-            self.restore_attributes(last_state)
-
     @property
+    @override
     def entity_picture(self) -> str | None:
         """Return entity picture."""
         if (picture := self._rendered.get(CONF_PICTURE)) is None:

@@ -1,11 +1,9 @@
 """Support for TPLink sensor entities."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
 from operator import methodcaller
-from typing import TYPE_CHECKING, Any, cast
+from typing import TYPE_CHECKING, Any, cast, override
 
 from kasa import Feature
 from kasa.smart.modules.clean import ErrorCode as VacuumError
@@ -305,6 +303,7 @@ class TPLinkSensorEntity(CoordinatedTPLinkFeatureEntity, SensorEntity):
     entity_description: TPLinkSensorEntityDescription
 
     @callback
+    @override
     def _async_update_attrs(self) -> bool:
         """Update the entity's attributes."""
         value = self._feature.value

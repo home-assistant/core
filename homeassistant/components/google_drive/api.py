@@ -1,12 +1,10 @@
 """API for Google Drive bound to Home Assistant OAuth."""
 
-from __future__ import annotations
-
 from collections.abc import AsyncIterator, Callable, Coroutine
 from dataclasses import dataclass
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientSession, ClientTimeout, StreamReader
 from aiohttp.client_exceptions import ClientError, ClientResponseError
@@ -15,11 +13,7 @@ from google_drive_api.api import AbstractAuth, GoogleDriveApi
 from homeassistant.components.backup import AgentBackup, suggested_filename
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import CONF_ACCESS_TOKEN
-from homeassistant.exceptions import (
-    ConfigEntryAuthFailed,
-    ConfigEntryNotReady,
-    HomeAssistantError,
-)
+from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
 from homeassistant.helpers import config_entry_oauth2_flow
 
 from .const import DOMAIN
@@ -52,32 +46,38 @@ class AsyncConfigEntryAuth(AbstractAuth):
         super().__init__(websession)
         self._oauth_session = oauth_session
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         try:
             await self._oauth_session.async_ensure_token_valid()
         except ClientError as ex:
-            if (
+            is_setup = (
                 self._oauth_session.config_entry.state
                 is ConfigEntryState.SETUP_IN_PROGRESS
-            ):
-                if isinstance(ex, ClientResponseError) and 400 <= ex.status < 500:
+            )
+
+            if isinstance(ex, ClientResponseError):
+                # OAuth2 spec uses 400 for invalid refresh tokens.
+                # During setup, we broaden this to all 4xx to abort cleanly.
+                if ex.status == 400 or (is_setup and 400 <= ex.status < 500):
+                    if not is_setup:
+                        self._oauth_session.config_entry.async_start_reauth(
+                            self._oauth_session.hass
+                        )
                     raise ConfigEntryAuthFailed(
                         translation_domain=DOMAIN,
                         translation_key="authentication_not_valid",
                     ) from ex
+
+            if is_setup:
                 raise ConfigEntryNotReady(
                     translation_domain=DOMAIN,
                     translation_key="authentication_failed",
                 ) from ex
-            if hasattr(ex, "status") and ex.status == 400:
-                self._oauth_session.config_entry.async_start_reauth(
-                    self._oauth_session.hass
-                )
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="authentication_failed",
-            ) from ex
+
+            raise
+
         return str(self._oauth_session.token[CONF_ACCESS_TOKEN])
 
 
@@ -93,6 +93,7 @@ class AsyncConfigFlowAuth(AbstractAuth):
         super().__init__(websession)
         self._token = token
 
+    @override
     async def async_get_access_token(self) -> str:
         """Return a valid access token."""
         return self._token
@@ -119,13 +120,13 @@ class DriveClient:
         """Get storage quota of the current user."""
         res = await self._api.get_user(params={"fields": "storageQuota"})
 
-        storageQuota = res["storageQuota"]
-        limit = storageQuota.get("limit")
+        storage_quota = res["storageQuota"]
+        limit = storage_quota.get("limit")
         return StorageQuotaData(
             limit=int(limit) if limit is not None else None,
-            usage=int(storageQuota.get("usage", 0)),
-            usage_in_drive=int(storageQuota.get("usageInDrive", 0)),
-            usage_in_trash=int(storageQuota.get("usageInTrash", 0)),
+            usage=int(storage_quota.get("usage", 0)),
+            usage_in_drive=int(storage_quota.get("usageInDrive", 0)),
+            usage_in_trash=int(storage_quota.get("usageInTrash", 0)),
         )
 
     async def async_create_ha_root_folder_if_not_exists(self) -> tuple[str, str]:
@@ -134,7 +135,8 @@ class DriveClient:
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='root' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 "trashed=false",
             ]
         )
@@ -198,7 +200,8 @@ class DriveClient:
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='backup' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 "trashed=false",
             ]
         )
@@ -222,7 +225,8 @@ class DriveClient:
         query = " and ".join(
             [
                 "properties has { key='home_assistant' and value='backup' }",
-                f"properties has {{ key='instance_id' and value='{self._ha_instance_id}' }}",
+                "properties has { key='instance_id'"
+                f" and value='{self._ha_instance_id}' }}",
                 f"properties has {{ key='backup_id' and value='{backup_id}' }}",
             ]
         )

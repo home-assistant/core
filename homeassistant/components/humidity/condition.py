@@ -1,6 +1,6 @@
 """Provides conditions for humidity."""
 
-from __future__ import annotations
+from typing import override
 
 from homeassistant.components.climate import (
     ATTR_CURRENT_HUMIDITY as CLIMATE_ATTR_CURRENT_HUMIDITY,
@@ -10,26 +10,55 @@ from homeassistant.components.humidifier import (
     ATTR_CURRENT_HUMIDITY as HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     DOMAIN as HUMIDIFIER_DOMAIN,
 )
-from homeassistant.components.number import DOMAIN as NUMBER_DOMAIN, NumberDeviceClass
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
+from homeassistant.components.weather import (
+    ATTR_WEATHER_HUMIDITY,
+    DOMAIN as WEATHER_DOMAIN,
+)
 from homeassistant.const import PERCENTAGE
-from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
-from homeassistant.helpers.condition import Condition, make_entity_numerical_condition
+from homeassistant.core import HomeAssistant, State
+from homeassistant.helpers.automation import DomainSpec
+from homeassistant.helpers.condition import Condition, EntityNumericalConditionBase
 
-HUMIDITY_DOMAIN_SPECS = {
-    CLIMATE_DOMAIN: NumericalDomainSpec(
+HUMIDITY_DOMAIN_SPECS: dict[str, DomainSpec] = {
+    CLIMATE_DOMAIN: DomainSpec(
         value_source=CLIMATE_ATTR_CURRENT_HUMIDITY,
     ),
-    HUMIDIFIER_DOMAIN: NumericalDomainSpec(
+    HUMIDIFIER_DOMAIN: DomainSpec(
         value_source=HUMIDIFIER_ATTR_CURRENT_HUMIDITY,
     ),
     SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.HUMIDITY),
-    NUMBER_DOMAIN: DomainSpec(device_class=NumberDeviceClass.HUMIDITY),
+    WEATHER_DOMAIN: DomainSpec(
+        value_source=ATTR_WEATHER_HUMIDITY,
+    ),
 }
 
+
+class HumidityCondition(EntityNumericalConditionBase):
+    """Condition for humidity value across multiple domains."""
+
+    _domain_specs = HUMIDITY_DOMAIN_SPECS
+    _valid_unit = PERCENTAGE
+
+    @override
+    def _should_include(self, state: State) -> bool:
+        """Skip attribute-source entities that lack the humidity attribute.
+
+        Mirrors the humidity trigger: for climate / humidifier / weather
+        (attribute-based), the entity is filtered when the source attribute
+        is absent; sensor entities (state-value-based) fall through to the
+        base impl.
+        """
+        if not super()._should_include(state):
+            return False
+        domain_spec = self._domain_specs[state.domain]
+        if domain_spec.value_source is None:
+            return True
+        return state.attributes.get(domain_spec.value_source) is not None
+
+
 CONDITIONS: dict[str, type[Condition]] = {
-    "is_value": make_entity_numerical_condition(HUMIDITY_DOMAIN_SPECS, PERCENTAGE),
+    "is_value": HumidityCondition,
 }
 
 

@@ -1,6 +1,4 @@
-"""Tests for the Hyperion component."""
-
-from __future__ import annotations
+"""Tests for the Hyperion integration."""
 
 from types import TracebackType
 from typing import Any

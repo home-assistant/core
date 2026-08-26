@@ -1,10 +1,8 @@
 """Support for Tractive sensors."""
 
-from __future__ import annotations
-
 from collections.abc import Callable
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -53,6 +51,8 @@ class TractiveSensor(TractiveEntity, SensorEntity):
 
     def __init__(
         self,
+        hass: HomeAssistant,
+        entry: TractiveConfigEntry,
         client: TractiveClient,
         item: Trackables,
         description: TractiveSensorEntityDescription,
@@ -65,7 +65,13 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         else:
             dispatcher_signal = f"{description.signal_prefix}-{item.trackable['_id']}"
         super().__init__(
-            client, item.trackable, item.tracker_details, dispatcher_signal
+            hass,
+            entry,
+            client,
+            item.trackable,
+            item.tracker_details,
+            dispatcher_signal,
+            description.hardware_sensor,
         )
 
         self._attr_unique_id = f"{item.trackable['_id']}_{description.key}"
@@ -73,6 +79,7 @@ class TractiveSensor(TractiveEntity, SensorEntity):
         self.entity_description = description
 
     @callback
+    @override
     def handle_status_update(self, event: dict[str, Any]) -> None:
         """Handle status update."""
         self._attr_native_value = self.entity_description.value_fn(
@@ -85,7 +92,6 @@ class TractiveSensor(TractiveEntity, SensorEntity):
 SENSOR_TYPES: tuple[TractiveSensorEntityDescription, ...] = (
     TractiveSensorEntityDescription(
         key=ATTR_BATTERY_LEVEL,
-        translation_key="tracker_battery_level",
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.BATTERY,
         signal_prefix=TRACKER_HARDWARE_STATUS_UPDATED,
@@ -154,7 +160,7 @@ async def async_setup_entry(
     trackables = entry.runtime_data.trackables
 
     entities = [
-        TractiveSensor(client, item, description)
+        TractiveSensor(hass, entry, client, item, description)
         for description in SENSOR_TYPES
         for item in trackables
     ]

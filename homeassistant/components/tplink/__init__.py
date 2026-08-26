@@ -1,6 +1,5 @@
 """Component to embed TP-Link smart home devices."""
-
-from __future__ import annotations
+# pylint: disable=home-assistant-use-runtime-data  # Uses legacy hass.data[DOMAIN] pattern
 
 import asyncio
 from collections.abc import Iterable
@@ -243,6 +242,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: TPLinkConfigEntry) -> bo
     live_view = entry.data.get(CONF_LIVE_VIEW)
 
     entry.runtime_data = TPLinkData(parent_coordinator, camera_creds, live_view)
+
+    # Register the parent device before forwarding platforms so child device
+    # entities can resolve their via_device_id from it.
+    device_registry = dr.async_get(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=entry.entry_id,
+        identifiers={(DOMAIN, device.device_id)},
+    )
+
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
 
     return True

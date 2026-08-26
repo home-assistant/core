@@ -27,5 +27,18 @@
     "manufacturer": "Control4",
     "roomName": "Studio",
     "model": "C4-TSTAT"
+  },
+  {
+    "id": 234,
+    "name": "Living Room Shade",
+    "type": 7,
+    "parentId": 567,
+    "categories": ["blinds_shades"]
+  },
+  {
+    "id": 567,
+    "manufacturer": "Lutron",
+    "roomName": "Living Room",
+    "model": "QSWS2-1BRLI"
   }
 ]

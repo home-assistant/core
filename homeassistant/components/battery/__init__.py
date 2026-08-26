@@ -1,6 +1,4 @@
-"""Integration for battery conditions."""
-
-from __future__ import annotations
+"""Integration for battery triggers and conditions."""
 
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import config_validation as cv

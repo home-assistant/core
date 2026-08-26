@@ -1,10 +1,8 @@
 """The ukraine_alarm component."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 import aiohttp
 from aiohttp import ClientSession
@@ -21,16 +19,18 @@ _LOGGER = logging.getLogger(__name__)
 
 UPDATE_INTERVAL = timedelta(seconds=10)
 
+type UkraineAlarmConfigEntry = ConfigEntry[UkraineAlarmDataUpdateCoordinator]
+
 
 class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
     """Class to manage fetching Ukraine Alarm API."""
 
-    config_entry: ConfigEntry
+    config_entry: UkraineAlarmConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        config_entry: ConfigEntry,
+        config_entry: UkraineAlarmConfigEntry,
         session: ClientSession,
     ) -> None:
         """Initialize."""
@@ -45,6 +45,7 @@ class UkraineAlarmDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             update_interval=UPDATE_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Update data via library."""
         try:

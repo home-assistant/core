@@ -1,8 +1,6 @@
 """Text-to-speech constants."""
 
-from __future__ import annotations
-
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, Final
 
 from homeassistant.util.hass_dict import HassKey
 
@@ -25,7 +23,7 @@ DEFAULT_CACHE = True
 DEFAULT_CACHE_DIR = "tts"
 DEFAULT_TIME_MEMORY = 300
 
-DOMAIN = "tts"
+DOMAIN: Final = "tts"
 DATA_COMPONENT: HassKey[EntityComponent[TextToSpeechEntity]] = HassKey(DOMAIN)
 
 DATA_TTS_MANAGER: HassKey[SpeechManager] = HassKey("tts_manager")

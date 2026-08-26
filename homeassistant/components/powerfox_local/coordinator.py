@@ -1,6 +1,6 @@
 """Coordinator for Powerfox Local integration."""
 
-from __future__ import annotations
+from typing import override
 
 from powerfox import (
     LocalResponse,
@@ -42,6 +42,7 @@ class PowerfoxLocalDataUpdateCoordinator(DataUpdateCoordinator[LocalResponse]):
             update_interval=SCAN_INTERVAL,
         )
 
+    @override
     async def _async_update_data(self) -> LocalResponse:
         """Fetch data from the local poweropti."""
         try:

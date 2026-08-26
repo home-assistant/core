@@ -639,7 +639,10 @@ async def test_add_party_member_not_in_a_party(
 
 @pytest.mark.usefixtures("habitica")
 async def test_add_party_member_entry_disabled(hass: HomeAssistant) -> None:
-    """Test we abort add party member subentry flow when the main config entry is disabled."""
+    """Test we abort add party member subentry flow.
+
+    Specifically when the main config entry is disabled.
+    """
 
     config_entry = MockConfigEntry(
         domain=DOMAIN,

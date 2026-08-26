@@ -1,10 +1,8 @@
 """The Flux LED/MagicLight integration coordinator."""
 
-from __future__ import annotations
-
 from datetime import timedelta
 import logging
-from typing import Final
+from typing import Final, override
 
 from flux_led.aio import AIOWifiLedBulb
 
@@ -49,6 +47,7 @@ class FluxLedUpdateCoordinator(DataUpdateCoordinator[None]):
             always_update=False,
         )
 
+    @override
     async def _async_update_data(self) -> None:
         """Fetch all device and sensor data from api."""
         try:

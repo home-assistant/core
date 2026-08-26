@@ -2,7 +2,8 @@
 
 import asyncio
 from collections.abc import Generator
-from copy import copy
+import dataclasses
+from datetime import UTC, datetime
 from ipaddress import ip_address
 from typing import Any
 from unittest.mock import AsyncMock, MagicMock, call, patch
@@ -12,14 +13,18 @@ from aiohasupervisor import SupervisorError
 from aiohasupervisor.models import AddonsOptions, Discovery
 import aiohttp
 import pytest
-from serial.tools.list_ports_common import ListPortInfo
 from voluptuous import InInvalid
-from zwave_js_server.exceptions import FailedCommand
+from zwave_js_server.exceptions import ConnectionFailed, FailedCommand
 from zwave_js_server.model.node import Node
 from zwave_js_server.version import VersionInfo
 
 from homeassistant import config_entries, data_entry_flow
-from homeassistant.components.zwave_js.config_flow import TITLE, get_usb_ports
+from homeassistant.components.usb import SerialDevice, USBDevice
+from homeassistant.components.zwave_js.config_flow import (
+    TITLE,
+    SecurityKeys,
+    async_get_usb_ports,
+)
 from homeassistant.components.zwave_js.const import (
     ADDON_SLUG,
     CONF_ADDON_DEVICE,
@@ -38,10 +43,13 @@ from homeassistant.components.zwave_js.helpers import SERVER_VERSION_TIMEOUT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
 from homeassistant.helpers import device_registry as dr
+from homeassistant.helpers.redact import REDACTED
 from homeassistant.helpers.service_info.esphome import ESPHomeServiceInfo
 from homeassistant.helpers.service_info.hassio import HassioServiceInfo
 from homeassistant.helpers.service_info.usb import UsbServiceInfo
 from homeassistant.helpers.service_info.zeroconf import ZeroconfServiceInfo
+
+from .common import TEST_SENSITIVE_NETWORK_KEY
 
 from tests.common import MockConfigEntry, async_capture_events
 
@@ -93,6 +101,13 @@ CP2652_ZIGBEE_DISCOVERY_INFO = UsbServiceInfo(
 )
 
 
+def _set_home_id(get_server_version: AsyncMock, home_id: int) -> None:
+    """Update the mocked server version's home_id (frozen dataclass)."""
+    get_server_version.return_value = dataclasses.replace(
+        get_server_version.return_value, home_id=home_id
+    )
+
+
 @pytest.fixture
 def platforms() -> list[str]:
     """Fixture to specify platforms to test."""
@@ -142,6 +157,49 @@ def unload_entry_fixture() -> Generator[AsyncMock]:
         yield mock_unload_entry
 
 
+@pytest.fixture(name="backup_nvm")
+def backup_nvm_fixture(client: MagicMock) -> AsyncMock:
+    """Mock a successful NVM backup that emits progress."""
+
+    async def mock_backup_nvm_raw() -> bytes:
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm backup progress",
+            {"event": "nvm backup progress", "bytesRead": 100, "total": 200},
+        )
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+    return client.driver.controller.async_backup_nvm_raw
+
+
+@pytest.fixture(name="restore_nvm")
+def restore_nvm_fixture(client: MagicMock) -> AsyncMock:
+    """Mock a successful NVM restore that emits progress and driver ready."""
+
+    async def mock_restore_nvm(
+        data: bytes, options: dict[str, bool] | None = None
+    ) -> None:
+        client.driver.controller.emit(
+            "nvm convert progress",
+            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
+        )
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm restore progress",
+            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
+        )
+        client.driver.controller.data["homeId"] = 3245146787
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
+    return client.driver.controller.async_restore_nvm
+
+
 @pytest.fixture(name="supervisor")
 def mock_supervisor_fixture() -> Generator[None]:
     """Mock Supervisor."""
@@ -161,37 +219,42 @@ def mock_addon_setup_time() -> Generator[None]:
 
 
 @pytest.fixture(name="serial_port")
-def serial_port_fixture() -> ListPortInfo:
+def serial_port_fixture() -> USBDevice:
     """Return a mock serial port."""
-    port = ListPortInfo("/test", skip_link_detection=True)
-    port.serial_number = "1234"
-    port.manufacturer = "Virtual serial port"
-    port.device = "/test"
-    port.description = "Some serial port"
-    port.pid = 9876
-    port.vid = 5678
+    return USBDevice(
+        device="/test",
+        vid="162E",
+        pid="269C",
+        serial_number="1234",
+        manufacturer="Virtual serial port",
+        description="Some serial port",
+    )
 
-    return port
 
-
-@pytest.fixture(name="mock_list_ports", autouse=True)
-def mock_list_ports_fixture(serial_port) -> Generator[MagicMock]:
-    """Mock list ports."""
+@pytest.fixture(name="mock_scan_serial_ports", autouse=True)
+def mock_scan_serial_ports_fixture(serial_port: USBDevice) -> Generator[MagicMock]:
+    """Mock scan serial ports."""
     with patch(
-        "homeassistant.components.zwave_js.config_flow.list_ports.comports"
-    ) as mock_list_ports:
-        another_port = copy(serial_port)
-        another_port.device = "/new"
-        another_port.description = "New serial port"
-        another_port.serial_number = "5678"
-        another_port.pid = 8765
-        no_vid_port = copy(serial_port)
-        no_vid_port.device = "/no_vid"
-        no_vid_port.description = "Port without vid"
-        no_vid_port.serial_number = "9123"
-        no_vid_port.vid = None
-        mock_list_ports.return_value = [serial_port, another_port, no_vid_port]
-        yield mock_list_ports
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports"
+    ) as mock_scan:
+        another_port = USBDevice(
+            device="/new",
+            vid="162E",
+            pid="223D",
+            serial_number="5678",
+            manufacturer="Virtual serial port",
+            description="New serial port",
+        )
+
+        no_vid_port = SerialDevice(
+            device="/no_vid",
+            description="Port without vid",
+            serial_number="9123",
+            manufacturer=None,
+        )
+
+        mock_scan.return_value = [serial_port, another_port, no_vid_port]
+        yield mock_scan
 
 
 @pytest.fixture(name="mock_usb_serial_by_id", autouse=True)
@@ -900,7 +963,7 @@ async def test_usb_discovery_addon_not_running(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm", "restore_nvm")
 async def test_usb_discovery_migration(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
@@ -930,34 +993,6 @@ async def test_usb_discovery_migration(
 
     restart_addon.side_effect = mock_restart_addon
 
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
-
-    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
-        client.driver.controller.emit(
-            "nvm convert progress",
-            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
-        )
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm restore progress",
-            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
-        )
-        client.driver.controller.data["homeId"] = 3245146787
-        client.driver.emit(
-            "driver ready", {"event": "driver ready", "source": "driver"}
-        )
-
-    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
-
     events = async_capture_events(
         hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
     )
@@ -978,7 +1013,13 @@ async def test_usb_discovery_migration(
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "backup_nvm"
 
-    with patch("pathlib.Path.write_bytes") as mock_file:
+    with (
+        patch("pathlib.Path.write_bytes") as mock_file,
+        patch(
+            "homeassistant.components.zwave_js.config_flow.dt_util.now",
+            return_value=datetime(2026, 8, 2, 12, 34, 56, tzinfo=UTC),
+        ),
+    ):
         await hass.async_block_till_done()
         assert client.driver.controller.async_backup_nvm_raw.call_count == 1
         assert mock_file.call_count == 1
@@ -990,6 +1031,9 @@ async def test_usb_discovery_migration(
 
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "instruct_unplug"
+    assert result["description_placeholders"] == {
+        "file_path": hass.config.path("zwavejs_nvm_backup_2026-08-02_12-34-56.bin")
+    }
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
 
@@ -1009,8 +1053,7 @@ async def test_usb_discovery_migration(
 
     assert restart_addon.call_args == call("core_zwave_js")
 
-    version_info = get_server_version.return_value
-    version_info.home_id = 3245146787
+    _set_home_id(get_server_version, 3245146787)
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
@@ -1019,7 +1062,7 @@ async def test_usb_discovery_migration(
     assert client.connect.call_count == 2
 
     await hass.async_block_till_done()
-    assert client.connect.call_count == 4
+    assert client.connect.call_count == 3
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
     assert len(events) == 2
@@ -1034,11 +1077,130 @@ async def test_usb_discovery_migration(
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" not in entry.data
     assert entry.unique_id == "3245146787"
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures(
+    "supervisor",
+    "addon_running",
+    "backup_nvm",
+    "climate_radio_thermostat_ct100_plus",
+    "lock_schlage_be469",
+)
+async def test_usb_discovery_migration_new_stick(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    restart_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+    mock_usb_serial_by_id: MagicMock,
+    get_server_version: AsyncMock,
+) -> None:
+    """Test migration to a factory-new adapter keeps the old node devices."""
+    addon_options["device"] = "/dev/ttyUSB0"
+    entry = integration
+    assert entry.unique_id == "3245146787"
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "usb_path": "/dev/ttyUSB0",
+        },
+    )
+
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(device_entries) == 3
+    old_device_ids = {device.id for device in device_entries}
+
+    nodes_snapshot = dict(client.driver.controller.nodes)
+    own_node_id = client.driver.controller.own_node.node_id
+
+    async def mock_restart_addon(addon_slug: str) -> None:
+        # A factory-new adapter has its own home id and no nodes.
+        client.driver.controller.data["homeId"] = 1234
+        client.driver.controller.nodes.clear()
+        client.driver.controller.nodes[own_node_id] = nodes_snapshot[own_node_id]
+
+    restart_addon.side_effect = mock_restart_addon
+
+    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
+        client.driver.controller.emit(
+            "nvm convert progress",
+            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
+        )
+        await asyncio.sleep(0)
+        client.driver.controller.emit(
+            "nvm restore progress",
+            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
+        )
+        client.driver.controller.data["homeId"] = 3245146787
+        client.driver.controller.nodes.update(nodes_snapshot)
+        client.driver.emit(
+            "driver ready", {"event": "driver ready", "source": "driver"}
+        )
+
+    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
+
+    registry_events = async_capture_events(hass, dr.EVENT_DEVICE_REGISTRY_UPDATED)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_usb_migration"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+
+    # The server, connected to the new adapter, reports the adapter's
+    # factory home id before the restore.
+    _set_home_id(get_server_version, 1234)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+    assert entry.unique_id == "3245146787"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_successful"
+    await hass.async_block_till_done()
+
+    assert not [event for event in registry_events if event.data["action"] == "remove"]
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
+    assert len(device_entries) == 3
+    assert {device.id for device in device_entries} == old_device_ids
+    assert entry.unique_id == "3245146787"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
 async def test_usb_discovery_migration_restore_driver_ready_timeout(
     hass: HomeAssistant,
     addon_options: dict[str, Any],
@@ -1066,17 +1228,6 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
         client.driver.controller.data["homeId"] = 1234
 
     restart_addon.side_effect = mock_restart_addon
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
 
     async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
@@ -1169,8 +1320,52 @@ async def test_usb_discovery_migration_restore_driver_ready_timeout(
     assert entry.data["usb_path"] == USB_DISCOVERY_INFO.device
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
-    assert entry.unique_id == "1234"
-    assert "keep_old_devices" in entry.data
+    assert entry.unique_id == "3245146787"
+
+
+@pytest.mark.parametrize(
+    ("addon_config", "expected_s0"),
+    [
+        pytest.param({"network_key": "legacy"}, "legacy", id="legacy_only"),
+        pytest.param(
+            {"network_key": "legacy", "s0_legacy_key": "s0"}, "s0", id="s0_wins"
+        ),
+        pytest.param({"s0_legacy_key": "s0"}, "s0", id="s0_only"),
+        pytest.param({}, "", id="neither"),
+    ],
+)
+def test_migrate_legacy_network_key(
+    addon_config: dict[str, str], expected_s0: str
+) -> None:
+    """Test the legacy network key is migrated to the S0 legacy key."""
+    original = dict(addon_config)
+
+    migrated = SecurityKeys.migrate_network_key(addon_config)
+    assert "network_key" not in migrated
+    assert migrated.get("s0_legacy_key", "") == expected_s0
+
+    keys = SecurityKeys.from_config(addon_config)
+    assert keys.s0_legacy_key == expected_s0
+
+    # Neither call mutates the caller's dict.
+    assert addon_config == original
+
+
+@pytest.mark.usefixtures("supervisor", "addon_info")
+async def test_esphome_discovery_title_placeholders(hass: HomeAssistant) -> None:
+    """Test ESPHome discovery sets the name placeholder for the flow_title."""
+    await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+
+    flows = hass.config_entries.flow.async_progress()
+    assert len(flows) == 1
+    assert (
+        flows[0]["context"]["title_placeholders"]["name"]
+        == "Network 0x000004d2 via mock-name (ESPHome)"
+    )
 
 
 @pytest.mark.parametrize(
@@ -1287,12 +1482,12 @@ async def test_esphome_discovery_intent_custom(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running", "addon_running", "addon_info")
+@pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
 async def test_esphome_discovery_intent_recommended(
     hass: HomeAssistant,
     set_addon_options: AsyncMock,
     addon_options: dict,
-    stop_addon: AsyncMock,
+    restart_addon: AsyncMock,
 ) -> None:
     """Test ESPHome discovery success path."""
     addon_options.update(
@@ -1317,6 +1512,31 @@ async def test_esphome_discovery_intent_recommended(
     assert result["step_id"] == "installation_type"
     assert result["menu_options"] == ["intent_recommended", "intent_custom"]
 
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "socket": "esphome://192.168.1.100:6053",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            }
+        ),
+    )
+
+    await hass.async_block_till_done()
+
+    assert restart_addon.call_args == call("core_zwave_js")
+
     with (
         patch(
             "homeassistant.components.zwave_js.async_setup", return_value=True
@@ -1326,9 +1546,8 @@ async def test_esphome_discovery_intent_recommended(
             return_value=True,
         ) as mock_setup_entry,
     ):
-        result = await hass.config_entries.flow.async_configure(
-            result["flow_id"], {"next_step_id": "intent_recommended"}
-        )
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
 
     assert result["type"] is FlowResultType.CREATE_ENTRY
     assert result["title"] == TITLE
@@ -1346,22 +1565,6 @@ async def test_esphome_discovery_intent_recommended(
         "use_addon": True,
         "integration_created_addon": False,
     }
-    assert set_addon_options.call_args == call(
-        "core_zwave_js",
-        AddonsOptions(
-            config={
-                "socket": "esphome://192.168.1.100:6053",
-                "s0_legacy_key": "new123",
-                "s2_access_control_key": "new456",
-                "s2_authenticated_key": "new789",
-                "s2_unauthenticated_key": "new987",
-                "lr_s2_access_control_key": "new654",
-                "lr_s2_authenticated_key": "new321",
-            }
-        ),
-    )
-    assert stop_addon.call_count == 1
-    assert stop_addon.call_args == call("core_zwave_js")
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
 
@@ -1421,6 +1624,361 @@ async def test_esphome_discovery_already_configured(
     assert stop_addon.call_args == call("core_zwave_js")
 
 
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm", "restore_nvm")
+@pytest.mark.parametrize(
+    "esphome_discovery_info",
+    [
+        pytest.param(ESPHOME_DISCOVERY_INFO, id="different_home_id"),
+        pytest.param(ESPHOME_DISCOVERY_INFO_CLEAN, id="unknown_home_id"),
+    ],
+)
+async def test_esphome_discovery_migration(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    get_server_version: AsyncMock,
+    esphome_discovery_info: ESPHomeServiceInfo,
+) -> None:
+    """Test ESPHome discovery of a different adapter starts migration."""
+    addon_options["device"] = "/dev/ttyUSB0"
+    entry = integration
+    assert client.connect.call_count == 1
+    assert entry.unique_id == "3245146787"
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "usb_path": "/dev/ttyUSB0",
+        },
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=esphome_discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "confirm_usb_migration"
+    # The add-on config is not touched before the user confirms.
+    set_addon_options.assert_not_called()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes") as mock_file:
+        await hass.async_block_till_done()
+        assert client.driver.controller.async_backup_nvm_raw.call_count == 1
+        assert mock_file.call_count == 1
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                CONF_ADDON_SOCKET: "esphome://192.168.1.100:6053",
+            }
+        ),
+    )
+
+    await hass.async_block_till_done()
+
+    assert restart_addon.call_args == call("core_zwave_js")
+    # The add-on start has finished and the next configure call below
+    # runs the finish step, which routes to the migration finish.
+    flow = hass.config_entries.flow.async_get(result["flow_id"])
+    assert flow["step_id"] == "finish_addon_setup"
+
+    _set_home_id(get_server_version, 3245146787)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+    assert client.connect.call_count == 2
+
+    await hass.async_block_till_done()
+    assert client.connect.call_count == 3
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+    assert client.driver.controller.async_restore_nvm.call_count == 1
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_successful"
+    assert entry.data["url"] == "ws://host1:3001"
+    assert entry.data["usb_path"] is None
+    assert entry.data["socket_path"] == "esphome://192.168.1.100:6053"
+    assert entry.data["use_addon"] is True
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_no_home_id_configured_socket_no_migration(
+    hass: HomeAssistant,
+) -> None:
+    """Test a no-home-ID reconnect of the configured socket isn't a migration."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            CONF_SOCKET_PATH: "esphome://192.168.1.100:6053",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_placeholder_then_home_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test a home ID discovery dedups against a pending placeholder prompt."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    # The same adapter now reports a home ID while its prompt is open.
+    home_id_info = ESPHomeServiceInfo(
+        name=ESPHOME_DISCOVERY_INFO_CLEAN.name,
+        zwave_home_id=1234,
+        ip_address=ESPHOME_DISCOVERY_INFO_CLEAN.ip_address,
+        port=ESPHOME_DISCOVERY_INFO_CLEAN.port,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=home_id_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_placeholder_ignored_then_home_id(
+    hass: HomeAssistant,
+) -> None:
+    """Test a home ID discovery honors a placeholder-based ignore."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id="esphome_mock-name",
+    )
+    entry.add_to_hass(hass)
+
+    # The adapter that was ignored without a home ID now reports one.
+    home_id_info = ESPHomeServiceInfo(
+        name="mock-name",
+        zwave_home_id=1234,
+        ip_address="192.168.1.100",
+        port=6053,
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=home_id_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
+async def test_esphome_discovery_same_socket_no_reload(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    addon_options: dict[str, Any],
+    stop_addon: AsyncMock,
+) -> None:
+    """Test ESPHome rediscovery with unchanged socket does not reload."""
+    addon_options[CONF_ADDON_SOCKET] = "esphome://192.168.1.100:6053"
+
+    entry = MockConfigEntry(
+        entry_id="mock-entry-id",
+        domain=DOMAIN,
+        data={
+            CONF_SOCKET_PATH: "esphome://192.168.1.100:6053",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    with patch.object(hass.config_entries, "async_schedule_reload") as mock_reload:
+        result = await hass.config_entries.flow.async_init(
+            DOMAIN,
+            context={"source": config_entries.SOURCE_ESPHOME},
+            data=ESPHOME_DISCOVERY_INFO,
+        )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+    mock_reload.assert_not_called()
+    set_addon_options.assert_not_called()
+    stop_addon.assert_not_called()
+    assert entry.data == {
+        CONF_SOCKET_PATH: "esphome://192.168.1.100:6053",
+        "use_addon": True,
+        "integration_created_addon": True,
+    }
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.parametrize(
+    ("esphome_discovery_info", "ignored_unique_id"),
+    [
+        pytest.param(ESPHOME_DISCOVERY_INFO, "1234", id="home_id"),
+        pytest.param(
+            ESPHOME_DISCOVERY_INFO_CLEAN, "esphome_mock-name", id="no_home_id"
+        ),
+    ],
+)
+async def test_esphome_discovery_ignored(
+    hass: HomeAssistant,
+    esphome_discovery_info: ESPHomeServiceInfo,
+    ignored_unique_id: str,
+) -> None:
+    """Test ESPHome discovery aborts when the discovery was ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id=ignored_unique_id,
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=esphome_discovery_info,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_esphome_discovery_without_home_id_can_be_ignored(
+    hass: HomeAssistant,
+) -> None:
+    """Test a discovery without a home ID gets a unique id for ignoring."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    flows = hass.config_entries.flow.async_progress_by_handler(
+        DOMAIN, match_context={"source": config_entries.SOURCE_ESPHOME}
+    )
+    assert len(flows) == 1
+    assert flows[0]["context"]["unique_id"] == "esphome_mock-name"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_IGNORE},
+        data={"unique_id": "esphome_mock-name", "title": "ZWA-2 proxy"},
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # The discovery prompt is gone and rediscovery aborts.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
+async def test_esphome_discovery_competing_migration_prompts(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test starting a migration supersedes competing prompts."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="4321", data={**entry.data, "use_addon": True}
+    )
+
+    result_a = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO,
+    )
+    result_b = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ESPHOME},
+        data=ESPHOME_DISCOVERY_INFO_CLEAN,
+    )
+
+    assert result_a["step_id"] == "confirm_usb_migration"
+    assert result_b["step_id"] == "confirm_usb_migration"
+
+    # Confirming the first migration removes the competing prompt.
+    with patch("pathlib.Path.write_bytes"):
+        result_a = await hass.config_entries.flow.async_configure(
+            result_a["flow_id"], {}
+        )
+        await hass.async_block_till_done()
+
+    assert result_a["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_a["step_id"] == "backup_nvm"
+    assert not any(
+        flow["flow_id"] == result_b["flow_id"]
+        for flow in hass.config_entries.flow.async_progress()
+    )
+
+    # A migration confirmed while another is in flight is rejected.
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
 @pytest.mark.usefixtures("supervisor", "addon_running", "addon_info")
 async def test_esphome_discovery_already_configured_unmanaged_addon(
     hass: HomeAssistant,
@@ -1428,7 +1986,7 @@ async def test_esphome_discovery_already_configured_unmanaged_addon(
     addon_options: dict[str, Any],
     stop_addon: AsyncMock,
 ) -> None:
-    """Test ESPHome discovery aborts when home ID already configured with unmanaged add-on."""
+    """Test ESPHome discovery aborts when home ID already configured."""
     addon_options[CONF_ADDON_SOCKET] = "esphome://existing-device:6053"
     addon_options["another_key"] = "should_not_be_touched"
 
@@ -1584,6 +2142,64 @@ async def test_esphome_discovery_not_hassio(hass: HomeAssistant) -> None:
         )
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "not_hassio"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_installed")
+async def test_configure_addon_usb_socket_validation(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+) -> None:
+    """Test USB path and socket path validation in the add-on config step."""
+    addon_options["device"] = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+            uuid="1234",
+        ),
+    )
+
+    assert result["step_id"] == "hassio_confirm"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_user"
+
+    # Neither USB path nor socket path provided.
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_user"
+    assert result["errors"] == {"base": "missing_usb_or_socket_path"}
+
+    # Both USB path and socket path provided.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/test",
+            "socket_path": "esphome://192.168.1.100:6053",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_user"
+    assert result["errors"] == {"base": "usb_and_socket_path"}
+
+    # Exactly one provided.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/test",
+        },
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "network_type"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
@@ -1885,6 +2501,358 @@ async def test_usb_discovery_with_existing_usb_flow(hass: HomeAssistant) -> None
     assert len(hass.config_entries.flow.async_progress()) == 0
 
 
+@pytest.mark.usefixtures("supervisor", "addon_installed")
+async def test_discovery_not_blocked_by_zeroconf_flow(hass: HomeAssistant) -> None:
+    """Test USB and add-on discovery are not blocked by a zeroconf prompt."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "5678"},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    # A USB flow does touch the add-on, so it still blocks add-on discovery.
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+            uuid="1234",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "hassio_confirm"
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+
+    # A zeroconf discovery of the same controller as the add-on discovery
+    # means another server is already connected to it, so it does block
+    # the add-on discovery, via the unique id in progress check.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "1234"},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_HASSIO},
+        data=HassioServiceInfo(
+            config=ADDON_DISCOVERY_INFO,
+            name="Z-Wave JS",
+            slug=ADDON_SLUG,
+            uuid="1234",
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_in_progress"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_usb_discovery_leaves_manual_entry_alone(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test USB discovery does not rewrite a manual entry with add-on data.
+
+    A manual entry for the same controller may be created while the USB
+    flow is waiting at the installation type menu, e.g. by confirming a
+    zeroconf discovery of the server that already serves the controller.
+    """
+    addon_options["device"] = "/dev/ttyUSB0"
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={"url": "ws://external-server:3000"},
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The add-on config now points at the discovered adapter, but the
+    # manual entry stays untouched.
+    assert entry.data == {"url": "ws://external-server:3000"}
+
+
+@pytest.mark.usefixtures("supervisor", "addon_info", "addon_store_info")
+async def test_usb_discovery_ignored(
+    hass: HomeAssistant,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test USB discovery aborts when the discovery was ignored."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=config_entries.SOURCE_IGNORE,
+        unique_id="AAAA:AAAA_1234_test_zwave radio",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_concurrent_usb_setup_flows(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test a second setup flow can't change the add-on config concurrently."""
+    second_stick = UsbServiceInfo(
+        device="/dev/zwave2",
+        pid="BBBB",
+        vid="BBBB",
+        serial_number="5678",
+        description="zwave radio",
+        manufacturer="test",
+    )
+    result_a = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    result_b = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=second_stick,
+    )
+
+    assert result_a["step_id"] == "installation_type"
+    assert result_b["step_id"] == "installation_type"
+
+    result_a = await hass.config_entries.flow.async_configure(
+        result_a["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result_a["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_a["step_id"] == "start_addon"
+    set_addon_options.reset_mock()
+
+    # The second flow may not change the add-on config while the first
+    # flow is applying its own.
+    result_b = await hass.config_entries.flow.async_configure(
+        result_b["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result_b["type"] is FlowResultType.ABORT
+    assert result_b["reason"] == "already_in_progress"
+    set_addon_options.assert_not_called()
+
+    hass.config_entries.flow.async_abort(result_a["flow_id"])
+    await hass.async_block_till_done()
+
+    # The aborted first flow is no longer in progress, so its ownership
+    # of the add-on config is gone and a new flow can change it.
+    result_c = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=second_stick,
+    )
+
+    assert result_c["step_id"] == "installation_type"
+
+    result_c = await hass.config_entries.flow.async_configure(
+        result_c["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result_c["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_c["step_id"] == "start_addon"
+    set_addon_options.assert_called_once()
+
+    hass.config_entries.flow.async_abort(result_c["flow_id"])
+    await hass.async_block_till_done()
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_concurrent_flow_during_addon_config_write(
+    hass: HomeAssistant,
+    set_addon_options: AsyncMock,
+    mock_usb_serial_by_id: MagicMock,
+) -> None:
+    """Test a second flow aborts while the first is inside the start add-on step.
+
+    A flow's published step only updates when its step handler returns,
+    so while the first flow is applying the add-on config inside the
+    start add-on step, its published step is still the prompt it was
+    submitted from. A second flow submitted at that moment must still
+    abort, and an entry created by another flow at that moment must not
+    abort the first flow as a redundant prompt.
+    """
+    options_write_started = asyncio.Event()
+    resume_options_write = asyncio.Event()
+
+    async def blocking_set_addon_options(slug: str, options: AddonsOptions) -> None:
+        options_write_started.set()
+        await resume_options_write.wait()
+
+    set_addon_options.side_effect = blocking_set_addon_options
+
+    second_stick = UsbServiceInfo(
+        device="/dev/zwave2",
+        pid="BBBB",
+        vid="BBBB",
+        serial_number="5678",
+        description="zwave radio",
+        manufacturer="test",
+    )
+    result_a = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=USB_DISCOVERY_INFO,
+    )
+    result_b = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_USB},
+        data=second_stick,
+    )
+
+    assert result_a["step_id"] == "installation_type"
+    assert result_b["step_id"] == "installation_type"
+
+    task_a = hass.async_create_task(
+        hass.config_entries.flow.async_configure(
+            result_a["flow_id"], {"next_step_id": "intent_recommended"}
+        )
+    )
+    # Release the blocked first flow also when an assertion fails,
+    # so a regression fails the test instead of hanging it.
+    try:
+        async with asyncio.timeout(5):
+            await options_write_started.wait()
+
+        # The first flow is changing the add-on config, but its published
+        # step is still the safe prompt it was submitted from.
+        flows_in_progress = {
+            flow["flow_id"]: flow for flow in hass.config_entries.flow.async_progress()
+        }
+        assert flows_in_progress[result_a["flow_id"]]["step_id"] == "installation_type"
+
+        result_b = await hass.config_entries.flow.async_configure(
+            result_b["flow_id"], {"next_step_id": "intent_recommended"}
+        )
+
+        assert result_b["type"] is FlowResultType.ABORT
+        assert result_b["reason"] == "already_in_progress"
+
+        # A manual flow that creates an entry supersedes prompt flows,
+        # but must not abort the flow that owns the add-on config, even
+        # though its published step still shows a safe prompt.
+        result_manual = await hass.config_entries.flow.async_init(
+            DOMAIN, context={"source": config_entries.SOURCE_USER}
+        )
+
+        assert result_manual["type"] is FlowResultType.MENU
+        assert result_manual["step_id"] == "installation_type"
+
+        result_manual = await hass.config_entries.flow.async_configure(
+            result_manual["flow_id"], {"next_step_id": "intent_custom"}
+        )
+
+        assert result_manual["type"] is FlowResultType.FORM
+        assert result_manual["step_id"] == "on_supervisor"
+
+        result_manual = await hass.config_entries.flow.async_configure(
+            result_manual["flow_id"], {"use_addon": False}
+        )
+
+        assert result_manual["type"] is FlowResultType.FORM
+        assert result_manual["step_id"] == "manual"
+
+        with (
+            patch("homeassistant.components.zwave_js.async_setup", return_value=True),
+            patch(
+                "homeassistant.components.zwave_js.async_setup_entry",
+                return_value=True,
+            ),
+        ):
+            result_manual = await hass.config_entries.flow.async_configure(
+                result_manual["flow_id"], {"url": "ws://localhost:3000"}
+            )
+
+        assert result_manual["type"] is FlowResultType.CREATE_ENTRY
+        assert any(
+            flow["flow_id"] == result_a["flow_id"]
+            for flow in hass.config_entries.flow.async_progress()
+        )
+    finally:
+        resume_options_write.set()
+
+    result_a = await task_a
+
+    assert result_a["type"] is FlowResultType.SHOW_PROGRESS
+    assert result_a["step_id"] == "start_addon"
+    set_addon_options.assert_called_once()
+
+    hass.config_entries.flow.async_abort(result_a["flow_id"])
+    await hass.async_block_till_done()
+
+
 @pytest.mark.usefixtures("supervisor", "addon_info")
 async def test_abort_usb_discovery_addon_required(hass: HomeAssistant) -> None:
     """Test usb discovery aborted when existing entry not using add-on."""
@@ -2012,6 +2980,94 @@ async def test_not_addon(hass: HomeAssistant) -> None:
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_addon_already_configured(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test flow aborts when another entry already uses the add-on."""
+    addon_options["device"] = "/test"
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "usb_path": "/other",
+            "use_addon": True,
+        },
+        title=TITLE,
+        unique_id="4321",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "on_supervisor"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_already_configured"
+    assert len(hass.config_entries.async_entries(DOMAIN)) == 1
+    # The flow must not have touched the add-on config of the existing entry.
+    set_addon_options.assert_not_called()
+    assert addon_options["device"] == "/test"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_reconfigure_addon_already_configured(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test reconfigure to add-on aborts when another entry uses the add-on."""
+    addon_entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "usb_path": "/other",
+            "use_addon": True,
+        },
+        title=TITLE,
+        unique_id="4321",
+    )
+    addon_entry.add_to_hass(hass)
+
+    result = await integration.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "on_supervisor_reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "addon_already_configured"
+    # The other entry's add-on config is untouched.
+    set_addon_options.assert_not_called()
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
@@ -2220,15 +3276,16 @@ async def test_addon_running_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == "/test_new"
-    assert entry.data["socket_path"] is None
-    assert entry.data["s0_legacy_key"] == "new123"
-    assert entry.data["s2_access_control_key"] == "new456"
-    assert entry.data["s2_authenticated_key"] == "new789"
-    assert entry.data["s2_unauthenticated_key"] == "new987"
-    assert entry.data["lr_s2_access_control_key"] == "new654"
-    assert entry.data["lr_s2_authenticated_key"] == "new321"
+    # The existing entry is not using the add-on,
+    # so it must not be rewritten with add-on data.
+    assert entry.data["url"] == "ws://localhost:3000"
+    assert entry.data["usb_path"] == "/test"
+    assert entry.data["s0_legacy_key"] == "old123"
+    assert entry.data["s2_access_control_key"] == "old456"
+    assert entry.data["s2_authenticated_key"] == "old789"
+    assert entry.data["s2_unauthenticated_key"] == "old987"
+    assert entry.data["lr_s2_access_control_key"] == "old654"
+    assert entry.data["lr_s2_authenticated_key"] == "old321"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
@@ -2542,13 +3599,23 @@ async def test_addon_installed_failures(
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed", "addon_info")
-@pytest.mark.parametrize("set_addon_options_side_effect", [SupervisorError()])
+@pytest.mark.parametrize(
+    "set_addon_options_side_effect",
+    [
+        SupervisorError(
+            "not a valid value at 'options'. "
+            f"Got {{'s0_legacy_key': '{TEST_SENSITIVE_NETWORK_KEY}'}}"
+        )
+    ],
+)
 async def test_addon_installed_set_options_failure(
     hass: HomeAssistant,
     set_addon_options: AsyncMock,
     start_addon: AsyncMock,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test all failures when add-on is installed."""
+    secret = TEST_SENSITIVE_NETWORK_KEY
 
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": config_entries.SOURCE_USER}
@@ -2594,7 +3661,7 @@ async def test_addon_installed_set_options_failure(
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
         {
-            "s0_legacy_key": "new123",
+            "s0_legacy_key": secret,
             "s2_access_control_key": "new456",
             "s2_authenticated_key": "new789",
             "s2_unauthenticated_key": "new987",
@@ -2608,7 +3675,7 @@ async def test_addon_installed_set_options_failure(
         AddonsOptions(
             config={
                 "device": "/test",
-                "s0_legacy_key": "new123",
+                "s0_legacy_key": secret,
                 "s2_access_control_key": "new456",
                 "s2_authenticated_key": "new789",
                 "s2_unauthenticated_key": "new987",
@@ -2622,6 +3689,10 @@ async def test_addon_installed_set_options_failure(
     assert result["reason"] == "addon_set_config_failed"
 
     assert start_addon.call_count == 0
+    assert "Failed to set the Z-Wave JS app options" in caplog.text
+    assert "not a valid value at" in caplog.text
+    assert REDACTED in caplog.text
+    assert secret not in caplog.text
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
@@ -2757,15 +3828,16 @@ async def test_addon_installed_already_configured(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
-    assert entry.data["url"] == "ws://host1:3001"
-    assert entry.data["usb_path"] == "/new"
-    assert entry.data["socket_path"] is None
-    assert entry.data["s0_legacy_key"] == "new123"
-    assert entry.data["s2_access_control_key"] == "new456"
-    assert entry.data["s2_authenticated_key"] == "new789"
-    assert entry.data["s2_unauthenticated_key"] == "new987"
-    assert entry.data["lr_s2_access_control_key"] == "new654"
-    assert entry.data["lr_s2_authenticated_key"] == "new321"
+    # The existing entry is not using the add-on,
+    # so it must not be rewritten with add-on data.
+    assert entry.data["url"] == "ws://localhost:3000"
+    assert entry.data["usb_path"] == "/test"
+    assert entry.data["s0_legacy_key"] == "old123"
+    assert entry.data["s2_access_control_key"] == "old456"
+    assert entry.data["s2_authenticated_key"] == "old789"
+    assert entry.data["s2_unauthenticated_key"] == "old987"
+    assert entry.data["lr_s2_access_control_key"] == "old654"
+    assert entry.data["lr_s2_authenticated_key"] == "old321"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
@@ -3208,6 +4280,39 @@ async def test_reconfigure_not_addon_with_addon_stop_fail(
             },
             0,
         ),
+        pytest.param(
+            {},
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
+            {
+                "usb_path": "",
+                "socket_path": "esphome://192.168.1.100:6053",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
+            {
+                "socket": "esphome://192.168.1.100:6053",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
+            0,
+            id="use_socket_option_removes_device",
+        ),
         (
             {"use_addon": True},
             {
@@ -3384,7 +4489,7 @@ async def test_reconfigure_addon_running_no_changes(
     form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
 ) -> None:
-    """Test reconfigure flow without changes, and add-on already running on Supervisor."""
+    """Test reconfigure flow without changes, add-on running."""
     addon_options.update(old_addon_options)
     entry = integration
     data = {**entry.data, **entry_data}
@@ -3471,6 +4576,7 @@ async def different_device_server_version(*args):
         "old_addon_options",
         "form_data",
         "new_addon_options",
+        "revert_addon_options",
         "disconnect_calls",
         "server_version_side_effect",
     ),
@@ -3505,6 +4611,15 @@ async def different_device_server_version(*args):
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             },
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
             0,
             different_device_server_version,
         ),
@@ -3538,8 +4653,56 @@ async def different_device_server_version(*args):
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             },
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
             0,
             different_device_server_version,
+        ),
+        pytest.param(
+            {},
+            {
+                "device": "/test",
+                "network_key": "old123",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+            },
+            {
+                "usb_path": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+            },
+            0,
+            different_device_server_version,
+            id="old_config_without_lr_keys",
         ),
     ],
 )
@@ -3554,6 +4717,7 @@ async def test_reconfigure_different_device(
     old_addon_options: dict[str, Any],
     form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
+    revert_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and configuring a different device."""
@@ -3607,25 +4771,12 @@ async def test_reconfigure_different_device(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    addon_options = {} | old_addon_options
-    # Legacy network key is not reset.
-    addon_options.pop("network_key")
-
     assert set_addon_options.call_count == 2
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config=addon_options)
+        "core_zwave_js", AddonsOptions(config=revert_addon_options)
     )
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "start_addon"
-
-    await hass.async_block_till_done()
-
     assert restart_addon.call_count == 2
     assert restart_addon.call_args == call("core_zwave_js")
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "different_device"
     assert entry.data == data
@@ -3642,9 +4793,11 @@ async def test_reconfigure_different_device(
         "new_addon_options",
         "disconnect_calls",
         "restart_addon_side_effect",
+        "final_connect_calls",
+        "final_disconnect_calls",
     ),
     [
-        (
+        pytest.param(
             {},
             {
                 "device": "/test",
@@ -3676,8 +4829,11 @@ async def test_reconfigure_different_device(
             },
             0,
             [SupervisorError(), None],
+            2,
+            1,
+            id="revert_restart_success",
         ),
-        (
+        pytest.param(
             {},
             {
                 "device": "/test",
@@ -3712,6 +4868,9 @@ async def test_reconfigure_different_device(
                 SupervisorError(),
                 SupervisorError(),
             ],
+            1,
+            0,
+            id="revert_restart_failed",
         ),
     ],
 )
@@ -3727,6 +4886,8 @@ async def test_reconfigure_addon_restart_failed(
     form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
     disconnect_calls: int,
+    final_connect_calls: int,
+    final_disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and add-on restart failure."""
     addon_options.update(old_addon_options)
@@ -3785,22 +4946,13 @@ async def test_reconfigure_addon_restart_failed(
     assert set_addon_options.call_args == call(
         "core_zwave_js", AddonsOptions(config=old_addon_options)
     )
-    assert result["type"] is FlowResultType.SHOW_PROGRESS
-    assert result["step_id"] == "start_addon"
-
-    await hass.async_block_till_done()
-
     assert restart_addon.call_count == 2
     assert restart_addon.call_args == call("core_zwave_js")
-
-    result = await hass.config_entries.flow.async_configure(result["flow_id"])
-    await hass.async_block_till_done()
-
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
     assert entry.data == data
-    assert client.connect.call_count == 2
-    assert client.disconnect.call_count == 1
+    assert client.connect.call_count == final_connect_calls
+    assert client.disconnect.call_count == final_disconnect_calls
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
@@ -3871,6 +5023,64 @@ async def test_reconfigure_addon_running_server_info_failure(
     assert set_addon_options.call_count == 0
     assert client.connect.call_count == 2
     assert client.disconnect.call_count == 1
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_reconfigure_preserves_omitted_security_keys(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+    restart_addon: AsyncMock,
+) -> None:
+    """Test a partial reconfigure keeps security keys not in the submission."""
+    addon_options.update({"device": "/test", "s0_legacy_key": "keep-me"})
+    entry = integration
+    hass.config_entries.async_update_entry(entry, unique_id="1234")
+    client.driver.controller.data["homeId"] = 1234
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    # The submission omits the security key fields and only changes the device.
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"usb_path": "/new"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    # The existing S0 key is preserved, not wiped to an empty string.
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                "device": "/new",
+                "s0_legacy_key": "keep-me",
+                "s2_access_control_key": "",
+                "s2_authenticated_key": "",
+                "s2_unauthenticated_key": "",
+                "lr_s2_access_control_key": "",
+                "lr_s2_authenticated_key": "",
+            }
+        ),
+    )
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+    await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "reconfigure_successful"
+    assert entry.data["s0_legacy_key"] == "keep-me"
 
 
 @pytest.mark.usefixtures("supervisor")
@@ -4035,6 +5245,81 @@ async def test_reconfigure_addon_not_installed(
     assert client.disconnect.call_count == 1
 
 
+@pytest.mark.parametrize(
+    "properties",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({"homeId": "not-a-number"}, id="malformed"),
+        pytest.param({"homeId": None}, id="valueless"),
+    ],
+)
+async def test_zeroconf_invalid_discovery_info(
+    hass: HomeAssistant, properties: dict[str, str | None]
+) -> None:
+    """Test zeroconf discovery with invalid home ID properties."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties=properties,
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_zeroconf_confirm_already_configured(hass: HomeAssistant) -> None:
+    """Test zeroconf confirm aborts if the entry appeared while pending."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "1234"},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    # An entry with the same home ID is configured while the discovery
+    # is pending, e.g. via the add-on discovery.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The existing add-on based entry is left untouched.
+    assert entry.data == {
+        "url": "ws://localhost:3000",
+        "use_addon": True,
+        "integration_created_addon": True,
+    }
+
+
 async def test_zeroconf(hass: HomeAssistant) -> None:
     """Test zeroconf discovery."""
 
@@ -4059,9 +5344,10 @@ async def test_zeroconf(hass: HomeAssistant) -> None:
     flows = hass.config_entries.flow.async_progress()
     assert len(flows) == 1
     flow = flows[0]
-    assert flow["context"]["title_placeholders"]["host"] == "127.0.0.1"
-    assert flow["context"]["title_placeholders"]["port"] == "3000"
-    assert flow["context"]["title_placeholders"]["home_id"] == "0x000004d2"  # 1234
+    assert (
+        flow["context"]["title_placeholders"]["name"]
+        == "Network 0x000004d2 at 127.0.0.1:3000"
+    )
 
     with (
         patch(
@@ -4115,7 +5401,6 @@ async def test_reconfigure_migrate_no_addon(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_required"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("mock_sdk_version")
@@ -4140,38 +5425,20 @@ async def test_reconfigure_migrate_low_sdk_version(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "migration_low_sdk_version"
-    assert "keep_old_devices" not in entry.data
 
 
 @pytest.mark.usefixtures("supervisor", "addon_running")
 @pytest.mark.parametrize(
-    (
-        "form_data",
-        "new_addon_options",
-        "restore_server_version_side_effect",
-        "final_unique_id",
-        "keep_old_devices",
-        "device_entry_count",
-    ),
+    ("form_data", "new_addon_options"),
     [
-        (
-            {CONF_USB_PATH: "/test"},
-            {CONF_ADDON_DEVICE: "/test"},
-            None,
-            "3245146787",
-            False,
-            2,
-        ),
+        ({CONF_USB_PATH: "/test"}, {CONF_ADDON_DEVICE: "/test"}),
         (
             {CONF_SOCKET_PATH: "esphome://1.2.3.4:1234"},
             {CONF_ADDON_SOCKET: "esphome://1.2.3.4:1234"},
-            aiohttp.ClientError("Boom"),
-            "5678",
-            True,
-            4,
         ),
     ],
 )
+@pytest.mark.usefixtures("backup_nvm", "restore_nvm")
 async def test_reconfigure_migrate_with_addon(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4184,13 +5451,8 @@ async def test_reconfigure_migrate_with_addon(
     get_server_version: AsyncMock,
     form_data: dict[str, Any],
     new_addon_options: dict,
-    restore_server_version_side_effect: Exception | None,
-    final_unique_id: str,
-    keep_old_devices: bool,
-    device_entry_count: int,
 ) -> None:
     """Test migration flow with add-on."""
-    version_info = get_server_version.return_value
     entry = integration
     assert client.connect.call_count == 1
     assert client.driver.controller.home_id == 3245146787
@@ -4216,19 +5478,21 @@ async def test_reconfigure_migrate_with_addon(
 
     assert len(device_registry.devices) == 2
     # Verify there's a device entry for the controller.
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, controller_device_id)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_device_id), entry.entry_id
     )
     assert device
-    assert device == device_registry.async_get_device(
-        identifiers={(DOMAIN, controller_device_id_ext)}
+    assert device == device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_device_id_ext), entry.entry_id
     )
     assert device.manufacturer == "AEON Labs"
     assert device.model == "ZW090"
     assert device.name == "Z‐Stick Gen5 USB Controller"
     # Verify there's a device entry for the multisensor.
     sensor_device_id = f"{client.driver.controller.home_id}-{multisensor_6.node_id}"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, sensor_device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, sensor_device_id), entry.entry_id
+    )
     assert device
     assert device.manufacturer == "AEON Labs"
     assert device.model == "ZW100"
@@ -4237,34 +5501,6 @@ async def test_reconfigure_migrate_with_addon(
     device_registry.async_update_device(
         device.id, name_by_user="Custom Sensor Device Name"
     )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
-
-    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
-        client.driver.controller.emit(
-            "nvm convert progress",
-            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
-        )
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm restore progress",
-            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
-        )
-        client.driver.controller.data["homeId"] = 3245146787
-        client.driver.emit(
-            "driver ready", {"event": "driver ready", "source": "driver"}
-        )
-
-    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
     events = async_capture_events(
         hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
@@ -4301,7 +5537,7 @@ async def test_reconfigure_migrate_with_addon(
     assert result["type"] is FlowResultType.FORM
     assert result["step_id"] == "choose_serial_port"
 
-    version_info.home_id = 5678
+    _set_home_id(get_server_version, 5678)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"], form_data
@@ -4332,16 +5568,14 @@ async def test_reconfigure_migrate_with_addon(
     with patch("homeassistant.components.zwave_js.async_ensure_addon_running"):
         result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-        assert entry.unique_id == "5678"
-        get_server_version.side_effect = restore_server_version_side_effect
-        version_info.home_id = 3245146787
+        assert entry.unique_id == "3245146787"
 
         assert result["type"] is FlowResultType.SHOW_PROGRESS
         assert result["step_id"] == "restore_nvm"
         assert client.connect.call_count == 2
 
         await hass.async_block_till_done()
-    assert client.connect.call_count == 4
+    assert client.connect.call_count == 3
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
     assert len(events) == 2
@@ -4356,22 +5590,23 @@ async def test_reconfigure_migrate_with_addon(
     assert entry.data[CONF_USB_PATH] == new_addon_options.get(CONF_ADDON_DEVICE)
     assert entry.data[CONF_SOCKET_PATH] == new_addon_options.get(CONF_ADDON_SOCKET)
     assert entry.data["use_addon"] is True
-    assert ("keep_old_devices" in entry.data) is keep_old_devices
-    assert entry.unique_id == final_unique_id
+    assert entry.unique_id == "3245146787"
 
-    assert len(device_registry.devices) == device_entry_count
+    assert len(device_registry.devices) == 2
     controller_device_id_ext = (
         f"{controller_device_id}-{controller_node.manufacturer_id}:"
         f"{controller_node.product_type}:{controller_node.product_id}"
     )
-    device = device_registry.async_get_device(
-        identifiers={(DOMAIN, controller_device_id_ext)}
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, controller_device_id_ext), entry.entry_id
     )
     assert device
     assert device.manufacturer == "New Device Manufacturer"
     assert device.model == "New Device Model"
     assert device.name == "New Device Name"
-    device = device_registry.async_get_device(identifiers={(DOMAIN, sensor_device_id)})
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, sensor_device_id), entry.entry_id
+    )
     assert device
     assert device.manufacturer == "AEON Labs"
     assert device.model == "ZW100"
@@ -4380,7 +5615,7 @@ async def test_reconfigure_migrate_with_addon(
     assert client.driver.controller.home_id == 3245146787
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
 async def test_reconfigure_migrate_restore_driver_ready_timeout(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4406,17 +5641,6 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
         client.driver.controller.data["homeId"] = 1234
 
     restart_addon.side_effect = mock_restart_addon
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
 
     async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
         client.driver.controller.emit(
@@ -4513,8 +5737,7 @@ async def test_reconfigure_migrate_restore_driver_ready_timeout(
     assert entry.data["usb_path"] == "/test"
     assert entry.data["socket_path"] is None
     assert entry.data["use_addon"] is True
-    assert "keep_old_devices" in entry.data
-    assert entry.unique_id == "1234"
+    assert entry.unique_id == "3245146787"
 
 
 async def test_reconfigure_migrate_backup_failure(
@@ -4543,9 +5766,9 @@ async def test_reconfigure_migrate_backup_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "backup_failed"
-    assert "keep_old_devices" not in entry.data
 
 
+@pytest.mark.usefixtures("backup_nvm")
 async def test_reconfigure_migrate_backup_file_failure(
     hass: HomeAssistant,
     integration: MockConfigEntry,
@@ -4555,14 +5778,6 @@ async def test_reconfigure_migrate_backup_file_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     result = await entry.start_reconfigure_flow(hass)
@@ -4585,10 +5800,9 @@ async def test_reconfigure_migrate_backup_file_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "backup_failed"
-    assert "keep_old_devices" not in entry.data
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm")
 async def test_reconfigure_migrate_start_addon_failure(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4601,14 +5815,6 @@ async def test_reconfigure_migrate_start_addon_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     result = await entry.start_reconfigure_flow(hass)
@@ -4659,10 +5865,85 @@ async def test_reconfigure_migrate_start_addon_failure(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "addon_start_failed"
-    assert "keep_old_devices" not in entry.data
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+@pytest.mark.usefixtures(
+    "supervisor", "addon_running", "restart_addon", "backup_nvm", "restore_nvm"
+)
+async def test_reconfigure_migrate_connect_failure(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test the restore step can be retried after a connect failure."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, data={**entry.data, "use_addon": True}
+    )
+
+    connect_side_effect = client.connect.side_effect
+    client.connect.side_effect = ConnectionFailed("test_error")
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "choose_serial_port"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USB_PATH: "/test",
+        },
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "restore_failed"
+    assert client.driver.controller.async_restore_nvm.call_count == 0
+
+    client.connect.side_effect = connect_side_effect
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "migration_successful"
+    assert entry.unique_id == "3245146787"
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon", "backup_nvm")
 async def test_reconfigure_migrate_restore_failure(
     hass: HomeAssistant,
     client: MagicMock,
@@ -4673,14 +5954,6 @@ async def test_reconfigure_migrate_restore_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     client.driver.controller.async_restore_nvm = AsyncMock(
@@ -4763,7 +6036,6 @@ async def test_reconfigure_migrate_restore_failure(
     hass.config_entries.flow.async_abort(result["flow_id"])
 
     assert len(hass.config_entries.flow.async_progress()) == 0
-    assert "keep_old_devices" not in entry.data
 
 
 async def test_get_driver_failure_intent_migrate(
@@ -4787,9 +6059,9 @@ async def test_get_driver_failure_intent_migrate(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "config_entry_not_loaded"
-    assert "keep_old_devices" not in entry.data
 
 
+@pytest.mark.usefixtures("backup_nvm")
 async def test_choose_serial_port_usb_ports_failure(
     hass: HomeAssistant,
     integration: MockConfigEntry,
@@ -4799,14 +6071,6 @@ async def test_choose_serial_port_usb_ports_failure(
     entry = integration
     hass.config_entries.async_update_entry(
         entry, unique_id="1234", data={**entry.data, "use_addon": True}
-    )
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
     )
 
     result = await entry.start_reconfigure_flow(hass)
@@ -4832,13 +6096,318 @@ async def test_choose_serial_port_usb_ports_failure(
     assert result["step_id"] == "instruct_unplug"
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
-    with patch(
-        "homeassistant.components.zwave_js.config_flow.async_get_usb_ports",
-        side_effect=OSError("test_error"),
+    with (
+        patch(
+            "homeassistant.components.zwave_js.config_flow.async_get_usb_ports",
+            side_effect=OSError("test_error"),
+        ),
+        patch("homeassistant.components.zwave_js.async_setup_entry", return_value=True),
     ):
         result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
         assert result["type"] is FlowResultType.ABORT
         assert result["reason"] == "usb_ports_failed"
+
+        # The aborted flow reloads the config entry it unloaded.
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_migrate_flow_abandoned_reloads_entry(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test an abandoned migration flow reloads the unloaded entry."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    # The user closes the migration dialog instead of continuing.
+    with patch(
+        "homeassistant.components.zwave_js.async_setup_entry", return_value=True
+    ):
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running")
+async def test_create_entry_spares_migration_flow(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    client: MagicMock,
+) -> None:
+    """Test entry creation does not abort a migration flow in progress."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="4321", data={**entry.data, "use_addon": True}
+    )
+
+    async def mock_backup_nvm_raw():
+        await asyncio.sleep(0)
+        return b"test_nvm_data"
+
+    client.driver.controller.async_backup_nvm_raw = AsyncMock(
+        side_effect=mock_backup_nvm_raw
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "backup_nvm"
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+    migration_flow_id = result["flow_id"]
+
+    # A manual flow for a different server creates an entry meanwhile.
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_custom"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": False}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+
+    with (
+        patch("homeassistant.components.zwave_js.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        result = await hass.config_entries.flow.async_configure(
+            result["flow_id"], {"url": "ws://localhost:3000"}
+        )
+        await hass.async_block_till_done()
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    # The migration flow is still in progress.
+    assert any(
+        flow["flow_id"] == migration_flow_id
+        for flow in hass.config_entries.flow.async_progress()
+    )
+    hass.config_entries.flow.async_abort(migration_flow_id)
+    await hass.async_block_till_done()
+    assert not hass.config_entries.flow.async_progress()
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_reconfigure_abandoned_restores_addon_config(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test an abandoned flow restores the add-on config it changed."""
+    addon_options.update(
+        {"device": "/test", "network_key": "legacy", "s0_legacy_key": "old123"}
+    )
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/new",
+            "s0_legacy_key": "old123",
+        },
+    )
+
+    assert set_addon_options.call_count == 1
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    # The user closes the dialog instead of waiting for the restart.
+    with patch(
+        "homeassistant.components.zwave_js.async_setup_entry", return_value=True
+    ):
+        hass.config_entries.flow.async_abort(result["flow_id"])
+        await hass.async_block_till_done()
+
+    # The add-on config the flow changed is restored, without the legacy
+    # network key, before the reload recovers the entry.
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(config={"device": "/test", "s0_legacy_key": "old123"}),
+    )
+    assert entry.state is config_entries.ConfigEntryState.LOADED
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon")
+async def test_reconfigure_abandoned_restore_failure_keeps_unloaded(
+    hass: HomeAssistant,
+    integration: MockConfigEntry,
+    addon_options: dict[str, Any],
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test the entry stays unloaded if restoring the add-on config fails."""
+    addon_options.update({"device": "/test", "s0_legacy_key": "old123"})
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry, unique_id="1234", data={**entry.data, "use_addon": True}
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_reconfigure"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"use_addon": True}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_reconfigure"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "usb_path": "/new",
+            "s0_legacy_key": "old123",
+        },
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+    # Restoring the original add-on options fails on the cleanup path.
+    set_addon_options.side_effect = SupervisorError("Boom")
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+    # The entry is left unloaded instead of adopting the unconfirmed options.
+    assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
+
+
+@pytest.mark.usefixtures("supervisor", "addon_running", "restart_addon", "backup_nvm")
+async def test_migrate_flow_abandoned_after_commit_keeps_new_config(
+    hass: HomeAssistant,
+    client: MagicMock,
+    integration: MockConfigEntry,
+    set_addon_options: AsyncMock,
+    get_server_version: AsyncMock,
+) -> None:
+    """Test abandoning after the migration commit doesn't revert the add-on."""
+    entry = integration
+    hass.config_entries.async_update_entry(
+        entry,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "usb_path": "/old",
+        },
+    )
+
+    result = await entry.start_reconfigure_flow(hass)
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_migrate"}
+    )
+
+    with patch("pathlib.Path.write_bytes"):
+        await hass.async_block_till_done()
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "instruct_unplug"
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "choose_serial_port"
+
+    _set_home_id(get_server_version, 5678)
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_USB_PATH: "/new"}
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    await hass.async_block_till_done()
+
+    set_addon_options.reset_mock()
+
+    # The migration commits the entry to the new adapter and starts the
+    # restore, then the user closes the dialog.
+    result = await hass.config_entries.flow.async_configure(result["flow_id"])
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "restore_nvm"
+    assert entry.data[CONF_USB_PATH] == "/new"
+
+    hass.config_entries.flow.async_abort(result["flow_id"])
+    await hass.async_block_till_done()
+
+    # The entry stays on the new adapter and the add-on config is not
+    # reverted to the old one.
+    assert entry.data[CONF_USB_PATH] == "/new"
+    for mock_call in set_addon_options.call_args_list:
+        assert mock_call.args[1].config.get(CONF_ADDON_DEVICE) != "/old"
 
 
 @pytest.mark.usefixtures("supervisor", "addon_installed")
@@ -4871,44 +6440,92 @@ async def test_configure_addon_usb_ports_failure(
         assert result["reason"] == "usb_ports_failed"
 
 
-async def test_get_usb_ports_filtering() -> None:
-    """Test that get_usb_ports filters out 'n/a' descriptions when other ports are available."""
+async def test_get_usb_ports_filtering(hass: HomeAssistant) -> None:
+    """Test get_usb_ports filters out 'n/a' when others exist."""
     mock_ports = [
-        ListPortInfo("/dev/ttyUSB0"),
-        ListPortInfo("/dev/ttyUSB1"),
-        ListPortInfo("/dev/ttyUSB2"),
-        ListPortInfo("/dev/ttyUSB3"),
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/a",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="N/A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB3",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device B",
+        ),
     ]
-    mock_ports[0].description = "n/a"
-    mock_ports[1].description = "Device A"
-    mock_ports[2].description = "N/A"
-    mock_ports[3].description = "Device B"
 
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
 
         descriptions = list(result.values())
 
         # Verify that only non-"n/a" descriptions are returned
         assert descriptions == [
-            "Device A - /dev/ttyUSB1, s/n: n/a",
-            "Device B - /dev/ttyUSB3, s/n: n/a",
+            "Device A - /dev/ttyUSB1, s/n: n/a - 1234:5678",
+            "Device B - /dev/ttyUSB3, s/n: n/a - 1234:5678",
         ]
 
 
-async def test_get_usb_ports_all_na() -> None:
-    """Test that get_usb_ports returns all ports as-is when only 'n/a' descriptions exist."""
+async def test_get_usb_ports_all_na(hass: HomeAssistant) -> None:
+    """Test get_usb_ports returns all when only 'n/a' descriptions."""
     mock_ports = [
-        ListPortInfo("/dev/ttyUSB0"),
-        ListPortInfo("/dev/ttyUSB1"),
-        ListPortInfo("/dev/ttyUSB2"),
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/a",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="N/A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/a",
+        ),
     ]
-    mock_ports[0].description = "n/a"
-    mock_ports[1].description = "N/A"
-    mock_ports[2].description = "n/a"
 
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
 
         descriptions = list(result.values())
 
@@ -4923,65 +6540,122 @@ async def test_get_usb_ports_all_na() -> None:
         assert "/dev/ttyUSB2" in device_paths
 
 
-async def test_get_usb_ports_mixed_case_filtering() -> None:
-    """Test that get_usb_ports filters out 'n/a' descriptions with different case variations."""
+async def test_get_usb_ports_mixed_case_filtering(hass: HomeAssistant) -> None:
+    """Test get_usb_ports filters 'n/a' case-insensitively."""
     mock_ports = [
-        ListPortInfo("/dev/ttyUSB0"),
-        ListPortInfo("/dev/ttyUSB1"),
-        ListPortInfo("/dev/ttyUSB2"),
-        ListPortInfo("/dev/ttyUSB3"),
-        ListPortInfo("/dev/ttyUSB4"),
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/a",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="N/A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB3",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/A",
+        ),
+        USBDevice(
+            device="/dev/ttyUSB4",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="Device B",
+        ),
     ]
-    mock_ports[0].description = "n/a"
-    mock_ports[1].description = "Device A"
-    mock_ports[2].description = "N/A"
-    mock_ports[3].description = "n/A"
-    mock_ports[4].description = "Device B"
 
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
 
         descriptions = list(result.values())
 
-        # Verify that only non-"n/a" descriptions are returned (case-insensitive filtering)
+        # Verify only non-"n/a" descriptions are returned
+        # (case-insensitive filtering)
         assert descriptions == [
-            "Device A - /dev/ttyUSB1, s/n: n/a",
-            "Device B - /dev/ttyUSB4, s/n: n/a",
+            "Device A - /dev/ttyUSB1, s/n: n/a - 1234:5678",
+            "Device B - /dev/ttyUSB4, s/n: n/a - 1234:5678",
         ]
 
 
-async def test_get_usb_ports_empty_list() -> None:
+async def test_get_usb_ports_empty_list(hass: HomeAssistant) -> None:
     """Test that get_usb_ports handles empty port list."""
-    with patch("serial.tools.list_ports.comports", return_value=[]):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=[],
+    ):
+        result = await async_get_usb_ports(hass)
 
         # Verify that empty dict is returned
         assert result == {}
 
 
-async def test_get_usb_ports_single_na_port() -> None:
-    """Test that get_usb_ports returns single 'n/a' port when it's the only one available."""
-    mock_ports = [ListPortInfo("/dev/ttyUSB0")]
-    mock_ports[0].description = "n/a"
+async def test_get_usb_ports_single_na_port(hass: HomeAssistant) -> None:
+    """Test get_usb_ports returns single 'n/a' port when alone."""
+    mock_ports = [
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="1234",
+            pid="5678",
+            serial_number=None,
+            manufacturer=None,
+            description="n/a",
+        ),
+    ]
 
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
 
         descriptions = list(result.values())
 
         # Verify that the single "n/a" port is returned
         assert descriptions == [
-            "n/a - /dev/ttyUSB0, s/n: n/a",
+            "n/a - /dev/ttyUSB0, s/n: n/a - 1234:5678",
         ]
 
 
-async def test_get_usb_ports_single_valid_port() -> None:
+async def test_get_usb_ports_single_valid_port(hass: HomeAssistant) -> None:
     """Test that get_usb_ports returns single valid port."""
-    mock_ports = [ListPortInfo("/dev/ttyUSB0")]
-    mock_ports[0].description = "Device A"
+    mock_ports = [
+        SerialDevice(
+            device="/dev/ttyUSB0",
+            serial_number=None,
+            manufacturer=None,
+            description="Device A",
+        ),
+    ]
 
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
 
         descriptions = list(result.values())
 
@@ -4991,48 +6665,77 @@ async def test_get_usb_ports_single_valid_port() -> None:
         ]
 
 
-async def test_get_usb_ports_ignored_devices() -> None:
+async def test_get_usb_ports_ignored_devices(hass: HomeAssistant) -> None:
     """Test that get_usb_ports filters out ignored non-Z-Wave devices."""
     mock_ports = [
-        ListPortInfo("/dev/ttyUSB0"),
-        ListPortInfo("/dev/ttyUSB1"),
-        ListPortInfo("/dev/ttyUSB2"),
-        ListPortInfo("/dev/ttyUSB3"),
-        ListPortInfo("/dev/ttyUSB4"),
-        ListPortInfo("/dev/ttyUSB5"),
+        # ZBT-2, should be filtered
+        USBDevice(
+            device="/dev/ttyUSB0",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer="Nabu Casa",
+            description="ZBT-2",
+        ),
+        # SkyConnect, should be filtered
+        USBDevice(
+            device="/dev/ttyUSB1",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer="Nabu Casa",
+            description="SkyConnect v1.0",
+        ),
+        # ZBT-1, should be filtered
+        USBDevice(
+            device="/dev/ttyUSB2",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer="Nabu Casa",
+            description="Home Assistant Connect ZBT-1",
+        ),
+        # ZWA-2, should be shown
+        USBDevice(
+            device="/dev/ttyUSB3",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer="Nabu Casa",
+            description="ZWA-2",
+        ),
+        # unknown device with manufacturer/description, should be shown
+        USBDevice(
+            device="/dev/ttyUSB4",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer="Another Manufacturer",
+            description="Z-Wave USB Adapter",
+        ),
+        # unknown device with no manufacturer/description, should be shown
+        USBDevice(
+            device="/dev/ttyUSB5",
+            vid="10C4",
+            pid="EA60",
+            serial_number=None,
+            manufacturer=None,
+            description=None,
+        ),
     ]
-    # ZBT-2, should be filtered
-    mock_ports[0].manufacturer = "Nabu Casa"
-    mock_ports[0].description = "ZBT-2"
 
-    # ZBT-1, should be filtered
-    mock_ports[2].manufacturer = "Nabu Casa"
-    mock_ports[2].description = "Home Assistant Connect ZBT-1"
-
-    # SkyConnect, should be filtered
-    mock_ports[1].manufacturer = "Nabu Casa"
-    mock_ports[1].description = "SkyConnect v1.0"
-
-    # ZWA-2, should be shown
-    mock_ports[3].manufacturer = "Nabu Casa"
-    mock_ports[3].description = "ZWA-2"
-
-    # unknown device with manufacturer/description, should be shown
-    mock_ports[4].manufacturer = "Another Manufacturer"
-    mock_ports[4].description = "Z-Wave USB Adapter"
-
-    # unknown device with no manufacturer/description, should be shown
-    mock_ports[5].manufacturer = None
-    mock_ports[5].description = None
-
-    with patch("serial.tools.list_ports.comports", return_value=mock_ports):
-        result = get_usb_ports()
+    with patch(
+        "homeassistant.components.zwave_js.config_flow.usb.async_scan_serial_ports",
+        return_value=mock_ports,
+    ):
+        result = await async_get_usb_ports(hass)
         descriptions = list(result.values())
 
         assert descriptions == [
-            "ZWA-2 - /dev/ttyUSB3, s/n: n/a - Nabu Casa",
-            "Z-Wave USB Adapter - /dev/ttyUSB4, s/n: n/a - Another Manufacturer",
-            "/dev/ttyUSB5, s/n: n/a",
+            "ZWA-2 - /dev/ttyUSB3, s/n: n/a - Nabu Casa - 10C4:EA60",
+            "Z-Wave USB Adapter - /dev/ttyUSB4, s/n: n/a"
+            " - Another Manufacturer - 10C4:EA60",
+            "/dev/ttyUSB5, s/n: n/a - 10C4:EA60",
         ]
 
 
@@ -5130,6 +6833,93 @@ async def test_intent_recommended_user(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("supervisor", "addon_installed")
+async def test_intent_recommended_preserves_existing_keys(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+    start_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test recommended installation keeps existing add-on security keys."""
+    addon_options.update(
+        {
+            CONF_ADDON_S0_LEGACY_KEY: "old123",
+            CONF_ADDON_S2_ACCESS_CONTROL_KEY: "old456",
+            CONF_ADDON_S2_AUTHENTICATED_KEY: "old789",
+            CONF_ADDON_S2_UNAUTHENTICATED_KEY: "old987",
+            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: "old654",
+            CONF_ADDON_LR_S2_AUTHENTICATED_KEY: "old321",
+        }
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USB_PATH: "/test",
+        },
+    )
+
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                CONF_ADDON_DEVICE: "/test",
+                CONF_ADDON_S0_LEGACY_KEY: "old123",
+                CONF_ADDON_S2_ACCESS_CONTROL_KEY: "old456",
+                CONF_ADDON_S2_AUTHENTICATED_KEY: "old789",
+                CONF_ADDON_S2_UNAUTHENTICATED_KEY: "old987",
+                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: "old654",
+                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: "old321",
+            }
+        ),
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    with (
+        patch("homeassistant.components.zwave_js.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert start_addon.call_args == call("core_zwave_js")
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "url": "ws://host1:3001",
+        "usb_path": "/test",
+        "socket_path": None,
+        "s0_legacy_key": "old123",
+        "s2_access_control_key": "old456",
+        "s2_authenticated_key": "old789",
+        "s2_unauthenticated_key": "old987",
+        "lr_s2_access_control_key": "old654",
+        "lr_s2_authenticated_key": "old321",
+        "use_addon": True,
+        "integration_created_addon": False,
+    }
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
@@ -5338,7 +7128,7 @@ async def test_addon_rf_region_new_network(
     assert entry.state is config_entries.ConfigEntryState.NOT_LOADED
 
 
-@pytest.mark.usefixtures("supervisor", "addon_running")
+@pytest.mark.usefixtures("supervisor", "addon_running", "backup_nvm", "restore_nvm")
 async def test_addon_rf_region_migrate_network(
     hass: HomeAssistant,
     client: MagicMock,
@@ -5350,7 +7140,6 @@ async def test_addon_rf_region_migrate_network(
 ) -> None:
     """Test migration flow with add-on."""
     hass.config.country = None
-    version_info = get_server_version.return_value
     entry = integration
     assert client.connect.call_count == 1
     assert client.driver.controller.home_id == 3245146787
@@ -5364,34 +7153,6 @@ async def test_addon_rf_region_migrate_network(
         },
     )
     addon_options["device"] = "/dev/ttyUSB0"
-
-    async def mock_backup_nvm_raw():
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm backup progress", {"bytesRead": 100, "total": 200}
-        )
-        return b"test_nvm_data"
-
-    client.driver.controller.async_backup_nvm_raw = AsyncMock(
-        side_effect=mock_backup_nvm_raw
-    )
-
-    async def mock_restore_nvm(data: bytes, options: dict[str, bool] | None = None):
-        client.driver.controller.emit(
-            "nvm convert progress",
-            {"event": "nvm convert progress", "bytesRead": 100, "total": 200},
-        )
-        await asyncio.sleep(0)
-        client.driver.controller.emit(
-            "nvm restore progress",
-            {"event": "nvm restore progress", "bytesWritten": 100, "total": 200},
-        )
-        client.driver.controller.data["homeId"] = 3245146787
-        client.driver.emit(
-            "driver ready", {"event": "driver ready", "source": "driver"}
-        )
-
-    client.driver.controller.async_restore_nvm = AsyncMock(side_effect=mock_restore_nvm)
 
     events = async_capture_events(
         hass, data_entry_flow.EVENT_DATA_ENTRY_FLOW_PROGRESS_UPDATE
@@ -5434,7 +7195,7 @@ async def test_addon_rf_region_migrate_network(
     with pytest.raises(InInvalid):
         data_schema.schema[CONF_USB_PATH](addon_options["device"])
 
-    version_info.home_id = 5678
+    _set_home_id(get_server_version, 5678)
 
     result = await hass.config_entries.flow.async_configure(
         result["flow_id"],
@@ -5468,15 +7229,14 @@ async def test_addon_rf_region_migrate_network(
 
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
 
-    assert entry.unique_id == "5678"
-    version_info.home_id = 3245146787
+    assert entry.unique_id == "3245146787"
 
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "restore_nvm"
     assert client.connect.call_count == 2
 
     await hass.async_block_till_done()
-    assert client.connect.call_count == 4
+    assert client.connect.call_count == 3
     assert entry.state is config_entries.ConfigEntryState.LOADED
     assert client.driver.controller.async_restore_nvm.call_count == 1
     assert len(events) == 2

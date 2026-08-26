@@ -35,6 +35,9 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestTransientError,
     ServiceValidationError,
 )
+from homeassistant.helpers.config_entry_oauth2_flow import (
+    ImplementationUnavailableError,
+)
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry
@@ -232,7 +235,7 @@ async def test_setup_oauth_reauth_error(
     await hass.async_block_till_done()
 
     assert config_entry.state is ConfigEntryState.SETUP_ERROR
-    mock_async_start_reauth.assert_called_once_with(hass)
+    mock_async_start_reauth.assert_called_once_with(hass, None, None)
 
 
 async def test_setup_oauth_transient_error(
@@ -265,13 +268,13 @@ async def test_setup_oauth_transient_error(
 @pytest.mark.parametrize(
     ("add_created_column_param", "expected_row"),
     [
-        ({ADD_CREATED_COLUMN: True}, ["bar", "2024-01-15 12:30:45.123456"]),
+        ({ADD_CREATED_COLUMN: True}, ["bar", "2024-01-15 04:30:45.123456-08:00"]),
         ({ADD_CREATED_COLUMN: False}, ["bar", ""]),
-        ({}, ["bar", "2024-01-15 12:30:45.123456"]),
+        ({}, ["bar", "2024-01-15 04:30:45.123456-08:00"]),
     ],
     ids=["created_column_true", "created_column_false", "created_column_default"],
 )
-@freeze_time("2024-01-15 12:30:45.123456")
+@freeze_time("2024-01-15 04:30:45.123456-08:00")
 async def test_append_sheet(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
@@ -309,6 +312,42 @@ async def test_append_sheet(
         assert rows_data[0] == expected_row
 
 
+@freeze_time("2024-01-15 12:30:45.123456")
+async def test_append_sheet_created_column_uses_configured_time_zone(
+    hass: HomeAssistant,
+    setup_integration: ComponentSetup,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test the created column follows the time zone configured in Home Assistant.
+
+    Home Assistant never changes the process time zone, so the machine the
+    installation happens to run on must not decide what is written here.
+    """
+    await hass.config.async_set_time_zone("Australia/Sydney")
+    await setup_integration()
+
+    with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
+        mock_worksheet = (
+            mock_client.return_value.open_by_key.return_value.worksheet.return_value
+        )
+        mock_worksheet.get_values.return_value = [["foo", "created"]]
+
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_APPEND_SHEET,
+            {
+                DATA_CONFIG_ENTRY: config_entry.entry_id,
+                WORKSHEET: "Sheet1",
+                DATA: {"foo": "bar"},
+                ADD_CREATED_COLUMN: True,
+            },
+            blocking=True,
+        )
+
+        rows_data = mock_worksheet.append_rows.call_args[0][0]
+        assert rows_data[0] == ["bar", "2024-01-15 23:30:45.123456+11:00"]
+
+
 async def test_get_sheet(
     hass: HomeAssistant,
     setup_integration: ComponentSetup,
@@ -323,7 +362,8 @@ async def test_get_sheet(
     assert entries[0].state is ConfigEntryState.LOADED
 
     with patch("homeassistant.components.google_sheets.services.Client") as mock_client:
-        mock_client.return_value.open_by_key.return_value.worksheet.return_value.get_values.return_value = [
+        worksheet = mock_client.return_value.open_by_key.return_value.worksheet
+        worksheet.return_value.get_values.return_value = [
             ["col1", "col2"],
             ["a", "b"],
             ["c", "d"],
@@ -558,3 +598,20 @@ async def test_get_sheet_invalid_worksheet(
                 blocking=True,
                 return_response=True,
             )
+
+
+async def test_oauth_implementation_not_available(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+) -> None:
+    """Test that unavailable OAuth implementation raises ConfigEntryNotReady."""
+    config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.google_sheets.async_get_config_entry_implementation",
+        side_effect=ImplementationUnavailableError,
+    ):
+        await hass.config_entries.async_setup(config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert config_entry.state is ConfigEntryState.SETUP_RETRY

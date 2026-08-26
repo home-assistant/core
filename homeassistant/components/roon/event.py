@@ -1,15 +1,16 @@
 """Roon event entities."""
 
 import logging
-from typing import cast
+from typing import cast, override
 
 from homeassistant.components.event import EventDeviceClass, EventEntity
-from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import DeviceInfo
 from homeassistant.helpers.dispatcher import async_dispatcher_connect
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
+from . import RoonConfigEntry
 from .const import DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
@@ -17,11 +18,11 @@ _LOGGER = logging.getLogger(__name__)
 
 async def async_setup_entry(
     hass: HomeAssistant,
-    config_entry: ConfigEntry,
+    config_entry: RoonConfigEntry,
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up Roon Event from Config Entry."""
-    roon_server = hass.data[DOMAIN][config_entry.entry_id]
+    roon_server = config_entry.runtime_data
     event_entities = set()
 
     @callback
@@ -70,7 +71,11 @@ class RoonEventEntity(EventEntity):
             name=cast(str | None, self.name),
             manufacturer="RoonLabs",
             model=dev_model,
-            via_device=(DOMAIN, self._entry_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                self._server.hass,
+                (DOMAIN, self._entry_id),
+                config_entry_id=self._entry_id,
+            ),
         )
 
     def _roonapi_volume_callback(
@@ -92,6 +97,7 @@ class RoonEventEntity(EventEntity):
         self._trigger_event(event)
         self.schedule_update_ha_state()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register volume hooks with the roon api."""
 
@@ -107,6 +113,7 @@ class RoonEventEntity(EventEntity):
             False,
         )
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Unregister volume hooks from the roon api."""
         self._server.roonapi.unregister_volume_control(self.unique_id)

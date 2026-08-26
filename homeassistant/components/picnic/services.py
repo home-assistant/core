@@ -1,7 +1,5 @@
 """Services for the Picnic integration."""
 
-from __future__ import annotations
-
 from typing import cast
 
 from python_picnic_api2 import PicnicAPI
@@ -9,17 +7,17 @@ import voluptuous as vol
 
 from homeassistant.const import ATTR_CONFIG_ENTRY_ID
 from homeassistant.core import HomeAssistant, ServiceCall, callback
-from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers import config_validation as cv, service
 
 from .const import (
     ATTR_AMOUNT,
     ATTR_PRODUCT_ID,
     ATTR_PRODUCT_IDENTIFIERS,
     ATTR_PRODUCT_NAME,
-    CONF_API,
     DOMAIN,
     SERVICE_ADD_PRODUCT_TO_CART,
 )
+from .coordinator import PicnicConfigEntry
 
 
 class PicnicServiceException(Exception):
@@ -50,10 +48,11 @@ def async_setup_services(hass: HomeAssistant) -> None:
 
 
 async def get_api_client(hass: HomeAssistant, config_entry_id: str) -> PicnicAPI:
-    """Get the right Picnic API client based on the device id, else get the default one."""
-    if config_entry_id not in hass.data[DOMAIN]:
-        raise ValueError(f"Config entry with id {config_entry_id} not found!")
-    return hass.data[DOMAIN][config_entry_id][CONF_API]
+    """Get the right Picnic API client based on the config entry id."""
+    entry: PicnicConfigEntry = service.async_get_config_entry(
+        hass, DOMAIN, config_entry_id
+    )
+    return entry.runtime_data.picnic_api_client
 
 
 async def handle_add_product(
@@ -81,12 +80,12 @@ def product_search(api_client: PicnicAPI, product_name: str | None) -> str | Non
 
     search_result = api_client.search(product_name)
 
-    if not search_result or "items" not in search_result[0]:
+    if not search_result or not search_result.items:
         return None
 
     # Return the first valid result
-    for item in search_result[0]["items"]:
-        if "name" in item:
-            return str(item["id"])
+    for item in search_result.items:
+        if item.name:
+            return str(item.id)
 
     return None

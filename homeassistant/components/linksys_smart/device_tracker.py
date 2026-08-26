@@ -1,9 +1,8 @@
 """Support for Linksys Smart Wifi routers."""
 
-from __future__ import annotations
-
 from http import HTTPStatus
 import logging
+from typing import override
 
 import requests
 import voluptuous as vol
@@ -50,12 +49,14 @@ class LinksysSmartWifiDeviceScanner(DeviceScanner):
         if response.status_code != HTTPStatus.OK:
             raise ConnectionError("Cannot connect to Linksys Access Point")
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with device IDs (MACs)."""
         self._update_info()
 
         return self.last_results.keys()
 
+    @override
     def get_device_name(self, device):
         """Return the name (if known) of the device."""
         return self.last_results.get(device)

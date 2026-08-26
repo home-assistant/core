@@ -5,15 +5,9 @@ from homeassistant.components.binary_sensor import (
     BinarySensorDeviceClass,
 )
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
-from homeassistant.const import (
-    CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
-    CONCENTRATION_PARTS_PER_BILLION,
-    CONCENTRATION_PARTS_PER_MILLION,
-    STATE_OFF,
-    STATE_ON,
-)
+from homeassistant.const import STATE_OFF, STATE_ON, UnitOfDensity, UnitOfRatio
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers.automation import DomainSpec, NumericalDomainSpec
+from homeassistant.helpers.automation import DomainSpec
 from homeassistant.helpers.condition import (
     Condition,
     make_entity_numerical_condition,
@@ -59,88 +53,72 @@ CONDITIONS: dict[str, type[Condition]] = {
     "is_smoke_cleared": _make_cleared_condition(BinarySensorDeviceClass.SMOKE),
     # Numerical sensor conditions with unit conversion
     "is_co_value": make_entity_numerical_condition_with_unit(
-        {SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.CO)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.CO)},
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         CarbonMonoxideConcentrationConverter,
     ),
     "is_ozone_value": make_entity_numerical_condition_with_unit(
-        {SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.OZONE)},
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.OZONE)},
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         OzoneConcentrationConverter,
     ),
     "is_voc_value": make_entity_numerical_condition_with_unit(
         {
-            SENSOR_DOMAIN: NumericalDomainSpec(
+            SENSOR_DOMAIN: DomainSpec(
                 device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS
             )
         },
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         MassVolumeConcentrationConverter,
     ),
     "is_voc_ratio_value": make_entity_numerical_condition_with_unit(
         {
-            SENSOR_DOMAIN: NumericalDomainSpec(
+            SENSOR_DOMAIN: DomainSpec(
                 device_class=SensorDeviceClass.VOLATILE_ORGANIC_COMPOUNDS_PARTS
             )
         },
-        CONCENTRATION_PARTS_PER_BILLION,
+        UnitOfRatio.PARTS_PER_BILLION,
         UnitlessRatioConverter,
     ),
     "is_no_value": make_entity_numerical_condition_with_unit(
-        {
-            SENSOR_DOMAIN: NumericalDomainSpec(
-                device_class=SensorDeviceClass.NITROGEN_MONOXIDE
-            )
-        },
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.NITROGEN_MONOXIDE)},
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         NitrogenMonoxideConcentrationConverter,
     ),
     "is_no2_value": make_entity_numerical_condition_with_unit(
-        {
-            SENSOR_DOMAIN: NumericalDomainSpec(
-                device_class=SensorDeviceClass.NITROGEN_DIOXIDE
-            )
-        },
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.NITROGEN_DIOXIDE)},
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         NitrogenDioxideConcentrationConverter,
     ),
     "is_so2_value": make_entity_numerical_condition_with_unit(
-        {
-            SENSOR_DOMAIN: NumericalDomainSpec(
-                device_class=SensorDeviceClass.SULPHUR_DIOXIDE
-            )
-        },
-        CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.SULPHUR_DIOXIDE)},
+        UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
         SulphurDioxideConcentrationConverter,
     ),
     # Numerical sensor conditions without unit conversion (single-unit device classes)
     "is_co2_value": make_entity_numerical_condition(
-        {SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.CO2)},
-        valid_unit=CONCENTRATION_PARTS_PER_MILLION,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.CO2)},
+        valid_unit=UnitOfRatio.PARTS_PER_MILLION,
     ),
     "is_pm1_value": make_entity_numerical_condition(
-        {SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.PM1)},
-        valid_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.PM1)},
+        valid_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     "is_pm25_value": make_entity_numerical_condition(
-        {SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.PM25)},
-        valid_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.PM25)},
+        valid_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     "is_pm4_value": make_entity_numerical_condition(
-        {SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.PM4)},
-        valid_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.PM4)},
+        valid_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     "is_pm10_value": make_entity_numerical_condition(
-        {SENSOR_DOMAIN: NumericalDomainSpec(device_class=SensorDeviceClass.PM10)},
-        valid_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.PM10)},
+        valid_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
     "is_n2o_value": make_entity_numerical_condition(
-        {
-            SENSOR_DOMAIN: NumericalDomainSpec(
-                device_class=SensorDeviceClass.NITROUS_OXIDE
-            )
-        },
-        valid_unit=CONCENTRATION_MICROGRAMS_PER_CUBIC_METER,
+        {SENSOR_DOMAIN: DomainSpec(device_class=SensorDeviceClass.NITROUS_OXIDE)},
+        valid_unit=UnitOfDensity.MICROGRAMS_PER_CUBIC_METER,
     ),
 }
 

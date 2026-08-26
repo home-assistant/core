@@ -1,12 +1,10 @@
 """Data update coordinator for the Radarr integration."""
 
-from __future__ import annotations
-
 from abc import ABC, abstractmethod
 import asyncio
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
-from typing import Generic, TypeVar, cast
+from typing import Generic, TypeVar, cast, override
 
 from aiopyarr import (
     Health,
@@ -24,6 +22,7 @@ from homeassistant.config_entries import ConfigEntry
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
+from homeassistant.util import dt as dt_util
 
 from .const import DOMAIN, LOGGER
 
@@ -57,7 +56,7 @@ class RadarrEvent(CalendarEvent, RadarrEventMixIn):
     """A class to describe a Radarr calendar event."""
 
 
-class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
+class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):  # noqa: UP046
     """Data update coordinator for the Radarr integration."""
 
     config_entry: RadarrConfigEntry
@@ -81,6 +80,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
         self.api_client = api_client
         self.host_configuration = host_configuration
 
+    @override
     async def _async_update_data(self) -> T:
         """Get the latest data from Radarr."""
         try:
@@ -102,6 +102,7 @@ class RadarrDataUpdateCoordinator(DataUpdateCoordinator[T], ABC, Generic[T]):
 class StatusDataUpdateCoordinator(RadarrDataUpdateCoordinator[SystemStatus]):
     """Status update coordinator for Radarr."""
 
+    @override
     async def _fetch_data(self) -> SystemStatus:
         """Fetch the data."""
         return await self.api_client.async_get_system_status()
@@ -110,6 +111,7 @@ class StatusDataUpdateCoordinator(RadarrDataUpdateCoordinator[SystemStatus]):
 class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[RootFolder]]):
     """Disk space update coordinator for Radarr."""
 
+    @override
     async def _fetch_data(self) -> list[RootFolder]:
         """Fetch the data."""
         root_folders = await self.api_client.async_get_root_folders()
@@ -121,6 +123,7 @@ class DiskSpaceDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[RootFolder
 class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
     """Health update coordinator."""
 
+    @override
     async def _fetch_data(self) -> list[Health]:
         """Fetch the health data."""
         health = await self.api_client.async_get_failed_health_checks()
@@ -132,6 +135,7 @@ class HealthDataUpdateCoordinator(RadarrDataUpdateCoordinator[list[Health]]):
 class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
     """Movies count update coordinator."""
 
+    @override
     async def _fetch_data(self) -> int:
         """Fetch the total count of movies in Radarr."""
         return len(cast(list[RadarrMovie], await self.api_client.async_get_movies()))
@@ -140,6 +144,7 @@ class MoviesDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
 class QueueDataUpdateCoordinator(RadarrDataUpdateCoordinator[int]):
     """Queue count update coordinator."""
 
+    @override
     async def _fetch_data(self) -> int:
         """Fetch the number of movies in the download queue."""
         # page_size=1 is sufficient since we only need the totalRecords count
@@ -163,10 +168,11 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         self.event: RadarrEvent | None = None
         self._events: list[RadarrEvent] = []
 
+    @override
     async def _fetch_data(self) -> None:
         """Fetch the calendar."""
         self.event = None
-        _date = datetime.today()
+        _date = dt_util.now()
         while self.event is None:
             await self.async_get_events(_date, _date + timedelta(days=1))
             for event in self._events:
@@ -174,7 +180,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
                     self.event = event
                     break
             # Prevent infinite loop in case there is nothing recent in the calendar
-            if (_date - datetime.today()).days > 45:
+            if (_date - dt_util.now()).days > 45:
                 break
             _date = _date + timedelta(days=1)
 
@@ -186,7 +192,7 @@ class CalendarUpdateCoordinator(RadarrDataUpdateCoordinator[None]):
         self._events = [
             e
             for e in self._events
-            if e.start >= datetime.now().date() - timedelta(days=30)
+            if e.start >= dt_util.now().date() - timedelta(days=30)
         ]
         _days = (end_date - start_date).days
         await asyncio.gather(

@@ -1,7 +1,5 @@
 """The Home Assistant Connect ZBT-2 hardware platform."""
 
-from __future__ import annotations
-
 from homeassistant.components.hardware import HardwareInfo, USBInfo
 from homeassistant.core import HomeAssistant, callback
 
@@ -21,7 +19,9 @@ EXPECTED_ENTRY_VERSION = (
 @callback
 def async_info(hass: HomeAssistant) -> list[HardwareInfo]:
     """Return board info."""
-    entries = hass.config_entries.async_entries(DOMAIN)
+    entries = hass.config_entries.async_entries(
+        DOMAIN, include_ignore=False, include_disabled=False
+    )
     return [
         HardwareInfo(
             board=None,

@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.cambridge_audio_cxnv2_early_update-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Early update',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Early update',
     }),
     'context': <ANY>,
     'entity_id': 'switch.cambridge_audio_cxnv2_early_update',
@@ -89,7 +89,7 @@
 # name: test_all_entities[switch.cambridge_audio_cxnv2_equalizer-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Equalizer',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Equalizer',
     }),
     'context': <ANY>,
     'entity_id': 'switch.cambridge_audio_cxnv2_equalizer',
@@ -139,7 +139,7 @@
 # name: test_all_entities[switch.cambridge_audio_cxnv2_pre_amp-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Pre-Amp',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Pre-Amp',
     }),
     'context': <ANY>,
     'entity_id': 'switch.cambridge_audio_cxnv2_pre_amp',
@@ -189,7 +189,7 @@
 # name: test_all_entities[switch.cambridge_audio_cxnv2_room_correction-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Cambridge Audio CXNv2 Room correction',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Cambridge Audio CXNv2 Room correction',
     }),
     'context': <ANY>,
     'entity_id': 'switch.cambridge_audio_cxnv2_room_correction',

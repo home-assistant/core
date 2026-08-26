@@ -2,7 +2,7 @@
 
 from abc import ABC, abstractmethod
 from collections.abc import Callable, Coroutine
-from typing import TYPE_CHECKING, Any, Concatenate
+from typing import TYPE_CHECKING, Any, Concatenate, override
 
 from eheimdigital.device import EheimDigitalDevice
 from eheimdigital.types import EheimDigitalClientError
@@ -10,11 +10,28 @@ from eheimdigital.types import EheimDigitalClientError
 from homeassistant.const import CONF_HOST
 from homeassistant.core import callback
 from homeassistant.exceptions import HomeAssistantError
+from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
 from .coordinator import EheimDigitalUpdateCoordinator
+
+
+def async_device_info(
+    coordinator: EheimDigitalUpdateCoordinator, device: EheimDigitalDevice
+) -> DeviceInfo:
+    """Return the base device info for an EHEIM Digital device."""
+    return DeviceInfo(
+        configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
+        name=device.name,
+        connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
+        manufacturer="EHEIM",
+        model=device.model_name,
+        identifiers={(DOMAIN, device.mac_address)},
+        suggested_area=device.aquarium_name,
+        sw_version=device.sw_version,
+    )
 
 
 class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
@@ -29,20 +46,22 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
     ) -> None:
         """Initialize a EHEIM Digital entity."""
         super().__init__(coordinator)
+        main = coordinator.hub.main
         if TYPE_CHECKING:
-            # At this point at least one device is found and so there is always a main device set
-            assert isinstance(coordinator.hub.main, EheimDigitalDevice)
-        self._attr_device_info = DeviceInfo(
-            configuration_url=f"http://{coordinator.config_entry.data[CONF_HOST]}",
-            name=device.name,
-            connections={(CONNECTION_NETWORK_MAC, device.mac_address)},
-            manufacturer="EHEIM",
-            model=device.model_name,
-            identifiers={(DOMAIN, device.mac_address)},
-            suggested_area=device.aquarium_name,
-            sw_version=device.sw_version,
-            via_device=(DOMAIN, coordinator.hub.main.mac_address),
-        )
+            # At this point at least one device is found
+            # and so there is always a main device set
+            assert isinstance(main, EheimDigitalDevice)
+        self._attr_device_info = async_device_info(coordinator, device)
+        if device.mac_address != main.mac_address:
+            # The main device is registered during setup, before the platforms
+            # are forwarded, so this link always resolves deterministically.
+            self._attr_device_info["via_device_id"] = (
+                dr.async_get_device_id_by_identifier(
+                    coordinator.hass,
+                    (DOMAIN, main.mac_address),
+                    config_entry_id=coordinator.config_entry.entry_id,
+                )
+            )
         self._device = device
         self._device_address = device.mac_address
 
@@ -50,6 +69,7 @@ class EheimDigitalEntity[_DeviceT: EheimDigitalDevice](
     def _async_update_attrs(self) -> None: ...
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Update attributes when the coordinator updates."""
         self._async_update_attrs()

@@ -1,12 +1,11 @@
 """Test the Nina config flow."""
 
-from __future__ import annotations
-
 from copy import deepcopy
 from typing import Any
 from unittest.mock import AsyncMock
 
-from pynina import ApiError
+from pynina import ApiError, Warning
+import pytest
 
 from homeassistant.components.nina.const import (
     CONF_AREA_FILTER,
@@ -21,11 +20,12 @@ from homeassistant.components.nina.const import (
     CONST_REGION_R_TO_U,
     CONST_REGION_V_TO_Z,
     DOMAIN,
+    SENSOR_SUFFIXES,
 )
 from homeassistant.config_entries import SOURCE_USER
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
 from . import setup_platform
 from .const import DUMMY_USER_INPUT
@@ -76,9 +76,8 @@ async def test_step_user_unexpected_exception(
     assert result["reason"] == "unknown"
 
 
-async def test_step_user(
-    hass: HomeAssistant, mock_setup_entry: AsyncMock, mock_nina_class: AsyncMock
-) -> None:
+@pytest.mark.usefixtures("mock_setup_entry")
+async def test_step_user(hass: HomeAssistant, mock_nina_class: AsyncMock) -> None:
     """Test starting a flow by user with valid values."""
     result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -99,7 +98,14 @@ async def test_step_user_no_selection(
     result: dict[str, Any] = await hass.config_entries.flow.async_init(
         DOMAIN,
         context={"source": SOURCE_USER},
-        data={CONF_FILTERS: {CONF_HEADLINE_FILTER: ""}},
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["errors"] == {}
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={CONF_FILTERS: {CONF_HEADLINE_FILTER: ""}},
     )
 
     assert result["type"] is FlowResultType.FORM
@@ -126,9 +132,9 @@ async def test_step_user_already_configured(
     assert result["reason"] == "single_instance_allowed"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_init(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
@@ -173,9 +179,9 @@ async def test_options_flow_init(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_with_no_selection(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
@@ -237,9 +243,9 @@ async def test_options_flow_with_no_selection(
     }
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_connection_error(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
@@ -257,9 +263,9 @@ async def test_options_flow_connection_error(
     assert result["reason"] == "no_fetch"
 
 
+@pytest.mark.usefixtures("mock_setup_entry")
 async def test_options_flow_unexpected_exception(
     hass: HomeAssistant,
-    mock_setup_entry: AsyncMock,
     mock_config_entry: MockConfigEntry,
     mock_nina_class: AsyncMock,
     nina_warnings: list[Warning],
@@ -285,6 +291,17 @@ async def test_options_flow_entity_removal(
     """Test if old entities are removed."""
     await setup_platform(hass, mock_config_entry, mock_nina_class, nina_warnings)
 
+    entries = er.async_entries_for_config_entry(
+        entity_registry, mock_config_entry.entry_id
+    )
+
+    entities_per_slot = len(SENSOR_SUFFIXES) + 1
+
+    assert (
+        len(entries)
+        == mock_config_entry.data.get(CONF_MESSAGE_SLOTS) * entities_per_slot
+    )
+
     result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
 
     new_slot_count = 2
@@ -309,4 +326,53 @@ async def test_options_flow_entity_removal(
         entity_registry, mock_config_entry.entry_id
     )
 
-    assert len(entries) == new_slot_count
+    assert len(entries) == new_slot_count * entities_per_slot
+
+
+async def test_options_flow_device_removal(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    mock_config_entry_multiple_regions: MockConfigEntry,
+    mock_nina_class: AsyncMock,
+    nina_warnings: list[Warning],
+) -> None:
+    """Test if old devices are removed."""
+    await setup_platform(
+        hass, mock_config_entry_multiple_regions, mock_nina_class, nina_warnings
+    )
+
+    old_devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry_multiple_regions.entry_id
+    )
+
+    assert len(old_devices) == len(
+        mock_config_entry_multiple_regions.data.get(CONF_REGIONS, [])
+    )
+
+    result = await hass.config_entries.options.async_init(
+        mock_config_entry_multiple_regions.entry_id
+    )
+
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_MESSAGE_SLOTS: 5,
+            CONST_REGION_A_TO_D: ["095760000000_0"],
+            CONST_REGION_E_TO_H: [],
+            CONST_REGION_I_TO_L: [],
+            CONST_REGION_M_TO_Q: [],
+            CONST_REGION_R_TO_U: [],
+            CONST_REGION_V_TO_Z: [],
+            CONF_FILTERS: {},
+        },
+    )
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+
+    devices = dr.async_entries_for_config_entry(
+        device_registry, mock_config_entry_multiple_regions.entry_id
+    )
+
+    assert not any(
+        old_device.id in (device.id for device in devices) for old_device in old_devices
+    )

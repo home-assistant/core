@@ -138,6 +138,10 @@
           "energy_flap_opened": "Energy flap opened",
           "not_in_charge": "Not charging",
           "unavailable": "Unavailable",
+          "v2g_charging_normal": "Vehicle to grid charging",
+          "v2g_charging_waiting": "Vehicle to grid charging waiting",
+          "v2g_discharging": "Vehicle to grid discharging",
+          "v2l_connected": "Vehicle to load connected",
           "waiting_for_a_planned_charge": "Waiting for planned charge",
           "waiting_for_current_charge": "Waiting for current charge"
         }
@@ -153,6 +157,7 @@
         "state": {
           "always": "Always",
           "delayed": "Delayed",
+          "delegated": "Delegated",
           "scheduled": "Scheduled"
         }
       },
@@ -276,6 +281,20 @@
         }
       },
       "name": "Update charge schedule"
+    },
+    "charge_start": {
+      "description": "Starts charging on vehicle.",
+      "fields": {
+        "vehicle": {
+          "description": "[%key:component::renault::services::ac_start::fields::vehicle::description%]",
+          "name": "Vehicle"
+        },
+        "when": {
+          "description": "Timestamp for charging to start (optional - defaults to now).",
+          "name": "When"
+        }
+      },
+      "name": "Start charging"
     }
   }
 }

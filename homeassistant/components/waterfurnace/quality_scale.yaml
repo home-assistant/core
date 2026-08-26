@@ -12,9 +12,15 @@ rules:
   docs-actions:
     status: exempt
     comment: This integration does not have custom service actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
   docs-high-level-description: done
   docs-installation-instructions: done
   docs-removal-instructions: done
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
   entity-event-setup:
     status: exempt
     comment: This integration does not subscribe to events.
@@ -29,7 +35,7 @@ rules:
   action-exceptions:
     status: exempt
     comment: This integration does not have custom service actions.
-  config-entry-unloading: todo
+  config-entry-unloading: done
   docs-configuration-parameters: done
   docs-installation-parameters: done
   entity-unavailable: done

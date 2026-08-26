@@ -102,8 +102,8 @@ async def test_connection_error_and_recovery(
     assert len(mock_setup_entry.mock_calls) == 1
 
 
-@pytest.mark.usefixtures("mock_system_nexa_2_device")
-async def test_empty_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_system_nexa_2_device", "mock_setup_entry")
+async def test_empty_host(hass: HomeAssistant) -> None:
     """Test invalid hostname/IP address handling."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}
@@ -124,8 +124,8 @@ async def test_empty_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> N
     assert result["type"] is FlowResultType.CREATE_ENTRY
 
 
-@pytest.mark.usefixtures("mock_system_nexa_2_device")
-async def test_invalid_host(hass: HomeAssistant, mock_setup_entry: AsyncMock) -> None:
+@pytest.mark.usefixtures("mock_system_nexa_2_device", "mock_setup_entry")
+async def test_invalid_host(hass: HomeAssistant) -> None:
     """Test invalid hostname/IP address handling."""
     result = await hass.config_entries.flow.async_init(
         DOMAIN, context={"source": SOURCE_USER}

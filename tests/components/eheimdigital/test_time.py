@@ -55,13 +55,13 @@ async def test_setup(
             "heater_mock",
             [
                 (
-                    "time.mock_heater_day_start_time",
+                    "time.mock_aquarium_mock_heater_day_start_time",
                     time(9, 0, tzinfo=timezone(timedelta(hours=1))),
                     "dayStartT",
                     9 * 60,
                 ),
                 (
-                    "time.mock_heater_night_start_time",
+                    "time.mock_aquarium_mock_heater_night_start_time",
                     time(19, 0, tzinfo=timezone(timedelta(hours=1))),
                     "nightStartT",
                     19 * 60,
@@ -72,13 +72,13 @@ async def test_setup(
             "classic_vario_mock",
             [
                 (
-                    "time.mock_classicvario_day_start_time",
+                    "time.mock_aquarium_mock_classicvario_day_start_time",
                     time(9, 0, tzinfo=timezone(timedelta(hours=1))),
                     "startTime_day",
                     9 * 60,
                 ),
                 (
-                    "time.mock_classicvario_night_start_time",
+                    "time.mock_aquarium_mock_classicvario_night_start_time",
                     time(19, 0, tzinfo=timezone(timedelta(hours=1))),
                     "startTime_night",
                     19 * 60,
@@ -89,13 +89,13 @@ async def test_setup(
             "filter_mock",
             [
                 (
-                    "time.mock_filter_day_start_time",
+                    "time.mock_aquarium_mock_filter_day_start_time",
                     time(9, 0, tzinfo=timezone(timedelta(hours=1))),
                     "end_time_night_mode",
                     9 * 60,
                 ),
                 (
-                    "time.mock_filter_night_start_time",
+                    "time.mock_aquarium_mock_filter_night_start_time",
                     time(19, 0, tzinfo=timezone(timedelta(hours=1))),
                     "start_time_night_mode",
                     19 * 60,
@@ -106,7 +106,7 @@ async def test_setup(
             "reeflex_mock",
             [
                 (
-                    "time.mock_reeflex_start_time",
+                    "time.mock_aquarium_mock_reeflex_start_time",
                     time(9, 0, tzinfo=timezone(timedelta(hours=1))),
                     "startTime",
                     9 * 60,
@@ -151,14 +151,14 @@ async def test_set_value(
             "heater_mock",
             [
                 (
-                    "time.mock_heater_day_start_time",
+                    "time.mock_aquarium_mock_heater_day_start_time",
                     "heater_data",
                     "dayStartT",
                     540,
                     time(9, 0, tzinfo=timezone(timedelta(hours=1))).isoformat(),
                 ),
                 (
-                    "time.mock_heater_night_start_time",
+                    "time.mock_aquarium_mock_heater_night_start_time",
                     "heater_data",
                     "nightStartT",
                     1140,
@@ -170,14 +170,14 @@ async def test_set_value(
             "classic_vario_mock",
             [
                 (
-                    "time.mock_classicvario_day_start_time",
+                    "time.mock_aquarium_mock_classicvario_day_start_time",
                     "classic_vario_data",
                     "startTime_day",
                     540,
                     time(9, 0, tzinfo=timezone(timedelta(hours=1))).isoformat(),
                 ),
                 (
-                    "time.mock_classicvario_night_start_time",
+                    "time.mock_aquarium_mock_classicvario_night_start_time",
                     "classic_vario_data",
                     "startTime_night",
                     1320,
@@ -189,14 +189,14 @@ async def test_set_value(
             "filter_mock",
             [
                 (
-                    "time.mock_filter_day_start_time",
+                    "time.mock_aquarium_mock_filter_day_start_time",
                     "filter_data",
                     "end_time_night_mode",
                     540,
                     time(9, 0, tzinfo=timezone(timedelta(hours=1))).isoformat(),
                 ),
                 (
-                    "time.mock_filter_night_start_time",
+                    "time.mock_aquarium_mock_filter_night_start_time",
                     "filter_data",
                     "start_time_night_mode",
                     1320,
@@ -208,7 +208,7 @@ async def test_set_value(
             "reeflex_mock",
             [
                 (
-                    "time.mock_reeflex_start_time",
+                    "time.mock_aquarium_mock_reeflex_start_time",
                     "reeflex_data",
                     "startTime",
                     540,

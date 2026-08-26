@@ -1,7 +1,5 @@
 """Map Z-Wave nodes and values to Home Assistant entities."""
 
-from __future__ import annotations
-
 from collections.abc import Generator
 from dataclasses import dataclass
 from typing import cast
@@ -112,6 +110,8 @@ class ZWaveDiscoverySchema:
     firmware_version_range: FirmwareVersionRange | None = None
     # [optional] the node's generic device class must match ANY of these values
     device_class_generic: set[str] | None = None
+    # [optional] the node's or endpoint's generic device class must NOT match ANY of these values
+    not_device_class_generic: set[str] | None = None
     # [optional] the node's specific device class must match ANY of these values
     device_class_specific: set[str] | None = None
     # [optional] additional values that ALL need to be present
@@ -256,6 +256,18 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
         data_template=FixedFanValueMappingDataTemplate(
             FanValueMapping(speeds=[(1, 25), (26, 50), (51, 75), (76, 99)]),
+        ),
+    ),
+    # Leviton VRF01 fan controllers using switch multilevel CC
+    ZWaveDiscoverySchema(
+        platform=Platform.FAN,
+        hint="has_fan_value_mapping",
+        manufacturer_id={0x001D},
+        product_id={0x0209, 0x0334},
+        product_type={0x1001},
+        primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
+        data_template=FixedFanValueMappingDataTemplate(
+            FanValueMapping(speeds=[(1, 32), (33, 66), (67, 99)]),
         ),
     ),
     # Inovelli LZW36 light / fan controller combo using switch multilevel CC
@@ -538,12 +550,12 @@ DISCOVERY_SCHEMAS = [
         primary_value=SWITCH_BINARY_CURRENT_VALUE_SCHEMA,
         assumed_state=True,
     ),
-    # Heatit Z-TRM6
+    # Heatit Z-TRM6 / Z-TRM7 (same sensor-mode / endpoint mapping)
     ZWaveDiscoverySchema(
         platform=Platform.CLIMATE,
         hint="dynamic_current_temp",
         manufacturer_id={0x019B},
-        product_id={0x3001},
+        product_id={0x3001, 0x3006},
         product_type={0x0030},
         primary_value=ZWaveValueDiscoverySchema(
             command_class={CommandClass.THERMOSTAT_MODE},
@@ -576,7 +588,8 @@ DISCOVERY_SCHEMAS = [
                     command_class=CommandClass.SENSOR_MULTILEVEL,
                     endpoint=3,
                 ),
-                # External sensor (connected to device) with limit by floor sensor (2x sensors)
+                # External sensor (connected to device) with
+                # limit by floor sensor (2x sensors)
                 "External with floor limit": ZwaveValueID(
                     property_=THERMOSTAT_CURRENT_TEMP_PROPERTY,
                     command_class=CommandClass.SENSOR_MULTILEVEL,
@@ -1053,13 +1066,15 @@ DISCOVERY_SCHEMAS = [
         device_class_generic={"Thermostat"},
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
     ),
-    # Handle the different combinations of Binary Switch, Multilevel Switch and Color Switch
+    # Handle the different combinations of Binary Switch,
+    # Multilevel Switch and Color Switch
     # to create switches and/or (colored) lights. The goal is to:
     # - couple Color Switch CC with Multilevel Switch CC if possible
     # - couple Color Switch CC with Binary Switch CC as the first fallback
     # - use Color Switch CC standalone as the last fallback
     #
-    # Multilevel Switch CC (+ Color Switch CC) -> Dimmable light with or without color support.
+    # Multilevel Switch CC (+ Color Switch CC) -> Dimmable
+    # light with or without color support.
     ZWaveDiscoverySchema(
         platform=Platform.LIGHT,
         primary_value=SWITCH_MULTILEVEL_CURRENT_VALUE_SCHEMA,
@@ -1284,19 +1299,19 @@ def async_discover_single_value(
             continue
 
         # check firmware_version_range
-        if schema.firmware_version_range is not None and (
-            (
+        if schema.firmware_version_range is not None:
+            # skip schema if device firmware version is unknown
+            if value.node.firmware_version is None:
+                continue
+            node_firmware = AwesomeVersion(value.node.firmware_version)
+            if (
                 schema.firmware_version_range.min is not None
-                and schema.firmware_version_range.min_ver
-                > AwesomeVersion(value.node.firmware_version)
-            )
-            or (
+                and schema.firmware_version_range.min_ver > node_firmware
+            ) or (
                 schema.firmware_version_range.max is not None
-                and schema.firmware_version_range.max_ver
-                < AwesomeVersion(value.node.firmware_version)
-            )
-        ):
-            continue
+                and schema.firmware_version_range.max_ver < node_firmware
+            ):
+                continue
 
         # check device_class_generic
         # If the value has an endpoint but it is missing on the node
@@ -1317,6 +1332,29 @@ def async_discover_single_value(
                 or not any(
                     device_class.generic.label == val
                     for val in schema.device_class_generic
+                )
+            )
+        ):
+            continue
+
+        # check not_device_class_generic
+        # Skip the schema if the endpoint's or the node's generic device class
+        # matches any of the excluded values.
+        if schema.not_device_class_generic and (
+            (
+                (endpoint := value.endpoint) is not None
+                and (node_endpoint := value.node.endpoints.get(endpoint)) is not None
+                and (device_class := node_endpoint.device_class) is not None
+                and any(
+                    device_class.generic.label == val
+                    for val in schema.not_device_class_generic
+                )
+            )
+            or (
+                (device_class := value.node.device_class) is not None
+                and any(
+                    device_class.generic.label == val
+                    for val in schema.not_device_class_generic
                 )
             )
         ):

@@ -1,7 +1,5 @@
 """The Aranet integration."""
 
-from __future__ import annotations
-
 import logging
 
 from aranet4.client import Aranet4Advertisement

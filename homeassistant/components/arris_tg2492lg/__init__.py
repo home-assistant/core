@@ -1,1 +1,1 @@
-"""The Arris TG2492LG component."""
+"""The Arris TG2492LG integration."""
