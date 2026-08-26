@@ -377,9 +377,7 @@ async def async_setup_entry(
         else:
             # No cached API (normal setup or migration didn't run)
             # Create new API instance and login
-            api, _ = await _create_api_and_login(
-                hass, username, password, url
-            )
+            api, _ = await _create_api_and_login(hass, username, password, url)
 
         # Get plant_id and devices using the authenticated session
         plant_id = config[CONF_PLANT_ID]
