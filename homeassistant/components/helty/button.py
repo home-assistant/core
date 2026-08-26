@@ -1,5 +1,7 @@
 """Button platform for the Helty Flow integration."""
 
+from typing import override
+
 from pyhelty import HeltyError
 
 from homeassistant.components.button import ButtonEntity
@@ -35,6 +37,7 @@ class HeltyResetFilterButton(HeltyEntity, ButtonEntity):
         super().__init__(coordinator)
         self._attr_unique_id = f"{self._device_id}_reset_filter"
 
+    @override
     async def async_press(self) -> None:
         """Reset the filter-life counter."""
         try:

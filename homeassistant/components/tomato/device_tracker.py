@@ -4,6 +4,7 @@ from http import HTTPStatus
 import json
 import logging
 import re
+from typing import override
 
 import requests
 import voluptuous as vol
@@ -73,12 +74,14 @@ class TomatoDeviceScanner(DeviceScanner):
 
         self.success_init = self._update_tomato_info()
 
+    @override
     def scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         self._update_tomato_info()
 
         return [item[1] for item in self.last_results["wldev"]]
 
+    @override
     def get_device_name(self, device):
         """Return the name of the given device or None if we don't know."""
         filter_named = [

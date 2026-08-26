@@ -1,6 +1,6 @@
 """Cover entity for Nice G.O."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.components.cover import (
     CoverDeviceClass,
@@ -43,11 +43,13 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
     _attr_name = None
 
     @property
+    @override
     def device_class(self) -> CoverDeviceClass:
         """Return the class of this device, from component DEVICE_CLASSES."""
         return DEVICE_CLASSES.get(self.data.type, CoverDeviceClass.GARAGE)
 
     @property
+    @override
     def is_closed(self) -> bool:
         """Return if cover is closed."""
         return self.data.barrier_status == "closed"
@@ -58,16 +60,19 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
         return self.data.barrier_status == "open"
 
     @property
+    @override
     def is_opening(self) -> bool:
         """Return if cover is opening."""
         return self.data.barrier_status == "opening"
 
     @property
+    @override
     def is_closing(self) -> bool:
         """Return if cover is closing."""
         return self.data.barrier_status == "closing"
 
     @retry("close_cover_error")
+    @override
     async def async_close_cover(self, **kwargs: Any) -> None:
         """Close the garage door."""
         if self.is_closed:
@@ -76,6 +81,7 @@ class NiceGOCoverEntity(NiceGOEntity, CoverEntity):
         await self.coordinator.api.close_barrier(self._device_id)
 
     @retry("open_cover_error")
+    @override
     async def async_open_cover(self, **kwargs: Any) -> None:
         """Open the garage door."""
         if self.is_opened:

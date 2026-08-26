@@ -20,9 +20,12 @@ from homeassistant.components.sensor import (
 from homeassistant.components.unifi.const import (
     CONF_ALLOW_BANDWIDTH_SENSORS,
     CONF_ALLOW_UPTIME_SENSORS,
+    CONF_CLIENT_SOURCE,
     CONF_DETECTION_TIME,
+    CONF_IGNORE_LOCAL_MAC,
     CONF_TRACK_CLIENTS,
     CONF_TRACK_DEVICES,
+    CONF_TRACK_WIRED_CLIENTS,
     DEFAULT_DETECTION_TIME,
     DEVICE_STATES,
 )
@@ -35,7 +38,7 @@ from homeassistant.const import (
     Platform,
 )
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 from homeassistant.helpers.entity_registry import RegistryEntryDisabler
 from homeassistant.util import dt as dt_util
 
@@ -65,6 +68,27 @@ WIRELESS_CLIENT = {
     "rx_bytes-r": 2345000000.0,
     "tx_bytes-r": 6789000000.0,
     "uptime": 60,
+}
+# Wi-Fi client with a private (locally-administered) MAC (U/L bit set in first octet)
+WIRELESS_LOCAL_MAC_CLIENT = {
+    "is_wired": False,
+    "mac": "02:00:00:00:00:03",
+    "name": "Wireless local mac client",
+    "oui": "Producer",
+    "rx_bytes-r": 2345000000.0,
+    "tx_bytes-r": 6789000000.0,
+    "uptime": 60,
+}
+# Wired client with a locally-administered MAC (e.g. a Docker container) - not filtered
+WIRED_LOCAL_MAC_CLIENT = {
+    "hostname": "Wired local mac client",
+    "is_wired": True,
+    "mac": "02:00:00:00:00:04",
+    "oui": "Producer",
+    "wired-rx_bytes-r": 1234000000,
+    "wired-tx_bytes-r": 5678000000,
+    "uptime": 1600094505,
+    "wired_rate_mbps": 1000,
 }
 
 DEVICE_1 = {
@@ -338,6 +362,49 @@ PDU_OUTLETS_UPDATE_DATA = [
     },
 ]
 
+UPS_DEVICE_1 = deepcopy(PDU_DEVICE_1)
+UPS_DEVICE_1.update(
+    {
+        "device_id": "mock-ups",
+        "mac": "02:00:00:00:00:01",
+        "model": "USPDA2B",
+        "name": "Dummy UPS 2U Pro",
+        "type": "usp",
+        "outlet_table": [
+            {
+                "index": 1,
+                "relay_state": True,
+                "cycle_enabled": False,
+                "name": "Outlet 1",
+                "outlet_caps": 65539,
+                "outlet_voltage": 121.7,
+                "outlet_current": 0.35,
+                "outlet_power": 42.5,
+                "outlet_power_factor": 0.98,
+            },
+            {
+                "index": 2,
+                "relay_state": True,
+                "cycle_enabled": False,
+                "has_metering": True,
+                "name": "Outlet 2",
+                "outlet_voltage": 121.7,
+                "outlet_current": 0.1,
+                "outlet_power": 12.5,
+                "outlet_power_factor": 0.95,
+            },
+        ],
+        "outlet_overrides": [
+            {
+                "cycle_enabled": False,
+                "name": "Outlet 1",
+                "relay_state": True,
+                "index": 1,
+            }
+        ],
+    }
+)
+
 
 @pytest.mark.parametrize(
     "config_entry_options",
@@ -577,6 +644,92 @@ async def test_wired_client_speed_sensor(
         await hass.async_block_till_done()
 
     assert hass.states.get("sensor.wired_client_link_speed").state == STATE_UNAVAILABLE
+
+
+@pytest.mark.parametrize(
+    ("config_entry_options", "wireless_local_mac_has_sensors"),
+    [
+        (
+            {
+                CONF_ALLOW_BANDWIDTH_SENSORS: True,
+                CONF_ALLOW_UPTIME_SENSORS: True,
+                CONF_IGNORE_LOCAL_MAC: True,
+            },
+            False,
+        ),
+        (
+            {
+                CONF_ALLOW_BANDWIDTH_SENSORS: True,
+                CONF_ALLOW_UPTIME_SENSORS: True,
+                CONF_IGNORE_LOCAL_MAC: True,
+                CONF_CLIENT_SOURCE: [WIRELESS_LOCAL_MAC_CLIENT["mac"]],
+            },
+            True,
+        ),
+    ],
+    ids=["ignored", "allowlist_overrides"],
+)
+@pytest.mark.parametrize(
+    "client_payload",
+    [[WIRED_CLIENT, WIRELESS_LOCAL_MAC_CLIENT, WIRED_LOCAL_MAC_CLIENT]],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+async def test_ignore_local_mac_client_sensors(
+    hass: HomeAssistant,
+    wireless_local_mac_has_sensors: bool,
+) -> None:
+    """Only Wi-Fi clients with private MACs are filtered when the option is enabled."""
+    # The universal-MAC wired client always keeps its client sensors
+    assert hass.states.get("sensor.wired_client_link_speed")
+    assert hass.states.get("sensor.wired_client_rx")
+    assert hass.states.get("sensor.wired_client_tx")
+    assert hass.states.get("sensor.wired_client_uptime")
+
+    # A wired locally-administered MAC (e.g. Docker) is never filtered
+    assert hass.states.get("sensor.wired_local_mac_client_link_speed")
+    assert hass.states.get("sensor.wired_local_mac_client_rx")
+    assert hass.states.get("sensor.wired_local_mac_client_tx")
+    assert hass.states.get("sensor.wired_local_mac_client_uptime")
+
+    # The Wi-Fi private-MAC client only keeps its sensors via the allowlist
+    for entity_id in (
+        "sensor.wireless_local_mac_client_rx",
+        "sensor.wireless_local_mac_client_tx",
+        "sensor.wireless_local_mac_client_uptime",
+    ):
+        assert (
+            hass.states.get(entity_id) is not None
+        ) == wireless_local_mac_has_sensors
+
+
+@pytest.mark.parametrize(
+    "config_entry_options",
+    [
+        {
+            CONF_TRACK_CLIENTS: False,
+            CONF_TRACK_WIRED_CLIENTS: False,
+            CONF_TRACK_DEVICES: False,
+        }
+    ],
+)
+@pytest.mark.parametrize("client_payload", [[WIRED_CLIENT]])
+async def test_wired_client_speed_sensor_not_created_when_untracked(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+    device_registry: dr.DeviceRegistry,
+    client_payload: list[dict[str, Any]],
+    config_entry_setup: MockConfigEntry,
+) -> None:
+    """Verify untracked wired clients create neither a link speed sensor nor a device."""
+    assert entity_registry.async_get("sensor.wired_client_link_speed") is None
+    assert (
+        device_registry.async_get_device_by_connection(
+            (dr.CONNECTION_NETWORK_MAC, client_payload[0]["mac"]),
+            config_entry_setup.entry_id,
+        )
+        is None
+    )
 
 
 @pytest.mark.parametrize(
@@ -844,6 +997,27 @@ async def test_outlet_power_readings(
         await hass.async_block_till_done()
 
         assert hass.states.get(f"sensor.{entity_id}").state == expected_update_value
+
+
+@pytest.mark.parametrize("device_payload", [[UPS_DEVICE_1]])
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_outlet_power_reading_extended_caps(
+    hass: HomeAssistant,
+    mock_websocket_message: WebsocketMessageMock,
+) -> None:
+    """Test outlet power reporting with extended capability bits and numeric values."""
+    entity_id = "sensor.dummy_ups_2u_pro_outlet_1_outlet_power"
+    assert hass.states.get(entity_id).state == "42.5"
+    assert (
+        hass.states.get("sensor.dummy_ups_2u_pro_outlet_2_outlet_power").state == "12.5"
+    )
+
+    updated_device_data = deepcopy(UPS_DEVICE_1)
+    updated_device_data["outlet_table"][0]["outlet_power"] = 43.5
+    mock_websocket_message(message=MessageKey.DEVICE, data=updated_device_data)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "43.5"
 
 
 @pytest.mark.parametrize(
@@ -1681,6 +1855,47 @@ async def test_wan_monitor_latency_with_no_uptime(
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Verify that wan latency sensors is not created if there is no data."""
+
+    assert len(hass.states.async_all()) == 6
+    assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2
+
+    latency_entry = entity_registry.async_get("sensor.mock_name_google_wan_latency")
+    assert latency_entry is None
+
+
+@pytest.mark.parametrize(
+    "device_payload",
+    [
+        [
+            {
+                "board_rev": 2,
+                "device_id": "mock-id",
+                "ip": "10.0.1.1",
+                "mac": "10:00:00:00:01:01",
+                "last_seen": 1562600145,
+                "model": "US16P150",
+                "name": "mock-name",
+                "port_overrides": [],
+                # A cellular/5G WAN reports uptime stats without a "monitors" key.
+                "uptime_stats": {
+                    "WAN": {
+                        "availability": 100.0,
+                        "latency_average": 39,
+                    },
+                },
+                "state": 1,
+                "type": "usw",
+                "version": "4.0.42.10433",
+            }
+        ]
+    ],
+)
+@pytest.mark.usefixtures("config_entry_setup")
+async def test_wan_monitor_latency_without_monitors_key(
+    hass: HomeAssistant,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Verify setup succeeds when a WAN's uptime stats omit the 'monitors' key."""
 
     assert len(hass.states.async_all()) == 6
     assert len(hass.states.async_entity_ids(SENSOR_DOMAIN)) == 2

@@ -1,6 +1,7 @@
 """Coordinator for Guntamatic integration."""
 
 import logging
+from typing import override
 
 from guntamatic.heater import Heater
 import requests
@@ -31,6 +32,7 @@ class GuntamaticCoordinator(DataUpdateCoordinator[dict[str, list[str]]]):
         )
         self.heater = Heater(entry.data[CONF_HOST])
 
+    @override
     async def _async_update_data(self) -> dict[str, list[str]]:
         """Fetch data from heater."""
         try:

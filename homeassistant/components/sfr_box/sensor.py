@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from dataclasses import dataclass
+from typing import override
 
 from sfrbox_api.models import DslInfo, SystemInfo, VoipInfo, WanInfo
 
@@ -264,6 +265,7 @@ class SFRBoxSensor[_T](SFRCoordinatorEntity[_T], SensorEntity):
     entity_description: SFRBoxSensorEntityDescription[_T]
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the native value of the device."""
         return self.entity_description.value_fn(self.coordinator.data)

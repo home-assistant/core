@@ -15,9 +15,12 @@
       "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "reauth_wrong_account": "You can only reauthenticate this entry with the same Overkiz account and hub",
+      "reconfigure_successful": "[%key:common::config_flow::abort::reconfigure_successful%]",
+      "reconfigure_wrong_account": "You can only reconfigure this entry with the same Overkiz account and hub",
       "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]"
     },
     "error": {
+      "application_not_allowed": "Your setup cannot be accessed through this application.",
       "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
       "certificate_verify_failed": "Cannot connect to host, certificate verify failed.",
       "developer_mode_disabled": "Developer Mode disabled. Activate the Developer Mode of your Somfy TaHoma box first.",

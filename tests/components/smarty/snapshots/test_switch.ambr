@@ -39,7 +39,7 @@
 # name: test_all_entities[switch.mock_title_boost-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      'friendly_name': 'Mock Title Boost',
+      <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Mock Title Boost',
     }),
     'context': <ANY>,
     'entity_id': 'switch.mock_title_boost',

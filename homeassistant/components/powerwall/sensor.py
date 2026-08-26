@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from operator import attrgetter, methodcaller
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 from tesla_powerwall import (
     BatteryResponse,
@@ -288,11 +288,13 @@ class PowerWallChargeSensor(PowerWallEntity, SensorEntity):
     _attr_device_class = SensorDeviceClass.BATTERY
 
     @property
+    @override
     def unique_id(self) -> str:
         """Device Unique ID."""
         return f"{self.base_unique_id}_charge"
 
     @property
+    @override
     def native_value(self) -> int:
         """Get the current value in percentage."""
         return round(self.data.charge)
@@ -317,6 +319,7 @@ class PowerWallEnergySensor(PowerWallEntity, SensorEntity):
         self._attr_unique_id = f"{self.base_unique_id}_{meter.value}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Get the current value."""
         meter = self.data.meters.get_meter(self._meter)
@@ -334,11 +337,13 @@ class PowerWallBackupReserveSensor(PowerWallEntity, SensorEntity):
     _attr_native_unit_of_measurement = PERCENTAGE
 
     @property
+    @override
     def unique_id(self) -> str:
         """Device Unique ID."""
         return f"{self.base_unique_id}_backup_reserve"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Get the current value in percentage."""
         if self.data.backup_reserve is None:
@@ -362,6 +367,7 @@ class PowerWallMaxPowerSensor(PowerWallEntity, SensorEntity):
         self._attr_unique_id = f"{self.base_unique_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> int | None:
         """Get the current value in watts."""
         return self.entity_description.value_fn(self.data)
@@ -375,11 +381,13 @@ class PowerWallOperationModeSensor(PowerWallEntity, SensorEntity):
     _attr_options = [mode.value for mode in OperationMode]
 
     @property
+    @override
     def unique_id(self) -> str:
         """Device Unique ID."""
         return f"{self.base_unique_id}_operation_mode"
 
     @property
+    @override
     def native_value(self) -> str | None:
         """Get the current operation mode."""
         if self.data.operation_mode is None:
@@ -407,6 +415,7 @@ class PowerWallEnergyDirectionSensor(PowerWallEntity, SensorEntity):
         self._attr_unique_id = f"{self.base_unique_id}_{meter.value}_{meter_direction}"
 
     @property
+    @override
     def available(self) -> bool:
         """Check if the reading is actually available.
 
@@ -434,6 +443,7 @@ class PowerWallExportSensor(PowerWallEnergyDirectionSensor):
         super().__init__(powerwall_data, meter, _METER_DIRECTION_EXPORT)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Get the current value in kWh."""
         meter = self.meter
@@ -454,6 +464,7 @@ class PowerWallImportSensor(PowerWallEnergyDirectionSensor):
         super().__init__(powerwall_data, meter, _METER_DIRECTION_IMPORT)
 
     @property
+    @override
     def native_value(self) -> float | None:
         """Get the current value in kWh."""
         meter = self.meter
@@ -480,6 +491,7 @@ class PowerWallBatterySensor[_ValueT: _ValueType](BatteryEntity, SensorEntity):
         self._attr_unique_id = f"{self.base_unique_id}_{description.key}"
 
     @property
+    @override
     def native_value(self) -> float | int | str | None:
         """Get the current value."""
         return self.entity_description.value_fn(self.battery_data)

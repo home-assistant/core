@@ -13,6 +13,7 @@ AUTH_RETRIES = 2
 
 ATTR_EVENT_SCORE = "event_score"
 ATTR_EVENT_ID = "event_id"
+ATTR_SMART_DETECT_TYPES = "smart_detect_types"
 ATTR_WIDTH = "width"
 ATTR_HEIGHT = "height"
 ATTR_FPS = "fps"
@@ -41,7 +42,6 @@ DEFAULT_VERIFY_SSL = False
 DEFAULT_MAX_MEDIA = 1000
 
 DEVICES_THAT_ADOPT = {
-    ModelType.AIPORT,
     ModelType.CAMERA,
     ModelType.LIGHT,
     ModelType.VIEWPORT,
@@ -55,7 +55,7 @@ DEVICES_FOR_SUBSCRIBE = DEVICES_WITH_ENTITIES | {ModelType.EVENT}
 # the public API devices WebSocket.
 DEVICES_WS_SUBSCRIBED_MODELS: set[ModelType] = set()
 
-MIN_REQUIRED_PROTECT_V = Version("6.0.0")
+MIN_REQUIRED_PROTECT_V = Version("7.1.0")
 OUTDATED_LOG_MESSAGE = (
     "You are running v%s of UniFi Protect. Minimum required version is v%s. Please"
     " upgrade UniFi Protect and then retry"
@@ -87,6 +87,7 @@ EVENT_TYPE_FINGERPRINT_IDENTIFIED: Final = "identified"
 EVENT_TYPE_FINGERPRINT_NOT_IDENTIFIED: Final = "not_identified"
 EVENT_TYPE_NFC_SCANNED: Final = "scanned"
 EVENT_TYPE_VEHICLE_DETECTED: Final = "detected"
+EVENT_TYPE_PACKAGE_DETECTED: Final = "detected"
 
 # Delay in seconds before firing vehicle event after last thumbnail
 VEHICLE_EVENT_DELAY_SECONDS: Final = 3

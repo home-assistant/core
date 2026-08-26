@@ -2,6 +2,7 @@
 
 from datetime import timedelta
 from enum import StrEnum, auto
+from typing import override
 
 from sensoterra.probe import Probe, Sensor
 
@@ -151,12 +152,14 @@ class SensoterraEntity(CoordinatorEntity[SensoterraCoordinator], SensorEntity):
         return self.coordinator.get_sensor(self._sensor_id)
 
     @property
+    @override
     def native_value(self) -> StateType:
         """Return the value reported by the sensor."""
         assert self.sensor
         return self.sensor.value
 
     @property
+    @override
     def available(self) -> bool:
         """Return True if entity is available."""
         if not super().available or (sensor := self.sensor) is None:

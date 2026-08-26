@@ -1,6 +1,7 @@
 """Support for Sky Hub."""
 
 import logging
+from typing import override
 
 from pyskyqhub.skyq_hub import SkyQHub
 import voluptuous as vol
@@ -47,11 +48,13 @@ class SkyHubDeviceScanner(DeviceScanner):
         self._hub = hub
         self.last_results = {}
 
+    @override
     async def async_scan_devices(self):
         """Scan for new devices and return a list with found device IDs."""
         await self._async_update_info()
         return [device.mac for device in self.last_results]
 
+    @override
     async def async_get_device_name(self, device):
         """Return the name of the given device."""
         return next(
@@ -59,6 +62,7 @@ class SkyHubDeviceScanner(DeviceScanner):
             None,
         )
 
+    @override
     async def async_get_extra_attributes(self, device):
         """Get extra attributes of a device."""
         device = next(

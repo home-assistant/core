@@ -19,7 +19,6 @@ from homeassistant.helpers import (
     integration_platform,
     issue_registry as ir,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
 from homeassistant.helpers.json import (
     ExtendedJSONEncoder,
     find_paths_unserializable_data,
@@ -36,9 +35,14 @@ from homeassistant.util.hass_dict import HassKey
 from homeassistant.util.json import format_unserializable_data
 
 from .const import DOMAIN, REDACTED, DiagnosticsSubType, DiagnosticsType
-from .util import async_redact_data, entity_entry_as_dict
+from .util import async_redact_data, device_entry_as_dict, entity_entry_as_dict
 
-__all__ = ["REDACTED", "async_redact_data", "entity_entry_as_dict"]
+__all__ = [
+    "REDACTED",
+    "async_redact_data",
+    "device_entry_as_dict",
+    "entity_entry_as_dict",
+]
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -57,7 +61,7 @@ class DiagnosticsPlatformData:
     )
     device_diagnostics: (
         Callable[
-            [HomeAssistant, ConfigEntry, DeviceEntry],
+            [HomeAssistant, ConfigEntry, dr.AnyDeviceEntry],
             Coroutine[Any, Any, Mapping[str, Any]],
         ]
         | None
@@ -95,9 +99,12 @@ class DiagnosticsProtocol(Protocol):
         """Return diagnostics for a config entry."""
 
     async def async_get_device_diagnostics(
-        self, hass: HomeAssistant, config_entry: ConfigEntry, device: DeviceEntry
+        self, hass: HomeAssistant, config_entry: ConfigEntry, device: dr.AnyDeviceEntry
     ) -> Mapping[str, Any]:
-        """Return diagnostics for a device."""
+        """Return diagnostics for a device.
+
+        Only integrations that register child devices can receive a child device.
+        """
 
 
 @callback

@@ -63,13 +63,12 @@ async def test_remove_stale_devices(
         await hass.config_entries.async_setup(config_entry.entry_id)
     assert (
         bool(
-            device_registry.async_get_device(
-                identifiers={
-                    (
-                        "zwave_me",
-                        f"{config_entry.unique_id}-{identifier}",
-                    )
-                }
+            device_registry.async_get_device_by_identifier(
+                (
+                    "zwave_me",
+                    f"{config_entry.unique_id}-{identifier}",
+                ),
+                config_entry.entry_id,
             )
         )
         == should_exist

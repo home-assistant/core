@@ -1,6 +1,6 @@
 """The repairs integration."""
 
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 
@@ -47,6 +47,7 @@ class RepairsFlowManager(
 ):
     """Manage repairs flows."""
 
+    @override
     async def async_create_flow(
         self,
         handler_key: str,
@@ -61,7 +62,9 @@ class RepairsFlowManager(
         issue_registry = ir.async_get(self.hass)
         issue = issue_registry.async_get_issue(handler_key, issue_id)
         if issue is None or not issue.is_fixable:
-            raise data_entry_flow.UnknownStep
+            raise data_entry_flow.UnknownStep(
+                f"issue id {issue_id} is {'not found' if issue is None else 'not fixable'}"
+            )
 
         platforms: LazyIntegrationPlatforms[RepairsProtocol] = self.hass.data[DOMAIN][
             "platforms"
@@ -75,6 +78,7 @@ class RepairsFlowManager(
         flow.data = issue.data
         return flow
 
+    @override
     async def async_finish_flow(
         self,
         flow: data_entry_flow.FlowHandler[
