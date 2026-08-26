@@ -246,7 +246,23 @@
       None,
     ]),
     'area_id': None,
-    'capabilities': None,
+    'capabilities': dict({
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charging',
+        'connected',
+        'diode_check_failed',
+        'disabled',
+        'gfci_fault',
+        'gfci_self_test_failure',
+        'no_ground',
+        'not_connected',
+        'over_temperature',
+        'sleeping',
+        'stuck_relay',
+        'unknown',
+        'vent_required',
+      ]),
+    }),
     'config_entry_id': <ANY>,
     'config_subentry_id': <ANY>,
     'device_class': None,
@@ -265,7 +281,7 @@
     'object_id_base': 'Charging status',
     'options': dict({
     }),
-    'original_device_class': None,
+    'original_device_class': <SensorDeviceClass.ENUM: 'enum'>,
     'original_icon': None,
     'original_name': 'Charging status',
     'platform': 'openevse',
@@ -280,14 +296,30 @@
 # name: test_entities[sensor.openevse_mock_config_charging_status-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'enum',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'openevse_mock_config Charging status',
+      <SensorEntityCapabilityAttribute.OPTIONS: 'options'>: list([
+        'charging',
+        'connected',
+        'diode_check_failed',
+        'disabled',
+        'gfci_fault',
+        'gfci_self_test_failure',
+        'no_ground',
+        'not_connected',
+        'over_temperature',
+        'sleeping',
+        'stuck_relay',
+        'unknown',
+        'vent_required',
+      ]),
     }),
     'context': <ANY>,
     'entity_id': 'sensor.openevse_mock_config_charging_status',
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'Charging',
+    'state': 'charging',
   })
 # ---
 # name: test_entities[sensor.openevse_mock_config_charging_voltage-entry]

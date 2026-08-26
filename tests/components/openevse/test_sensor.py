@@ -92,7 +92,7 @@ async def test_websocket_callback_updates_entities(
 
     state = hass.states.get("sensor.openevse_mock_config_charging_status")
     assert state
-    assert state.state == "Charging"
+    assert state.state == "charging"
 
     mock_charger.status = "Sleeping"
     await mock_charger.callback()
@@ -100,7 +100,7 @@ async def test_websocket_callback_updates_entities(
 
     state = hass.states.get("sensor.openevse_mock_config_charging_status")
     assert state
-    assert state.state == "Sleeping"
+    assert state.state == "sleeping"
 
 
 async def test_sensor_unavailable_on_coordinator_timeout(
