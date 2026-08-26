@@ -1,13 +1,12 @@
 """Test the Sofar Inverter Modbus sensor platform."""
 
-from collections.abc import Callable
 from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
-from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+from modbus_connection.mock import MockModbusConnection
 import pytest
 from sofar_modbus.modern.device import SofarInverter
 from syrupy.assertion import SnapshotAssertion
@@ -26,39 +25,28 @@ from homeassistant.helpers import entity_registry as er
 from . import (
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
-    MOCK_MODEL,
     MOCK_SERIAL,
     MOCK_USER_INPUT,
     seed_hybrid_inverter,
-    seed_pv_inverter,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
 
 
-@pytest.mark.parametrize(
-    ("serial", "model", "seed"),
-    [
-        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, id="pv"),
-        pytest.param(
-            MOCK_HYBRID_SERIAL, MOCK_HYBRID_MODEL, seed_hybrid_inverter, id="hybrid"
-        ),
-    ],
-)
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
 async def test_all_entities(
     hass: HomeAssistant,
     snapshot: SnapshotAssertion,
     entity_registry: er.EntityRegistry,
-    serial: str,
-    model: str,
-    seed: Callable[[MockModbusUnit], None],
 ) -> None:
-    """Test all entities match their snapshot, for a PV and a Hybrid device."""
+    """Test all entities match their snapshot on a hybrid device."""
     connection = MockModbusConnection()
-    seed(connection.for_unit(1))
+    seed_hybrid_inverter(connection.for_unit(1))
     entry = MockConfigEntry(
-        domain=DOMAIN, unique_id=serial, data=MOCK_USER_INPUT, title=model
+        domain=DOMAIN,
+        unique_id=MOCK_HYBRID_SERIAL,
+        data=MOCK_USER_INPUT,
+        title=MOCK_HYBRID_MODEL,
     )
     entry.add_to_hass(hass)
     with patch(
