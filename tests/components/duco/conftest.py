@@ -1,6 +1,7 @@
 """Fixtures for Duco tests."""
 
 from collections.abc import Generator
+from dataclasses import replace
 from typing import Any
 from unittest.mock import AsyncMock, patch
 
@@ -307,6 +308,20 @@ def mock_duco_client(
 
         client.async_get_bypass_supply_temperature_target.side_effect = (
             async_get_bypass_supply_temperature_target
+        )
+
+        async def async_set_bypass_supply_temperature_target(
+            zone_id: int,
+            temperature: float,
+        ) -> BypassSupplyTemperatureTarget:
+            target = replace(
+                mock_bypass_supply_temperature_targets[zone_id], value=temperature
+            )
+            mock_bypass_supply_temperature_targets[zone_id] = target
+            return target
+
+        client.async_set_bypass_supply_temperature_target.side_effect = (
+            async_set_bypass_supply_temperature_target
         )
         client.async_get_diagnostics.return_value = [
             DiagComponent(component="Ventilation", status="Ok")
