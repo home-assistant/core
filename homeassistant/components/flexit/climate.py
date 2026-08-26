@@ -257,8 +257,8 @@ class FlexitClimate(FlexitEntity, ClimateEntity):
 
     _attr_name = None
     _attr_fan_modes = list(HA_TO_FLEXIT_FAN_MODE)
-    _attr_hvac_mode = HVACMode.HEAT_COOL
-    _attr_hvac_modes = [HVACMode.HEAT_COOL]
+    _attr_hvac_mode = HVACMode.AUTO
+    _attr_hvac_modes = [HVACMode.AUTO]
     _attr_supported_features = (
         ClimateEntityFeature.TARGET_TEMPERATURE | ClimateEntityFeature.FAN_MODE
     )

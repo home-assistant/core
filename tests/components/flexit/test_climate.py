@@ -12,6 +12,7 @@ from homeassistant.components.climate import (
     ATTR_FAN_MODE,
     ATTR_HVAC_ACTION,
     HVACAction,
+    HVACMode,
 )
 from homeassistant.components.flexit.climate import async_setup_platform
 from homeassistant.components.flexit.const import DOMAIN
@@ -114,6 +115,7 @@ async def test_climate_entity_state(
 
     state = hass.states.get(CLIMATE_ENTITY_ID)
     assert state is not None
+    assert state.state == HVACMode.AUTO
     assert state.attributes[ATTR_TEMPERATURE] == 21.5
     assert state.attributes[ATTR_CURRENT_TEMPERATURE] == 20.0
     assert state.attributes[ATTR_FAN_MODE] == "Medium"

@@ -44,7 +44,9 @@ def test_create_serial_params() -> None:
 
 
 async def test_async_setup_entry_success(
-    hass: HomeAssistant, mock_config_entry: MockConfigEntry
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_modbus_unit: MockModbusUnit,
 ) -> None:
     """Test successful setup of the integration."""
     mock_config_entry.add_to_hass(hass)
@@ -53,6 +55,7 @@ async def test_async_setup_entry_success(
 
     assert result is True
     assert mock_config_entry.state is ConfigEntryState.LOADED
+    assert mock_modbus_unit.message_spacing == 0.03
 
 
 async def test_async_setup_entry_with_custom_port(

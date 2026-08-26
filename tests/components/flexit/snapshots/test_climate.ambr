@@ -13,7 +13,7 @@
         'High',
       ]),
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
@@ -62,7 +62,7 @@
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Flexit',
       <ClimateEntityStateAttribute.HVAC_ACTION: 'hvac_action'>: <HVACAction.OFF: 'off'>,
       <ClimateEntityCapabilityAttribute.HVAC_MODES: 'hvac_modes'>: list([
-        <HVACMode.HEAT_COOL: 'heat_cool'>,
+        <HVACMode.AUTO: 'auto'>,
       ]),
       <ClimateEntityCapabilityAttribute.MAX_TEMP: 'max_temp'>: 30.0,
       <ClimateEntityCapabilityAttribute.MIN_TEMP: 'min_temp'>: 10.0,
@@ -74,6 +74,6 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': 'heat_cool',
+    'state': 'auto',
   })
 # ---
