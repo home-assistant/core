@@ -28,6 +28,7 @@ from .const import (
     DEFAULT_URL,
     DOMAIN,
     LOGIN_INVALID_AUTH_CODE,
+    NULL_SENTINELS,
     V1_DEVICE_TYPES,
 )
 from .models import GrowattRuntimeData
@@ -587,7 +588,7 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             "enabled": enabled,
         }
 
-    async def _fetch_classic_mix_settings(self) -> dict:
+    async def _fetch_classic_mix_settings(self, required_keys: list[str]) -> dict:
         """Fetch classic Mix settings (getMixSetParams) for the AC read services."""
         try:
             response = await self.hass.async_add_executor_job(
@@ -608,7 +609,30 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="mix_settings_empty",
             )
+        # Every write is a read-merge-write, so a field missing here would be
+        # written back as a 0/100/disabled default over whatever the device
+        # currently holds. Reject the payload instead of silently losing it.
+        if missing := [k for k in required_keys if settings.get(k) in NULL_SENTINELS]:
+            _LOGGER.debug(
+                "Incomplete mixBean for %s, missing %s: %r",
+                self.device_id,
+                missing,
+                settings,
+            )
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="mix_settings_incomplete",
+            )
         return settings
+
+    @staticmethod
+    def _ac_period_keys(time_type: str) -> list[str]:
+        """List the per-period settings keys for a charge/discharge schedule."""
+        return [
+            f"forced{time_type}{field}{i}"
+            for i in range(1, 4)
+            for field in ("TimeStart", "TimeStop", "StopSwitch")
+        ]
 
     def _parse_ac_time_periods(self, settings: dict, time_type: str) -> list[dict]:
         """Parse AC charge/discharge time periods from classic Mix settings data."""
@@ -616,13 +640,12 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
             {
                 "period_id": i,
                 "start_time": self._format_time(
-                    settings.get(f"forced{time_type}TimeStart{i}", "00:00")
+                    settings[f"forced{time_type}TimeStart{i}"]
                 ),
                 "end_time": self._format_time(
-                    settings.get(f"forced{time_type}TimeStop{i}", "00:00")
+                    settings[f"forced{time_type}TimeStop{i}"]
                 ),
-                "enabled": int(settings.get(f"forced{time_type}StopSwitch{i}") or 0)
-                == 1,
+                "enabled": int(settings[f"forced{time_type}StopSwitch{i}"]) == 1,
             }
             for i in range(1, 4)
         ]
@@ -820,14 +843,21 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.device_id, settings_data=self.data
             )
 
-        settings = await self._fetch_classic_mix_settings()
+        # getMixSetParams returns wchargeSOCLowLimit1/wchargeSOCLowLimit2 rather
+        # than a single value; "2" is the one the app displays as the AC
+        # charge schedule's stop SOC (verified against real hardware).
+        settings = await self._fetch_classic_mix_settings(
+            [
+                "chargePowerCommand",
+                "wchargeSOCLowLimit2",
+                "acChargeEnable",
+                *self._ac_period_keys("Charge"),
+            ]
+        )
         return {
-            "charge_power": int(settings.get("chargePowerCommand") or 0),
-            # getMixSetParams returns wchargeSOCLowLimit1/wchargeSOCLowLimit2 rather
-            # than a single value; "2" is the one the app displays as the AC
-            # charge schedule's stop SOC (verified against real hardware).
-            "charge_stop_soc": int(settings.get("wchargeSOCLowLimit2") or 100),
-            "mains_enabled": int(settings.get("acChargeEnable") or 0) == 1,
+            "charge_power": int(settings["chargePowerCommand"]),
+            "charge_stop_soc": int(settings["wchargeSOCLowLimit2"]),
+            "mains_enabled": int(settings["acChargeEnable"]) == 1,
             "periods": self._parse_ac_time_periods(settings, "Charge"),
         }
 
@@ -840,12 +870,18 @@ class GrowattCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 self.device_id, settings_data=self.data
             )
 
-        settings = await self._fetch_classic_mix_settings()
+        # See the charge_stop_soc comment above — "2" is the variant the
+        # app displays as the AC discharge schedule's stop SOC (not the
+        # off-grid offGridDischargeSOC field).
+        settings = await self._fetch_classic_mix_settings(
+            [
+                "disChargePowerCommand",
+                "wdisChargeSOCLowLimit2",
+                *self._ac_period_keys("Discharge"),
+            ]
+        )
         return {
-            "discharge_power": int(settings.get("disChargePowerCommand") or 0),
-            # See the charge_stop_soc comment above — "2" is the variant the
-            # app displays as the AC discharge schedule's stop SOC (not the
-            # off-grid offGridDischargeSOC field).
-            "discharge_stop_soc": int(settings.get("wdisChargeSOCLowLimit2") or 100),
+            "discharge_power": int(settings["disChargePowerCommand"]),
+            "discharge_stop_soc": int(settings["wdisChargeSOCLowLimit2"]),
             "periods": self._parse_ac_time_periods(settings, "Discharge"),
         }

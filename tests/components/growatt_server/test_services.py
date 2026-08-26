@@ -1784,6 +1784,47 @@ async def test_read_ac_charge_times_classic_auth_empty_settings(
     assert not excinfo.value.translation_placeholders
 
 
+@pytest.mark.parametrize(
+    "missing_key",
+    ["chargePowerCommand", "acChargeEnable", "forcedChargeTimeStart1"],
+)
+async def test_write_ac_charge_times_classic_auth_incomplete_settings(
+    hass: HomeAssistant,
+    mock_config_entry_classic: MockConfigEntry,
+    mock_growatt_classic_api: MagicMock,
+    device_registry: dr.DeviceRegistry,
+    missing_key: str,
+) -> None:
+    """Test a partial write aborts when the device returns incomplete settings.
+
+    Every write is a read-merge-write, so a settings field missing from the
+    read would be written back as a 0/100/disabled default over whatever the
+    device currently holds, wiping settings the caller never mentioned.
+    """
+    await _setup_mix_integration(
+        hass, mock_config_entry_classic, mock_growatt_classic_api
+    )
+
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "MIX123456"), mock_config_entry_classic.entry_id
+    )
+    assert device_entry is not None
+
+    settings = mock_growatt_classic_api.get_mix_inverter_settings.return_value
+    del settings["obj"]["mixBean"][missing_key]
+
+    with pytest.raises(HomeAssistantError) as excinfo:
+        await hass.services.async_call(
+            DOMAIN,
+            "write_ac_charge_times",
+            {"device_id": device_entry.id, "period_1_start": "02:00"},
+            blocking=True,
+        )
+
+    assert excinfo.value.translation_key == "mix_settings_incomplete"
+    mock_growatt_classic_api.update_mix_inverter_setting.assert_not_called()
+
+
 async def test_read_ac_charge_times_classic_auth(
     hass: HomeAssistant,
     mock_config_entry_classic: MockConfigEntry,
