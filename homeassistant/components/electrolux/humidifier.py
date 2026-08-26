@@ -65,7 +65,7 @@ class DehumidifierEntity(ElectroluxBaseEntity[DHAppliance], HumidifierEntity):
         super().__init__(appliance_data, coordinator, "dehumidifier")
 
         self._attr_key = "dehumidifier"
-        self._attr_translation_key = "dehumidifier"
+        self._attr_name = None
         self._attr_available_modes = self._get_supported_modes()
         self._attr_max_humidity = (
             self._appliance_data.get_supported_max_humidity() or 85
