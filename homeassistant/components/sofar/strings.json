@@ -457,16 +457,16 @@
       "offgrid_frequency": {
         "name": "Off-grid frequency"
       },
-      "offgrid_loadpeakratio": {
+      "offgrid_load_peak_ratio": {
         "name": "Off-grid load peak ratio"
       },
-      "offgrid_loadpeakratio_l1": {
+      "offgrid_load_peak_ratio_l1": {
         "name": "Off-grid load peak ratio L1"
       },
-      "offgrid_loadpeakratio_l2": {
+      "offgrid_load_peak_ratio_l2": {
         "name": "Off-grid load peak ratio L2"
       },
-      "offgrid_loadpeakratio_l3": {
+      "offgrid_load_peak_ratio_l3": {
         "name": "Off-grid load peak ratio L3"
       },
       "offgrid_reactive_power_output": {
@@ -640,9 +640,6 @@
       "reactive_power_pcc_total": {
         "name": "Reactive power PCC total"
       },
-      "rtc": {
-        "name": "System time"
-      },
       "serial_number": {
         "name": "Serial number"
       },
@@ -703,8 +700,8 @@
       "voltage_phase_l2n": {
         "name": "Voltage phase L2N"
       },
-      "waiting_time": {
-        "name": "Waiting time"
+      "waiting_ends": {
+        "name": "Waiting ends"
       }
     }
   },

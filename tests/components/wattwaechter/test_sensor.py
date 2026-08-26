@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from datetime import timedelta
-from unittest.mock import AsyncMock
+from unittest.mock import AsyncMock, patch
 
 from aio_wattwaechter import (
     WattwaechterConnectionError,
@@ -16,7 +16,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.wattwaechter.const import DEFAULT_SCAN_INTERVAL, DOMAIN
-from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
+from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
 
@@ -34,8 +34,9 @@ async def test_all_entities(
     mock_client: AsyncMock,
 ) -> None:
     """Test all sensor entities created from a full OBIS payload."""
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    with patch("homeassistant.components.wattwaechter.PLATFORMS", [Platform.SENSOR]):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
     await snapshot_platform(hass, entity_registry, snapshot, mock_config_entry.entry_id)
 
