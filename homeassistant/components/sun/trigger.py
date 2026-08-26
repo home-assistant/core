@@ -489,6 +489,12 @@ class _MidnightSunPolarNightTrigger(SunEventTrigger):
     midnight) rises above/drops below the horizon, and the polar night when its
     daily high (solar noon) drops below/rises above it.
 
+    The daily solar extreme is used rather than the actual sunrise/sunset event
+    because astral's rise/set calculations are numerically unstable where the sun
+    only grazes the horizon, and a polar night has no sunrise/sunset event at all
+    (its sun clears the horizon around noon, not at a normal sunrise). Firing at
+    the extreme places the event where the sun is unambiguously up or down.
+
     ``_solar_event`` is the astral event scanned for the crossing; ``_event`` is
     only the label reported as ``trigger.description``.
     """
