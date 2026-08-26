@@ -150,6 +150,7 @@ class SofarRuntimeData:
 
     readings: SofarDataUpdateCoordinator
     settings: SofarDataUpdateCoordinator
+    inverter_device_id: str
 
     @property
     def served_components(self) -> frozenset[str]:
