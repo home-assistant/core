@@ -1246,6 +1246,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/netio/ @agners
 /homeassistant/components/network/ @home-assistant/core
 /tests/components/network/ @home-assistant/core
+/homeassistant/components/nexblue/ @nexblue-maintainer
+/tests/components/nexblue/ @nexblue-maintainer
 /homeassistant/components/nexia/ @bdraco
 /tests/components/nexia/ @bdraco
 /homeassistant/components/nextbus/ @vividboarder
