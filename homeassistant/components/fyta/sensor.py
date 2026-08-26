@@ -132,6 +132,13 @@ SENSORS: Final[list[FytaSensorEntityDescription]] = [
         entity_category=EntityCategory.DIAGNOSTIC,
         value_fn=lambda plant: plant.battery_level,
     ),
+    FytaSensorEntityDescription(
+        key="last_sensor_update",
+        translation_key="last_sensor_update",
+        device_class=SensorDeviceClass.DATE,
+        entity_category=EntityCategory.DIAGNOSTIC,
+        value_fn=lambda plant: plant.last_updated,
+    ),
 ]
 
 MEASUREMENT_SENSORS: Final[list[FytaMeasurementSensorEntityDescription]] = [
