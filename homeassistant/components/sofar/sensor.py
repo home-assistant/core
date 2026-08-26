@@ -1861,6 +1861,8 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         key="passive_eps_wait_time",
         component="eps",
         translation_key="passive_eps_wait_time",
+        device_class=SensorDeviceClass.DURATION,
+        native_unit_of_measurement=UnitOfTime.SECONDS,
         entity_category=EntityCategory.DIAGNOSTIC,
         entity_registry_enabled_default=False,
     ),

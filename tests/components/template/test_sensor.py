@@ -35,6 +35,7 @@ from .conftest import (
     RESTORE_STATE_UPDATED_ATTRIBUTES,
     ConfigurationStyle,
     TemplatePlatformSetup,
+    assert_attributes_template,
     assert_state_and_attributes,
     async_get_flow_preview_state,
     async_trigger,
@@ -1936,3 +1937,45 @@ async def test_numeric_sensor_int_float(
     """Test sensor properly stores int or float for state."""
     await async_trigger(hass, TEST_STATE_SENSOR, "anything")
     assert hass.states.get(TEST_SENSOR.entity_id).state == expected_state
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass, TEST_SENSOR, style, {"state": "{{ 'x' }}"}, caplog
+    )
+
+
+@pytest.mark.parametrize("attribute", ["device_class"])
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: str,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_SENSOR,
+        style,
+        1,
+        {
+            "state": "{{ 'x' }}",
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_SENSOR.entity_id}: {attribute}"
+    assert error in caplog.text
