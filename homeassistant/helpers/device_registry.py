@@ -153,12 +153,14 @@ class _DeviceInfoMapping(MutableMapping[str, Any]):
 
     def __post_init__(self, initial: Mapping[str, Any] | None) -> None:
         """Apply the fields of a mapping passed to the constructor."""
+        # Integrations build a device info from a mapping: `DeviceInfo({...})`
         if initial is not None:
             self.update(initial)
 
     @override
     def __getitem__(self, key: str) -> Any:
         """Return the value of a set field."""
+        # Also backs `.get()`, `in` and `**device_info` unpacking
         if key in self._field_names:
             value = getattr(self, key)
             if value is not UNDEFINED:
@@ -168,6 +170,8 @@ class _DeviceInfoMapping(MutableMapping[str, Any]):
     @override
     def __setitem__(self, key: str, value: Any) -> None:
         """Set the value of a field."""
+        # Integrations fill a device info in after building it, and `.update()`
+        # merges another mapping in field by field
         if key not in self._field_names:
             raise KeyError(f"'{key}' is not a valid {type(self).__name__} field")
         setattr(self, key, value)
@@ -175,6 +179,7 @@ class _DeviceInfoMapping(MutableMapping[str, Any]):
     @override
     def __delitem__(self, key: str) -> None:
         """Unset a field."""
+        # Integrations drop fields before passing a device info on, with `.pop()`
         if key not in self._field_names or getattr(self, key) is UNDEFINED:
             raise KeyError(key)
         setattr(self, key, UNDEFINED)
@@ -192,17 +197,21 @@ class _DeviceInfoMapping(MutableMapping[str, Any]):
     @override
     def __repr__(self) -> str:
         """Return the representation, listing the set fields only."""
+        # The generated repr would spell out UNDEFINED for every unset field
         set_fields = ", ".join(f"{key}={value!r}" for key, value in self.items())
         return f"{type(self).__name__}({set_fields})"
 
     def __or__(self, other: Mapping[str, Any]) -> Self:
         """Return a copy updated with the fields of another mapping."""
+        # Integrations layer a device info on top of a shared one:
+        # `base_device_info | DeviceInfo(...)`
         new = copy.copy(self)
         new.update(other)
         return new
 
     def __ior__(self, other: Mapping[str, Any]) -> Self:
         """Update with the fields of another mapping."""
+        # Integrations merge extra fields in: `self._attr_device_info |= {...}`
         self.update(other)
         return self
 
