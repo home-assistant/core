@@ -335,7 +335,7 @@
       "message": "Failed setting HVACMode, set a schedule first."
     },
     "temperature_out_of_range": {
-      "message": "Temperature {temperature} is out of range ({min_temp} - {max_temp})"
+      "message": "Temperature must be between {min_temp} and {max_temp}."
     },
     "unsupported_firmware": {
       "message": "[%key:component::plugwise::config::error::unsupported%]"
