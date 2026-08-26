@@ -212,6 +212,12 @@ class _DeviceInfoMapping:
         """Return the set fields as key-value pairs."""
         return tuple((key, getattr(self, key)) for key in self)
 
+    def as_dict(self) -> dict[str, Any]:
+        """Return the set fields."""
+        # The JSON encoders serialize an object with an as_dict; a dataclass would
+        # otherwise be serialized field by field, unset fields included
+        return dict(self)
+
     def get(self, key: str, default: Any = None) -> Any:
         """Return the value of a field, or default if the field is not set."""
         try:
