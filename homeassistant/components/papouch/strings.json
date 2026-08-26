@@ -73,6 +73,9 @@
   },
   "exceptions": {
     "cannot_connect": {
+      "message": "Failed to connect to device."
+    },
+    "cannot_connect_device": {
       "message": "Failed to connect to device {name} ({location})."
     },
     "command_failed": {

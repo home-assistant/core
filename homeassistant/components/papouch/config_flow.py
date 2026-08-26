@@ -66,11 +66,15 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         self._async_abort_entries_match({CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS]})
 
         ip_address = user_input[CONF_IP_ADDRESS]
-        password = str(user_input.get(CONF_PASSWORD, ""))
+
+        password = user_input.get(CONF_PASSWORD)
+        if password == "":
+            password = None
+
         web_port = int(user_input[CONF_PORT])
 
         errors, mode_device = await self._test_connection(
-            user_input[CONF_IP_ADDRESS], password, web_port
+            user_input[CONF_IP_ADDRESS], password or "", web_port
         )
 
         if errors:
@@ -85,9 +89,12 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
 
         session = async_get_clientsession(self.hass)
         client = PapouchHTTPClient(
-            ip_address, session, password=password, web_port=web_port
+            ip_address,
+            session,
+            password=password or "",
+            web_port=web_port,
         )
-        title_name = await _get_device_name(self.hass, ip_address, password)
+        title_name = await _get_device_name(self.hass, ip_address, password or "")
 
         try:
             mac_address = await client.get_device_mac()
@@ -99,10 +106,9 @@ class PapouchConfigFlow(ConfigFlow, domain=DOMAIN):
         if errors:
             return errors, None
 
-        if mac_address:
-            formatted_mac = format_mac(mac_address)
-            await self.async_set_unique_id(formatted_mac)
-            self._abort_if_unique_id_configured()
+        formatted_mac = format_mac(mac_address)
+        await self.async_set_unique_id(formatted_mac)
+        self._abort_if_unique_id_configured()
 
         data = {
             CONF_IP_ADDRESS: user_input[CONF_IP_ADDRESS],

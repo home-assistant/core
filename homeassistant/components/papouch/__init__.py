@@ -4,6 +4,7 @@ from typing import TYPE_CHECKING
 
 import aiohttp
 from aiopapouch import PapouchHTTPClient, create_device
+from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
 
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_IP_ADDRESS, CONF_PASSWORD, CONF_PORT, Platform
@@ -36,8 +37,15 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
     password = entry.data.get(CONF_PASSWORD, "")
     web_port = entry.data.get(CONF_PORT, DEFAULT_WEB_PORT)
     api_client = PapouchHTTPClient(
-        entry.data[CONF_IP_ADDRESS], session, password=password, web_port=web_port
+        entry.data[CONF_IP_ADDRESS], session, password=password or "", web_port=web_port
     )
+
+    try:
+        name, location = await api_client.get_device_info()
+    except (DeviceConnectionError, DeviceAuthError) as err:
+        raise ConfigEntryNotReady(
+            translation_domain=DOMAIN, translation_key="cannot_connect"
+        ) from err
 
     name, location = await api_client.get_device_info()
     safe_name = name or UNKNOWN_NAME
@@ -58,7 +66,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: PapouchConfigEntry) -> b
 
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="cannot_connect",
+            translation_key="cannot_connect_device",
             translation_placeholders={"name": safe_name, "location": safe_location},
         ) from err
 

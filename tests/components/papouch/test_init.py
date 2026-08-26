@@ -1,12 +1,15 @@
 """Tests for the Papouch initialization and coordinator."""
 
-from unittest.mock import MagicMock
+from unittest.mock import MagicMock, patch
 
 import aiohttp
 from aiopapouch.exceptions import DeviceAuthError, DeviceConnectionError
 
+from homeassistant.components.papouch.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+
+from tests.common import MockConfigEntry
 
 
 async def test_setup_unload_and_reload(
@@ -98,3 +101,25 @@ async def test_coordinator_connection_error(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+
+
+@patch("homeassistant.components.papouch.PapouchHTTPClient.get_device_info")
+async def test_setup_device_info_connection_error_no_password(
+    mock_get_device_info, hass: HomeAssistant
+) -> None:
+    """Test setup retries when get_device_info fails and no password is provided."""
+    mock_get_device_info.side_effect = DeviceConnectionError()
+
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "ip_address": "192.168.1.50",
+            "port": 80,
+        },
+    )
+    entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert entry.state is ConfigEntryState.SETUP_RETRY

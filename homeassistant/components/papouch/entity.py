@@ -1,10 +1,6 @@
 """Base class for Papouch entities."""
 
-from homeassistant.helpers.device_registry import (
-    CONNECTION_NETWORK_MAC,
-    DeviceInfo,
-    format_mac,
-)
+from homeassistant.helpers.device_registry import CONNECTION_NETWORK_MAC, DeviceInfo
 from homeassistant.helpers.update_coordinator import CoordinatorEntity
 
 from .const import DOMAIN
@@ -23,9 +19,7 @@ class PapouchEntity(CoordinatorEntity[PapouchDataUpdateCoordinator]):
         """Initialize the base entity."""
         super().__init__(coordinator)
 
-        formatted_mac = format_mac(coordinator.device.mac_address)
-
         self._attr_device_info = DeviceInfo(
-            connections={(CONNECTION_NETWORK_MAC, formatted_mac)},
+            connections={(CONNECTION_NETWORK_MAC, coordinator.device.mac_address)},
             identifiers={(DOMAIN, coordinator.device.mac_address)},
         )

@@ -58,7 +58,7 @@ class PapouchDataUpdateCoordinator(DataUpdateCoordinator):
         except DeviceConnectionError as err:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
-                translation_key="cannot_connect",
+                translation_key="cannot_connect_device",
                 translation_placeholders={
                     "name": self.device.name,
                     "location": self.device.location,

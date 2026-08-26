@@ -225,3 +225,51 @@ async def test_user_already_configured(hass: HomeAssistant, mock_api_client) -> 
 
     assert result2["type"] == data_entry_flow.FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_user_success_no_password(
+    hass: HomeAssistant, mock_api_client, mock_setup_entry
+) -> None:
+    """Test successful manual setup when no password is provided."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    assert result["type"] == data_entry_flow.FlowResultType.FORM
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "ip_address": "192.168.1.50",
+            "port": 80,
+        },
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["title"] == "Quido (Lab) - 192.168.1.50"
+    assert result2["data"]["ip_address"] == "192.168.1.50"
+    assert result2["data"]["password"] is None
+    assert result2["data"]["device_name"] == "Quido (Lab)"
+    assert result2["data"]["port"] == 80
+    assert len(mock_setup_entry.mock_calls) == 1
+
+
+async def test_user_success_empty_string_password(
+    hass: HomeAssistant, mock_api_client, mock_setup_entry
+) -> None:
+    """Test successful manual setup when password is an empty string."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": "user"}
+    )
+
+    result2 = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        {
+            "ip_address": "192.168.1.50",
+            "password": "",
+            "port": 80,
+        },
+    )
+
+    assert result2["type"] == data_entry_flow.FlowResultType.CREATE_ENTRY
+    assert result2["data"]["password"] is None
