@@ -130,7 +130,7 @@
     'object_id_base': 'Last sensor update',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last sensor update',
     'platform': 'fyta',
@@ -145,7 +145,7 @@
 # name: test_all_entities[sensor.gummibaum_last_sensor_update-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Gummibaum Last sensor update',
     }),
     'context': <ANY>,
@@ -153,7 +153,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-01-10T10:10:00',
+    'state': '2023-01-10T18:10:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.gummibaum_light-entry]
@@ -1087,7 +1087,7 @@
     'object_id_base': 'Last sensor update',
     'options': dict({
     }),
-    'original_device_class': <SensorDeviceClass.DATE: 'date'>,
+    'original_device_class': <SensorDeviceClass.TIMESTAMP: 'timestamp'>,
     'original_icon': None,
     'original_name': 'Last sensor update',
     'platform': 'fyta',
@@ -1102,7 +1102,7 @@
 # name: test_all_entities[sensor.kakaobaum_last_sensor_update-state]
   StateSnapshot({
     'attributes': ReadOnlyDict({
-      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'date',
+      <EntityStateAttribute.DEVICE_CLASS: 'device_class'>: 'timestamp',
       <EntityStateAttribute.FRIENDLY_NAME: 'friendly_name'>: 'Kakaobaum Last sensor update',
     }),
     'context': <ANY>,
@@ -1110,7 +1110,7 @@
     'last_changed': <ANY>,
     'last_reported': <ANY>,
     'last_updated': <ANY>,
-    'state': '2023-01-02T10:10:00',
+    'state': '2023-01-02T18:10:00+00:00',
   })
 # ---
 # name: test_all_entities[sensor.kakaobaum_light-entry]
