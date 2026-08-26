@@ -60,9 +60,6 @@
     "incorrect_oauth2_scope": {
       "message": "Stored permissions are invalid. Please login again to update permissions."
     },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
-    },
     "set_number_error": {
       "message": "Failed to set new value {value} for {point}/{entity}."
     },

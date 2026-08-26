@@ -91,9 +91,6 @@
     },
     "missing_profile_scope": {
       "message": "Missing required Google Health profile read permission."
-    },
-    "oauth2_implementation_unavailable": {
-      "message": "[%key:common::exceptions::oauth2_implementation_unavailable::message%]"
     }
   }
 }
