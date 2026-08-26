@@ -43,6 +43,7 @@ PLATFORMS = [
     Platform.BUTTON,
     Platform.CLIMATE,
     Platform.FAN,
+    Platform.HUMIDIFIER,
     Platform.LIGHT,
     Platform.NUMBER,
     Platform.SENSOR,
