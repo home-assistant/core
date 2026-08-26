@@ -6,7 +6,12 @@ from aiomodernforms.const import LIGHT_POWER_OFF, LIGHT_POWER_ON
 from aiomodernforms.models import Light
 import voluptuous as vol
 
-from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
+from homeassistant.components.light import (
+    ATTR_BRIGHTNESS,
+    ATTR_COLOR_TEMP_KELVIN,
+    ColorMode,
+    LightEntity,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
@@ -22,6 +27,7 @@ from .const import (
     CLEAR_TIMER,
     DOMAIN,
     OPT_BRIGHTNESS,
+    OPT_COLOR_TEMP_KELVIN,
     OPT_ON,
     SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
     SERVICE_SET_LIGHT_SLEEP_TIMER,
@@ -76,8 +82,6 @@ async def async_setup_entry(
 class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
     """Defines a Modern Forms light."""
 
-    _attr_color_mode = ColorMode.BRIGHTNESS
-    _attr_supported_color_modes = {ColorMode.BRIGHTNESS}
     _attr_translation_key = "light"
 
     def __init__(
@@ -105,6 +109,18 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
             self._attr_name = strip_device_name_prefix(
                 self.coordinator.data.info.device_name, fixture_name
             )
+
+        if (
+            self._light.min_color_temp_kelvin is not None
+            and self._light.max_color_temp_kelvin is not None
+        ):
+            self._attr_color_mode = ColorMode.COLOR_TEMP
+            self._attr_supported_color_modes = {ColorMode.COLOR_TEMP}
+            self._attr_min_color_temp_kelvin = self._light.min_color_temp_kelvin
+            self._attr_max_color_temp_kelvin = self._light.max_color_temp_kelvin
+        else:
+            self._attr_color_mode = ColorMode.BRIGHTNESS
+            self._attr_supported_color_modes = {ColorMode.BRIGHTNESS}
 
     @property
     def _light(self) -> Light | None:
@@ -136,6 +152,12 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         """Return the state of the light."""
         return self._light is not None and bool(self._light.on)
 
+    @property
+    @override
+    def color_temp_kelvin(self) -> int | None:
+        """Return the color temperature of this light in Kelvin."""
+        return self._light.color_temp_kelvin
+
     @modernforms_exception_handler
     @override
     async def async_turn_off(self, **kwargs: Any) -> None:
@@ -152,6 +174,8 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
             data[OPT_BRIGHTNESS] = ranged_value_to_percentage(
                 BRIGHTNESS_RANGE, kwargs[ATTR_BRIGHTNESS]
             )
+        if ATTR_COLOR_TEMP_KELVIN in kwargs:
+            data[OPT_COLOR_TEMP_KELVIN] = kwargs[ATTR_COLOR_TEMP_KELVIN]
 
         await self._async_control_light(**data)
 
