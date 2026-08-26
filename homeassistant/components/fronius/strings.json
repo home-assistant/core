@@ -429,6 +429,20 @@
       "voltage_dc_mppt_no": {
         "name": "DC voltage {mppt_no}"
       }
+    },
+    "switch": {
+      "battery_charge_power_limit_enabled": {
+        "name": "Battery charge power limiting"
+      },
+      "battery_discharge_power_limit_enabled": {
+        "name": "Battery discharge power limiting"
+      },
+      "battery_grid_charging": {
+        "name": "Battery grid charging"
+      },
+      "power_limit_enabled": {
+        "name": "Power limiting"
+      }
     }
   },
   "exceptions": {
