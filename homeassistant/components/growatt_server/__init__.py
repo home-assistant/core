@@ -21,6 +21,8 @@ Error handling pattern for reauth:
   → raise ConfigEntryAuthFailed
 - V1 API: catch GrowattV1ApiError with error_code == GrowattV1ApiErrorCode.NO_PRIVILEGE
   → raise ConfigEntryAuthFailed
+- Classic API: msg == LOGIN_FAILED (507, transient server error)
+  → raise ConfigEntryNotReady (setup retries automatically)
 - All other errors → ConfigEntryError (setup) or UpdateFailed (coordinator)
 """
 
