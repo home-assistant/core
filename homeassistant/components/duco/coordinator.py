@@ -230,10 +230,6 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                     translation_key="cannot_connect",
                 ) from err
             except DucoError as err:
-                if str(err) == f"Expected TempSupTgtZone{zone_id} in /config response":
-                    bypass_supply_temperature_targets.pop(zone_id, None)
-                    continue
-
                 _LOGGER.debug(
                     "Could not fetch Duco bypass supply target for zone %s",
                     zone_id,

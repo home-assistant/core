@@ -251,14 +251,14 @@ async def test_set_bypass_supply_temperature_target_stays_within_maximum(
     )
 
 
-async def test_bypass_supply_temperature_target_becomes_unavailable_when_missing(
+async def test_bypass_supply_temperature_target_keeps_value_when_missing(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test an existing bypass target becomes unavailable when it disappears."""
+    """Test an existing bypass target keeps its value when it disappears."""
     zone_1_missing = False
 
     async def async_get_bypass_supply_temperature_target(
@@ -287,7 +287,7 @@ async def test_bypass_supply_temperature_target_becomes_unavailable_when_missing
 
     state = hass.states.get(_ZONE_1_ENTITY_ID)
     assert state is not None
-    assert state.state == "unavailable"
+    assert state.state == "20.0"
 
     mock_bypass_supply_temperature_targets[1] = replace(
         mock_bypass_supply_temperature_targets[1], value=20.5
