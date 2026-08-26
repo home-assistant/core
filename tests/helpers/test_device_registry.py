@@ -4631,6 +4631,61 @@ async def test_async_get_or_create_deprecated_parameters(
         ("via_device", ("some_domain", "via_id")),
     ],
 )
+@pytest.mark.parametrize(
+    "integration_frame_path", ["custom_components/test_integration"]
+)
+@pytest.mark.usefixtures("mock_integration_frame")
+async def test_device_info_deprecated_parameters(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    caplog: pytest.LogCaptureFixture,
+    parameter: str,
+    value: Any,
+) -> None:
+    """Test a device info can carry deprecated parameters.
+
+    They were dropped from the typed device info when they were deprecated, but an
+    integration can still set them until they are removed.
+    """
+    config_entry = MockConfigEntry()
+    config_entry.add_to_hass(hass)
+    device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id, identifiers={("some_domain", "via_id")}
+    )
+
+    assert dr.DeviceInfo(**{parameter: value})[parameter] == value
+
+    device_info = dr.DeviceInfo(identifiers={("some_domain", "some_id")})
+    device_info[parameter] = value
+    assert dict(device_info) == {
+        "identifiers": {("some_domain", "some_id")},
+        parameter: value,
+    }
+
+    what = (
+        "calls `device_registry.async_get_or_create` with a deprecated "
+        f"`{parameter}` parameter"
+    )
+    with patch.object(frame, "_REPORTED_INTEGRATIONS", set()):
+        device = device_registry.async_get_or_create(
+            config_entry_id=config_entry.entry_id, **device_info
+        )
+
+    assert device.identifiers == {("some_domain", "some_id")}
+    assert caplog.text.count(what) == 1
+
+
+@pytest.mark.parametrize(
+    ("parameter", "value"),
+    [
+        ("created_at", "2024-01-01T00:00:00+00:00"),
+        ("default_manufacturer", "manufacturer"),
+        ("default_model", "model"),
+        ("default_name", "name"),
+        ("modified_at", "2024-01-01T00:00:00+00:00"),
+        ("via_device", ("some_domain", "via_id")),
+    ],
+)
 @pytest.mark.usefixtures("mock_integration_frame")
 async def test_async_get_or_create_deprecated_parameter_reported_before_mutation(
     hass: HomeAssistant,
