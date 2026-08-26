@@ -263,7 +263,7 @@ class NexBlueStatusSensor(
         """Return whether this charger is currently reachable."""
         return (
             super().available
-            and self.coordinator.data.get(self._serial_number) is not None
+            and self._serial_number in self.coordinator.data
         )
 
     @property
