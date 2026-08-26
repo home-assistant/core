@@ -8,6 +8,10 @@ import pytest
 
 from homeassistant.components.binary_sensor import BinarySensorDeviceClass
 from homeassistant.components.concord232.binary_sensor import SCAN_INTERVAL
+from homeassistant.components.concord232.const import (
+    CONF_EXCLUDE_ZONES,
+    CONF_ZONE_TYPES,
+)
 from homeassistant.const import ATTR_DEVICE_CLASS, STATE_OFF, STATE_ON
 from homeassistant.core import HomeAssistant
 
@@ -97,3 +101,23 @@ async def test_unsorted_zones_map_to_stable_entities(
 
     assert hass.states.get("binary_sensor.front_door").state == STATE_ON
     assert hass.states.get("binary_sensor.hall_motion").state == STATE_OFF
+
+
+async def test_imported_zone_options_honored(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test imported exclude_zones and zone_types apply to the sensors."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_EXCLUDE_ZONES: [2], CONF_ZONE_TYPES: {"1": "door"}},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    front_door = hass.states.get("binary_sensor.front_door")
+    assert front_door is not None
+    assert front_door.attributes[ATTR_DEVICE_CLASS] == BinarySensorDeviceClass.DOOR
+    assert hass.states.get("binary_sensor.hall_motion") is None

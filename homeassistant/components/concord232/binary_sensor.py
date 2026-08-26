@@ -26,12 +26,9 @@ from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 from homeassistant.util import dt as dt_util
 
 from . import build_url
-from .const import DEFAULT_PORT, DOMAIN
+from .const import CONF_EXCLUDE_ZONES, CONF_ZONE_TYPES, DEFAULT_PORT, DOMAIN
 
 _LOGGER = logging.getLogger(__name__)
-
-CONF_EXCLUDE_ZONES = "exclude_zones"
-CONF_ZONE_TYPES = "zone_types"
 
 DEFAULT_HOST = "localhost"
 DEFAULT_NAME = "Alarm"
@@ -71,13 +68,25 @@ async def async_setup_entry(
 ) -> None:
     """Set up Concord232 zone binary sensors from a config entry."""
     url = build_url(entry.data[CONF_HOST], entry.data[CONF_PORT])
-    sensors = await hass.async_add_executor_job(_create_zone_sensors, url)
+    # Options imported from YAML; JSON storage turns zone numbers into strings
+    exclude = {int(number) for number in entry.options.get(CONF_EXCLUDE_ZONES, [])}
+    zone_types = {
+        int(number): zone_type
+        for number, zone_type in entry.options.get(CONF_ZONE_TYPES, {}).items()
+    }
+    sensors = await hass.async_add_executor_job(
+        _create_zone_sensors, url, exclude, zone_types
+    )
     if sensors is None:
         return
     async_add_entities(sensors, True)
 
 
-def _create_zone_sensors(url: str) -> list[Concord232ZoneSensor] | None:
+def _create_zone_sensors(
+    url: str,
+    exclude: set[int],
+    zone_types: dict[int, BinarySensorDeviceClass],
+) -> list[Concord232ZoneSensor] | None:
     """Connect to the server and build a sensor per zone."""
     try:
         _LOGGER.debug("Initializing client")
@@ -95,8 +104,11 @@ def _create_zone_sensors(url: str) -> list[Concord232ZoneSensor] | None:
     client.zones.sort(key=lambda zone: zone["number"])
 
     return [
-        Concord232ZoneSensor(client, zone, get_opening_type(zone))
+        Concord232ZoneSensor(
+            client, zone, zone_types.get(zone["number"], get_opening_type(zone))
+        )
         for zone in client.zones
+        if zone["number"] not in exclude
     ]
 
 

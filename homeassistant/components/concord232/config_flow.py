@@ -18,7 +18,7 @@ from homeassistant.config_entries import (
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, callback
 from homeassistant.data_entry_flow import FlowResultType
-from homeassistant.helpers import issue_registry as ir
+from homeassistant.helpers import config_validation as cv, issue_registry as ir
 from homeassistant.helpers.selector import (
     SelectSelector,
     SelectSelectorConfig,
@@ -27,6 +27,8 @@ from homeassistant.helpers.selector import (
 
 from . import build_url
 from .const import (
+    CONF_EXCLUDE_ZONES,
+    CONF_ZONE_TYPES,
     DATA_IMPORT_LOCK,
     DEFAULT_MODE,
     DEFAULT_PORT,
@@ -40,7 +42,7 @@ _LOGGER = logging.getLogger(__name__)
 USER_SCHEMA = vol.Schema(
     {
         vol.Required(CONF_HOST): str,
-        vol.Required(CONF_PORT, default=DEFAULT_PORT): int,
+        vol.Required(CONF_PORT, default=DEFAULT_PORT): cv.port,
     }
 )
 
@@ -129,6 +131,10 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
             )
             return result
 
+        # The import now works; drop the failure issue a previous attempt left
+        ir.async_delete_issue(
+            self.hass, DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+        )
         ir.async_create_issue(
             self.hass,
             HOMEASSISTANT_DOMAIN,
@@ -158,6 +164,14 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
             options[CONF_CODE] = import_data[CONF_CODE]
         if CONF_MODE in import_data:
             options[CONF_MODE] = import_data[CONF_MODE]
+        if import_data.get(CONF_EXCLUDE_ZONES):
+            options[CONF_EXCLUDE_ZONES] = import_data[CONF_EXCLUDE_ZONES]
+        if import_data.get(CONF_ZONE_TYPES):
+            # JSON storage requires string keys
+            options[CONF_ZONE_TYPES] = {
+                str(number): zone_type
+                for number, zone_type in import_data[CONF_ZONE_TYPES].items()
+            }
 
         # Both platforms import the same YAML server. When the other platform's
         # import created the entry first, merge the alarm-only fields (code,
@@ -194,7 +208,13 @@ class Concord232OptionsFlow(OptionsFlow):
     ) -> ConfigFlowResult:
         """Manage the options."""
         if user_input is not None:
-            return self.async_create_entry(data=user_input)
+            # Keep the YAML-imported zone settings, which this form does not
+            # expose; an omitted code still clears the stored code.
+            options = {**user_input}
+            for key in (CONF_EXCLUDE_ZONES, CONF_ZONE_TYPES):
+                if key in self.config_entry.options:
+                    options[key] = self.config_entry.options[key]
+            return self.async_create_entry(data=options)
 
         return self.async_show_form(
             step_id="init",

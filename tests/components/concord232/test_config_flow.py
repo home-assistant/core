@@ -2,15 +2,20 @@
 
 from unittest.mock import MagicMock
 
+import pytest
 import requests
 
 from homeassistant.components.alarm_control_panel import DOMAIN as ALARM_DOMAIN
 from homeassistant.components.binary_sensor import DOMAIN as BINARY_SENSOR_DOMAIN
-from homeassistant.components.concord232.const import DOMAIN
+from homeassistant.components.concord232.const import (
+    CONF_EXCLUDE_ZONES,
+    CONF_ZONE_TYPES,
+    DOMAIN,
+)
 from homeassistant.config_entries import SOURCE_IMPORT, SOURCE_USER
 from homeassistant.const import CONF_CODE, CONF_HOST, CONF_MODE, CONF_NAME, CONF_PORT
 from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
-from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.data_entry_flow import FlowResultType, InvalidData
 from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
@@ -317,3 +322,98 @@ async def test_import_does_not_overwrite_user_entry_options(
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
     assert mock_config_entry.options == {CONF_CODE: "5678", CONF_MODE: "audible"}
+
+
+async def test_user_flow_rejects_invalid_port(
+    hass: HomeAssistant, mock_concord232_client: MagicMock
+) -> None:
+    """Test an out-of-range port is rejected by the schema."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": SOURCE_USER}
+    )
+    with pytest.raises(InvalidData):
+        await hass.config_entries.flow.async_configure(
+            result["flow_id"], {CONF_HOST: "localhost", CONF_PORT: -1}
+        )
+
+
+async def test_import_carries_zone_options(
+    hass: HomeAssistant, mock_concord232_client: MagicMock
+) -> None:
+    """Test exclude_zones and zone_types survive the YAML import."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: "localhost",
+            CONF_PORT: 5007,
+            CONF_EXCLUDE_ZONES: [2],
+            CONF_ZONE_TYPES: {1: "door"},
+        },
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["options"] == {
+        CONF_EXCLUDE_ZONES: [2],
+        CONF_ZONE_TYPES: {"1": "door"},
+    }
+
+
+async def test_import_recovery_clears_cannot_connect_issue(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    issue_registry: ir.IssueRegistry,
+) -> None:
+    """Test a successful import removes the earlier failed-import issue."""
+    mock_concord232_client.list_partitions.side_effect = (
+        requests.exceptions.ConnectionError("boom")
+    )
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: "localhost", CONF_PORT: 5007},
+    )
+    assert result["reason"] == "cannot_connect"
+    assert issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+
+    mock_concord232_client.list_partitions.side_effect = None
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={CONF_HOST: "localhost", CONF_PORT: 5007},
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert not issue_registry.async_get_issue(
+        DOMAIN, "deprecated_yaml_import_issue_cannot_connect"
+    )
+    assert issue_registry.async_get_issue(
+        HOMEASSISTANT_DOMAIN, f"deprecated_yaml_{DOMAIN}"
+    )
+
+
+async def test_options_flow_preserves_zone_options(
+    hass: HomeAssistant,
+    mock_concord232_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test saving code and mode keeps the imported zone settings."""
+    mock_config_entry.add_to_hass(hass)
+    hass.config_entries.async_update_entry(
+        mock_config_entry,
+        options={CONF_EXCLUDE_ZONES: [2], CONF_ZONE_TYPES: {"1": "door"}},
+    )
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    result = await hass.config_entries.options.async_init(mock_config_entry.entry_id)
+    result = await hass.config_entries.options.async_configure(
+        result["flow_id"], {CONF_CODE: "1234", CONF_MODE: "silent"}
+    )
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_config_entry.options == {
+        CONF_CODE: "1234",
+        CONF_MODE: "silent",
+        CONF_EXCLUDE_ZONES: [2],
+        CONF_ZONE_TYPES: {"1": "door"},
+    }
