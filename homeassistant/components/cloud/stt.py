@@ -145,6 +145,11 @@ class CloudProviderEntity(SpeechToTextEntity):
             )
         )
 
+    @override
+    async def async_will_remove_from_hass(self) -> None:
+        """Close the connection when the entity is removed."""
+        await self.cloud.stt_v2.disconnect()
+
     async def _async_handle_labs_update(
         self, event_data: labs.EventLabsUpdatedData
     ) -> None:
