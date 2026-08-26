@@ -1,6 +1,6 @@
 """The EnergyZero services."""
 
-from datetime import date
+from datetime import date, datetime, timedelta
 from enum import Enum
 from functools import partial
 from typing import Final
@@ -51,17 +51,22 @@ class ServicePriceType(Enum):
     GAS = "gas"
 
 
-def __get_local_date(date_input: str | None, local_tz: ZoneInfo) -> date:
-    """Get date normalized to the configured Home Assistant timezone."""
+def __get_date(
+    date_input: str | None, local_tz: ZoneInfo
+) -> tuple[date, datetime | None]:
+    """Get date for the API and optional datetime for response filtering."""
     if not date_input:
-        return dt_util.now().astimezone(local_tz).date()
+        return dt_util.now().astimezone(local_tz).date(), None
+
+    if date_value := dt_util.parse_date(date_input):
+        return date_value, None
 
     if value := dt_util.parse_datetime(date_input):
         if value.tzinfo is None:
             value = value.replace(tzinfo=local_tz)
         else:
             value = value.astimezone(local_tz)
-        return value.date()
+        return value.date(), dt_util.as_utc(value)
 
     raise ServiceValidationError(
         translation_domain=DOMAIN,
@@ -72,15 +77,19 @@ def __get_local_date(date_input: str | None, local_tz: ZoneInfo) -> date:
     )
 
 
-def __serialize_prices(prices: EnergyPrices) -> ServiceResponse:
-    """Serialize prices."""
+def __serialize_prices(
+    prices: list[EnergyPrices], start: datetime, end: datetime
+) -> ServiceResponse:
+    """Filter and serialize prices to the requested datetime range."""
     return {
         "prices": [
             {
                 "price": price,
                 "timestamp": str(time_range.start_including),
             }
-            for time_range, price in prices.prices.items()
+            for price_data in prices
+            for time_range, price in price_data.prices.items()
+            if time_range.end_excluding > start and time_range.start_including < end
         ]
     }
 
@@ -100,20 +109,22 @@ async def __get_prices(
 ) -> ServiceResponse:
     coordinator = __get_coordinator(call)
     local_tz = ZoneInfo(call.hass.config.time_zone)
-    start_input = call.data.get(ATTR_START)
-    end_input = call.data.get(ATTR_END)
+    start_date, start_datetime = __get_date(call.data.get(ATTR_START), local_tz)
+    end_date, end_datetime = __get_date(call.data.get(ATTR_END), local_tz)
+    filter_start = start_datetime or dt_util.as_utc(
+        dt_util.start_of_local_day(start_date)
+    )
+    filter_end = end_datetime or dt_util.as_utc(
+        dt_util.start_of_local_day(end_date + timedelta(days=1))
+    )
 
-    # Keep backward-compatible single-day behavior when only `end` is provided.
-    start = __get_local_date(start_input or end_input, local_tz)
-    end = __get_local_date(end_input, local_tz) if end_input else start
-
-    if start_input and end_input and end != start:
+    if filter_end <= filter_start:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_range",
             translation_placeholders={
-                "start": start.isoformat(),
-                "end": end.isoformat(),
+                "start": call.data.get(ATTR_START) or start_date.isoformat(),
+                "end": call.data.get(ATTR_END) or end_date.isoformat(),
             },
         )
 
@@ -121,34 +132,37 @@ async def __get_prices(
         PriceType.MARKET_WITH_VAT if call.data[ATTR_INCL_VAT] else PriceType.MARKET
     )
 
-    if price_type is ServicePriceType.GAS:
-        prices = coordinator.energyzero.get_gas_prices(
-            start_date=start,
-            end_date=end,
-            price_type=selected_price_type,
-            local_tz=local_tz,
-        )
-    else:
-        prices = coordinator.energyzero.get_electricity_prices(
-            start_date=start,
-            end_date=end,
-            interval=Interval.HOUR,
-            price_type=selected_price_type,
-            local_tz=local_tz,
-        )
+    price_data: list[EnergyPrices] = []
+    for day_offset in range((end_date - start_date).days + 1):
+        request_date = start_date + timedelta(days=day_offset)
+        if price_type is ServicePriceType.GAS:
+            prices = coordinator.energyzero.get_gas_prices(
+                start_date=request_date,
+                end_date=request_date,
+                price_type=selected_price_type,
+                local_tz=local_tz,
+            )
+        else:
+            prices = coordinator.energyzero.get_electricity_prices(
+                start_date=request_date,
+                end_date=request_date,
+                interval=Interval.HOUR,
+                price_type=selected_price_type,
+                local_tz=local_tz,
+            )
 
-    try:
-        data: EnergyPrices = await prices
-    except EnergyZeroNoDataError as err:
-        raise ServiceValidationError(
-            translation_domain=DOMAIN,
-            translation_key="no_data",
-            translation_placeholders={
-                "date": start.isoformat(),
-            },
-        ) from err
+        try:
+            price_data.append(await prices)
+        except EnergyZeroNoDataError as err:
+            raise ServiceValidationError(
+                translation_domain=DOMAIN,
+                translation_key="no_data",
+                translation_placeholders={
+                    "date": request_date.isoformat(),
+                },
+            ) from err
 
-    return __serialize_prices(data)
+    return __serialize_prices(price_data, filter_start, filter_end)
 
 
 @callback

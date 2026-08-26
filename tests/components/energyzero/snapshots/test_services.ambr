@@ -101,12 +101,6 @@
     ]),
   })
 # ---
-# name: test_service[get_energy_prices-service_data3]
-  dict({
-    'prices': list([
-    ]),
-  })
-# ---
 # name: test_service[get_gas_prices-service_data0]
   dict({
     'prices': list([
@@ -114,12 +108,6 @@
         'price': 0.430304930424,
         'timestamp': '2026-04-11 04:00:00+00:00',
       }),
-    ]),
-  })
-# ---
-# name: test_service[get_gas_prices-service_data2]
-  dict({
-    'prices': list([
     ]),
   })
 # ---

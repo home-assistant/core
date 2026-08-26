@@ -45,7 +45,7 @@
       "message": "Invalid date provided. Got {date}"
     },
     "invalid_range": {
-      "message": "Invalid date range provided. Start {start} and end {end} must be on the same day."
+      "message": "Invalid date range provided. End {end} must be after start {start}."
     },
     "no_data": {
       "message": "No price data available for {date}."
