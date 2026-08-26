@@ -228,9 +228,6 @@ class ServiceCallState:
     config_entry: ConfigEntry | None = None
 
 
-# Holds a mutable state object rather than the config entry itself, so a handler
-# running in a task of its own - async_register_admin_service does this - can
-# still record the entry it resolved. A task only gets a copy of the context.
 _current_service_call_state: ContextVar[ServiceCallState | None] = ContextVar(
     "current_service_call_state", default=None
 )
