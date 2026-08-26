@@ -215,6 +215,7 @@ async def test_new_accounts_and_pots_are_discovered(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test sensors are added for accounts and pots discovered after setup."""
     await setup_integration(hass, polling_config_entry)
@@ -237,7 +238,8 @@ async def test_new_accounts_and_pots_are_discovered(
     monzo.user_account.accounts.return_value = [*TEST_ACCOUNTS, new_account]
     monzo.user_account.pots.return_value = [*TEST_POTS, new_pot]
 
-    await polling_config_entry.runtime_data.coordinator.async_refresh()
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     account_entity_id = await async_get_entity_id(

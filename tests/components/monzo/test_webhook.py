@@ -88,6 +88,7 @@ async def test_new_account_event_and_webhook_are_discovered(
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a newly discovered account gets an event entity and webhook."""
     await setup_integration(hass, polling_config_entry)
@@ -106,7 +107,8 @@ async def test_new_account_event_and_webhook_are_discovered(
     ]
     monzo.user_account.register_webhook.reset_mock()
 
-    await polling_config_entry.runtime_data.coordinator.async_refresh()
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     entity_id = entity_registry.async_get_entity_id(
@@ -120,7 +122,8 @@ async def test_new_account_event_and_webhook_are_discovered(
         "acc_joint", WEBHOOK_URL
     )
 
-    await polling_config_entry.runtime_data.coordinator.async_refresh()
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert monzo.user_account.list_account_webhooks.await_count == 3
@@ -133,6 +136,7 @@ async def test_account_discovered_during_initial_webhook_registration(
     hass: HomeAssistant,
     monzo: AsyncMock,
     polling_config_entry: MockConfigEntry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test accounts discovered during initial registration get a webhook."""
     registration_started = asyncio.Event()
@@ -164,7 +168,13 @@ async def test_account_discovered_during_initial_webhook_registration(
         "balance": {"balance": 456, "total_balance": 654, "currency": "GBP"},
     }
     monzo.user_account.accounts.return_value = [*TEST_ACCOUNTS, new_account]
-    await polling_config_entry.runtime_data.coordinator.async_refresh()
+    resource_discovered = asyncio.Event()
+    hass.bus.async_listen_once(
+        er.EVENT_ENTITY_REGISTRY_UPDATED, lambda _: resource_discovered.set()
+    )
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
+    await resource_discovered.wait()
     continue_registration.set()
     await setup_task
     await hass.async_block_till_done()
@@ -182,6 +192,7 @@ async def test_removed_account_entities_are_removed(
     polling_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """Test a removed account loses its device and entities."""
     await setup_integration(hass, polling_config_entry)
@@ -189,7 +200,8 @@ async def test_removed_account_entities_are_removed(
     monzo.user_account.list_account_webhooks.reset_mock()
     monzo.user_account.register_webhook.reset_mock()
 
-    await polling_config_entry.runtime_data.coordinator.async_refresh()
+    freezer.tick(timedelta(minutes=1))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     assert (
