@@ -258,7 +258,7 @@ class GazetteerFallback:
                 self._matcher = await self.hass.async_add_executor_job(
                     _build_matcher, previous, async_build_home(self.hass)
                 )
-            except Exception:
+            except BaseException:
                 self._stale = True
                 raise
 
