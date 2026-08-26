@@ -68,18 +68,15 @@ OAUTH_TOKEN_TIMEOUT_SEC = 30
 
 
 class ImplementationUnavailableError(ConfigEntryNotReady):
-    """Raised when an underlying implementation is unavailable.
-
-    Subclasses ConfigEntryNotReady so integrations can let it bubble out of
-    async_setup_entry instead of translating it themselves.
-    """
+    """Raised when an underlying implementation is unavailable."""
 
     def __init__(self, *args: object) -> None:
         """Initialize the error."""
-        super().__init__(*args)
-        self.translation_domain = HOMEASSISTANT_DOMAIN
-        self.translation_key = "oauth2_implementation_unavailable"
-        self.generate_message = True
+        super().__init__(
+            *args,
+            translation_domain=HOMEASSISTANT_DOMAIN,
+            translation_key="oauth2_implementation_unavailable",
+        )
 
 
 @callback
