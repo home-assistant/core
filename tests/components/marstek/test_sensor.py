@@ -109,3 +109,22 @@ async def test_missing_sensor_fields_do_not_fallback(
     assert hass.states.get("sensor.marstek_es5_v1_pv1_power").state == "500"
     assert hass.states.get("sensor.marstek_es5_v1_pv1_voltage") is None
     assert hass.states.get("sensor.marstek_es5_v1_pv2_power") is None
+
+
+async def test_invalid_integer_sensor_value(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_client: MagicMock,
+) -> None:
+    """Test non-numeric integer sensor values are reported as unknown."""
+    mock_config_entry.add_to_hass(hass)
+    mock_udp_client.get_device_status.side_effect = None
+    mock_udp_client.get_device_status.return_value = {
+        **MOCK_DEVICE_STATUS,
+        "battery_power": {},
+    }
+
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.marstek_es5_v1_battery_power").state == STATE_UNKNOWN

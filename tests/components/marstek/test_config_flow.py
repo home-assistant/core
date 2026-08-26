@@ -41,10 +41,8 @@ DISCOVERED_DEVICE = {
     "mac": TEST_MAC,
 }
 
-DISCOVERED_DEVICE_2 = {
+DISCOVERED_DEVICE_DUPLICATE_NAME = {
     **DISCOVERED_DEVICE,
-    "ip": "192.168.1.101",
-    "wifi_name": "",
     "mac": "AA:BB:CC:DD:EE:00",
     "wifi_mac": "AA:BB:CC:DD:EE:00",
 }
@@ -69,9 +67,6 @@ EXPECTED_ENTRY_DATA = {
 EXPECTED_TITLE = f"Marstek {TEST_DEVICE_TYPE} v{TEST_VERSION} ({TEST_HOST})"
 EXPECTED_DEVICE_OPTION = (
     f"{TEST_DEVICE_TYPE} v{TEST_VERSION} ({TEST_WIFI_NAME}) - {TEST_HOST}"
-)
-EXPECTED_DEVICE_OPTION_2 = (
-    f"{TEST_DEVICE_TYPE} v{TEST_VERSION} (No WiFi) - 192.168.1.101"
 )
 
 
@@ -111,7 +106,7 @@ async def test_discovery_flow_duplicate_device_names(
     """Test duplicate device names are deduplicated in the selector."""
     mock_udp_client.discover_devices.return_value = [
         DISCOVERED_DEVICE,
-        DISCOVERED_DEVICE_2,
+        DISCOVERED_DEVICE_DUPLICATE_NAME,
     ]
 
     result = await hass.config_entries.flow.async_init(
@@ -126,7 +121,7 @@ async def test_discovery_flow_duplicate_device_names(
 
     assert selector.config["options"] == [
         {"value": "0", "label": EXPECTED_DEVICE_OPTION},
-        {"value": "1", "label": EXPECTED_DEVICE_OPTION_2},
+        {"value": "1", "label": f"{EXPECTED_DEVICE_OPTION} #2"},
     ]
 
 
@@ -163,6 +158,38 @@ async def test_discovery_flow_aborts_without_stable_unique_id(
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "missing_unique_id"
+
+
+@pytest.mark.parametrize(
+    ("error", "expected_reason"),
+    [
+        pytest.param(TimeoutError("timeout"), "cannot_connect", id="timeout"),
+        pytest.param(TypeError("bad data"), "device_not_found", id="typeerror"),
+    ],
+)
+async def test_discovery_flow_select_device_errors(
+    hass: HomeAssistant,
+    mock_udp_client: MagicMock,
+    error: Exception,
+    expected_reason: str,
+) -> None:
+    """Test errors when selecting a discovered device."""
+    mock_udp_client.discover_devices.return_value = [DISCOVERED_DEVICE]
+    mock_udp_client.get_device_info.side_effect = error
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "discover"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_DEVICE: "0"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "discover"
+    assert result["errors"] == {"base": expected_reason}
 
 
 async def test_manual_flow_creates_entry(
@@ -216,6 +243,28 @@ async def test_manual_flow_aborts_if_host_configured(hass: HomeAssistant) -> Non
 
     assert result["type"] is FlowResultType.ABORT
     assert result["reason"] == "already_configured"
+
+
+async def test_manual_flow_errors_if_device_info_is_invalid(
+    hass: HomeAssistant,
+    mock_udp_client: MagicMock,
+) -> None:
+    """Test manual setup errors when device information is invalid."""
+    mock_udp_client.get_device_info.return_value = None
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "manual"}
+    )
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {CONF_HOST: TEST_HOST}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "manual"
+    assert result["errors"] == {"base": "device_not_found"}
 
 
 @pytest.mark.parametrize(

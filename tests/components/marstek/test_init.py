@@ -172,6 +172,30 @@ async def test_async_setup_entry_not_ready(
     mock_udp_client.async_cleanup.assert_awaited_once()
 
 
+@pytest.mark.parametrize(
+    "device_info",
+    [
+        pytest.param(None, id="invalid_data"),
+        pytest.param({"ip": "192.168.1.100"}, id="missing_stable_id"),
+    ],
+)
+async def test_async_setup_entry_invalid_device_info(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_client: MagicMock,
+    device_info: object,
+) -> None:
+    """Test setup retries when device information is invalid."""
+    mock_config_entry.add_to_hass(hass)
+    mock_udp_client.get_device_info.return_value = device_info
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_udp_client.async_cleanup.assert_awaited_once()
+
+
 async def test_async_setup_entry_cleans_up_after_first_refresh_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
