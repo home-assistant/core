@@ -3507,7 +3507,7 @@ zeversolar==0.3.2
 zha-quirks==2.2.0
 
 # homeassistant.components.zha
-zha==2.1.0
+zha==2.2.0
 
 # homeassistant.components.zhong_hong
 zhong-hong-hvac==1.0.19
