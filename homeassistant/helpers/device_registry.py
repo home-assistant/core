@@ -17,7 +17,6 @@ from typing import (
     Any,
     Literal,
     NamedTuple,
-    Required,
     TypedDict,
     Unpack,
     overload,
@@ -145,7 +144,8 @@ class DeviceInfo(TypedDict, total=False):
     via_device_id: str
 
 
-class ChildDeviceInfo(TypedDict, total=False):
+@dataclass(kw_only=True, slots=True)
+class ChildDeviceInfo:
     """Entity device information for a child device in the device registry.
 
     A child device is a lightweight logical part of a parent device. The parent
@@ -153,12 +153,12 @@ class ChildDeviceInfo(TypedDict, total=False):
     entry, and must belong to the same config subentry.
     """
 
-    identifiers: Required[set[tuple[str, str]]]
-    name: str | None
-    parent_device_id: Required[str]
-    suggested_area: str | None
-    translation_key: str | None
-    translation_placeholders: Mapping[str, str] | None
+    identifiers: set[tuple[str, str]]
+    name: str | UndefinedType | None = UNDEFINED
+    parent_device_id: str
+    suggested_area: str | UndefinedType | None = UNDEFINED
+    translation_key: str | None = None
+    translation_placeholders: Mapping[str, str] | None = None
 
 
 class _EventDeviceRegistryUpdatedData_Create(TypedDict):
