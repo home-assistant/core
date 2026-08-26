@@ -479,7 +479,7 @@ async def test_coordinator_recovers_after_transient_failure(
         assert state is not None, f"{sensor_id} not found in states"
         assert state.state != STATE_UNAVAILABLE
 
-        service.fetch_all_features.side_effect = PyViCareInternalServerError(
+        service.getProperty.side_effect = PyViCareInternalServerError(
             {
                 "statusCode": 500,
                 "errorType": "INTERNAL_SERVER_ERROR",
@@ -494,7 +494,7 @@ async def test_coordinator_recovers_after_transient_failure(
         state = hass.states.get(sensor_id)
         assert state.state == STATE_UNAVAILABLE
 
-        service.fetch_all_features.side_effect = None
+        service.getProperty.side_effect = service._read_property
         freezer.tick(timedelta(seconds=120))
         async_fire_time_changed(hass, fire_all=True)
         await hass.async_block_till_done(wait_background_tasks=True)
@@ -538,7 +538,7 @@ async def test_per_device_failure_isolation(
     assert hass.states.get(sensor_device0).state != STATE_UNAVAILABLE
     assert hass.states.get(sensor_device1).state != STATE_UNAVAILABLE
 
-    service0.fetch_all_features.side_effect = PyViCareInternalServerError(
+    service0.getProperty.side_effect = PyViCareInternalServerError(
         {
             "statusCode": 500,
             "errorType": "INTERNAL_SERVER_ERROR",
@@ -586,7 +586,7 @@ async def test_coordinator_auth_failure_triggers_reauth(
             if flow["context"]["source"] == SOURCE_REAUTH
         ]
 
-        service.fetch_all_features.side_effect = PyViCareInvalidCredentialsError(
+        service.getProperty.side_effect = PyViCareInvalidCredentialsError(
             "invalid_grant"
         )
         freezer.tick(timedelta(seconds=120))

@@ -1,5 +1,6 @@
 """DataUpdateCoordinator for the ViCare integration."""
 
+from contextlib import suppress
 from datetime import timedelta
 import logging
 from typing import override
@@ -9,6 +10,7 @@ from PyViCare.PyViCareUtils import (
     PyViCareDeviceCommunicationError,
     PyViCareInternalServerError,
     PyViCareInvalidCredentialsError,
+    PyViCareNotSupportedFeatureError,
     PyViCareRateLimitError,
 )
 import requests
@@ -60,7 +62,11 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
         """Force a fresh fetch from the Viessmann API."""
         try:
             self._device.service.clear_cache()
-            self._device.service.fetch_all_features(self._device.accessor)
+            # Read one property instead of calling fetch_all_features(): on the
+            # cached service the latter bypasses the cache, so every entity read
+            # would hit the API again, from the event loop.
+            with suppress(PyViCareNotSupportedFeatureError):
+                self._device.getProperty("device.serial")
         except PyViCareInvalidCredentialsError as err:
             raise ConfigEntryAuthFailed from err
         except (

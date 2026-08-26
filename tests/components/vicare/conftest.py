@@ -103,12 +103,14 @@ class MockViCareService:
         self.setProperty = Mock()
         self.clear_cache = Mock()
         self.roles = fixture.roles
+        # A Mock so tests can inject API errors on the read path.
+        self.getProperty = Mock(side_effect=self._read_property)
 
     def hasRoles(self, requested_roles: list[str]) -> bool:
         """Return true if requested roles are assigned."""
         return requested_roles and set(requested_roles).issubset(self.roles)
 
-    def getProperty(self, accessor: ViCareDeviceAccessor, property_name: str):
+    def _read_property(self, accessor: ViCareDeviceAccessor, property_name: str):
         """Read a property from json dump."""
         return readFeature(self._test_data["data"], property_name)
 
