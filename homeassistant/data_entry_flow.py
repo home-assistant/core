@@ -747,15 +747,23 @@ class FlowHandler(Generic[_FlowContextT, _FlowResultT, _HandlerT]):
         *,
         reason: str,
         description_placeholders: Mapping[str, str] | None = None,
+        translation_domain: str | None = None,
     ) -> _FlowResultT:
-        """Abort the flow."""
-        return self._flow_result(
+        """Abort the flow.
+
+        Pass `translation_domain` to resolve the reason from another integration's
+        translations instead of the one owning the flow.
+        """
+        flow_result = self._flow_result(
             type=FlowResultType.ABORT,
             flow_id=self.flow_id,
             handler=self.handler,
             reason=reason,
             description_placeholders=description_placeholders,
         )
+        if translation_domain is not None:
+            flow_result["translation_domain"] = translation_domain
+        return flow_result
 
     @callback
     def async_external_step(
