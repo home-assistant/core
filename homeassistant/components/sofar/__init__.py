@@ -56,11 +56,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         device.async_update_settings,
         timedelta(seconds=SETTINGS_SCAN_INTERVAL),
     )
-    # Sequential: both share one device/unit, and a Modbus link answers
-    # one request at a time, so concurrent setups would race each other.
     await readings.async_config_entry_first_refresh()
-    # Non-fatal: an inverter that answers telemetry but not its settings
-    # block still serves every reading-backed sensor.
     await settings.async_refresh()
 
     entry.runtime_data = SofarRuntimeData(readings, settings)
