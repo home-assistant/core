@@ -223,10 +223,10 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
                     translation_key="cannot_connect",
                 ) from err
             except DucoError as err:
-                _LOGGER.debug(
-                    "Could not fetch Duco bypass supply temperature targets",
-                    exc_info=err,
-                )
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="api_error",
+                ) from err
 
         return DucoData(
             nodes={node.node_id: node for node in nodes},

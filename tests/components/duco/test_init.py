@@ -234,42 +234,38 @@ async def test_setup_entry_recovers_from_optional_temperature_capability_failure
 
 
 @pytest.mark.parametrize(
-    "exception",
+    ("exception", "translation_key"),
     [
-        pytest.param(DucoError("API error"), id="duco_error"),
+        pytest.param(
+            DucoConnectionError("Connection refused"),
+            "cannot_connect",
+            id="connection_error",
+        ),
+        pytest.param(DucoError("API error"), "api_error", id="duco_error"),
+        pytest.param(
+            DucoResponseError(500, "/config"),
+            "api_error",
+            id="response_error",
+        ),
     ],
 )
-async def test_setup_entry_ignores_optional_bypass_temperature_capability_failures(
+async def test_setup_entry_retries_on_bypass_temperature_failure(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
     exception: Exception,
+    translation_key: str,
 ) -> None:
-    """Test setup succeeds when an optional bypass temperature capability fails."""
+    """Test setup retries when fetching bypass temperature targets fails."""
     mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = exception
     mock_config_entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    assert mock_config_entry.state is ConfigEntryState.LOADED
-
-
-async def test_setup_entry_retries_on_optional_bypass_temperature_connection_failure(
-    hass: HomeAssistant,
-    mock_config_entry: MockConfigEntry,
-    mock_duco_client: AsyncMock,
-) -> None:
-    """Test setup retries when an optional bypass temperature read hits a connection error."""
-    mock_duco_client.async_get_bypass_supply_temperature_targets.side_effect = (
-        DucoConnectionError("Connection refused")
-    )
-    mock_config_entry.add_to_hass(hass)
-
-    await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
-
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    assert mock_config_entry.error_reason_translation_key == translation_key
+    assert mock_config_entry.error_reason_translation_placeholders is None
 
 
 async def test_unsupported_bypass_temperature_capability_is_not_repolled(
@@ -296,7 +292,7 @@ async def test_unsupported_bypass_temperature_capability_is_not_repolled(
     assert hass.states.get("number.living_bypass_target_2") is None
     mock_duco_client.async_get_bypass_supply_temperature_targets.assert_awaited_once_with()
 
-    freezer.tick(timedelta(days=1))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 
@@ -326,7 +322,7 @@ async def test_missing_bypass_temperature_targets_are_retried(
     assert mock_config_entry.state is ConfigEntryState.LOADED
     assert hass.states.get("number.living_bypass_target_1") is None
 
-    freezer.tick(timedelta(days=1))
+    freezer.tick(SCAN_INTERVAL)
     async_fire_time_changed(hass)
     await hass.async_block_till_done(wait_background_tasks=True)
 

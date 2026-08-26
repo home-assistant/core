@@ -129,22 +129,6 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
         )
         return target.value if target else None
 
-    def _validate_step(self, value: float) -> None:
-        """Validate the value follows the API-provided increment metadata."""
-        if (
-            (Decimal(str(value)) - Decimal(str(self.native_min_value)))
-            / Decimal(str(self.native_step))
-        ) % 1 != 0:
-            raise HomeAssistantError(
-                translation_domain=DOMAIN,
-                translation_key="invalid_bypass_supply_temperature_target_step",
-                translation_placeholders={
-                    "value": str(value),
-                    "minimum": str(self.native_min_value),
-                    "increment": str(self.native_step),
-                },
-            )
-
     def _normalize_step_value(self, value: float) -> float:
         """Normalize converted temperature values to the nearest supported native step."""
         if self.unit_of_measurement == self.native_unit_of_measurement:
@@ -167,7 +151,19 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
     async def async_set_native_value(self, value: float) -> None:
         """Set the bypass supply temperature target."""
         value = self._normalize_step_value(value)
-        self._validate_step(value)
+        if (
+            (Decimal(str(value)) - Decimal(str(self.native_min_value)))
+            / Decimal(str(self.native_step))
+        ) % 1 != 0:
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="invalid_bypass_supply_temperature_target_step",
+                translation_placeholders={
+                    "value": str(value),
+                    "minimum": str(self.native_min_value),
+                    "increment": str(self.native_step),
+                },
+            )
 
         try:
             await self.coordinator.client.async_set_bypass_supply_temperature_target(
