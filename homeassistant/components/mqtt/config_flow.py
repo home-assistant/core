@@ -54,8 +54,7 @@ from homeassistant.components.sensor import (
     SensorDeviceClass,
     SensorStateClass,
 )
-from homeassistant.components.switch import SwitchDeviceClass
-from homeassistant.components.valve import ValveDeviceClass, ValveState
+from homeassistant.components.valve import ValveState
 from homeassistant.config_entries import (
     SOURCE_RECONFIGURE,
     ConfigEntry,
@@ -779,12 +778,8 @@ SUPPORTED_COLOR_MODES_SELECTOR = SelectSelector(
         sort=True,
     )
 )
-SWITCH_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in SwitchDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_switch",
-    )
+SWITCH_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.SWITCH)
 )
 TARGET_TEMPERATURE_FEATURE_SELECTOR = SelectSelector(
     SelectSelectorConfig(
@@ -812,12 +807,8 @@ TEXT_MODE_SELECTOR = SelectSelector(
 TEXT_SIZE_SELECTOR = NumberSelector(
     NumberSelectorConfig(min=0, max=255, step=1, mode=NumberSelectorMode.BOX)
 )
-VALVE_DEVICE_CLASS_SELECTOR = SelectSelector(
-    SelectSelectorConfig(
-        options=[device_class.value for device_class in ValveDeviceClass],
-        mode=SelectSelectorMode.DROPDOWN,
-        translation_key="device_class_valve",
-    )
+VALVE_DEVICE_CLASS_SELECTOR = DeviceClassSelector(
+    DeviceClassSelectorConfig(domain=Platform.VALVE)
 )
 VALVE_POSITION_SELECTOR = NumberSelector(
     NumberSelectorConfig(mode=NumberSelectorMode.BOX, step=1)
