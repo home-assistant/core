@@ -184,6 +184,19 @@ class _DeviceInfoMapping:
         return sum(getattr(self, key) is not UNDEFINED for key in self._field_names)
 
     @override
+    def __eq__(self, other: object) -> bool:
+        """Return if the set fields match those of another device info or mapping."""
+        # Integrations compare a device info to a plain mapping, so this can't be
+        # left to the dataclass
+        if isinstance(other, _DeviceInfoMapping):
+            return type(other) is type(self) and all(
+                getattr(self, key) == getattr(other, key) for key in self._field_names
+            )
+        if isinstance(other, Mapping):
+            return dict(self) == other
+        return NotImplemented
+
+    @override
     def __repr__(self) -> str:
         """Return the representation, listing the set fields only."""
         # The generated repr would spell out UNDEFINED for every unset field
@@ -232,6 +245,16 @@ class _DeviceInfoMapping:
         new.update(other)
         return new
 
+    def __ror__(self, other: _DeviceInfoLike) -> Self:
+        """Return a copy holding the fields of another mapping it does not set."""
+        # An integration can hold a device info as a plain dict, and layer on top
+        # of it: `base_device_info | DeviceInfo(...)`
+        new = copy.copy(self)
+        for key, value in other.items():
+            if key not in self:
+                new[key] = value
+        return new
+
     def __ior__(self, other: _DeviceInfoLike) -> Self:
         """Update with the fields of another mapping."""
         # Integrations merge extra fields in: `self._attr_device_info |= {...}`
@@ -248,7 +271,7 @@ def _device_info_fields[_DeviceInfoT: _DeviceInfoMapping](
 
 
 @_device_info_fields
-@dataclass(repr=False, slots=True)
+@dataclass(eq=False, repr=False, slots=True)
 class DeviceInfo(_DeviceInfoMapping):
     """Entity device information for device registry."""
 
@@ -283,7 +306,7 @@ class DeviceInfo(_DeviceInfoMapping):
 
 
 @_device_info_fields
-@dataclass(repr=False, slots=True)
+@dataclass(eq=False, repr=False, slots=True)
 class ChildDeviceInfo(_DeviceInfoMapping):
     """Entity device information for a child device in the device registry.
 
