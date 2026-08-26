@@ -1676,6 +1676,16 @@ def test_select_selector_schema_error(schema) -> None:
             ("cat", 0, None, ["temperature"]),
         ),
         (
+            {"domain": "binary_sensor"},
+            ("door", "smoke", "gas"),
+            ("cat", 0, None, ["gas"]),
+        ),
+        (
+            {"domain": "switch"},
+            ("outlet", "switch"),
+            ("cat", 0, None, ["outlet"]),
+        ),
+        (
             {"domain": "sensor", "multiple": True},
             (["temperature"], ["temperature", "humidity"], []),
             ("battery", "beer", 0, None, "temperature", ["dog"]),

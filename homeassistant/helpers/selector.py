@@ -13,7 +13,6 @@ import voluptuous as vol
 from homeassistant.const import CONF_MODE, CONF_UNIT_OF_MEASUREMENT, Platform
 from homeassistant.core import split_entity_id, valid_entity_id
 from homeassistant.generated.countries import COUNTRIES
-from homeassistant.generated.entity_platforms import EntityPlatforms
 from homeassistant.util import decorator
 from homeassistant.util.yaml import dumper
 
@@ -906,6 +905,74 @@ class DateTimeSelector(Selector[DateTimeSelectorConfig]):
         """Validate the passed selection."""
         cv.datetime(data)
         return data
+
+
+class DeviceClassSelectorConfig(BaseSelectorConfig, total=False):
+    """Class to represent a device class selector config."""
+
+    domain: Required[Platform]
+    multiple: bool
+
+
+@cache
+def _enum_options(domain: str, enum_name: str) -> list[str]:
+    """Return a cached lookup of enum options for a domain.
+
+    This will import a module from disk and is run from an executor when
+    loading the services schema files.
+    """
+    module = importlib.import_module(f"homeassistant.components.{domain}")
+    enum = getattr(module, enum_name)
+
+    return [element.value for element in enum]
+
+
+@SELECTORS.register("device_class")
+class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
+    """Selector for device class."""
+
+    selector_type = "device_class"
+
+    SUPPORTED_PLATFORMS = {
+        Platform.BINARY_SENSOR: "BinarySensorDeviceClass",
+        Platform.BUTTON: "ButtonDeviceClass",
+        Platform.COVER: "CoverSensorDeviceClass",
+        Platform.EVENT: "EventDeviceClass",
+        Platform.HUMIDIFIER: "HumidifierDeviceClass",
+        Platform.INFRARED: "InfraredDeviceClass",
+        Platform.MEDIA_PLAYER: "MediaPlayerDeviceClass",
+        Platform.NUMBER: "NumberDeviceClass",
+        Platform.SENSOR: "SensorDeviceClass",
+        Platform.SWITCH: "SwitchDeviceClass",
+        Platform.UPDATE: "UpdateDeviceClass",
+        Platform.VALVE: "ValueDeviceClass",
+    }
+
+    CONFIG_SCHEMA = make_selector_config_schema(
+        {
+            vol.Required("domain"): vol.All(
+                vol.In(SUPPORTED_PLATFORMS), lambda val: Platform(val).value
+            ),
+            vol.Optional("multiple", default=False): cv.boolean,
+        }
+    )
+
+    def __init__(self, config: DeviceClassSelectorConfig) -> None:
+        """Instantiate a device class selector."""
+        super().__init__(config)
+
+    def __call__(self, data: Any) -> Any:
+        """Validate the passed selection."""
+        valid_options = _enum_options(
+            self.config["domain"], self.SUPPORTED_PLATFORMS[self.config["domain"]]
+        )
+        options_schema = vol.In(valid_options)
+
+        if not self.config["multiple"]:
+            return options_schema(vol.Schema(str)(data))
+        if not isinstance(data, list):
+            raise vol.Invalid("Value should be a list")
+        return [options_schema(vol.Schema(str)(val)) for val in data]
 
 
 class DeviceSelectorConfig(BaseSelectorConfig, DeviceFilterSelectorConfig, total=False):
@@ -1868,100 +1935,6 @@ class SelectSelector(Selector[SelectSelectorConfig]):
         if not isinstance(data, list):
             raise vol.Invalid("Value should be a list")
         return [parent_schema(vol.Schema(str)(val)) for val in data]
-
-
-class DeviceClassSelectorConfig(BaseSelectorConfig, total=False):
-    """Class to represent a device class selector config."""
-
-    domain: Required[Platform]
-    multiple: bool
-
-
-@SELECTORS.register("device_class")
-class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
-    """Selector for device class."""
-
-    selector_type = "device_class"
-
-    SUPPORTED_PLATFORMS = (
-        Platform.BUTTON,
-        Platform.BINARY_SENSOR,
-        Platform.COVER,
-        Platform.EVENT,
-        Platform.HUMIDIFIER,
-        Platform.INFRARED,
-        Platform.MEDIA_PLAYER,
-        Platform.NUMBER,
-        Platform.SENSOR,
-        Platform.SWITCH,
-        Platform.UPDATE,
-        Platform.VALVE,
-    )
-
-    CONFIG_SCHEMA = make_selector_config_schema(
-        {
-            vol.Required("domain"): vol.In(SUPPORTED_PLATFORMS),
-            vol.Optional("multiple", default=False): cv.boolean,
-        }
-    )
-
-    def _device_class_options(self, domain: EntityPlatforms) -> list[str]:
-        # Do late imports to prevent circular imports
-        from homeassistant.components.binary_sensor import (  # noqa: PLC0415
-            BinarySensorDeviceClass,
-        )
-        from homeassistant.components.button import ButtonDeviceClass  # noqa: PLC0415
-        from homeassistant.components.cover import CoverDeviceClass  # noqa: PLC0415
-        from homeassistant.components.event import EventDeviceClass  # noqa: PLC0415
-        from homeassistant.components.humidifier import (  # noqa: PLC0415
-            HumidifierDeviceClass,
-        )
-        from homeassistant.components.infrared import (  # noqa: PLC0415
-            InfraredDeviceClass,
-        )
-        from homeassistant.components.media_player import (  # noqa: PLC0415
-            MediaPlayerDeviceClass,
-        )
-        from homeassistant.components.number import NumberDeviceClass  # noqa: PLC0415
-        from homeassistant.components.sensor import SensorDeviceClass  # noqa: PLC0415
-        from homeassistant.components.switch import SwitchDeviceClass  # noqa: PLC0415
-        from homeassistant.components.update import UpdateDeviceClass  # noqa: PLC0415
-        from homeassistant.components.valve import ValveDeviceClass  # noqa: PLC0415
-
-        return [
-            device_class.value
-            for device_class in {
-                Platform.BUTTON: ButtonDeviceClass,
-                Platform.COVER: CoverDeviceClass,
-                Platform.BINARY_SENSOR: BinarySensorDeviceClass,
-                Platform.EVENT: EventDeviceClass,
-                Platform.HUMIDIFIER: HumidifierDeviceClass,
-                Platform.INFRARED: InfraredDeviceClass,
-                Platform.MEDIA_PLAYER: MediaPlayerDeviceClass,
-                Platform.NUMBER: NumberDeviceClass,
-                Platform.SENSOR: SensorDeviceClass,
-                Platform.SWITCH: SwitchDeviceClass,
-                Platform.UPDATE: UpdateDeviceClass,
-                Platform.VALVE: ValveDeviceClass,
-            }[domain]
-        ]
-
-    def __init__(self, config: DeviceClassSelectorConfig) -> None:
-        """Instantiate a device class selector."""
-
-        config = self.CONFIG_SCHEMA(config)
-        super().__init__(cast(SelectSelectorConfig, config))
-
-    def __call__(self, data: Any) -> Any:
-        """Validate the passed selection."""
-        valid_options = self._device_class_options(self.config["domain"])
-        options_schema = vol.In(valid_options)
-
-        if not self.config["multiple"]:
-            return options_schema(vol.Schema(str)(data))
-        if not isinstance(data, list):
-            raise vol.Invalid("Value should be a list")
-        return [options_schema(vol.Schema(str)(val)) for val in data]
 
 
 class SerialPortSelectorConfig(BaseSelectorConfig, total=False):
