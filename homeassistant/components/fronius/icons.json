@@ -9,10 +9,10 @@
       }
     },
     "number": {
-      "battery_charge_limit": {
+      "battery_charge_power_limit": {
         "default": "mdi:battery-arrow-up"
       },
-      "battery_discharge_limit": {
+      "battery_discharge_power_limit": {
         "default": "mdi:battery-arrow-down"
       },
       "battery_minimum_reserve": {

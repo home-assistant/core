@@ -44,7 +44,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
         entity_category=EntityCategory.CONFIG,
     ),
     FroniusNumberEntityDescription(
-        key="battery_charge_limit",
+        key="battery_charge_power_limit",
         component="storage",
         field="charge_limit",
         enable_field="charge_limit_enabled",
@@ -55,7 +55,7 @@ MODBUS_NUMBER_ENTITY_DESCRIPTIONS: list[FroniusNumberEntityDescription] = [
         entity_category=EntityCategory.CONFIG,
     ),
     FroniusNumberEntityDescription(
-        key="battery_discharge_limit",
+        key="battery_discharge_power_limit",
         component="storage",
         field="discharge_limit",
         enable_field="discharge_limit_enabled",

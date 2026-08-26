@@ -23,7 +23,7 @@ from tests.common import MockConfigEntry
 from tests.test_util.aiohttp import AiohttpClientMocker
 
 POWER_LIMIT = "number.gen24_storage_power_limit"
-CHARGE_LIMIT = "number.gen24_storage_battery_charge_limit"
+CHARGE_LIMIT = "number.gen24_storage_battery_charge_power_limit"
 
 
 async def _setup(
@@ -53,7 +53,7 @@ async def test_setpoints_read_from_the_device(
 
     assert_state(hass, POWER_LIMIT, 100.0)
     assert_state(hass, CHARGE_LIMIT, 0.0)
-    assert_state(hass, "number.gen24_storage_battery_discharge_limit", 0.0)
+    assert_state(hass, "number.gen24_storage_battery_discharge_power_limit", 0.0)
     assert_state(hass, "number.gen24_storage_battery_minimum_reserve", 20.0)
 
 

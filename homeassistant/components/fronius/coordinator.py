@@ -342,8 +342,8 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         if (controls := inverter.controls) is not None:
             values["power_limit"] = controls.power_limit
         if (storage := inverter.storage) is not None:
-            values["battery_charge_limit"] = storage.charge_limit
-            values["battery_discharge_limit"] = storage.discharge_limit
+            values["battery_charge_power_limit"] = storage.charge_limit
+            values["battery_discharge_power_limit"] = storage.discharge_limit
             values["battery_minimum_reserve"] = storage.minimum_reserve
 
         return self._as_device_data(values)

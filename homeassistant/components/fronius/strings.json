@@ -49,11 +49,11 @@
       }
     },
     "number": {
-      "battery_charge_limit": {
-        "name": "Battery charge limit"
+      "battery_charge_power_limit": {
+        "name": "Battery charge power limit"
       },
-      "battery_discharge_limit": {
-        "name": "Battery discharge limit"
+      "battery_discharge_power_limit": {
+        "name": "Battery discharge power limit"
       },
       "battery_minimum_reserve": {
         "name": "Battery minimum reserve"
