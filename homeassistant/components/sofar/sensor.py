@@ -1,5 +1,6 @@
 """Support for Sofar sensors."""
 
+from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import date, datetime, timedelta
 from enum import IntEnum
@@ -39,6 +40,14 @@ PARALLEL_UPDATES = 0
 
 # Two polls of slack, so jitter does not republish a steady countdown.
 _COUNTDOWN_VARIANCE = timedelta(seconds=_POLL_INTERVAL * 2)
+
+
+def _deadline_filter() -> Callable[[int], datetime]:
+    """Turn remaining seconds into a deadline, holding it steady."""
+    return ignore_variance(
+        lambda seconds: dt_util.utcnow() + timedelta(seconds=seconds),
+        _COUNTDOWN_VARIANCE,
+    )
 
 
 async def async_setup_entry(
@@ -98,10 +107,7 @@ class SofarCountdownSensor(SofarSensor):
     ) -> None:
         """Initialize the entity."""
         super().__init__(runtime_data, entity_description)
-        self._deadline = ignore_variance(
-            lambda seconds: dt_util.utcnow() + timedelta(seconds=seconds),
-            _COUNTDOWN_VARIANCE,
-        )
+        self._deadline = _deadline_filter()
 
     @property
     @override
@@ -109,6 +115,8 @@ class SofarCountdownSensor(SofarSensor):
         component = getattr(self.coordinator.device, self.entity_description.component)
         seconds = getattr(component, self.entity_description.key)
         if not isinstance(seconds, int) or seconds <= 0:
+            # A restart must not land inside the finished countdown's slack.
+            self._deadline = _deadline_filter()
             return None
         return self._deadline(seconds)
 
