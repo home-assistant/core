@@ -15,8 +15,10 @@ from freezegun.api import FrozenDateTimeFactory
 import pytest
 
 from homeassistant.components.ecosmart.const import SPOT_SCAN_INTERVAL
+from homeassistant.components.ecosmart.coordinator import EcosmartCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.helpers.update_coordinator import UpdateFailed
 
 from . import setup_integration
 from .conftest import TEST_POC, load_identity
@@ -116,14 +118,11 @@ async def test_identity_failures(
 
 
 @pytest.mark.parametrize(
-    ("side_effect", "expected_retry_after"),
+    "side_effect",
     [
-        (EcosmartRateLimitError("slow down", retry_after=30), "30"),
-        # No Retry-After header, so the message quotes our own cadence.
-        (
-            EcosmartRateLimitError("slow down"),
-            str(int(SPOT_SCAN_INTERVAL.total_seconds())),
-        ),
+        EcosmartRateLimitError("slow down", retry_after=30),
+        # No Retry-After header either — setup must not invent a delay claim.
+        EcosmartRateLimitError("slow down"),
     ],
 )
 async def test_identity_rate_limit_is_reported_as_such(
@@ -131,18 +130,56 @@ async def test_identity_rate_limit_is_reported_as_such(
     mock_ecosmart_client: AsyncMock,
     mock_config_entry: MockConfigEntry,
     side_effect: Exception,
-    expected_retry_after: str,
 ) -> None:
-    """Test a spent budget is not reported as a connection failure."""
+    """Test a spent budget is not reported as a connection failure.
+
+    ConfigEntryNotReady has no retry_after support, so the setup path must
+    use a message that does not claim a delay Home Assistant will not honour.
+    """
     mock_ecosmart_client.me.side_effect = side_effect
 
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
-    assert mock_config_entry.error_reason_translation_key == "rate_limited"
-    assert mock_config_entry.error_reason_translation_placeholders == {
-        "retry_after": expected_retry_after
-    }
+    assert mock_config_entry.error_reason_translation_key == "rate_limited_setup"
+    placeholders = mock_config_entry.error_reason_translation_placeholders or {}
+    assert "retry_after" not in placeholders
+    # The rendered reason must not claim a number of seconds either.
+    reason = str(mock_config_entry.reason or "")
+    assert not any(ch.isdigit() for ch in reason)
+
+
+async def test_first_refresh_rate_limit_omits_retry_after(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test an initial 429 does not claim a delay HA will ignore.
+
+    async_config_entry_first_refresh ignores UpdateFailed.retry_after and
+    converts the failure to a normal config-entry retry (~5s), so the
+    setup-time path must not pass or advertise a server delay.
+    """
+    mock_config_entry.add_to_hass(hass)
+    coordinator: EcosmartCoordinator = EcosmartCoordinator(
+        hass,
+        mock_config_entry,
+        [TEST_POC],
+        name="spot price",
+        update_interval=SPOT_SCAN_INTERVAL,
+        fetch=mock_ecosmart_client.spot,
+    )
+    assert coordinator.data is None
+    mock_ecosmart_client.spot.side_effect = EcosmartRateLimitError(
+        "slow down", retry_after=30
+    )
+
+    with pytest.raises(UpdateFailed) as err:
+        await coordinator._async_update_data()
+
+    assert err.value.translation_key == "rate_limited_setup"
+    assert err.value.retry_after is None
+    assert not err.value.translation_placeholders
 
 
 @pytest.mark.parametrize(
@@ -170,6 +207,28 @@ async def test_first_refresh_failures(
     await setup_integration(hass, mock_config_entry)
 
     assert mock_config_entry.state is expected_state
+
+
+async def test_later_rate_limit_without_header_uses_scan_interval(
+    hass: HomeAssistant,
+    mock_ecosmart_client: AsyncMock,
+    mock_config_entry: MockConfigEntry,
+) -> None:
+    """Test a later 429 with no Retry-After falls back to our poll cadence."""
+    await setup_integration(hass, mock_config_entry)
+    coordinator = mock_config_entry.runtime_data.spot_coordinator
+    assert coordinator.data is not None
+
+    mock_ecosmart_client.spot.side_effect = EcosmartRateLimitError("slow down")
+
+    with pytest.raises(UpdateFailed) as err:
+        await coordinator._async_update_data()
+
+    assert err.value.translation_key == "rate_limited"
+    assert err.value.retry_after == int(SPOT_SCAN_INTERVAL.total_seconds())
+    assert err.value.translation_placeholders == {
+        "retry_after": str(int(SPOT_SCAN_INTERVAL.total_seconds()))
+    }
 
 
 async def test_rate_limit_retry_after_moves_the_next_poll(

@@ -70,6 +70,13 @@ class EcosmartCoordinator[_DataT](DataUpdateCoordinator[dict[str, _DataT]]):
                 translation_domain=DOMAIN, translation_key="invalid_auth"
             ) from err
         except EcosmartRateLimitError as err:
+            # First refresh converts UpdateFailed to ConfigEntryNotReady and
+            # ignores retry_after (~5s HA retry). Do not claim a delay then.
+            if self.data is None:
+                raise UpdateFailed(
+                    translation_domain=DOMAIN,
+                    translation_key="rate_limited_setup",
+                ) from err
             retry_after = err.retry_after
             if retry_after is None:
                 # No Retry-After header: fall back to our own cadence rather
