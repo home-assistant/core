@@ -40,6 +40,7 @@ from homeassistant.helpers.target import TargetEntityChangeTracker, TargetSelect
 from homeassistant.helpers.typing import ConfigType
 
 from .const import TARGET_CHANGE_RELOAD_COOLDOWN
+from .util import state_needs_accessory_mode
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -55,10 +56,34 @@ _DOMAIN_PRIORITY = 20
 _UNKNOWN_TARGET_PRIORITY = 10
 _NO_MATCH_PRIORITY = -1
 
+type TargetEntityFilter = Callable[[HomeAssistant, str], bool]
+
+
+@callback
+def async_is_bridge_target_entity(hass: HomeAssistant, entity_id: str) -> bool:
+    """Return whether a target entity can remain on a HomeKit bridge."""
+    state = hass.states.get(entity_id)
+    return state is None or not state_needs_accessory_mode(state)
+
+
+@callback
+def _async_filter_target_entity_ids(
+    hass: HomeAssistant,
+    entity_ids: set[str],
+    entity_filter: TargetEntityFilter | None,
+) -> set[str]:
+    """Filter expanded target entities when requested."""
+    if entity_filter is None:
+        return entity_ids
+    return {entity_id for entity_id in entity_ids if entity_filter(hass, entity_id)}
+
 
 @callback
 def async_target_entity_ids_by_type(
-    hass: HomeAssistant, targets: Mapping[str, list[str]]
+    hass: HomeAssistant,
+    targets: Mapping[str, list[str]],
+    *,
+    entity_filter: TargetEntityFilter | None = None,
 ) -> dict[str, set[str]]:
     """Expand each target type separately to preserve match specificity."""
     expanded: dict[str, set[str]] = {}
@@ -68,7 +93,11 @@ def async_target_entity_ids_by_type(
         selected = target_helper.async_extract_referenced_entity_ids(
             hass, TargetSelection({target_type: target_ids})
         )
-        expanded[target_type] = selected.referenced | selected.indirectly_referenced
+        expanded[target_type] = _async_filter_target_entity_ids(
+            hass,
+            selected.referenced | selected.indirectly_referenced,
+            entity_filter,
+        )
     return expanded
 
 
@@ -147,9 +176,17 @@ class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
         hass: HomeAssistant,
         target_selection: TargetSelection,
         action: Callable[[set[str], set[str]], Any],
+        *,
+        entity_filter: TargetEntityFilter | None,
     ) -> None:
         """Initialize the target entity set change tracker."""
-        super().__init__(hass, target_selection, lambda entity_ids: entity_ids)
+        super().__init__(
+            hass,
+            target_selection,
+            lambda entity_ids: _async_filter_target_entity_ids(
+                hass, entity_ids, entity_filter
+            ),
+        )
         self._action = action
         self._tracked_entities: set[str] = set()
         self._group_entity_ids: set[str] = set()
@@ -350,6 +387,8 @@ async def async_track_target_entity_change(
     hass: HomeAssistant,
     target_config: ConfigType,
     action: Callable[[set[str], set[str]], Any],
+    *,
+    entity_filter: TargetEntityFilter | None = None,
 ) -> CALLBACK_TYPE:
     """Track changes to the entities referenced by a HomeKit target."""
     target_selection = TargetSelection(target_config)
@@ -357,5 +396,10 @@ async def async_track_target_entity_change(
         raise HomeAssistantError(
             f"Target selection {target_config} does not contain any targets"
         )
-    tracker = HomeKitTargetEntitySetChangeTracker(hass, target_selection, action)
+    tracker = HomeKitTargetEntitySetChangeTracker(
+        hass,
+        target_selection,
+        action,
+        entity_filter=entity_filter,
+    )
     return await tracker.async_setup()
