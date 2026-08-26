@@ -1,5 +1,7 @@
 """Tests for the Papouch sensor platform."""
 
+from unittest.mock import AsyncMock
+
 from homeassistant.components.papouch.const import DOMAIN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -31,12 +33,16 @@ async def test_sensor_entity(
     assert state.state == "22.5"
     assert state.attributes["unit_of_measurement"] == "°C"
 
-    mock_device.get_supported_sensors.return_value = [
-        {"item_id": "1", "type": "temperature", "name": "Temp 1", "unit": "°F"}
-    ]
+    mock_device.parse_fresh_data = AsyncMock(
+        return_value={
+            "temperature": {"1": 24.0},
+            "input": {"1": 1},
+            "switch": {"1": 1},
+        }
+    )
 
     await mock_config_entry.runtime_data.async_request_refresh()
     await hass.async_block_till_done()
 
     state = hass.states.get(sensor_id)
-    assert state.attributes["unit_of_measurement"] == "°F"
+    assert state.state == "24.0"
