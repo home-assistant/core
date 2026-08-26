@@ -18,6 +18,7 @@ from homeassistant.const import (
 )
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import (
+    device_registry as dr,
     entity_registry as er,
     label_registry as lr,
     target as target_helper,
@@ -32,6 +33,8 @@ from homeassistant.helpers.entityfilter import (
 )
 
 from .util import async_fire_target_change_cooldown
+
+from tests.common import MockConfigEntry
 
 
 @pytest.mark.parametrize(
@@ -200,6 +203,48 @@ async def test_target_state_change_does_not_refresh(
     await async_fire_target_change_cooldown(hass, freezer)
 
     action.assert_not_called()
+    unsubscribe()
+
+
+async def test_direct_device_target_topology_change(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test direct device targets refresh when a device becomes a child."""
+    config_entry = MockConfigEntry(domain="demo")
+    config_entry.add_to_hass(hass)
+    parent = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("demo", "parent")},
+    )
+    future_child = device_registry.async_get_or_create(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("demo", "child")},
+    )
+    child_entity = entity_registry.async_get_or_create(
+        "light",
+        "demo",
+        "child",
+        device_id=future_child.id,
+    )
+    action = Mock()
+    unsubscribe = await async_track_target_entity_change(
+        hass, {ATTR_DEVICE_ID: [parent.id]}, action
+    )
+
+    # Start a new setup session so the existing device can become a child.
+    device_registry.async_config_entry_unloaded(config_entry.entry_id)
+    device_registry.async_get_or_create_child(
+        config_entry_id=config_entry.entry_id,
+        identifiers={("demo", "child")},
+        parent_device_id=parent.id,
+    )
+    await hass.async_block_till_done()
+    await async_fire_target_change_cooldown(hass, freezer)
+
+    action.assert_called_once_with({child_entity.entity_id}, set())
     unsubscribe()
 
 
