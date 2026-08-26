@@ -47,9 +47,7 @@ def async_cleanup_stale_devices(
     """Cleanup stale heater devices and climates."""
     heater_serial_numbers = {heater.serial_no for heater in data.heaters}
     device_registry = dr.async_get(hass)
-    device_entries = device_registry.devices.get_devices_for_config_entry_id(
-        entry.entry_id
-    )
+    device_entries = dr.async_entries_for_config_entry(device_registry, entry.entry_id)
     stale_heater_serial_numbers: list[str] = [
         device_entry.serial_number
         for device_entry in device_entries

@@ -3,6 +3,7 @@
 from unittest.mock import AsyncMock, MagicMock, call
 
 from music_assistant_models.enums import MediaType
+from music_assistant_models.errors import UserNotFoundError
 from music_assistant_models.media_items import SearchResults
 import pytest
 from syrupy.assertion import SnapshotAssertion
@@ -87,21 +88,33 @@ async def test_search_action_with_username(
         require_schema=35,
     )
 
-    # not valid because of name, disabled or guest
-    for username in ("non_existing_user", "party_guest", "user_disabled"):
-        with pytest.raises(ServiceValidationError) as exc:
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_SEARCH,
-                {
-                    ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-                    ATTR_SEARCH_NAME: "test",
-                    ATTR_USERNAME: username,
-                },
-                blocking=True,
-                return_response=True,
-            )
-        assert exc.value.translation_key == "invalid_username"
+
+async def test_search_action_with_unknown_username(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that a username the server does not know raises a translated error."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.music.search = AsyncMock(
+        side_effect=UserNotFoundError(
+            "A user with user id or name nobody is not available."
+        )
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_SEARCH,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_SEARCH_NAME: "test",
+                ATTR_USERNAME: "nobody",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == "invalid_username"
+    assert err.value.translation_placeholders == {"username": "nobody"}
 
 
 @pytest.mark.parametrize(
@@ -160,22 +173,7 @@ async def test_get_library_action_with_username(
     # username supported from schema 35 and above
     music_assistant_client.server_info.schema_version = 35
 
-    # invalid users
-    for username in ("non_existing_user", "party_guest", "user_disabled"):
-        with pytest.raises(ServiceValidationError):
-            await hass.services.async_call(
-                DOMAIN,
-                SERVICE_GET_LIBRARY,
-                {
-                    ATTR_CONFIG_ENTRY_ID: entry.entry_id,
-                    ATTR_FAVORITE: False,
-                    ATTR_MEDIA_TYPE: media_type,
-                    ATTR_USERNAME: username,
-                },
-                blocking=True,
-                return_response=True,
-            )
-    # valid user
+    # an explicit username is forwarded to the server (which validates it)
     await hass.services.async_call(
         DOMAIN,
         SERVICE_GET_LIBRARY,
@@ -188,3 +186,31 @@ async def test_get_library_action_with_username(
         blocking=True,
         return_response=True,
     )
+
+
+async def test_get_library_action_with_unknown_username(
+    hass: HomeAssistant,
+    music_assistant_client: MagicMock,
+) -> None:
+    """Test that a username the server does not know raises a translated error."""
+    entry = await setup_integration_from_fixtures(hass, music_assistant_client)
+    music_assistant_client.music.get_library_tracks = AsyncMock(
+        side_effect=UserNotFoundError(
+            "A user with user id or name nobody is not available."
+        )
+    )
+
+    with pytest.raises(ServiceValidationError) as err:
+        await hass.services.async_call(
+            DOMAIN,
+            SERVICE_GET_LIBRARY,
+            {
+                ATTR_CONFIG_ENTRY_ID: entry.entry_id,
+                ATTR_MEDIA_TYPE: "track",
+                ATTR_USERNAME: "nobody",
+            },
+            blocking=True,
+            return_response=True,
+        )
+    assert err.value.translation_key == "invalid_username"
+    assert err.value.translation_placeholders == {"username": "nobody"}
