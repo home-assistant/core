@@ -339,9 +339,6 @@
     },
     "unsupported_firmware": {
       "message": "[%key:component::plugwise::config::error::unsupported%]"
-    },
-    "unsupported_operation_mode": {
-      "message": "Operation mode {op_mode} is not supported"
     }
   }
 }
