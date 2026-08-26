@@ -1,4 +1,6 @@
-"""Owns the coordinator; modbus hands out the unit, sofar-modbus reads."""
+"""Integrate Sofar devices into Home Assistant."""
+
+from datetime import timedelta
 
 from modbus_connection import ModbusTcpParams
 from sofar_modbus.modern.device import SofarInverter, identify
@@ -8,8 +10,8 @@ from homeassistant.const import CONF_HOST, CONF_PORT, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 
-from .const import CONF_UNIT_ID, DOMAIN
-from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator
+from .const import CONF_UNIT_ID, DOMAIN, SCAN_INTERVAL, SETTINGS_SCAN_INTERVAL
+from .coordinator import SofarConfigEntry, SofarDataUpdateCoordinator, SofarRuntimeData
 
 PLATFORMS: list[Platform] = [Platform.SENSOR]
 
@@ -40,10 +42,24 @@ async def async_setup_entry(hass: HomeAssistant, entry: SofarConfigEntry) -> boo
         inverter_type=inverter_type,
     )
 
-    coordinator = SofarDataUpdateCoordinator(hass, entry, device)
-    await coordinator.async_config_entry_first_refresh()
+    readings = SofarDataUpdateCoordinator(
+        hass,
+        entry,
+        device,
+        device.async_update_readings,
+        timedelta(seconds=SCAN_INTERVAL),
+    )
+    settings = SofarDataUpdateCoordinator(
+        hass,
+        entry,
+        device,
+        device.async_update_settings,
+        timedelta(seconds=SETTINGS_SCAN_INTERVAL),
+    )
+    await readings.async_config_entry_first_refresh()
+    await settings.async_refresh()
 
-    entry.runtime_data = coordinator
+    entry.runtime_data = SofarRuntimeData(readings, settings)
 
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
     return True
