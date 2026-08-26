@@ -72,6 +72,7 @@ class VeluxCover(VeluxEntity, CoverEntity):
     """Representation of a Velux cover."""
 
     node: OpeningDevice
+    _attr_translation_key = "cover"
 
     # Features common to all covers
     _attr_supported_features = (
