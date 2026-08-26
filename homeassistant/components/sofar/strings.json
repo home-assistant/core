@@ -79,18 +79,6 @@
       "apparent_power_pcc_total": {
         "name": "Apparent power PCC total"
       },
-      "bat_config_address_1": {
-        "name": "Battery config address 1"
-      },
-      "bat_config_address_2": {
-        "name": "Battery config address 2"
-      },
-      "bat_config_address_3": {
-        "name": "Battery config address 3"
-      },
-      "bat_config_address_4": {
-        "name": "Battery config address 4"
-      },
       "bat_config_capacity": {
         "name": "Battery config capacity"
       },
@@ -117,9 +105,6 @@
       },
       "bat_config_eps_buffer": {
         "name": "Battery config EPS buffer"
-      },
-      "bat_config_id": {
-        "name": "Battery config ID"
       },
       "bat_config_maximum_charge_current_limit": {
         "name": "Battery config maximum charge current limit"
@@ -391,9 +376,6 @@
       "grid_frequency": {
         "name": "Grid frequency"
       },
-      "hardware_version": {
-        "name": "Hardware version"
-      },
       "heatsink_temperature_1": {
         "name": "Heatsink temperature 1"
       },
@@ -663,9 +645,6 @@
       },
       "serial_number": {
         "name": "Serial number"
-      },
-      "software_version": {
-        "name": "Software version"
       },
       "solar_generation_today": {
         "name": "Solar generation today"
