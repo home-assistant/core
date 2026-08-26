@@ -10,10 +10,12 @@ from vizaio import (
     AppAvailability,
     AppConfig,
     AppRecord,
+    ChargingStatus,
     InputInfo,
     SettingInfo,
     StateExtended,
     Vizio,
+    VizioAuthError,
     VizioError,
     VizioNotFoundError,
     fetch_app_availability,
@@ -26,12 +28,19 @@ from homeassistant.components.media_player import MediaPlayerDeviceClass
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import CONF_DEVICE_CLASS, CONF_HOST, CONF_NAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.storage import Store
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, VIZIO_AUDIO_SETTINGS, VIZIO_SOUND_MODE
+from .const import (
+    DOMAIN,
+    VIZIO_AUDIO_SETTINGS,
+    VIZIO_MUTE,
+    VIZIO_SOUND_MODE,
+    VIZIO_VOLUME,
+)
 
 type VizioConfigEntry = ConfigEntry[VizioRuntimeData]
 
@@ -41,9 +50,14 @@ SCAN_INTERVAL = timedelta(seconds=30)
 
 
 async def _optional[T](coro: Coroutine[Any, Any, T]) -> T | None:
-    """Return the call result, or None when the device API call fails."""
+    """Return the call result, or None when the device API call fails.
+
+    Auth failures are not degradable — they surface as a reauth trigger.
+    """
     try:
         return await coro
+    except VizioAuthError as err:
+        raise ConfigEntryAuthFailed from err
     except VizioError:
         return None
 
@@ -95,6 +109,11 @@ class VizioDeviceData:
     # Audio settings from get_settings("audio")
     audio_settings: dict[str, SettingInfo] | None = None
 
+    # Volume and mute, read individually when the audio settings
+    # collection does not carry them.
+    volume: int | None = None
+    is_muted: bool | None = None
+
     # Sound mode options from get_setting("audio", "eq")
     sound_mode_list: list[str] | None = None
 
@@ -106,6 +125,10 @@ class VizioDeviceData:
 
     # Current app config from get_current_app_config() (TVs only)
     current_app_config: AppConfig | None = None
+
+    # Battery state (Crave speakers only)
+    battery_level: int | None = None
+    charging_status: ChargingStatus | None = None
 
 
 class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
@@ -169,6 +192,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         if self._use_state_extended:
             try:
                 state = await self.device.get_state_extended()
+            except VizioAuthError as err:
+                raise ConfigEntryAuthFailed from err
             except VizioNotFoundError:
                 self._use_state_extended = False
             except VizioError as err:
@@ -179,6 +204,8 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
         else:
             try:
                 is_on = await self.device.get_power_state()
+            except VizioAuthError as err:
+                raise ConfigEntryAuthFailed from err
             except VizioError as err:
                 raise self._update_failed() from err
 
@@ -187,6 +214,17 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
 
         # Device is on - fetch all data
         audio_settings = await _optional(self.device.get_settings(VIZIO_AUDIO_SETTINGS))
+
+        # Some firmware omits volume and mute from the audio settings
+        # collection even though the individual settings still work, and
+        # there is no way to tell in advance. Read them directly only when
+        # they are missing, so unaffected devices cost nothing extra.
+        volume: int | None = None
+        is_muted: bool | None = None
+        if audio_settings is None or VIZIO_VOLUME not in audio_settings:
+            volume = await _optional(self.device.get_volume())
+        if audio_settings is None or VIZIO_MUTE not in audio_settings:
+            is_muted = await _optional(self.device.is_muted())
 
         sound_mode_list = None
         if audio_settings and VIZIO_SOUND_MODE in audio_settings:
@@ -217,13 +255,23 @@ class VizioDeviceCoordinator(DataUpdateCoordinator[VizioDeviceData]):
                     self.device.get_current_app_config()
                 )
 
+        battery_level: int | None = None
+        charging_status: ChargingStatus | None = None
+        if self.device.profile.has_battery:
+            battery_level = await _optional(self.device.get_battery_level())
+            charging_status = await _optional(self.device.get_charging_status())
+
         return VizioDeviceData(
             is_on=True,
             audio_settings=audio_settings,
+            volume=volume,
+            is_muted=is_muted,
             sound_mode_list=sound_mode_list,
             current_input=current_input,
             input_list=input_list,
             current_app_config=current_app_config,
+            battery_level=battery_level,
+            charging_status=charging_status,
         )
 
 

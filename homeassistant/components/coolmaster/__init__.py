@@ -57,7 +57,7 @@ async def async_unload_entry(hass: HomeAssistant, entry: CoolmasterConfigEntry) 
 async def async_remove_config_entry_device(
     hass: HomeAssistant,
     config_entry: CoolmasterConfigEntry,
-    device_entry: dr.DeviceEntry,
+    device_entry: dr.AnyDeviceEntry,
 ) -> bool:
     """Remove a config entry from a device."""
     return not device_entry.identifiers.intersection(

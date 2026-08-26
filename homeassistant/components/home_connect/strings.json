@@ -10,12 +10,6 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
-      "oauth_error": "[%key:common::config_flow::abort::oauth2_error%]",
-      "oauth_failed": "[%key:common::config_flow::abort::oauth2_failed%]",
-      "oauth_implementation_unavailable": "[%key:common::config_flow::abort::oauth2_implementation_unavailable%]",
-      "oauth_timeout": "[%key:common::config_flow::abort::oauth2_timeout%]",
-      "oauth_unauthorized": "[%key:common::config_flow::abort::oauth2_unauthorized%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "Please ensure you reconfigure against the same account."
     },
@@ -38,6 +32,16 @@
       "reauth_confirm": {
         "description": "The Home Connect integration needs to re-authenticate your account",
         "title": "[%key:common::config_flow::title::reauth%]"
+      },
+      "scopes": {
+        "data": {
+          "images_scope": "Images scope"
+        },
+        "data_description": {
+          "images_scope": "Allows Home Assistant to access images from your Home Connect devices."
+        },
+        "description": "Select the optional scopes you want to enable for Home Connect authentication.",
+        "title": "Scopes"
       }
     }
   },
@@ -146,6 +150,14 @@
             }
           }
         }
+      }
+    },
+    "image": {
+      "door_right_camera": {
+        "name": "Door right camera"
+      },
+      "interior_right_camera": {
+        "name": "Interior right camera"
       }
     },
     "light": {
@@ -1583,17 +1595,14 @@
     "auth_error": {
       "message": "Authentication error: {error}. Please, re-authenticate your account"
     },
-    "config_entry_not_found": {
-      "message": "Config entry for device ID {device_id} not found"
-    },
-    "device_entry_not_found": {
-      "message": "Device entry for device ID {device_id} not found"
-    },
     "execute_command": {
       "message": "Error executing command {command}: {error}"
     },
     "fetch_api_error": {
       "message": "Error obtaining data from the API: {error}"
+    },
+    "fetch_image_error": {
+      "message": "Error obtaining image from the API: {error}"
     },
     "fetch_program_error": {
       "message": "Error obtaining the selected or active program: {error}"

@@ -5,9 +5,13 @@ from collections.abc import Coroutine
 import logging
 from typing import Any
 
+import voluptuous as vol
+from voluptuous.humanize import humanize_error
+
 from homeassistant import config as conf_util
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
+    CONF_ACTIONS,
     CONF_DEVICE_ID,
     CONF_NAME,
     CONF_TRIGGERS,
@@ -19,6 +23,7 @@ from homeassistant.exceptions import ConfigEntryError, HomeAssistantError
 from homeassistant.helpers import device_registry as dr, discovery, issue_registry as ir
 from homeassistant.helpers.helper_integration import async_remove_helper_devices
 from homeassistant.helpers.reload import async_reload_integration_platforms
+from homeassistant.helpers.script import async_validate_actions_config
 from homeassistant.helpers.service import async_register_admin_service
 from homeassistant.helpers.typing import ConfigType
 from homeassistant.loader import async_get_integration
@@ -102,8 +107,13 @@ async def async_setup_entry(hass: HomeAssistant, entry: ConfigEntry) -> bool:
         remove_all_devices=True,
     )
 
-    if device_id is not None and dr.async_get(hass).async_is_composite_device_id(
-        device_id
+    device_registry = dr.async_get(hass)
+    if (
+        device_id is not None
+        and device_registry.async_get(
+            device_id, include_main_devices=False, include_child_devices=False
+        )
+        is not None
     ):
         # The device was split into one device per config entry; ask the user to
         # select a device again
@@ -187,6 +197,13 @@ async def async_migrate_entry(hass: HomeAssistant, config_entry: ConfigEntry) ->
     return True
 
 
+def _humanize(err: Exception, data: Any) -> str:
+    """Humanize vol.Invalid, stringify other exceptions."""
+    if isinstance(err, vol.Invalid):
+        return humanize_error(data, err)
+    return str(err)
+
+
 async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
     """Process config."""
     coordinators = hass.data.pop(DATA_COORDINATORS, None)
@@ -207,6 +224,24 @@ async def _process_config(hass: HomeAssistant, hass_config: ConfigType) -> None:
 
     for conf_section in hass_config[DOMAIN]:
         if CONF_TRIGGERS in conf_section:
+            if actions_config := conf_section.get(CONF_ACTIONS):
+                try:
+                    conf_section[CONF_ACTIONS] = await async_validate_actions_config(
+                        hass, actions_config
+                    )
+                except (vol.Invalid, HomeAssistantError) as err:
+                    breadcrumb = "template section"
+                    if (unique_id := conf_section.get(CONF_UNIQUE_ID)) is not None:
+                        breadcrumb = f"template section with unique_id: {unique_id}"
+
+                    _LOGGER.error(
+                        "The 'actions' for %s failed to setup: %s",
+                        breadcrumb,
+                        _humanize(err, actions_config),
+                    )
+
+                    continue
+
             coordinator_tasks.append(init_coordinator(hass, conf_section))
             continue
 
