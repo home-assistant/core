@@ -13,9 +13,9 @@ from homeassistant.components.sofar.coordinator import SofarRuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import entity_registry as er
+from homeassistant.helpers import device_registry as dr, entity_registry as er
 
-from . import MOCK_SERIAL, MOCK_USER_INPUT
+from . import MOCK_HW_VERSION, MOCK_SERIAL, MOCK_SW_VERSION, MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
 
@@ -159,3 +159,19 @@ async def test_sensor_platform_is_forwarded(
 ) -> None:
     """Test the sensor platform is set up as part of config entry setup."""
     assert hass.states.async_entity_ids("sensor")
+
+
+async def test_device_info_carries_the_firmware_versions(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test the identity registers reach the device, not the state machine."""
+    device = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), init_integration.entry_id
+    )
+
+    assert device is not None
+    assert device.hw_version == MOCK_HW_VERSION
+    assert device.sw_version == MOCK_SW_VERSION
+    assert device.serial_number == MOCK_SERIAL

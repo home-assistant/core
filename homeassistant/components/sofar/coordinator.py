@@ -52,11 +52,14 @@ class SofarDataUpdateCoordinator(DataUpdateCoordinator[UpdateReport]):
         """Return device information."""
         serial = self.device.serial_number
         assert serial is not None
+        identity = self.device.identity
         return DeviceInfo(
             identifiers={(DOMAIN, serial)},
             manufacturer=ATTR_MANUFACTURER,
             model=self.device.model or None,
             serial_number=serial,
+            hw_version=identity.hardware_version or None,
+            sw_version=identity.software_version or None,
         )
 
     @override
