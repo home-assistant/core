@@ -494,6 +494,56 @@ async def test_optimistic_light_yields_to_push_after_ttl(
     assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
 
+async def test_optimistic_writes_age_out_individually(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test each write ages out on its own timestamp, not the newest one.
+
+    With coalesced snapshots that never match the oldest entry, the queue
+    would otherwise stay alive as long as writes keep coming, suppressing
+    real remote changes indefinitely.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+    ttl = vp_coordinator.OPTIMISTIC_TTL_SECONDS
+
+    with patch.object(
+        vp_coordinator,
+        "monotonic",
+        side_effect=[100.0, 104.0, 100.0 + ttl + 1.0, 104.0 + ttl + 1.0],
+    ):
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+            blocking=True,
+        )
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_OFF,
+            {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+            blocking=True,
+        )
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+        # The first write has aged out, but the newest one keeps its full
+        # TTL: the remote on may not override the fresher off write yet.
+        on_data({"light": {"status": 1}})
+        await hass.async_block_till_done()
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+        # Once the newest write has aged too, the remote change wins.
+        on_data({"light": {"status": 1}})
+        await hass.async_block_till_done()
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
+
+
 async def test_optimistic_light_self_expires_without_push(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,

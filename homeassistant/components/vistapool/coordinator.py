@@ -124,7 +124,13 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         intermediate off): the echo must be confirmed in order, but
         entities and automations must not see the value flash by.
         """
-        self._pending_optimistic.setdefault(value_path, []).append((value, monotonic()))
+        writes = self._pending_optimistic.setdefault(value_path, [])
+        now = monotonic()
+        # Age out entries by their own timestamp so sustained writing cannot
+        # grow the queue without bound; the newest write keeps its full TTL.
+        while writes and now - writes[0][1] >= OPTIMISTIC_TTL_SECONDS:
+            writes.pop(0)
+        writes.append((value, now))
         _set_path(self.data, value_path, value)
         if (handle := self._optimistic_handles.pop(value_path, None)) is not None:
             handle.cancel()
@@ -157,7 +163,12 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Overlay unconfirmed optimistic writes onto freshly fetched data."""
         now = monotonic()
         for path, writes in list(self._pending_optimistic.items()):
-            if now - writes[-1][1] >= OPTIMISTIC_TTL_SECONDS:
+            # Coalesced snapshots may never match the oldest entries, so age
+            # each write out on its own timestamp instead of keeping the
+            # whole queue alive as long as the newest write is fresh.
+            while writes and now - writes[0][1] >= OPTIMISTIC_TTL_SECONDS:
+                writes.pop(0)
+            if not writes:
                 self._clear_optimistic(path)
                 continue
             remote_value = AquariteClient.get_value(data, path)
