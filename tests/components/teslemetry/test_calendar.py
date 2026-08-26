@@ -79,6 +79,31 @@ def mock_site_info_invalid_season(mock_site_info) -> Generator[AsyncMock]:
 
 
 @pytest.fixture
+def mock_site_info_end_of_day(
+    request: pytest.FixtureRequest, mock_site_info
+) -> Generator[AsyncMock]:
+    """Mock site_info with a real end-of-day tariff period ending at the day boundary."""
+    site_info = deepcopy(SITE_INFO)
+    tariff = site_info["response"]["tariff_content_v2"]
+    # 23:30->24:00 period taken verbatim from a PowerSync Flow Power tariff,
+    # where Tesla encodes the end of the day as hour 24 or minute 60.
+    tariff["energy_charges"]["Summer"]["rates"] = {"PERIOD_23_30": 0.3561}
+    tariff["seasons"]["Summer"]["tou_periods"] = {
+        "PERIOD_23_30": {
+            "periods": [
+                {"toDayOfWeek": 6, "fromHour": 23, "fromMinute": 30, **request.param}
+            ]
+        }
+    }
+    tariff["sell_tariff"]["seasons"] = {}
+    with patch(
+        "tesla_fleet_api.tesla.energysite.EnergySite.site_info",
+        side_effect=lambda: deepcopy(site_info),
+    ) as mock:
+        yield mock
+
+
+@pytest.fixture
 def mock_site_info_invalid_price(mock_site_info) -> Generator[AsyncMock]:
     """Mock site_info with non-numeric price data."""
     site_info = deepcopy(SITE_INFO)
@@ -379,6 +404,51 @@ async def test_calendar_midnight_crossing_local_start(
     assert starts[0].day == 31  # Dec 31 21:00 (previous evening)
     assert starts[1].day == 1  # Jan 1 16:00
     assert starts[2].day == 1  # Jan 1 21:00
+
+
+@pytest.mark.usefixtures("entity_registry_enabled_by_default")
+@pytest.mark.parametrize(
+    "mock_site_info_end_of_day",
+    [
+        pytest.param({"toHour": 24}, id="hour_24"),
+        pytest.param({"toHour": 23, "toMinute": 60}, id="minute_60"),
+    ],
+    indirect=True,
+)
+async def test_calendar_end_of_day_period(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    mock_legacy: AsyncMock,
+    mock_site_info_end_of_day: AsyncMock,
+) -> None:
+    """Test a tariff period ending at the day boundary parses instead of crashing."""
+    tz = dt_util.get_default_time_zone()
+    # Sunday 23:45, inside the 23:30->24:00 end-of-day period
+    freezer.move_to(datetime(2024, 1, 7, 23, 45, 0, tzinfo=tz))
+
+    await setup_platform(hass, [Platform.CALENDAR])
+
+    state = hass.states.get(ENTITY_BUY)
+    assert state
+    assert state.state == "on"
+
+    result = await hass.services.async_call(
+        CALENDAR_DOMAIN,
+        SERVICE_GET_EVENTS,
+        {
+            ATTR_ENTITY_ID: [ENTITY_BUY],
+            EVENT_START_DATETIME: datetime(2024, 1, 7, 0, 0, 0, tzinfo=tz),
+            EVENT_END_DATETIME: datetime(2024, 1, 8, 0, 0, 0, tzinfo=tz),
+        },
+        blocking=True,
+        return_response=True,
+    )
+    events = result[ENTITY_BUY]["events"]
+    assert len(events) == 1
+    # The day boundary normalises to the following midnight
+    assert dt_util.parse_datetime(events[0]["end"]) == datetime(
+        2024, 1, 8, 0, 0, 0, tzinfo=tz
+    )
 
 
 @pytest.mark.usefixtures("entity_registry_enabled_by_default")
