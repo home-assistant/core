@@ -97,7 +97,7 @@ async def test_setting_a_value_re_enables_an_active_limit(
     config_entry = await _setup(hass, aioclient_mock, mock_fronius_modbus)
     coordinator = config_entry.runtime_data.modbus_settings_coordinators[0]
     controls = coordinator.modbus_inverter.controls
-    await coordinator.async_write("controls", "enabled", True)
+    await coordinator.async_write(lambda inverter: inverter.controls, "enabled", True)
     assert controls.enabled is True
 
     writes: list[WriteEvent] = []

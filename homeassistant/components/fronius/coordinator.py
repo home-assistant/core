@@ -28,7 +28,7 @@ from .const import (
     FroniusDeviceInfo,
     SolarNetId,
 )
-from .entity import FroniusEntity, FroniusEntityDescription
+from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
 from .number import MODBUS_NUMBER_ENTITY_DESCRIPTIONS
 from .sensor import (
     INVERTER_ENTITY_DESCRIPTIONS,
@@ -298,7 +298,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
 
     async def async_write(
         self,
-        component_name: str,
+        component_fn: ModbusComponentFn,
         field: str,
         value: float | bool,
         *,
@@ -317,7 +317,7 @@ class FroniusModbusSettingsUpdateCoordinator(FroniusModbusCoordinatorBase):
         turning a limit off hands control to the next priority source, and a
         setpoint change should not quietly take it back.
         """
-        component = getattr(self.modbus_inverter, component_name)
+        component = component_fn(self.modbus_inverter)
         if component is None:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,

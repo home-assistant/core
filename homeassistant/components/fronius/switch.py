@@ -8,7 +8,7 @@ from homeassistant.const import EntityCategory, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
-from .entity import FroniusEntity, FroniusEntityDescription
+from .entity import FroniusEntity, FroniusEntityDescription, ModbusComponentFn
 
 if TYPE_CHECKING:
     from . import FroniusConfigEntry
@@ -25,32 +25,32 @@ class FroniusSwitchEntityDescription(FroniusEntityDescription, SwitchEntityDescr
     ``field`` is the writable field of the model the control lives in.
     """
 
-    component: str
+    component_fn: ModbusComponentFn
     field: str
 
 
 MODBUS_SWITCH_ENTITY_DESCRIPTIONS: list[FroniusSwitchEntityDescription] = [
     FroniusSwitchEntityDescription(
         key="power_limit_enabled",
-        component="controls",
+        component_fn=lambda inverter: inverter.controls,
         field="enabled",
         entity_category=EntityCategory.CONFIG,
     ),
     FroniusSwitchEntityDescription(
         key="battery_charge_power_limit_enabled",
-        component="storage",
+        component_fn=lambda inverter: inverter.storage,
         field="charge_limit_enabled",
         entity_category=EntityCategory.CONFIG,
     ),
     FroniusSwitchEntityDescription(
         key="battery_discharge_power_limit_enabled",
-        component="storage",
+        component_fn=lambda inverter: inverter.storage,
         field="discharge_limit_enabled",
         entity_category=EntityCategory.CONFIG,
     ),
     FroniusSwitchEntityDescription(
         key="battery_grid_charging",
-        component="storage",
+        component_fn=lambda inverter: inverter.storage,
         field="grid_charging",
         entity_category=EntityCategory.CONFIG,
     ),
@@ -111,5 +111,5 @@ class ModbusControlSwitch(FroniusEntity, SwitchEntity):
 
     async def _async_write(self, value: bool) -> None:
         await self.coordinator.async_write(
-            self.entity_description.component, self.entity_description.field, value
+            self.entity_description.component_fn, self.entity_description.field, value
         )
