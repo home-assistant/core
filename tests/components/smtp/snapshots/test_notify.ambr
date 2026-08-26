@@ -70,6 +70,7 @@
   '''
   MIME-Version: 1.0
   Subject: Home Assistant
+  X-Priority: 1 (Highest)
   Content-Type: multipart/alternative;
    boundary="===============0000000000000000001=="
   From: Home Assistant <email@example.com>
@@ -89,7 +90,7 @@
   Content-Transfer-Encoding: 7bit
   MIME-Version: 1.0
   
-  <html><body><img src="cid:avatar.png"></body></html>
+  <html><body><img src="https://example.com/avatar.png"></body></html>
   
   --===============0000000000000000001==--
   
