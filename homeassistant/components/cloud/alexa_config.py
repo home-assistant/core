@@ -24,14 +24,17 @@ from homeassistant.components.alexa import (
     errors as alexa_errors,
     state_report as alexa_state_report,
 )
-from homeassistant.components.binary_sensor import BinarySensorDeviceClass
+from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
+    BinarySensorDeviceClass,
+)
 from homeassistant.components.homeassistant.exposed_entities import (
     async_expose_entity,
     async_get_assistant_settings,
     async_listen_entity_updates,
     async_should_expose,
 )
-from homeassistant.components.sensor import SensorDeviceClass
+from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN, SensorDeviceClass
 from homeassistant.core import Event, HomeAssistant, callback, split_entity_id
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er, start
@@ -119,12 +122,12 @@ def entity_supported(hass: HomeAssistant, entity_id: str) -> bool:
         # The entity no longer exists
         return False
     if (
-        domain == "binary_sensor"
+        domain == BINARY_SENSOR_DOMAIN
         and device_class in SUPPORTED_BINARY_SENSOR_DEVICE_CLASSES
     ):
         return True
 
-    if domain == "sensor" and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
+    if domain == SENSOR_DOMAIN and device_class in SUPPORTED_SENSOR_DEVICE_CLASSES:
         return True
 
     return False
