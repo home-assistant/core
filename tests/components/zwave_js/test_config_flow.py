@@ -3526,6 +3526,7 @@ async def different_device_server_version(*args):
         "old_addon_options",
         "form_data",
         "new_addon_options",
+        "revert_addon_options",
         "disconnect_calls",
         "server_version_side_effect",
     ),
@@ -3560,6 +3561,15 @@ async def different_device_server_version(*args):
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             },
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
             0,
             different_device_server_version,
         ),
@@ -3593,8 +3603,58 @@ async def different_device_server_version(*args):
                 "lr_s2_access_control_key": "new654",
                 "lr_s2_authenticated_key": "new321",
             },
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "old654",
+                "lr_s2_authenticated_key": "old321",
+            },
             0,
             different_device_server_version,
+        ),
+        pytest.param(
+            {},
+            {
+                "device": "/test",
+                "network_key": "old123",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+            },
+            {
+                "usb_path": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/new",
+                "s0_legacy_key": "new123",
+                "s2_access_control_key": "new456",
+                "s2_authenticated_key": "new789",
+                "s2_unauthenticated_key": "new987",
+                "lr_s2_access_control_key": "new654",
+                "lr_s2_authenticated_key": "new321",
+            },
+            {
+                "device": "/test",
+                "s0_legacy_key": "old123",
+                "s2_access_control_key": "old456",
+                "s2_authenticated_key": "old789",
+                "s2_unauthenticated_key": "old987",
+                "lr_s2_access_control_key": "",
+                "lr_s2_authenticated_key": "",
+            },
+            0,
+            different_device_server_version,
+            id="old_config_without_lr_keys",
         ),
     ],
 )
@@ -3609,6 +3669,7 @@ async def test_reconfigure_different_device(
     old_addon_options: dict[str, Any],
     form_data: dict[str, Any],
     new_addon_options: dict[str, Any],
+    revert_addon_options: dict[str, Any],
     disconnect_calls: int,
 ) -> None:
     """Test reconfigure flow and configuring a different device."""
@@ -3662,13 +3723,9 @@ async def test_reconfigure_different_device(
     result = await hass.config_entries.flow.async_configure(result["flow_id"])
     await hass.async_block_till_done()
 
-    addon_options = {} | old_addon_options
-    # Legacy network key is not reset.
-    addon_options.pop("network_key")
-
     assert set_addon_options.call_count == 2
     assert set_addon_options.call_args == call(
-        "core_zwave_js", AddonsOptions(config=addon_options)
+        "core_zwave_js", AddonsOptions(config=revert_addon_options)
     )
     assert result["type"] is FlowResultType.SHOW_PROGRESS
     assert result["step_id"] == "start_addon"
@@ -4088,6 +4145,81 @@ async def test_reconfigure_addon_not_installed(
     assert entry.data["integration_created_addon"] is True
     assert client.connect.call_count == 2
     assert client.disconnect.call_count == 1
+
+
+@pytest.mark.parametrize(
+    "properties",
+    [
+        pytest.param({}, id="missing"),
+        pytest.param({"homeId": "not-a-number"}, id="malformed"),
+        pytest.param({"homeId": None}, id="valueless"),
+    ],
+)
+async def test_zeroconf_invalid_discovery_info(
+    hass: HomeAssistant, properties: dict[str, str | None]
+) -> None:
+    """Test zeroconf discovery with invalid home ID properties."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties=properties,
+        ),
+    )
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "invalid_discovery_info"
+
+
+async def test_zeroconf_confirm_already_configured(hass: HomeAssistant) -> None:
+    """Test zeroconf confirm aborts if the entry appeared while pending."""
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": config_entries.SOURCE_ZEROCONF},
+        data=ZeroconfServiceInfo(
+            ip_address=ip_address("127.0.0.1"),
+            ip_addresses=[ip_address("127.0.0.1")],
+            hostname="mock_hostname",
+            name="mock_name",
+            port=3000,
+            type="_zwave-js-server._tcp.local.",
+            properties={"homeId": "1234"},
+        ),
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "zeroconf_confirm"
+
+    # An entry with the same home ID is configured while the discovery
+    # is pending, e.g. via the add-on discovery.
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        data={
+            "url": "ws://localhost:3000",
+            "use_addon": True,
+            "integration_created_addon": True,
+        },
+        title=TITLE,
+        unique_id="1234",
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_configure(result["flow_id"], {})
+
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    # The existing add-on based entry is left untouched.
+    assert entry.data == {
+        "url": "ws://localhost:3000",
+        "use_addon": True,
+        "integration_created_addon": True,
+    }
 
 
 async def test_zeroconf(hass: HomeAssistant) -> None:
@@ -5323,6 +5455,93 @@ async def test_intent_recommended_user(
     }
     assert len(mock_setup.mock_calls) == 1
     assert len(mock_setup_entry.mock_calls) == 1
+
+
+@pytest.mark.usefixtures("supervisor", "addon_installed")
+async def test_intent_recommended_preserves_existing_keys(
+    hass: HomeAssistant,
+    addon_options: dict[str, Any],
+    start_addon: AsyncMock,
+    set_addon_options: AsyncMock,
+) -> None:
+    """Test recommended installation keeps existing add-on security keys."""
+    addon_options.update(
+        {
+            CONF_ADDON_S0_LEGACY_KEY: "old123",
+            CONF_ADDON_S2_ACCESS_CONTROL_KEY: "old456",
+            CONF_ADDON_S2_AUTHENTICATED_KEY: "old789",
+            CONF_ADDON_S2_UNAUTHENTICATED_KEY: "old987",
+            CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: "old654",
+            CONF_ADDON_LR_S2_AUTHENTICATED_KEY: "old321",
+        }
+    )
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    assert result["type"] is FlowResultType.MENU
+    assert result["step_id"] == "installation_type"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"], {"next_step_id": "intent_recommended"}
+    )
+
+    assert result["type"] is FlowResultType.FORM
+    assert result["step_id"] == "configure_addon_user"
+
+    result = await hass.config_entries.flow.async_configure(
+        result["flow_id"],
+        user_input={
+            CONF_USB_PATH: "/test",
+        },
+    )
+
+    assert set_addon_options.call_args == call(
+        "core_zwave_js",
+        AddonsOptions(
+            config={
+                CONF_ADDON_DEVICE: "/test",
+                CONF_ADDON_S0_LEGACY_KEY: "old123",
+                CONF_ADDON_S2_ACCESS_CONTROL_KEY: "old456",
+                CONF_ADDON_S2_AUTHENTICATED_KEY: "old789",
+                CONF_ADDON_S2_UNAUTHENTICATED_KEY: "old987",
+                CONF_ADDON_LR_S2_ACCESS_CONTROL_KEY: "old654",
+                CONF_ADDON_LR_S2_AUTHENTICATED_KEY: "old321",
+            }
+        ),
+    )
+
+    assert result["type"] is FlowResultType.SHOW_PROGRESS
+    assert result["step_id"] == "start_addon"
+
+    with (
+        patch("homeassistant.components.zwave_js.async_setup", return_value=True),
+        patch(
+            "homeassistant.components.zwave_js.async_setup_entry",
+            return_value=True,
+        ),
+    ):
+        await hass.async_block_till_done()
+        result = await hass.config_entries.flow.async_configure(result["flow_id"])
+        await hass.async_block_till_done()
+
+    assert start_addon.call_args == call("core_zwave_js")
+
+    assert result["type"] is FlowResultType.CREATE_ENTRY
+    assert result["data"] == {
+        "url": "ws://host1:3001",
+        "usb_path": "/test",
+        "socket_path": None,
+        "s0_legacy_key": "old123",
+        "s2_access_control_key": "old456",
+        "s2_authenticated_key": "old789",
+        "s2_unauthenticated_key": "old987",
+        "lr_s2_access_control_key": "old654",
+        "lr_s2_authenticated_key": "old321",
+        "use_addon": True,
+        "integration_created_addon": False,
+    }
 
 
 @pytest.mark.usefixtures("supervisor", "addon_info")
