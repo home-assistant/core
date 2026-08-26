@@ -1,6 +1,7 @@
 """Coordinator for WS66i."""
 
 import logging
+from typing import override
 
 from pyws66i import WS66i, ZoneStatus
 
@@ -48,6 +49,7 @@ class Ws66iDataUpdateCoordinator(DataUpdateCoordinator[list[ZoneStatus]]):
 
         return data
 
+    @override
     async def _async_update_data(self) -> list[ZoneStatus]:
         """Fetch data for each of the zones."""
         # The data that is returned here can be accessed through coordinator.data.

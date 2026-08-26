@@ -1,15 +1,22 @@
 """Support for Tibber."""
 
+import asyncio
 from dataclasses import dataclass, field
 import logging
+from typing import Final
 
 import aiohttp
-from aiohttp.client_exceptions import ClientError, ClientResponseError
+from aiohttp.client_exceptions import ClientError
 import tibber
 
 from homeassistant.const import CONF_ACCESS_TOKEN, EVENT_HOMEASSISTANT_STOP, Platform
 from homeassistant.core import Event, HomeAssistant
-from homeassistant.exceptions import ConfigEntryAuthFailed, ConfigEntryNotReady
+from homeassistant.exceptions import (
+    ConfigEntryAuthFailed,
+    ConfigEntryNotReady,
+    OAuth2TokenRequestError,
+    OAuth2TokenRequestReauthError,
+)
 from homeassistant.helpers import config_validation as cv
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.config_entry_oauth2_flow import (
@@ -30,6 +37,8 @@ from .coordinator import (
 from .services import async_setup_services
 
 PLATFORMS = [Platform.BINARY_SENSOR, Platform.NOTIFY, Platform.SENSOR]
+
+DISCONNECT_TIMEOUT: Final = 10
 
 CONFIG_SCHEMA = cv.config_entry_only_config_schema(DOMAIN)
 
@@ -71,6 +80,18 @@ class TibberRuntimeData:
             await self._client.set_access_token(access_token)
         return self._client
 
+    async def async_disconnect(self) -> None:
+        """Disconnect the cached realtime connection without raising."""
+        if self._client is None:
+            return
+        try:
+            async with asyncio.timeout(DISCONNECT_TIMEOUT):
+                await self._client.rt_disconnect()
+        except Exception:
+            _LOGGER.warning(
+                "Error disconnecting the Tibber realtime connection", exc_info=True
+            )
+
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Tibber component."""
@@ -104,13 +125,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     session = OAuth2Session(hass, entry, implementation)
     try:
         await session.async_ensure_token_valid()
-    except ClientResponseError as err:
-        if 400 <= err.status < 500:
-            raise ConfigEntryAuthFailed(
-                "OAuth session is not valid, reauthentication required"
-            ) from err
-        raise ConfigEntryNotReady from err
-    except ClientError as err:
+    except OAuth2TokenRequestReauthError as err:
+        raise ConfigEntryAuthFailed(
+            "OAuth session is not valid, reauthentication required"
+        ) from err
+    except (OAuth2TokenRequestError, ClientError) as err:
         raise ConfigEntryNotReady from err
 
     entry.runtime_data = TibberRuntimeData(
@@ -120,7 +139,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: TibberConfigEntry) -> bo
     tibber_connection = await entry.runtime_data.async_get_client(hass)
 
     async def _close(event: Event) -> None:
-        await tibber_connection.rt_disconnect()
+        await entry.runtime_data.async_disconnect()
 
     entry.async_on_unload(hass.bus.async_listen_once(EVENT_HOMEASSISTANT_STOP, _close))
 
@@ -165,6 +184,5 @@ async def async_unload_entry(
     if unload_ok := await hass.config_entries.async_unload_platforms(
         config_entry, PLATFORMS
     ):
-        tibber_connection = await config_entry.runtime_data.async_get_client(hass)
-        await tibber_connection.rt_disconnect()
+        await config_entry.runtime_data.async_disconnect()
     return unload_ok

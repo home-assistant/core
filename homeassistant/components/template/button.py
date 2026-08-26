@@ -1,7 +1,7 @@
 """Support for buttons which integrates with other components."""
 
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import voluptuous as vol
 
@@ -25,7 +25,7 @@ from .const import CONF_PRESS, DOMAIN
 from .helpers import async_setup_template_entry, async_setup_template_platform
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    make_template_entity_common_modern_schema,
+    make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
 
@@ -41,7 +41,11 @@ BUTTON_YAML_SCHEMA = vol.Schema(
         vol.Required(CONF_PRESS): cv.SCRIPT_SCHEMA,
         vol.Optional(CONF_DEVICE_CLASS): DEVICE_CLASSES_SCHEMA,
     }
-).extend(make_template_entity_common_modern_schema(BUTTON_DOMAIN, DEFAULT_NAME).schema)
+).extend(
+    make_template_entity_common_schema(
+        BUTTON_DOMAIN, DEFAULT_NAME, block_device_class=True
+    ).schema
+)
 
 BUTTON_CONFIG_ENTRY_SCHEMA = vol.Schema(
     {
@@ -110,6 +114,7 @@ class StateButtonEntity(TemplateEntity, ButtonEntity):
         self._attr_device_class = config.get(CONF_DEVICE_CLASS)
         self._attr_state = None
 
+    @override
     async def async_press(self) -> None:
         """Press the button."""
         if script := self._action_scripts.get(CONF_PRESS):

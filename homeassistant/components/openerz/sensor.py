@@ -1,6 +1,7 @@
 """Support for OpenERZ API for Zurich city waste disposal system."""
 
 from datetime import timedelta
+from typing import override
 
 from openerz_api.main import OpenERZConnector
 import voluptuous as vol
@@ -50,11 +51,13 @@ class OpenERZSensor(SensorEntity):
         self.api_connector = api_connector
 
     @property
+    @override
     def name(self):
         """Return the name of the sensor."""
         return self._name
 
     @property
+    @override
     def native_value(self):
         """Return the state of the sensor."""
         return self._state

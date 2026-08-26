@@ -2,7 +2,7 @@
 
 from datetime import date, datetime, time, timedelta
 import logging
-from typing import TYPE_CHECKING, Any
+from typing import TYPE_CHECKING, Any, override
 
 from pytrafikverket import TrafikverketFerry
 from pytrafikverket.exceptions import InvalidAuthentication, NoFerryFound
@@ -67,6 +67,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator):
         self._time: time | None = dt_util.parse_time(config_entry.data[CONF_TIME])
         self._weekdays: list[str] = config_entry.data[CONF_WEEKDAY]
 
+    @override
     async def _async_update_data(self) -> dict[str, Any]:
         """Fetch data from Trafikverket."""
 

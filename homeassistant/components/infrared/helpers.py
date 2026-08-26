@@ -156,6 +156,7 @@ class InfraredEmitterConsumerEntity(InfraredConsumerEntity):
     _attr_should_poll = False
     _infrared_emitter_entity_id: str
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to infrared entity state changes."""
         await super().async_added_to_hass()
@@ -181,6 +182,7 @@ class InfraredReceiverConsumerEntity(InfraredConsumerEntity):
     _infrared_receiver_entity_id: str
     _remove_signal_subscription: CALLBACK_TYPE | None = None
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Subscribe to infrared entity state changes and receiver signals."""
         await super().async_added_to_hass()

@@ -16,11 +16,7 @@ from homeassistant.setup import async_setup_component
 from . import PRST_SERVICE_INFO, TEMP_HUMI_ENCRYPTED_SERVICE_INFO
 
 from tests.common import MockConfigEntry
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 BINDKEY = "231d39c1d7cc1ab1aee224cd096db932"
@@ -160,7 +156,6 @@ async def test_repair_flow_removes_bindkey_and_reloads_entry(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     assert await async_setup_component(hass, "repairs", {})
-    await async_process_repairs_platforms(hass)
     http_client = await hass_client()
 
     # Start the repair flow
@@ -195,7 +190,6 @@ async def test_repair_flow_aborts_when_entry_removed(
     assert issue_registry.async_get_issue(DOMAIN, issue_id) is not None
 
     assert await async_setup_component(hass, "repairs", {})
-    await async_process_repairs_platforms(hass)
     http_client = await hass_client()
 
     # Start the repair flow

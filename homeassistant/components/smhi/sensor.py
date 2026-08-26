@@ -3,6 +3,7 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from datetime import datetime
+from typing import override
 
 from homeassistant.components.sensor import (
     SensorDeviceClass,
@@ -303,6 +304,7 @@ class SMHIWeatherSensor(SmhiWeatherEntity, SensorEntity):
         )
         self._attr_unique_id = f"{latitude}, {longitude}-{entity_description.key}"
 
+    @override
     def update_entity_data(self) -> None:
         """Refresh the entity data."""
         if self.coordinator.data.daily:
@@ -330,6 +332,7 @@ class SMHIFireSensor(SmhiFireEntity, SensorEntity):
         )
         self._attr_unique_id = f"{latitude}, {longitude}-{entity_description.key}"
 
+    @override
     def update_entity_data(self) -> None:
         """Refresh the entity data."""
         if self.coordinator.data.fire_daily:

@@ -2,7 +2,7 @@
 
 from collections import defaultdict
 import logging
-from typing import Any, Final
+from typing import Any, Final, override
 
 import boto3
 import botocore
@@ -155,25 +155,30 @@ class AmazonPollyProvider(Provider):
         self.name = "Amazon Polly"
 
     @property
+    @override
     def supported_languages(self) -> list[str]:
         """Return a list of supported languages."""
         return self.supported_langs
 
     @property
+    @override
     def default_language(self) -> str | None:
         """Return the default language."""
         return self.all_voices.get(self.default_voice, {}).get("LanguageCode")
 
     @property
+    @override
     def default_options(self) -> dict[str, str]:
         """Return dict include default options."""
         return {CONF_VOICE: self.default_voice, CONF_ENGINE: self.default_engine}
 
     @property
+    @override
     def supported_options(self) -> list[str]:
         """Return a list of supported options."""
         return [CONF_VOICE, CONF_ENGINE]
 
+    @override
     def get_tts_audio(
         self,
         message: str,

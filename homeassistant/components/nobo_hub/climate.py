@@ -1,6 +1,6 @@
 """Python Control of Nobø Hub - Nobø Energy Control."""
 
-from typing import Any
+from typing import Any, override
 
 from pynobo import PynoboError, nobo
 
@@ -29,7 +29,6 @@ from homeassistant.util import dt as dt_util
 
 from . import NoboHubConfigEntry
 from .const import (
-    ATTR_SERIAL,
     ATTR_TEMP_COMFORT_C,
     ATTR_TEMP_ECO_C,
     CONF_OVERRIDE_TYPE,
@@ -56,8 +55,6 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Set up the Nobø Ecohub platform from UI configuration."""
-
-    # Setup connection with hub
     hub = config_entry.runtime_data
 
     override_type = (
@@ -66,8 +63,27 @@ async def async_setup_entry(
         else nobo.API.OVERRIDE_TYPE_CONSTANT
     )
 
-    # Add zones as entities
-    async_add_entities(NoboZone(zone_id, hub, override_type) for zone_id in hub.zones)
+    known_zones: set[str] = set()
+
+    @callback
+    def _add_zones(_hub: nobo) -> None:
+        """Add climate entities for zones added to the hub."""
+        if hub.connected:
+            # Forget zones no longer on the hub so a removed-then-re-added zone
+            # (the hub reuses zone ids) is detected as new again. Skip while
+            # disconnected: a stale/empty snapshot would drop live zones and
+            # cause duplicate re-adds on reconnect.
+            known_zones.intersection_update(hub.zones)
+        new_zones = [zone_id for zone_id in hub.zones if zone_id not in known_zones]
+        known_zones.update(new_zones)
+        async_add_entities(
+            NoboZone(hass, zone_id, hub, override_type, config_entry.entry_id)
+            for zone_id in new_zones
+        )
+
+    _add_zones(hub)
+    hub.register_callback(_add_zones)
+    config_entry.async_on_unload(lambda: hub.deregister_callback(_add_zones))
 
 
 class NoboZone(NoboBaseEntity, ClimateEntity):
@@ -90,25 +106,35 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
     # Need to poll to get preset change when in HVACMode.AUTO
     _attr_should_poll = True
 
-    def __init__(self, zone_id, hub: nobo, override_type) -> None:
+    def __init__(
+        self,
+        hass: HomeAssistant,
+        zone_id: str,
+        hub: nobo,
+        override_type: str,
+        entry_id: str,
+    ) -> None:
         """Initialize the climate device."""
-        super().__init__(hub)
+        super().__init__(hass, hub, entry_id)
         self._id = zone_id
         self._attr_unique_id = f"{hub.hub_serial}:{zone_id}"
         self._override_type = override_type
+        zone_name = hub.zones[zone_id][ATTR_NAME]
         self._attr_device_info = DeviceInfo(
-            identifiers={(DOMAIN, f"{hub.hub_serial}:{zone_id}")},
-            name=hub.zones[zone_id][ATTR_NAME],
-            via_device=(DOMAIN, hub.hub_info[ATTR_SERIAL]),
-            suggested_area=hub.zones[zone_id][ATTR_NAME],
+            identifiers={(DOMAIN, self._attr_unique_id)},
+            name=zone_name,
+            via_device_id=self._hub_device_id,
+            suggested_area=zone_name,
         )
         self._read_state()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Set new target HVAC mode."""
         preset = PRESET_COMFORT if hvac_mode == HVACMode.HEAT else PRESET_NONE
         await self._apply_preset(preset, "set_hvac_mode_failed")
 
+    @override
     async def async_set_preset_mode(self, preset_mode: str) -> None:
         """Set new zone override."""
         await self._apply_preset(preset_mode, "set_preset_mode_failed")
@@ -139,6 +165,7 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
                 translation_key=translation_key,
             ) from err
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Set new target temperature."""
         if ATTR_TARGET_TEMP_LOW in kwargs:
@@ -158,14 +185,18 @@ class NoboZone(NoboBaseEntity, ClimateEntity):
         """Fetch new state data for this zone."""
         self._read_state()
 
+    @property
+    @override
+    def available(self) -> bool:
+        """Available when the hub is connected and the zone still exists."""
+        return super().available and self._id in self._nobo.zones
+
     @callback
+    @override
     def _read_state(self) -> None:
-        """Copy the current hub state onto the entity attributes."""
-        if self._id not in self._nobo.zones:
-            # Zone removed via the Nobø app; mark unavailable.
-            self._attr_available = False
+        """Read the current state from the hub. These are only local calls."""
+        if not self.available:
             return
-        self._attr_available = True
         state = self._nobo.get_current_zone_mode(self._id, dt_util.now())
         self._attr_hvac_mode = HVACMode.AUTO
         self._attr_preset_mode = PRESET_NONE

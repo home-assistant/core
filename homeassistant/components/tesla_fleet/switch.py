@@ -3,9 +3,9 @@
 from collections.abc import Callable
 from dataclasses import dataclass
 from itertools import chain
-from typing import Any
+from typing import Any, override
 
-from tesla_fleet_api.const import AutoSeat, Scope, Seat
+from tesla_fleet_api.const import AutoSeat, Scope
 
 from homeassistant.components.switch import (
     SwitchDeviceClass,
@@ -48,7 +48,7 @@ VEHICLE_DESCRIPTIONS: tuple[TeslaFleetSwitchEntityDescription, ...] = (
             AutoSeat.FRONT_LEFT, True
         ),
         off_func=lambda api: api.remote_auto_seat_climate_request(
-            Seat.FRONT_LEFT, False
+            AutoSeat.FRONT_LEFT, False
         ),
         scopes=[Scope.VEHICLE_CMDS],
     ),
@@ -148,6 +148,7 @@ class TeslaFleetVehicleSwitchEntity(TeslaFleetVehicleEntity, TeslaFleetSwitchEnt
         if description.unique_id:
             self._attr_unique_id = f"{data.vin}-{description.unique_id}"
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         if self._value is None:
@@ -155,6 +156,7 @@ class TeslaFleetVehicleSwitchEntity(TeslaFleetVehicleEntity, TeslaFleetSwitchEnt
         else:
             self._attr_is_on = self.entity_description.value_func(self._value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         self.raise_for_read_only(self.entity_description.scopes[0])
@@ -163,6 +165,7 @@ class TeslaFleetVehicleSwitchEntity(TeslaFleetVehicleEntity, TeslaFleetSwitchEnt
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         self.raise_for_read_only(self.entity_description.scopes[0])
@@ -188,12 +191,14 @@ class TeslaFleetChargeFromGridSwitchEntity(
             data, "components_disallow_charge_from_grid_with_solar_installed"
         )
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the entity."""
         # When disallow_charge_from_grid_with_solar_installed is missing, its Off.
         # But this sensor is flipped to match how the Tesla app works.
         self._attr_is_on = not self.get(self.key, False)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         self.raise_for_read_only(Scope.ENERGY_CMDS)
@@ -205,6 +210,7 @@ class TeslaFleetChargeFromGridSwitchEntity(
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         self.raise_for_read_only(Scope.ENERGY_CMDS)
@@ -231,11 +237,13 @@ class TeslaFleetStormModeSwitchEntity(
         super().__init__(data, "user_settings_storm_mode_enabled")
         self.scoped = Scope.ENERGY_CMDS in scopes
 
+    @override
     def _async_update_attrs(self) -> None:
         """Update the attributes of the sensor."""
         self._attr_available = self._value is not None
         self._attr_is_on = bool(self._value)
 
+    @override
     async def async_turn_on(self, **kwargs: Any) -> None:
         """Turn on the Switch."""
         self.raise_for_read_only(Scope.ENERGY_CMDS)
@@ -243,6 +251,7 @@ class TeslaFleetStormModeSwitchEntity(
         self._attr_is_on = True
         self.async_write_ha_state()
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn off the Switch."""
         self.raise_for_read_only(Scope.ENERGY_CMDS)

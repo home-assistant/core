@@ -1,0 +1,104 @@
+{
+  "config": {
+    "abort": {
+      "already_configured": "[%key:common::config_flow::abort::already_configured_device%]",
+      "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
+      "invalid_discovery_info": "The discovered device does not report a valid Harbor serial number"
+    },
+    "error": {
+      "cannot_connect": "[%key:common::config_flow::error::cannot_connect%]",
+      "invalid_cert": "The client certificate must be a valid PEM certificate",
+      "invalid_key": "The private key must be a valid PEM private key",
+      "invalid_serial": "The serial number must be exactly 10 digits"
+    },
+    "flow_title": "{name}",
+    "step": {
+      "discovery_confirm": {
+        "data": {
+          "cert_pem": "[%key:component::harbor::config::step::user::data::cert_pem%]",
+          "key_pem": "[%key:component::harbor::config::step::user::data::key_pem%]"
+        },
+        "data_description": {
+          "cert_pem": "[%key:component::harbor::config::step::user::data_description::cert_pem%]",
+          "key_pem": "[%key:component::harbor::config::step::user::data_description::key_pem%]"
+        },
+        "description": "Do you want to set up the Harbor camera with serial number {serial}?",
+        "title": "[%key:component::harbor::config::step::user::title%]"
+      },
+      "user": {
+        "data": {
+          "cert_pem": "Client certificate",
+          "ip_address": "[%key:common::config_flow::data::ip%]",
+          "key_pem": "Private key",
+          "serial": "Serial number"
+        },
+        "data_description": {
+          "cert_pem": "Paste the client certificate from the Harbor app.",
+          "ip_address": "The local IP address of the Harbor device.",
+          "key_pem": "Paste the private key that matches the client certificate.",
+          "serial": "The 10-digit serial number printed on the Harbor device."
+        },
+        "title": "Set up Harbor"
+      }
+    }
+  },
+  "entity": {
+    "select": {
+      "night_mode_preference": {
+        "name": "Night mode",
+        "state": {
+          "auto": "[%key:common::state::auto%]",
+          "off": "[%key:common::state::off%]",
+          "on": "[%key:common::state::on%]"
+        }
+      }
+    },
+    "sensor": {
+      "bitrate": {
+        "name": "Bitrate"
+      },
+      "num_viewers": {
+        "name": "Viewers",
+        "unit_of_measurement": "viewers"
+      },
+      "stream_quality": {
+        "name": "Stream quality",
+        "state": {
+          "excellent": "Excellent",
+          "fair": "Fair",
+          "good": "Good",
+          "poor": "Poor"
+        }
+      },
+      "wifi_strength": {
+        "name": "Wi-Fi strength",
+        "unit_of_measurement": "bars"
+      }
+    },
+    "switch": {
+      "camera_on": {
+        "name": "Camera"
+      },
+      "clock_display": {
+        "name": "Clock overlay"
+      },
+      "video_flip": {
+        "name": "Flip image"
+      }
+    }
+  },
+  "exceptions": {
+    "cannot_connect": {
+      "message": "Could not connect to the Harbor camera. It may be offline or unreachable."
+    },
+    "select_option_failed": {
+      "message": "Failed to select {option} for {select}."
+    },
+    "switch_turn_off_failed": {
+      "message": "Failed to turn off {switch}."
+    },
+    "switch_turn_on_failed": {
+      "message": "Failed to turn on {switch}."
+    }
+  }
+}

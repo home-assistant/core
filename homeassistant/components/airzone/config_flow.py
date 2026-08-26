@@ -1,7 +1,7 @@
 """Config flow for Airzone."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aioairzone.const import DEFAULT_PORT, DEFAULT_SYSTEM_ID
 from aioairzone.exceptions import AirzoneError, InvalidSystem
@@ -44,6 +44,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
     _discovered_mac: str | None = None
     MINOR_VERSION = 2
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
@@ -97,6 +98,7 @@ class AirZoneConfigFlow(ConfigFlow, domain=DOMAIN):
             errors=errors,
         )
 
+    @override
     async def async_step_dhcp(
         self, discovery_info: DhcpServiceInfo
     ) -> ConfigFlowResult:

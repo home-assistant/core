@@ -2,7 +2,7 @@
 
 import json
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp.client import ClientSession
 from pyfreedompro import put_state
@@ -96,6 +96,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         )
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         device = next(
@@ -116,11 +117,13 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
                 self._attr_hvac_mode = HVAC_MAP[state["heatingCoolingState"]]
         super()._handle_coordinator_update()
 
+    @override
     async def async_added_to_hass(self) -> None:
         """When entity is added to hass."""
         await super().async_added_to_hass()
         self._handle_coordinator_update()
 
+    @override
     async def async_set_hvac_mode(self, hvac_mode: HVACMode) -> None:
         """Async function to set mode to climate."""
 
@@ -133,6 +136,7 @@ class Device(CoordinatorEntity[FreedomproDataUpdateCoordinator], ClimateEntity):
         )
         await self.coordinator.async_request_refresh()
 
+    @override
     async def async_set_temperature(self, **kwargs: Any) -> None:
         """Async function to set temperature to climate."""
         payload = {}

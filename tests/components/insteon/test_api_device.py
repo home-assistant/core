@@ -50,6 +50,47 @@ async def test_get_config(
 
         assert result["name"] == "Device 11.11.11"
         assert result["address"] == "11.11.11"
+        assert result["cat"] == 0x02
+        assert result["subcat"] == 0x00
+        assert result["model"] == "1"
+        assert result["description"] == "Device 11.11.11"
+        assert result["engine_version"] == "unknown"
+        assert result["firmware"] == 0x00
+        assert result["buttons"] == {"1": "on_off_switch"}
+
+
+async def test_get_device_with_buttons(
+    hass: HomeAssistant,
+    hass_ws_client: WebSocketGenerator,
+) -> None:
+    """Test getting a multi-button Insteon device."""
+
+    ws_client, devices, _, device_registry = await async_mock_setup(
+        hass, hass_ws_client
+    )
+    ha_device = device_registry.async_get_or_create(
+        config_entry_id="abcde12345",
+        identifiers={(DOMAIN, "33.33.33")},
+        name="Device 33.33.33",
+    )
+    with patch.object(insteon.api.device, "devices", devices):
+        await ws_client.send_json(
+            {ID: 2, TYPE: "insteon/device/get", DEVICE_ID: ha_device.id}
+        )
+        msg = await ws_client.receive_json()
+        result = msg["result"]
+
+        assert result["address"] == "33.33.33"
+        assert result["buttons"] == {
+            "1": "dimmable_light_main",
+            "2": "on_off_switch_b",
+            "3": "on_off_switch_c",
+            "4": "on_off_switch_d",
+            "5": "on_off_switch_e",
+            "6": "on_off_switch_f",
+            "7": "on_off_switch_g",
+            "8": "on_off_switch_h",
+        }
 
 
 async def test_no_ha_device(
@@ -123,14 +164,33 @@ async def test_get_ha_device_name(
     """Test getting the HA device name from an Insteon address."""
 
     _, devices, _, device_reg = await async_mock_setup(hass, hass_ws_client)
+    config_entry_id = hass.config_entries.async_entries(DOMAIN)[0].entry_id
+
+    # Register a colliding device sharing the same identifier but owned by a second
+    # config entry. The lookup must be scoped to the supplied config entry: an
+    # unscoped lookup could return either device, so returning the correct name for
+    # each config entry proves the config entry controls the lookup.
+    other_config_entry = MockConfigEntry(domain=DOMAIN, data=MOCK_USER_INPUT_PLM)
+    other_config_entry.add_to_hass(hass)
+    device_reg.async_get_or_create(
+        config_entry_id=other_config_entry.entry_id,
+        identifiers={(DOMAIN, "11.11.11")},
+        name="Device 11.11.11 second entry",
+    )
 
     with patch.object(insteon.api.device, "devices", devices):
-        # Test a real HA and Insteon device
-        name = await async_device_name(device_reg, "11.11.11")
+        # The scoped lookup returns the device owned by the supplied config entry
+        name = await async_device_name(device_reg, "11.11.11", config_entry_id)
         assert name == "Device 11.11.11"
 
+        # The same identifier scoped to the second config entry returns its device
+        name = await async_device_name(
+            device_reg, "11.11.11", other_config_entry.entry_id
+        )
+        assert name == "Device 11.11.11 second entry"
+
         # Test no HA or Insteon device
-        name = await async_device_name(device_reg, "BB.BB.BB")
+        name = await async_device_name(device_reg, "BB.BB.BB", config_entry_id)
         assert name == ""
 
 

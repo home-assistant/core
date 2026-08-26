@@ -1,14 +1,18 @@
 """Support for August lock."""
 
 import logging
-from typing import Any
+from typing import Any, override
 
 from aiohttp import ClientResponseError
 from yalexs.activity import ActivityType
 from yalexs.lock import Lock, LockOperation, LockStatus
 from yalexs.util import get_latest_activity, update_lock_detail_from_activity
 
-from homeassistant.components.lock import ATTR_CHANGED_BY, LockEntity, LockEntityFeature
+from homeassistant.components.lock import (
+    LockEntity,
+    LockEntityFeature,
+    LockEntityStateAttribute,
+)
 from homeassistant.const import ATTR_BATTERY_LEVEL
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
@@ -45,14 +49,17 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
         if self._detail.unlatch_supported:
             self._attr_supported_features = LockEntityFeature.OPEN
 
+    @override
     async def async_lock(self, **kwargs: Any) -> None:
         """Lock the device."""
         await self._perform_lock_operation(LockOperation.LOCK)
 
+    @override
     async def async_open(self, **kwargs: Any) -> None:
         """Open/unlatch the device."""
         await self._perform_lock_operation(LockOperation.OPEN)
 
+    @override
     async def async_unlock(self, **kwargs: Any) -> None:
         """Unlock the device."""
         await self._perform_lock_operation(LockOperation.UNLOCK)
@@ -92,6 +99,7 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
         return False
 
     @callback
+    @override
     def _update_from_data(self) -> None:
         """Get the latest state of the sensor and update activity."""
         detail = self._detail
@@ -128,8 +136,9 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
                 keypad.battery_level
             )
 
+    @override
     async def async_added_to_hass(self) -> None:
-        """Restore ATTR_CHANGED_BY on startup.
+        """Restore changed_by on startup.
 
         It is likely no longer in the activity log.
         """
@@ -138,5 +147,7 @@ class AugustLock(AugustEntity, RestoreEntity, LockEntity):
         if not (last_state := await self.async_get_last_state()):
             return
 
-        if ATTR_CHANGED_BY in last_state.attributes:
-            self._attr_changed_by = last_state.attributes[ATTR_CHANGED_BY]
+        if LockEntityStateAttribute.CHANGED_BY in last_state.attributes:
+            self._attr_changed_by = last_state.attributes[
+                LockEntityStateAttribute.CHANGED_BY
+            ]

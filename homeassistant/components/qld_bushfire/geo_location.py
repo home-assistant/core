@@ -3,7 +3,7 @@
 from collections.abc import Callable
 from datetime import timedelta
 import logging
-from typing import Any
+from typing import Any, override
 
 from georss_qld_bushfire_alert_client import (
     QldBushfireAlertFeedEntry,
@@ -174,6 +174,7 @@ class QldBushfireLocationEvent(GeolocationEvent):
         self._remove_signal_delete: Callable[[], None]
         self._remove_signal_update: Callable[[], None]
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Call when entity is added to hass."""
         self._remove_signal_delete = async_dispatcher_connect(
@@ -219,6 +220,7 @@ class QldBushfireLocationEvent(GeolocationEvent):
         self._status = feed_entry.status
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return the device state attributes."""
         return {

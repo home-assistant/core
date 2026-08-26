@@ -1,7 +1,7 @@
 """Sensor platform for Hyperion."""
 
 import functools
-from typing import Any
+from typing import Any, override
 
 from hyperion import client
 from hyperion.const import (
@@ -128,10 +128,12 @@ class HyperionSensor(SensorEntity):
         )
 
     @property
+    @override
     def available(self) -> bool:
         """Return server availability."""
         return bool(self._client.has_loaded_state)
 
+    @override
     async def async_added_to_hass(self) -> None:
         """Register callbacks when entity added to hass."""
         self.async_on_remove(
@@ -144,6 +146,7 @@ class HyperionSensor(SensorEntity):
 
         self._client.add_callbacks(self._client_callbacks)
 
+    @override
     async def async_will_remove_from_hass(self) -> None:
         """Cleanup prior to hass removal."""
         self._client.remove_callbacks(self._client_callbacks)

@@ -23,11 +23,7 @@ from homeassistant.helpers import issue_registry as ir
 from homeassistant.setup import async_setup_component
 
 from tests.common import MockConfigEntry, MockModule, mock_integration
-from tests.components.repairs import (
-    async_process_repairs_platforms,
-    process_repair_fix_flow,
-    start_repair_fix_flow,
-)
+from tests.components.repairs import process_repair_fix_flow, start_repair_fix_flow
 from tests.typing import ClientSessionGenerator
 
 DEVICE = (
@@ -114,7 +110,6 @@ async def test_multi_pan_migration_repair_flow(
         assert await hass.config_entries.async_setup(config_entry.entry_id)
         await hass.async_block_till_done()
 
-        await async_process_repairs_platforms(hass)
         client = await hass_client()
 
         issue_id = f"{ISSUE_MULTI_PAN_MIGRATION}_{config_entry.entry_id}"

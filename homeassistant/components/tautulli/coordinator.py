@@ -2,6 +2,7 @@
 
 import asyncio
 from datetime import timedelta
+from typing import override
 
 from pytautulli import (
     PyTautulli,
@@ -51,6 +52,7 @@ class TautulliDataUpdateCoordinator(DataUpdateCoordinator[None]):
         self.home_stats: list[PyTautulliApiHomeStats] | None = None
         self.users: list[PyTautulliApiUser] | None = None
 
+    @override
     async def _async_update_data(self) -> None:
         """Get the latest data from Tautulli."""
         try:

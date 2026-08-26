@@ -3,7 +3,7 @@
 import logging
 from pathlib import Path
 import shutil
-from typing import Any
+from typing import Any, override
 
 import voluptuous as vol
 from yarl import URL
@@ -164,6 +164,7 @@ async def _save_uploaded_cert_file(hass: HomeAssistant, uploaded_file_id: str) -
 class InfluxDBConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for InfluxDB."""
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:
