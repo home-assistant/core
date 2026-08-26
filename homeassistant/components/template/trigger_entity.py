@@ -59,6 +59,8 @@ class TriggerEntity(  # pylint: disable=home-assistant-enforce-class-module
     async def async_added_to_hass(self) -> None:
         """Handle being added to Home Assistant."""
 
+        # Setup condition before calling async_added_to_hass to ensure
+        # the condition is available before a trigger can occur
         if condition_config := self._config.get(CONF_CONDITIONS):
             self._cond_func = await condition.async_conditions_from_config(
                 self.hass,
