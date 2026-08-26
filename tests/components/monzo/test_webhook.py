@@ -109,7 +109,7 @@ async def test_new_account_event_and_webhook_are_discovered(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     entity_id = entity_registry.async_get_entity_id(
         EVENT_DOMAIN, DOMAIN, "acc_joint_transaction"
@@ -124,7 +124,7 @@ async def test_new_account_event_and_webhook_are_discovered(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert monzo.user_account.list_account_webhooks.await_count == 3
     monzo.user_account.register_webhook.assert_awaited_once_with(
@@ -202,7 +202,7 @@ async def test_removed_account_entities_are_removed(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert (
         device_registry.async_get_device_by_identifier(
@@ -911,7 +911,7 @@ async def test_external_url_cleanup_oauth_failure_starts_reauthentication(
 
         freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert polling_config_entry.data[CONF_WEBHOOK_URL] == WEBHOOK_URL
     monzo.user_account.list_account_webhooks.assert_awaited_once()
@@ -949,7 +949,7 @@ async def test_external_url_cleanup_failure_is_retried_once(
 
         freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert CONF_WEBHOOK_URL not in polling_config_entry.data
     assert monzo.user_account.delete_webhook.await_args_list == [
@@ -999,7 +999,7 @@ async def test_cloudhook_creation_failure_is_retried(
 
         freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     assert monzo.user_account.register_webhook.await_args_list == [
         call("acc_curr", CLOUDHOOK_URL),
@@ -1041,7 +1041,7 @@ async def test_retry_is_cancelled_when_callback_url_becomes_unavailable(
 
         freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
         async_fire_time_changed(hass)
-        await hass.async_block_till_done()
+        await hass.async_block_till_done(wait_background_tasks=True)
 
     generate_url.assert_called_once()
     monzo.user_account.list_account_webhooks.assert_not_awaited()
@@ -1081,7 +1081,7 @@ async def test_registration_oauth_failure_starts_reauthentication(
 
     freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert monzo.user_account.list_account_webhooks.await_count == 2
     monzo.user_account.delete_webhook.assert_awaited_once_with("webhook-acc_curr")
@@ -1111,11 +1111,11 @@ async def test_registration_failure_is_retried(
 
     freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     freezer.tick(timedelta(seconds=WEBHOOK_RETRY_DELAY))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert monzo.user_account.register_webhook.await_count == 2
     assert caplog.text.count("Unable to register Monzo webhooks") == 1

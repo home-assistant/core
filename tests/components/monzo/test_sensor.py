@@ -105,7 +105,7 @@ async def test_unavailable_entity(
     basic_monzo.user_account.pots.return_value = [{"id": "pot_savings"}]
     freezer.tick(timedelta(minutes=100))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
     entity_id = await async_get_entity_id(hass, TEST_POTS[0]["id"], POT_SENSORS[0])
     state = hass.states.get(entity_id)
     assert state.state == "unknown"
@@ -151,7 +151,7 @@ async def test_deleted_pot_is_removed_and_can_be_rediscovered(
     basic_monzo.user_account.pots.return_value = [{**holiday_pot, "balance": 54321}]
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert hass.states.get(deleted_entity_id) is None
     assert entity_registry.async_get(deleted_entity_id) is None
@@ -166,7 +166,7 @@ async def test_deleted_pot_is_removed_and_can_be_rediscovered(
     basic_monzo.user_account.pots.return_value = [TEST_POTS[0], holiday_pot]
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     restored_entity_id = await async_get_entity_id(
         hass, TEST_POTS[0]["id"], POT_SENSORS[0]
@@ -240,7 +240,7 @@ async def test_new_accounts_and_pots_are_discovered(
 
     freezer.tick(timedelta(minutes=1))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     account_entity_id = await async_get_entity_id(
         hass, new_account["id"], ACCOUNT_SENSORS[0]
@@ -301,7 +301,7 @@ async def test_update_failed(
     )
     freezer.tick(timedelta(minutes=10))
     async_fire_time_changed(hass)
-    await hass.async_block_till_done()
+    await hass.async_block_till_done(wait_background_tasks=True)
 
     assert "Invalid Monzo API response." in caplog.text
     assert "account_id" in caplog.text
