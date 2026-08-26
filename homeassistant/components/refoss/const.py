@@ -2,7 +2,7 @@
 
 from logging import Logger, getLogger
 
-_LOGGER: Logger = getLogger(__package__)
+LOGGER: Logger = getLogger(__package__)
 
 COORDINATORS = "coordinators"
 

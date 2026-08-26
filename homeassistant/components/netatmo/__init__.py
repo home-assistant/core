@@ -16,30 +16,25 @@ from homeassistant.exceptions import (
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
 )
-from homeassistant.helpers import aiohttp_client, config_validation as cv
+from homeassistant.helpers import (
+    aiohttp_client,
+    config_validation as cv,
+    device_registry as dr,
+)
 from homeassistant.helpers.config_entry_oauth2_flow import (
     ImplementationUnavailableError,
     OAuth2Session,
     async_get_config_entry_implementation,
 )
-from homeassistant.helpers.device_registry import DeviceEntry
+from homeassistant.helpers.device_registry import AnyDeviceEntry, DeviceEntry
 from homeassistant.helpers.dispatcher import async_dispatcher_send
 from homeassistant.helpers.event import async_call_later
 from homeassistant.helpers.start import async_at_started
 from homeassistant.helpers.typing import ConfigType
 
 from . import api
-from .const import (
-    DATA_CAMERAS,
-    DATA_DEVICE_IDS,
-    DATA_EVENTS,
-    DATA_HOMES,
-    DATA_PERSONS,
-    DATA_SCHEDULES,
-    DOMAIN,
-    PLATFORMS,
-)
-from .data_handler import NetatmoConfigEntry, NetatmoDataHandler
+from .const import DOMAIN, PLATFORMS
+from .coordinator import NetatmoConfigEntry, NetatmoDataHandler
 from .services import async_setup_services
 from .webhook import async_register_webhook, async_unregister_webhook
 
@@ -52,17 +47,6 @@ MAX_WEBHOOK_RETRIES = 3
 
 async def async_setup(hass: HomeAssistant, config: ConfigType) -> bool:
     """Set up the Netatmo component."""
-    # Uses legacy hass.data[DOMAIN] pattern
-    # pylint: disable-next=home-assistant-use-runtime-data
-    hass.data[DOMAIN] = {
-        DATA_PERSONS: {},
-        DATA_DEVICE_IDS: {},
-        DATA_SCHEDULES: {},
-        DATA_HOMES: {},
-        DATA_EVENTS: {},
-        DATA_CAMERAS: {},
-    }
-
     async_setup_services(hass)
 
     return True
@@ -167,16 +151,38 @@ async def async_remove_entry(hass: HomeAssistant, entry: NetatmoConfigEntry) -> 
 
 
 async def async_remove_config_entry_device(
-    hass: HomeAssistant, config_entry: NetatmoConfigEntry, device_entry: DeviceEntry
+    hass: HomeAssistant, config_entry: NetatmoConfigEntry, device_entry: AnyDeviceEntry
 ) -> bool:
     """Remove a config entry from a device."""
-    data = config_entry.runtime_data
-    modules = [m for h in data.account.homes.values() for m in h.modules]
-    rooms = [r for h in data.account.homes.values() for r in h.rooms]
+    account = config_entry.runtime_data.account
+    # A disabled home leaves the account, so everything below it looks stale to
+    # the inventory check. Its descendants keep their own disabler, hence a walk.
+    unpolled_home_ids = account.all_home_names.keys() - account.homes.keys()
+    device_registry = dr.async_get(hass)
+    device: AnyDeviceEntry | None = device_entry
+    while device is not None:
+        if any(
+            identifier[1] in unpolled_home_ids
+            for identifier in device.identifiers
+            if identifier[0] == DOMAIN
+        ):
+            return False
+        device = (
+            device_registry.async_get(device.via_device_id, include_child_devices=False)
+            if isinstance(device, DeviceEntry) and device.via_device_id
+            else None
+        )
+
+    homes = config_entry.runtime_data.account.homes.values()
+    valid_ids = {
+        *config_entry.runtime_data.account.all_home_names,
+        *config_entry.runtime_data.account.modules,
+        *(module for home in homes for module in home.modules),
+        *(room for home in homes for room in home.rooms),
+    }
 
     return not any(
-        identifier
+        identifier[1] in valid_ids
         for identifier in device_entry.identifiers
-        if (identifier[0] == DOMAIN and identifier[1] in modules)
-        or identifier[1] in rooms
+        if identifier[0] == DOMAIN
     )

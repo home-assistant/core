@@ -70,7 +70,11 @@ def async_get_device_for_service_call(
     """Get the device entry related to a service call."""
     device_id = call.data[CONF_DEVICE_ID]
     device_registry = dr.async_get(hass)
-    if (device_entry := device_registry.async_get(device_id)) is None:
+    if (
+        device_entry := device_registry.async_get(
+            device_id, include_child_devices=False
+        )
+    ) is None:
         raise ServiceValidationError(
             translation_domain=DOMAIN,
             translation_key="invalid_device",
@@ -84,10 +88,11 @@ def async_get_config_for_device(
     hass: HomeAssistant, device_entry: dr.DeviceEntry
 ) -> TeslemetryConfigEntry:
     """Get the config entry related to a device entry."""
-    for entry_id in device_entry.config_entries:
-        if entry := hass.config_entries.async_get_entry(entry_id):
-            if entry.domain == DOMAIN:
-                return entry
+    _, config_entry = dr.async_get_device_and_config_entry_for_domain(
+        hass, device_entry.id, domain=DOMAIN
+    )
+    if config_entry:
+        return config_entry
     raise ServiceValidationError(
         translation_domain=DOMAIN,
         translation_key="no_config_entry_for_device",
@@ -139,7 +144,7 @@ def async_setup_services(hass: HomeAssistant) -> None:
             vehicle.api.navigation_gps_request(
                 lat=call.data[ATTR_GPS][CONF_LATITUDE],
                 lon=call.data[ATTR_GPS][CONF_LONGITUDE],
-                order=call.data.get(ATTR_ORDER),
+                order=call.data.get(ATTR_ORDER, 0),
             )
         )
 

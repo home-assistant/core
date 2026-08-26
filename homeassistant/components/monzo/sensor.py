@@ -13,8 +13,12 @@ from homeassistant.core import HomeAssistant
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.helpers.typing import StateType
 
+from .const import DEVICE_MODEL_ACCOUNT, DEVICE_MODEL_POT, NON_TRANSFER_ACCOUNT_TYPES
 from .coordinator import MonzoConfigEntry, MonzoCoordinator, MonzoData
 from .entity import MonzoBaseEntity
+from .helpers import get_account_name
+
+PARALLEL_UPDATES = 0
 
 
 @dataclass(frozen=True, kw_only=True)
@@ -30,7 +34,6 @@ ACCOUNT_SENSORS = (
         translation_key="balance",
         value_fn=lambda data: data["balance"]["balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement="GBP",
         suggested_display_precision=2,
     ),
     MonzoSensorEntityDescription(
@@ -38,7 +41,13 @@ ACCOUNT_SENSORS = (
         translation_key="total_balance",
         value_fn=lambda data: data["balance"]["total_balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement="GBP",
+        suggested_display_precision=2,
+    ),
+    MonzoSensorEntityDescription(
+        key="spend_today",
+        translation_key="spend_today",
+        value_fn=lambda data: abs(data["balance"]["spend_today"]) / 100,
+        device_class=SensorDeviceClass.MONETARY,
         suggested_display_precision=2,
     ),
 )
@@ -49,12 +58,9 @@ POT_SENSORS = (
         translation_key="pot_balance",
         value_fn=lambda data: data["balance"] / 100,
         device_class=SensorDeviceClass.MONETARY,
-        native_unit_of_measurement="GBP",
         suggested_display_precision=2,
     ),
 )
-
-MODEL_POT = "Pot"
 
 
 async def async_setup_entry(
@@ -63,24 +69,38 @@ async def async_setup_entry(
     async_add_entities: AddConfigEntryEntitiesCallback,
 ) -> None:
     """Defer sensor setup to the shared sensor module."""
-    coordinator = config_entry.runtime_data
+    coordinator = config_entry.runtime_data.coordinator
 
     accounts = [
         MonzoSensor(
             coordinator,
             entity_description,
-            index,
-            account["name"],
+            account_id,
+            (
+                account["name"]
+                if account["type"] in NON_TRANSFER_ACCOUNT_TYPES
+                else DEVICE_MODEL_ACCOUNT
+            ),
+            get_account_name(account),
+            account["balance"]["currency"],
             lambda x: x.accounts,
         )
         for entity_description in ACCOUNT_SENSORS
-        for index, account in enumerate(coordinator.data.accounts)
+        for account_id, account in coordinator.data.accounts.items()
     ]
 
     pots = [
-        MonzoSensor(coordinator, entity_description, index, MODEL_POT, lambda x: x.pots)
+        MonzoSensor(
+            coordinator,
+            entity_description,
+            pot_id,
+            DEVICE_MODEL_POT,
+            pot["name"],
+            pot["currency"],
+            lambda x: x.pots,
+        )
         for entity_description in POT_SENSORS
-        for index, _pot in enumerate(coordinator.data.pots)
+        for pot_id, pot in coordinator.data.pots.items()
     ]
 
     async_add_entities(accounts + pots)
@@ -95,14 +115,23 @@ class MonzoSensor(MonzoBaseEntity, SensorEntity):
         self,
         coordinator: MonzoCoordinator,
         entity_description: MonzoSensorEntityDescription,
-        index: int,
+        resource_id: str,
         device_model: str,
-        data_accessor: Callable[[MonzoData], list[dict[str, Any]]],
+        device_name: str,
+        currency: str,
+        data_accessor: Callable[[MonzoData], dict[str, dict[str, Any]]],
     ) -> None:
         """Initialize the sensor."""
-        super().__init__(coordinator, index, device_model, data_accessor)
+        super().__init__(
+            coordinator,
+            resource_id,
+            device_model,
+            device_name,
+            data_accessor,
+        )
         self.entity_description = entity_description
-        self._attr_unique_id = f"{self.data['id']}_{entity_description.key}"
+        self._attr_native_unit_of_measurement = currency
+        self._attr_unique_id = f"{resource_id}_{entity_description.key}"
 
     @property
     @override

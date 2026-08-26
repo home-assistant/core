@@ -67,10 +67,9 @@ async def async_setup_entry(
             devices_added |= new_platforms
 
     for platform in SUPPORTED_PLATFORMS:
-        if device_reg.async_get_device(
-            identifiers={
-                (DOMAIN, f"{coordinator.config_entry.unique_id}_{platform.value}")
-            }
+        if device_reg.async_get_device_by_identifier(
+            (DOMAIN, f"{coordinator.config_entry.unique_id}_{platform.value}"),
+            config_entry.entry_id,
         ):
             entities.append(PsnMediaPlayerEntity(coordinator, platform, trophy_titles))
             devices_added.add(platform)
@@ -110,7 +109,11 @@ class PsnMediaPlayerEntity(
             name=PLATFORM_MAP[platform],
             manufacturer="Sony Interactive Entertainment",
             model=PLATFORM_MAP[platform],
-            via_device=(DOMAIN, coordinator.config_entry.unique_id),
+            via_device_id=dr.async_get_device_id_by_identifier(
+                coordinator.hass,
+                (DOMAIN, coordinator.config_entry.unique_id),
+                config_entry_id=coordinator.config_entry.entry_id,
+            ),
         )
         self.trophy_titles = trophy_titles
 

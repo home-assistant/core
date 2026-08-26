@@ -59,7 +59,9 @@ rules:
   docs-supported-functions: todo
   docs-troubleshooting: done
   docs-use-cases: todo
-  dynamic-devices: todo
+  dynamic-devices:
+    status: exempt
+    comment: Integration only has static hardware devices, single device per config entry
   entity-category: todo
   entity-device-class: done
   entity-disabled-by-default: todo
@@ -68,7 +70,9 @@ rules:
   icon-translations: todo
   reconfiguration-flow: todo
   repair-issues: todo
-  stale-devices: todo
+  stale-devices:
+    status: exempt
+    comment: Integration only has static hardware devices, single device per config entry
 
   # Platinum
   async-dependency: done

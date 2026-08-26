@@ -20,12 +20,11 @@ from homeassistant.components.sensor import (
 )
 from homeassistant.config_entries import ConfigEntry
 from homeassistant.const import (
-    ATTR_DEVICE_CLASS,
-    ATTR_UNIT_OF_MEASUREMENT,
     CONF_METHOD,
     CONF_NAME,
     CONF_UNIQUE_ID,
     STATE_UNAVAILABLE,
+    EntityStateAttribute,
     UnitOfTime,
 )
 from homeassistant.core import (
@@ -39,6 +38,7 @@ from homeassistant.core import (
 )
 from homeassistant.helpers import config_validation as cv, entity_registry as er
 from homeassistant.helpers.device import async_entity_id_to_device
+from homeassistant.helpers.device_registry import AnyDeviceEntry
 from homeassistant.helpers.entity_platform import (
     AddConfigEntryEntitiesCallback,
     AddEntitiesCallback,
@@ -267,7 +267,6 @@ async def async_setup_entry(
         round_digits = int(round_digits)
 
     integral = IntegrationSensor(
-        hass,
         integration_method=config_entry.options[CONF_METHOD],
         name=config_entry.title,
         round_digits=round_digits,
@@ -276,6 +275,7 @@ async def async_setup_entry(
         unit_prefix=unit_prefix,
         unit_time=config_entry.options[CONF_UNIT_TIME],
         max_sub_interval=max_sub_interval,
+        device=async_entity_id_to_device(hass, source_entity_id),
     )
 
     async_add_entities([integral])
@@ -289,7 +289,6 @@ async def async_setup_platform(
 ) -> None:
     """Set up the integration sensor."""
     integral = IntegrationSensor(
-        hass,
         integration_method=config[CONF_METHOD],
         name=config.get(CONF_NAME),
         round_digits=config.get(CONF_ROUND_DIGITS),
@@ -311,7 +310,6 @@ class IntegrationSensor(RestoreSensor):
 
     def __init__(
         self,
-        hass: HomeAssistant,
         *,
         integration_method: str,
         name: str | None,
@@ -321,6 +319,7 @@ class IntegrationSensor(RestoreSensor):
         unit_prefix: str | None,
         unit_time: UnitOfTime,
         max_sub_interval: timedelta | None,
+        device: AnyDeviceEntry | None = None,
     ) -> None:
         """Initialize the integration sensor."""
         self._attr_unique_id = unique_id
@@ -338,10 +337,7 @@ class IntegrationSensor(RestoreSensor):
         self._attr_icon = "mdi:chart-histogram"
         self._source_entity: str = source_entity
         self._last_valid_state: Decimal | None = None
-        self.device_entry = async_entity_id_to_device(
-            hass,
-            source_entity,
-        )
+        self.device_entry = device
         self._max_sub_interval: timedelta | None = (
             None  # disable time based integration
             if max_sub_interval is None or max_sub_interval.total_seconds() == 0
@@ -389,7 +385,9 @@ class IntegrationSensor(RestoreSensor):
         return device_class
 
     def _derive_and_set_attributes_from_state(self, source_state: State) -> None:
-        source_unit = source_state.attributes.get(ATTR_UNIT_OF_MEASUREMENT)
+        source_unit = source_state.attributes.get(
+            EntityStateAttribute.UNIT_OF_MEASUREMENT
+        )
         if source_unit is not None:
             self._unit_of_measurement = self._calculate_unit(source_unit)
         else:
@@ -397,7 +395,8 @@ class IntegrationSensor(RestoreSensor):
             self._unit_of_measurement = None
 
         self._attr_device_class = self._calculate_device_class(
-            source_state.attributes.get(ATTR_DEVICE_CLASS), self.unit_of_measurement
+            source_state.attributes.get(EntityStateAttribute.DEVICE_CLASS),
+            self.unit_of_measurement,
         )
         if self._attr_device_class:
             # Remove this sensors icon default and allow

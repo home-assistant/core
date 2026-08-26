@@ -59,7 +59,7 @@ async def test_doortag_setup(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
         patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            "homeassistant.components.netatmo.coordinator.PLATFORMS",
             ["camera", "binary_sensor"],
         ),
         patch(
@@ -171,7 +171,7 @@ async def test_doortag_opening_status_change(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
         patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            "homeassistant.components.netatmo.coordinator.PLATFORMS",
             ["camera", "binary_sensor"],
         ),
         patch(
@@ -298,7 +298,7 @@ async def test_doortag_opening_category(
             "homeassistant.components.netatmo.api.AsyncConfigEntryNetatmoAuth"
         ) as mock_auth,
         patch(
-            "homeassistant.components.netatmo.data_handler.PLATFORMS",
+            "homeassistant.components.netatmo.coordinator.PLATFORMS",
             ["camera", "binary_sensor"],
         ),
         patch(
