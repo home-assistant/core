@@ -319,8 +319,15 @@ async def test_optimistic_write_creates_missing_intermediate_dicts(
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test writes through entities build up missing branches of the pool data."""
-    mock_vistapool_client.fetch_pool_data.return_value = {"existing": "scalar"}
+    """Test writes through entities build or replace branches of the pool data.
+
+    The fixture puts scalars where the write paths expect dicts, covering
+    both a scalar at the branch root and a scalar intermediate node.
+    """
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "light": "scalar",
+        "filtration": {"intel": 5},
+    }
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
