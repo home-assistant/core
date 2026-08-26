@@ -174,7 +174,12 @@ async def async_migrate_entry(
                     plant_info = await hass.async_add_executor_job(
                         api.plant_list, login_response["user"]["id"]
                     )
-                except (ConfigEntryError, RequestException, JSONDecodeError) as ex:
+                except (
+                    ConfigEntryError,
+                    ConfigEntryNotReady,
+                    RequestException,
+                    JSONDecodeError,
+                ) as ex:
                     # API failure during migration - return False to retry later
                     _LOGGER.error(
                         "Failed to resolve plant_id during migration: %s. "
