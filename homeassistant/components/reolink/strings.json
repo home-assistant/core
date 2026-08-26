@@ -891,6 +891,9 @@
       },
       "siren_on_event": {
         "name": "Siren on event"
+      },
+      "tamper_enabled": {
+        "name": "Tamper alarm"
       }
     },
     "time": {
@@ -935,9 +938,6 @@
     },
     "not_supported": {
       "message": "Function not supported by this device: {err}"
-    },
-    "service_entry_ex": {
-      "message": "Reolink {service_name} error: config entry not found or not loaded"
     },
     "service_not_chime": {
       "message": "Reolink play_chime error: {device_name} is not a Chime"

@@ -80,6 +80,7 @@ async def test_connection_error_keeps_last_state(
     mock_concord232_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
 ) -> None:
     """Test the panel keeps its last state when the server stops answering."""
     await setup_integration(hass, mock_config_entry)
@@ -93,6 +94,7 @@ async def test_connection_error_keeps_last_state(
     await hass.async_block_till_done()
 
     assert hass.states.get(ENTITY_ID).state == AlarmControlPanelState.DISARMED
+    assert "Unable to connect to" in caplog.text
 
 
 @pytest.mark.parametrize(
