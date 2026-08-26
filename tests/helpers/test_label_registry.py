@@ -558,3 +558,14 @@ async def test_migration_from_1_1(
             ]
         },
     }
+
+
+async def test_async_get_missing_label_ids(
+    hass: HomeAssistant, label_registry: lr.LabelRegistry
+) -> None:
+    """Test getting label ids missing from the registry."""
+    label_registry.async_create("mock")
+
+    assert lr.async_get_missing_label_ids(hass, set()) == set()
+    assert lr.async_get_missing_label_ids(hass, {"mock"}) == set()
+    assert lr.async_get_missing_label_ids(hass, {"mock", "missing"}) == {"missing"}

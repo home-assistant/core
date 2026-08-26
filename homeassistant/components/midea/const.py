@@ -13,6 +13,8 @@ CONF_SUBTYPE = "subtype"
 CONF_ACCOUNT = "account"
 CONF_SERVER = "server"
 
+PRESET_MODE_NONE = "none"
+
 
 class FanSpeed(IntEnum):
     """FanSpeed reference values."""

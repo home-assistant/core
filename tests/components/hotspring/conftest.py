@@ -117,7 +117,7 @@ def device_fixture() -> Spa:
             zone_id=1,
             is_enabled=True,
             is_on=False,
-            color=LightColor.OFF,
+            color=LightColor.BLUE,
             light_wheel=LightWheelMode.OFF,
             intensity=0,
             loop_speed=0,

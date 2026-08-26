@@ -8,6 +8,7 @@ from unittest.mock import AsyncMock, MagicMock, Mock, patch
 from lyngdorf.const import LyngdorfModel
 from lyngdorf.device import Receiver
 from lyngdorf.models.base import NumericRange
+from lyngdorf.remote import RemoteKey
 import pytest
 
 from homeassistant.components.lyngdorf.const import (
@@ -63,16 +64,25 @@ def mock_receiver() -> Generator[MagicMock]:
         receiver = MagicMock(spec=Receiver)
         receiver.name = "Mock Lyngdorf"
         receiver.connected = True
-        receiver.model = LyngdorfModel.MP_60
+        receiver.has_remote_keys = True
+        receiver.available_remote_keys = frozenset(
+            {
+                RemoteKey.UP,
+                RemoteKey.DOWN,
+                RemoteKey.ENTER,
+                RemoteKey.MENU,
+                RemoteKey.DIGIT_0,
+            }
+        )
 
         # Diagnostics reports the whole receiver, so every property it reads
         # needs a value here; an unset one is a mock the response cannot encode.
         receiver.model = LyngdorfModel.MP_60
         receiver.max_volume = 0.0
-        receiver.room_perfect_position = None
-        receiver.available_room_perfect_positions = []
-        receiver.voicing = None
-        receiver.available_voicings = []
+        receiver.room_perfect_position = "Focus 1"
+        receiver.available_room_perfect_positions = ["Global", "Focus 1"]
+        receiver.voicing = "Neutral"
+        receiver.available_voicings = ["Neutral", "Music", "Movie"]
         receiver.lipsync = None
         receiver.lipsync_range = NumericRange(0, 500, 1)
         for _t in ("bass", "treble"):
