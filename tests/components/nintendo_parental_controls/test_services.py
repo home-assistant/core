@@ -13,13 +13,13 @@ from homeassistant.components.nintendo_parental_controls.services import (
     NintendoParentalServices,
 )
 from homeassistant.const import ATTR_DEVICE_ID, CONF_PIN
-from homeassistant.core import HomeAssistant
-from homeassistant.exceptions import ServiceValidationError
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, Context, HomeAssistant
+from homeassistant.exceptions import ServiceValidationError, Unauthorized
 from homeassistant.helpers import device_registry as dr
 
 from . import setup_integration
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, MockUser
 
 
 async def test_add_bonus_time(
@@ -31,7 +31,9 @@ async def test_add_bonus_time(
 ) -> None:
     """Test add bonus time service."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "testdevid")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
     assert device_entry
     await hass.services.async_call(
         DOMAIN,
@@ -46,36 +48,42 @@ async def test_add_bonus_time(
 
 
 @pytest.mark.parametrize(
-    ("service", "payload", "exception_key"),
+    ("service", "payload", "exception_domain", "exception_key"),
     [
         (
             NintendoParentalServices.ADD_BONUS_TIME,
             {ATTR_DEVICE_ID: "invalid_device", ATTR_BONUS_TIME: 15},
-            "device_not_found",
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "1234"},
-            "device_not_found",
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "123"},
+            DOMAIN,
             "invalid_pin_length",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "123456789"},
+            DOMAIN,
             "invalid_pin_length",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "0000"},
-            "device_not_found",
+            HOMEASSISTANT_DOMAIN,
+            "service_device_not_found",
         ),
         (
             NintendoParentalServices.UPDATE_PIN_CODE,
             {ATTR_DEVICE_ID: "invalid_device", CONF_PIN: "abc"},
+            DOMAIN,
             "invalid_pin_length",
         ),
     ],
@@ -86,6 +94,7 @@ async def test_service_no_device_exceptions(
     mock_nintendo_client: AsyncMock,
     service: NintendoParentalServices,
     payload: dict[str, Any],
+    exception_domain: str,
     exception_key: str,
 ) -> None:
     """Test service exceptions."""
@@ -97,7 +106,7 @@ async def test_service_no_device_exceptions(
             payload,
             blocking=True,
         )
-    assert err.value.translation_domain == DOMAIN
+    assert err.value.translation_domain == exception_domain
     assert err.value.translation_key == exception_key
 
 
@@ -151,7 +160,9 @@ async def test_update_pin_code(
 ) -> None:
     """Test update pin code service."""
     await setup_integration(hass, mock_config_entry)
-    device_entry = device_registry.async_get_device(identifiers={(DOMAIN, "testdevid")})
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
     assert device_entry
     await hass.services.async_call(
         DOMAIN,
@@ -163,3 +174,31 @@ async def test_update_pin_code(
         blocking=True,
     )
     assert len(mock_nintendo_device.set_new_pin.mock_calls) == 1
+
+
+async def test_update_pin_code_requires_admin(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    hass_read_only_user: MockUser,
+    mock_config_entry: MockConfigEntry,
+    mock_nintendo_client: AsyncMock,
+    mock_nintendo_device: AsyncMock,
+) -> None:
+    """Test updating the PIN code requires administrator access."""
+    await setup_integration(hass, mock_config_entry)
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "testdevid"), mock_config_entry.entry_id
+    )
+    assert device_entry
+    with pytest.raises(Unauthorized):
+        await hass.services.async_call(
+            DOMAIN,
+            NintendoParentalServices.UPDATE_PIN_CODE,
+            {
+                ATTR_DEVICE_ID: device_entry.id,
+                CONF_PIN: "1234",
+            },
+            blocking=True,
+            context=Context(user_id=hass_read_only_user.id),
+        )
+    mock_nintendo_device.set_new_pin.assert_not_called()

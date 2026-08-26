@@ -37,6 +37,7 @@ from ..const import (
     DOMAIN,
 )
 from ..helpers import (
+    async_get_config_entry_from_node,
     async_get_nodes_from_targets,
     get_device_id,
     get_home_and_node_id_from_device_entry,
@@ -279,8 +280,11 @@ class EventTrigger(Trigger):
             driver = node.client.driver
             assert driver is not None  # The node comes from the driver.
             drivers.add(driver)
+            node_entry = async_get_config_entry_from_node(self._hass, node)
             device_identifier = get_device_id(driver, node)
-            device = dev_reg.async_get_device(identifiers={device_identifier})
+            device = dev_reg.async_get_device_by_identifier(
+                device_identifier, node_entry.entry_id
+            )
             assert device
             # We need to store the device for the callback
             self._unsubs.append(

@@ -33,7 +33,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from .const import DOMAIN
 from .entity import ViCareEntity
 from .types import HeatingProgram, ViCareConfigEntry, ViCareDevice
-from .utils import get_burners, get_circuits, get_compressors, get_device_serial
+from .utils import get_burners, get_circuits, get_compressors
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -82,7 +82,7 @@ def _build_entities(
     """Create ViCare climate entities for a device."""
     return [
         ViCareClimate(
-            get_device_serial(device.api),
+            device.serial,
             device.config,
             device.api,
             circuit,

@@ -177,15 +177,12 @@ class HomekitControllerFlowHandler(ConfigFlow, domain=DOMAIN):
     def _hkid_is_homekit(self, hkid: str) -> bool:
         """Determine if the device is a homekit bridge or accessory."""
         dev_reg = dr.async_get(self.hass)
-        device = dev_reg.async_get_device(
+        # Several config entries can each own a device for the same MAC, so check every
+        # matching device, not just the first.
+        for device in dev_reg.async_get_devices(
             connections={(dr.CONNECTION_NETWORK_MAC, hkid)}
-        )
-
-        if device is None:
-            return False
-
-        for entry_id in device.config_entries:
-            entry = self.hass.config_entries.async_get_entry(entry_id)
+        ):
+            entry = self.hass.config_entries.async_get_entry(device.config_entry_id)
             if entry and entry.domain == HOMEKIT_BRIDGE_DOMAIN:
                 return True
 

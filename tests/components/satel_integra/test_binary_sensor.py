@@ -57,14 +57,14 @@ async def test_binary_sensors(
         hass, entity_registry, snapshot, mock_config_entry_with_subentries.entry_id
     )
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_zones_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_zones_1"), mock_config_entry_with_subentries.entry_id
     )
 
     assert device_entry == snapshot(name="device-zone")
 
-    device_entry = device_registry.async_get_device(
-        identifiers={(DOMAIN, "1234567890_outputs_1")}
+    device_entry = device_registry.async_get_device_by_identifier(
+        (DOMAIN, "1234567890_outputs_1"), mock_config_entry_with_subentries.entry_id
     )
     assert device_entry == snapshot(name="device-output")
 
