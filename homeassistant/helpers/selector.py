@@ -936,7 +936,7 @@ class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
     SUPPORTED_PLATFORMS = {
         Platform.BINARY_SENSOR: "BinarySensorDeviceClass",
         Platform.BUTTON: "ButtonDeviceClass",
-        Platform.COVER: "CoverSensorDeviceClass",
+        Platform.COVER: "CoverDeviceClass",
         Platform.EVENT: "EventDeviceClass",
         Platform.HUMIDIFIER: "HumidifierDeviceClass",
         Platform.INFRARED: "InfraredDeviceClass",
@@ -945,7 +945,7 @@ class DeviceClassSelector(Selector[DeviceClassSelectorConfig]):
         Platform.SENSOR: "SensorDeviceClass",
         Platform.SWITCH: "SwitchDeviceClass",
         Platform.UPDATE: "UpdateDeviceClass",
-        Platform.VALVE: "ValueDeviceClass",
+        Platform.VALVE: "ValveDeviceClass",
     }
 
     CONFIG_SCHEMA = make_selector_config_schema(
