@@ -648,11 +648,16 @@ def mock_ufp_public_only_client() -> Mock:
     pb = Mock(spec=PublicBootstrap)
     pb.nvr = nvr
     pb.arm_mode = arm_mode
-    # One map per device family forwarded in public-only mode; tests replace
-    # them, so both helpers below read the attribute at call time.
+    # Public device maps used by public-only tests; tests replace them, so both
+    # helpers below read the attribute at call time.
     pb.cameras = {}
     pb.lights = {}
-    device_maps = {ModelType.CAMERA: "cameras", ModelType.LIGHT: "lights"}
+    pb.relays = {}
+    device_maps = {
+        ModelType.CAMERA: "cameras",
+        ModelType.LIGHT: "lights",
+        ModelType.RELAY: "relays",
+    }
 
     def _all_devices(*, include_nvr: bool = False) -> Iterator[Mock]:
         if include_nvr and pb.nvr is not None:

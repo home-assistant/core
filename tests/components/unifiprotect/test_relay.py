@@ -1,6 +1,6 @@
 """Tests for UniFi Protect relay entities from the Public API."""
 
-from collections.abc import Callable
+from collections.abc import Awaitable, Callable
 from unittest.mock import AsyncMock, Mock
 
 import pytest
@@ -31,6 +31,7 @@ from homeassistant.const import (
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers.dispatcher import async_dispatcher_connect
 
 from .utils import MockUFPFixture, init_entry
 
@@ -402,6 +403,40 @@ async def test_relay_input_devices_ws_disconnect_reconnect_resync(
     assert state is not None
     assert state.state == STATE_ON
     ufp.api.update_public.assert_awaited()
+
+
+async def test_public_only_relay_channels_resignaled_after_reconnect(
+    hass: HomeAssistant,
+    ufp_public_only: MockUFPFixture,
+    setup_public_only: Callable[[], Awaitable[None]],
+) -> None:
+    """A public-only reconnect re-offers channels on an existing relay."""
+    relay = _make_relay(inputs=[])
+    public_bootstrap = ufp_public_only.api.public_bootstrap
+    public_bootstrap.relays = {relay.id: relay}
+    await setup_public_only()
+
+    signaled_relays: list[Relay] = []
+    ufp_public_only.entry.async_on_unload(
+        async_dispatcher_connect(
+            hass,
+            ufp_public_only.entry.runtime_data.relay_signal,
+            signaled_relays.append,
+        )
+    )
+
+    async def resync_public_bootstrap() -> Mock:
+        relay.inputs = [_make_input()]
+        return public_bootstrap
+
+    ufp_public_only.api.update_public.side_effect = resync_public_bootstrap
+    assert ufp_public_only.devices_ws_state_subscription is not None
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.DISCONNECTED)
+    ufp_public_only.devices_ws_state_subscription(WebsocketState.CONNECTED)
+    await hass.async_block_till_done()
+
+    assert signaled_relays == [relay]
+    assert [relay_input.id for relay_input in signaled_relays[0].inputs] == [INPUT_ID]
 
 
 @pytest.mark.parametrize(

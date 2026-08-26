@@ -498,9 +498,8 @@ class ProtectData:
                 for device in list(self.api.public_bootstrap.all_devices()):
                     if isinstance(device, PublicDeviceModel):
                         self._async_dispatch_new_public_device(device)
-            else:
-                for relay in list(self.api.public_bootstrap.relays.values()):
-                    async_dispatcher_send(self._hass, self.relay_signal, relay)
+            for relay in list(self.api.public_bootstrap.relays.values()):
+                async_dispatcher_send(self._hass, self.relay_signal, relay)
 
     @callback
     def _async_signal_nvr_update(self) -> None:
