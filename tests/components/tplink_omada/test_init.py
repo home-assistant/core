@@ -4,10 +4,11 @@ import asyncio
 from collections.abc import AsyncGenerator
 from datetime import timedelta
 from functools import partial
-from unittest.mock import MagicMock, patch
+from unittest.mock import AsyncMock, MagicMock, patch
 
 import pytest
 from tplink_omada_client.clients import OmadaWirelessClient
+from tplink_omada_client.devices import OmadaListDevice
 from tplink_omada_client.exceptions import (
     ConnectionFailed,
     OmadaClientException,
@@ -112,7 +113,7 @@ async def test_automatic_missing_device_cleanup(
 
 async def test_automatic_missing_client_cleanup(
     hass: HomeAssistant,
-    mock_omada_client: MagicMock,
+    mock_omada_clients_only_client: MagicMock,
     entity_registry: er.EntityRegistry,
 ) -> None:
     """Test missing client trackers are removed during initial startup cleanup.
@@ -134,6 +135,7 @@ async def test_automatic_missing_client_cleanup(
         platform=DOMAIN,
         unique_id="scanner_SiteId_11-11-11-11-11-11",
         config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
 
     assert entity_registry.async_get(tracker.entity_id)
@@ -170,12 +172,21 @@ async def test_cleanup_helpers_remove_unknown_clients(
         platform=DOMAIN,
         unique_id="scanner_Default_99-99-99-99-99-99",
         config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
     )
 
     unknown_client_entity_2 = entity_registry.async_get_or_create(
         domain="device_tracker",
         platform=DOMAIN,
         unique_id="scanner_Default_88-88-88-88-88-88",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    enabled_unknown_client_entity = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_66-66-66-66-66-66",
         config_entry=mock_config_entry,
     )
 
@@ -214,6 +225,9 @@ async def test_cleanup_helpers_remove_unknown_clients(
 
     assert entity_registry.async_get(unknown_client_entity_1.entity_id) is None
     assert entity_registry.async_get(unknown_client_entity_2.entity_id) is None
+    assert (
+        entity_registry.async_get(enabled_unknown_client_entity.entity_id) is not None
+    )
     assert entity_registry.async_get(already_disabled_entity.entity_id) is not None
     assert entity_registry.async_get(sensor_entity.entity_id) is not None
     assert entity_registry.async_get(malformed_no_prefix.entity_id) is not None
@@ -222,7 +236,7 @@ async def test_cleanup_helpers_remove_unknown_clients(
 
 async def test_cleanup_devices_removes_orphans(
     hass: HomeAssistant,
-    mock_omada_clients_only_client: MagicMock,
+    mock_omada_client: MagicMock,
     mock_config_entry: MockConfigEntry,
     device_registry: dr.DeviceRegistry,
 ) -> None:
@@ -301,6 +315,18 @@ async def _get_known_clients_without(
             yield OmadaWirelessClient(client)
 
 
+async def _get_devices_without(
+    hass: HomeAssistant, excluded_mac: str
+) -> list[OmadaListDevice]:
+    """Return devices from the devices fixture, skipping one MAC."""
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    return [
+        OmadaListDevice(device)
+        for device in devices_data
+        if device["mac"] != excluded_mac
+    ]
+
+
 async def test_cleanup_runs_hourly(
     hass: HomeAssistant,
     mock_omada_clients_only_client: MagicMock,
@@ -374,6 +400,94 @@ async def test_cleanup_recreates_tracker_when_client_reappears(
         entity_registry.async_get_entity_id("device_tracker", DOMAIN, tracker_unique_id)
         is not None
     )
+
+
+async def test_cleanup_recreates_device_when_reappears(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+) -> None:
+    """Test a device removed by cleanup is re-registered when it returns."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    removed_mac = "54-AF-97-00-00-01"
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, removed_mac), mock_config_entry.entry_id
+    )
+
+    site_client = mock_omada_client.get_site_client.return_value
+
+    # Remove the switch from the controller's device list and clean up
+    site_client.get_devices = AsyncMock(
+        side_effect=partial(_get_devices_without, hass, removed_mac)
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=1, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert (
+        device_registry.async_get_device_by_identifier(
+            (DOMAIN, removed_mac), mock_config_entry.entry_id
+        )
+        is None
+    )
+
+    # Switch returns to the controller — the next interval run re-registers it
+    devices_data = await async_load_json_array_fixture(hass, "devices.json", DOMAIN)
+    site_client.get_devices = AsyncMock(
+        return_value=[OmadaListDevice(d) for d in devices_data]
+    )
+    async_fire_time_changed(hass, dt_util.utcnow() + timedelta(hours=2, seconds=1))
+    await hass.async_block_till_done(wait_background_tasks=True)
+    assert device_registry.async_get_device_by_identifier(
+        (DOMAIN, removed_mac), mock_config_entry.entry_id
+    )
+
+
+async def test_cleanup_skips_on_empty_data(
+    hass: HomeAssistant,
+    mock_omada_client: MagicMock,
+    mock_config_entry: MockConfigEntry,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+) -> None:
+    """Test cleanup does not remove entries when the controller reports no data."""
+    mock_config_entry.add_to_hass(hass)
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done(wait_background_tasks=True)
+
+    controller = hass.config_entries.async_get_entry(
+        mock_config_entry.entry_id
+    ).runtime_data
+
+    orphan = device_registry.async_get_or_create(
+        config_entry_id=mock_config_entry.entry_id,
+        identifiers={(DOMAIN, "99:99:99:99:99:99")},
+        manufacturer="TP-Link",
+        model="Test",
+        name="Orphan",
+    )
+    tracker = entity_registry.async_get_or_create(
+        domain="device_tracker",
+        platform=DOMAIN,
+        unique_id="scanner_Default_55-55-55-55-55-55",
+        config_entry=mock_config_entry,
+        disabled_by=er.RegistryEntryDisabler.INTEGRATION,
+    )
+
+    site_client = mock_omada_client.get_site_client.return_value
+    site_client.get_devices = AsyncMock(return_value=[])
+    site_client.get_known_clients = AsyncMock(return_value=[])
+
+    await controller.devices_coordinator.async_refresh()
+    await controller.known_clients_coordinator.async_refresh()
+
+    await async_cleanup_devices(hass, controller)
+    await async_cleanup_client_trackers(hass, controller)
+
+    assert device_registry.async_get(orphan.id) is not None
+    assert entity_registry.async_get(tracker.entity_id) is not None
 
 
 async def test_unload_cancels_cleanup_and_interval(

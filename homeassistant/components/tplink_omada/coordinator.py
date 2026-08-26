@@ -271,11 +271,13 @@ async def async_cleanup_client_trackers(
     if not controller.known_clients_coordinator.last_update_success:
         return
 
+    known_clients = controller.known_clients_coordinator.data or {}
+    if not known_clients:
+        return
+
     entity_registry = er.async_get(hass)
     entry_id = controller.known_clients_coordinator.config_entry.entry_id
-    known_macs = {
-        dr.format_mac(mac) for mac in (controller.known_clients_coordinator.data or {})
-    }
+    known_macs = {dr.format_mac(mac) for mac in known_clients}
 
     for entity in er.async_entries_for_config_entry(entity_registry, entry_id):
         if entity.domain != DEVICE_TRACKER_DOMAIN:
@@ -287,7 +289,7 @@ async def async_cleanup_client_trackers(
 
         if (
             client_mac not in known_macs
-            and entity.disabled_by is not er.RegistryEntryDisabler.USER
+            and entity.disabled_by is er.RegistryEntryDisabler.INTEGRATION
         ):
             entity_registry.async_remove(entity.entity_id)
 
@@ -300,9 +302,13 @@ async def async_cleanup_devices(
     if not controller.devices_coordinator.last_update_success:
         return
 
+    devices = controller.devices_coordinator.data
+    if not devices:
+        return
+
     device_registry = dr.async_get(hass)
     entry_id = controller.devices_coordinator.config_entry.entry_id
-    known_devices = {dr.format_mac(mac) for mac in controller.devices_coordinator.data}
+    known_devices = {dr.format_mac(mac) for mac in devices}
 
     for device_entry in dr.async_entries_for_config_entry(device_registry, entry_id):
         mac = next(

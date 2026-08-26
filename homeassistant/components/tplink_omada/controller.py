@@ -7,6 +7,7 @@ from tplink_omada_client import OmadaSiteClient
 from tplink_omada_client.devices import OmadaListDevice, OmadaSwitch
 
 from homeassistant.core import HomeAssistant, callback
+from homeassistant.helpers import device_registry as dr
 
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
@@ -87,14 +88,15 @@ class OmadaSiteController:
             devices_to_process = [
                 device
                 for device in self._devices_coordinator.data.values()
-                if device_filter(device) and device.mac not in processed_devices
+                if device_filter(device)
+                and dr.format_mac(device.mac) not in processed_devices
             ]
 
             if not devices_to_process:
                 return
 
             for device in devices_to_process:
-                processed_devices.add(device.mac)
+                processed_devices.add(dr.format_mac(device.mac))
                 await entity_callback(device)
 
         @callback
