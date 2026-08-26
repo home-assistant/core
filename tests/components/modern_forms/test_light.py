@@ -326,28 +326,39 @@ async def test_light_change_state_gen4(
         light_mock.assert_not_called()
 
 
-async def test_sleep_timer_services_gen4(
-    hass: HomeAssistant, aioclient_mock: AiohttpClientMocker
+async def test_light_sleep_timer_not_supported_gen4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
 ) -> None:
-    """Test Gen4 sleep timer services pass sleep through light_fixture()."""
+    """Test setting a sleep timer on a Gen4 light fixture raises an error."""
     await init_integration_gen4(hass, aioclient_mock)
 
-    with patch("aiomodernforms.ModernFormsDevice.light_fixture") as light_fixture_mock:
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_SET_LIGHT_SLEEP_TIMER,
             {ATTR_ENTITY_ID: "light.modernformsfan_uplight", ATTR_SLEEP_TIME: 1},
             blocking=True,
         )
-        await hass.async_block_till_done()
-        light_fixture_mock.assert_called_once_with(2, sleep=60)
 
-    with patch("aiomodernforms.ModernFormsDevice.light_fixture") as light_fixture_mock:
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "sleep_timer_not_supported"
+
+
+async def test_clear_light_sleep_timer_not_supported_gen4(
+    hass: HomeAssistant,
+    aioclient_mock: AiohttpClientMocker,
+) -> None:
+    """Test clearing a sleep timer on a Gen4 light fixture raises an error."""
+    await init_integration_gen4(hass, aioclient_mock)
+
+    with pytest.raises(HomeAssistantError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
             SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
             {ATTR_ENTITY_ID: "light.modernformsfan_uplight"},
             blocking=True,
         )
-        await hass.async_block_till_done()
-        light_fixture_mock.assert_called_once_with(2, sleep=0)
+
+    assert exc_info.value.translation_domain == DOMAIN
+    assert exc_info.value.translation_key == "sleep_timer_not_supported"

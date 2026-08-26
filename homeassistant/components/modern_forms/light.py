@@ -8,6 +8,7 @@ import voluptuous as vol
 
 from homeassistant.components.light import ATTR_BRIGHTNESS, ColorMode, LightEntity
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_platform
 from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 from homeassistant.util.percentage import (
@@ -19,6 +20,7 @@ from . import modernforms_exception_handler
 from .const import (
     ATTR_SLEEP_TIME,
     CLEAR_TIMER,
+    DOMAIN,
     OPT_BRIGHTNESS,
     OPT_ON,
     SERVICE_CLEAR_LIGHT_SLEEP_TIMER,
@@ -159,6 +161,11 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         sleep_time: int,
     ) -> None:
         """Set a Modern Forms light sleep timer."""
+        if not self.coordinator.data.has_sleep_timer():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_not_supported",
+            )
         await self._async_control_light(sleep=sleep_time * 60)
 
     @modernforms_exception_handler
@@ -166,6 +173,11 @@ class ModernFormsLightEntity(ModernFormsDeviceEntity, LightEntity):
         self,
     ) -> None:
         """Clear a Modern Forms light sleep timer."""
+        if not self.coordinator.data.has_sleep_timer():
+            raise HomeAssistantError(
+                translation_domain=DOMAIN,
+                translation_key="sleep_timer_not_supported",
+            )
         await self._async_control_light(sleep=CLEAR_TIMER)
 
     async def _async_control_light(self, **kwargs: Any) -> None:
