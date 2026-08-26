@@ -89,6 +89,7 @@ async def _async_update_listener(
     if (
         entry.data[CONF_NPSSO] == psn.npsso
         and entry.data.get(CONF_TOKEN_RESPONSE) == psn.token_response
+        and entry.subentries.keys() == entry.runtime_data.friends.keys()
     ):
         return
     await hass.config_entries.async_reload(entry.entry_id)

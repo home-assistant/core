@@ -115,6 +115,26 @@ async def test_reloads_after_reauth_with_unchanged_npsso(
     async_reload.assert_awaited_once_with(config_entry.entry_id)
 
 
+async def test_reloads_after_friend_subentry_change(
+    hass: HomeAssistant,
+    config_entry: MockConfigEntry,
+    mock_psnawpapi: MagicMock,
+) -> None:
+    """Test changing friend subentries reloads the integration."""
+    config_entry.add_to_hass(hass)
+
+    assert await hass.config_entries.async_setup(config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    with patch.object(
+        hass.config_entries, "async_reload", new=AsyncMock()
+    ) as async_reload:
+        hass.config_entries.async_remove_subentry(config_entry, "ABCDEF")
+        await hass.async_block_till_done()
+
+    async_reload.assert_awaited_once_with(config_entry.entry_id)
+
+
 @pytest.mark.parametrize(
     "exception", [PSNAWPNotFoundError, PSNAWPServerError, PSNAWPClientError]
 )
