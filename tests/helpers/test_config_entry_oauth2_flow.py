@@ -12,8 +12,9 @@ from multidict import CIMultiDict
 import pytest
 
 from homeassistant import config_entries, data_entry_flow, setup
-from homeassistant.core import HomeAssistant
+from homeassistant.core import DOMAIN as HOMEASSISTANT_DOMAIN, HomeAssistant
 from homeassistant.exceptions import (
+    ConfigEntryNotReady,
     OAuth2TokenRequestError,
     OAuth2TokenRequestReauthError,
     OAuth2TokenRequestTransientError,
@@ -1400,6 +1401,33 @@ async def test_async_get_config_entry_implementation_with_failing_provider(
         await config_entry_oauth2_flow.async_get_config_entry_implementation(
             hass, config_entry
         )
+
+
+async def test_implementation_unavailable_error_is_translated_not_ready(
+    hass: HomeAssistant,
+) -> None:
+    """Test the error retries setup and is translated by the homeassistant domain."""
+    await setup.async_setup_component(hass, "homeassistant", {})
+
+    err = config_entry_oauth2_flow.ImplementationUnavailableError()
+
+    assert isinstance(err, ConfigEntryNotReady)
+    assert err.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.translation_key == "oauth2_implementation_unavailable"
+    assert str(err) == "OAuth2 implementation unavailable, will retry"
+
+
+async def test_implementation_unavailable_error_keeps_message(
+    hass: HomeAssistant,
+) -> None:
+    """Test an explicit message is kept for logging while staying translatable."""
+    await setup.async_setup_component(hass, "homeassistant", {})
+
+    err = config_entry_oauth2_flow.ImplementationUnavailableError("Provider down")
+
+    assert str(err) == "Provider down"
+    assert err.translation_domain == HOMEASSISTANT_DOMAIN
+    assert err.translation_key == "oauth2_implementation_unavailable"
 
 
 async def test_async_get_config_entry_implementation_missing_provider(
