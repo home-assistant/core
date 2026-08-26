@@ -1,8 +1,8 @@
 """Sensors for the NexBlue integration."""
 
-from collections.abc import Callable
+from collections.abc import Callable, Sequence
 from dataclasses import dataclass
-from typing import override
+from typing import Literal, override
 
 from nexblue_api.models import ChargerStatus
 
@@ -66,6 +66,28 @@ class NexBlueSensorEntityDescription(SensorEntityDescription):
 def _enum_options(values: dict[int, str]) -> list[str]:
     """Return the supported options for an enum sensor."""
     return list(values.values())
+
+
+def _phase_value(
+    values: Sequence[int | float],
+    phase: int,
+) -> int | float | None:
+    """Return a phase value when it is reported by the charger."""
+    if len(values) <= phase:
+        return None
+    return values[phase]
+
+
+def _phase_value_fn(
+    metric: Literal["current", "voltage"], phase: int
+) -> Callable[[ChargerStatus], StateType]:
+    """Return a typed value function for a phase measurement."""
+
+    def value_fn(status: ChargerStatus) -> StateType:
+        values = status.current_a if metric == "current" else status.voltage_v
+        return _phase_value(values, phase)
+
+    return value_fn
 
 
 SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
@@ -152,35 +174,27 @@ SENSOR_DESCRIPTIONS: tuple[NexBlueSensorEntityDescription, ...] = (
         NexBlueSensorEntityDescription(
             key=f"current_{phase}",
             translation_key="current",
+            phase=phase,
             device_class=SensorDeviceClass.CURRENT,
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfElectricCurrent.AMPERE,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=value_fn,
-            phase=phase,
+            value_fn=_phase_value_fn("current", phase - 1),
         )
-        for phase, value_fn in (
-            (1, lambda status: status.current_a[0]),
-            (2, lambda status: status.current_a[1]),
-            (3, lambda status: status.current_a[2]),
-        )
+        for phase in range(1, 4)
     ),
     *(
         NexBlueSensorEntityDescription(
             key=f"voltage_{phase}",
             translation_key="voltage",
+            phase=phase,
             device_class=SensorDeviceClass.VOLTAGE,
             entity_category=EntityCategory.DIAGNOSTIC,
             native_unit_of_measurement=UnitOfElectricPotential.VOLT,
             state_class=SensorStateClass.MEASUREMENT,
-            value_fn=value_fn,
-            phase=phase,
+            value_fn=_phase_value_fn("voltage", phase - 1),
         )
-        for phase, value_fn in (
-            (1, lambda status: status.voltage_v[0]),
-            (2, lambda status: status.voltage_v[1]),
-            (3, lambda status: status.voltage_v[2]),
-        )
+        for phase in range(1, 4)
     ),
     NexBlueSensorEntityDescription(
         key="network_status",
@@ -247,13 +261,15 @@ class NexBlueStatusSensor(
     @override
     def available(self) -> bool:
         """Return whether this charger is currently reachable."""
-        return super().available and self._serial_number in self.coordinator.data
+        return (
+            super().available
+            and self.coordinator.data.get(self._serial_number) is not None
+        )
 
     @property
     @override
     def native_value(self) -> StateType:
         """Return the sensor value from the latest coordinator data."""
-        status = self.coordinator.data.get(self._serial_number)
-        if status is None:
-            return None
+        status = self.coordinator.data[self._serial_number]
+        assert status is not None
         return self.entity_description.value_fn(status)

@@ -1,7 +1,6 @@
 """Fixtures for the NexBlue integration tests."""
 
 from collections.abc import Generator
-from json import loads
 from unittest.mock import MagicMock, patch
 
 from nexblue_api import Charger, ChargerStatus, TokenBundle
@@ -11,13 +10,13 @@ from homeassistant.components.nexblue.const import CONF_REFRESH_TOKEN, DOMAIN
 from homeassistant.const import CONF_PASSWORD, CONF_USERNAME
 from homeassistant.core import HomeAssistant
 
-from tests.common import MockConfigEntry, load_fixture
+from tests.common import MockConfigEntry, load_json_object_fixture
 
-CHARGER = Charger.from_api(loads(load_fixture("charger.json", DOMAIN)))
+CHARGER = Charger.from_api(load_json_object_fixture("charger.json", DOMAIN))
 CHARGER_STATUS = ChargerStatus.from_api(
-    CHARGER.serial_number, loads(load_fixture("charger_status.json", DOMAIN))
+    CHARGER.serial_number, load_json_object_fixture("charger_status.json", DOMAIN)
 )
-TOKEN = TokenBundle.from_api(loads(load_fixture("token.json", DOMAIN)))
+TOKEN = TokenBundle.from_api(load_json_object_fixture("token.json", DOMAIN))
 
 
 @pytest.fixture

@@ -20,18 +20,20 @@ from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, Upda
 
 from .const import CONF_REFRESH_TOKEN, LOGGER, UPDATE_INTERVAL
 
+type NexBlueConfigEntry = ConfigEntry["NexBlueDataUpdateCoordinator"]
+
 
 class NexBlueDataUpdateCoordinator(
     DataUpdateCoordinator[dict[str, ChargerStatus | None]]
 ):
     """Fetch all charger telemetry in a coordinated update."""
 
-    config_entry: ConfigEntry
+    config_entry: NexBlueConfigEntry
 
     def __init__(
         self,
         hass: HomeAssistant,
-        entry: ConfigEntry,
+        entry: NexBlueConfigEntry,
         client: NexBlueClient,
     ) -> None:
         """Initialize the coordinator."""
@@ -95,6 +97,3 @@ class NexBlueDataUpdateCoordinator(
                     CONF_REFRESH_TOKEN: token.refresh_token,
                 },
             )
-
-
-type NexBlueConfigEntry = ConfigEntry[NexBlueDataUpdateCoordinator]

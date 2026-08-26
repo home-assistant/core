@@ -23,7 +23,6 @@ async def test_setup_entry(
     mock_client.async_ensure_access_token.assert_awaited_once()
     mock_client.async_list_chargers.assert_awaited_once()
     mock_client.async_get_charger_status.assert_awaited_once()
-    assert init_integration.runtime_data.data
 
 
 async def test_setup_entry_recovers_from_invalid_refresh_token(

@@ -1,51 +1,55 @@
 """Tests for NexBlue sensors."""
 
+from dataclasses import replace
 from unittest.mock import MagicMock
 
-from nexblue_api import NexBlueDeviceOfflineError, NexBlueError
+from nexblue_api import NexBlueConnectionError, NexBlueDeviceOfflineError, NexBlueError
 import pytest
+from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.nexblue.const import DOMAIN
-from homeassistant.const import PERCENTAGE
 from homeassistant.core import HomeAssistant
-from homeassistant.helpers import device_registry as dr, entity_registry as er
+from homeassistant.helpers import entity_registry as er
 
 from .conftest import CHARGER, CHARGER_STATUS
 
-from tests.common import MockConfigEntry
+from tests.common import MockConfigEntry, snapshot_platform
 
 
-async def test_sensors(
+async def test_sensor_entities_snapshot(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
-    device_registry: dr.DeviceRegistry,
     entity_registry: er.EntityRegistry,
+    snapshot: SnapshotAssertion,
 ) -> None:
-    """Test charger telemetry is exposed as sensors with unique IDs."""
-    assert hass.states.get("sensor.nb123456_charging_state").state == "charging"
-    assert hass.states.get("sensor.nb123456_power").state == "7.2"
-    assert hass.states.get("sensor.nb123456_energy").state == "1.5"
-    assert hass.states.get("sensor.nb123456_network_status").state == "wifi"
-
-    brightness = hass.states.get("sensor.nb123456_led_brightness")
-    assert brightness.state == "100"
-    assert brightness.attributes["unit_of_measurement"] == PERCENTAGE
-    assert brightness.attributes["state_class"] == "measurement"
-
-    device = device_registry.async_get_device_by_identifier(
-        (DOMAIN, CHARGER.serial_number),
+    """Test the complete NexBlue sensor platform through a snapshot."""
+    await snapshot_platform(
+        hass,
+        entity_registry,
+        snapshot,
         init_integration.entry_id,
     )
-    assert device is not None
-    assert device.name == CHARGER.serial_number
-    assert device.serial_number == CHARGER.serial_number
 
-    assert (
-        entity_registry.async_get_entity_id(
-            "sensor", "nexblue", f"{CHARGER.serial_number}_voltage_1"
-        )
-        == "sensor.nb123456_voltage_l1"
+
+async def test_missing_phase_values_are_unknown(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_client: MagicMock,
+) -> None:
+    """Test missing phase measurements are exposed as unknown."""
+    mock_client.async_get_charger_status.return_value = replace(
+        CHARGER_STATUS,
+        current_a=(16.0,),
+        voltage_v=(230,),
     )
+    mock_config_entry.add_to_hass(hass)
+
+    await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+
+    assert hass.states.get("sensor.nb123456_current_l1").state == "16.0"
+    assert hass.states.get("sensor.nb123456_current_l2").state == "unknown"
+    assert hass.states.get("sensor.nb123456_voltage_l1").state == "230"
+    assert hass.states.get("sensor.nb123456_voltage_l3").state == "unknown"
 
 
 @pytest.mark.parametrize("error", [NexBlueDeviceOfflineError, NexBlueError])
@@ -68,17 +72,19 @@ async def test_charger_error_does_not_block_other_chargers(
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.nb123456_charging_state").state == "charging"
-    assert hass.states.get("sensor.nb654321_charging_state").state == "unknown"
+    assert hass.states.get("sensor.nb654321_charging_state").state == "unavailable"
 
 
 async def test_sensors_unavailable_when_coordinator_update_fails(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
+    mock_client: MagicMock,
 ) -> None:
     """Test a failed coordinator update makes all charger entities unavailable."""
+    mock_client.async_list_chargers.side_effect = NexBlueConnectionError
     coordinator = init_integration.runtime_data
-    coordinator.last_update_success = False
-    coordinator.async_update_listeners()
+
+    await coordinator.async_request_refresh()
     await hass.async_block_till_done()
 
     assert hass.states.get("sensor.nb123456_charging_state").state == "unavailable"
