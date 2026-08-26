@@ -542,7 +542,7 @@ async def test_coordinator_handles_invalid_data(
         assert "Unexpected error fetching" not in caplog.text
 
 
-async def test_per_device_failure_isolation(
+async def test_per_gateway_failure_isolation(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     mock_config_entry: MockConfigEntry,
