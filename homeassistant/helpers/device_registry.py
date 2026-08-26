@@ -213,10 +213,17 @@ class _DeviceInfoMapping:
         return tuple((key, getattr(self, key)) for key in self)
 
     def as_dict(self) -> dict[str, Any]:
-        """Return the set fields."""
-        # The JSON encoders serialize an object with an as_dict; a dataclass would
-        # otherwise be serialized field by field, unset fields included
-        return dict(self)
+        """Return the set fields.
+
+        Reads the fields, so a caller does not need the mapping interface the
+        integrations use. The JSON encoders serialize an object with an as_dict; a
+        dataclass would otherwise be serialized field by field, unset ones included.
+        """
+        return {
+            name: value
+            for name in self._field_names
+            if (value := getattr(self, name)) is not UNDEFINED
+        }
 
     def get(self, key: str, default: Any = None) -> Any:
         """Return the value of a field, or default if the field is not set."""
@@ -2988,44 +2995,6 @@ class DeviceRegistry(BaseRegistry[dict[str, list[dict[str, Any]]]]):
             updated_child_device.id
         )
         return updated_child_device
-
-    @callback
-    def async_get_or_create_from_device_info(
-        self,
-        *,
-        config_entry_id: str,
-        config_subentry_id: str | UndefinedType | None = UNDEFINED,
-        device_info: DeviceInfo | ChildDeviceInfo | Mapping[str, Any],
-    ) -> AnyDeviceEntry:
-        """Get or create the device a device info describes.
-
-        A ChildDeviceInfo, or a device info carrying a parent_device_id, gets or
-        creates a child device, any other a main device.
-        """
-        if isinstance(device_info, _DeviceInfoMapping):
-            # Read the fields, rather than the mapping interface integrations use
-            device_info_fields = {
-                name: value
-                for name in device_info._field_names  # noqa: SLF001
-                if (value := getattr(device_info, name)) is not UNDEFINED
-            }
-        else:
-            device_info_fields = dict(device_info)
-        # An explicit parent_device_id of None, as a dynamically built device info
-        # may carry, means a main device
-        parent_device_id = device_info_fields.pop("parent_device_id", None)
-        if parent_device_id is not None:
-            return self.async_get_or_create_child(
-                config_entry_id=config_entry_id,
-                config_subentry_id=config_subentry_id,
-                parent_device_id=parent_device_id,
-                **device_info_fields,
-            )
-        return self.async_get_or_create(
-            config_entry_id=config_entry_id,
-            config_subentry_id=config_subentry_id,
-            **device_info_fields,
-        )
 
     @callback
     def _async_validate_device_to_child_conversion(

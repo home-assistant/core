@@ -956,12 +956,29 @@ class EntityPlatform:
                 # A device info without any field means no device
                 if device_info := entity.device_info:
                     dev_reg = dr.async_get(self.hass)
+                    if isinstance(device_info, dr.DeviceInfo | dr.ChildDeviceInfo):
+                        device_info_fields = device_info.as_dict()
+                    else:
+                        # An integration can still describe its device with a plain
+                        # mapping, which its type does not allow. To be deprecated.
+                        device_info_fields = dict(device_info)  # type: ignore[unreachable]
+                    # An explicit parent_device_id of None, as a dynamically built
+                    # device info may carry, means a main device
+                    parent_device_id = device_info_fields.pop("parent_device_id", None)
                     try:
-                        device = dev_reg.async_get_or_create_from_device_info(
-                            config_entry_id=self.config_entry.entry_id,
-                            config_subentry_id=config_subentry_id,
-                            device_info=device_info,
-                        )
+                        if parent_device_id is not None:
+                            device = dev_reg.async_get_or_create_child(
+                                config_entry_id=self.config_entry.entry_id,
+                                config_subentry_id=config_subentry_id,
+                                parent_device_id=parent_device_id,
+                                **device_info_fields,
+                            )
+                        else:
+                            device = dev_reg.async_get_or_create(
+                                config_entry_id=self.config_entry.entry_id,
+                                config_subentry_id=config_subentry_id,
+                                **device_info_fields,
+                            )
                     except dr.DeviceInfoError as exc:
                         self.logger.error(
                             "%s: Not adding entity with invalid device info: %s",
