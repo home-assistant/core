@@ -128,6 +128,5 @@ async def test_victron_device_tracker(
         "course": None,
         "speed": None,
         "friendly_name": "GPS Location",
-        "in_zones": [],
         "tracking_type": TrackingType.POSITION,
     }
