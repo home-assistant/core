@@ -336,3 +336,46 @@ async def test_link_dying_during_the_retry_marks_sensors_unavailable(
     )
     assert entity_id is not None
     assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+
+
+async def test_pv_strings_become_their_own_devices(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test every PV string the inverter serves gets a device of its own."""
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), init_integration.entry_id
+    )
+    assert inverter is not None
+
+    strings = [
+        device
+        for device in dr.async_entries_for_config_entry(
+            device_registry, init_integration.entry_id
+        )
+        if device.via_device_id == inverter.id
+    ]
+
+    # Two MPPTs on this model, so strings 3 to 10 are not served at all.
+    assert {device.name for device in strings} == {"PV string 1", "PV string 2"}
+
+
+async def test_pv_aggregate_stays_on_the_inverter(
+    hass: HomeAssistant,
+    device_registry: dr.DeviceRegistry,
+    entity_registry: er.EntityRegistry,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a total living in a per-string component is not moved off."""
+    inverter = device_registry.async_get_device_by_identifier(
+        (DOMAIN, MOCK_SERIAL), init_integration.entry_id
+    )
+    assert inverter is not None
+
+    # pv_power_total sits in the pv_1_2 component but measures all strings.
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_total"
+    )
+    assert entity_id is not None
+    assert entity_registry.async_get(entity_id).device_id == inverter.id
