@@ -66,8 +66,8 @@ async def _async_reproduce_state(
     # Return if we are already at the right state.
     if (
         cur_state.state == state.state
-        and cur_state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE)
-        == state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE)
+        and cur_state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+        == state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
         and cur_state.attributes.get(WaterHeaterStateAttribute.AWAY_MODE)
         == state.attributes.get(WaterHeaterStateAttribute.AWAY_MODE)
     ):
@@ -89,9 +89,10 @@ async def _async_reproduce_state(
         )
 
     if (
-        state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE)
-        != cur_state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE)
-        and state.attributes.get(WaterHeaterStateAttribute.TEMPERATURE) is not None
+        state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+        != cur_state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+        and state.attributes.get(WaterHeaterStateAttribute.TARGET_TEMPERATURE)
+        is not None
     ):
         await hass.services.async_call(
             DOMAIN,
@@ -99,7 +100,7 @@ async def _async_reproduce_state(
             {
                 ATTR_ENTITY_ID: state.entity_id,
                 ATTR_TEMPERATURE: state.attributes.get(
-                    WaterHeaterStateAttribute.TEMPERATURE
+                    WaterHeaterStateAttribute.TARGET_TEMPERATURE
                 ),
             },
             context=context,

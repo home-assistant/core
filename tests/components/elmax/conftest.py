@@ -1,7 +1,7 @@
 """Configuration for Elmax tests."""
 
 from collections.abc import Generator
-from datetime import datetime, timedelta
+from datetime import timedelta
 import json
 from unittest.mock import AsyncMock, patch
 
@@ -15,6 +15,8 @@ from httpx import Response
 import jwt
 import pytest
 import respx
+
+from homeassistant.util import dt as dt_util
 
 from . import (
     MOCK_DIRECT_HOST,
@@ -81,7 +83,7 @@ def httpx_mock_direct_fixture(base_uri: str) -> Generator[respx.MockRouter]:
             algorithms="HS256",
             options={"verify_signature": False},
         )
-        expiration = datetime.now() + timedelta(hours=1)  # pylint: disable=home-assistant-enforce-naive-now
+        expiration = dt_util.utcnow() + timedelta(hours=1)
         decoded_jwt["payload"]["exp"] = int(expiration.timestamp())
         jws_string = jwt.encode(
             payload=decoded_jwt["payload"], algorithm="HS256", key=TOKEN_SIGNING_KEY

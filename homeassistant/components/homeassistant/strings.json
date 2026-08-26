@@ -1,6 +1,7 @@
 {
   "config": {
     "abort": {
+      "cloud_not_connected": "[%key:common::config_flow::abort::cloud_not_connected%]",
       "single_instance_allowed": "[%key:common::config_flow::abort::single_instance_allowed%]"
     },
     "step": {}
@@ -62,6 +63,12 @@
     },
     "service_config_entry_wrong_domain": {
       "message": "Config entry {entry_title} does not belong to integration {domain}."
+    },
+    "service_device_not_found": {
+      "message": "Device with ID {device_id} was not found."
+    },
+    "service_device_wrong_domain": {
+      "message": "Device {device_name} does not belong to integration {domain}."
     },
     "service_does_not_support_response": {
       "message": "An action which does not return responses can't be called with {return_response}."

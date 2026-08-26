@@ -89,14 +89,14 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
             )
         location_entity_id = entity_entry.entity_id
         state = hass.states.get(location_entity_id)
-        if state is None or (location := get_state_coordinates(state)) is None:
+        if state is None or (coordinates := get_state_coordinates(state)) is None:
             raise ConfigEntryNotReady(
                 translation_domain=DOMAIN,
                 translation_key="entity_unavailable",
                 translation_placeholders={"entity_id": location_entity_id},
             )
-        latitude = location.latitude
-        longitude = location.longitude
+        latitude = coordinates.latitude
+        longitude = coordinates.longitude
         station = None
     else:
         latitude = entry.data[CONF_LATITUDE]
@@ -150,7 +150,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
         entry,
         nws_data,
         location_entity_id=location_entity_id,
-        initial_position=Coordinates(latitude, longitude)
+        initial_coordinates=Coordinates(latitude, longitude)
         if location_entity_id
         else None,
     )
@@ -212,19 +212,19 @@ async def async_setup_entry(hass: HomeAssistant, entry: NWSConfigEntry) -> bool:
             new_state = event.data["new_state"]
             if (
                 new_state is None
-                or (location := get_state_coordinates(new_state)) is None
+                or (coordinates := get_state_coordinates(new_state)) is None
             ):
                 return
             if (
-                location.latitude == entry.runtime_data.latitude
-                and location.longitude == entry.runtime_data.longitude
+                coordinates.latitude == entry.runtime_data.latitude
+                and coordinates.longitude == entry.runtime_data.longitude
             ):
                 return
             dist = location_util.distance(
                 entry.runtime_data.latitude,
                 entry.runtime_data.longitude,
-                location.latitude,
-                location.longitude,
+                coordinates.latitude,
+                coordinates.longitude,
             )
             if dist is not None and dist <= LOCATION_CHANGE_THRESHOLD:
                 return
