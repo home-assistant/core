@@ -29,6 +29,8 @@ type SwitchbotConfigEntry = ConfigEntry[SwitchbotDataUpdateCoordinator]
 class SwitchbotDataUpdateCoordinator(ActiveBluetoothDataUpdateCoordinator[None]):
     """Class to manage fetching switchbot data."""
 
+    curtain_speed: float | None = None
+
     def __init__(
         self,
         hass: HomeAssistant,

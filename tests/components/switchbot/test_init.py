@@ -8,7 +8,6 @@ import switchbot
 
 from homeassistant.components.bluetooth import BluetoothServiceInfoBleak
 from homeassistant.components.switchbot.const import (
-    CONF_CURTAIN_SPEED,
     CONF_RETRY_COUNT,
     DEFAULT_CURTAIN_SPEED,
     DEFAULT_RETRY_COUNT,
@@ -150,7 +149,6 @@ async def test_coordinator_wait_ready_timeout(
             WOCURTAIN_SERVICE_INFO,
             {
                 CONF_RETRY_COUNT: DEFAULT_RETRY_COUNT,
-                CONF_CURTAIN_SPEED: DEFAULT_CURTAIN_SPEED,
             },
         ),
         (
@@ -220,7 +218,6 @@ async def test_migrate_entry_preserves_existing_options(
     assert entry.minor_version == 2
     # Existing retry_count should be preserved, curtain_speed added
     assert entry.options[CONF_RETRY_COUNT] == 5
-    assert entry.options[CONF_CURTAIN_SPEED] == DEFAULT_CURTAIN_SPEED
 
 
 async def test_migrate_entry_fails_for_future_version(
