@@ -16,6 +16,7 @@ from .entity import (
     RpcEntityDescription,
     ShellyRpcAttributeEntity,
     async_setup_entry_rpc,
+    rpc_call,
 )
 
 PARALLEL_UPDATES = 1
@@ -70,6 +71,7 @@ class ShellyInfraredEmitter(ShellyRpcAttributeEntity, InfraredEmitterEntity):
         """Initialize the infrared emitter."""
         super().__init__(coordinator, key, attribute, description)
 
+    @rpc_call
     @override
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command via IR.EmitRaw."""
