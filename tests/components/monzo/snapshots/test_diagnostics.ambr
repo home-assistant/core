@@ -102,6 +102,7 @@
     'entry': dict({
       'data': dict({
         'auth_implementation': 'monzo',
+        'cloudhook_url': '**REDACTED**',
         'profile': '**REDACTED**',
         'token': '**REDACTED**',
         'webhook_id': '**REDACTED**',
