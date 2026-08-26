@@ -9,11 +9,27 @@ from unittest.mock import AsyncMock, MagicMock, patch
 from aioaquarite import AquariteError, AuthenticationError
 import pytest
 
+from homeassistant.components.light import DOMAIN as LIGHT_DOMAIN
+from homeassistant.components.number import (
+    ATTR_VALUE,
+    DOMAIN as NUMBER_DOMAIN,
+    SERVICE_SET_VALUE as NUMBER_SERVICE_SET_VALUE,
+)
 from homeassistant.components.vistapool import coordinator as vp_coordinator
 from homeassistant.components.vistapool.const import DOMAIN
 from homeassistant.config_entries import ConfigEntryState
+from homeassistant.const import (
+    ATTR_ENTITY_ID,
+    SERVICE_TURN_OFF,
+    SERVICE_TURN_ON,
+    STATE_OFF,
+    STATE_ON,
+    STATE_UNAVAILABLE,
+    STATE_UNKNOWN,
+)
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import device_registry as dr
+from homeassistant.setup import async_setup_component
 
 from .conftest import MOCK_POOL_ID, MOCK_POOL_NAME
 
@@ -22,6 +38,8 @@ from tests.common import MockConfigEntry, async_fire_time_changed
 _SECOND_POOL_ID = "ZYXWVU9876543210"
 _SECOND_POOL_NAME = "Spa"
 _THIRD_POOL_ID = "QQQQQQ1111111111"
+_LIGHT_ENTITY = "light.my_pool_light"
+_INTEL_ENTITY = "number.my_pool_intel_temperature"
 
 
 async def test_setup_entry(
@@ -296,24 +314,36 @@ async def test_setup_prunes_devices_removed_while_offline(
     )
 
 
-async def test_apply_optimistic_creates_missing_intermediate_dicts(
+async def test_optimistic_write_creates_missing_intermediate_dicts(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test apply_optimistic walks through and creates missing intermediate dicts."""
+    """Test writes through entities build up missing branches of the pool data."""
     mock_vistapool_client.fetch_pool_data.return_value = {"existing": "scalar"}
     mock_config_entry.add_to_hass(hass)
 
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
-    coordinator.apply_optimistic("filtration.intel.temp", 27)
-    coordinator.apply_optimistic("existing.nested.key", 1)
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_UNKNOWN
+    assert hass.states.get(_INTEL_ENTITY).state == STATE_UNKNOWN
 
-    assert coordinator.data["filtration"]["intel"]["temp"] == 27
-    assert coordinator.data["existing"] == {"nested": {"key": 1}}
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NUMBER_SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _INTEL_ENTITY, ATTR_VALUE: 27},
+        blocking=True,
+    )
+
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
+    assert hass.states.get(_INTEL_ENTITY).state == "27.0"
 
 
 @pytest.mark.parametrize(
@@ -323,31 +353,35 @@ async def test_apply_optimistic_creates_missing_intermediate_dicts(
         pytest.param(None, id="non_coercible"),
     ],
 )
-async def test_apply_optimistic_suppresses_stale_push(
+async def test_optimistic_light_suppresses_stale_push(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
     remote_status: int | None,
 ) -> None:
-    """Test a Firestore push that disagrees within the TTL keeps the optimistic value."""
+    """Test a Firestore push that disagrees within the TTL keeps the light on."""
     mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
 
-    coordinator.apply_optimistic("light.status", 1)
-    assert coordinator.data["light"]["status"] == 1
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
     on_data({"light": {"status": remote_status}})
     await hass.async_block_till_done()
 
-    assert coordinator.data["light"]["status"] == 1
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
 
-async def test_apply_optimistic_rapid_toggle_confirms_writes_in_order(
+async def test_optimistic_rapid_toggle_confirms_writes_in_order(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
@@ -358,33 +392,43 @@ async def test_apply_optimistic_rapid_toggle_confirms_writes_in_order(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
 
     # Rapid toggle: ON then OFF, both awaiting their confirming pushes.
-    coordinator.apply_optimistic("light.status", 1)
-    coordinator.apply_optimistic("light.status", 0)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_OFF,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
-    # A pre-write echo carrying OFF matches the newest write but must not
-    # lift protection while the ON write is still unconfirmed.
+    # A pre-write echo carrying off matches the newest write but must not
+    # lift protection while the on write is still unconfirmed.
     on_data({"light": {"status": 0}})
     await hass.async_block_till_done()
-    assert coordinator.data["light"]["status"] == 0
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
-    # The ON write's confirmation arrives; the entity must not flip back on.
+    # The on write's confirmation arrives; the light must not flip back on.
     on_data({"light": {"status": 1}})
     await hass.async_block_till_done()
-    assert coordinator.data["light"]["status"] == 0
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
-    # The OFF write's confirmation clears protection; a later real push sticks.
+    # The off write's confirmation clears protection; a later real push sticks.
     on_data({"light": {"status": 0}})
     await hass.async_block_till_done()
     on_data({"light": {"status": 1}})
     await hass.async_block_till_done()
-    assert coordinator.data["light"]["status"] == 1
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
 
-async def test_apply_optimistic_accepts_confirming_push(
+async def test_optimistic_light_accepts_confirming_push(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
@@ -395,32 +439,35 @@ async def test_apply_optimistic_accepts_confirming_push(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
 
-    coordinator.apply_optimistic("light.status", 1)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
     on_data({"light": {"status": "1"}})
     await hass.async_block_till_done()
-    assert coordinator.data["light"]["status"] == "1"
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
     # Protection should have lifted; a later push (real off command) must stick.
     on_data({"light": {"status": 0}})
     await hass.async_block_till_done()
-    assert coordinator.data["light"]["status"] == 0
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
 
-async def test_apply_optimistic_yields_to_push_after_ttl(
+async def test_optimistic_light_yields_to_push_after_ttl(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test a disagreeing Firestore push after the TTL window overrides the optimistic value."""
+    """Test a disagreeing Firestore push after the TTL window turns the light off."""
     mock_vistapool_client.fetch_pool_data.return_value = {"light": {"status": 0}}
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
 
     with patch.object(
@@ -428,33 +475,41 @@ async def test_apply_optimistic_yields_to_push_after_ttl(
         "monotonic",
         side_effect=[100.0, 100.0 + vp_coordinator.OPTIMISTIC_TTL_SECONDS + 1.0],
     ):
-        coordinator.apply_optimistic("light.status", 1)
+        await hass.services.async_call(
+            LIGHT_DOMAIN,
+            SERVICE_TURN_ON,
+            {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+            blocking=True,
+        )
         on_data({"light": {"status": 0}})
         await hass.async_block_till_done()
 
-    assert coordinator.data["light"]["status"] == 0
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
 
-async def test_apply_optimistic_self_expires_without_push(
+async def test_optimistic_light_self_expires_without_push(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test the optimistic value clears via the scheduled timer when no push arrives."""
-    # Return a fresh dict per call so apply_optimistic's in-place mutation
-    # doesn't leak back into the mock's payload on the next fetch.
+    """Test the optimistic light state clears via the scheduled timer when no push arrives."""
+    # Return a fresh dict per call so optimistic in-place mutation doesn't
+    # leak back into the mock's payload on the next fetch.
     mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
         "light": {"status": 0}
     }
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
-
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     mock_vistapool_client.fetch_pool_data.reset_mock()
 
-    coordinator.apply_optimistic("light.status", 1)
-    assert coordinator.data["light"]["status"] == 1
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
     # The expiry is a raw loop timer, so force-fire scheduled handles instead
     # of waiting on wall-clock time.
@@ -462,15 +517,15 @@ async def test_apply_optimistic_self_expires_without_push(
     await hass.async_block_till_done()
 
     mock_vistapool_client.fetch_pool_data.assert_called()
-    assert coordinator.data["light"]["status"] == 0
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
 
-async def test_apply_optimistic_self_heal_retries_after_failed_refresh(
+async def test_self_heal_retries_after_failed_fetch(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test the self-heal refresh re-arms until an authoritative fetch succeeds."""
+    """Test the self-heal fetch re-arms until an authoritative fetch succeeds."""
     mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
         "light": {"status": 0}
     }
@@ -478,14 +533,18 @@ async def test_apply_optimistic_self_heal_retries_after_failed_refresh(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
-    coordinator.apply_optimistic("light.status", 1)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
 
     # The TTL expiry fires but the authoritative fetch fails.
     mock_vistapool_client.fetch_pool_data.side_effect = AquariteError("cloud down")
     async_fire_time_changed(hass, fire_all=True)
     await hass.async_block_till_done()
-    assert coordinator.last_update_success is False
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_UNAVAILABLE
 
     # The re-armed retry succeeds once the cloud is reachable again.
     mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
@@ -493,8 +552,7 @@ async def test_apply_optimistic_self_heal_retries_after_failed_refresh(
     }
     async_fire_time_changed(hass, fire_all=True)
     await hass.async_block_till_done()
-    assert coordinator.last_update_success is True
-    assert coordinator.data["light"]["status"] == 0
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
 
 async def test_self_heal_stops_on_unload(
@@ -510,14 +568,18 @@ async def test_self_heal_stops_on_unload(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
-    coordinator.apply_optimistic("light.status", 1)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
 
     # The TTL expiry fires, the fetch fails, and a retry is armed.
     mock_vistapool_client.fetch_pool_data.side_effect = AquariteError("cloud down")
     async_fire_time_changed(hass, fire_all=True)
     await hass.async_block_till_done()
-    assert coordinator.last_update_success is False
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_UNAVAILABLE
 
     assert await hass.config_entries.async_unload(mock_config_entry.entry_id)
     await hass.async_block_till_done()
@@ -534,7 +596,7 @@ async def test_push_discards_in_flight_self_heal(
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test an authoritative push cancels an in-flight self-heal refresh."""
+    """Test an authoritative push cancels an in-flight self-heal fetch."""
     mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
         "light": {"status": 0}
     }
@@ -542,9 +604,13 @@ async def test_push_discards_in_flight_self_heal(
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
     on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
-    coordinator.apply_optimistic("light.status", 1)
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
 
     # The TTL expiry fires and the self-heal fetch hangs mid-flight.
     release = asyncio.Event()
@@ -561,13 +627,12 @@ async def test_push_discards_in_flight_self_heal(
     assert mock_vistapool_client.fetch_pool_data.called
 
     # The push must win: the hung fetch's late failure may neither mark the
-    # coordinator unavailable nor re-arm the retry.
+    # light unavailable nor re-arm the retry.
     on_data({"light": {"status": 0}})
     release.set()
     await hass.async_block_till_done()
 
-    assert coordinator.last_update_success is True
-    assert coordinator.data["light"]["status"] == 0
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
     mock_vistapool_client.fetch_pool_data.reset_mock()
     async_fire_time_changed(hass, fire_all=True)
@@ -580,29 +645,41 @@ async def test_refresh_preserves_other_pending_optimistic_values(
     mock_config_entry: MockConfigEntry,
     mock_vistapool_client: AsyncMock,
 ) -> None:
-    """Test a self-heal refresh keeps writes still inside their own TTL window."""
-    # Return a fresh dict per call so apply_optimistic's in-place mutation
-    # doesn't leak back into the mock's payload on the next fetch.
+    """Test a forced refresh keeps writes still inside their own TTL window."""
     mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
         "light": {"status": 0},
-        "relays": {"filtration": {"status": 0}},
+        "filtration": {"intel": {"temp": 24}},
     }
     mock_config_entry.add_to_hass(hass)
     assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
     await hass.async_block_till_done()
+    assert await async_setup_component(hass, "homeassistant", {})
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        NUMBER_SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _INTEL_ENTITY, ATTR_VALUE: 27},
+        blocking=True,
+    )
 
-    coordinator.apply_optimistic("light.status", 1)
-    coordinator.apply_optimistic("relays.filtration.status", 1)
-
-    # A full refresh (the path a self-heal takes) must not clobber the
-    # filtration write, which is still inside its own TTL window.
-    await coordinator.async_refresh()
+    # A forced refresh (the path a self-heal takes) must not clobber writes
+    # that are still inside their own TTL window.
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
     await hass.async_block_till_done()
 
-    assert coordinator.data["light"]["status"] == 1
-    assert coordinator.data["relays"]["filtration"]["status"] == 1
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
+    assert hass.states.get(_INTEL_ENTITY).state == "27.0"
 
 
 async def test_unload_entry(

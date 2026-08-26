@@ -10,7 +10,7 @@ import pytest
 from syrupy.assertion import SnapshotAssertion
 
 from homeassistant.components.button import DOMAIN as BUTTON_DOMAIN, SERVICE_PRESS
-from homeassistant.const import ATTR_ENTITY_ID, Platform
+from homeassistant.const import ATTR_ENTITY_ID, STATE_OFF, STATE_ON, Platform
 from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import HomeAssistantError
 from homeassistant.helpers import entity_registry as er
@@ -18,6 +18,7 @@ from homeassistant.helpers import entity_registry as er
 from tests.common import MockConfigEntry, snapshot_platform
 
 _BUTTON = "button.my_pool_led_next_color"
+_LIGHT_ENTITY = "light.my_pool_light"
 _LED_DATA = {"main": {"hasLED": 1, "version": 1}, "light": {"status": 0}}
 
 
@@ -187,35 +188,39 @@ async def test_button_press_pulse_survives_stale_push(
     }
     mock_config_entry.add_to_hass(hass)
 
-    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
-    await hass.async_block_till_done()
+    # Load the light platform too: the pulse's observable effect is on it.
+    with patch(
+        "homeassistant.components.vistapool.PLATFORMS",
+        [Platform.BUTTON, Platform.LIGHT],
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
 
-    coordinator = next(iter(mock_config_entry.runtime_data.coordinators.values()))
-    on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+        on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
 
-    await hass.services.async_call(
-        BUTTON_DOMAIN,
-        SERVICE_PRESS,
-        {ATTR_ENTITY_ID: _BUTTON},
-        blocking=True,
-    )
+        await hass.services.async_call(
+            BUTTON_DOMAIN,
+            SERVICE_PRESS,
+            {ATTR_ENTITY_ID: _BUTTON},
+            blocking=True,
+        )
 
-    # Stale pre-pulse push still carrying on: must not confirm the final on.
-    on_data({"light": {"status": 1}})
-    await hass.async_block_till_done()
-    assert coordinator.data["light"]["status"] == 1
+        # Stale pre-pulse push still carrying on: must not confirm the final on.
+        on_data({"light": {"status": 1}})
+        await hass.async_block_till_done()
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
-    # The pulse's off echo must not flicker the light state off.
-    on_data({"light": {"status": 0}})
-    await hass.async_block_till_done()
-    assert coordinator.data["light"]["status"] == 1
+        # The pulse's off echo must not flicker the light state off.
+        on_data({"light": {"status": 0}})
+        await hass.async_block_till_done()
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_ON
 
-    # The final on echo confirms; a later real push then sticks.
-    on_data({"light": {"status": 1}})
-    await hass.async_block_till_done()
-    on_data({"light": {"status": 0}})
-    await hass.async_block_till_done()
-    assert coordinator.data["light"]["status"] == 0
+        # The final on echo confirms; a later real push then sticks.
+        on_data({"light": {"status": 1}})
+        await hass.async_block_till_done()
+        on_data({"light": {"status": 0}})
+        await hass.async_block_till_done()
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
 
 async def test_button_press_raises_on_api_error(
