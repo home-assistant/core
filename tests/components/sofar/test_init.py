@@ -257,7 +257,7 @@ async def test_device_versions_recover_without_a_reload(
     assert device.sw_version == MOCK_SW_VERSION
 
 
-async def test_every_component_failing_marks_sensors_unavailable(
+async def test_every_component_failing_recovers_on_a_later_poll(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,
     caplog: pytest.LogCaptureFixture,
@@ -265,7 +265,7 @@ async def test_every_component_failing_marks_sensors_unavailable(
     mock_connection: MockModbusConnection,
     init_integration: MockConfigEntry,
 ) -> None:
-    """Test sensors go unavailable when no component answers the poll."""
+    """Test sensors go unavailable while no component answers, then return."""
     entity_id = entity_registry.async_get_entity_id(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_1"
     )
@@ -281,6 +281,13 @@ async def test_every_component_failing_marks_sensors_unavailable(
     # Availability alone cannot tell a failed poll from one that reported
     # every component as failed; only the logged error separates them.
     assert "no component answered" in caplog.text
+
+    mock_connection.for_unit(1).fail_requests(None)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "2.5"
 
 
 async def test_component_answering_the_retry_stays_available(
