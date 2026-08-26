@@ -21,6 +21,7 @@ from hass_nabucasa.google_report_state import GoogleReportState
 from hass_nabucasa.ice_servers import IceServers
 from hass_nabucasa.iot import CloudIoT
 from hass_nabucasa.remote import RemoteUI
+from hass_nabucasa.stt_v2 import SpeechToTextV2
 from hass_nabucasa.voice import Voice
 import jwt
 import pytest
@@ -81,6 +82,10 @@ async def cloud_fixture() -> AsyncGenerator[MagicMock]:
         mock_cloud.events = CloudEventBus()
         mock_cloud.iot = MagicMock(
             spec=CloudIoT, last_disconnect_reason=None, state=STATE_CONNECTED, tries=0
+        )
+        mock_cloud.stt_v2 = MagicMock(
+            spec=SpeechToTextV2,
+            resolve_language=SpeechToTextV2.resolve_language,
         )
         mock_cloud.voice = MagicMock(spec=Voice)
         mock_cloud.files = MagicMock(spec=Files)

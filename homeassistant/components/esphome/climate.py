@@ -272,15 +272,18 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @override
     def target_temperature(self) -> float | None:
         """Return the temperature we try to reach."""
-        if (
-            not self._feature_flags
+        if not (
+            self._feature_flags
             & (
                 ClimateFeature.REQUIRES_TWO_POINT_TARGET_TEMPERATURE
                 | ClimateFeature.SUPPORTS_TWO_POINT_TARGET_TEMPERATURE
             )
-            and self.hvac_mode != HVACMode.AUTO
         ):
+            # There is no second set point, so this applies in auto mode too
             return self._state.target_temperature
+        # Two point capable devices report both set points but only act on one
+        # of them in heat and cool mode, so expose that one here and leave the
+        # range to target_temperature_low/target_temperature_high
         if self.hvac_mode == HVACMode.HEAT:
             return self._state.target_temperature_low
         if self.hvac_mode == HVACMode.COOL:
@@ -292,8 +295,6 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @override
     def target_temperature_low(self) -> float | None:
         """Return the lowbound target temperature we try to reach."""
-        if self.hvac_mode == HVACMode.AUTO:
-            return None
         return self._state.target_temperature_low
 
     @property
@@ -301,8 +302,6 @@ class EsphomeClimateEntity(EsphomeEntity[ClimateInfo, ClimateState], ClimateEnti
     @override
     def target_temperature_high(self) -> float | None:
         """Return the highbound target temperature we try to reach."""
-        if self.hvac_mode == HVACMode.AUTO:
-            return None
         return self._state.target_temperature_high
 
     @property
