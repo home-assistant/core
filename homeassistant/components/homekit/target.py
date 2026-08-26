@@ -271,11 +271,16 @@ class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
     def _device_registry_event_affects_target(self, event: Event[Any]) -> bool:
         """Return whether a device registry event can change this target."""
         target = self._target_selection
-        if not (target.area_ids or target.floor_ids or target.label_ids):
+        if not (
+            target.device_ids or target.area_ids or target.floor_ids or target.label_ids
+        ):
             return False
         action: str = event.data["action"]
         if action != "update":
             return action != "reorder"
+        if target.device_ids:
+            # Direct device targets include child and split-device topology.
+            return True
 
         changed_fields = set(event.data["changes"])
         relevant_fields = {"area_id"}
@@ -319,13 +324,14 @@ class HomeKitTargetEntitySetChangeTracker(TargetEntityChangeTracker):
                     self._handle_entity_registry_update,
                 )
             )
-        if target.area_ids or target.floor_ids or target.label_ids:
+        if target.device_ids or target.area_ids or target.floor_ids or target.label_ids:
             self._registry_unsubs.append(
                 self._hass.bus.async_listen(
                     dr.EVENT_DEVICE_REGISTRY_UPDATED,
                     self._handle_device_registry_update,
                 )
             )
+        if target.area_ids or target.floor_ids or target.label_ids:
             # Area update events do not report which fields changed.
             self._registry_unsubs.append(
                 self._hass.bus.async_listen(
