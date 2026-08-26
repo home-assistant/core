@@ -67,7 +67,7 @@ def _append_to_sheet(call: ServiceCall, entry: GoogleSheetsConfigEntry) -> None:
         raise HomeAssistantError("Failed to write data") from ex
 
     worksheet = sheet.worksheet(call.data.get(WORKSHEET, sheet.sheet1.title))
-    columns: list[str] = next(iter(worksheet.get_values("A1:ZZ1")), [])
+    columns: list[str] = worksheet.row_values(1)
     add_created_column = call.data[ADD_CREATED_COLUMN]
     now = str(dt_util.now())
     rows = []
