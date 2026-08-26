@@ -5,6 +5,7 @@ from dataclasses import dataclass
 from datetime import datetime
 from functools import partial
 import logging
+import operator
 from typing import Any, cast, override
 
 from uiprotect.data import (
@@ -325,8 +326,8 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=LIGHT_LUX,
         device_class=SensorDeviceClass.ILLUMINANCE,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.light.value",
-        ufp_enabled="is_light_sensor_enabled",
+        ufp_public_value="stats.light.value",
+        ufp_public_enabled_fn=operator.attrgetter("is_light_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.LIGHT,
     ),
     ProtectSensorEntityDescription(
@@ -334,8 +335,8 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=PERCENTAGE,
         device_class=SensorDeviceClass.HUMIDITY,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.humidity.value",
-        ufp_enabled="is_humidity_sensor_enabled",
+        ufp_public_value="stats.humidity.value",
+        ufp_public_enabled_fn=operator.attrgetter("is_humidity_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.HUMIDITY,
     ),
     ProtectSensorEntityDescription(
@@ -343,8 +344,8 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         native_unit_of_measurement=UnitOfTemperature.CELSIUS,
         device_class=SensorDeviceClass.TEMPERATURE,
         state_class=SensorStateClass.MEASUREMENT,
-        ufp_value="stats.temperature.value",
-        ufp_enabled="is_temperature_sensor_enabled",
+        ufp_public_value="stats.temperature.value",
+        ufp_public_enabled_fn=operator.attrgetter("is_temperature_sensor_enabled"),
         ufp_capability=SensorFeatureCapability.TEMPERATURE,
     ),
     ProtectSensorEntityDescription[Sensor](
@@ -358,7 +359,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="door_last_trip_time",
         translation_key="last_open",
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="open_status_changed_at",
+        ufp_public_value="open_status_changed_at_dt",
         ufp_capability=SensorFeatureCapability.OPEN,
         entity_registry_enabled_default=False,
     ),
@@ -366,7 +367,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         key="motion_last_trip_time",
         translation_key="last_motion_detected",
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="motion_detected_at",
+        ufp_public_value="motion_detected_at_dt",
         ufp_capability=SensorFeatureCapability.MOTION,
         entity_registry_enabled_default=False,
     ),
@@ -375,7 +376,7 @@ SENSE_SENSORS: tuple[ProtectSensorEntityDescription, ...] = (
         translation_key="last_tampering_detected",
         ufp_capability=SensorFeatureCapability.TAMPER,
         device_class=SensorDeviceClass.TIMESTAMP,
-        ufp_value="tampering_detected_at",
+        ufp_public_value="tampering_detected_at_dt",
         entity_registry_enabled_default=False,
     ),
     ProtectSensorEntityDescription(
