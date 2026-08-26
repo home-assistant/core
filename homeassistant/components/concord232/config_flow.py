@@ -175,17 +175,22 @@ class Concord232ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         # Both platforms import the same YAML server. When the other platform's
         # import created the entry first, merge the alarm-only fields (code,
-        # mode) into it instead of dropping them. Never touch a user-configured
-        # entry: stale YAML must not overwrite options chosen in the UI.
+        # mode, name) into it instead of dropping them. YAML only fills gaps:
+        # it must never overwrite a user-created entry, options changed later
+        # in the UI, or a customized title.
         for entry in self._async_current_entries(include_ignore=False):
             if (
                 entry.data.get(CONF_HOST) != data[CONF_HOST]
                 or entry.data.get(CONF_PORT) != data[CONF_PORT]
             ):
                 continue
-            if options and entry.source == SOURCE_IMPORT:
+            if entry.source == SOURCE_IMPORT:
+                merged_options = {**options, **entry.options}
+                title = entry.title
+                if CONF_NAME in import_data and title == entry.data[CONF_HOST]:
+                    title = import_data[CONF_NAME]
                 self.hass.config_entries.async_update_entry(
-                    entry, options={**entry.options, **options}
+                    entry, options=merged_options, title=title
                 )
             return self.async_abort(reason="already_configured")
 

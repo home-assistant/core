@@ -270,6 +270,7 @@ async def test_second_import_merges_alarm_options(
         data={
             CONF_HOST: "localhost",
             CONF_PORT: 5007,
+            CONF_NAME: "Test Alarm",
             CONF_CODE: "1234",
             CONF_MODE: "silent",
         },
@@ -280,6 +281,7 @@ async def test_second_import_merges_alarm_options(
     entries = hass.config_entries.async_entries(DOMAIN)
     assert len(entries) == 1
     assert entries[0].options == {CONF_CODE: "1234", CONF_MODE: "silent"}
+    assert entries[0].title == "Test Alarm"
 
 
 async def test_import_alongside_other_server_creates_second_entry(
@@ -417,3 +419,33 @@ async def test_options_flow_preserves_zone_options(
         CONF_EXCLUDE_ZONES: [2],
         CONF_ZONE_TYPES: {"1": "door"},
     }
+
+
+async def test_stale_yaml_does_not_overwrite_later_changes(
+    hass: HomeAssistant, mock_concord232_client: MagicMock
+) -> None:
+    """Test YAML left in place cannot undo options or title changed later."""
+    entry = MockConfigEntry(
+        domain=DOMAIN,
+        source=SOURCE_IMPORT,
+        title="My Alarm",
+        data={CONF_HOST: "localhost", CONF_PORT: 5007},
+        options={CONF_CODE: "5678", CONF_MODE: "audible"},
+    )
+    entry.add_to_hass(hass)
+
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN,
+        context={"source": SOURCE_IMPORT},
+        data={
+            CONF_HOST: "localhost",
+            CONF_PORT: 5007,
+            CONF_NAME: "Test Alarm",
+            CONF_CODE: "1234",
+            CONF_MODE: "silent",
+        },
+    )
+    assert result["type"] is FlowResultType.ABORT
+    assert result["reason"] == "already_configured"
+    assert entry.options == {CONF_CODE: "5678", CONF_MODE: "audible"}
+    assert entry.title == "My Alarm"
