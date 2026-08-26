@@ -74,6 +74,20 @@
       "voltage_dc_mppt_no": {
         "default": "mdi:current-dc"
       }
+    },
+    "switch": {
+      "battery_charge_power_limit_enabled": {
+        "default": "mdi:battery-arrow-up"
+      },
+      "battery_discharge_power_limit_enabled": {
+        "default": "mdi:battery-arrow-down"
+      },
+      "battery_grid_charging": {
+        "default": "mdi:transmission-tower-import"
+      },
+      "power_limit_enabled": {
+        "default": "mdi:speedometer-slow"
+      }
     }
   }
 }
