@@ -41,5 +41,4 @@ class SofarEntity(CoordinatorEntity[SofarDataUpdateCoordinator]):
         """Whether this entity's component answered the most recent poll."""
         if not super().available:
             return False
-        report = self.coordinator.data
-        return report is None or self.entity_description.component not in report.failed
+        return self.entity_description.component not in self.coordinator.data.failed

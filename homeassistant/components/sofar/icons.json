@@ -16,12 +16,6 @@
       "bat_config_capacity": {
         "default": "mdi:battery-check-outline"
       },
-      "bat_config_cell_type": {
-        "default": "mdi:battery-check-outline"
-      },
-      "bat_config_charging_voltage": {
-        "default": "mdi:battery-check-outline"
-      },
       "bat_config_depth_of_discharge": {
         "default": "mdi:battery-check-outline"
       },
@@ -34,44 +28,8 @@
       "bat_config_id": {
         "default": "mdi:battery-check-outline"
       },
-      "bat_config_maximum_charge_current_limit": {
-        "default": "mdi:battery-check-outline"
-      },
-      "bat_config_maximum_discharge_current_limit": {
-        "default": "mdi:battery-check-outline"
-      },
-      "bat_config_minimum_discharge_voltage": {
-        "default": "mdi:battery-check-outline"
-      },
-      "bat_config_overvoltage_protection": {
-        "default": "mdi:battery-check-outline"
-      },
-      "bat_config_protocol": {
-        "default": "mdi:battery-check-outline"
-      },
-      "bat_config_rated_battery_voltage": {
-        "default": "mdi:battery-check-outline"
-      },
       "bat_config_tempco": {
         "default": "mdi:battery-check-outline"
-      },
-      "bat_config_undervoltage_protection": {
-        "default": "mdi:battery-check-outline"
-      },
-      "bat_config_voltage_float": {
-        "default": "mdi:battery-check-outline"
-      },
-      "battery_input_energy_today": {
-        "default": "mdi:battery-arrow-up"
-      },
-      "battery_input_energy_total": {
-        "default": "mdi:battery-arrow-up"
-      },
-      "battery_output_energy_today": {
-        "default": "mdi:battery-arrow-down"
-      },
-      "battery_output_energy_total": {
-        "default": "mdi:battery-arrow-down"
       },
       "battery_state_of_health_1": {
         "default": "mdi:battery-heart"
@@ -99,18 +57,6 @@
       },
       "battery_state_of_health_total": {
         "default": "mdi:battery-heart"
-      },
-      "export_energy_today": {
-        "default": "mdi:home-export-outline"
-      },
-      "export_energy_total": {
-        "default": "mdi:home-export-outline"
-      },
-      "import_energy_today": {
-        "default": "mdi:home-import-outline"
-      },
-      "import_energy_total": {
-        "default": "mdi:home-import-outline"
       },
       "rtc": {
         "default": "mdi:clock"
