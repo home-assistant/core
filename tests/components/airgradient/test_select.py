@@ -203,6 +203,12 @@ async def test_v1_entities(
             "set_co2_automatic_baseline_calibration",
             0,
         ),
+        (
+            "select.airgradient_measurement_interval",
+            "300",
+            "set_measurement_interval",
+            300,
+        ),
     ],
 )
 async def test_v1_select_writes(

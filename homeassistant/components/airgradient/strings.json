@@ -111,6 +111,18 @@
           "pm": "Particulate matter"
         }
       },
+      "measurement_interval": {
+        "name": "Measurement interval",
+        "state": {
+          "3": "3 seconds",
+          "10": "10 seconds",
+          "30": "30 seconds",
+          "60": "1 minute",
+          "300": "5 minutes",
+          "900": "15 minutes",
+          "3600": "1 hour"
+        }
+      },
       "nox_index_learning_time_offset": {
         "name": "NOx index learning offset",
         "state": {
