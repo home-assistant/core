@@ -6315,17 +6315,26 @@ def _event_trigger(device_id: Any) -> dict[str, Any]:
 
 
 @pytest.mark.usefixtures("split_devices")
-async def test_validate_trigger_reports_composite_device(hass: HomeAssistant) -> None:
-    """The event trigger validator reports a composite device id via the reporter."""
+async def test_validate_trigger_reports_composite_device(
+    hass: HomeAssistant,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """The event trigger validator reports a composite device id and also logs it."""
     findings: list[ValidationFinding] = []
-    await trigger.async_validate_trigger_config(
-        hass, [_event_trigger(COMPOSITE_ID)], issue_reporter=findings.append
-    )
+    with caplog.at_level(logging.WARNING):
+        await trigger.async_validate_trigger_config(
+            hass, [_event_trigger(COMPOSITE_ID)], issue_reporter=findings.append
+        )
     assert len(findings) == 1
     assert findings[0].finding_type == "event_trigger_composite_device_id"
     assert findings[0].issue_key == COMPOSITE_ID
     assert findings[0].placeholders["device_id"] == COMPOSITE_ID
     assert "Split device 1" in findings[0].placeholders["devices"]
+    # The warning is logged regardless of whether a reporter is provided.
+    assert any(
+        "was split into one device per integration" in message
+        for message in caplog.messages
+    )
 
 
 @pytest.mark.usefixtures("split_devices")

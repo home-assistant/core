@@ -68,7 +68,7 @@ async def async_validate_trigger_config(
     A templated device id is a Template (not a plain string) and is left alone.
 
     When an ``issue_reporter`` is provided the problem is reported as a finding to be
-    materialized as a repair issue. Otherwise it is logged as a warning.
+    materialized as a repair issue. It is always logged as a warning.
     """
     validated_config: ConfigType = TRIGGER_SCHEMA(config)
     if (
@@ -82,6 +82,9 @@ async def async_validate_trigger_config(
             ).async_get_devices_for_composite_device_id(device_id)
         )
     ):
+        # Log the original (pre-schema) config so the dumped YAML has no Template
+        # objects, which cannot be serialized.
+        _log_composite_device_id_warning(hass, config, device_id, split_devices)
         if issue_reporter is not None:
             issue_reporter(
                 ValidationFinding(
@@ -93,8 +96,6 @@ async def async_validate_trigger_config(
                     },
                 )
             )
-        else:
-            _log_composite_device_id_warning(hass, config, device_id, split_devices)
     return validated_config
 
 
