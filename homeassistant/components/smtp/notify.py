@@ -259,6 +259,7 @@ class MailNotifyEntity(NotifyEntity):
                     subtype=subtype,
                     filename=target_filename,
                     cid=f"<{cid}>",
+                    disposition="inline",
                 )
             else:
                 msg.add_attachment(

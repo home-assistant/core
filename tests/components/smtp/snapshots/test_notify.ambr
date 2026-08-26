@@ -127,7 +127,7 @@
   --===============0000000000000000001==
   Content-Type: image/jpeg
   Content-Transfer-Encoding: base64
-  Content-Disposition: attachment; filename="Epic Sax Guy 10 Hours.jpg"
+  Content-Disposition: inline; filename="Epic Sax Guy 10 Hours.jpg"
   Content-ID: <1312>
   MIME-Version: 1.0
   
@@ -174,7 +174,7 @@
   --===============0000000000000000001==
   Content-Type: image/jpeg
   Content-Transfer-Encoding: base64
-  Content-Disposition: attachment; filename="test.png"
+  Content-Disposition: inline; filename="test.png"
   Content-ID: <1312>
   MIME-Version: 1.0
   
