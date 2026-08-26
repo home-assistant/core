@@ -768,9 +768,13 @@ async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
         Fixture({"type:climateSensor"}, "vicare/RoomSensor1.json", gateway_id="gwB"),
     ]
     client = MockPyViCare(fixtures)
-    client.loadViaGateway = Mock()
+    # viaGateway has to be set before init, the services are wired during init.
+    setup_calls: list[str] = []
+    client.loadViaGateway = Mock(side_effect=lambda _: setup_calls.append("gateway"))
     client.setCacheDuration = Mock()
-    client.initWithExternalOAuth = Mock()
+    client.initWithExternalOAuth = Mock(
+        side_effect=lambda _: setup_calls.append("init")
+    )
 
     with (
         patch(
@@ -787,6 +791,8 @@ async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
 
     # viaGateway mode enabled, cache duration scaled to the gateway count.
     client.loadViaGateway.assert_called_with(True)
+    # Setup re-inits once to apply the gateway-based cache duration.
+    assert setup_calls == ["gateway", "init", "gateway", "init"]
     assert call(DEFAULT_CACHE_DURATION * 2) in client.setCacheDuration.call_args_list
 
     # One refresh per gateway, and the two devices behind gwA share that one
