@@ -4,10 +4,12 @@ from datetime import timedelta
 import logging
 from typing import override
 
-from gatus_api import EndpointStatus, GatusClient, GatusClientError
+from gatus_api import EndpointStatus, GatusAuthError, GatusClient, GatusClientError
 
 from homeassistant.config_entries import ConfigEntry
+from homeassistant.const import CONF_PASSWORD, CONF_TOKEN, CONF_USERNAME
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryAuthFailed
 from homeassistant.helpers import device_registry as dr
 from homeassistant.helpers.aiohttp_client import async_get_clientsession
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
@@ -26,7 +28,13 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
     def __init__(self, hass: HomeAssistant, entry: GatusConfigEntry, url: str) -> None:
         """Initialize the coordinator."""
         self.url = url.rstrip("/")
-        self.client = GatusClient(url=self.url, session=async_get_clientsession(hass))
+        self.client = GatusClient(
+            url=self.url,
+            session=async_get_clientsession(hass),
+            username=entry.data.get(CONF_USERNAME),
+            password=entry.data.get(CONF_PASSWORD),
+            token=entry.data.get(CONF_TOKEN),
+        )
         self._entry_id = entry.entry_id
         self.last_update_time = dt_util.utcnow().replace(second=0, microsecond=0)
         device_registry = dr.async_get(hass)
@@ -54,6 +62,8 @@ class GatusDataUpdateCoordinator(DataUpdateCoordinator[dict[str, EndpointStatus]
         self.last_update_time = dt_util.utcnow().replace(second=0, microsecond=0)
         try:
             raw_endpoints = await self.client.get_endpoints_statuses()
+        except GatusAuthError as err:
+            raise ConfigEntryAuthFailed from err
         except GatusClientError as err:
             raise UpdateFailed(
                 translation_domain=DOMAIN,
