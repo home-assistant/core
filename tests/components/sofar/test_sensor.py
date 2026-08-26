@@ -23,6 +23,7 @@ from homeassistant.components.sofar.sensor import (
 from homeassistant.const import STATE_UNKNOWN
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
+from homeassistant.util import dt as dt_util
 
 from . import (
     MOCK_HYBRID_MODEL,
@@ -416,8 +417,9 @@ async def test_countdown_holds_its_deadline_until_it_restarts(
         SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_waiting_time"
     )
     assert entity_id is not None
-    deadline = hass.states.get(entity_id).state
-    assert deadline != STATE_UNKNOWN
+    # The exact moment, so a wrong sign or unit cannot pass as "not unknown".
+    deadline = (dt_util.utcnow() + timedelta(seconds=300)).isoformat(timespec="seconds")
+    assert hass.states.get(entity_id).state == deadline
 
     # A second of poll jitter must not republish the deadline as a new one.
     unit.holding[0x0417] = 296
