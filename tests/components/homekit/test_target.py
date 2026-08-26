@@ -54,14 +54,15 @@ from tests.common import MockConfigEntry
         ("floor", "area", False),
         ("label", "floor", False),
         ("domain", "label", False),
-        # Exclusions win at equal specificity.
+        # Target exclusions win at equal specificity.
         ("entity", "entity", False),
         ("device", "device", False),
-        ("glob", "glob", False),
         ("area", "area", False),
         ("floor", "floor", False),
         ("label", "label", False),
-        ("domain", "domain", False),
+        # Legacy base filter inclusions keep winning equal-specificity conflicts.
+        ("glob", "glob", True),
+        ("domain", "domain", True),
     ],
 )
 def test_target_filter_specificity(
@@ -69,7 +70,7 @@ def test_target_filter_specificity(
     exclude_rule: str,
     expected: bool,
 ) -> None:
-    """Test specificity precedence and equal-specificity exclusions."""
+    """Test specificity precedence and equal-specificity rules."""
     entity_id = "light.test"
     filter_config = {
         CONF_INCLUDE_DOMAINS: ["light"] if include_rule == "domain" else [],
@@ -106,6 +107,27 @@ def test_target_filter_specificity(
             has_include_rules=True,
         )
         is expected
+    )
+
+
+def test_base_entity_filter_inclusion_wins_tie() -> None:
+    """Test a legacy entity inclusion wins an equal exclusion."""
+    entity_id = "light.test"
+    filter_config = {
+        CONF_INCLUDE_DOMAINS: [],
+        CONF_INCLUDE_ENTITIES: [entity_id],
+        CONF_INCLUDE_ENTITY_GLOBS: [],
+        CONF_EXCLUDE_DOMAINS: [],
+        CONF_EXCLUDE_ENTITIES: [entity_id],
+        CONF_EXCLUDE_ENTITY_GLOBS: [],
+    }
+
+    assert should_include_entity(
+        entity_id,
+        filter_config,
+        {},
+        {},
+        has_include_rules=True,
     )
 
 

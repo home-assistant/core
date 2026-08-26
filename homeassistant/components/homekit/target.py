@@ -118,19 +118,24 @@ def should_include_entity(
     has_include_rules: bool,
 ) -> bool:
     """Resolve include and exclude rules by specificity."""
+    include_target_priority = _target_match_priority(entity_id, included_targets)
+    exclude_target_priority = _target_match_priority(entity_id, excluded_targets)
     include_priority = max(
         _base_filter_match_priority(entity_id, filter_config, include=True),
-        _target_match_priority(entity_id, included_targets),
+        include_target_priority,
     )
     exclude_priority = max(
         _base_filter_match_priority(entity_id, filter_config, include=False),
-        _target_match_priority(entity_id, excluded_targets),
+        exclude_target_priority,
     )
-    if include_priority != _NO_MATCH_PRIORITY:
-        return include_priority > exclude_priority
-    if exclude_priority != _NO_MATCH_PRIORITY:
-        return False
-    return not has_include_rules
+    if include_priority == exclude_priority:
+        if include_priority == _NO_MATCH_PRIORITY:
+            return not has_include_rules
+        return (
+            include_target_priority != include_priority
+            and exclude_target_priority != exclude_priority
+        )
+    return include_priority > exclude_priority
 
 
 # This functionality should move into the core target tracker in a later PR.
