@@ -228,13 +228,6 @@ SENSOR_DESCRIPTIONS: tuple[SofarSensorDescription, ...] = (
         entity_category=EntityCategory.DIAGNOSTIC,
     ),
     SofarSensorDescription(
-        key="rtc",
-        component="identity",
-        translation_key="rtc",
-        entity_category=EntityCategory.DIAGNOSTIC,
-        entity_registry_enabled_default=False,
-    ),
-    SofarSensorDescription(
         key="serial_number",
         component="identity",
         translation_key="serial_number",

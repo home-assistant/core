@@ -42,9 +42,6 @@
       },
       "battery_state_of_health_total": {
         "default": "mdi:battery-heart"
-      },
-      "rtc": {
-        "default": "mdi:clock"
       }
     }
   }
