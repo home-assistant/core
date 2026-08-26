@@ -99,7 +99,7 @@ class HotSpringLightEntity(HotSpringEntity, LightEntity):
             await self.coordinator.hotspring.set_light_rgb(self._zone_id, *rgb_color)
 
         if (brightness := kwargs.get(ATTR_BRIGHTNESS)) is not None:
-            intensity = round(brightness_to_value((1, 5), brightness))
+            intensity = max(1, round(brightness_to_value((1, 5), brightness)))
             await self.coordinator.hotspring.set_light_brightness(
                 self._zone_id, intensity
             )
