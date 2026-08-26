@@ -4,11 +4,16 @@ from datetime import timedelta
 from unittest.mock import patch
 
 from freezegun.api import FrozenDateTimeFactory
-from modbus_connection import ModbusConnectionError, ModbusTimeoutError
-from modbus_connection.mock import MockModbusConnection
+from modbus_connection import ModbusConnectionError, ModbusError, ModbusTimeoutError
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
+import pytest
 
 from homeassistant.components.sensor import DOMAIN as SENSOR_DOMAIN
-from homeassistant.components.sofar.const import DOMAIN, SETTINGS_SCAN_INTERVAL
+from homeassistant.components.sofar.const import (
+    DOMAIN,
+    SCAN_INTERVAL,
+    SETTINGS_SCAN_INTERVAL,
+)
 from homeassistant.components.sofar.coordinator import SofarRuntimeData
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.const import STATE_UNAVAILABLE
@@ -18,6 +23,39 @@ from homeassistant.helpers import device_registry as dr, entity_registry as er
 from . import MOCK_HW_VERSION, MOCK_SERIAL, MOCK_SW_VERSION, MOCK_USER_INPUT
 
 from tests.common import MockConfigEntry, async_fire_time_changed
+
+PV_POWER_REGISTER = 0x0586
+SOLAR_GENERATION_REGISTER = 0x0684
+
+
+def _heal_after_one_failure(unit: MockModbusUnit, address: int) -> None:
+    """Fail a register once, so the coordinator's retry finds it healthy."""
+    unit.fail_read(address, ModbusError("busy"))
+    read = unit.read_holding_registers
+
+    async def read_and_heal(address_: int, count: int) -> list[int]:
+        try:
+            return await read(address_, count)
+        except ModbusError:
+            unit.fail_read(address, None)
+            raise
+
+    unit.read_holding_registers = read_and_heal
+
+
+def _drop_link_after_one_failure(unit: MockModbusUnit, address: int) -> None:
+    """Fail the last component, then the link, so its retry finds it dead."""
+    unit.fail_read(address, ModbusError("busy"))
+    read = unit.read_holding_registers
+
+    async def read_and_drop(address_: int, count: int) -> list[int]:
+        try:
+            return await read(address_, count)
+        except ModbusError:
+            unit.fail_requests(ModbusConnectionError("link dropped"))
+            raise
+
+    unit.read_holding_registers = read_and_drop
 
 
 async def test_setup_and_unload_entry(
@@ -217,3 +255,77 @@ async def test_device_versions_recover_without_a_reload(
     assert device is not None
     assert device.hw_version == MOCK_HW_VERSION
     assert device.sw_version == MOCK_SW_VERSION
+
+
+async def test_every_component_failing_marks_sensors_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    caplog: pytest.LogCaptureFixture,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test sensors go unavailable when no component answers the poll."""
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_1"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "2.5"
+
+    mock_connection.for_unit(1).fail_requests(ModbusError("illegal data address"))
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
+    # Availability alone cannot tell a failed poll from one that reported
+    # every component as failed; only the logged error separates them.
+    assert "no component answered" in caplog.text
+
+
+async def test_component_answering_the_retry_stays_available(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test one component failing alone is retried and keeps its sensors."""
+    unit = mock_connection.for_unit(1)
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_pv_power_1"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == "2.5"
+
+    # A new value only reaches the sensor if the retry actually read it;
+    # a component left failed would keep showing the old one.
+    unit.holding[PV_POWER_REGISTER] = 300
+    _heal_after_one_failure(unit, PV_POWER_REGISTER)
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    assert hass.states.get(entity_id).state == "3.0"
+
+
+async def test_link_dying_during_the_retry_marks_sensors_unavailable(
+    hass: HomeAssistant,
+    freezer: FrozenDateTimeFactory,
+    entity_registry: er.EntityRegistry,
+    mock_connection: MockModbusConnection,
+    init_integration: MockConfigEntry,
+) -> None:
+    """Test a link lost while retrying one component fails the whole poll."""
+    unit = mock_connection.for_unit(1)
+    _drop_link_after_one_failure(unit, SOLAR_GENERATION_REGISTER)
+
+    freezer.tick(timedelta(seconds=SCAN_INTERVAL))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
+    entity_id = entity_registry.async_get_entity_id(
+        SENSOR_DOMAIN, DOMAIN, f"{MOCK_SERIAL}_grid_frequency"
+    )
+    assert entity_id is not None
+    assert hass.states.get(entity_id).state == STATE_UNAVAILABLE
