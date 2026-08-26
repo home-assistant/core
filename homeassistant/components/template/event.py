@@ -24,7 +24,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator
+from . import TriggerUpdateCoordinator, validators as tcv
 from .entity import AbstractTemplateEntity
 from .helpers import (
     async_setup_template_entry,
@@ -33,7 +33,6 @@ from .helpers import (
 )
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
-    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -56,8 +55,8 @@ EVENT_COMMON_SCHEMA = vol.Schema(
     }
 )
 
-BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(
-    (
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(
         EventEntityCapabilityAttribute,
         EventEntityStateAttribute,
     )
@@ -125,7 +124,7 @@ class AbstractTemplateEvent(AbstractTemplateEntity, EventEntity):
     """Representation of a template event features."""
 
     _entity_id_format = ENTITY_ID_FORMAT
-    _blocked_attributes = BLOCKED_ATTRIBUTES
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call

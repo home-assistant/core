@@ -2,6 +2,7 @@
 
 from collections.abc import Callable
 from enum import StrEnum
+from itertools import chain
 import logging
 from typing import Any
 
@@ -17,6 +18,54 @@ _LOGGER = logging.getLogger(__name__)
 # from cv.boolean and are used to produce logger errors for the user.
 RESULT_ON = ("1", "true", "yes", "on", "enable")
 RESULT_OFF = ("0", "false", "no", "off", "disable")
+
+
+class BlockedTemplateAttributes:
+    """Blocked template attributes."""
+
+    def __init__(
+        self,
+        *,
+        attributes: tuple[type[StrEnum], ...] | type[StrEnum] | None = None,
+        device_class: bool = False,
+    ) -> None:
+        """Initialize."""
+        blocked_attributes: set[str]
+        if (attributes := attributes) is None:
+            blocked_attributes = set()
+        elif isinstance(attributes, tuple):
+            blocked_attributes = set(chain(*attributes))
+        else:
+            blocked_attributes = set(attributes)
+
+        if device_class:
+            blocked_attributes.add("device_class")
+
+        self._blocked = blocked_attributes
+
+    def blocked(self, other: dict) -> set[str]:
+        """Return a set of attributes that are blocked."""
+        return self._blocked.intersection(set(other.keys()))
+
+
+def validate_attributes(
+    breadcrumb: str,
+    blocked_attributes: BlockedTemplateAttributes | None,
+) -> Callable[[dict], dict]:
+    """Validate entity attributes."""
+
+    def validate(obj: dict):
+        if blocked_attributes is None:
+            return obj
+
+        if blocked := (blocked_attributes.blocked(obj)):
+            raise vol.Invalid(
+                f"Unsupported attribute(s) found for {breadcrumb}: {', '.join(blocked)}"
+            )
+
+        return obj
+
+    return validate
 
 
 def log_validation_result_error(

@@ -39,7 +39,6 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -95,13 +94,15 @@ ALARM_CONTROL_PANEL_COMMON_SCHEMA = vol.Schema(
     }
 )
 
-BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(AlarmControlPanelEntityStateAttribute)
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=AlarmControlPanelEntityStateAttribute
+)
 
 ALARM_CONTROL_PANEL_YAML_SCHEMA = ALARM_CONTROL_PANEL_COMMON_SCHEMA.extend(
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA
 ).extend(
     make_template_entity_common_schema(
-        ALARM_CONTROL_PANEL_DOMAIN, DEFAULT_NAME, BLOCKED_ATTRIBUTES
+        ALARM_CONTROL_PANEL_DOMAIN, DEFAULT_NAME, _BLOCKED_ATTRIBUTES
     ).schema
 )
 
@@ -170,7 +171,7 @@ class AbstractTemplateAlarmControlPanel(
     _optimistic_entity = True
     _state_option = CONF_STATE
     _restore_state_properties = ("_attr_alarm_state",)
-    _blocked_attributes = BLOCKED_ATTRIBUTES
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because
     # TemplateEntity calls AbstractTemplateEntity.__init__.

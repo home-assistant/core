@@ -34,7 +34,7 @@ from homeassistant.helpers.entity_platform import (
 from homeassistant.helpers.restore_state import ExtraStoredData, RestoreEntity
 from homeassistant.helpers.typing import ConfigType, DiscoveryInfoType
 
-from . import TriggerUpdateCoordinator, validators as template_validators
+from . import TriggerUpdateCoordinator, validators as tcv
 from .const import DOMAIN
 from .entity import AbstractTemplateEntity
 from .helpers import (
@@ -45,7 +45,6 @@ from .helpers import (
 from .schemas import (
     TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA,
     TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA,
-    BlockedTemplateAttributes,
     make_template_entity_common_schema,
 )
 from .template_entity import TemplateEntity
@@ -101,8 +100,8 @@ VACUUM_COMMON_SCHEMA = vol.Schema(
     }
 )
 
-BLOCKED_ATTRIBUTES = BlockedTemplateAttributes(
-    (VacuumEntityCapabilityAttribute, VacuumEntityStateAttribute)
+_BLOCKED_ATTRIBUTES = tcv.BlockedTemplateAttributes(
+    attributes=(VacuumEntityCapabilityAttribute, VacuumEntityStateAttribute)
 )
 
 VACUUM_YAML_SCHEMA = vol.All(
@@ -174,13 +173,13 @@ def validate_segments(
     """Parse segment template to list of segments."""
 
     def parse(result: Any) -> list[Segment] | None:
-        if template_validators.check_result_for_none(result):
+        if tcv.check_result_for_none(result):
             return None
 
         segments: list[Segment] = []
 
         if not isinstance(result, list):
-            template_validators.log_validation_result_error(
+            tcv.log_validation_result_error(
                 entity,
                 option,
                 result,
@@ -190,7 +189,7 @@ def validate_segments(
 
         for item in result:
             if not isinstance(item, dict):
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     item,
@@ -205,7 +204,7 @@ def validate_segments(
                 or ("group" in item and not isinstance(item["group"], str))
                 or not set(item).issubset({"id", "name", "group"})
             ):
-                template_validators.log_validation_result_error(
+                tcv.log_validation_result_error(
                     entity,
                     option,
                     item,
@@ -259,7 +258,7 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
     _state_option = CONF_STATE
     _restore_state_extra_data = VacuumExtraStoredData
     _restore_state_properties = ("_attr_activity",)
-    _blocked_attributes = BLOCKED_ATTRIBUTES
+    _blocked_attributes = _BLOCKED_ATTRIBUTES
 
     # The super init is not called because TemplateEntity
     # and TriggerEntity will call
@@ -274,14 +273,12 @@ class AbstractTemplateVacuum(AbstractTemplateEntity, StateVacuumEntity, RestoreE
         self._segments: list[Segment] = []
         self.setup_state_template(
             "_attr_activity",
-            template_validators.strenum(self, CONF_STATE, VacuumActivity),
+            tcv.strenum(self, CONF_STATE, VacuumActivity),
         )
         self.setup_template(
             CONF_FAN_SPEED,
             "_attr_fan_speed",
-            template_validators.item_in_list(
-                self, CONF_FAN_SPEED, self._attr_fan_speed_list
-            ),
+            tcv.item_in_list(self, CONF_FAN_SPEED, self._attr_fan_speed_list),
         )
 
         self.setup_template(

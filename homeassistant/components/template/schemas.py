@@ -1,9 +1,5 @@
 """Shared schemas for config entry and YAML config items."""
 
-from collections.abc import Callable
-from dataclasses import dataclass
-from enum import StrEnum
-from itertools import chain
 import logging
 from typing import Any
 
@@ -26,6 +22,7 @@ from .const import (
     CONF_DEFAULT_ENTITY_ID,
     CONF_PICTURE,
 )
+from .validators import BlockedTemplateAttributes, validate_attributes
 
 TEMPLATE_ENTITY_AVAILABILITY_SCHEMA = vol.Schema(
     {
@@ -44,14 +41,6 @@ TEMPLATE_ENTITY_COMMON_CONFIG_ENTRY_SCHEMA = vol.Schema(
 TEMPLATE_ENTITY_OPTIMISTIC_SCHEMA = {
     vol.Optional(CONF_OPTIMISTIC): cv.boolean,
 }
-
-
-@dataclass
-class BlockedTemplateAttributes:
-    """Blocked template attributes."""
-
-    attributes: tuple[type[StrEnum], ...] | type[StrEnum] | None = None
-    device_class: bool = False
 
 
 def log_validation_error(
@@ -75,43 +64,6 @@ def log_validation_error(
         entity_id,
         exception.msg,
     )
-
-
-def validate_attributes(
-    breadcrumb: str,
-    blocked_attributes: BlockedTemplateAttributes | None,
-) -> Callable[[dict], dict]:
-    """Validate entity attributes."""
-
-    def validate(obj: dict):
-        if blocked_attributes is None:
-            return obj
-
-        if (
-            blocked_attributes.attributes is None
-            and not blocked_attributes.device_class
-        ):
-            return obj
-
-        _blocked_attributes: set[str]
-        if (attributes := blocked_attributes.attributes) is None:
-            _blocked_attributes = set()
-        elif isinstance(attributes, tuple):
-            _blocked_attributes = set(chain(*attributes))
-        else:
-            _blocked_attributes = set(attributes)
-
-        if blocked_attributes.device_class:
-            _blocked_attributes.add("device_class")
-
-        if blocked := (_blocked_attributes.intersection(set(obj.keys()))):
-            raise vol.Invalid(
-                f"Unsupported attribute(s) found for {breadcrumb}: {', '.join(blocked)}"
-            )
-
-        return obj
-
-    return validate
 
 
 def make_template_entity_common_schema(
