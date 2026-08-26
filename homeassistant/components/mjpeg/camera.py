@@ -198,7 +198,7 @@ class MjpegCamera(Camera):
                     stream.aiter_bytes(BUFFER_SIZE)
                 )
 
-        except TimeoutError as err:
+        except (TimeoutError, httpx.TimeoutException) as err:
             raise HomeAssistantError(
                 translation_domain=DOMAIN,
                 translation_key="timeout_getting_image",

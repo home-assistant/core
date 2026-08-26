@@ -87,6 +87,9 @@ def mock_digest_config_entry() -> MockConfigEntry:
     ("exception", "translation_key"),
     [
         pytest.param(TimeoutError, "timeout_getting_image", id="timeout"),
+        pytest.param(
+            httpx.TimeoutException, "timeout_getting_image", id="httpx_timeout"
+        ),
         pytest.param(httpx.HTTPError, "error_getting_image", id="http_error"),
     ],
 )
