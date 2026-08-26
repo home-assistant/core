@@ -80,8 +80,6 @@ class HotSpringLightEntity(HotSpringEntity, LightEntity):
     @override
     def brightness(self) -> int | None:
         """Return the brightness of this light between 1..255."""
-        if not self._zone.is_on:
-            return None
         return value_to_brightness((1, 5), self._zone.intensity)
 
     @property
@@ -89,11 +87,7 @@ class HotSpringLightEntity(HotSpringEntity, LightEntity):
     def rgb_color(self) -> tuple[int, int, int] | None:
         """Return the rgb color value."""
         zone = self._zone
-        if zone.rgb_state == "active" and (zone.c_red, zone.c_green, zone.c_blue) != (
-            0,
-            0,
-            0,
-        ):
+        if zone.rgb_state == "active":
             return (zone.c_red, zone.c_green, zone.c_blue)
         return LIGHT_COLOR_TO_RGB.get(zone.color)
 

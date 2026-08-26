@@ -13,7 +13,6 @@ from hotspring import (
 import pytest
 from syrupy.assertion import SnapshotAssertion
 
-from homeassistant.components.hotspring.light import HotSpringLightEntity
 from homeassistant.components.light import (
     ATTR_BRIGHTNESS,
     ATTR_RGB_COLOR,
@@ -52,8 +51,20 @@ async def test_turn_on_default(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_hotspring: MagicMock,
+    device_fixture: Spa,
 ) -> None:
     """Test turning on light with default settings."""
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "off"
+    assert state.attributes.get(ATTR_BRIGHTNESS) is None
+
+    def _set_light_brightness(zone: int, brightness: int) -> None:
+        device_fixture.light_zones[0].intensity = brightness
+        device_fixture.light_zones[0].is_on = brightness > 0
+
+    mock_hotspring.set_light_brightness.side_effect = _set_light_brightness
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -62,14 +73,26 @@ async def test_turn_on_default(
     )
 
     mock_hotspring.set_light_brightness.assert_called_once_with(1, 5)
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 255
 
 
 async def test_turn_on_with_brightness(
     hass: HomeAssistant,
     init_integration: MockConfigEntry,
     mock_hotspring: MagicMock,
+    device_fixture: Spa,
 ) -> None:
     """Test turning on light with brightness."""
+
+    def _set_light_brightness(zone: int, brightness: int) -> None:
+        device_fixture.light_zones[0].intensity = brightness
+        device_fixture.light_zones[0].is_on = brightness > 0
+
+    mock_hotspring.set_light_brightness.side_effect = _set_light_brightness
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_ON,
@@ -81,6 +104,10 @@ async def test_turn_on_with_brightness(
     )
 
     mock_hotspring.set_light_brightness.assert_called_once_with(1, 3)
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+    assert state.attributes.get(ATTR_BRIGHTNESS) == 153
 
 
 async def test_turn_on_with_rgb_color_when_off(
@@ -187,12 +214,65 @@ async def test_rgb_color_active_custom(
     assert state.attributes.get("rgb_color") == (120, 200, 50)
 
 
+async def test_rgb_color_all_zero(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_hotspring: MagicMock,
+    device_fixture: Spa,
+) -> None:
+    """Test rgb_color property returns (0, 0, 0) when rgb_state is active."""
+    device_fixture.light_zones = [
+        LightZone(
+            zone_id=1,
+            is_enabled=True,
+            is_on=True,
+            color=LightColor.CUSTOM,
+            light_wheel=LightWheelMode.OFF,
+            intensity=3,
+            loop_speed=0,
+            c_red=0,
+            c_green=0,
+            c_blue=0,
+            rgb_state="active",
+        ),
+    ]
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.attributes.get("rgb_color") == (0, 0, 0)
+
+
 async def test_turn_off(
     hass: HomeAssistant,
-    init_integration: MockConfigEntry,
+    mock_config_entry: MockConfigEntry,
     mock_hotspring: MagicMock,
+    device_fixture: Spa,
 ) -> None:
     """Test turning off light."""
+    device_fixture.light_zones = [
+        LightZone(
+            zone_id=1,
+            is_enabled=True,
+            is_on=True,
+            color=LightColor.BLUE,
+            light_wheel=LightWheelMode.OFF,
+            intensity=5,
+            loop_speed=0,
+        ),
+    ]
+    await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
+
+    def _turn_off_light(zone: int) -> None:
+        device_fixture.light_zones[0].intensity = 0
+        device_fixture.light_zones[0].is_on = False
+
+    mock_hotspring.turn_off_light.side_effect = _turn_off_light
+
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "on"
+
     await hass.services.async_call(
         LIGHT_DOMAIN,
         SERVICE_TURN_OFF,
@@ -201,6 +281,9 @@ async def test_turn_off(
     )
 
     mock_hotspring.turn_off_light.assert_called_once_with(1)
+    state = hass.states.get(ENTITY_ID)
+    assert state is not None
+    assert state.state == "off"
 
 
 @pytest.mark.parametrize(
@@ -283,14 +366,3 @@ async def test_disabled_zone_not_added(
     await setup_with_selected_platforms(hass, mock_config_entry, [Platform.LIGHT])
 
     assert not entity_registry.async_is_registered(ENTITY_ID)
-
-
-async def test_brightness_property_when_off(
-    hass: HomeAssistant,
-    init_integration: MockConfigEntry,
-) -> None:
-    """Test brightness property returns None when light intensity is 0."""
-    coordinator = init_integration.runtime_data
-    entity = HotSpringLightEntity(coordinator, 1)
-    assert entity.brightness is None
-    assert not entity.is_on
