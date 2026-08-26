@@ -10,7 +10,10 @@ import voluptuous as vol
 
 from homeassistant.const import STATE_UNAVAILABLE, STATE_UNKNOWN
 from homeassistant.helpers import config_validation as cv
+from homeassistant.helpers.condition import ConditionsChecker
 from homeassistant.helpers.entity import Entity
+from homeassistant.helpers.trace import trace_get
+from homeassistant.helpers.typing import TemplateVarsType
 
 _LOGGER = logging.getLogger(__name__)
 
@@ -410,3 +413,20 @@ def string(
             return None
 
     return convert
+
+
+def check_conditions(
+    condition_func: ConditionsChecker | None, run_variables: TemplateVarsType
+) -> bool:
+    """Check if conditions have been met using run variables."""
+    if not condition_func:
+        return True
+
+    condition_result = condition_func.async_check(variables=run_variables)
+    if condition_result is False:
+        _LOGGER.debug(
+            "Conditions not met, aborting template trigger update. Condition summary: %s",
+            trace_get(clear=False),
+        )
+
+    return condition_result

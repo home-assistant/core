@@ -6,6 +6,7 @@ from typing import Any
 import voluptuous as vol
 
 from homeassistant.const import (
+    CONF_CONDITIONS,
     CONF_DEVICE_ID,
     CONF_ICON,
     CONF_NAME,
@@ -87,6 +88,7 @@ def make_template_entity_common_schema(
             vol.Optional(CONF_PICTURE): cv.template,
             vol.Optional(CONF_UNIQUE_ID): cv.string,
             vol.Optional(CONF_VARIABLES): cv.SCRIPT_VARIABLES_SCHEMA,
+            vol.Optional(CONF_CONDITIONS): cv.CONDITIONS_SCHEMA,
             vol.Optional(CONF_ATTRIBUTES): vol.Schema(
                 vol.Any(
                     vol.All(
