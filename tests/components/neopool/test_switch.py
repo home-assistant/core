@@ -402,17 +402,24 @@ async def test_backwash_turn_on_starts_and_reports_on(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """turn_on starts the backwash and optimistically flips is_on to ON."""
+    """turn_on starts the backwash and reports ON once the device confirms."""
     await setup_integration(hass, mock_config_entry)
     entity_id = _entity_id_by_suffix(hass, mock_config_entry, "_backwash")
 
     mock_neopool_client.async_start_backwash.reset_mock()
     await _turn_on(hass, entity_id)
-
     mock_neopool_client.async_start_backwash.assert_awaited_once_with()
-    coordinator = mock_config_entry.runtime_data
-    assert coordinator.data["MBF_PAR_FILTVALVE_REMAINING"] == 150
+
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_FILTVALVE_REMAINING": 150,
+    }
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert hass.states.get(entity_id).state == STATE_ON
 
 
@@ -420,21 +427,33 @@ async def test_backwash_turn_off_stops_and_reports_off(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
-    """turn_off stops the backwash and optimistically flips is_on to OFF."""
+    """turn_off stops the backwash and reports OFF once the device confirms."""
     await setup_integration(hass, mock_config_entry)
     entity_id = _entity_id_by_suffix(hass, mock_config_entry, "_backwash")
 
-    coordinator = mock_config_entry.runtime_data
-    coordinator.data["MBF_PAR_FILTVALVE_REMAINING"] = 120
-    coordinator.async_set_updated_data(coordinator.data)
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_FILTVALVE_REMAINING": 120,
+    }
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
+    assert hass.states.get(entity_id).state == STATE_ON
 
     mock_neopool_client.async_stop_backwash.reset_mock()
     await _turn_off(hass, entity_id)
-
     mock_neopool_client.async_stop_backwash.assert_awaited_once_with()
-    assert coordinator.data["MBF_PAR_FILTVALVE_REMAINING"] == 0
+
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_FILTVALVE_REMAINING": 0,
+    }
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
+    await hass.async_block_till_done()
+
     assert hass.states.get(entity_id).state == STATE_OFF
 
 
@@ -442,14 +461,18 @@ async def test_backwash_turn_on_raises_when_interval_unset(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
     mock_neopool_client: MagicMock,
+    freezer: FrozenDateTimeFactory,
 ) -> None:
     """turn_on with no configured duration raises before touching the client."""
     await setup_integration(hass, mock_config_entry)
     entity_id = _entity_id_by_suffix(hass, mock_config_entry, "_backwash")
 
-    coordinator = mock_config_entry.runtime_data
-    coordinator.data["MBF_PAR_FILTVALVE_INTERVAL"] = 0
-    coordinator.async_set_updated_data(coordinator.data)
+    mock_neopool_client.async_read_all.return_value = {
+        **MOCK_POOL_DATA,
+        "MBF_PAR_FILTVALVE_INTERVAL": 0,
+    }
+    freezer.tick(timedelta(seconds=60))
+    async_fire_time_changed(hass)
     await hass.async_block_till_done()
 
     mock_neopool_client.async_start_backwash.reset_mock()
