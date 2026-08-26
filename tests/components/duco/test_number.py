@@ -26,8 +26,7 @@ from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_plat
 
 _ZONE_1_ENTITY_ID = "number.living_bypass_target_1"
 _ZONE_2_ENTITY_ID = "number.living_bypass_target_2"
-_ZONE_3_ENTITY_ID = "number.living_bypass_target_3"
-_ZONE_4_ENTITY_ID = "number.living_bypass_target_4"
+_ZONE_8_ENTITY_ID = "number.living_bypass_target_8"
 
 
 @pytest.fixture
@@ -40,30 +39,19 @@ async def init_integration(
     return await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
 
 
-async def test_bypass_supply_temperature_target_numbers_support_four_zones(
+async def test_bypass_supply_temperature_target_numbers_support_all_exposed_zones(
     hass: HomeAssistant,
     mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
     mock_config_entry: MockConfigEntry,
     mock_duco_client: AsyncMock,
 ) -> None:
-    """Test bypass target controls are created for all supported zones."""
-    mock_bypass_supply_temperature_targets.update(
-        {
-            3: BypassSupplyTemperatureTarget(
-                zone_id=3,
-                value=22.0,
-                minimum=15.0,
-                increment=0.1,
-                maximum=25.0,
-            ),
-            4: BypassSupplyTemperatureTarget(
-                zone_id=4,
-                value=23.0,
-                minimum=15.0,
-                increment=0.1,
-                maximum=25.0,
-            ),
-        }
+    """Test bypass target controls are created for all exposed zones."""
+    mock_bypass_supply_temperature_targets[8] = BypassSupplyTemperatureTarget(
+        zone_id=8,
+        value=22.0,
+        minimum=15.0,
+        increment=0.1,
+        maximum=25.0,
     )
 
     await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
@@ -71,8 +59,7 @@ async def test_bypass_supply_temperature_target_numbers_support_four_zones(
     for entity_id in (
         _ZONE_1_ENTITY_ID,
         _ZONE_2_ENTITY_ID,
-        _ZONE_3_ENTITY_ID,
-        _ZONE_4_ENTITY_ID,
+        _ZONE_8_ENTITY_ID,
     ):
         assert hass.states.get(entity_id) is not None
 
