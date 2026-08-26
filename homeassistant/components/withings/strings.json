@@ -5,9 +5,7 @@
   "config": {
     "abort": {
       "already_configured": "Configuration updated for profile.",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
       "wrong_account": "Authenticated account does not match the account to be reauthenticated. Please log in with the correct account."
     },

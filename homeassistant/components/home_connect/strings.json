@@ -10,9 +10,7 @@
     "abort": {
       "already_configured": "[%key:common::config_flow::abort::already_configured_account%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]",
-      "user_rejected_authorize": "[%key:common::config_flow::abort::oauth2_user_rejected_authorize%]",
       "wrong_account": "Please ensure you reconfigure against the same account."
     },
     "create_entry": {

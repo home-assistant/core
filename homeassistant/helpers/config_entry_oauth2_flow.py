@@ -70,11 +70,15 @@ OAUTH_TOKEN_TIMEOUT_SEC = 30
 # homeassistant integration so each flow does not repeat them in its strings.json.
 _SHARED_ABORT_REASONS = frozenset(
     {
+        "authorize_url_timeout",
+        "missing_credentials",
+        "no_url_available",
         "oauth_error",
         "oauth_failed",
         "oauth_implementation_unavailable",
         "oauth_timeout",
         "oauth_unauthorized",
+        "user_rejected_authorize",
     }
 )
 

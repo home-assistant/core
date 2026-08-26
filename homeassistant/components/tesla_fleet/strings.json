@@ -3,9 +3,7 @@
     "abort": {
       "already_configured": "Configuration updated for profile.",
       "already_in_progress": "[%key:common::config_flow::abort::already_in_progress%]",
-      "authorize_url_timeout": "[%key:common::config_flow::abort::oauth2_authorize_url_timeout%]",
       "missing_configuration": "[%key:common::config_flow::abort::oauth2_missing_configuration%]",
-      "no_url_available": "[%key:common::config_flow::abort::oauth2_no_url_available%]",
       "reauth_account_mismatch": "The reauthentication account does not match the original account",
       "reauth_successful": "[%key:common::config_flow::abort::reauth_successful%]"
     },
