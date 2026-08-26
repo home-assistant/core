@@ -3,7 +3,7 @@
 from datetime import timedelta
 import functools as ft
 import math
-from typing import Any
+from typing import Any, override
 
 from pywemo import DesiredHumidity, FanMode, Humidifier
 import voluptuous as vol
@@ -92,11 +92,13 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
             self._last_fan_on_mode = FanMode.High
 
     @property
+    @override
     def icon(self) -> str:
         """Return the icon of device based on its type."""
         return "mdi:water-percent"
 
     @property
+    @override
     def extra_state_attributes(self) -> dict[str, Any]:
         """Return device specific state attributes."""
         return {
@@ -109,22 +111,26 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
         }
 
     @property
+    @override
     def percentage(self) -> int:
         """Return the current speed percentage."""
         return ranged_value_to_percentage(SPEED_RANGE, self.wemo.fan_mode)
 
     @property
+    @override
     def speed_count(self) -> int:
         """Return the number of speeds the fan supports."""
         return int_states_in_range(SPEED_RANGE)
 
     @callback
+    @override
     def _handle_coordinator_update(self) -> None:
         """Handle updated data from the coordinator."""
         if self.wemo.fan_mode != FanMode.Off:
             self._last_fan_on_mode = self.wemo.fan_mode
         super()._handle_coordinator_update()
 
+    @override
     async def async_turn_on(
         self,
         percentage: int | None = None,
@@ -134,12 +140,14 @@ class WemoHumidifier(WemoBinaryStateEntity, FanEntity):
         """Turn the fan on."""
         await self._async_set_percentage(percentage)
 
+    @override
     async def async_turn_off(self, **kwargs: Any) -> None:
         """Turn the fan off."""
         await self._async_wemo_call(
             "turn off", ft.partial(self.wemo.set_state, FanMode.Off)
         )
 
+    @override
     async def async_set_percentage(self, percentage: int) -> None:
         """Set the fan_mode of the Humidifier."""
         await self._async_set_percentage(percentage)

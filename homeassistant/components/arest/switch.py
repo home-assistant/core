@@ -2,7 +2,7 @@
 
 from http import HTTPStatus
 import logging
-from typing import Any
+from typing import Any, override
 
 import requests
 import voluptuous as vol
@@ -125,6 +125,7 @@ class ArestSwitchFunction(ArestSwitchBase):
         except ValueError:
             _LOGGER.error("Response invalid")
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         request = requests.get(
@@ -136,6 +137,7 @@ class ArestSwitchFunction(ArestSwitchBase):
         else:
             _LOGGER.error("Can't turn on function %s at %s", self._func, self._resource)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         request = requests.get(
@@ -171,6 +173,7 @@ class ArestSwitchPin(ArestSwitchBase):
 
         self.__set_pin_output()
 
+    @override
     def turn_on(self, **kwargs: Any) -> None:
         """Turn the device on."""
         turn_on_payload = int(not self.invert)
@@ -182,6 +185,7 @@ class ArestSwitchPin(ArestSwitchBase):
         else:
             _LOGGER.error("Can't turn on pin %s at %s", self._pin, self._resource)
 
+    @override
     def turn_off(self, **kwargs: Any) -> None:
         """Turn the device off."""
         turn_off_payload = int(self.invert)

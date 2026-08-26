@@ -1,6 +1,6 @@
 """Config flow to configure the Zodiac integration."""
 
-from typing import Any
+from typing import Any, override
 
 from homeassistant.config_entries import ConfigFlow, ConfigFlowResult
 
@@ -12,6 +12,7 @@ class ZodiacConfigFlow(ConfigFlow, domain=DOMAIN):
 
     VERSION = 1
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

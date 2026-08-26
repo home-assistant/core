@@ -2,7 +2,7 @@
 
 import asyncio
 import logging
-from typing import Any
+from typing import Any, override
 
 from orvibo.s20 import S20, S20Exception, discover
 import voluptuous as vol
@@ -65,6 +65,7 @@ class S20ConfigFlow(ConfigFlow, domain=DOMAIN):
 
         self._discovered_switches = _filter_discovered_switches(_unfiltered_switches)
 
+    @override
     async def async_step_user(
         self, user_input: dict[str, Any] | None = None
     ) -> ConfigFlowResult:

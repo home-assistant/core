@@ -3,6 +3,7 @@
 import asyncio
 from datetime import timedelta
 import logging
+from typing import override
 
 from aiopvapi.helpers.aiorequest import PvApiMaintenance
 from aiopvapi.hub import Hub
@@ -41,6 +42,7 @@ class PowerviewShadeUpdateCoordinator(DataUpdateCoordinator[PowerviewShadeData])
             update_interval=timedelta(seconds=60),
         )
 
+    @override
     async def _async_update_data(self) -> PowerviewShadeData:
         """Fetch data from shade endpoint."""
 

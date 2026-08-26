@@ -31,7 +31,8 @@
       },
       "user": {
         "data": {
-          "host": "[%key:common::config_flow::data::host%]"
+          "host": "[%key:common::config_flow::data::host%]",
+          "protocol": "Protocol"
         },
         "data_description": {
           "host": "Hostname or IP address of your Iskra device."

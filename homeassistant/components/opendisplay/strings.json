@@ -75,13 +75,13 @@
       "message": "Authentication failed. Please update the encryption key."
     },
     "device_not_found": {
-      "message": "Could not find Bluetooth device with address `{address}`."
-    },
-    "invalid_device_id": {
-      "message": "Device `{device_id}` is not a valid OpenDisplay device."
+      "message": "Could not find Bluetooth device with address `{address}`. Reason: {reason}"
     },
     "media_download_error": {
       "message": "Failed to download media: {error}"
+    },
+    "setup_connection_error": {
+      "message": "Failed to connect to OpenDisplay device."
     },
     "upload_error": {
       "message": "Failed to upload image to the display."

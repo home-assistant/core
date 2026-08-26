@@ -222,7 +222,7 @@ async def test_properties_unknown_symbol(
 
     mock_client.async_get_daily_forecast.return_value = testdata
 
-    entry = MockConfigEntry(domain="smhi", title="test", data=TEST_CONFIG, version=3)
+    entry = MockConfigEntry(domain=DOMAIN, title="test", data=TEST_CONFIG, version=3)
     entry.add_to_hass(hass)
 
     await hass.config_entries.async_setup(entry.entry_id)

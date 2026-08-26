@@ -10,8 +10,15 @@
         'pushAlarm': 7,
       }),
     }),
+    'Baichuan connection': 'tcp',
+    'Baichuan fallbacks': list([
+      'GetPtzCurPos',
+    ]),
     'Baichuan only': False,
     'Baichuan port': 5678,
+    'Broken cmds': list([
+      'GetManualRec',
+    ]),
     'Chimes': dict({
       '12345678': dict({
         'channel': 0,
@@ -65,6 +72,10 @@
       0,
     ]),
     'cmd list': dict({
+      '115': dict({
+        '0': 1,
+        'null': 2,
+      }),
       '208': dict({
         '0': 1,
         'null': 1,
@@ -77,15 +88,55 @@
         '0': 1,
         'null': 1,
       }),
-      '594': dict({
+      '439': dict({
         '0': 1,
         'null': 1,
+      }),
+      '483': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '527': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '529': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      '531': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      '549': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      '551': dict({
+        '0': 2,
+        'null': 2,
+      }),
+      '594': dict({
+        '0': 4,
+        'null': 4,
       }),
       '609': dict({
         '0': 1,
         'null': 1,
       }),
+      '626': dict({
+        '0': 1,
+        'null': 1,
+      }),
       '64': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '763': dict({
+        '0': 1,
+        'null': 1,
+      }),
+      '771': dict({
         '0': 1,
         'null': 1,
       }),
@@ -94,20 +145,20 @@
         'null': 2,
       }),
       'GetAiAlarm': dict({
-        '0': 6,
-        'null': 6,
+        '0': 12,
+        'null': 12,
       }),
       'GetAiCfg': dict({
-        '0': 2,
-        'null': 2,
+        '0': 4,
+        'null': 4,
       }),
       'GetAudioAlarm': dict({
         '0': 1,
         'null': 1,
       }),
       'GetAudioCfg': dict({
-        '0': 4,
-        'null': 4,
+        '0': 5,
+        'null': 5,
       }),
       'GetAutoFocus': dict({
         '0': 1,
@@ -118,8 +169,8 @@
         'null': 2,
       }),
       'GetBatteryInfo': dict({
-        '0': 1,
-        'null': 1,
+        '0': 3,
+        'null': 3,
       }),
       'GetBuzzerAlarmV20': dict({
         '0': 1,
@@ -142,20 +193,27 @@
         'null': 2,
       }),
       'GetEnc': dict({
-        '0': 1,
-        'null': 1,
+        '0': 7,
+        'null': 7,
       }),
       'GetFtp': dict({
         '0': 1,
         'null': 2,
+      }),
+      'GetHddInfo': dict({
+        'null': 1,
+      }),
+      'GetImage': dict({
+        '0': 5,
+        'null': 5,
       }),
       'GetIrLights': dict({
         '0': 1,
         'null': 1,
       }),
       'GetIsp': dict({
-        '0': 1,
-        'null': 1,
+        '0': 6,
+        'null': 6,
       }),
       'GetManualRec': dict({
         '0': 1,
@@ -169,9 +227,12 @@
         '0': 1,
         'null': 1,
       }),
-      'GetPirInfo': dict({
-        '0': 1,
+      'GetPerformance': dict({
         'null': 1,
+      }),
+      'GetPirInfo': dict({
+        '0': 4,
+        'null': 4,
       }),
       'GetPowerLed': dict({
         '0': 2,
@@ -185,13 +246,17 @@
         '0': 2,
         'null': 2,
       }),
+      'GetPtzTraceSection': dict({
+        '0': 2,
+        'null': 2,
+      }),
       'GetPush': dict({
         '0': 1,
         'null': 2,
       }),
       'GetRec': dict({
-        '0': 1,
-        'null': 2,
+        '0': 2,
+        'null': 4,
       }),
       'GetScene': dict({
         'null': 1,
@@ -200,8 +265,8 @@
         'null': 1,
       }),
       'GetWhiteLed': dict({
-        '0': 3,
-        'null': 3,
+        '0': 7,
+        'null': 7,
       }),
       'GetZoomFocus': dict({
         '0': 2,
@@ -215,6 +280,9 @@
     ]),
     'firmware version': 'v1.0.0.0.0.0000',
     'hardware version': 'IPC_00000',
+    'is Battery': False,
+    'is Hub': False,
+    'is NVR': True,
     'model': 'RLN8-410',
     'stream channels': list([
       0,

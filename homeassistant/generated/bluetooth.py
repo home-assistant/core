@@ -69,6 +69,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "service_uuid": "f815e810-456c-6761-746f-4d756e696368",
     },
     {
+        "connectable": True,
+        "domain": "besen",
+        "local_name": "ACP#*",
+    },
+    {
         "connectable": False,
         "domain": "bluemaestro",
         "manufacturer_id": 307,
@@ -92,6 +97,11 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
         "connectable": True,
         "domain": "casper_glow",
         "local_name": "Jar*",
+    },
+    {
+        "connectable": False,
+        "domain": "chef_iq",
+        "manufacturer_id": 1485,
     },
     {
         "domain": "dormakaba_dkey",
@@ -118,6 +128,14 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     },
     {
         "domain": "eufylife_ble",
+        "local_name": "eufy T9120",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9130",
+    },
+    {
+        "domain": "eufylife_ble",
         "local_name": "eufy T9140",
     },
     {
@@ -135,6 +153,10 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "eufylife_ble",
         "local_name": "eufy T9149",
+    },
+    {
+        "domain": "eufylife_ble",
+        "local_name": "eufy T9150",
     },
     {
         "connectable": True,
@@ -738,6 +760,72 @@ BLUETOOTH: Final[list[dict[str, bool | str | int | list[int]]]] = [
     {
         "domain": "snooz",
         "service_uuid": "729f0608-496a-47fe-a124-3a62aaa3fbc0",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_data_start": [
+            84,
+            85,
+            82,
+            66,
+            79,
+            72,
+            77,
+            73,
+        ],
+        "manufacturer_id": 89,
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_data_start": [
+            2,
+            21,
+            84,
+            85,
+            82,
+            66,
+            79,
+            72,
+            77,
+            73,
+        ],
+        "manufacturer_id": 76,
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "local_name": "SPECIALIZED",
+        "manufacturer_id": 525,
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_id": 89,
+        "service_uuid": "00000001-3731-3032-494d-484f42525554",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_id": 89,
+        "service_uuid": "00000002-3731-3032-494d-484f42525554",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "manufacturer_id": 89,
+        "service_uuid": "00000003-3731-3032-494d-484f42525554",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "local_name": "WSBC*",
+    },
+    {
+        "connectable": True,
+        "domain": "specialized_turbo",
+        "local_name": "SPECIALIZED*",
     },
     {
         "connectable": False,

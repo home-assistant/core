@@ -9,6 +9,7 @@ from homeassistant.components.ccm15.const import DOMAIN
 from homeassistant.const import CONF_HOST, CONF_PORT
 from homeassistant.core import HomeAssistant
 from homeassistant.data_entry_flow import FlowResultType
+from homeassistant.helpers.httpx_client import get_async_client
 
 from tests.common import MockConfigEntry
 
@@ -175,3 +176,29 @@ async def test_duplicate_host(hass: HomeAssistant) -> None:
 
     assert result2["type"] is FlowResultType.ABORT
     assert result2["reason"] == "already_configured"
+
+
+async def test_form_uses_shared_httpx_client(
+    hass: HomeAssistant, mock_setup_entry: AsyncMock
+) -> None:
+    """The config flow passes HA's shared httpx client to the library.
+
+    Letting the library build its own client runs blocking certifi/SSL setup on
+    the event loop, which aborts the flow; the shared client avoids that.
+    """
+    result = await hass.config_entries.flow.async_init(
+        DOMAIN, context={"source": config_entries.SOURCE_USER}
+    )
+
+    with patch(
+        "homeassistant.components.ccm15.config_flow.CCM15Device", autospec=True
+    ) as mock_device:
+        mock_device.return_value.async_test_connection.return_value = True
+        result2 = await hass.config_entries.flow.async_configure(
+            result["flow_id"],
+            {CONF_HOST: "1.1.1.1"},
+        )
+        await hass.async_block_till_done()
+
+    assert result2["type"] is FlowResultType.CREATE_ENTRY
+    assert mock_device.call_args.kwargs["client"] is get_async_client(hass)

@@ -58,6 +58,7 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.get_devices_data.return_value = {
             TEST_DEVICE_1_SN: deepcopy(TEST_DEVICE_1)
         }
+        client.get_default_device = AsyncMock(return_value=deepcopy(TEST_DEVICE_1))
         client.routines = ["Test Routine"]
         client.sync_history_state = AsyncMock(
             return_value={TEST_DEVICE_1_SN: TEST_VOCAL_RECORD_INITIAL}
@@ -65,9 +66,16 @@ def mock_amazon_devices_client() -> Generator[AsyncMock]:
         client.on_history_event = MagicMock()
         client.on_volume_state_event = MagicMock()
         client.on_media_state_event = MagicMock()
-        http2_task = asyncio.Future()
-        http2_task.set_result(None)
-        client.start_http2_processing = AsyncMock(return_value=http2_task)
+        client.on_todo_event = MagicMock()
+
+        async def _start_http2_processing(*_args, **_kwargs) -> asyncio.Task[None]:
+            async def _completed_task() -> None:
+                return
+
+            return asyncio.create_task(_completed_task())
+
+        client.start_http2_processing = AsyncMock(side_effect=_start_http2_processing)
+        client.stop_http2_processing = AsyncMock()
         client.send_sound_notification = AsyncMock()
         yield client
 

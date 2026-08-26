@@ -292,6 +292,7 @@ async def async_test_home_assistant(
             )
         },
     )
+    hass.config_entries._initialized.set()
     hass.bus.async_listen_once(
         EVENT_HOMEASSISTANT_STOP,
         hass.config_entries._async_shutdown,
@@ -492,7 +493,7 @@ def async_fire_time_changed_exact(
     approach, as this is only for testing.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(UTC)
+        utc_datetime = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
@@ -515,7 +516,7 @@ def async_fire_time_changed(
     for an exact microsecond, use async_fire_time_changed_exact.
     """
     if datetime_ is None:
-        utc_datetime = datetime.now(UTC)
+        utc_datetime = datetime.now(UTC)  # pylint: disable=home-assistant-enforce-utcnow
     else:
         utc_datetime = dt_util.as_utc(datetime_)
 
@@ -677,7 +678,8 @@ def mock_registry(
     if mock_entries is None:
         mock_entries = {}
     registry.deleted_entities = {}
-    registry.entities = er.EntityRegistryItems()
+    registry.entities = er.EntityRegistryItems(hass)
+    registry.settings = er.EntityRegistrySettings()
     registry._entities_data = registry.entities.data
     for key, entry in mock_entries.items():
         registry.entities[key] = entry
@@ -744,6 +746,7 @@ def mock_area_registry(
 def mock_device_registry(
     hass: HomeAssistant,
     mock_entries: dict[str, dr.DeviceEntry] | None = None,
+    mock_child_entries: dict[str, dr.ChildDeviceEntry] | None = None,
 ) -> dr.DeviceRegistry:
     """Mock the Device Registry.
 
@@ -757,13 +760,21 @@ def mock_device_registry(
     fixture instead.
     """
     registry = dr.DeviceRegistry(hass)
-    registry.devices = dr.ActiveDeviceRegistryItems()
-    registry._device_data = registry.devices.data
+    registry._devices = dr.ActiveDeviceRegistryItems()
+    registry.devices = registry._devices.values()
+    registry._device_data = registry._devices.data
+    registry._child_devices = dr.ChildDeviceRegistryItems()
+    registry.child_devices = registry._child_devices.values()
+    registry._child_device_data = registry._child_devices.data
     if mock_entries is None:
         mock_entries = {}
     for key, entry in mock_entries.items():
-        registry.devices[key] = entry
-    registry.deleted_devices = dr.DeviceRegistryItems()
+        registry._devices[key] = entry
+    if mock_child_entries is None:
+        mock_child_entries = {}
+    for key, child_entry in mock_child_entries.items():
+        registry._child_devices[key] = child_entry
+    registry._deleted_devices = dr.DeletedDeviceRegistryItems()
 
     hass.data[dr.DATA_REGISTRY] = registry
     return registry
@@ -1587,7 +1598,16 @@ async def flush_store(store: storage.Store) -> None:
 
 async def get_system_health_info(hass: HomeAssistant, domain: str) -> dict[str, Any]:
     """Get system health info."""
-    return await hass.data["system_health"][domain].info_callback(hass)
+    from homeassistant.components.system_health import (  # noqa: PLC0415
+        DATA_SYSTEM_HEALTH_PLATFORMS,
+        DOMAIN as SYSTEM_HEALTH_DOMAIN,
+    )
+
+    platform_registrations = await hass.data[
+        DATA_SYSTEM_HEALTH_PLATFORMS
+    ].async_get_platforms()
+    registrations = {**hass.data[SYSTEM_HEALTH_DOMAIN], **platform_registrations}
+    return await registrations[domain].info_callback(hass)
 
 
 @contextmanager

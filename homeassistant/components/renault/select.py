@@ -2,7 +2,7 @@
 
 from collections.abc import Callable, Coroutine
 from dataclasses import dataclass
-from typing import Any
+from typing import Any, override
 
 from renault_api.kamereon.models import (
     KamereonVehicleChargeModeData,
@@ -54,10 +54,12 @@ class RenaultSelectEntity[T: KamereonVehicleDataAttributes](
     entity_description: RenaultSelectEntityDescription[T]
 
     @property
+    @override
     def current_option(self) -> str | None:
         """Return the selected entity option to represent the entity state."""
         return self.entity_description.value_fn(self)
 
+    @override
     async def async_select_option(self, option: str) -> None:
         """Change the selected option."""
         await self.entity_description.update_fn(self, option)

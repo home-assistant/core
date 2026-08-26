@@ -4,7 +4,7 @@ from dataclasses import dataclass
 from datetime import timedelta
 from io import BytesIO
 import logging
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, override
 
 import aiohttp
 from pytrafikverket import (
@@ -57,6 +57,7 @@ class TVDataUpdateCoordinator(DataUpdateCoordinator[CameraData]):
         )
         self._id = config_entry.data[CONF_ID]
 
+    @override
     async def _async_update_data(self) -> CameraData:
         """Fetch data from Trafikverket."""
         camera_data: CameraInfoModel

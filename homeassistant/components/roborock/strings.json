@@ -10,6 +10,7 @@
       "invalid_email": "There is no account associated with the email you entered, please try again.",
       "invalid_email_format": "There is an issue with the formatting of your email - please try again.",
       "invalid_email_or_region": "Either there is no account associated with the email you entered, or there is no account in the selected region.",
+      "invalid_url_format": "The URL must start with http:// or https:// and include a valid host.",
       "too_frequent_code_requests": "You have attempted to request too many codes. Try again later.",
       "unknown": "[%key:common::config_flow::error::unknown%]",
       "unknown_roborock": "There was an unknown Roborock exception - please check your logs.",
@@ -24,6 +25,15 @@
           "code": "The verification code sent to your email."
         },
         "description": "Type the verification code sent to your email"
+      },
+      "custom_url": {
+        "data": {
+          "roborock_server_url": "Roborock Server URL"
+        },
+        "data_description": {
+          "roborock_server_url": "The URL of the Roborock server."
+        },
+        "description": "Enter the Roborock server URL to connect to."
       },
       "reauth_confirm": {
         "description": "The Roborock integration needs to re-authenticate your account",
@@ -115,6 +125,11 @@
         "name": "Start"
       }
     },
+    "image": {
+      "map": {
+        "name": "Map"
+      }
+    },
     "number": {
       "volume": {
         "name": "Volume"
@@ -124,7 +139,9 @@
       "cleaning_mode": {
         "name": "Cleaning mode",
         "state": {
+          "custom": "Custom",
           "mop": "Mop only",
+          "smart_mode": "Smart",
           "vac_and_mop": "Vacuum and mop",
           "vacuum": "Vacuum only"
         }
@@ -594,11 +611,26 @@
       }
     },
     "switch": {
+      "button_light": {
+        "name": "Indicator light"
+      },
       "child_lock": {
         "name": "Child lock"
       },
       "dnd_switch": {
         "name": "Do not disturb"
+      },
+      "dust_collection": {
+        "name": "Dust collection"
+      },
+      "dust_emptying": {
+        "name": "Dust emptying"
+      },
+      "mop_drying": {
+        "name": "Mop drying"
+      },
+      "mop_washing": {
+        "name": "Mop washing"
       },
       "off_peak_switch": {
         "name": "Off-peak charging"
@@ -677,9 +709,6 @@
     "mqtt_unauthorized": {
       "message": "Roborock MQTT servers rejected the connection due to rate limiting or invalid credentials. You may either attempt to reauthenticate or wait and reload the integration."
     },
-    "network_error": {
-      "message": "Network error connecting to Roborock servers. Check your internet connection and the Roborock service status."
-    },
     "no_coordinators": {
       "message": "No devices were able to successfully setup"
     },
@@ -709,6 +738,14 @@
     "cloud_api_used": {
       "description": "The Roborock integration is unable to connect directly to {device_name} and falling back to the cloud API. This is not recommended as it can lead to rate limiting. Please make your vacuum accessible on the local network by your Home Assistant instance.",
       "title": "Cloud API used"
+    },
+    "deprecated_mop_drying": {
+      "description": "The `{entity_id}` ({entity_name}) binary sensor is deprecated and has been replaced by the **Mop drying** switch, which reports the same state and can also start and stop drying.\n\nUpdate any dashboards, templates, automations or scripts to use the new switch entity, then disable `{entity_id}` to have it removed.",
+      "title": "The Roborock mop drying binary sensor is deprecated"
+    },
+    "deprecated_mop_drying_scripts": {
+      "description": "The `{entity_id}` ({entity_name}) binary sensor is deprecated and has been replaced by the **Mop drying** switch, which reports the same state and can also start and stop drying.\n\nIt is still used in the following automations or scripts:\n{items}\n\nUpdate them to use the new switch entity, then disable `{entity_id}` to have it removed.",
+      "title": "[%key:component::roborock::issues::deprecated_mop_drying::title%]"
     }
   },
   "options": {
@@ -767,6 +804,7 @@
       "options": {
         "auto": "Auto",
         "cn": "CN",
+        "custom": "Manual",
         "eu": "EU",
         "ru": "RU",
         "us": "US"
@@ -795,6 +833,32 @@
         }
       },
       "name": "Go to position"
+    },
+    "set_vacuum_zoned_cleaning": {
+      "description": "Starts cleaning the specified zone.",
+      "fields": {
+        "repeats": {
+          "description": "The number of times the zone cleaning is repeated. '0' is just cleaning once.",
+          "name": "Repeats"
+        },
+        "x1": {
+          "description": "The first x-coordinate of the zone.",
+          "name": "X1-coordinate"
+        },
+        "x2": {
+          "description": "The second x-coordinate of the zone.",
+          "name": "X2-coordinate"
+        },
+        "y1": {
+          "description": "The first y-coordinate of the zone.",
+          "name": "Y1-coordinate"
+        },
+        "y2": {
+          "description": "The second y-coordinate of the zone.",
+          "name": "Y2-coordinate"
+        }
+      },
+      "name": "Clean zone"
     }
   }
 }

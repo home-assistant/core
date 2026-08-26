@@ -29,9 +29,20 @@ ATTR_DEVICE_NAME = "device_name"
 ATTR_AREA_NAME = "area_name"
 ATTR_ACTION = "action"
 
+ACTION_LONG_PRESS = "long_press"
 ACTION_MULTITAP = "multi_tap"
 ACTION_PRESS = "press"
 ACTION_RELEASE = "release"
+
+# Raw EventType string sent by the Lutron LEAP protocol for a long hold.
+# pylutron-caseta passes all EventType values through without filtering.
+BUTTON_STATUS_LONG_HOLD = "LongHold"
+
+# Bridge DeviceType strings (bridge_device["type"]) that are known to send
+# native LongHold events over LEAP. Used to gate the long_press device
+# trigger so it only appears in the automation UI for supported hardware.
+# Caseta and RadioRA3 processors do not emit LongHold.
+BRIDGE_DEVICE_TYPES_WITH_LONG_HOLD = frozenset({"HWQSProcessor"})
 
 CONF_SUBTYPE = "subtype"
 
