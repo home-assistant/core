@@ -125,12 +125,12 @@ class MatterDiscoverySchema:
     # for example for the DoorSensor on a DoorLock Cluster
     featuremap_contains: int | None = None
 
-    # [optional] minimum cluster revision required (inclusive)
-    # corresponds to the ClusterRevision attribute in Matter clusters
+    # [optional] the primary attribute's cluster ClusterRevision
+    # must be at least this value (inclusive)
     cluster_revision_min: int | None = None
 
-    # [optional] maximum cluster revision allowed (inclusive)
-    # corresponds to the ClusterRevision attribute in Matter clusters
+    # [optional] the primary attribute's cluster ClusterRevision
+    # must be at most this value (inclusive)
     cluster_revision_max: int | None = None
 
     # [optional] bool to specify if this primary value may be discovered
