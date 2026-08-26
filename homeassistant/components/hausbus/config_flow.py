@@ -16,6 +16,8 @@ _LOGGER = logging.getLogger(__name__)
 
 STEP_USER_SCHEMA = vol.Schema({})
 
+_DEVICE_SEARCH_TIMEOUT = 5  # seconds
+
 
 class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
     """Handle a config flow for hausbus."""
@@ -107,7 +109,7 @@ class HausBusConfigFlow(ConfigFlow, domain=DOMAIN):
         assert self.home_server is not None
         await self.hass.async_add_executor_job(self.home_server.searchDevices)
         # wait for up to 5 seconds to find devices
-        await asyncio.wait_for(self._check_device_found(), 5)
+        await asyncio.wait_for(self._check_device_found(), _DEVICE_SEARCH_TIMEOUT)
 
     async def _check_device_found(self) -> bool:
         """Check if a device was found periodically."""

@@ -53,7 +53,7 @@ async def test_user_flow_creates_entry(
     assert mock_home_server.searchDevices.call_count == 2
 
 
-@pytest.mark.timeout(15)
+@pytest.mark.timeout(5)
 async def test_user_flow_search_timeout_then_retry(
     hass: HomeAssistant, mock_home_server: MagicMock
 ) -> None:

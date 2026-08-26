@@ -6,6 +6,15 @@ from unittest.mock import MagicMock, patch
 import pytest
 
 
+@pytest.fixture(autouse=True)
+def fast_device_search_timeout() -> Generator[None]:
+    """Reduce the device search timeout to speed up tests."""
+    with patch(
+        "homeassistant.components.hausbus.config_flow._DEVICE_SEARCH_TIMEOUT", 0.1
+    ):
+        yield
+
+
 @pytest.fixture
 def mock_home_server() -> Generator[MagicMock]:
     """Mock the pyhausbus HomeServer to avoid a real UDP socket and threads."""
