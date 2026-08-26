@@ -6,9 +6,15 @@ from chip.clusters import Objects as clusters
 from chip.clusters.ClusterObjects import ClusterAttributeDescriptor, NullValue
 import pytest
 
-from homeassistant.components.matter.discovery import _resolve_cluster_revision
+from homeassistant.components.matter import discovery
+from homeassistant.components.matter.discovery import (
+    _resolve_cluster_revision,
+    async_discover_entities,
+)
 from homeassistant.components.matter.models import MatterDiscoverySchema
 from homeassistant.const import Platform
+
+from .common import create_node_from_fixture
 
 
 def _make_schema(
@@ -75,3 +81,24 @@ def test_resolve_cluster_revision(
 
     assert _resolve_cluster_revision(endpoint, primary_attribute, schema) is expected
     assert endpoint.get_attribute_value.call_count == expected_call_count
+
+
+@pytest.mark.parametrize(
+    ("cluster_revision", "expected_discovered"),
+    [(6, True), (7, False)],
+    ids=["within range", "above range"],
+)
+def test_async_discover_entities_filters_by_cluster_revision(
+    monkeypatch: pytest.MonkeyPatch,
+    cluster_revision: int,
+    expected_discovered: bool,
+) -> None:
+    """Test async_discover_entities honors cluster_revision_min/cluster_revision_max."""
+    schema = _make_schema(cluster_revision_min=None, cluster_revision_max=6)
+    monkeypatch.setattr(discovery, "DISCOVERY_SCHEMAS", {Platform.SENSOR: [schema]})
+    node = create_node_from_fixture(
+        "mock_thermostat", override_attributes={"1/513/65533": cluster_revision}
+    )
+    endpoint = node.endpoints[1]
+
+    assert bool(list(async_discover_entities(endpoint))) is expected_discovered
