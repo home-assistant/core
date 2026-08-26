@@ -11,7 +11,7 @@ import pytest
 import voluptuous as vol
 
 from homeassistant.components import automation, sun
-from homeassistant.components.sun.trigger import _next_horizon_crossing
+from homeassistant.components.sun.trigger import _next_polar_transition
 from homeassistant.const import (
     ATTR_ENTITY_ID,
     ENTITY_MATCH_ALL,
@@ -886,7 +886,7 @@ async def test_midnight_sun_trigger_offset_catches_pending_crossing(
         (78.22, True),  # Svalbard, deep polar
     ],
 )
-def test_next_horizon_crossing_short_circuits_non_polar(
+def test_next_polar_transition_short_circuits_non_polar(
     latitude: float, has_crossing: bool
 ) -> None:
     """Test the crossing scan is skipped where no polar period can occur.
@@ -895,10 +895,29 @@ def test_next_horizon_crossing_short_circuits_non_polar(
     short-circuit rather than run its ~year-long loop in the event loop.
     """
     observer = astral.Observer(latitude, 15.0, 0)
-    result = _next_horizon_crossing(
+    result = _next_polar_transition(
         observer, "midnight", _TEST_DATETIME, target_above=True, offset=timedelta(0)
     )
     assert (result is not None) is has_crossing
+
+
+def test_next_polar_transition_large_before_offset() -> None:
+    """Test a large ``before`` offset still reaches the following annual crossing.
+
+    A negative (before) offset advances the fire time, so the nearest crossing's
+    fire can already be in the past. Anchoring the scan on ``now - offset`` (not a
+    fixed lookback) must then carry it forward to next year's crossing instead of
+    returning None and leaving the trigger unscheduled.
+    """
+    observer = astral.Observer(*_SVALBARD[:2], 0)
+    now = datetime(2015, 2, 27, 12, tzinfo=dt_util.UTC)
+    # The 2015-04-18 crossing's fire (60 days earlier) is already past, so the
+    # next fire derives from the 2016-04-17 22:56:39 solar-midnight crossing.
+    expected = datetime(2016, 2, 17, 22, 56, 39, tzinfo=dt_util.UTC)
+    result = _next_polar_transition(
+        observer, "midnight", now, target_above=True, offset=timedelta(days=-60)
+    )
+    assert result == expected
 
 
 # --- Sun elevation triggers --------------------------------------------------

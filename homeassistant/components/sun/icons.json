@@ -100,13 +100,13 @@
       "trigger": "mdi:weather-sunset"
     },
     "midnight_sun_ended": {
-      "trigger": "mdi:weather-sunny"
+      "trigger": "mdi:weather-sunset"
     },
     "midnight_sun_started": {
       "trigger": "mdi:weather-sunny"
     },
     "polar_night_ended": {
-      "trigger": "mdi:weather-night"
+      "trigger": "mdi:weather-sunset-up"
     },
     "polar_night_started": {
       "trigger": "mdi:weather-night"

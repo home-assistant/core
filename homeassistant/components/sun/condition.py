@@ -1,7 +1,7 @@
 """Offer sun based automation rules."""
 
 from datetime import datetime, timedelta
-from typing import Any, Unpack, cast, override
+from typing import Any, Final, Literal, Unpack, cast, override
 
 import astral.sun
 import voluptuous as vol
@@ -54,8 +54,8 @@ from .const import (
 )
 
 # Names of the solar noon/midnight events in the astral.sun module.
-_SUN_EVENT_SOLAR_NOON = "noon"
-_SUN_EVENT_SOLAR_MIDNIGHT = "midnight"
+_SUN_EVENT_SOLAR_NOON: Final = "noon"
+_SUN_EVENT_SOLAR_MIDNIGHT: Final = "midnight"
 
 CONF_PERIOD = "period"
 _PERIOD_ANY = "any"
@@ -409,7 +409,9 @@ class _BlueHourCondition(_GoldenBlueHourCondition):
     _high = ELEVATION_BLUE_HOUR_HIGH
 
 
-def _elevation_at_last_solar_extreme(hass: HomeAssistant, event: str) -> float:
+def _elevation_at_last_solar_extreme(
+    hass: HomeAssistant, event: Literal["noon", "midnight"]
+) -> float:
     """Return the sun's elevation at the most recent solar noon or midnight.
 
     Evaluating the current cycle's extreme (the one at or before now), rather than
@@ -431,6 +433,9 @@ def _elevation_at_last_solar_extreme(hass: HomeAssistant, event: str) -> float:
         candidate: datetime = event_func(observer, local_date)
         if candidate <= now:
             latest = candidate
+        else:
+            # Candidates only move later, so the first one past now ends the scan.
+            break
     elevation: float = astral.sun.elevation(observer, latest)
     return elevation
 
