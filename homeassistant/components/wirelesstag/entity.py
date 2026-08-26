@@ -73,9 +73,7 @@ class WirelessTagBaseSensor(Entity):
 
         updated_tags = self._api.load_tags()
         if (updated_tag := updated_tags.get(self._uuid)) is None:
-            # The tag is gone from the account, so there is nothing left to
-            # poll. Reported through availability rather than a log message
-            # repeated on every poll.
+            # A tag can be removed from the account, so this is not an error.
             _LOGGER.debug('Unable to update tag: "%s"', self.name)
             self._tag_missing = True
             self._state = None
