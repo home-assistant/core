@@ -15,7 +15,8 @@
   "loggers": ["acme", "hass_nabucasa", "snitun"],
   "preview_features": {
     "stt_v2": {
-      "feedback_url": "https://forms.gle/Juf2vsxJHUX5y6Ev5"
+      "feedback_url": "https://forms.gle/Juf2vsxJHUX5y6Ev5",
+      "learn_more_url": "https://support.nabucasa.com/hc/en-us/articles/29718084245149-Speech-to-text-STT"
     }
   },
   "requirements": ["hass-nabucasa==2.6.0", "openai==2.45.0"],

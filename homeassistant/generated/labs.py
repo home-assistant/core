@@ -14,7 +14,7 @@ LABS_PREVIEW_FEATURES = {
     "cloud": {
         "stt_v2": {
             "feedback_url": "https://forms.gle/Juf2vsxJHUX5y6Ev5",
-            "learn_more_url": "",
+            "learn_more_url": "https://support.nabucasa.com/hc/en-us/articles/29718084245149-Speech-to-text-STT",
             "report_issue_url": "",
         },
     },
