@@ -1,11 +1,16 @@
 """Tests for the Marstek integration."""
 
+from ipaddress import IPv4Address
 from unittest.mock import AsyncMock, MagicMock, patch
 
+import pytest
+
+from homeassistant.components.marstek import async_create_udp_client
 from homeassistant.components.marstek.const import DOMAIN
 from homeassistant.components.marstek.coordinator import MarstekDataUpdateCoordinator
 from homeassistant.config_entries import ConfigEntryState
 from homeassistant.core import HomeAssistant
+from homeassistant.exceptions import ConfigEntryError
 
 from tests.common import MockConfigEntry
 
@@ -107,6 +112,50 @@ async def test_async_setup_entry_client_creation_fails(
     assert DOMAIN not in hass.data
 
 
+async def test_async_create_udp_client(
+    hass: HomeAssistant,
+) -> None:
+    """Test creating a UDP client configures broadcast addresses."""
+    with (
+        patch("homeassistant.components.marstek.MarstekUDPClient") as mock_client_class,
+        patch(
+            "homeassistant.components.marstek.network.async_get_ipv4_broadcast_addresses",
+            return_value=[IPv4Address("192.168.1.255")],
+        ),
+    ):
+        mock_client = mock_client_class.return_value
+        mock_client.async_setup = AsyncMock()
+        mock_client.async_cleanup = AsyncMock()
+
+        client = await async_create_udp_client(hass)
+
+    assert client is mock_client
+    mock_client.async_setup.assert_awaited_once()
+    mock_client.set_broadcast_addresses.assert_called_once_with(["192.168.1.255"])
+    mock_client.async_cleanup.assert_not_awaited()
+
+
+async def test_async_create_udp_client_cleans_up_on_broadcast_lookup_failure(
+    hass: HomeAssistant,
+) -> None:
+    """Test client creation cleans up when broadcast address lookup fails."""
+    with (
+        patch("homeassistant.components.marstek.MarstekUDPClient") as mock_client_class,
+        patch(
+            "homeassistant.components.marstek.network.async_get_ipv4_broadcast_addresses",
+            side_effect=OSError("network down"),
+        ),
+    ):
+        mock_client = mock_client_class.return_value
+        mock_client.async_setup = AsyncMock()
+        mock_client.async_cleanup = AsyncMock()
+
+        with pytest.raises(OSError):
+            await async_create_udp_client(hass)
+
+    mock_client.async_cleanup.assert_awaited_once()
+
+
 async def test_async_setup_entry_not_ready(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -120,6 +169,26 @@ async def test_async_setup_entry_not_ready(
     await hass.async_block_till_done()
 
     assert mock_config_entry.state is ConfigEntryState.SETUP_RETRY
+    mock_udp_client.async_cleanup.assert_awaited_once()
+
+
+async def test_async_setup_entry_cleans_up_after_first_refresh_error(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_udp_client: MagicMock,
+) -> None:
+    """Test setup cleans up when the first refresh raises an error."""
+    mock_config_entry.add_to_hass(hass)
+
+    with patch.object(
+        MarstekDataUpdateCoordinator,
+        "async_config_entry_first_refresh",
+        new=AsyncMock(side_effect=ConfigEntryError("boom")),
+    ):
+        await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+    assert mock_config_entry.state is ConfigEntryState.SETUP_ERROR
     mock_udp_client.async_cleanup.assert_awaited_once()
 
 
