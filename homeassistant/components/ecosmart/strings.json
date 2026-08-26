@@ -41,6 +41,9 @@
     },
     "rate_limited": {
       "message": "The ecosmart API key is out of requests; the next attempt is in {retry_after} seconds"
+    },
+    "rate_limited_setup": {
+      "message": "The ecosmart API is temporarily out of requests. Home Assistant will retry automatically."
     }
   }
 }

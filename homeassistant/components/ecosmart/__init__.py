@@ -39,15 +39,11 @@ async def async_setup_entry(hass: HomeAssistant, entry: EcosmartConfigEntry) -> 
             translation_domain=DOMAIN, translation_key="invalid_auth"
         ) from err
     except EcosmartRateLimitError as err:
-        retry_after = err.retry_after
-        if retry_after is None:
-            # No Retry-After header: quote our own cadence rather than
-            # hammering a key that is already out of budget.
-            retry_after = int(SPOT_SCAN_INTERVAL.total_seconds())
+        # ConfigEntryNotReady has no retry_after support; HA retries in ~5s.
+        # Do not claim a delay the framework will not honour.
         raise ConfigEntryNotReady(
             translation_domain=DOMAIN,
-            translation_key="rate_limited",
-            translation_placeholders={"retry_after": str(retry_after)},
+            translation_key="rate_limited_setup",
         ) from err
     except EcosmartError as err:
         raise ConfigEntryNotReady(
