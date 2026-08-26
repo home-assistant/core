@@ -598,6 +598,52 @@ async def test_self_heal_stops_on_unload(
     mock_vistapool_client.fetch_pool_data.assert_not_called()
 
 
+async def test_manual_refresh_cancels_self_heal_retry(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a successful manual refresh disarms the pending self-heal retry."""
+    mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
+        "light": {"status": 0}
+    }
+    mock_config_entry.add_to_hass(hass)
+    assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+    await hass.async_block_till_done()
+    assert await async_setup_component(hass, "homeassistant", {})
+
+    await hass.services.async_call(
+        LIGHT_DOMAIN,
+        SERVICE_TURN_ON,
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+
+    # The TTL expiry fires, the fetch fails, and a retry is armed.
+    mock_vistapool_client.fetch_pool_data.side_effect = AquariteError("cloud down")
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done()
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_UNAVAILABLE
+
+    # A manual refresh recovers; the armed retry must not refetch later.
+    mock_vistapool_client.fetch_pool_data.side_effect = lambda *_a, **_k: {
+        "light": {"status": 0}
+    }
+    await hass.services.async_call(
+        "homeassistant",
+        "update_entity",
+        {ATTR_ENTITY_ID: _LIGHT_ENTITY},
+        blocking=True,
+    )
+    await hass.async_block_till_done()
+    assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+    mock_vistapool_client.fetch_pool_data.reset_mock()
+    async_fire_time_changed(hass, fire_all=True)
+    await hass.async_block_till_done()
+    mock_vistapool_client.fetch_pool_data.assert_not_called()
+
+
 async def test_push_discards_in_flight_self_heal(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
@@ -675,8 +721,8 @@ async def test_refresh_preserves_other_pending_optimistic_values(
         blocking=True,
     )
 
-    # A forced refresh (the path a self-heal takes) must not clobber writes
-    # that are still inside their own TTL window.
+    # A manual refresh must not clobber writes that are still inside
+    # their own TTL window.
     await hass.services.async_call(
         "homeassistant",
         "update_entity",

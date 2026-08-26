@@ -70,8 +70,12 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
                 translation_domain=DOMAIN,
                 translation_key="update_failed",
             ) from err
-        # A refresh (self-heal or manual) must not clobber optimistic writes
-        # for other paths that are still inside their own TTL window.
+        # This fetch is as authoritative as a push: a pending self-heal
+        # retry would only refetch and could mark recovered data
+        # unavailable again on a transient failure.
+        self._cancel_self_heal()
+        # A manual refresh must not clobber optimistic writes for other
+        # paths that are still inside their own TTL window.
         return self._merge_optimistic(data)
 
     async def subscribe(self) -> None:
@@ -124,6 +128,19 @@ class VistapoolDataUpdateCoordinator(DataUpdateCoordinator[dict[str, Any]]):
         """Reflect a just-written value and protect it from stale Firestore pushes."""
         self.record_optimistic(value_path, value)
         self.async_set_updated_data(self.data)
+
+    def discard_optimistic(self, value_path: str) -> None:
+        """Drop the newest pending write for a path.
+
+        For unwinding a prequeued write whose send failed: it must not
+        keep suppressing the pushes that reflect what the cloud really has.
+        """
+        writes = self._pending_optimistic.get(value_path)
+        if not writes:
+            return
+        writes.pop()
+        if not writes:
+            self._clear_optimistic(value_path)
 
     def _merge_optimistic(self, data: dict[str, Any]) -> dict[str, Any]:
         """Overlay unconfirmed optimistic writes onto freshly fetched data."""

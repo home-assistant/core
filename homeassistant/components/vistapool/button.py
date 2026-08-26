@@ -80,13 +80,22 @@ class VistapoolLEDPulseButton(VistapoolEntity, ButtonEntity):
         # Queue the whole off/on sequence before the first send: the echoes
         # are then confirmed in order, and a push landing inside the pulse
         # delay is overlaid with the final on instead of the transient off,
-        # so the light entity never flickers. A failed send leaves queued
-        # values the cloud never got; the TTL self-heal reconciles those.
+        # so the light entity never flickers. A failed send discards the
+        # writes the cloud never acknowledged.
         self.coordinator.record_optimistic(_LIGHT_STATUS_PATH, 0)
         self.coordinator.record_optimistic(_LIGHT_STATUS_PATH, 1)
-        await self._async_write_status(0)
+        try:
+            await self._async_write_status(0)
+        except HomeAssistantError:
+            self.coordinator.discard_optimistic(_LIGHT_STATUS_PATH)
+            self.coordinator.discard_optimistic(_LIGHT_STATUS_PATH)
+            raise
         await asyncio.sleep(_LED_PULSE_DELAY_SECONDS)
-        await self._async_write_status(1)
+        try:
+            await self._async_write_status(1)
+        except HomeAssistantError:
+            self.coordinator.discard_optimistic(_LIGHT_STATUS_PATH)
+            raise
         self.coordinator.async_set_updated_data(self.coordinator.data)
 
     async def _async_write_status(self, value: int) -> None:

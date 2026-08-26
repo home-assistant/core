@@ -276,6 +276,49 @@ async def test_button_press_pulse_survives_stale_push(
         assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
 
 
+async def test_button_press_failed_pulse_discards_unsent_write(
+    hass: HomeAssistant,
+    mock_config_entry: MockConfigEntry,
+    mock_vistapool_client: AsyncMock,
+) -> None:
+    """Test a failed final on send does not keep suppressing the real off push."""
+    mock_vistapool_client.fetch_pool_data.return_value = {
+        "main": {"hasLED": 1, "version": 1},
+        "light": {"status": 1},
+    }
+    mock_config_entry.add_to_hass(hass)
+
+    with patch(
+        "homeassistant.components.vistapool.PLATFORMS",
+        [Platform.BUTTON, Platform.LIGHT],
+    ):
+        assert await hass.config_entries.async_setup(mock_config_entry.entry_id)
+        await hass.async_block_till_done()
+
+        on_data = mock_vistapool_client.subscribe_pool_resilient.call_args.args[1]
+
+        async def _fail_final_on(_pool_id: str, _path: str, value: int) -> None:
+            """Acknowledge the off write, fail the final on write."""
+            if value:
+                raise AquariteError("boom")
+
+        mock_vistapool_client.set_value.side_effect = _fail_final_on
+
+        with pytest.raises(HomeAssistantError):
+            await hass.services.async_call(
+                BUTTON_DOMAIN,
+                SERVICE_PRESS,
+                {ATTR_ENTITY_ID: _BUTTON},
+                blocking=True,
+            )
+
+        # The off landed on the cloud; its echo must reach the entity instead
+        # of being suppressed by the discarded, never-sent on value.
+        on_data({"light": {"status": 0}})
+        await hass.async_block_till_done()
+        assert hass.states.get(_LIGHT_ENTITY).state == STATE_OFF
+
+
 async def test_button_press_raises_on_api_error(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
