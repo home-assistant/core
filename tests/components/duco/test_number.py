@@ -265,6 +265,35 @@ async def test_set_bypass_supply_temperature_target_in_fahrenheit_units(
         assert state.state == "68.9"
 
 
+async def test_set_bypass_supply_temperature_target_stays_within_maximum(
+    hass: HomeAssistant,
+    mock_bypass_supply_temperature_targets: dict[int, BypassSupplyTemperatureTarget],
+    mock_config_entry: MockConfigEntry,
+    mock_duco_client: AsyncMock,
+) -> None:
+    """Test normalization never rounds past a maximum that is not a whole step."""
+    hass.config.units = US_CUSTOMARY_SYSTEM
+    mock_bypass_supply_temperature_targets[1] = replace(
+        mock_bypass_supply_temperature_targets[1],
+        minimum=10.0,
+        increment=0.5,
+        maximum=24.8,
+    )
+
+    await setup_platform_integration(hass, mock_config_entry, [Platform.NUMBER])
+
+    await hass.services.async_call(
+        NUMBER_DOMAIN,
+        SERVICE_SET_VALUE,
+        {ATTR_ENTITY_ID: _ZONE_1_ENTITY_ID, "value": 76.6},
+        blocking=True,
+    )
+
+    mock_duco_client.async_set_bypass_supply_temperature_target.assert_called_once_with(
+        1, 24.5
+    )
+
+
 async def test_bypass_supply_temperature_target_becomes_unavailable_when_missing(
     hass: HomeAssistant,
     freezer: FrozenDateTimeFactory,

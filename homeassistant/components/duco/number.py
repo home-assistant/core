@@ -1,6 +1,6 @@
 """Number platform for the Duco integration."""
 
-from decimal import ROUND_HALF_UP, Decimal
+from decimal import ROUND_DOWN, ROUND_HALF_UP, Decimal
 import logging
 from typing import override
 
@@ -152,14 +152,16 @@ class DucoBypassSupplyTemperatureTargetNumber(DucoEntity, NumberEntity):
 
         # Home Assistant converts service values from the configured temperature
         # unit first, which can land between valid Duco Celsius increments.
-        steps = (
-            (Decimal(str(value)) - Decimal(str(self.native_min_value)))
-            / Decimal(str(self.native_step))
-        ).to_integral_value(rounding=ROUND_HALF_UP)
-        return float(
-            Decimal(str(self.native_min_value))
-            + (steps * Decimal(str(self.native_step)))
+        minimum = Decimal(str(self.native_min_value))
+        step = Decimal(str(self.native_step))
+        steps = ((Decimal(str(value)) - minimum) / step).to_integral_value(
+            rounding=ROUND_HALF_UP
         )
+        # Rounding up may overshoot when the range is not a whole number of steps.
+        max_steps = (
+            (Decimal(str(self.native_max_value)) - minimum) / step
+        ).to_integral_value(rounding=ROUND_DOWN)
+        return float(minimum + (min(steps, max_steps) * step))
 
     @override
     async def async_set_native_value(self, value: float) -> None:
