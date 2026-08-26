@@ -829,6 +829,14 @@
         }
       },
       "title": "No stream is available for camera {camera}"
+    },
+    "sense_setting_mirror_deprecated": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release; use `{replacement}` instead, which holds the same state and can also change it.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Read-only sensor setting entity deprecated"
+    },
+    "sense_setting_mirror_deprecated_no_replacement": {
+      "description": "The read-only entity `{entity_id}` is deprecated and will be removed in a future release. The sensor does not support this setting, so there is no replacement.\n\nUpdate the following automations and scripts:\n{items}",
+      "title": "Read-only sensor setting entity deprecated"
     }
   },
   "options": {

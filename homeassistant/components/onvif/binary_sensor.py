@@ -3,6 +3,7 @@
 from typing import override
 
 from homeassistant.components.binary_sensor import (
+    DOMAIN as BINARY_SENSOR_DOMAIN,
     BinarySensorDeviceClass,
     BinarySensorEntity,
 )
@@ -39,7 +40,7 @@ async def async_setup_entry(
 
     ent_reg = er.async_get(hass)
     for entry in er.async_entries_for_config_entry(ent_reg, config_entry.entry_id):
-        if entry.domain == "binary_sensor" and entry.unique_id not in uids:
+        if entry.domain == BINARY_SENSOR_DOMAIN and entry.unique_id not in uids:
             uids.add(entry.unique_id)
             entities.append(ONVIFBinarySensor(entry.unique_id, device, entry=entry))
 

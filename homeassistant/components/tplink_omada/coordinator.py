@@ -18,6 +18,8 @@ from tplink_omada_client.exceptions import OmadaClientException
 from homeassistant.core import HomeAssistant, callback
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
+from .const import DOMAIN
+
 if TYPE_CHECKING:
     from . import OmadaConfigEntry
 
@@ -60,7 +62,10 @@ class OmadaCoordinator[_T](DataUpdateCoordinator[dict[str, _T]]):
             async with asyncio.timeout(10):
                 return await self.poll_update()
         except OmadaClientException as err:
-            raise UpdateFailed(f"Error communicating with API: {err}") from err
+            raise UpdateFailed(
+                translation_domain=DOMAIN,
+                translation_key="api_error",
+            ) from err
 
     async def poll_update(self) -> dict[str, _T]:
         """Poll the current data from the controller."""

@@ -8,6 +8,7 @@ from midealocal.const import DeviceType
 import pytest
 
 from homeassistant.components.midea.const import CONF_KEY, CONF_SUBTYPE, DOMAIN
+from homeassistant.components.midea.device_catalog import MIDEA_DEVICE_NAMES
 from homeassistant.const import CONF_NAME, CONF_TOKEN, CONF_TYPE
 from homeassistant.core import HomeAssistant
 from homeassistant.helpers import entity_registry as er
@@ -18,7 +19,6 @@ from .const import (
     TEST_KEY,
     TEST_MAC_ADDRESS,
     TEST_MODEL,
-    TEST_NAME,
     TEST_SERIAL_NUMBER,
     TEST_SUBTYPE,
     TEST_TOKEN,
@@ -41,11 +41,12 @@ class DummyDevice:
         """Initialize fake device."""
         self.device_type = device_type
         self.device_id = TEST_DEVICE_ID
-        self.name = TEST_NAME
+        self.name = MIDEA_DEVICE_NAMES[device_type]
         self.model = TEST_MODEL
         self.subtype = TEST_SUBTYPE
         self.available = False
         self.attributes = attributes or {}
+        self.capabilities: dict[str, Any] = {}
         self._callbacks: list[Callable] = []
         self.calls: list[tuple] = []
         self.temperature_step = 1
@@ -83,6 +84,8 @@ class DummyDevice:
 
     def set_attribute(self, attr: str, value: Any) -> None:
         """Record set attribute call."""
+        self.attributes[attr] = value
+        self.notify_update({attr: value})
         self.calls.append(("set_attribute", attr, value))
 
     def set_target_temperature(self, **kwargs: Any) -> None:
@@ -96,6 +99,10 @@ class DummyDevice:
     def set_mode(self, zone: int, mode: int) -> None:
         """Record set mode call."""
         self.calls.append(("set_mode", zone, mode))
+
+    def start_work(self) -> None:
+        """Record start_work call."""
+        self.calls.append(("start_work",))
 
     def turn_on(self, fan_speed: int | None = None, mode: str | None = None) -> None:
         """Record turn_on call."""
@@ -170,7 +177,7 @@ def mock_config_entry() -> Callable[[DummyDevice], MockConfigEntry]:
             data={
                 **BASE_DATA,
                 CONF_TYPE: device.device_type,
-                CONF_NAME: TEST_NAME,
+                CONF_NAME: MIDEA_DEVICE_NAMES[device.device_type],
                 CONF_TOKEN: TEST_TOKEN,
                 CONF_KEY: TEST_KEY,
                 CONF_SUBTYPE: TEST_SUBTYPE,
