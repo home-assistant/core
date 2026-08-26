@@ -42,30 +42,24 @@ def _make_schema(
         "expected_call_count",
     ),
     [
-        (None, None, 5, True, 0),
-        (7, None, 6, False, 1),
-        (7, None, 7, True, 1),
-        (None, 6, 7, False, 1),
-        (None, 6, 6, True, 1),
-        (2, 6, 1, False, 1),
-        (2, 6, 7, False, 1),
-        (2, 6, 4, True, 1),
-        (7, None, None, True, 1),
-        (7, None, NullValue, True, 1),
-        (7, None, 0, True, 1),
-    ],
-    ids=[
-        "no bounds",
-        "min unmet",
-        "min met",
-        "max exceeded",
-        "max met",
-        "below range",
-        "above range",
-        "within range",
-        "unreadable revision (None)",
-        "unreadable revision (NullValue)",
-        "unreadable revision (0, unpopulated uint16 default)",
+        pytest.param(None, None, 5, True, 0, id="no bounds"),
+        pytest.param(7, None, 6, False, 1, id="min unmet"),
+        pytest.param(7, None, 7, True, 1, id="min met"),
+        pytest.param(None, 6, 7, False, 1, id="max exceeded"),
+        pytest.param(None, 6, 6, True, 1, id="max met"),
+        pytest.param(2, 6, 1, False, 1, id="below range"),
+        pytest.param(2, 6, 7, False, 1, id="above range"),
+        pytest.param(2, 6, 4, True, 1, id="within range"),
+        pytest.param(7, None, None, True, 1, id="unreadable revision (None)"),
+        pytest.param(7, None, NullValue, True, 1, id="unreadable revision (NullValue)"),
+        pytest.param(
+            7,
+            None,
+            0,
+            True,
+            1,
+            id="unreadable revision (0, unpopulated uint16 default)",
+        ),
     ],
 )
 def test_matches_cluster_revision(
@@ -87,8 +81,11 @@ def test_matches_cluster_revision(
 
 @pytest.mark.parametrize(
     ("cluster_revision", "expected_discovered"),
-    [(6, True), (7, False), (0, True)],
-    ids=["within range", "above range", "unreadable revision (0)"],
+    [
+        pytest.param(6, True, id="within range"),
+        pytest.param(7, False, id="above range"),
+        pytest.param(0, True, id="unreadable revision (0)"),
+    ],
 )
 def test_async_discover_entities_filters_by_cluster_revision(
     monkeypatch: pytest.MonkeyPatch,
