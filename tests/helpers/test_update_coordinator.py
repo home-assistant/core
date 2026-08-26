@@ -814,18 +814,27 @@ async def test_async_config_entry_first_refresh_not_ready(
 
 
 @pytest.mark.parametrize(
-    ("cause", "expected_translation_domain", "expected_translation_key"),
+    (
+        "cause",
+        "expected_translation_domain",
+        "expected_translation_key",
+        "expected_translation_placeholders",
+    ),
     [
         pytest.param(
             update_coordinator.UpdateFailed(
-                translation_domain="test", translation_key="update_failed_key"
+                translation_domain="test",
+                translation_key="update_failed_key",
+                translation_placeholders={"key": "value"},
             ),
             "test",
             "update_failed_key",
+            {"key": "value"},
             id="update_failed_with_translation_attrs",
         ),
         pytest.param(
             Exception("boom"),
+            None,
             None,
             None,
             id="plain_exception_no_translation_attrs",
@@ -841,6 +850,7 @@ async def test_async_config_entry_first_refresh_translation_key_propagation(
     cause: Exception,
     expected_translation_domain: str | None,
     expected_translation_key: str | None,
+    expected_translation_placeholders: dict[str, str] | None,
     method: str,
 ) -> None:
     """Test that translation attributes from the cause are propagated to ConfigEntryNotReady."""
@@ -856,6 +866,7 @@ async def test_async_config_entry_first_refresh_translation_key_propagation(
 
     assert exc_info.value.translation_domain == expected_translation_domain
     assert exc_info.value.translation_key == expected_translation_key
+    assert exc_info.value.translation_placeholders == expected_translation_placeholders
 
 
 async def test_async_config_entry_first_refresh_success(hass: HomeAssistant) -> None:
