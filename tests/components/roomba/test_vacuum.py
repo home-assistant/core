@@ -58,13 +58,9 @@ async def test_vacuum_activity(
 @pytest.mark.parametrize(
     ("extra_state", "expect_fan_speed_support", "expected_fan_speed"),
     [
-        # A Braava Jet reports rankOverlap and gets the mop behavior control.
-        # rankOverlap 67 is OVERLAP_STANDARD, and fan_speed reads the
-        # "disposable" pad wetness, so the value resolves to a real member of
-        # the entity's own fan speed list.
+        # 67 is OVERLAP_STANDARD.
         ({"rankOverlap": 67}, True, "Standard-1"),
-        # A Combo reports a mop pad but no rankOverlap, so the behavior cannot
-        # be resolved and the feature is not offered at all.
+        # Combo models report a mop pad but no rankOverlap.
         ({}, False, None),
     ],
 )
@@ -79,8 +75,7 @@ async def test_braava_fan_speed_requires_rank_overlap(
     """Test that fan speed is only offered when it can be produced."""
     reported = mock_roomba.master_state["state"]["reported"]
     reported["detectedPad"] = "reusableWet"
-    # A Braava Jet reports both keys with the same value, and fan_speed reads
-    # the disposable one.
+    # fan_speed reads the "disposable" key.
     reported["padWetness"] = {"disposable": 1, "reusable": 1}
     reported.pop("rankOverlap", None)
     reported.update(extra_state)
@@ -94,6 +89,4 @@ async def test_braava_fan_speed_requires_rank_overlap(
     assert state is not None
     supported = VacuumEntityFeature(state.attributes["supported_features"])
     assert bool(supported & VacuumEntityFeature.FAN_SPEED) is expect_fan_speed_support
-    # The reported value must be a real member of the list the entity offers,
-    # which is the whole point of withholding the feature.
     assert state.attributes.get("fan_speed") == expected_fan_speed
