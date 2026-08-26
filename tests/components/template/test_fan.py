@@ -1,5 +1,6 @@
 """The tests for the Template fan platform."""
 
+from enum import StrEnum
 from itertools import chain
 from typing import Any
 
@@ -30,6 +31,7 @@ from .conftest import (
     ConfigurationStyle,
     TemplatePlatformSetup,
     assert_action,
+    assert_attributes_template,
     assert_extra_template_attributes,
     assert_invalid_config_entry_actions_do_not_create_entities,
     assert_invalid_yaml_actions_do_not_create_entities,
@@ -1710,3 +1712,53 @@ async def test_blocked_template_attributes(
     assert (
         f"Unsupported attribute(s) found for {DEFAULT_NAME}: {attribute}" in caplog.text
     )
+
+
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test attributes as a single template."""
+    await assert_attributes_template(
+        hass,
+        TEST_FAN,
+        style,
+        {"state": "{{ 'on' }}", **OPTIMISTIC_ON_OFF_ACTIONS},
+        caplog,
+    )
+
+
+@pytest.mark.parametrize(
+    "attribute",
+    list(chain(FanEntityCapabilityAttribute, FanEntityStateAttribute)),
+)
+@pytest.mark.parametrize(
+    "style", [ConfigurationStyle.MODERN, ConfigurationStyle.TRIGGER]
+)
+async def test_attributes_template_with_blocked_attributes(
+    hass: HomeAssistant,
+    style: ConfigurationStyle,
+    attribute: StrEnum,
+    caplog: pytest.LogCaptureFixture,
+) -> None:
+    """Test blocked attributes for a single attributes template."""
+    await setup_entity(
+        hass,
+        TEST_FAN,
+        style,
+        1,
+        {
+            "state": "{{ 'on' }}",
+            **OPTIMISTIC_ON_OFF_ACTIONS,
+            "attributes": f"{{{{ dict({attribute}='does not matter') }}}}",
+        },
+    )
+
+    await async_trigger(hass, "sensor.test_extra_attributes", "anything")
+
+    error = f"Unsupported attribute(s) found for {TEST_FAN.entity_id}: {attribute}"
+    assert error in caplog.text
