@@ -1187,7 +1187,6 @@ async def _check_config_flow_result_translations(
             return
         if abort_domain := result.get("translation_domain"):
             integration = abort_domain
-            key_prefix = ""
         await _validate_translation(
             flow.hass,
             translation_errors,
