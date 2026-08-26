@@ -22,5 +22,11 @@
       "message": "Error reading image from {path}: {error}"
     }
   },
+  "services": {
+    "shuffle": {
+      "description": "Update the image entity to a random image from the configured media.",
+      "name": "Shuffle"
+    }
+  },
   "title": "Collection Image"
 }
