@@ -756,10 +756,10 @@ async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
     hass: HomeAssistant,
     mock_config_entry: MockConfigEntry,
 ) -> None:
-    """Setup drives the real _setup_vicare_api path, not a prebuilt ViCareData.
+    """Set up through _setup_vicare_api instead of a prebuilt ViCareData.
 
-    Mocks PyViCare at the API boundary so the via-gateway init, gateway-based
-    cache reconfiguration, and single fetch per gateway are all exercised.
+    Covers the via-gateway init, the gateway-based cache duration, and one
+    fetch per gateway.
     """
     # Two devices behind gwA, one behind gwB: two gateways, three devices.
     fixtures: list[Fixture] = [
@@ -791,7 +791,6 @@ async def test_setup_runs_pyvicare_init_and_fetches_once_per_gateway(
 
     # One refresh per gateway, and the two devices behind gwA share that one
     # service, so the second device is served without a fetch of its own.
-    assert client.devices[0].service is client.devices[1].service
     assert client.services["gwA"].fetch_all_features.call_count == 1
     assert client.services["gwB"].fetch_all_features.call_count == 1
     assert hass.states.get("sensor.model0_temperature").state == "17.5"

@@ -29,10 +29,9 @@ class ViCareCoordinator(DataUpdateCoordinator[None]):
     """Coordinator for a single ViCare gateway.
 
     In viaGateway mode all devices behind a gateway share one service, so a
-    single feature fetch refreshes every device on that gateway. The fetch runs
-    against a representative device using its accessor (the shared service is
-    stateless and needs the accessor per call); freshness is signalled via
-    ``last_update_success``. Carries no payload of its own.
+    single feature fetch refreshes every device on that gateway. The fetch takes
+    the accessor of a representative device. Carries no payload of its own;
+    freshness is signalled via ``last_update_success``.
     """
 
     config_entry: ViCareConfigEntry
