@@ -1,0 +1,12 @@
+{
+  "entity": {
+    "sensor": {
+      "set_point": {
+        "default": "mdi:thermostat"
+      },
+      "hardware_status": {
+        "default": "mdi:pulse"
+      }
+    }
+  }
+}

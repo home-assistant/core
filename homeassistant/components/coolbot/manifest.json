@@ -1,0 +1,12 @@
+{
+  "domain": "coolbot",
+  "name": "CoolBot Pro",
+  "codeowners": ["@strulock"],
+  "config_flow": true,
+  "documentation": "https://www.home-assistant.io/integrations/coolbot",
+  "integration_type": "hub",
+  "iot_class": "cloud_push",
+  "loggers": ["pycoolbot"],
+  "quality_scale": "bronze",
+  "requirements": ["pycoolbot==0.1.0"]
+}

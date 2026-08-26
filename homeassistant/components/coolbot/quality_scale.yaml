@@ -1,0 +1,102 @@
+rules:
+  # Bronze
+  action-setup:
+    status: exempt
+    comment: |
+      The integration is read-only and defines no actions.
+  appropriate-polling:
+    status: done
+    comment: |
+      The cloud pushes over an open socket; the 10s interval only republishes
+      already-received client state to entities and doubles as the keepalive.
+  brands: done
+  common-modules:
+    status: done
+    comment: |
+      Coordinator in coordinator.py. Single platform, no shared base entity.
+  config-flow: done
+  config-flow-test-coverage: done
+  dependency-transparency: done
+  docs-actions:
+    status: exempt
+    comment: |
+      The integration is read-only and defines no actions.
+  docs-conditions:
+    status: exempt
+    comment: This integration does not have any conditions.
+  docs-triggers:
+    status: exempt
+    comment: This integration does not have any triggers.
+  docs-high-level-description: done
+  docs-installation-instructions: done
+  docs-removal-instructions: done
+  entity-event-setup:
+    status: exempt
+    comment: |
+      Entities only subscribe to the coordinator.
+  entity-unique-id: done
+  has-entity-name: done
+  runtime-data: done
+  test-before-configure: done
+  test-before-setup: done
+  unique-config-entry: done
+  # Silver
+  action-exceptions:
+    status: exempt
+    comment: |
+      The integration is read-only and defines no actions.
+  config-entry-unloading: done
+  docs-configuration-parameters:
+    status: exempt
+    comment: |
+      No options flow.
+  docs-installation-parameters: done
+  entity-unavailable: done
+  integration-owner: done
+  log-when-unavailable:
+    status: done
+    comment: |
+      Handled by the coordinator.
+  parallel-updates: done
+  reauthentication-flow: done
+  test-coverage: done
+  # Gold
+  devices: done
+  diagnostics: done
+  discovery:
+    status: exempt
+    comment: |
+      Cloud account service; devices are enumerated from the account profile
+      and are not locally discoverable.
+  discovery-update-info:
+    status: exempt
+    comment: |
+      No discovery.
+  docs-data-update: todo
+  docs-examples: todo
+  docs-known-limitations: todo
+  docs-supported-devices: todo
+  docs-supported-functions: todo
+  docs-troubleshooting: todo
+  docs-use-cases: todo
+  dynamic-devices: done
+  entity-category: done
+  entity-device-class: done
+  entity-disabled-by-default: done
+  entity-translations: done
+  exception-translations: done
+  icon-translations: done
+  reconfiguration-flow: done
+  repair-issues:
+    status: exempt
+    comment: |
+      No situations a repair issue could fix; auth problems raise reauth.
+  stale-devices:
+    status: done
+    comment: |
+      Devices missing from a refresh go unavailable rather than being deleted;
+      async_remove_config_entry_device allows removing genuinely gone devices.
+  # Platinum
+  async-dependency: done
+  inject-websession: done
+  strict-typing: done

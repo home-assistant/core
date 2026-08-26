@@ -153,6 +153,7 @@ homeassistant.components.compit.*
 homeassistant.components.config.*
 homeassistant.components.configurator.*
 homeassistant.components.cookidoo.*
+homeassistant.components.coolbot.*
 homeassistant.components.counter.*
 homeassistant.components.cover.*
 homeassistant.components.cpuspeed.*

@@ -344,6 +344,8 @@ CLAUDE.md @home-assistant/core
 /tests/components/conversation/ @home-assistant/core @synesthesiam @arturpragacz
 /homeassistant/components/cookidoo/ @miaucl
 /tests/components/cookidoo/ @miaucl
+/homeassistant/components/coolbot/ @strulock
+/tests/components/coolbot/ @strulock
 /homeassistant/components/coolmaster/ @OnFreund
 /tests/components/coolmaster/ @OnFreund
 /homeassistant/components/counter/ @fabaff
