@@ -26,7 +26,7 @@ from homeassistant.core import HomeAssistant
 from homeassistant.exceptions import ConfigEntryError
 from homeassistant.helpers.update_coordinator import DataUpdateCoordinator, UpdateFailed
 
-from .const import DOMAIN, SCAN_INTERVAL
+from .const import BYPASS_SUPPLY_TARGET_ZONE_IDS, DOMAIN, SCAN_INTERVAL
 from .validation import UnsupportedBoardError, async_get_supported_board_info
 
 _LOGGER = logging.getLogger(__name__)
@@ -211,9 +211,14 @@ class DucoCoordinator(DataUpdateCoordinator[DucoData]):
         )
         if self._supports_bypass_supply_temperature_targets:
             try:
-                bypass_supply_temperature_targets = (
+                targets = (
                     await self.client.async_get_bypass_supply_temperature_targets()
                 )
+                bypass_supply_temperature_targets = {
+                    zone_id: target
+                    for zone_id, target in targets.items()
+                    if zone_id in BYPASS_SUPPLY_TARGET_ZONE_IDS
+                }
             except DucoUnsupportedCapabilityError:
                 bypass_supply_temperature_targets = {}
                 self._supports_bypass_supply_temperature_targets = False
