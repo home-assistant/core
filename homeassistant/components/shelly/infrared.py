@@ -73,11 +73,8 @@ class ShellyInfraredEmitter(ShellyRpcAttributeEntity, InfraredEmitterEntity):
     @override
     async def async_send_command(self, command: InfraredCommand) -> None:
         """Send an IR command via IR.EmitRaw."""
-        await self.call_rpc(
-            "IR.EmitRaw",
-            {
-                "timings": command.get_raw_timings(),
-                "freq": command.modulation,
-                "repeats": command.repeat_count,
-            },
+        await self.coordinator.device.ir_emit_raw(
+            command.get_raw_timings(),
+            command.modulation,
+            command.repeat_count,
         )
