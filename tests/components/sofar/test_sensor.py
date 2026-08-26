@@ -1,12 +1,13 @@
 """Test the Sofar Inverter Modbus sensor platform."""
 
+from collections.abc import Callable
 from datetime import timedelta
 from types import SimpleNamespace
 from unittest.mock import AsyncMock, patch
 
 from freezegun.api import FrozenDateTimeFactory
 from modbus_connection import ModbusTimeoutError
-from modbus_connection.mock import MockModbusConnection
+from modbus_connection.mock import MockModbusConnection, MockModbusUnit
 import pytest
 from sofar_modbus.modern.device import SofarInverter
 from syrupy.assertion import SnapshotAssertion
@@ -25,9 +26,11 @@ from homeassistant.helpers import entity_registry as er
 from . import (
     MOCK_HYBRID_MODEL,
     MOCK_HYBRID_SERIAL,
+    MOCK_MODEL,
     MOCK_SERIAL,
     MOCK_USER_INPUT,
     seed_hybrid_inverter,
+    seed_pv_inverter,
 )
 
 from tests.common import MockConfigEntry, async_fire_time_changed, snapshot_platform
@@ -90,20 +93,49 @@ async def test_sensor_entities_created_and_state(
     assert state.state == "grid_connected"
 
 
+@pytest.mark.parametrize(
+    ("serial", "model", "seed", "created", "enabled"),
+    [
+        pytest.param(MOCK_SERIAL, MOCK_MODEL, seed_pv_inverter, 76, 24, id="pv"),
+        pytest.param(
+            MOCK_HYBRID_SERIAL,
+            MOCK_HYBRID_MODEL,
+            seed_hybrid_inverter,
+            190,
+            40,
+            id="hybrid",
+        ),
+    ],
+)
 async def test_enabled_by_default_partition(
+    hass: HomeAssistant,
     entity_registry: er.EntityRegistry,
-    init_integration: MockConfigEntry,
+    serial: str,
+    model: str,
+    seed: Callable[[MockModbusUnit], None],
+    created: int,
+    enabled: int,
 ) -> None:
     """Test the opt-in tiering holds, and matches the descriptions."""
-    entries = er.async_entries_for_config_entry(
-        entity_registry, init_integration.entry_id
+    connection = MockModbusConnection()
+    seed(connection.for_unit(1))
+    entry = MockConfigEntry(
+        domain=DOMAIN, unique_id=serial, data=MOCK_USER_INPUT, title=model
     )
-    enabled = [entry for entry in entries if entry.disabled_by is None]
-    # Literal counts: an accidental flip has to be acknowledged here.
-    assert len(entries) == 76
-    assert len(enabled) == 24
+    entry.add_to_hass(hass)
+    with patch(
+        "homeassistant.components.sofar.async_get_unit",
+        side_effect=lambda hass, entry, params, unit_id: connection.for_unit(unit_id),
+    ):
+        await hass.config_entries.async_setup(entry.entry_id)
+        await hass.async_block_till_done(wait_background_tasks=True)
 
-    served = init_integration.runtime_data.served_components
+    entries = er.async_entries_for_config_entry(entity_registry, entry.entry_id)
+    # Literal counts: an accidental flip has to be acknowledged here.
+    assert len(entries) == created
+    assert len([e for e in entries if e.disabled_by is None]) == enabled
+
+    served = entry.runtime_data.served_components
     expected_disabled = {
         description.key
         for description in SENSOR_DESCRIPTIONS
@@ -111,9 +143,9 @@ async def test_enabled_by_default_partition(
         and not description.entity_registry_enabled_default
     }
     disabled = {
-        entry.unique_id.removeprefix(f"{MOCK_SERIAL}_")
-        for entry in entries
-        if entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
+        registry_entry.unique_id.removeprefix(f"{serial}_")
+        for registry_entry in entries
+        if registry_entry.disabled_by is er.RegistryEntryDisabler.INTEGRATION
     }
     assert disabled == expected_disabled
 
