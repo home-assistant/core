@@ -36,7 +36,7 @@ from homeassistant.components.media_player import (
     SearchMediaQuery,
     async_process_play_media_url,
 )
-from homeassistant.const import ATTR_NAME, STATE_OFF, Platform
+from homeassistant.const import ATTR_NAME, STATE_OFF, STATE_UNAVAILABLE, Platform
 from homeassistant.core import HomeAssistant, ServiceResponse
 from homeassistant.exceptions import HomeAssistantError, ServiceValidationError
 from homeassistant.helpers import entity_registry as er
@@ -560,8 +560,9 @@ class MusicAssistantPlayer(MusicAssistantEntity, MediaPlayerEntity):
         if message is not None:
             if TYPE_CHECKING:
                 assert tts_entity_id is not None
-            # the referenced tts entity may no longer exist
-            if self.hass.states.get(tts_entity_id) is None:
+            # a gone or unavailable entity would otherwise yield a url that plays nothing
+            tts_state = self.hass.states.get(tts_entity_id)
+            if tts_state is None or tts_state.state == STATE_UNAVAILABLE:
                 raise ServiceValidationError(
                     translation_domain=DOMAIN,
                     translation_key="tts_entity_not_available",

@@ -79,6 +79,7 @@ from homeassistant.const import (
     SERVICE_VOLUME_MUTE,
     SERVICE_VOLUME_SET,
     SERVICE_VOLUME_UP,
+    STATE_UNAVAILABLE,
     Platform,
 )
 from homeassistant.core import Context, HomeAssistant
@@ -1108,12 +1109,19 @@ async def test_media_player_play_announcement_action_invalid_input(
     assert music_assistant_client.send_command.call_count == 0
 
 
-async def test_media_player_play_announcement_action_unavailable_tts_entity(
+@pytest.mark.parametrize(
+    "tts_entity_id",
+    ["tts.does_not_exist", MOCK_TTS_ENTITY_ID],
+    ids=["unknown tts entity", "unavailable tts entity"],
+)
+async def test_media_player_play_announcement_action_unusable_tts_entity(
     hass: HomeAssistant,
     music_assistant_client: MagicMock,
+    tts_entity_id: str,
 ) -> None:
-    """Test play_announcement action reports a text-to-speech entity that is gone."""
+    """Test play_announcement action reports a text-to-speech entity it cannot use."""
     await setup_integration_from_fixtures(hass, music_assistant_client)
+    hass.states.async_set(MOCK_TTS_ENTITY_ID, STATE_UNAVAILABLE)
     with pytest.raises(ServiceValidationError) as exc_info:
         await hass.services.async_call(
             DOMAIN,
@@ -1121,7 +1129,7 @@ async def test_media_player_play_announcement_action_unavailable_tts_entity(
             {
                 ATTR_ENTITY_ID: "media_player.test_player_1",
                 ATTR_MESSAGE: "Dinner is ready!",
-                ATTR_TTS_ENTITY_ID: MOCK_TTS_ENTITY_ID,
+                ATTR_TTS_ENTITY_ID: tts_entity_id,
             },
             blocking=True,
         )
